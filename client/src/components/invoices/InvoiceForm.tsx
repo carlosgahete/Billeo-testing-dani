@@ -236,32 +236,40 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       });
       
       if (isEditMode) {
-        // En modo edición, incluir solo los campos modificados para evitar sobrescribir datos
+        // En modo edición, necesitamos asegurarnos de enviar todos los datos importantes
+        // y no perder información existente
+        console.log("Actualizando factura existente - ID:", invoiceId);
+        
+        // Obtenemos todos los datos originales
         const originalInvoice = invoiceData?.invoice || {};
         
-        // Solo enviamos los campos que han cambiado
-        const updatedInvoiceData: Record<string, any> = {};
+        // Creamos una copia de la factura original y sobrescribimos con los nuevos valores
+        // así mantenemos campos que podrían no estar en el formulario
+        const completeInvoiceData = {
+          ...originalInvoice,
+          ...formattedData,
+          // Aseguramos que estos campos siempre se envían correctamente
+          invoiceNumber: formattedData.invoiceNumber,
+          clientId: formattedData.clientId,
+          issueDate: formattedData.issueDate,
+          dueDate: formattedData.dueDate,
+          subtotal: formattedData.subtotal,
+          tax: formattedData.tax,
+          total: formattedData.total,
+          status: formattedData.status,
+          // Para campos opcionales, usamos los nuevos valores si existen, o los originales
+          notes: formattedData.notes !== undefined ? formattedData.notes : originalInvoice.notes,
+          additionalTaxes: formattedData.additionalTaxes || originalInvoice.additionalTaxes || [],
+          attachments: formattedData.attachments || originalInvoice.attachments
+        };
         
-        // Comparamos cada campo y solo incluimos los modificados
-        Object.keys(formattedData).forEach(key => {
-          const formattedValue = (formattedData as any)[key];
-          const originalValue = (originalInvoice as any)[key];
-          
-          // Si el valor ha cambiado o es un campo crítico, lo incluimos
-          if (key === 'issueDate' || key === 'dueDate' || 
-              key === 'additionalTaxes' || 
-              formattedValue !== originalValue) {
-            updatedInvoiceData[key] = formattedValue;
-          }
-        });
-        
-        console.log("Datos actualizados para enviar:", {
-          invoice: updatedInvoiceData,
+        console.log("Datos completos actualizados para enviar:", {
+          invoice: completeInvoiceData,
           items: formattedItems
         });
         
         return apiRequest(`/api/invoices/${invoiceId}`, "PUT", {
-          invoice: updatedInvoiceData,
+          invoice: completeInvoiceData,
           items: formattedItems,
         });
       } else {
