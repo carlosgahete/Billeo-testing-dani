@@ -9,6 +9,7 @@ import {
   User,
   X
 } from "lucide-react";
+import billeoLogo from '../../assets/billeo-logo.png';
 
 interface SidebarProps {
   sidebarOpen: boolean;
