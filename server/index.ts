@@ -7,15 +7,19 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure session middleware
+// Configure session middleware con la configuración optimizada
 app.use(session({
   secret: 'financial-app-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { 
     secure: false, // Set to true if using https
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/'
+  },
+  name: 'financial-app.sid'
 }));
 
 app.use((req, res, next) => {
