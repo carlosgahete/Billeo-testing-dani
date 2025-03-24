@@ -903,24 +903,9 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 Añadir ítem
               </Button>
               
-
-              
-              <div className="border-t pt-4 flex flex-col items-end">
-                <div className="flex justify-between w-full md:w-80 mb-2">
-                  <span className="text-sm text-muted-foreground">Subtotal:</span>
-                  <span className="font-medium">
-                    {form.getValues("subtotal").toFixed(2)} €
-                  </span>
-                </div>
-                <div className="flex justify-between w-full md:w-80 mb-2">
-                  <span className="text-sm text-muted-foreground">IVA:</span>
-                  <span className="font-medium">
-                    {form.getValues("tax").toFixed(2)} €
-                  </span>
-                </div>
-
-                {/* Botones de impuestos alineados debajo del IVA */}
-                <div className="w-full md:w-80 mb-3 flex justify-end gap-2">
+              {/* Botones de impuestos alineados antes de la línea divisoria */}
+              <div className="w-full flex justify-end mb-4">
+                <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -948,6 +933,21 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                     <Plus className="h-3 w-3 mr-1" />
                     Otro impuesto
                   </Button>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4 flex flex-col items-end">
+                <div className="flex justify-between w-full md:w-80 mb-2">
+                  <span className="text-sm text-muted-foreground">Subtotal:</span>
+                  <span className="font-medium">
+                    {form.getValues("subtotal").toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between w-full md:w-80 mb-2">
+                  <span className="text-sm text-muted-foreground">IVA:</span>
+                  <span className="font-medium">
+                    {form.getValues("tax").toFixed(2)} €
+                  </span>
                 </div>
                 
                 {/* Sección de impuestos adicionales */}
