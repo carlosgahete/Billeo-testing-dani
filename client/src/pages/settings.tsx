@@ -210,6 +210,45 @@ const SettingsPage = () => {
         </TabsList>
         
         <TabsContent value="profile" className="space-y-6">
+          {/* Imagen de perfil */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Imagen de perfil</CardTitle>
+              <CardDescription>
+                Sube una foto que aparecerá junto a tu nombre
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+                <div className="flex flex-col items-center gap-3">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage 
+                      src={user?.profileImage ? user.profileImage : undefined} 
+                      alt={user?.name || "Usuario"} 
+                    />
+                    <AvatarFallback className="text-lg">
+                      {user?.name?.split(' ').map(n => n[0]).join('') || <User />}
+                    </AvatarFallback>
+                  </Avatar>
+                  {uploadingProfileImage && (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <p className="text-sm mb-3">
+                    Sube una imagen JPG, PNG o JPEG. Esta imagen se mostrará junto a tu nombre en la aplicación.
+                  </p>
+                  <FileUpload 
+                    onUpload={handleProfileImageUpload} 
+                    accept=".jpg,.jpeg,.png"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Información del perfil */}
           <Card>
             <CardHeader>
               <CardTitle>Información de perfil</CardTitle>

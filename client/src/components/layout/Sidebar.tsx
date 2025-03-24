@@ -1,4 +1,5 @@
 import { useLocation, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -9,7 +10,20 @@ import {
   User,
   X
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import billeoLogo from '../../assets/billeo-logo.png';
+
+interface UserSession {
+  authenticated: boolean;
+  user?: {
+    id: number;
+    username: string;
+    name: string;
+    email: string;
+    role: string;
+    profileImage?: string | null;
+  };
+}
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -50,6 +64,13 @@ const Sidebar = ({
   isMobile 
 }: SidebarProps) => {
   const [location] = useLocation();
+  
+  // Obtener los datos del usuario
+  const { data: sessionData } = useQuery<UserSession>({
+    queryKey: ["/api/auth/session"],
+  });
+  
+  const user = sessionData?.user;
 
   // Close mobile menu when a link is clicked
   const handleNavClick = () => {
@@ -143,12 +164,15 @@ const Sidebar = ({
         {/* User Menu */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
           <div className="flex items-center">
-            <div className="h-9 w-9 rounded-full bg-neutral-300 flex items-center justify-center text-neutral-700">
-              <User size={20} />
-            </div>
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
+              <AvatarFallback className="text-xs">
+                {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
+              </AvatarFallback>
+            </Avatar>
             <div className="ml-3">
-              <p className="text-sm font-medium">Ana García</p>
-              <p className="text-xs text-neutral-500">Administrador</p>
+              <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
+              <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
             </div>
           </div>
         </div>
@@ -209,12 +233,15 @@ const Sidebar = ({
         {/* User Menu */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
           <div className="flex items-center">
-            <div className="h-9 w-9 rounded-full bg-neutral-300 flex items-center justify-center text-neutral-700">
-              <User size={20} />
-            </div>
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
+              <AvatarFallback className="text-xs">
+                {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
+              </AvatarFallback>
+            </Avatar>
             <div className="ml-3">
-              <p className="text-sm font-medium">Ana García</p>
-              <p className="text-xs text-neutral-500">Administrador</p>
+              <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
+              <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
             </div>
           </div>
         </div>
