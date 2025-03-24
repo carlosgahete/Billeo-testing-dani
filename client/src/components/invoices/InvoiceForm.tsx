@@ -885,7 +885,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 
                 {/* Esta es la fila con los botones de impuestos, alineados como en la imagen */}
                 <div className="grid grid-cols-12 gap-4 items-center mb-4">
-                  <div className="col-span-7 sm:col-span-8 flex">
+                  <div className="col-span-8 sm:col-span-9 flex">
                     <Button
                       type="button"
                       variant="outline"
@@ -904,7 +904,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                       Añadir ítem
                     </Button>
                   </div>
-                  <div className="col-span-5 sm:col-span-4 flex gap-2">
+                  <div className="col-span-4 sm:col-span-3 flex justify-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
