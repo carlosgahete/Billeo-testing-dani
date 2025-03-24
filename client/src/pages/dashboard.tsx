@@ -56,29 +56,54 @@ const Dashboard = () => {
     );
   }
   
-  // Datos de ejemplo contables para un autónomo
+  // Usar datos reales del sistema o valores por defecto si no hay datos
+  const incomeTotal = stats?.income || 0;
+  const expensesTotal = stats?.expenses || 0;
+  
+  // Cálculos de IVA (asumiendo una tasa de IVA estándar del 21% en España)
+  const ivaRate = 0.21;
+  const baseIncomeWithoutVAT = Number((incomeTotal / (1 + ivaRate)).toFixed(2));
+  const ivaRepercutido = Number((incomeTotal - baseIncomeWithoutVAT).toFixed(2));
+  
+  const baseExpensesWithoutVAT = Number((expensesTotal / (1 + ivaRate)).toFixed(2));
+  const ivaSoportado = Number((expensesTotal - baseExpensesWithoutVAT).toFixed(2));
+  
+  // Cálculo del resultado y estimaciones de impuestos
+  const balanceTotal = Number((incomeTotal - expensesTotal).toFixed(2));
+  const ivaNeto = Number((ivaRepercutido - ivaSoportado).toFixed(2));
+  
+  // Estimación de IRPF (asumimos una retención del 15% sobre el beneficio)
+  const irpfRate = 0.15;
+  const irpfEstimated = Number((baseIncomeWithoutVAT * irpfRate).toFixed(2));
+  
+  // Beneficio neto estimado
+  const netProfit = Number((balanceTotal - ivaNeto - irpfEstimated).toFixed(2));
+  
+  // Datos financieros organizados
   const financialData = {
     income: {
-      total: 1317.00,
-      ivaRepercutido: 276.57,  // IVA que cobras a tus clientes
-      totalWithoutVAT: 1040.43 // Base imponible (sin IVA)
+      total: incomeTotal,
+      ivaRepercutido: ivaRepercutido,
+      totalWithoutVAT: baseIncomeWithoutVAT
     },
     expenses: {
-      total: 503.02,
-      ivaSoportado: 47.33,    // IVA que pagas en tus compras
-      totalWithoutVAT: 455.69 // Base imponible (sin IVA)
+      total: expensesTotal,
+      ivaSoportado: ivaSoportado,
+      totalWithoutVAT: baseExpensesWithoutVAT
     },
     balance: {
-      total: 813.98,          // Ingresos - Gastos (bruto)
-      ivaNeto: 229.24,        // IVA a ingresar (repercutido - soportado)
-      irpfEstimated: 158.10,  // Estimación IRPF (% sobre la base)
-      netProfit: 426.64       // Beneficio neto después de impuestos estimados
+      total: balanceTotal,
+      ivaNeto: ivaNeto,
+      irpfEstimated: irpfEstimated,
+      netProfit: netProfit
     }
   };
 
-  // Cálculo de rentabilidad
-  const profitMargin = (financialData.balance.total / financialData.income.total * 100).toFixed(1);
-  const isPositiveMargin = financialData.balance.total > 0;
+  // Cálculo de rentabilidad (con manejo seguro para división por cero)
+  const profitMargin = incomeTotal > 0 
+    ? ((balanceTotal / incomeTotal) * 100).toFixed(1) 
+    : "0.0";
+  const isPositiveMargin = balanceTotal > 0;
 
   return (
     <div className="space-y-6">
