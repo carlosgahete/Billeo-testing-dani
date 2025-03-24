@@ -225,10 +225,16 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     
     // Calculate subtotal for each item
     const updatedItems = items.map(item => {
-      const subtotal = Number(item.quantity) * Number(item.unitPrice);
+      // Asegurarnos que tenemos números válidos
+      const quantity = parseFloat(item.quantity) || 0;
+      const unitPrice = parseFloat(item.unitPrice) || 0;
+      const subtotal = quantity * unitPrice;
+      
       return {
         ...item,
-        subtotal
+        quantity: quantity,
+        unitPrice: unitPrice,
+        subtotal: subtotal
       };
     });
     
@@ -236,9 +242,9 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     form.setValue("items", updatedItems);
     
     // Calculate invoice totals
-    const subtotal = updatedItems.reduce((sum, item) => sum + Number(item.subtotal), 0);
+    const subtotal = updatedItems.reduce((sum, item) => sum + (item.subtotal || 0), 0);
     const tax = updatedItems.reduce((sum, item) => {
-      const itemTax = Number(item.subtotal) * (Number(item.taxRate) / 100);
+      const itemTax = (item.subtotal || 0) * (parseFloat(item.taxRate) / 100);
       return sum + itemTax;
     }, 0);
     
@@ -249,11 +255,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     additionalTaxes.forEach(taxItem => {
       if (taxItem.isPercentage) {
         // Si es un porcentaje, calculamos en base al subtotal
-        const percentageTax = subtotal * (Number(taxItem.amount) / 100);
+        const percentageTax = subtotal * (parseFloat(taxItem.amount) / 100);
         additionalTaxesTotal += percentageTax;
       } else {
         // Si es un valor monetario, lo añadimos directamente
-        additionalTaxesTotal += Number(taxItem.amount);
+        additionalTaxesTotal += parseFloat(taxItem.amount) || 0;
       }
     });
     
@@ -552,13 +558,19 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                             </FormLabel>
                             <FormControl>
                               <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="Cant."
+                                type="text"
+                                placeholder="Cantidad"
                                 {...field}
                                 onChange={(e) => {
-                                  field.onChange(parseFloat(e.target.value));
+                                  // Permitir entrada de cualquier carácter de número y puntos/comas
+                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+                                  field.onChange(value);
+                                  calculateTotals();
+                                }}
+                                onBlur={(e) => {
+                                  // Al perder el foco, aseguramos que sea un número válido
+                                  const numericValue = parseFloat(field.value) || 0;
+                                  field.onChange(numericValue.toString());
                                   calculateTotals();
                                 }}
                               />
@@ -580,13 +592,19 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                             </FormLabel>
                             <FormControl>
                               <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
+                                type="text"
                                 placeholder="Precio"
                                 {...field}
                                 onChange={(e) => {
-                                  field.onChange(parseFloat(e.target.value));
+                                  // Permitir entrada de cualquier carácter de número y puntos/comas
+                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+                                  field.onChange(value);
+                                  calculateTotals();
+                                }}
+                                onBlur={(e) => {
+                                  // Al perder el foco, aseguramos que sea un número válido
+                                  const numericValue = parseFloat(field.value) || 0;
+                                  field.onChange(numericValue.toString());
                                   calculateTotals();
                                 }}
                               />
