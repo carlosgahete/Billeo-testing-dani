@@ -103,9 +103,6 @@ const Sidebar = ({
     }
   };
 
-  // Determine if the element is visible
-  const isVisible = isMobile ? mobileMenuOpen : sidebarOpen;
-
   const navigationItems = [
     { 
       href: "/", 
@@ -185,19 +182,30 @@ const Sidebar = ({
           ))}
         </nav>
         
-        {/* User Menu */}
+        {/* User Menu - Desktop */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
-          <div className="flex items-center">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
-              <AvatarFallback className="text-xs">
-                {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
-              </AvatarFallback>
-            </Avatar>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
-              <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
+                <AvatarFallback className="text-xs">
+                  {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
+                </AvatarFallback>
+              </Avatar>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
+                <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
+              </div>
             </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout}
+              className="text-neutral-500 hover:text-red-500"
+              aria-label="Cerrar sesión"
+            >
+              <LogOut size={18} />
+            </Button>
           </div>
         </div>
       </aside>
@@ -254,19 +262,30 @@ const Sidebar = ({
           ))}
         </nav>
         
-        {/* User Menu */}
+        {/* User Menu - Mobile */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
-          <div className="flex items-center">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
-              <AvatarFallback className="text-xs">
-                {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
-              </AvatarFallback>
-            </Avatar>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
-              <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
+                <AvatarFallback className="text-xs">
+                  {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
+                </AvatarFallback>
+              </Avatar>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
+                <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
+              </div>
             </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout}
+              className="text-neutral-500 hover:text-red-500"
+              aria-label="Cerrar sesión"
+            >
+              <LogOut size={18} />
+            </Button>
           </div>
         </div>
       </aside>
