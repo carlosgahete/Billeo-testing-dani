@@ -8,9 +8,13 @@ import {
   Building2, 
   Settings,
   User,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import billeoLogo from '../../assets/billeo-logo.png';
 
 interface UserSession {
@@ -63,7 +67,8 @@ const Sidebar = ({
   setMobileMenuOpen,
   isMobile 
 }: SidebarProps) => {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { toast } = useToast();
   
   // Obtener los datos del usuario
   const { data: sessionData } = useQuery<UserSession>({
@@ -76,6 +81,25 @@ const Sidebar = ({
   const handleNavClick = () => {
     if (isMobile) {
       setMobileMenuOpen(false);
+    }
+  };
+  
+  // Logout functionality
+  const handleLogout = async () => {
+    try {
+      await apiRequest("/api/auth/logout", "POST");
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+      });
+      navigate("/login");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cerrar la sesión",
+        variant: "destructive",
+      });
     }
   };
 
