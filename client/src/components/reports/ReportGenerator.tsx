@@ -44,6 +44,25 @@ interface Category {
   color: string;
 }
 
+interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  clientId: number;
+  issueDate: string;
+  dueDate: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: string;
+  notes?: string;
+  additionalTaxes?: any[] | null;
+}
+
+interface ChartDataItem {
+  name: string;
+  value: number;
+}
+
 const getPeriodLabel = (period: string) => {
   switch (period) {
     case "monthly":
@@ -69,15 +88,20 @@ const ReportGenerator = () => {
   );
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+  
+  // Añadimos la consulta de facturas para incluirlas en los informes
+  const { data: invoices, isLoading: invoicesLoading } = useQuery<Invoice[]>({
+    queryKey: ["/api/invoices"],
+  });
 
-  const isLoading = transactionsLoading || categoriesLoading;
+  const isLoading = transactionsLoading || categoriesLoading || invoicesLoading;
 
   const getCategoryName = (categoryId: number | null) => {
     if (!categoryId || !categories) return "Sin categoría";
@@ -99,14 +123,33 @@ const ReportGenerator = () => {
     end.setHours(23, 59, 59);
     return transactionDate >= start && transactionDate <= end;
   });
+  
+  // Filter invoices based on date range
+  const filteredInvoices = invoices?.filter((invoice: Invoice) => {
+    const invoiceDate = new Date(invoice.issueDate);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59);
+    return invoiceDate >= start && invoiceDate <= end;
+  });
 
   // Prepare data for income-expense chart
-  const incomeExpenseData = [];
-  if (filteredTransactions) {
-    const incomeTotal = filteredTransactions
+  const incomeExpenseData: ChartDataItem[] = [];
+  if (filteredTransactions && filteredInvoices) {
+    // Ingresos de transacciones
+    const transactionIncomeTotal = filteredTransactions
       .filter((t: Transaction) => t.type === "income")
       .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0);
     
+    // Ingresos de facturas pagadas
+    const invoiceIncomeTotal = filteredInvoices
+      .filter((invoice: Invoice) => invoice.status === "paid")
+      .reduce((sum: number, invoice: Invoice) => sum + Number(invoice.subtotal), 0);
+    
+    // Total de ingresos combinados
+    const incomeTotal = transactionIncomeTotal + invoiceIncomeTotal;
+    
+    // Gastos de transacciones
     const expenseTotal = filteredTransactions
       .filter((t: Transaction) => t.type === "expense")
       .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0);
@@ -118,8 +161,9 @@ const ReportGenerator = () => {
   }
 
   // Prepare data for category breakdown
-  const categoryData = [];
-  if (filteredTransactions && categories) {
+  const categoryData: Array<{name: string, value: number}> = [];
+  if (filteredTransactions && filteredInvoices && categories) {
+    // Primero procesamos las transacciones por categoría
     const categorySums = filteredTransactions
       .filter((t: Transaction) => t.type === (reportType === "expense-categories" ? "expense" : "income"))
       .reduce((acc: Record<string, number>, transaction: Transaction) => {
@@ -131,12 +175,36 @@ const ReportGenerator = () => {
         acc[categoryKey] += Number(transaction.amount);
         return acc;
       }, {});
+      
+    // Si estamos viendo ingresos, también incluimos las facturas pagadas
+    if (reportType === "income-categories") {
+      // Agregamos una categoría "Facturas" para agrupar ingresos de facturas
+      const invoicesTotal = filteredInvoices
+        .filter((invoice: Invoice) => invoice.status === "paid")
+        .reduce((sum: number, invoice: Invoice) => sum + Number(invoice.subtotal), 0);
+      
+      if (invoicesTotal > 0) {
+        if (!categorySums["facturas"]) {
+          categorySums["facturas"] = 0;
+        }
+        categorySums["facturas"] += invoicesTotal;
+      }
+    }
     
+    // Convertimos los datos acumulados al formato para el gráfico
     Object.entries(categorySums).forEach(([categoryId, sum]) => {
-      categoryData.push({
-        name: getCategoryName(parseInt(categoryId) || null),
-        value: sum
-      });
+      // Si es la categoría especial de facturas
+      if (categoryId === "facturas") {
+        categoryData.push({
+          name: "Facturas",
+          value: sum
+        });
+      } else {
+        categoryData.push({
+          name: getCategoryName(parseInt(categoryId) || null),
+          value: sum
+        });
+      }
     });
   }
 
