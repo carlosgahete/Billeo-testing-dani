@@ -348,7 +348,12 @@ const ReportGenerator = () => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={(value) => `${value.toFixed(2)} €`} />
+                      <Tooltip 
+                        formatter={(value: any) => {
+                          const numValue = Number(value);
+                          return isNaN(numValue) ? value : `${numValue.toFixed(2)} €`;
+                        }} 
+                      />
                       <Legend />
                       <Bar dataKey="value" name="Importe (€)" fill="#1976d2" />
                     </BarChart>
@@ -370,7 +375,12 @@ const ReportGenerator = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => `${value.toFixed(2)} €`} />
+                      <Tooltip 
+                        formatter={(value: any) => {
+                          const numValue = Number(value);
+                          return isNaN(numValue) ? value : `${numValue.toFixed(2)} €`;
+                        }} 
+                      />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
