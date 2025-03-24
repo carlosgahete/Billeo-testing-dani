@@ -187,7 +187,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Create or update invoice mutation
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
-      console.log("Datos originales:", data);
+      console.log("Datos originales del formulario:", data);
       
       // Asegurarnos que las fechas están en formato YYYY-MM-DD
       const formatDate = (dateString: string) => {
@@ -230,11 +230,38 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         subtotal: (item.subtotal || 0).toString(),
       }));
       
-      console.log("Datos formateados:", { invoice: formattedData, items: formattedItems });
+      console.log("Datos formateados para enviar al servidor:", { 
+        invoice: formattedData, 
+        items: formattedItems 
+      });
       
       if (isEditMode) {
+        // En modo edición, incluir solo los campos modificados para evitar sobrescribir datos
+        const originalInvoice = invoiceData?.invoice || {};
+        
+        // Solo enviamos los campos que han cambiado
+        const updatedInvoiceData: Record<string, any> = {};
+        
+        // Comparamos cada campo y solo incluimos los modificados
+        Object.keys(formattedData).forEach(key => {
+          const formattedValue = (formattedData as any)[key];
+          const originalValue = (originalInvoice as any)[key];
+          
+          // Si el valor ha cambiado o es un campo crítico, lo incluimos
+          if (key === 'issueDate' || key === 'dueDate' || 
+              key === 'additionalTaxes' || 
+              formattedValue !== originalValue) {
+            updatedInvoiceData[key] = formattedValue;
+          }
+        });
+        
+        console.log("Datos actualizados para enviar:", {
+          invoice: updatedInvoiceData,
+          items: formattedItems
+        });
+        
         return apiRequest(`/api/invoices/${invoiceId}`, "PUT", {
-          invoice: formattedData,
+          invoice: updatedInvoiceData,
           items: formattedItems,
         });
       } else {
@@ -422,9 +449,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                           <div className="flex-1">
                             <Select
                               onValueChange={(value) => field.onChange(Number(value))}
-                              defaultValue={
-                                field.value ? field.value.toString() : undefined
-                              }
+                              value={field.value ? field.value.toString() : undefined}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -469,12 +494,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                           <FormControl>
                             <Input 
                               type="date" 
-                              {...field} 
+                              value={field.value}
                               onChange={(e) => {
                                 console.log("Cambiando fecha de emisión a:", e.target.value);
                                 field.onChange(e.target.value);
                               }} 
-                              className="text-base"
+                              className="text-base h-12 text-lg"
                             />
                           </FormControl>
                           <FormMessage />
@@ -491,12 +516,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                           <FormControl>
                             <Input 
                               type="date" 
-                              {...field} 
+                              value={field.value}
                               onChange={(e) => {
                                 console.log("Cambiando fecha de vencimiento a:", e.target.value);
                                 field.onChange(e.target.value);
                               }}
-                              className="text-base"
+                              className="text-base h-12 text-lg"
                             />
                           </FormControl>
                           <FormMessage />
@@ -513,7 +538,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormLabel>Estado</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
