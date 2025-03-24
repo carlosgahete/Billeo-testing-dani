@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trash2, Plus, FileText, Minus } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Trash2, Plus, FileText, Minus, CalendarIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -500,17 +507,35 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de emisión</FormLabel>
                           <FormControl>
-                            <div className="date-picker-large">
-                              <Input 
-                                type="date" 
-                                value={field.value}
-                                onChange={(e) => {
-                                  console.log("Cambiando fecha de emisión a:", e.target.value);
-                                  field.onChange(e.target.value);
-                                }} 
-                                className="text-base h-12 text-lg"
-                                style={{ width: "100%" }}
-                              />
+                            <div className="calendar-popup-wrapper">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    className="w-full justify-start text-left font-normal flex items-center h-12 text-base"
+                                  >
+                                    <CalendarIcon className="h-5 w-5 mr-2 opacity-70" />
+                                    {field.value ? format(new Date(field.value), "dd/MM/yyyy") : 
+                                    <span className="text-muted-foreground">Seleccionar fecha</span>}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        const formattedDate = format(date, "yyyy-MM-dd");
+                                        console.log("Cambiando fecha de emisión a:", formattedDate);
+                                        field.onChange(formattedDate);
+                                      }
+                                    }}
+                                    disabled={(date) => date < new Date("1900-01-01")}
+                                    initialFocus
+                                    className="rounded-md border shadow p-4"
+                                  />
+                                </PopoverContent>
+                              </Popover>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -525,17 +550,35 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de vencimiento</FormLabel>
                           <FormControl>
-                            <div className="date-picker-large">
-                              <Input 
-                                type="date" 
-                                value={field.value}
-                                onChange={(e) => {
-                                  console.log("Cambiando fecha de vencimiento a:", e.target.value);
-                                  field.onChange(e.target.value);
-                                }}
-                                className="text-base h-12 text-lg"
-                                style={{ width: "100%" }}
-                              />
+                            <div className="calendar-popup-wrapper">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    className="w-full justify-start text-left font-normal flex items-center h-12 text-base"
+                                  >
+                                    <CalendarIcon className="h-5 w-5 mr-2 opacity-70" />
+                                    {field.value ? format(new Date(field.value), "dd/MM/yyyy") : 
+                                    <span className="text-muted-foreground">Seleccionar fecha</span>}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        const formattedDate = format(date, "yyyy-MM-dd");
+                                        console.log("Cambiando fecha de vencimiento a:", formattedDate);
+                                        field.onChange(formattedDate);
+                                      }
+                                    }}
+                                    disabled={(date) => date < new Date("1900-01-01")}
+                                    initialFocus
+                                    className="rounded-md border shadow p-4"
+                                  />
+                                </PopoverContent>
+                              </Popover>
                             </div>
                           </FormControl>
                           <FormMessage />
