@@ -904,7 +904,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                       Añadir ítem
                     </Button>
                   </div>
-                  <div className="col-span-4 sm:col-span-3 flex justify-start pl-4 gap-2">
+                  <div className="col-span-4 sm:col-span-3 flex justify-start pl-2 gap-2">
                     <Button
                       type="button"
                       variant="outline"
