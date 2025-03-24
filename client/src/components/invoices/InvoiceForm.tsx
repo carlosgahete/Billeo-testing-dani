@@ -84,7 +84,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   });
 
   // Fetch invoice data if in edit mode
-  const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
+  const { data: invoiceData = { invoice: null, items: [] }, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
   });

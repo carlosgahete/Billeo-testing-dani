@@ -49,11 +49,11 @@ const StatusBadge = ({ status }: { status: string }) => {
 const RecentInvoices = () => {
   const [, navigate] = useLocation();
   
-  const { data: invoices, isLoading: invoicesLoading } = useQuery({
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
     queryKey: ["/api/invoices/recent"],
   });
   
-  const { data: clients, isLoading: clientsLoading } = useQuery({
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
     queryKey: ["/api/clients"],
   });
   
