@@ -104,6 +104,27 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
   });
+  
+  // Intentar obtener datos del sessionStorage si estamos en modo de edición
+  // Esto permite conservar todos los datos de la factura incluso si la API no devuelve todo
+  useEffect(() => {
+    if (isEditMode) {
+      try {
+        const storedData = sessionStorage.getItem('currentInvoiceData');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          console.log("Datos recuperados de sessionStorage para edición:", parsedData);
+          // No sobreescribimos los datos de la API si ya los tenemos
+          if (!invoiceData.invoice && parsedData.invoice) {
+            // Utilizar los datos almacenados en lugar de los de la API
+            Object.assign(invoiceData, parsedData);
+          }
+        }
+      } catch (error) {
+        console.error("Error al recuperar datos de sessionStorage:", error);
+      }
+    }
+  }, [isEditMode]);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),

@@ -41,14 +41,28 @@ const InvoiceDetailPage = () => {
   
   const isLoadingAll = isLoading || (data?.invoice?.clientId && clientLoading);
   
+  // En modo edición, pasamos los datos completos a través de sessionStorage
   if (isEditMode) {
+    // Si tenemos los datos disponibles y no están ya en sessionStorage, los guardamos
+    if (data?.invoice && !sessionStorage.getItem('currentInvoiceData')) {
+      sessionStorage.setItem('currentInvoiceData', JSON.stringify({
+        invoice: data.invoice,
+        items: data.items
+      }));
+      console.log("Datos de factura guardados en sessionStorage para edición:", data);
+    }
+    
     return (
       <div>
         <div className="flex items-center mb-6">
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => navigate(`/invoices/${id}`)}
+            onClick={() => {
+              // Limpiar datos al salir del modo edición
+              sessionStorage.removeItem('currentInvoiceData');
+              navigate(`/invoices/${id}`)
+            }}
             className="mr-2"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
