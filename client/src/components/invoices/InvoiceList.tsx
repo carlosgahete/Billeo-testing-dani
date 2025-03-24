@@ -475,7 +475,7 @@ const InvoiceList = () => {
   return (
     <div className="w-full px-2 md:px-4">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <div className="ml-6 md:ml-0">
+        <div className="md:ml-16">
           <h1 className="text-2xl font-bold text-neutral-800">
             Gestión de Facturas
           </h1>

@@ -18,7 +18,7 @@ const CompanyPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="ml-16 md:ml-0">
+      <div className="md:ml-16">
         <h1 className="text-2xl font-bold text-neutral-800">Perfil de empresa</h1>
         <p className="text-neutral-500">
           Gestiona los datos fiscales y de contacto de tu empresa
