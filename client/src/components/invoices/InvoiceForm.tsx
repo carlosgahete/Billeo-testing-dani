@@ -903,40 +903,40 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 Añadir ítem
               </Button>
               
-              <div className="border-t pt-4 flex flex-col items-end">
-                
-                {/* Botones para añadir impuestos alineados a la derecha junto con subtotal e IVA */}
-                <div className="w-full md:w-80 flex justify-end mb-2">
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleAddTax('irpf');
-                      }}
-                      className="text-xs"
-                      title="Añadir retención de IRPF (-15%)"
-                    >
-                      <Minus className="h-3 w-3 mr-1" />
-                      Añadir IRPF
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleAddTax();
-                      }}
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Otro impuesto
-                    </Button>
-                  </div>
+              {/* Botones para añadir impuestos alineados a la derecha antes de la línea */}
+              <div className="w-full flex justify-end mb-4">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      handleAddTax('irpf');
+                    }}
+                    className="text-xs"
+                    title="Añadir retención de IRPF (-15%)"
+                  >
+                    <Minus className="h-3 w-3 mr-1" />
+                    Añadir IRPF
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      handleAddTax();
+                    }}
+                    className="text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Otro impuesto
+                  </Button>
                 </div>
+              </div>
+              
+              <div className="border-t pt-4 flex flex-col items-end">
                 <div className="flex justify-between w-full md:w-80 mb-2">
                   <span className="text-sm text-muted-foreground">Subtotal:</span>
                   <span className="font-medium">
