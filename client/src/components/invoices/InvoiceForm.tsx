@@ -29,6 +29,15 @@ import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
 
+// Función auxiliar para convertir texto a número
+function toNumber(value: any, defaultValue = 0): number {
+  if (value === null || value === undefined || value === '') return defaultValue;
+  if (typeof value === 'number') return value;
+  // Asegurar que las comas se convierten a puntos para operaciones matemáticas
+  const numericValue = parseFloat(String(value).replace(',', '.'));
+  return isNaN(numericValue) ? defaultValue : numericValue;
+}
+
 // Define schema for additional tax
 const additionalTaxSchema = z.object({
   name: z.string().min(1, "El nombre del impuesto es obligatorio"),
@@ -220,14 +229,14 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
 
   // Calculate totals when items change
   const calculateTotals = () => {
-    const items = form.getValues("items");
+    const items = form.getValues("items") || [];
     const additionalTaxes = form.getValues("additionalTaxes") || [];
     
     // Calculate subtotal for each item
     const updatedItems = items.map(item => {
-      // Asegurarnos que tenemos números válidos
-      const quantity = handleNumericField(item.quantity, 0);
-      const unitPrice = handleNumericField(item.unitPrice, 0);
+      // Asegurarnos que tenemos números válidos usando nuestra función toNumber
+      const quantity = toNumber(item.quantity, 0);
+      const unitPrice = toNumber(item.unitPrice, 0);
       const subtotal = quantity * unitPrice;
       
       return {
@@ -242,9 +251,9 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     form.setValue("items", updatedItems);
     
     // Calculate invoice totals
-    const subtotal = updatedItems.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+    const subtotal = updatedItems.reduce((sum, item) => sum + toNumber(item.subtotal, 0), 0);
     const tax = updatedItems.reduce((sum, item) => {
-      const itemTax = (item.subtotal || 0) * (parseFloat(String(item.taxRate)) / 100);
+      const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
       return sum + itemTax;
     }, 0);
     
@@ -255,11 +264,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     additionalTaxes.forEach(taxItem => {
       if (taxItem.isPercentage) {
         // Si es un porcentaje, calculamos en base al subtotal
-        const percentageTax = subtotal * (parseFloat(String(taxItem.amount)) / 100);
+        const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
         additionalTaxesTotal += percentageTax;
       } else {
         // Si es un valor monetario, lo añadimos directamente
-        additionalTaxesTotal += parseFloat(String(taxItem.amount)) || 0;
+        additionalTaxesTotal += toNumber(taxItem.amount, 0);
       }
     });
     
@@ -287,21 +296,10 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     setAttachments([...attachments, path]);
   };
 
-  // Función para manejar entradas numéricas
-  const handleNumericField = (value: any, defaultValue: number = 0): number => {
-    if (typeof value === 'number') return value;
-    
-    const stringValue = String(value || "");
-    if (stringValue === "") return defaultValue;
-    
-    const parsed = parseFloat(stringValue);
-    return isNaN(parsed) ? defaultValue : parsed;
-  };
-  
   // Función para manejar el evento onBlur en campos numéricos
   const handleNumericBlur = (field: any, defaultValue: number = 0) => {
     return (e: React.FocusEvent<HTMLInputElement>) => {
-      const numericValue = handleNumericField(field.value, defaultValue);
+      const numericValue = toNumber(field.value, defaultValue);
       if (numericValue > 0 || field.value !== "") {
         field.onChange(numericValue.toString());
       }
@@ -582,14 +580,14 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                               <Input
                                 type="text"
                                 placeholder="Cantidad"
-                                {...field}
+                                value={field.value || ''}
                                 onChange={(e) => {
-                                  // Permitir entrada de cualquier carácter de número y puntos/comas
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
+                                }}
+                                onBlur={(e) => {
                                   calculateTotals();
                                 }}
-                                onBlur={handleNumericBlur(field)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -611,14 +609,14 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                               <Input
                                 type="text"
                                 placeholder="Precio"
-                                {...field}
+                                value={field.value || ''}
                                 onChange={(e) => {
-                                  // Permitir entrada de cualquier carácter de número y puntos/comas
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
+                                }}
+                                onBlur={(e) => {
                                   calculateTotals();
                                 }}
-                                onBlur={handleNumericBlur(field)}
                               />
                             </FormControl>
                             <FormMessage />
