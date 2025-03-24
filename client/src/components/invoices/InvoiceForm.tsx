@@ -1091,13 +1091,13 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 </div>
                 
                 {/* Mostrar impuestos adicionales */}
-                {additionalTaxes.map((tax, index) => (
-                  <div key={index} className="flex justify-between w-full md:w-80 mb-2">
-                    <span className="text-sm text-muted-foreground">{tax.name}:</span>
+                {taxFields.map((field, index) => (
+                  <div key={field.id} className="flex justify-between w-full md:w-80 mb-2">
+                    <span className="text-sm text-muted-foreground">{field.name}:</span>
                     <span className="font-medium">
-                      {tax.isPercentage 
-                        ? `${tax.amount.toFixed(2)}% (${((form.getValues("subtotal") * tax.amount) / 100).toFixed(2)} €)`
-                        : `${tax.amount.toFixed(2)} €`}
+                      {field.isPercentage 
+                        ? `${field.amount.toFixed(2)}% (${((form.getValues("subtotal") * field.amount) / 100).toFixed(2)} €)`
+                        : `${field.amount.toFixed(2)} €`}
                     </span>
                   </div>
                 ))}
