@@ -99,14 +99,30 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
+  // Estado local para almacenar datos combinados
+  const [combinedData, setCombinedData] = useState<{ invoice: any; items: any[] }>({ invoice: null, items: [] });
+  
   // Fetch invoice data if in edit mode
-  const { data: invoiceData = { invoice: null, items: [] }, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
+  const { data: apiInvoiceData, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
   });
   
-  // Intentar obtener datos del sessionStorage si estamos en modo de edición
-  // Esto permite conservar todos los datos de la factura incluso si la API no devuelve todo
+  // Actualizar el estado combinado cuando lleguen datos de la API
+  useEffect(() => {
+    if (apiInvoiceData && apiInvoiceData.invoice) {
+      console.log("Datos recibidos de la API:", apiInvoiceData);
+      setCombinedData(prevData => ({
+        ...apiInvoiceData,
+        // Mantener los items anteriores si no hay nuevos o si están vacíos
+        items: apiInvoiceData.items && apiInvoiceData.items.length > 0 
+          ? apiInvoiceData.items 
+          : prevData.items
+      }));
+    }
+  }, [apiInvoiceData]);
+  
+  // Intentar obtener datos del sessionStorage al montar el componente
   useEffect(() => {
     if (isEditMode) {
       try {
@@ -114,17 +130,32 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         if (storedData) {
           const parsedData = JSON.parse(storedData);
           console.log("Datos recuperados de sessionStorage para edición:", parsedData);
-          // No sobreescribimos los datos de la API si ya los tenemos
-          if (!invoiceData.invoice && parsedData.invoice) {
-            // Utilizar los datos almacenados en lugar de los de la API
-            Object.assign(invoiceData, parsedData);
-          }
+          
+          // Actualizar el estado combinado con los datos de sessionStorage
+          setCombinedData(prevData => {
+            // Si ya tenemos datos de la API (prevData), combinamos con sessionStorage
+            // dando prioridad a sessionStorage para campos críticos
+            const result = {
+              invoice: {
+                ...(prevData.invoice || {}),
+                ...(parsedData.invoice || {}),
+              },
+              items: parsedData.items && parsedData.items.length > 0 
+                ? parsedData.items 
+                : prevData.items || []
+            };
+            
+            console.log("Datos combinados de API y sessionStorage:", result);
+            return result;
+          });
         }
       } catch (error) {
         console.error("Error al recuperar datos de sessionStorage:", error);
       }
     }
   }, [isEditMode]);
+  
+  // Este efecto ya lo tenemos más arriba, así que se elimina para evitar duplicidad
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -154,13 +185,14 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     },
   });
 
-  // Initialize form with invoice data when loaded
+  // Initialize form with combined data
   useEffect(() => {
-    if (invoiceData && !invoiceLoading && invoiceData.invoice) {
-      const { invoice, items } = invoiceData;
+    if (isEditMode && combinedData.invoice) {
+      const { invoice, items } = combinedData;
       
       // Aseguramos que las fechas estén en formato YYYY-MM-DD
       const formatDateForInput = (dateString: string) => {
+        if (!dateString) return new Date().toISOString().split("T")[0];
         try {
           const date = new Date(dateString);
           return date.toISOString().split("T")[0];
@@ -174,7 +206,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       const formattedInvoice = {
         ...invoice,
         invoiceNumber: invoice.invoiceNumber || "",
-        clientId: invoice.clientId,
+        clientId: invoice.clientId || 0,
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
@@ -195,11 +227,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           invoice.additionalTaxes.map((tax: any) => ({
             name: tax.name || "",
             amount: Number(tax.amount || 0),
-            isPercentage: tax.isPercentage || false
+            isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
           })) : []
       };
       
-      console.log("Cargando datos de factura existente:", formattedInvoice);
+      console.log("Cargando datos combinados en el formulario:", formattedInvoice);
       
       // Actualizar el formulario con los datos formateados
       form.reset(formattedInvoice);
@@ -214,7 +246,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         calculateTotals();
       }, 200);
     }
-  }, [invoiceData, invoiceLoading, form]);
+  }, [combinedData, isEditMode, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -286,10 +318,10 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         // y no perder información existente
         console.log("Actualizando factura existente - ID:", invoiceId);
         
-        // Obtenemos todos los datos originales
-        const originalInvoice = invoiceData?.invoice || {};
+        // Obtenemos los datos combinados como fuente original
+        const originalInvoice = combinedData.invoice || {};
         
-        // Creamos una copia de la factura original y sobrescribimos con los nuevos valores
+        // Creamos una copia de la factura combinada y sobrescribimos con los nuevos valores
         // así mantenemos campos que podrían no estar en el formulario
         const completeInvoiceData = {
           ...originalInvoice,
