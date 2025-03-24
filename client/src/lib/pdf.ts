@@ -1,5 +1,5 @@
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface AdditionalTax {
   name: string;
@@ -105,7 +105,7 @@ export async function generateInvoicePDF(
   doc.text("DETALLES DE LA FACTURA", 14, 110);
   
   // Create the table with items
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: 115,
     head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
     body: items.map(item => [
@@ -128,7 +128,8 @@ export async function generateInvoicePDF(
   });
   
   // Add totals
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  // @ts-ignore
+  const finalY = doc.lastAutoTable.finalY + 10;
   let yOffset = 0;
   
   doc.setFontSize(10);
@@ -258,7 +259,7 @@ export async function generateReportPDF(
   doc.text(`Fecha de generación: ${formatDate(new Date().toISOString())}`, 14, 50);
   
   // Create the table with data
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: 60,
     head: [['Concepto', 'Importe']],
     body: data.map(item => [
@@ -275,7 +276,8 @@ export async function generateReportPDF(
   });
   
   // Add totals
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  // @ts-ignore
+  const finalY = doc.lastAutoTable.finalY + 10;
   const total = data.reduce((sum, item) => sum + Number(item.value), 0);
   
   doc.setFontSize(12);
