@@ -32,7 +32,8 @@ import { ClientForm } from "../clients/ClientForm";
 // Define schema for additional tax
 const additionalTaxSchema = z.object({
   name: z.string().min(1, "El nombre del impuesto es obligatorio"),
-  amount: z.coerce.number().min(0, "El importe del impuesto debe ser mayor o igual a 0")
+  amount: z.coerce.number(), // Permitimos valores negativos para representar retenciones (como el IRPF)
+  isPercentage: z.boolean().default(false) // Indica si es un porcentaje o un valor fijo
 });
 
 // Define schema for line items
@@ -243,7 +244,19 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     }, 0);
     
     // Calcular el importe total de impuestos adicionales
-    const additionalTaxesTotal = additionalTaxes.reduce((sum, tax) => sum + Number(tax.amount), 0);
+    let additionalTaxesTotal = 0;
+    
+    // Procesamos cada impuesto adicional según su tipo
+    additionalTaxes.forEach(taxItem => {
+      if (taxItem.isPercentage) {
+        // Si es un porcentaje, calculamos en base al subtotal
+        const percentageTax = subtotal * (Number(taxItem.amount) / 100);
+        additionalTaxesTotal += percentageTax;
+      } else {
+        // Si es un valor monetario, lo añadimos directamente
+        additionalTaxesTotal += Number(taxItem.amount);
+      }
+    });
     
     // Calcular el total incluyendo todos los impuestos
     const total = subtotal + tax + additionalTaxesTotal;
@@ -270,8 +283,30 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   };
 
   // Función para agregar un nuevo impuesto adicional
-  const handleAddTax = () => {
-    appendTax({ name: "", amount: 0 });
+  const handleAddTax = (taxType?: string) => {
+    // Si se especifica un tipo de impuesto, lo añadimos preconfigurado
+    if (taxType === 'irpf') {
+      // IRPF predeterminado (-15%)
+      appendTax({ 
+        name: "IRPF", 
+        amount: -15, 
+        isPercentage: true 
+      });
+    } else if (taxType === 'iva') {
+      // IVA adicional (21%)
+      appendTax({ 
+        name: "IVA adicional", 
+        amount: 21, 
+        isPercentage: true 
+      });
+    } else {
+      // Impuesto genérico (valor monetario)
+      appendTax({ 
+        name: "", 
+        amount: 0,
+        isPercentage: false 
+      });
+    }
     // Recalcular totales después de agregar impuesto
     setTimeout(() => calculateTotals(), 0);
   };
@@ -675,20 +710,35 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                   <div className="w-full md:w-80 mt-2">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-muted-foreground">Impuestos adicionales:</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleAddTax}
-                        className="h-7 px-2"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        <span className="text-xs">Añadir</span>
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            handleAddTax('irpf');
+                          }}
+                          className="h-7 px-2"
+                          title="Añadir retención de IRPF (-15%)"
+                        >
+                          <span className="text-xs">+ IRPF</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleAddTax()}
+                          className="h-7 px-2"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          <span className="text-xs">Añadir</span>
+                        </Button>
+                      </div>
                     </div>
                     
                     {taxFields.map((field, index) => (
-                      <div key={field.id} className="mb-2 pl-2 border-l-2 border-muted">
+                      <div key={field.id} className="mb-4 pl-2 border-l-2 border-muted">
                         <div className="grid grid-cols-12 gap-2 items-center">
                           <div className="col-span-5">
                             <FormField
@@ -717,18 +767,46 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                 <FormItem className="space-y-1">
                                   <FormLabel className="sr-only">Importe</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      type="number" 
-                                      placeholder="Importe" 
-                                      min="0"
-                                      step="0.01"
-                                      {...field} 
-                                      onChange={(e) => {
-                                        field.onChange(parseFloat(e.target.value));
-                                        calculateTotals();
-                                      }}
-                                      className="h-8 text-sm"
-                                    />
+                                    <div className="flex items-center">
+                                      <Input 
+                                        type="number" 
+                                        placeholder="Importe"
+                                        step="0.01"
+                                        {...field} 
+                                        onChange={(e) => {
+                                          field.onChange(parseFloat(e.target.value));
+                                          calculateTotals();
+                                        }}
+                                        className="h-8 text-sm"
+                                      />
+                                      
+                                      {/* Indicador de porcentaje o euros */}
+                                      <div className="ml-1">
+                                        <FormField
+                                          control={form.control}
+                                          name={`additionalTaxes.${index}.isPercentage`}
+                                          render={({ field }) => (
+                                            <FormItem className="space-y-0">
+                                              <FormLabel className="sr-only">Tipo</FormLabel>
+                                              <FormControl>
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() => {
+                                                    field.onChange(!field.value);
+                                                    calculateTotals();
+                                                  }}
+                                                  className="h-8 px-2 text-xs font-normal"
+                                                >
+                                                  {field.value ? '%' : '€'}
+                                                </Button>
+                                              </FormControl>
+                                            </FormItem>
+                                          )}
+                                        />
+                                      </div>
+                                    </div>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -736,15 +814,6 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                             />
                           </div>
                           
-                          {/* Mostrar el valor actual en euros después del campo */}
-                          <div className="col-span-12 pl-5 -mt-1">
-                            <span className="text-xs text-muted-foreground">
-                              {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
-                              <span className="font-medium ml-1">
-                                {Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €
-                              </span>
-                            </span>
-                          </div>
                           <div className="col-span-2 text-right">
                             <Button
                               type="button"
@@ -760,24 +829,48 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                               <span className="sr-only">Eliminar impuesto</span>
                             </Button>
                           </div>
+                          
+                          {/* Mostrar el valor calculado después del campo */}
+                          <div className="col-span-12 pl-5 -mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
+                              <span className="font-medium ml-1">
+                                {form.getValues(`additionalTaxes.${index}.isPercentage`) 
+                                  ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
+                                  : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
+                                }
+                              </span>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
                 
-                {/* Botón para añadir impuesto cuando no hay ninguno */}
+                {/* Botones para añadir impuestos cuando no hay ninguno */}
                 {taxFields.length === 0 && (
-                  <div className="w-full md:w-80 my-2">
+                  <div className="w-full md:w-80 my-2 grid grid-cols-2 gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={handleAddTax}
-                      className="w-full text-xs"
+                      onClick={() => handleAddTax('irpf')}
+                      className="text-xs"
+                      title="Añadir retención de IRPF (-15%)"
+                    >
+                      <Minus className="h-3 w-3 mr-1" />
+                      Añadir IRPF
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddTax()}
+                      className="text-xs"
                     >
                       <Plus className="h-3 w-3 mr-1" />
-                      Añadir impuesto adicional
+                      Otro impuesto
                     </Button>
                   </div>
                 )}
