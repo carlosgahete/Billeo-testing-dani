@@ -93,18 +93,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/session", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+        return res.status(200).json({ authenticated: false });
       }
       
       const user = await storage.getUser(req.session.userId);
       
       if (!user) {
-        return res.status(401).json({ message: "User not found" });
+        return res.status(200).json({ authenticated: false });
       }
       
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
-      return res.status(200).json(userWithoutPassword);
+      return res.status(200).json({
+        authenticated: true,
+        user: userWithoutPassword
+      });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
