@@ -1,0 +1,40 @@
+Quiero desarrollar una app web con las siguientes funcionalidades:
+	1.	Gestión de facturas:
+	•	Los usuarios deben poder crear, editar y gestionar facturas. Cada factura debe incluir:
+	•	Datos del cliente (nombre, NIF, dirección).
+	•	Detalles de productos o servicios (nombre, precio, cantidad).
+	•	Impuestos aplicables (IVA, IRPF, etc.).
+	•	Fecha de emisión.
+	•	Estado de la factura (pagada, pendiente, cancelada).
+	•	Debe haber una opción para adjuntar documentos (como PDFs de las facturas).
+	•	Los usuarios podrán generar facturas automáticas a partir de plantillas predefinidas o de la información previamente guardada.
+	2.	Control de ingresos y gastos:
+	•	Los usuarios deben poder registrar sus ingresos y gastos.
+	•	Cada registro debe incluir:
+	•	Descripción del ingreso o gasto.
+	•	Categoría (por ejemplo, oficina, sueldos, suministros, etc.).
+	•	Monto.
+	•	Fecha de la transacción.
+	•	Método de pago (transferencia, efectivo, tarjeta, etc.).
+	•	Los usuarios pueden adjuntar documentos relacionados (como tickets, facturas de compras, etc.).
+	3.	Generación de informes:
+	•	Los usuarios deben poder ver informes de sus finanzas, como:
+	•	Informe de ingresos y gastos: Un resumen mensual, trimestral o anual.
+	•	Informe de impuestos: Detalles sobre los impuestos a pagar (IVA, IRPF, etc.), con los montos calculados automáticamente a partir de las facturas y los registros de ingresos/gastos.
+	•	Los informes deben ser exportables en PDF.
+	4.	Dashboard de usuario:
+	•	El usuario tendrá un panel de control donde puede ver:
+	•	Un resumen de las facturas recientes.
+	•	Ingresos y gastos destacados.
+	•	El estado de sus impuestos.
+	•	Notificaciones sobre tareas o pagos pendientes.
+	•	Este panel debe ser fácil de navegar y tener una interfaz clara y sencilla.
+	5.	Configuración de usuarios y empresas:
+	•	Los usuarios podrán crear un perfil de empresa, donde se guarden detalles como:
+	•	Nombre de la empresa.
+	•	CIF/NIF.
+	•	Dirección fiscal.
+	•	Información de contacto.
+	•	El sistema también debe permitir agregar diferentes roles de usuario (por ejemplo, contable, administrador), con permisos específicos.
+	6.	Sin conexión con bancos:
+	•	La app no tendrá conexión directa con bancos, pero permitirá la importación manual de movimientos bancarios en formato CSV o similar para poder conciliar gastos e ingresos.
