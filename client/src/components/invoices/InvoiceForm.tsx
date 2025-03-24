@@ -298,6 +298,17 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     return isNaN(parsed) ? defaultValue : parsed;
   };
   
+  // Función para manejar el evento onBlur en campos numéricos
+  const handleNumericBlur = (field: any, defaultValue: number = 0) => {
+    return (e: React.FocusEvent<HTMLInputElement>) => {
+      const numericValue = handleNumericField(field.value, defaultValue);
+      if (numericValue > 0 || field.value !== "") {
+        field.onChange(numericValue.toString());
+      }
+      calculateTotals();
+    };
+  };
+  
   // Función para agregar un nuevo impuesto adicional
   const handleAddTax = (taxType?: string) => {
     // Si se especifica un tipo de impuesto, lo añadimos preconfigurado
@@ -578,15 +589,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                   field.onChange(value);
                                   calculateTotals();
                                 }}
-                                onBlur={(e) => {
-                                  // Al perder el foco, aseguramos que sea un número válido
-                                  let value = field.value;
-                                  if (value !== "" && !isNaN(parseFloat(value))) {
-                                    const numericValue = parseFloat(value);
-                                    field.onChange(numericValue.toString());
-                                  }
-                                  calculateTotals();
-                                }}
+                                onBlur={handleNumericBlur(field)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -615,15 +618,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                   field.onChange(value);
                                   calculateTotals();
                                 }}
-                                onBlur={(e) => {
-                                  // Al perder el foco, aseguramos que sea un número válido
-                                  let value = field.value;
-                                  if (value !== "" && !isNaN(parseFloat(value))) {
-                                    const numericValue = parseFloat(value);
-                                    field.onChange(numericValue.toString());
-                                  }
-                                  calculateTotals();
-                                }}
+                                onBlur={handleNumericBlur(field)}
                               />
                             </FormControl>
                             <FormMessage />
