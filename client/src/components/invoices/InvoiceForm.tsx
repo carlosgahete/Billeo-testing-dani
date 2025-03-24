@@ -903,8 +903,8 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 Añadir ítem
               </Button>
               
-              {/* Botones para añadir impuestos directamente debajo de los ítems */}
-              <div className="w-full my-2 mb-6">
+              {/* Botones para añadir impuestos directamente debajo de los ítems - alineados a la derecha */}
+              <div className="w-full my-2 mb-6 flex justify-end">
                 <div className="flex gap-2">
                   <Button
                     type="button"
