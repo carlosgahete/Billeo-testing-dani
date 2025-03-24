@@ -192,7 +192,7 @@ const Dashboard = () => {
             </div>
             
             <Button 
-              variant="outline" 
+              variant="default" 
               size="sm" 
               className="w-full mt-4"
               onClick={() => navigate("/invoices")}
@@ -239,7 +239,7 @@ const Dashboard = () => {
             </div>
             
             <Button 
-              variant="outline" 
+              variant="default" 
               size="sm" 
               className="w-full mt-4"
               onClick={() => navigate("/transactions")}
@@ -302,7 +302,7 @@ const Dashboard = () => {
             </div>
             
             <Button 
-              variant="outline"
+              variant="default"
               size="sm" 
               className="w-full mt-6"
               onClick={() => navigate("/reports")}

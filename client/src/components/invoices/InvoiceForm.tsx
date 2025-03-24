@@ -588,7 +588,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={mutation.isPending}>
+          <Button type="submit" variant="default" disabled={mutation.isPending}>
             {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
           </Button>
         </div>
