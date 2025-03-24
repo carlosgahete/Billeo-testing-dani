@@ -955,21 +955,6 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                   <div className="w-full md:w-80 mt-2">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-muted-foreground">Impuestos adicionales:</span>
-                      <div className="flex gap-1">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => { 
-                            e.preventDefault(); 
-                            handleAddTax('iva');
-                          }}
-                          className="h-7 px-2"
-                          title="Añadir IVA adicional (21%)"
-                        >
-                          <span className="text-xs">+ IVA</span>
-                        </Button>
-                      </div>
                     </div>
                     
                     {taxFields.map((field, index) => (
