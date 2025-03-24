@@ -226,8 +226,8 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     // Calculate subtotal for each item
     const updatedItems = items.map(item => {
       // Asegurarnos que tenemos números válidos
-      const quantity = parseFloat(item.quantity) || 0;
-      const unitPrice = parseFloat(item.unitPrice) || 0;
+      const quantity = handleNumericField(item.quantity, 0);
+      const unitPrice = handleNumericField(item.unitPrice, 0);
       const subtotal = quantity * unitPrice;
       
       return {
@@ -244,7 +244,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     // Calculate invoice totals
     const subtotal = updatedItems.reduce((sum, item) => sum + (item.subtotal || 0), 0);
     const tax = updatedItems.reduce((sum, item) => {
-      const itemTax = (item.subtotal || 0) * (parseFloat(item.taxRate) / 100);
+      const itemTax = (item.subtotal || 0) * (parseFloat(String(item.taxRate)) / 100);
       return sum + itemTax;
     }, 0);
     
@@ -255,11 +255,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     additionalTaxes.forEach(taxItem => {
       if (taxItem.isPercentage) {
         // Si es un porcentaje, calculamos en base al subtotal
-        const percentageTax = subtotal * (parseFloat(taxItem.amount) / 100);
+        const percentageTax = subtotal * (parseFloat(String(taxItem.amount)) / 100);
         additionalTaxesTotal += percentageTax;
       } else {
         // Si es un valor monetario, lo añadimos directamente
-        additionalTaxesTotal += parseFloat(taxItem.amount) || 0;
+        additionalTaxesTotal += parseFloat(String(taxItem.amount)) || 0;
       }
     });
     
@@ -287,6 +287,17 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     setAttachments([...attachments, path]);
   };
 
+  // Función para manejar entradas numéricas
+  const handleNumericField = (value: any, defaultValue: number = 0): number => {
+    if (typeof value === 'number') return value;
+    
+    const stringValue = String(value || "");
+    if (stringValue === "") return defaultValue;
+    
+    const parsed = parseFloat(stringValue);
+    return isNaN(parsed) ? defaultValue : parsed;
+  };
+  
   // Función para agregar un nuevo impuesto adicional
   const handleAddTax = (taxType?: string) => {
     // Si se especifica un tipo de impuesto, lo añadimos preconfigurado
@@ -569,8 +580,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                 }}
                                 onBlur={(e) => {
                                   // Al perder el foco, aseguramos que sea un número válido
-                                  const numericValue = parseFloat(field.value) || 0;
-                                  field.onChange(numericValue.toString());
+                                  let value = field.value;
+                                  if (value !== "" && !isNaN(parseFloat(value))) {
+                                    const numericValue = parseFloat(value);
+                                    field.onChange(numericValue.toString());
+                                  }
                                   calculateTotals();
                                 }}
                               />
@@ -603,8 +617,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                 }}
                                 onBlur={(e) => {
                                   // Al perder el foco, aseguramos que sea un número válido
-                                  const numericValue = parseFloat(field.value) || 0;
-                                  field.onChange(numericValue.toString());
+                                  let value = field.value;
+                                  if (value !== "" && !isNaN(parseFloat(value))) {
+                                    const numericValue = parseFloat(value);
+                                    field.onChange(numericValue.toString());
+                                  }
                                   calculateTotals();
                                 }}
                               />
