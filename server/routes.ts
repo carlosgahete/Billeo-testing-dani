@@ -497,12 +497,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Received items data:", JSON.stringify(items, null, 2));
       
       // Asegurar que todos los campos requeridos estén presentes
+      // Convertir las cadenas de fecha ISO en objetos Date
       const invoiceData = {
         ...invoice,
         userId: req.session.userId,
         status: invoice.status || "pending",
         notes: invoice.notes ?? null,
-        attachments: invoice.attachments ?? null
+        attachments: invoice.attachments ?? null,
+        // Convertir explícitamente las fechas de string a Date
+        issueDate: invoice.issueDate ? new Date(invoice.issueDate) : new Date(),
+        dueDate: invoice.dueDate ? new Date(invoice.dueDate) : new Date()
       };
       
       console.log("Processed invoice data:", JSON.stringify(invoiceData, null, 2));
@@ -559,7 +563,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { invoice: invoiceData, items } = req.body;
       
-      const invoiceResult = insertInvoiceSchema.partial().safeParse(invoiceData);
+      // Convertir las fechas de string a Date
+      const processedData = {
+        ...invoiceData,
+        // Convertir explícitamente las fechas de string a Date si están presentes
+        issueDate: invoiceData.issueDate ? new Date(invoiceData.issueDate) : undefined,
+        dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : undefined
+      };
+      
+      const invoiceResult = insertInvoiceSchema.partial().safeParse(processedData);
       
       if (!invoiceResult.success) {
         return res.status(400).json({ 
