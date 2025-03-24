@@ -936,6 +936,125 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 </div>
               </div>
               
+              
+              {/* Sección de impuestos adicionales - ahora directamente bajo los botones */}
+              {taxFields.length > 0 && (
+                <div className="w-full mt-4 mb-6 border-t border-b py-4">
+                  <div className="mb-2">
+                    <span className="text-sm font-medium">Impuestos adicionales:</span>
+                  </div>
+                  
+                  {taxFields.map((field, index) => (
+                    <div key={field.id} className="mb-4 pl-2 border-l-2 border-muted">
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-5">
+                          <FormField
+                            control={form.control}
+                            name={`additionalTaxes.${index}.name`}
+                            render={({ field }) => (
+                              <FormItem className="space-y-1">
+                                <FormLabel className="sr-only">Nombre</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Nombre" 
+                                    {...field} 
+                                    className="h-8 text-sm"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="col-span-5">
+                          <FormField
+                            control={form.control}
+                            name={`additionalTaxes.${index}.amount`}
+                            render={({ field }) => (
+                              <FormItem className="space-y-1">
+                                <FormLabel className="sr-only">Importe</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center">
+                                    <Input 
+                                      type="number" 
+                                      placeholder="Importe"
+                                      step="0.01"
+                                      {...field} 
+                                      onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value));
+                                        calculateTotals();
+                                      }}
+                                      className="h-8 text-sm"
+                                    />
+                                    
+                                    {/* Indicador de porcentaje o euros */}
+                                    <div className="ml-1">
+                                      <FormField
+                                        control={form.control}
+                                        name={`additionalTaxes.${index}.isPercentage`}
+                                        render={({ field }) => (
+                                          <FormItem className="space-y-0">
+                                            <FormLabel className="sr-only">Tipo</FormLabel>
+                                            <FormControl>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  field.onChange(!field.value);
+                                                  calculateTotals();
+                                                }}
+                                                className="h-8 px-2 text-xs font-normal"
+                                              >
+                                                {field.value ? '%' : '€'}
+                                              </Button>
+                                            </FormControl>
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="col-span-2 text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              removeTax(index);
+                              calculateTotals();
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span className="sr-only">Eliminar impuesto</span>
+                          </Button>
+                        </div>
+                        
+                        {/* Mostrar el valor calculado después del campo */}
+                        <div className="col-span-12 pl-5 -mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
+                            <span className="font-medium ml-1">
+                              {form.getValues(`additionalTaxes.${index}.isPercentage`) 
+                                ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
+                                : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
+                              }
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <div className="border-t pt-4 flex flex-col items-end">
                 <div className="flex justify-between w-full md:w-80 mb-2">
                   <span className="text-sm text-muted-foreground">Subtotal:</span>
@@ -950,125 +1069,6 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                   </span>
                 </div>
                 
-                {/* Sección de impuestos adicionales */}
-                {taxFields.length > 0 && (
-                  <div className="w-full md:w-80 mt-2">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-muted-foreground">Impuestos adicionales:</span>
-                    </div>
-                    
-                    {taxFields.map((field, index) => (
-                      <div key={field.id} className="mb-4 pl-2 border-l-2 border-muted">
-                        <div className="grid grid-cols-12 gap-2 items-center">
-                          <div className="col-span-5">
-                            <FormField
-                              control={form.control}
-                              name={`additionalTaxes.${index}.name`}
-                              render={({ field }) => (
-                                <FormItem className="space-y-1">
-                                  <FormLabel className="sr-only">Nombre</FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Nombre" 
-                                      {...field} 
-                                      className="h-8 text-sm"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="col-span-5">
-                            <FormField
-                              control={form.control}
-                              name={`additionalTaxes.${index}.amount`}
-                              render={({ field }) => (
-                                <FormItem className="space-y-1">
-                                  <FormLabel className="sr-only">Importe</FormLabel>
-                                  <FormControl>
-                                    <div className="flex items-center">
-                                      <Input 
-                                        type="number" 
-                                        placeholder="Importe"
-                                        step="0.01"
-                                        {...field} 
-                                        onChange={(e) => {
-                                          field.onChange(parseFloat(e.target.value));
-                                          calculateTotals();
-                                        }}
-                                        className="h-8 text-sm"
-                                      />
-                                      
-                                      {/* Indicador de porcentaje o euros */}
-                                      <div className="ml-1">
-                                        <FormField
-                                          control={form.control}
-                                          name={`additionalTaxes.${index}.isPercentage`}
-                                          render={({ field }) => (
-                                            <FormItem className="space-y-0">
-                                              <FormLabel className="sr-only">Tipo</FormLabel>
-                                              <FormControl>
-                                                <Button
-                                                  type="button"
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  onClick={() => {
-                                                    field.onChange(!field.value);
-                                                    calculateTotals();
-                                                  }}
-                                                  className="h-8 px-2 text-xs font-normal"
-                                                >
-                                                  {field.value ? '%' : '€'}
-                                                </Button>
-                                              </FormControl>
-                                            </FormItem>
-                                          )}
-                                        />
-                                      </div>
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="col-span-2 text-right">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                removeTax(index);
-                                calculateTotals();
-                              }}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              <span className="sr-only">Eliminar impuesto</span>
-                            </Button>
-                          </div>
-                          
-                          {/* Mostrar el valor calculado después del campo */}
-                          <div className="col-span-12 pl-5 -mt-1">
-                            <span className="text-xs text-muted-foreground">
-                              {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
-                              <span className="font-medium ml-1">
-                                {form.getValues(`additionalTaxes.${index}.isPercentage`) 
-                                  ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
-                                  : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
-                                }
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-
                 <div className="flex justify-between w-full md:w-80 text-lg font-bold">
                   <span>Total:</span>
                   <span>{form.getValues("total").toFixed(2)} €</span>
