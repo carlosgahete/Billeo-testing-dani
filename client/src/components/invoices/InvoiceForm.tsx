@@ -107,6 +107,35 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const queryClient = useQueryClient();
   
   const isEditMode = !!invoiceId;
+  
+  // Mutation para eliminar clientes
+  const deleteClientMutation = useMutation({
+    mutationFn: async (clientId: number) => {
+      return await apiRequest(`/api/clients/${clientId}`, "DELETE");
+    },
+    onSuccess: () => {
+      // Invalidar consultas de clientes para actualizar la lista
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      
+      toast({
+        title: "Cliente eliminado",
+        description: "El cliente ha sido eliminado correctamente",
+      });
+    },
+    onError: (error) => {
+      console.error("Error al eliminar cliente:", error);
+      toast({
+        title: "Error",
+        description: `No se pudo eliminar el cliente: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Función para eliminar un cliente
+  const deleteClient = (clientId: number) => {
+    deleteClientMutation.mutate(clientId);
+  };
 
   // Fetch clients for dropdown
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
@@ -553,11 +582,32 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                   <SelectValue placeholder="Seleccionar cliente" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
+                              <SelectContent className="max-h-60">
                                 {clients?.map((client: any) => (
-                                  <SelectItem key={client.id} value={client.id.toString()}>
-                                    {client.name}
-                                  </SelectItem>
+                                  <div key={client.id} className="flex items-center justify-between p-1 px-2 hover:bg-muted/50 rounded-sm group">
+                                    <SelectItem value={client.id.toString()} className="flex-1 data-[highlighted]:bg-transparent">
+                                      <div className="flex flex-col">
+                                        <span>{client.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {client.taxId} - {client.city || client.address}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="ml-2 p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm(`¿Estás seguro de que deseas eliminar el cliente ${client.name}?`)) {
+                                          deleteClient(client.id);
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </div>
                                 ))}
                                 {clients?.length === 0 && (
                                   <div className="px-2 py-3 text-sm text-muted-foreground">
