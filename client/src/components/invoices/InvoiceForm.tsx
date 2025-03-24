@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trash2, Plus, FileText } from "lucide-react";
+import { Trash2, Plus, FileText, Minus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -728,7 +728,10 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAddTax()}
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            handleAddTax();
+                          }}
                           className="h-7 px-2"
                         >
                           <Plus className="h-3 w-3 mr-1" />
@@ -855,7 +858,10 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAddTax('irpf')}
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax('irpf');
+                      }}
                       className="text-xs"
                       title="Añadir retención de IRPF (-15%)"
                     >
@@ -866,7 +872,10 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAddTax()}
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax();
+                      }}
                       className="text-xs"
                     >
                       <Plus className="h-3 w-3 mr-1" />
