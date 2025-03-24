@@ -136,7 +136,7 @@ const InvoiceDetailPage = () => {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Volver
           </Button>
-          <div>
+          <div className="ml-3 md:ml-0">
             <h1 className="text-2xl font-bold text-neutral-800">
               Factura: {invoice.invoiceNumber}
             </h1>

@@ -195,7 +195,7 @@ const SettingsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="ml-16 md:ml-0">
         <h1 className="text-2xl font-bold text-neutral-800">Configuración</h1>
         <p className="text-neutral-500">
           Gestiona tu cuenta y tus preferencias

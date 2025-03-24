@@ -17,7 +17,7 @@ const CreateInvoicePage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-neutral-800 mb-6">Crear nueva factura</h1>
+      <h1 className="text-2xl font-bold text-neutral-800 mb-6 ml-16 md:ml-0">Crear nueva factura</h1>
       <InvoiceForm />
     </div>
   );
