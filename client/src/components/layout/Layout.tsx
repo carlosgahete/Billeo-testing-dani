@@ -58,7 +58,7 @@ const Layout = ({ children }: LayoutProps) => {
               </svg>
             </button>
           )}
-          <div className={`p-4 lg:p-6 transition-all duration-300 ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
+          <div className={`p-4 lg:p-6 transition-all duration-300 ${!isMobile && !sidebarOpen ? 'ml-0' : ''} ${isMobile ? 'pl-12' : ''}`}>
             {children}
           </div>
         </main>
