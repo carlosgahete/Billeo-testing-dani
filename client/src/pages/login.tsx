@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import billeoLogo from '../assets/billeo-logo.png';
 
 const LoginPage = () => {
   const [, navigate] = useLocation();
@@ -44,15 +45,15 @@ const LoginPage = () => {
 
       if (response) {
         toast({
-          title: "Login successful",
-          description: "Welcome to the financial management system",
+          title: "Inicio de sesión exitoso",
+          description: "Bienvenido al sistema de gestión financiera",
         });
         navigate("/");
       }
     } catch (error) {
       toast({
-        title: "Login failed",
-        description: "Invalid username or password",
+        title: "Error de inicio de sesión",
+        description: "Usuario o contraseña incorrectos",
         variant: "destructive",
       });
     } finally {
@@ -63,18 +64,22 @@ const LoginPage = () => {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">
-            Billeo
-          </CardTitle>
+        <CardHeader className="space-y-3 text-center">
+          <div className="flex justify-center">
+            <img 
+              src={billeoLogo} 
+              alt="Billeo Logo" 
+              className="h-14"
+            />
+          </div>
           <p className="text-sm text-neutral-500">
-            Enter your credentials to access your account
+            Introduce tus credenciales para acceder a la cuenta
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Usuario</Label>
               <Input
                 id="username"
                 placeholder="demo"
@@ -84,7 +89,7 @@ const LoginPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
@@ -99,11 +104,11 @@ const LoginPage = () => {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
             <div className="text-center text-sm">
               <p className="text-neutral-500 mt-2">
-                Demo account: username <span className="font-semibold">demo</span> / password <span className="font-semibold">demo</span>
+                Cuenta demo: usuario <span className="font-semibold">demo</span> / contraseña <span className="font-semibold">demo</span>
               </p>
             </div>
           </form>
