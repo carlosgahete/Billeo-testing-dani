@@ -90,7 +90,7 @@ const MarkAsPaidButton = ({
     setIsPending(true);
     try {
       // Actualizar el estado de la factura a "paid"
-      await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
+      await apiRequest(`/api/invoices/${invoice.id}`, "PUT", {
         status: "paid"
       });
       
@@ -150,7 +150,7 @@ const DeleteInvoiceDialog = ({
   const handleDelete = async () => {
     setIsPending(true);
     try {
-      await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
+      await apiRequest(`/api/invoices/${invoiceId}`, "DELETE");
       toast({
         title: "Factura eliminada",
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
@@ -225,7 +225,7 @@ const InvoiceList = () => {
       }
       
       // Get invoice items
-      const { data } = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      const { data } = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
       
       await generateInvoicePDF(invoice, client, data.items);
       
