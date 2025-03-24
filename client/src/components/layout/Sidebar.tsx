@@ -163,8 +163,9 @@ const Sidebar = ({
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-neutral-900 bg-opacity-50 z-20 lg:hidden"
+          className="fixed inset-0 bg-neutral-900 bg-opacity-50 z-20 lg:hidden cursor-pointer"
           onClick={() => setMobileMenuOpen(false)}
+          aria-label="Cerrar menú"
         />
       )}
 

@@ -70,6 +70,7 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
           size="icon"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="text-neutral-500"
+          aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
         >
           <Menu size={24} />
         </Button>
