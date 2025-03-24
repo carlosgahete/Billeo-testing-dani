@@ -352,6 +352,16 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     },
     onSuccess: (data) => {
       console.log("✅ Factura guardada:", data);
+      
+      // Invalidar la lista de facturas para que se actualice automáticamente
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Invalidar también las estadísticas del dashboard
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Invalidar las facturas recientes (si existe esa consulta)
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
+      
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
         description: isEditMode
