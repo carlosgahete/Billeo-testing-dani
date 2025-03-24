@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 import TaxSummary from "@/components/dashboard/TaxSummary";
+import { PageTitle } from "@/components/ui/page-title";
 
 const Dashboard = () => {
   const [, navigate] = useLocation();
