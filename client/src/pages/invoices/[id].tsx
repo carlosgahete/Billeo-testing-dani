@@ -30,7 +30,7 @@ const InvoiceDetailPage = () => {
   
   const invoiceId = parseInt(id as string);
   
-  const { data, isLoading, isError } = useQuery({
+  const { data = { invoice: null, items: [] }, isLoading, isError } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
   });
   

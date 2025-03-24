@@ -30,16 +30,20 @@ interface Client {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const statusMap: Record<string, { label: string; variant: "default" | "success" | "destructive" | "warning" | "outline" | "secondary" }> = {
-    pending: { label: "Pendiente", variant: "warning" },
-    paid: { label: "Pagada", variant: "success" },
+  // Definir los tipos de variantes disponibles basados en los que Badge acepta
+  const statusMap: Record<string, { label: string; variant: "default" | "destructive" | "outline" | "secondary" }> = {
+    pending: { label: "Pendiente", variant: "default" },
+    paid: { label: "Pagada", variant: "outline" },
     overdue: { label: "Vencida", variant: "destructive" },
-    canceled: { label: "Cancelada", variant: "outline" },
+    canceled: { label: "Cancelada", variant: "secondary" },
   };
 
   const { label, variant } = statusMap[status] || { label: status, variant: "default" };
 
-  return <Badge variant={variant}>{label}</Badge>;
+  // Aplicar clases personalizadas para manejar colores específicos
+  const badgeClasses = status === 'paid' ? "border-green-500 text-green-600 bg-green-50" : "";
+
+  return <Badge variant={variant} className={badgeClasses}>{label}</Badge>;
 };
 
 const RecentInvoices = () => {

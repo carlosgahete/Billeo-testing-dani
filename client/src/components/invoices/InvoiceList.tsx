@@ -211,11 +211,11 @@ const InvoiceList = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
+  const { data: invoicesData = [], isLoading: invoicesLoading } = useQuery({
     queryKey: ["/api/invoices"],
   });
 
-  const { data: clientsData, isLoading: clientsLoading } = useQuery({
+  const { data: clientsData = [], isLoading: clientsLoading } = useQuery({
     queryKey: ["/api/clients"],
   });
 
