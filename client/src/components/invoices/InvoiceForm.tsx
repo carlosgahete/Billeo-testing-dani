@@ -99,63 +99,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
-  // Estado local para almacenar datos combinados
-  const [combinedData, setCombinedData] = useState<{ invoice: any; items: any[] }>({ invoice: null, items: [] });
-  
   // Fetch invoice data if in edit mode
-  const { data: apiInvoiceData, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
+  const { data: invoiceData, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
   });
-  
-  // Actualizar el estado combinado cuando lleguen datos de la API
-  useEffect(() => {
-    if (apiInvoiceData && apiInvoiceData.invoice) {
-      console.log("Datos recibidos de la API:", apiInvoiceData);
-      setCombinedData(prevData => ({
-        ...apiInvoiceData,
-        // Mantener los items anteriores si no hay nuevos o si están vacíos
-        items: apiInvoiceData.items && apiInvoiceData.items.length > 0 
-          ? apiInvoiceData.items 
-          : prevData.items
-      }));
-    }
-  }, [apiInvoiceData]);
-  
-  // Intentar obtener datos del sessionStorage al montar el componente
-  useEffect(() => {
-    if (isEditMode) {
-      try {
-        const storedData = sessionStorage.getItem('currentInvoiceData');
-        if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          console.log("Datos recuperados de sessionStorage para edición:", parsedData);
-          
-          // Actualizar el estado combinado con los datos de sessionStorage
-          setCombinedData(prevData => {
-            // Si ya tenemos datos de la API (prevData), combinamos con sessionStorage
-            // dando prioridad a sessionStorage para campos críticos
-            const result = {
-              invoice: {
-                ...(prevData.invoice || {}),
-                ...(parsedData.invoice || {}),
-              },
-              items: parsedData.items && parsedData.items.length > 0 
-                ? parsedData.items 
-                : prevData.items || []
-            };
-            
-            console.log("Datos combinados de API y sessionStorage:", result);
-            return result;
-          });
-        }
-      } catch (error) {
-        console.error("Error al recuperar datos de sessionStorage:", error);
-      }
-    }
-  }, [isEditMode]);
-  
-  // Este efecto ya lo tenemos más arriba, así que se elimina para evitar duplicidad
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -185,10 +133,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     },
   });
 
-  // Initialize form with combined data
+  // Initialize form with invoice data when loaded
   useEffect(() => {
-    if (isEditMode && combinedData.invoice) {
-      const { invoice, items } = combinedData;
+    if (isEditMode && invoiceData && invoiceData.invoice) {
+      console.log("⚡ Cargando datos de factura para edición:", invoiceData);
+      
+      const { invoice, items } = invoiceData;
       
       // Aseguramos que las fechas estén en formato YYYY-MM-DD
       const formatDateForInput = (dateString: string) => {
@@ -231,7 +181,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           })) : []
       };
       
-      console.log("Cargando datos combinados en el formulario:", formattedInvoice);
+      console.log("🔄 Datos formateados para el formulario:", formattedInvoice);
       
       // Actualizar el formulario con los datos formateados
       form.reset(formattedInvoice);
@@ -246,7 +196,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         calculateTotals();
       }, 200);
     }
-  }, [combinedData, isEditMode, form]);
+  }, [invoiceData, isEditMode, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
