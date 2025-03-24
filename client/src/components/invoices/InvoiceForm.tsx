@@ -215,7 +215,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Create or update invoice mutation
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
-      console.log("Datos originales del formulario:", data);
+      console.log("✅ Enviando datos del formulario:", data);
       
       // Asegurarnos que las fechas están en formato YYYY-MM-DD
       const formatDate = (dateString: string) => {
@@ -258,7 +258,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         subtotal: (item.subtotal || 0).toString(),
       }));
       
-      console.log("Datos formateados para enviar al servidor:", { 
+      console.log("🔄 Datos formateados para API:", { 
         invoice: formattedData, 
         items: formattedItems 
       });
@@ -266,17 +266,16 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       if (isEditMode) {
         // En modo edición, necesitamos asegurarnos de enviar todos los datos importantes
         // y no perder información existente
-        console.log("Actualizando factura existente - ID:", invoiceId);
+        console.log("🔄 Modo edición - ID:", invoiceId);
         
-        // Obtenemos los datos combinados como fuente original
-        const originalInvoice = combinedData.invoice || {};
+        // Incorporar datos originales si están disponibles
+        const originalInvoice = invoiceData?.invoice || {};
         
-        // Creamos una copia de la factura combinada y sobrescribimos con los nuevos valores
-        // así mantenemos campos que podrían no estar en el formulario
+        // Mantener los campos originales si no se proporcionan nuevos valores
         const completeInvoiceData = {
           ...originalInvoice,
           ...formattedData,
-          // Aseguramos que estos campos siempre se envían correctamente
+          // Asegurar campos críticos
           invoiceNumber: formattedData.invoiceNumber,
           clientId: formattedData.clientId,
           issueDate: formattedData.issueDate,
@@ -285,13 +284,13 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           tax: formattedData.tax,
           total: formattedData.total,
           status: formattedData.status,
-          // Para campos opcionales, usamos los nuevos valores si existen, o los originales
-          notes: formattedData.notes !== undefined ? formattedData.notes : originalInvoice.notes,
+          // Campos opcionales
+          notes: formattedData.notes !== null ? formattedData.notes : originalInvoice.notes,
           additionalTaxes: formattedData.additionalTaxes || originalInvoice.additionalTaxes || [],
           attachments: formattedData.attachments || originalInvoice.attachments
         };
         
-        console.log("Datos completos actualizados para enviar:", {
+        console.log("📤 Enviando actualización completa:", {
           invoice: completeInvoiceData,
           items: formattedItems
         });
@@ -308,7 +307,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       }
     },
     onSuccess: (data) => {
-      console.log("Factura guardada:", data);
+      console.log("✅ Factura guardada:", data);
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
         description: isEditMode
@@ -318,6 +317,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       navigate("/invoices");
     },
     onError: (error) => {
+      console.error("❌ Error al guardar factura:", error);
       toast({
         title: "Error",
         description: `Ha ocurrido un error: ${error.message}`,
