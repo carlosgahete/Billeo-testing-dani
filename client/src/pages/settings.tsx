@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Upload, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
@@ -21,16 +21,32 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import FileUpload from "@/components/common/FileUpload";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+interface UserSession {
+  authenticated: boolean;
+  user?: {
+    id: number;
+    username: string;
+    name: string;
+    email: string;
+    role: string;
+    profileImage?: string | null;
+  };
+}
 
 const SettingsPage = () => {
   const { toast } = useToast();
   const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(true);
   const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
   
-  const { data: user, isLoading: userLoading } = useQuery({
+  const { data: sessionData, isLoading: userLoading } = useQuery<UserSession>({
     queryKey: ["/api/auth/session"],
   });
+  
+  const user = sessionData?.user;
   
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -43,8 +59,40 @@ const SettingsPage = () => {
     email: ""
   });
   
+  // Profile image state
+  const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+  
+  // Profile image upload mutation
+  const updateProfileImageMutation = useMutation({
+    mutationFn: async (imagePath: string) => {
+      if (!user) throw new Error("User not authenticated");
+      return apiRequest("POST", `/api/users/${user.id}/profile-image`, { profileImage: imagePath });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      setUploadingProfileImage(false);
+      toast({
+        title: "Imagen actualizada",
+        description: "Tu imagen de perfil ha sido actualizada correctamente",
+      });
+    },
+    onError: (error: any) => {
+      setUploadingProfileImage(false);
+      toast({
+        title: "Error",
+        description: `No se pudo actualizar la imagen: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleProfileImageUpload = (filePath: string) => {
+    setUploadingProfileImage(true);
+    updateProfileImageMutation.mutate(filePath);
+  };
+  
   // Initialize form with user data when loaded
-  useState(() => {
+  useEffect(() => {
     if (user && !userLoading) {
       setProfileForm({
         name: user.name || "",
@@ -55,6 +103,7 @@ const SettingsPage = () => {
   
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof profileForm) => {
+      if (!user) throw new Error("User not authenticated");
       return apiRequest("PUT", `/api/users/${user.id}`, data);
     },
     onSuccess: () => {

@@ -140,6 +140,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Internal server error" });
     }
   });
+  
+  // Update user profile
+  app.put("/api/users/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = parseInt(req.params.id);
+      
+      if (userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this user" });
+      }
+      
+      const userResult = insertUserSchema.partial().safeParse(req.body);
+      
+      if (!userResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid user data", 
+          errors: userResult.error.errors 
+        });
+      }
+      
+      // Omit sensitive fields
+      const { password, username, role, ...safeUserData } = userResult.data;
+      
+      const updatedUser = await storage.updateUserProfile(userId, safeUserData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Update user profile image
+  app.post("/api/users/:id/profile-image", upload.single("profileImage"), async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = parseInt(req.params.id);
+      
+      if (userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this user" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const imagePath = `/uploads/${req.file.filename}`;
+      
+      const updatedUser = await storage.updateUserProfile(userId, {
+        profileImage: imagePath
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Company endpoints
   app.get("/api/company", async (req: Request, res: Response) => {
