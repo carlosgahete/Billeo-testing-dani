@@ -1,20 +1,224 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+ 
+    --primary: 187 58% 44%;
+    --primary-foreground: 0 0% 98%;
+ 
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+ 
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+ 
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+ 
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+ 
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+ 
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+ 
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+ 
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+ 
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+ 
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+ 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply antialiased bg-background text-foreground;
-    font-family: 'Open Sans', sans-serif;
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Aumenta el tamaño de los inputs de fechas */
+input[type="date"] {
+  font-size: 1rem;
+  height: 2.5rem;
+}
+
+/* Hacer más grande el calendario nativo */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+/* Estilo específico para selectores de fechas grandes */
+.date-picker-large ::-webkit-datetime-edit {
+  padding: 8px;
+  font-size: 16px;
+}
+
+.date-picker-large input::-webkit-calendar-picker-indicator {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  margin-right: 4px;
+}
+
+/* Estilo para el calendario nativo cuando se muestra */
+::-webkit-calendar-picker {
+  width: 300px;
+  height: 300px;
+}
+
+::-webkit-datetime-edit-fields-wrapper {
+  padding: 4px;
+}
+
+/* Estilos para subtítulos */
+.subtitle {
+  @apply text-lg text-muted-foreground mb-4;
+}
+
+/* Gradiente para la página principal */
+.gradient-heading {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400 font-bold;
+}
+
+/* Estilos para cards de dashboard */
+.dashboard-card {
+  @apply rounded-lg border bg-card shadow-sm overflow-hidden;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  @apply shadow-md;
+}
+
+/* Estilos para estadísticas */
+.stat-card {
+  @apply p-6 rounded-lg border bg-card text-card-foreground shadow-sm;
+}
+
+.stat-value {
+  @apply text-2xl md:text-3xl font-bold mt-2;
+}
+
+.stat-label {
+  @apply text-sm text-muted-foreground;
+}
+
+/* Estilos para etiquetas de estado de facturas */
+.status-badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
+}
+
+.status-paid {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+}
+
+.status-overdue {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+}
+
+.status-canceled {
+  @apply bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300;
+}
+
+/* Estilos para leyendas de gráficos */
+.chart-legend {
+  @apply flex flex-wrap gap-2 mt-4 justify-center;
+}
+
+.legend-item {
+  @apply flex items-center text-sm;
+}
+
+.legend-color {
+  @apply w-3 h-3 rounded mr-1;
+}
+
+/* Animación para cargar datos */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Personalización de la barra de navegación móvil */
+.mobile-nav {
+  @apply fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex justify-around py-2;
+}
+
+.mobile-nav-item {
+  @apply flex flex-col items-center justify-center px-4 py-2 text-xs text-gray-600;
+}
+
+.mobile-nav-item.active {
+  @apply text-primary;
+}
+
+/* Personalizaciones para tablas responsivas */
+.responsive-table {
+  @apply w-full overflow-x-auto;
+}
+
+/* Personalizaciones para tablas responsivas */
+@media (max-width: 640px) {
+  .responsive-table table {
+    @apply min-w-full;
+  }
+  
+  .responsive-table th, 
+  .responsive-table td {
+    @apply whitespace-nowrap px-2 py-2 text-sm;
   }
 
-  h1, h2, h3, h4, h5, h6, p, span, div, button, input, select, textarea {
-    font-family: 'Open Sans', sans-serif;
+  .hide-on-mobile {
+    @apply hidden sm:table-cell;
   }
 }

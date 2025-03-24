@@ -563,53 +563,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { invoice: invoiceData, items } = req.body;
       
-      // Convertir las fechas de string a Date
-      const processedData = {
-        ...invoiceData,
-        // Convertir explícitamente las fechas de string a Date si están presentes
-        issueDate: invoiceData.issueDate ? new Date(invoiceData.issueDate) : undefined,
-        dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : undefined
+      console.log("[SERVER] Actualizando factura:", invoiceId);
+      console.log("[SERVER] Datos recibidos:", JSON.stringify(invoiceData, null, 2));
+      
+      // Asegurarnos que tenemos todos los campos originales si no se están actualizando
+      const completeInvoiceData = {
+        ...invoice,                  // Datos actuales
+        ...invoiceData,              // Datos nuevos que sobrescriben
+        userId: req.session.userId,  // Mantener siempre el userID original
+        id: invoiceId,               // Mantener siempre el ID
+        // Convertir explícitamente las fechas de string a Date
+        issueDate: invoiceData.issueDate ? new Date(invoiceData.issueDate) : invoice.issueDate,
+        dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : invoice.dueDate
       };
       
-      const invoiceResult = insertInvoiceSchema.partial().safeParse(processedData);
+      console.log("[SERVER] Datos completos a actualizar:", JSON.stringify(completeInvoiceData, null, 2));
+      
+      // Validar solo los campos que se van a actualizar
+      const invoiceResult = insertInvoiceSchema.partial().safeParse(completeInvoiceData);
       
       if (!invoiceResult.success) {
+        console.log("[SERVER] Error de validación:", JSON.stringify(invoiceResult.error.errors, null, 2));
         return res.status(400).json({ 
           message: "Invalid invoice data", 
           errors: invoiceResult.error.errors 
         });
       }
       
+      // Actualizar la factura
       const updatedInvoice = await storage.updateInvoice(invoiceId, invoiceResult.data);
       
       if (!updatedInvoice) {
         return res.status(404).json({ message: "Failed to update invoice" });
       }
       
+      // Procesar los items solo si se proporcionan
       if (items && Array.isArray(items)) {
-        // Delete existing items
+        // Eliminar items existentes
+        console.log("[SERVER] Eliminando items existentes para la factura:", invoiceId);
         const existingItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
         for (const item of existingItems) {
           await storage.deleteInvoiceItem(item.id);
         }
         
-        // Create new items
+        // Crear nuevos items
+        console.log("[SERVER] Creando nuevos items para la factura:", items.length);
         for (const item of items) {
-          const itemResult = insertInvoiceItemSchema.safeParse({
+          const itemData = {
             ...item,
             invoiceId
-          });
+          };
+          
+          const itemResult = insertInvoiceItemSchema.safeParse(itemData);
           
           if (itemResult.success) {
             await storage.createInvoiceItem(itemResult.data);
+          } else {
+            console.log("[SERVER] Error al validar item:", JSON.stringify(itemResult.error.errors, null, 2));
           }
         }
       }
       
+      // Obtener los items actualizados
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
       
+      console.log("[SERVER] Factura actualizada correctamente");
       return res.status(200).json({ invoice: updatedInvoice, items: invoiceItems });
     } catch (error) {
+      console.error("[SERVER] Error al actualizar factura:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

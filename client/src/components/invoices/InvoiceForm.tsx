@@ -500,15 +500,18 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de emisión</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="date" 
-                              value={field.value}
-                              onChange={(e) => {
-                                console.log("Cambiando fecha de emisión a:", e.target.value);
-                                field.onChange(e.target.value);
-                              }} 
-                              className="text-base h-12 text-lg"
-                            />
+                            <div className="date-picker-large">
+                              <Input 
+                                type="date" 
+                                value={field.value}
+                                onChange={(e) => {
+                                  console.log("Cambiando fecha de emisión a:", e.target.value);
+                                  field.onChange(e.target.value);
+                                }} 
+                                className="text-base h-12 text-lg"
+                                style={{ width: "100%" }}
+                              />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -522,15 +525,18 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de vencimiento</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="date" 
-                              value={field.value}
-                              onChange={(e) => {
-                                console.log("Cambiando fecha de vencimiento a:", e.target.value);
-                                field.onChange(e.target.value);
-                              }}
-                              className="text-base h-12 text-lg"
-                            />
+                            <div className="date-picker-large">
+                              <Input 
+                                type="date" 
+                                value={field.value}
+                                onChange={(e) => {
+                                  console.log("Cambiando fecha de vencimiento a:", e.target.value);
+                                  field.onChange(e.target.value);
+                                }}
+                                className="text-base h-12 text-lg"
+                                style={{ width: "100%" }}
+                              />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

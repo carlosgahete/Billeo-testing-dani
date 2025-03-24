@@ -27,13 +27,13 @@ import { apiRequest } from "@/lib/queryClient";
 const clientSchema = z.object({
   name: z.string().min(2, { message: "El nombre es obligatorio" }),
   taxId: z.string().min(1, { message: "El NIF/CIF es obligatorio" }),
-  email: z.string().email({ message: "Email inválido" }).nullable().optional(),
-  phone: z.string().nullable().optional(),
+  email: z.string().email({ message: "Email inválido" }).optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
   address: z.string().min(1, { message: "La dirección es obligatoria" }),
-  city: z.string().nullable().optional(),
-  postalCode: z.string().nullable().optional(),
-  country: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
+  city: z.string().optional().or(z.literal("")),
+  postalCode: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
 });
 
 type ClientFormValues = z.infer<typeof clientSchema>;
