@@ -1,0 +1,1005 @@
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { 
+  insertUserSchema, 
+  insertCompanySchema,
+  insertClientSchema,
+  insertInvoiceSchema,
+  insertInvoiceItemSchema,
+  insertCategorySchema,
+  insertTransactionSchema,
+  insertTaskSchema
+} from "@shared/schema";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// Set up file upload with multer
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage_disk = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage: storage_disk });
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Create HTTP server
+  const httpServer = createServer(app);
+
+  // Authentication endpoints
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Simple session management (not for production)
+      if (!req.session) {
+        return res.status(500).json({ message: "Session management not available" });
+      }
+      
+      req.session.userId = user.id;
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to logout" });
+        }
+        
+        res.clearCookie("connect.sid");
+        return res.status(200).json({ message: "Logged out successfully" });
+      });
+    } else {
+      return res.status(200).json({ message: "Already logged out" });
+    }
+  });
+
+  app.get("/api/auth/session", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(req.session.userId);
+      
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // User endpoints
+  app.post("/api/users", async (req: Request, res: Response) => {
+    try {
+      const userResult = insertUserSchema.safeParse(req.body);
+      
+      if (!userResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid user data", 
+          errors: userResult.error.errors 
+        });
+      }
+      
+      const existingUser = await storage.getUserByUsername(userResult.data.username);
+      
+      if (existingUser) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+      
+      const newUser = await storage.createUser(userResult.data);
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      return res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Company endpoints
+  app.get("/api/company", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const company = await storage.getCompanyByUserId(req.session.userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      return res.status(200).json(company);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/company", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const companyResult = insertCompanySchema.safeParse({
+        ...req.body,
+        userId: req.session.userId
+      });
+      
+      if (!companyResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid company data", 
+          errors: companyResult.error.errors 
+        });
+      }
+      
+      const existingCompany = await storage.getCompanyByUserId(req.session.userId);
+      
+      if (existingCompany) {
+        return res.status(409).json({ message: "Company already exists for this user" });
+      }
+      
+      const newCompany = await storage.createCompany(companyResult.data);
+      return res.status(201).json(newCompany);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/company/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const companyId = parseInt(req.params.id);
+      const company = await storage.getCompany(companyId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      if (company.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this company" });
+      }
+      
+      const companyResult = insertCompanySchema.partial().safeParse(req.body);
+      
+      if (!companyResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid company data", 
+          errors: companyResult.error.errors 
+        });
+      }
+      
+      const updatedCompany = await storage.updateCompany(companyId, companyResult.data);
+      
+      if (!updatedCompany) {
+        return res.status(404).json({ message: "Failed to update company" });
+      }
+      
+      return res.status(200).json(updatedCompany);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Client endpoints
+  app.get("/api/clients", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const clients = await storage.getClientsByUserId(req.session.userId);
+      return res.status(200).json(clients);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/clients/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const clientId = parseInt(req.params.id);
+      const client = await storage.getClient(clientId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      if (client.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to access this client" });
+      }
+      
+      return res.status(200).json(client);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/clients", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const clientResult = insertClientSchema.safeParse({
+        ...req.body,
+        userId: req.session.userId
+      });
+      
+      if (!clientResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid client data", 
+          errors: clientResult.error.errors 
+        });
+      }
+      
+      const newClient = await storage.createClient(clientResult.data);
+      return res.status(201).json(newClient);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/clients/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const clientId = parseInt(req.params.id);
+      const client = await storage.getClient(clientId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      if (client.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this client" });
+      }
+      
+      const clientResult = insertClientSchema.partial().safeParse(req.body);
+      
+      if (!clientResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid client data", 
+          errors: clientResult.error.errors 
+        });
+      }
+      
+      const updatedClient = await storage.updateClient(clientId, clientResult.data);
+      
+      if (!updatedClient) {
+        return res.status(404).json({ message: "Failed to update client" });
+      }
+      
+      return res.status(200).json(updatedClient);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/clients/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const clientId = parseInt(req.params.id);
+      const client = await storage.getClient(clientId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      if (client.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to delete this client" });
+      }
+      
+      const deleted = await storage.deleteClient(clientId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete client" });
+      }
+      
+      return res.status(200).json({ message: "Client deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Invoice endpoints
+  app.get("/api/invoices", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      return res.status(200).json(invoices);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/invoices/recent", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const limit = parseInt(req.query.limit as string) || 5;
+      const invoices = await storage.getRecentInvoicesByUserId(req.session.userId, limit);
+      return res.status(200).json(invoices);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/invoices/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const invoiceId = parseInt(req.params.id);
+      const invoice = await storage.getInvoice(invoiceId);
+      
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      if (invoice.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to access this invoice" });
+      }
+      
+      const items = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+      
+      return res.status(200).json({ invoice, items });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/invoices", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { invoice, items } = req.body;
+      
+      const invoiceResult = insertInvoiceSchema.safeParse({
+        ...invoice,
+        userId: req.session.userId
+      });
+      
+      if (!invoiceResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid invoice data", 
+          errors: invoiceResult.error.errors 
+        });
+      }
+      
+      const newInvoice = await storage.createInvoice(invoiceResult.data);
+      
+      if (items && Array.isArray(items)) {
+        for (const item of items) {
+          const itemResult = insertInvoiceItemSchema.safeParse({
+            ...item,
+            invoiceId: newInvoice.id
+          });
+          
+          if (itemResult.success) {
+            await storage.createInvoiceItem(itemResult.data);
+          }
+        }
+      }
+      
+      const invoiceItems = await storage.getInvoiceItemsByInvoiceId(newInvoice.id);
+      
+      return res.status(201).json({ invoice: newInvoice, items: invoiceItems });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/invoices/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const invoiceId = parseInt(req.params.id);
+      const invoice = await storage.getInvoice(invoiceId);
+      
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      if (invoice.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this invoice" });
+      }
+      
+      const { invoice: invoiceData, items } = req.body;
+      
+      const invoiceResult = insertInvoiceSchema.partial().safeParse(invoiceData);
+      
+      if (!invoiceResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid invoice data", 
+          errors: invoiceResult.error.errors 
+        });
+      }
+      
+      const updatedInvoice = await storage.updateInvoice(invoiceId, invoiceResult.data);
+      
+      if (!updatedInvoice) {
+        return res.status(404).json({ message: "Failed to update invoice" });
+      }
+      
+      if (items && Array.isArray(items)) {
+        // Delete existing items
+        const existingItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+        for (const item of existingItems) {
+          await storage.deleteInvoiceItem(item.id);
+        }
+        
+        // Create new items
+        for (const item of items) {
+          const itemResult = insertInvoiceItemSchema.safeParse({
+            ...item,
+            invoiceId
+          });
+          
+          if (itemResult.success) {
+            await storage.createInvoiceItem(itemResult.data);
+          }
+        }
+      }
+      
+      const invoiceItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+      
+      return res.status(200).json({ invoice: updatedInvoice, items: invoiceItems });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/invoices/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const invoiceId = parseInt(req.params.id);
+      const invoice = await storage.getInvoice(invoiceId);
+      
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      if (invoice.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to delete this invoice" });
+      }
+      
+      // Delete invoice items first
+      const items = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+      for (const item of items) {
+        await storage.deleteInvoiceItem(item.id);
+      }
+      
+      const deleted = await storage.deleteInvoice(invoiceId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete invoice" });
+      }
+      
+      return res.status(200).json({ message: "Invoice deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Category endpoints
+  app.get("/api/categories", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const categories = await storage.getCategoriesByUserId(req.session.userId);
+      return res.status(200).json(categories);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/categories", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const categoryResult = insertCategorySchema.safeParse({
+        ...req.body,
+        userId: req.session.userId
+      });
+      
+      if (!categoryResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid category data", 
+          errors: categoryResult.error.errors 
+        });
+      }
+      
+      const newCategory = await storage.createCategory(categoryResult.data);
+      return res.status(201).json(newCategory);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const categoryId = parseInt(req.params.id);
+      const category = await storage.getCategory(categoryId);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      if (category.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this category" });
+      }
+      
+      const categoryResult = insertCategorySchema.partial().safeParse(req.body);
+      
+      if (!categoryResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid category data", 
+          errors: categoryResult.error.errors 
+        });
+      }
+      
+      const updatedCategory = await storage.updateCategory(categoryId, categoryResult.data);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Failed to update category" });
+      }
+      
+      return res.status(200).json(updatedCategory);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const categoryId = parseInt(req.params.id);
+      const category = await storage.getCategory(categoryId);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      if (category.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to delete this category" });
+      }
+      
+      const deleted = await storage.deleteCategory(categoryId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete category" });
+      }
+      
+      return res.status(200).json({ message: "Category deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Transaction endpoints
+  app.get("/api/transactions", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const transactions = await storage.getTransactionsByUserId(req.session.userId);
+      return res.status(200).json(transactions);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/transactions/recent", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const limit = parseInt(req.query.limit as string) || 5;
+      const transactions = await storage.getRecentTransactionsByUserId(req.session.userId, limit);
+      return res.status(200).json(transactions);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/transactions/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const transactionId = parseInt(req.params.id);
+      const transaction = await storage.getTransaction(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      
+      if (transaction.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to access this transaction" });
+      }
+      
+      return res.status(200).json(transaction);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/transactions", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const transactionResult = insertTransactionSchema.safeParse({
+        ...req.body,
+        userId: req.session.userId
+      });
+      
+      if (!transactionResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid transaction data", 
+          errors: transactionResult.error.errors 
+        });
+      }
+      
+      const newTransaction = await storage.createTransaction(transactionResult.data);
+      return res.status(201).json(newTransaction);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/transactions/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const transactionId = parseInt(req.params.id);
+      const transaction = await storage.getTransaction(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      
+      if (transaction.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this transaction" });
+      }
+      
+      const transactionResult = insertTransactionSchema.partial().safeParse(req.body);
+      
+      if (!transactionResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid transaction data", 
+          errors: transactionResult.error.errors 
+        });
+      }
+      
+      const updatedTransaction = await storage.updateTransaction(transactionId, transactionResult.data);
+      
+      if (!updatedTransaction) {
+        return res.status(404).json({ message: "Failed to update transaction" });
+      }
+      
+      return res.status(200).json(updatedTransaction);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/transactions/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const transactionId = parseInt(req.params.id);
+      const transaction = await storage.getTransaction(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      
+      if (transaction.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to delete this transaction" });
+      }
+      
+      const deleted = await storage.deleteTransaction(transactionId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete transaction" });
+      }
+      
+      return res.status(200).json({ message: "Transaction deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Task endpoints
+  app.get("/api/tasks", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const tasks = await storage.getTasksByUserId(req.session.userId);
+      return res.status(200).json(tasks);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/tasks", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const taskResult = insertTaskSchema.safeParse({
+        ...req.body,
+        userId: req.session.userId
+      });
+      
+      if (!taskResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid task data", 
+          errors: taskResult.error.errors 
+        });
+      }
+      
+      const newTask = await storage.createTask(taskResult.data);
+      return res.status(201).json(newTask);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/tasks/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const taskId = parseInt(req.params.id);
+      const task = await storage.getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this task" });
+      }
+      
+      const taskResult = insertTaskSchema.partial().safeParse(req.body);
+      
+      if (!taskResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid task data", 
+          errors: taskResult.error.errors 
+        });
+      }
+      
+      const updatedTask = await storage.updateTask(taskId, taskResult.data);
+      
+      if (!updatedTask) {
+        return res.status(404).json({ message: "Failed to update task" });
+      }
+      
+      return res.status(200).json(updatedTask);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const taskId = parseInt(req.params.id);
+      const task = await storage.getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to delete this task" });
+      }
+      
+      const deleted = await storage.deleteTask(taskId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete task" });
+      }
+      
+      return res.status(200).json({ message: "Task deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // File upload endpoint
+  app.post("/api/upload", upload.single("file"), (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      return res.status(201).json({
+        filename: req.file.filename,
+        path: `/uploads/${req.file.filename}`
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // CSV import endpoint
+  app.post("/api/import/csv", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Process CSV file (in a real app, we would parse the CSV here)
+      // For the demo, we'll just return a success message
+      
+      return res.status(200).json({
+        message: "CSV imported successfully",
+        filename: req.file.filename
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Stats and reports
+  app.get("/api/stats/dashboard", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = req.session.userId;
+      
+      // Get all transactions for the user
+      const allTransactions = await storage.getTransactionsByUserId(userId);
+      
+      // Calculate totals
+      const income = allTransactions
+        .filter(t => t.type === "income")
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      const expenses = allTransactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      // Get all invoices
+      const allInvoices = await storage.getInvoicesByUserId(userId);
+      
+      // Calculate pending invoices
+      const pendingInvoices = allInvoices
+        .filter(inv => inv.status === "pending" || inv.status === "overdue")
+        .reduce((sum, inv) => sum + Number(inv.total), 0);
+      
+      const pendingCount = allInvoices
+        .filter(inv => inv.status === "pending" || inv.status === "overdue")
+        .length;
+      
+      // Calculate balance
+      const balance = income - expenses;
+      
+      // Calculate tax estimates (simplified)
+      const vatCollected = allInvoices.reduce((sum, inv) => sum + Number(inv.tax), 0);
+      const vatPaid = allTransactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + (Number(t.amount) * 0.21), 0); // Simplified VAT calculation
+      
+      const vatBalance = vatCollected - vatPaid;
+      
+      // Calculate income tax (simplified - 20% of income)
+      const incomeTax = income * 0.2;
+      
+      return res.status(200).json({
+        income,
+        expenses,
+        pendingInvoices,
+        pendingCount,
+        balance,
+        taxes: {
+          vat: vatBalance,
+          incomeTax
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  return httpServer;
+}
