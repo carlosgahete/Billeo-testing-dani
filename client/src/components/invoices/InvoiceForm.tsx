@@ -23,10 +23,11 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Plus, FileText } from "lucide-react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
+import { ClientForm } from "../clients/ClientForm";
 
 // Define schema for line items
 const invoiceItemSchema = z.object({
@@ -271,25 +272,42 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={
-                          field.value ? field.value.toString() : undefined
-                        }
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar cliente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clients?.map((client: any) => (
-                            <SelectItem key={client.id} value={client.id.toString()}>
-                              {client.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <Select
+                            onValueChange={(value) => field.onChange(Number(value))}
+                            defaultValue={
+                              field.value ? field.value.toString() : undefined
+                            }
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar cliente" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {clients?.map((client: any) => (
+                                <SelectItem key={client.id} value={client.id.toString()}>
+                                  {client.name}
+                                </SelectItem>
+                              ))}
+                              {clients?.length === 0 && (
+                                <div className="px-2 py-3 text-sm text-muted-foreground">
+                                  No hay clientes disponibles
+                                </div>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setShowClientForm(true)}
+                          className="shrink-0"
+                        >
+                          Nuevo
+                        </Button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
