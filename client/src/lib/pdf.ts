@@ -1,6 +1,12 @@
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
+interface AdditionalTax {
+  name: string;
+  amount: number;
+  isPercentage?: boolean;
+}
+
 interface Invoice {
   id: number;
   invoiceNumber: string;
@@ -12,6 +18,7 @@ interface Invoice {
   total: number;
   status: string;
   notes?: string;
+  additionalTaxes?: AdditionalTax[] | null;
 }
 
 interface Client {
@@ -54,7 +61,7 @@ export async function generateInvoicePDF(
   doc.text("FinanzaPro", 14, 22);
   
   doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(0);
   doc.text("Tu empresa, S.L.", 14, 30);
   doc.text("NIF: B12345678", 14, 35);
   doc.text("Calle Ejemplo 123", 14, 40);
@@ -67,14 +74,15 @@ export async function generateInvoicePDF(
   
   // Add invoice details
   doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(0);
   doc.text(`Fecha de emisión: ${formatDate(invoice.issueDate)}`, 140, 30, { align: "right" });
   doc.text(`Fecha de vencimiento: ${formatDate(invoice.dueDate)}`, 140, 35, { align: "right" });
   
   // Add status
   const statusText = getStatusText(invoice.status);
+  const statusColor = getStatusColor(invoice.status);
   doc.setFontSize(12);
-  doc.setTextColor(getStatusColor(invoice.status));
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.text(`Estado: ${statusText}`, 140, 45, { align: "right" });
   
   // Add client information
@@ -83,7 +91,7 @@ export async function generateInvoicePDF(
   doc.text("CLIENTE", 14, 60);
   
   doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(0);
   doc.text(client.name, 14, 68);
   doc.text(`NIF/CIF: ${client.taxId}`, 14, 73);
   doc.text(client.address, 14, 78);
@@ -121,18 +129,39 @@ export async function generateInvoicePDF(
   
   // Add totals
   const finalY = (doc as any).lastAutoTable.finalY + 10;
+  let yOffset = 0;
   
   doc.setFontSize(10);
-  doc.text("Subtotal:", 140, finalY, { align: "right" });
-  doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY, { align: "right" });
+  doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+  yOffset += 6;
   
-  doc.text("IVA:", 140, finalY + 6, { align: "right" });
-  doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + 6, { align: "right" });
+  doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+  yOffset += 6;
+  
+  // Add additional taxes if they exist
+  if (invoice.additionalTaxes && invoice.additionalTaxes.length > 0) {
+    invoice.additionalTaxes.forEach(tax => {
+      let taxText = tax.name;
+      let taxAmount = tax.amount;
+      
+      // Format differently based on whether it's percentage or fixed
+      if (tax.isPercentage) {
+        taxText += ` (${taxAmount}%)`;
+        taxAmount = (Number(invoice.subtotal) * taxAmount) / 100;
+      }
+      
+      doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
+      doc.text(`${taxAmount.toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+      yOffset += 6;
+    });
+  }
   
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("TOTAL:", 140, finalY + 15, { align: "right" });
-  doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + 15, { align: "right" });
+  doc.text("TOTAL:", 140, finalY + yOffset + 4, { align: "right" });
+  doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset + 4, { align: "right" });
   
   // Add payment details and notes
   doc.setFontSize(10);
