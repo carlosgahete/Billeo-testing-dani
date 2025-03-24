@@ -67,9 +67,11 @@ export function ClientForm({ open, onOpenChange, onClientCreated }: ClientFormPr
   // Mutación para crear un cliente
   const mutation = useMutation({
     mutationFn: async (data: ClientFormValues) => {
-      return apiRequest("POST", "/api/clients", data);
+      return apiRequest("/api/clients", "POST", data);
     },
-    onSuccess: (data) => {
+    onSuccess: async (response) => {
+      const data = await response.json();
+      console.log("Cliente creado:", data);
       toast({
         title: "Cliente creado",
         description: "El cliente se ha creado correctamente",

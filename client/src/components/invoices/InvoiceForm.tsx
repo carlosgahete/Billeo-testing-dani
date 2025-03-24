@@ -169,18 +169,20 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       console.log("Datos formateados:", { invoice: formattedData, items: formattedItems });
       
       if (isEditMode) {
-        return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
+        return apiRequest(`/api/invoices/${invoiceId}`, "PUT", {
           invoice: formattedData,
           items: formattedItems,
         });
       } else {
-        return apiRequest("POST", "/api/invoices", {
+        return apiRequest("/api/invoices", "POST", {
           invoice: formattedData,
           items: formattedItems,
         });
       }
     },
-    onSuccess: () => {
+    onSuccess: async (response) => {
+      const data = await response.json();
+      console.log("Factura guardada:", data);
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
         description: isEditMode
