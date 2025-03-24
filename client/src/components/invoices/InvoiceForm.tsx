@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -106,7 +106,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   });
 
   // Initialize form with invoice data when loaded
-  useState(() => {
+  useEffect(() => {
     if (invoiceData && !invoiceLoading) {
       const { invoice, items } = invoiceData;
       
