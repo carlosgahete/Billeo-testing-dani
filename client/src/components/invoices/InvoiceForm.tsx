@@ -79,7 +79,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const isEditMode = !!invoiceId;
 
   // Fetch clients for dropdown
-  const { data: clients, isLoading: clientsLoading } = useQuery({
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
     queryKey: ["/api/clients"],
   });
 
@@ -119,14 +119,14 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
 
   // Initialize form with invoice data when loaded
   useEffect(() => {
-    if (invoiceData && !invoiceLoading) {
+    if (invoiceData && !invoiceLoading && invoiceData.invoice) {
       const { invoice, items } = invoiceData;
       
       form.reset({
         ...invoice,
         issueDate: new Date(invoice.issueDate).toISOString().split("T")[0],
         dueDate: new Date(invoice.dueDate).toISOString().split("T")[0],
-        items: items.map((item: any) => ({
+        items: (items || []).map((item: any) => ({
           ...item,
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
