@@ -43,8 +43,26 @@ const Layout = ({ children }: LayoutProps) => {
         />
 
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''}`}>
-          <div className="p-4 lg:p-6">
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''} ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
+          {/* Toggle sidebar button for desktop */}
+          {!isMobile && (
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className={`fixed top-4 z-50 bg-white rounded-full p-2 shadow-md hover:bg-neutral-100 transition-colors ${sidebarOpen ? 'left-[250px]' : 'left-4'}`}
+              aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
+            >
+              {sidebarOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              )}
+            </button>
+          )}
+          <div className={`p-4 lg:p-6 transition-all duration-300 ${!isMobile && !sidebarOpen ? 'ml-0' : ''}`}>
             {children}
           </div>
         </main>
