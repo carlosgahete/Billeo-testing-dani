@@ -7,11 +7,11 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+export async function apiRequest<T = any>(
   url: string,
   method: string = "GET",
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<T> {
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -20,7 +20,15 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  return res;
+  
+  // Para métodos GET, siempre devolver el JSON, 
+  // para otros métodos, solo si el Content-Type es application/json
+  if (method === "GET" || (res.headers.get("Content-Type")?.includes("application/json"))) {
+    return await res.json();
+  }
+  
+  // Si no hay contenido JSON, devolver un objeto con status
+  return { status: res.status } as T;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

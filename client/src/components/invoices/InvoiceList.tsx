@@ -89,9 +89,13 @@ const MarkAsPaidButton = ({
   const handleMarkAsPaid = async () => {
     setIsPending(true);
     try {
+      // Primero obtener los ítems actuales de la factura
+      const { data } = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
+      
       // Actualizar el estado de la factura a "paid"
       await apiRequest(`/api/invoices/${invoice.id}`, "PUT", {
-        status: "paid"
+        invoice: { status: "paid" },
+        items: data.items || [] // Mantener los items existentes
       });
       
       toast({
