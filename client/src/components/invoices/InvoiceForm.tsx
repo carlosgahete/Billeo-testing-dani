@@ -137,34 +137,42 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Create or update invoice mutation
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
-      // Transformamos las fechas a objetos Date
+      console.log("Datos originales:", data);
+      
+      // Transformamos las fechas a objetos Date y aseguramos valores correctos
       const formattedData = {
-        ...data,
+        invoiceNumber: data.invoiceNumber,
+        clientId: data.clientId,
         issueDate: new Date(data.issueDate),
         dueDate: new Date(data.dueDate),
         // Convertimos los números a strings para que coincidan con lo que espera el servidor
         subtotal: data.subtotal.toString(),
         tax: data.tax.toString(),
         total: data.total.toString(),
+        status: data.status,
+        notes: data.notes || null,
+        attachments: attachments.length > 0 ? attachments : null,
       };
       
       // Transformamos los items de la factura
       const formattedItems = data.items.map(item => ({
-        ...item,
+        description: item.description,
         quantity: item.quantity.toString(),
         unitPrice: item.unitPrice.toString(),
         taxRate: item.taxRate.toString(),
-        subtotal: item.subtotal ? item.subtotal.toString() : undefined,
+        subtotal: (item.subtotal || 0).toString(),
       }));
+      
+      console.log("Datos formateados:", { invoice: formattedData, items: formattedItems });
       
       if (isEditMode) {
         return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
-          invoice: { ...formattedData, attachments },
+          invoice: formattedData,
           items: formattedItems,
         });
       } else {
         return apiRequest("POST", "/api/invoices", {
-          invoice: { ...formattedData, attachments },
+          invoice: formattedData,
           items: formattedItems,
         });
       }

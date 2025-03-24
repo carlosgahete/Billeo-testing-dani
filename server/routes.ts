@@ -494,11 +494,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { invoice, items } = req.body;
       
       console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
+      console.log("Received items data:", JSON.stringify(items, null, 2));
       
-      const invoiceResult = insertInvoiceSchema.safeParse({
+      // Asegurar que todos los campos requeridos estén presentes
+      const invoiceData = {
         ...invoice,
-        userId: req.session.userId
-      });
+        userId: req.session.userId,
+        status: invoice.status || "pending",
+        notes: invoice.notes ?? null,
+        attachments: invoice.attachments ?? null
+      };
+      
+      console.log("Processed invoice data:", JSON.stringify(invoiceData, null, 2));
+      
+      const invoiceResult = insertInvoiceSchema.safeParse(invoiceData);
       
       if (!invoiceResult.success) {
         console.log("Validation errors:", JSON.stringify(invoiceResult.error.errors, null, 2));
