@@ -284,7 +284,14 @@ export class MemStorage implements IStorage {
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
     const id = this.invoiceIdCounter++;
-    const newInvoice: Invoice = { ...invoice, id };
+    // Ensure all required fields are present with proper defaults
+    const newInvoice: Invoice = { 
+      ...invoice, 
+      id,
+      status: invoice.status || "pending",
+      notes: invoice.notes || null,
+      attachments: invoice.attachments || null
+    };
     this.invoices.set(id, newInvoice);
     return newInvoice;
   }
@@ -311,7 +318,11 @@ export class MemStorage implements IStorage {
 
   async createInvoiceItem(invoiceItem: InsertInvoiceItem): Promise<InvoiceItem> {
     const id = this.invoiceItemIdCounter++;
-    const newInvoiceItem: InvoiceItem = { ...invoiceItem, id };
+    // Ensure the proper data format for invoice items
+    const newInvoiceItem: InvoiceItem = { 
+      ...invoiceItem, 
+      id
+    };
     this.invoiceItems.set(id, newInvoiceItem);
     return newInvoiceItem;
   }

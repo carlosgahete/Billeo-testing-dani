@@ -34,7 +34,7 @@ const invoiceItemSchema = z.object({
   quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor que cero"),
   unitPrice: z.coerce.number().min(0.01, "El precio debe ser mayor que cero"),
   taxRate: z.coerce.number().min(0, "El IVA no puede ser negativo"),
-  subtotal: z.coerce.number().optional(),
+  subtotal: z.coerce.number().min(0).optional(),
 });
 
 // Define schema for the whole invoice
@@ -49,8 +49,8 @@ const invoiceSchema = z.object({
   tax: z.coerce.number().min(0),
   total: z.coerce.number().min(0),
   status: z.string().min(1, "El estado es obligatorio"),
-  notes: z.string().optional(),
-  attachments: z.array(z.string()).optional(),
+  notes: z.string().nullable().optional(),
+  attachments: z.array(z.string()).nullable().optional(),
   items: z.array(invoiceItemSchema).min(1, "Agrega al menos un ítem a la factura"),
 });
 
@@ -360,6 +360,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <Textarea
                           placeholder="Información adicional para la factura..."
                           {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />

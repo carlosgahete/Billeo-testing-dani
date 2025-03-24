@@ -493,12 +493,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { invoice, items } = req.body;
       
+      console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
+      
       const invoiceResult = insertInvoiceSchema.safeParse({
         ...invoice,
         userId: req.session.userId
       });
       
       if (!invoiceResult.success) {
+        console.log("Validation errors:", JSON.stringify(invoiceResult.error.errors, null, 2));
         return res.status(400).json({ 
           message: "Invalid invoice data", 
           errors: invoiceResult.error.errors 
