@@ -64,7 +64,9 @@ interface InvoiceFormProps {
 const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [showClientForm, setShowClientForm] = useState(false);
   const [location, navigate] = useLocation();
+  const queryClient = useQueryClient();
   
   const isEditMode = !!invoiceId;
 
@@ -241,87 +243,40 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     setAttachments([...attachments, path]);
   };
 
+  // Función que maneja la creación de un nuevo cliente
+  const handleClientCreated = (newClient: any) => {
+    // Actualizar la caché de react-query para incluir el nuevo cliente
+    queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+    
+    // Seleccionar automáticamente el nuevo cliente en el formulario
+    form.setValue("clientId", newClient.id);
+    
+    toast({
+      title: "Cliente creado",
+      description: `El cliente ${newClient.name} ha sido creado correctamente`,
+    });
+  };
+
   if ((isEditMode && invoiceLoading) || clientsLoading) {
     return <div className="flex justify-center p-8">Cargando...</div>;
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="invoiceNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número de factura</FormLabel>
-                      <FormControl>
-                        <Input placeholder="F-2023-001" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="clientId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cliente</FormLabel>
-                      <div className="flex gap-2 items-start">
-                        <div className="flex-1">
-                          <Select
-                            onValueChange={(value) => field.onChange(Number(value))}
-                            defaultValue={
-                              field.value ? field.value.toString() : undefined
-                            }
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar cliente" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {clients?.map((client: any) => (
-                                <SelectItem key={client.id} value={client.id.toString()}>
-                                  {client.name}
-                                </SelectItem>
-                              ))}
-                              {clients?.length === 0 && (
-                                <div className="px-2 py-3 text-sm text-muted-foreground">
-                                  No hay clientes disponibles
-                                </div>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => setShowClientForm(true)}
-                          className="shrink-0"
-                        >
-                          Nuevo
-                        </Button>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="issueDate"
+                    name="invoiceNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fecha de emisión</FormLabel>
+                        <FormLabel>Número de factura</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input placeholder="F-2023-001" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -330,317 +285,387 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
 
                   <FormField
                     control={form.control}
-                    name="dueDate"
+                    name="clientId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fecha de vencimiento</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormLabel>Cliente</FormLabel>
+                        <div className="flex gap-2 items-start">
+                          <div className="flex-1">
+                            <Select
+                              onValueChange={(value) => field.onChange(Number(value))}
+                              defaultValue={
+                                field.value ? field.value.toString() : undefined
+                              }
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar cliente" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {clients?.map((client: any) => (
+                                  <SelectItem key={client.id} value={client.id.toString()}>
+                                    {client.name}
+                                  </SelectItem>
+                                ))}
+                                {clients?.length === 0 && (
+                                  <div className="px-2 py-3 text-sm text-muted-foreground">
+                                    No hay clientes disponibles
+                                  </div>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setShowClientForm(true)}
+                            className="shrink-0"
+                          >
+                            Nuevo
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="issueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fecha de emisión</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fecha de vencimiento</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar estado" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendiente</SelectItem>
+                            <SelectItem value="paid">Pagada</SelectItem>
+                            <SelectItem value="overdue">Vencida</SelectItem>
+                            <SelectItem value="canceled">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+              </CardContent>
+            </Card>
 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notas</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar estado" />
-                          </SelectTrigger>
+                          <Textarea
+                            placeholder="Información adicional para la factura..."
+                            {...field}
+                            value={field.value || ""}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="pending">Pendiente</SelectItem>
-                          <SelectItem value="paid">Pagada</SelectItem>
-                          <SelectItem value="overdue">Vencida</SelectItem>
-                          <SelectItem value="canceled">Cancelada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notas</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Información adicional para la factura..."
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div>
-                  <FormLabel>Archivos adjuntos</FormLabel>
-                  <div className="mt-2">
-                    <FileUpload onUpload={handleFileUpload} />
-                    
-                    <div className="mt-3 space-y-2">
-                      {attachments.map((attachment, index) => (
-                        <div key={index} className="flex items-center space-x-2 text-sm">
-                          <FileText className="h-4 w-4" />
-                          <span className="flex-1 truncate">
-                            {attachment.split('/').pop()}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              const newAttachments = [...attachments];
-                              newAttachments.splice(index, 1);
-                              setAttachments(newAttachments);
-                            }}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                  <div>
+                    <FormLabel>Archivos adjuntos</FormLabel>
+                    <div className="mt-2">
+                      <FileUpload onUpload={handleFileUpload} />
+                      
+                      <div className="mt-3 space-y-2">
+                        {attachments.map((attachment, index) => (
+                          <div key={index} className="flex items-center space-x-2 text-sm">
+                            <FileText className="h-4 w-4" />
+                            <span className="flex-1 truncate">
+                              {attachment.split('/').pop()}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const newAttachments = [...attachments];
+                                newAttachments.splice(index, 1);
+                                setAttachments(newAttachments);
+                              }}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-medium mb-4">Detalles de la factura</h3>
+              
+              <div className="mb-4 space-y-4">
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-12 gap-4 items-start"
+                  >
+                    <div className="col-span-12 md:col-span-5">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.description`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Descripción
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="Descripción" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Cantidad
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="Cant."
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(parseFloat(e.target.value));
+                                  calculateTotals();
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.unitPrice`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Precio
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="Precio"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(parseFloat(e.target.value));
+                                  calculateTotals();
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-1">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.taxRate`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              IVA %
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="IVA %"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(parseFloat(e.target.value));
+                                  calculateTotals();
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-1">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.subtotal`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Subtotal
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                disabled
+                                value={
+                                  form.getValues(`items.${index}.quantity`) *
+                                  form.getValues(`items.${index}.unitPrice`)
+                                }
+                                placeholder="Subtotal"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-12 md:col-span-1 flex items-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          remove(index);
+                          calculateTotals();
+                        }}
+                        disabled={fields.length === 1}
+                        className="h-10 w-10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Eliminar ítem</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  append({
+                    description: "",
+                    quantity: 1,
+                    unitPrice: 0,
+                    taxRate: 21,
+                    subtotal: 0,
+                  });
+                }}
+                className="mb-6"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Añadir ítem
+              </Button>
+
+              <div className="border-t pt-4 flex flex-col items-end space-y-2">
+                <div className="flex justify-between w-full md:w-80">
+                  <span className="text-sm text-muted-foreground">Subtotal:</span>
+                  <span className="font-medium">
+                    {form.getValues("subtotal").toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between w-full md:w-80">
+                  <span className="text-sm text-muted-foreground">IVA:</span>
+                  <span className="font-medium">
+                    {form.getValues("tax").toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between w-full md:w-80 text-lg font-bold">
+                  <span>Total:</span>
+                  <span>{form.getValues("total").toFixed(2)} €</span>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-4">Detalles de la factura</h3>
-            
-            <div className="mb-4 space-y-4">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-12 gap-4 items-start"
-                >
-                  <div className="col-span-12 md:col-span-5">
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.description`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                            Descripción
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="Descripción" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="col-span-3 md:col-span-2">
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.quantity`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                            Cantidad
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="Cant."
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(parseFloat(e.target.value));
-                                calculateTotals();
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="col-span-3 md:col-span-2">
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.unitPrice`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                            Precio
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="Precio"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(parseFloat(e.target.value));
-                                calculateTotals();
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="col-span-3 md:col-span-1">
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.taxRate`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                            IVA %
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="1"
-                              placeholder="IVA %"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(parseFloat(e.target.value));
-                                calculateTotals();
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="col-span-3 md:col-span-1">
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.subtotal`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                            Subtotal
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              disabled
-                              value={
-                                form.getValues(`items.${index}.quantity`) *
-                                form.getValues(`items.${index}.unitPrice`)
-                              }
-                              placeholder="Subtotal"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="col-span-12 md:col-span-1 flex items-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        remove(index);
-                        calculateTotals();
-                      }}
-                      disabled={fields.length === 1}
-                      className="h-10 w-10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Eliminar ítem</span>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+          <div className="flex justify-end space-x-2">
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              onClick={() => {
-                append({
-                  description: "",
-                  quantity: 1,
-                  unitPrice: 0,
-                  taxRate: 21,
-                  subtotal: 0,
-                });
-              }}
-              className="mb-6"
+              onClick={() => navigate("/invoices")}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Añadir ítem
+              Cancelar
             </Button>
+            <Button type="submit" variant="default" disabled={mutation.isPending}>
+              {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
+            </Button>
+          </div>
+        </form>
+      </Form>
 
-            <div className="border-t pt-4 flex flex-col items-end space-y-2">
-              <div className="flex justify-between w-full md:w-80">
-                <span className="text-sm text-muted-foreground">Subtotal:</span>
-                <span className="font-medium">
-                  {form.getValues("subtotal").toFixed(2)} €
-                </span>
-              </div>
-              <div className="flex justify-between w-full md:w-80">
-                <span className="text-sm text-muted-foreground">IVA:</span>
-                <span className="font-medium">
-                  {form.getValues("tax").toFixed(2)} €
-                </span>
-              </div>
-              <div className="flex justify-between w-full md:w-80 text-lg font-bold">
-                <span>Total:</span>
-                <span>{form.getValues("total").toFixed(2)} €</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/invoices")}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" variant="default" disabled={mutation.isPending}>
-            {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      {/* Formulario de clientes como modal */}
+      <ClientForm 
+        open={showClientForm} 
+        onOpenChange={setShowClientForm} 
+        onClientCreated={handleClientCreated} 
+      />
+    </>
   );
 };
 
