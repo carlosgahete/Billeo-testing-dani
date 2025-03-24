@@ -152,6 +152,25 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         }
       };
       
+      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
+      let additionalTaxesArray = [];
+      
+      if (invoice.additionalTaxes) {
+        // Si es una cadena JSON, intentamos parsearlo
+        if (typeof invoice.additionalTaxes === 'string') {
+          try {
+            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
+          } catch (e) {
+            console.error("Error al parsear additionalTaxes como JSON:", e);
+            additionalTaxesArray = [];
+          }
+        } 
+        // Si ya es un array, lo usamos directamente
+        else if (Array.isArray(invoice.additionalTaxes)) {
+          additionalTaxesArray = invoice.additionalTaxes;
+        }
+      }
+      
       // Transformar los datos para el formulario
       const formattedInvoice = {
         ...invoice,
@@ -164,7 +183,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
-        // Mapeamos los items
+        // Mapeamos los items asegurando valores correctos
         items: (items || []).map((item: any) => ({
           description: item.description || "",
           quantity: Number(item.quantity) || 0,
@@ -172,13 +191,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           taxRate: Number(item.taxRate) || 21,
           subtotal: Number(item.subtotal) || 0,
         })),
-        // Aseguramos que additionalTaxes siempre sea un array
-        additionalTaxes: Array.isArray(invoice.additionalTaxes) ? 
-          invoice.additionalTaxes.map((tax: any) => ({
-            name: tax.name || "",
-            amount: Number(tax.amount || 0),
-            isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
-          })) : []
+        // Formateamos los impuestos adicionales
+        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
+          name: tax.name || "",
+          amount: Number(tax.amount || 0),
+          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
+        }))
       };
       
       console.log("🔄 Datos formateados para el formulario:", formattedInvoice);
@@ -191,7 +209,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
       }
       
-      // Esto es importante para que se actualicen los campos dinámicos (items y taxes)
+      // Recalcular totales después de que el formulario se haya actualizado completamente
       setTimeout(() => {
         calculateTotals();
       }, 200);
@@ -271,11 +289,23 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         // Incorporar datos originales si están disponibles
         const originalInvoice = invoiceData?.invoice || {};
         
+        // Asegurar que los impuestos adicionales estén en el formato correcto
+        // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
+        let processedAdditionalTaxes = formattedData.additionalTaxes;
+        
+        console.log("📊 Impuestos antes de procesar:", processedAdditionalTaxes);
+        
+        // Si es un array vacío, asegurarnos de que siga siendo un array
+        if (Array.isArray(processedAdditionalTaxes) && processedAdditionalTaxes.length === 0) {
+          processedAdditionalTaxes = [];
+        }
+        
         // Mantener los campos originales si no se proporcionan nuevos valores
         const completeInvoiceData = {
           ...originalInvoice,
           ...formattedData,
           // Asegurar campos críticos
+          id: invoiceId,  // Importante incluir el ID explícitamente
           invoiceNumber: formattedData.invoiceNumber,
           clientId: formattedData.clientId,
           issueDate: formattedData.issueDate,
@@ -286,7 +316,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           status: formattedData.status,
           // Campos opcionales
           notes: formattedData.notes !== null ? formattedData.notes : originalInvoice.notes,
-          additionalTaxes: formattedData.additionalTaxes || originalInvoice.additionalTaxes || [],
+          additionalTaxes: processedAdditionalTaxes,
           attachments: formattedData.attachments || originalInvoice.attachments
         };
         
@@ -899,6 +929,19 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                           size="sm"
                           onClick={(e) => { 
                             e.preventDefault(); 
+                            handleAddTax('iva');
+                          }}
+                          className="h-7 px-2"
+                          title="Añadir IVA adicional (21%)"
+                        >
+                          <span className="text-xs">+ IVA</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => { 
+                            e.preventDefault(); 
                             handleAddTax('irpf');
                           }}
                           className="h-7 px-2"
@@ -1035,7 +1078,21 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 
                 {/* Botones para añadir impuestos cuando no hay ninguno */}
                 {taxFields.length === 0 && (
-                  <div className="w-full md:w-80 my-2 grid grid-cols-2 gap-2">
+                  <div className="w-full md:w-80 my-2 grid grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax('iva');
+                      }}
+                      className="text-xs"
+                      title="Añadir IVA adicional (21%)"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Añadir IVA
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"
