@@ -88,12 +88,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const isEditMode = !!invoiceId;
 
   // Fetch clients for dropdown
-  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+  const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
   });
 
   // Fetch invoice data if in edit mode
-  const { data: invoiceData = { invoice: null, items: [] }, isLoading: invoiceLoading } = useQuery({
+  const { data: invoiceData = { invoice: null, items: [] }, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
   });
@@ -131,10 +131,22 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     if (invoiceData && !invoiceLoading && invoiceData.invoice) {
       const { invoice, items } = invoiceData;
       
-      form.reset({
+      // Aseguramos que las fechas estén en formato YYYY-MM-DD
+      const formatDateForInput = (dateString: string) => {
+        try {
+          const date = new Date(dateString);
+          return date.toISOString().split("T")[0];
+        } catch (e) {
+          console.error("Error al formatear fecha:", e);
+          return dateString;
+        }
+      };
+      
+      // Transformar los datos para el formulario
+      const formattedInvoice = {
         ...invoice,
-        issueDate: new Date(invoice.issueDate).toISOString().split("T")[0],
-        dueDate: new Date(invoice.dueDate).toISOString().split("T")[0],
+        issueDate: formatDateForInput(invoice.issueDate),
+        dueDate: formatDateForInput(invoice.dueDate),
         items: (items || []).map((item: any) => ({
           ...item,
           quantity: Number(item.quantity),
@@ -142,8 +154,16 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           taxRate: Number(item.taxRate),
           subtotal: Number(item.subtotal),
         })),
-      });
+        // Aseguramos que additionalTaxes siempre sea un array
+        additionalTaxes: invoice.additionalTaxes || []
+      };
       
+      console.log("Cargando datos de factura existente:", formattedInvoice);
+      
+      // Actualizar el formulario con los datos formateados
+      form.reset(formattedInvoice);
+      
+      // Si hay archivos adjuntos, actualizamos el estado
       if (invoice.attachments) {
         setAttachments(invoice.attachments);
       }
@@ -447,7 +467,15 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de emisión</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input 
+                              type="date" 
+                              {...field} 
+                              onChange={(e) => {
+                                console.log("Cambiando fecha de emisión a:", e.target.value);
+                                field.onChange(e.target.value);
+                              }} 
+                              className="text-base"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -461,7 +489,15 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de vencimiento</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input 
+                              type="date" 
+                              {...field} 
+                              onChange={(e) => {
+                                console.log("Cambiando fecha de vencimiento a:", e.target.value);
+                                field.onChange(e.target.value);
+                              }}
+                              className="text-base"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
