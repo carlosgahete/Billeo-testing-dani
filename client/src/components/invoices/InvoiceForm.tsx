@@ -29,6 +29,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Trash2, Plus, FileText, Minus, CalendarIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -89,6 +97,8 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [showTaxDialog, setShowTaxDialog] = useState(false);
+  const [newTaxData, setNewTaxData] = useState({ name: "", amount: 0, isPercentage: false });
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
@@ -446,6 +456,8 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         amount: -15, 
         isPercentage: true 
       });
+      // Recalcular totales después de agregar impuesto
+      setTimeout(() => calculateTotals(), 0);
     } else if (taxType === 'iva') {
       // IVA adicional (21%)
       appendTax({ 
@@ -453,14 +465,19 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         amount: 21, 
         isPercentage: true 
       });
+      // Recalcular totales después de agregar impuesto
+      setTimeout(() => calculateTotals(), 0);
     } else {
-      // Impuesto genérico (valor monetario)
-      appendTax({ 
-        name: "", 
-        amount: 0,
-        isPercentage: false 
-      });
+      // Mostrar diálogo para impuesto personalizado
+      setNewTaxData({ name: "", amount: 0, isPercentage: false });
+      setShowTaxDialog(true);
     }
+  };
+  
+  // Función para agregar el impuesto desde el diálogo
+  const handleAddTaxFromDialog = () => {
+    appendTax(newTaxData);
+    setShowTaxDialog(false);
     // Recalcular totales después de agregar impuesto
     setTimeout(() => calculateTotals(), 0);
   };
@@ -1098,6 +1115,65 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         onOpenChange={setShowClientForm} 
         onClientCreated={handleClientCreated} 
       />
+
+      {/* Diálogo para agregar impuestos adicionales */}
+      <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregar nuevo impuesto</DialogTitle>
+            <DialogDescription>
+              Ingresa los datos del impuesto que deseas agregar a la factura.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <div>
+                <label htmlFor="taxName" className="text-sm font-medium">
+                  Nombre del impuesto
+                </label>
+                <input
+                  id="taxName"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                  placeholder="Ej: IRPF, tasa municipal, etc."
+                  value={newTaxData.name}
+                  onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="taxAmount" className="text-sm font-medium">
+                  Importe
+                </label>
+                <div className="flex items-center mt-1">
+                  <input
+                    id="taxAmount"
+                    type="number"
+                    step="0.01"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Importe o porcentaje"
+                    value={newTaxData.amount}
+                    onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="ml-2 px-3"
+                    onClick={() => setNewTaxData({...newTaxData, isPercentage: !newTaxData.isPercentage})}
+                  >
+                    {newTaxData.isPercentage ? '%' : '€'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTaxDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAddTaxFromDialog}>Agregar impuesto</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
