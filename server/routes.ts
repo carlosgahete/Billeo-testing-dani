@@ -1,5 +1,13 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
+
+// Extiende el objeto Request para incluir las propiedades de sesión
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+  }
+}
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
