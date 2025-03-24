@@ -882,57 +882,57 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  append({
-                    description: "",
-                    quantity: 1,
-                    unitPrice: 0,
-                    taxRate: 21,
-                    subtotal: 0,
-                  });
-                }}
-                className="mb-4"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Añadir ítem
-              </Button>
-              
-              {/* Botones de impuestos alineados antes de la línea divisoria */}
-              <div className="w-full flex justify-end mb-4">
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => { 
-                      e.preventDefault(); 
-                      handleAddTax('irpf');
-                    }}
-                    className="text-xs"
-                    title="Añadir retención de IRPF (-15%)"
-                  >
-                    <Minus className="h-3 w-3 mr-1" />
-                    Añadir IRPF
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => { 
-                      e.preventDefault(); 
-                      handleAddTax();
-                    }}
-                    className="text-xs"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Otro impuesto
-                  </Button>
+                
+                {/* Esta es la fila con los botones de impuestos, alineados al final como en la imagen */}
+                <div className="grid grid-cols-12 gap-4 items-center mb-4">
+                  <div className="col-span-8 sm:col-span-9 flex">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        append({
+                          description: "",
+                          quantity: 1,
+                          unitPrice: 0,
+                          taxRate: 21,
+                          subtotal: 0,
+                        });
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Añadir ítem
+                    </Button>
+                  </div>
+                  <div className="col-span-4 sm:col-span-3 flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax('irpf');
+                      }}
+                      className="text-xs"
+                      title="Añadir retención de IRPF (-15%)"
+                    >
+                      <Minus className="h-3 w-3 mr-1" />
+                      Añadir IRPF
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax();
+                      }}
+                      className="text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Otro impuesto
+                    </Button>
+                  </div>
                 </div>
               </div>
               
