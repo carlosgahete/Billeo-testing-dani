@@ -22,14 +22,20 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   const { data, isLoading, error } = useQuery<SessionData>({
     queryKey: ["/api/auth/session"],
     retry: false,
+    staleTime: 0, // Don't use stale data
+    refetchOnMount: true, // Always refetch on component mount
   });
 
   useEffect(() => {
     // Only redirect if we have a response and user is not authenticated
     if (!isLoading && (!data?.authenticated || error)) {
-      navigate("/login");
+      if (location !== "/login") {
+        // Prevent infinite redirect loops - only navigate if we're not already at login
+        console.log("No authentication detected, redirecting to login");
+        navigate("/login");
+      }
     }
-  }, [data, isLoading, error, navigate]);
+  }, [data, isLoading, error, navigate, location]);
 
   // If we're loading the session, show a loading state
   if (isLoading) {

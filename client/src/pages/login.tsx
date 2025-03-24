@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import billeoLogo from '../assets/billeo-logo.png';
 
 const LoginPage = () => {
@@ -44,11 +44,19 @@ const LoginPage = () => {
       });
 
       if (response) {
-        toast({
-          title: "Inicio de sesión exitoso",
-          description: "Bienvenido al sistema de gestión financiera",
-        });
-        navigate("/");
+        // Invalidate auth session cache to force refetch
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+        
+        // Fetch session info again before redirecting
+        const sessionCheck = await apiRequest("/api/auth/session", "GET");
+        
+        if (sessionCheck && sessionCheck.authenticated) {
+          toast({
+            title: "Inicio de sesión exitoso",
+            description: "Bienvenido al sistema de gestión financiera",
+          });
+          navigate("/");
+        }
       }
     } catch (error) {
       toast({
