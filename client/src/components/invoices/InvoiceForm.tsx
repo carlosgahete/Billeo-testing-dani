@@ -152,17 +152,30 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       // Transformar los datos para el formulario
       const formattedInvoice = {
         ...invoice,
+        invoiceNumber: invoice.invoiceNumber || "",
+        clientId: invoice.clientId,
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
+        status: invoice.status || "pending",
+        notes: invoice.notes || "",
+        subtotal: Number(invoice.subtotal || 0),
+        tax: Number(invoice.tax || 0),
+        total: Number(invoice.total || 0),
+        // Mapeamos los items
         items: (items || []).map((item: any) => ({
-          ...item,
-          quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice),
-          taxRate: Number(item.taxRate),
-          subtotal: Number(item.subtotal),
+          description: item.description || "",
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.unitPrice) || 0,
+          taxRate: Number(item.taxRate) || 21,
+          subtotal: Number(item.subtotal) || 0,
         })),
         // Aseguramos que additionalTaxes siempre sea un array
-        additionalTaxes: invoice.additionalTaxes || []
+        additionalTaxes: Array.isArray(invoice.additionalTaxes) ? 
+          invoice.additionalTaxes.map((tax: any) => ({
+            name: tax.name || "",
+            amount: Number(tax.amount || 0),
+            isPercentage: tax.isPercentage || false
+          })) : []
       };
       
       console.log("Cargando datos de factura existente:", formattedInvoice);
@@ -172,8 +185,13 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       
       // Si hay archivos adjuntos, actualizamos el estado
       if (invoice.attachments) {
-        setAttachments(invoice.attachments);
+        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
       }
+      
+      // Esto es importante para que se actualicen los campos dinámicos (items y taxes)
+      setTimeout(() => {
+        calculateTotals();
+      }, 200);
     }
   }, [invoiceData, invoiceLoading, form]);
 
