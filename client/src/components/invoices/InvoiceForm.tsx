@@ -29,6 +29,12 @@ import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
 
+// Define schema for additional tax
+const additionalTaxSchema = z.object({
+  name: z.string().min(1, "El nombre del impuesto es obligatorio"),
+  amount: z.coerce.number().min(0, "El importe del impuesto debe ser mayor o igual a 0")
+});
+
 // Define schema for line items
 const invoiceItemSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria"),
@@ -49,6 +55,7 @@ const invoiceSchema = z.object({
   subtotal: z.coerce.number().min(0),
   tax: z.coerce.number().min(0),
   total: z.coerce.number().min(0),
+  additionalTaxes: z.array(additionalTaxSchema).optional().default([]),
   status: z.string().min(1, "El estado es obligatorio"),
   notes: z.string().nullable().optional(),
   attachments: z.array(z.string()).nullable().optional(),
@@ -203,6 +210,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Calculate totals when items change
   const calculateTotals = () => {
     const items = form.getValues("items");
+    const additionalTaxes = form.getValues("additionalTaxes") || [];
     
     // Calculate subtotal for each item
     const updatedItems = items.map(item => {
@@ -222,18 +230,23 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       const itemTax = Number(item.subtotal) * (Number(item.taxRate) / 100);
       return sum + itemTax;
     }, 0);
-    const total = subtotal + tax;
+    
+    // Calcular el importe total de impuestos adicionales
+    const additionalTaxesTotal = additionalTaxes.reduce((sum, tax) => sum + Number(tax.amount), 0);
+    
+    // Calcular el total incluyendo todos los impuestos
+    const total = subtotal + tax + additionalTaxesTotal;
     
     form.setValue("subtotal", subtotal);
     form.setValue("tax", tax);
     form.setValue("total", total);
     
-    return { subtotal, tax, total };
+    return { subtotal, tax, additionalTaxesTotal, total };
   };
 
   const handleSubmit = (data: InvoiceFormValues) => {
     // Recalculate totals before submission
-    const { subtotal, tax, total } = calculateTotals();
+    const { subtotal, tax, additionalTaxesTotal, total } = calculateTotals();
     data.subtotal = subtotal;
     data.tax = tax;
     data.total = total;

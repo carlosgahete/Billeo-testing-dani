@@ -72,14 +72,29 @@ export const invoices = pgTable("invoices", {
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  additionalTaxes: jsonb("additional_taxes"), // Array de impuestos adicionales
   status: text("status").notNull().default("pending"), // pending, paid, overdue, canceled
   notes: text("notes"),
   attachments: text("attachments").array(),
 });
 
+// Definición del tipo de impuesto adicional
+export const additionalTaxSchema = z.object({
+  name: z.string().min(1, { message: "El nombre del impuesto es obligatorio" }),
+  amount: z.number().min(0, { message: "El importe del impuesto debe ser mayor o igual a 0" })
+});
+
+export type AdditionalTax = z.infer<typeof additionalTaxSchema>;
+
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ 
   id: true 
 });
+
+// Modificamos el esquema para incluir el campo additionalTaxes como un array de impuestos
+export const invoiceWithTaxesSchema = insertInvoiceSchema.extend({
+  additionalTaxes: z.array(additionalTaxSchema).optional().nullable()
+});
+
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
 
