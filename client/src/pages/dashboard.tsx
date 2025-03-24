@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
+import TaxSummary from "@/components/dashboard/TaxSummary";
 
 const Dashboard = () => {
   const [, navigate] = useLocation();
@@ -154,6 +156,9 @@ const Dashboard = () => {
         </div>
       </div>
       
+      {/* Métricas principales */}
+      <DashboardMetrics userId={user?.user?.id || 0} />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Tarjeta de Ingresos */}
         <Card className="overflow-hidden">
@@ -249,8 +254,11 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
+        {/* Resumen de impuestos */}
+        <TaxSummary />
+        
         {/* Tarjeta de Resultado */}
-        <Card className="overflow-hidden md:col-span-2">
+        <Card className="overflow-hidden">
           <CardHeader className="bg-neutral-50 pb-2">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg text-neutral-700 flex items-center">
@@ -265,46 +273,42 @@ const Dashboard = () => {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="w-[200px] text-xs">La diferencia entre tus ingresos y tus gastos</p>
+                    <p className="w-[200px] text-xs">La diferencia entre tus ingresos y tus gastos, incluyendo retenciones</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-3xl font-bold text-neutral-900">{financialData.balance.total.toLocaleString('es-ES')} €</p>
-                <div className="flex items-center gap-1 mt-1 text-sm">
-                  <span className={isPositiveMargin ? "text-primary-600" : "text-red-600"}>
-                    {isPositiveMargin ? <TrendingUp className="inline h-4 w-4 mr-1" /> : <TrendingDown className="inline h-4 w-4 mr-1" />}
-                    {profitMargin}% de margen
-                  </span>
-                </div>
+            <div>
+              <p className="text-3xl font-bold text-neutral-900">{(stats?.result || financialData.balance.netProfit).toLocaleString('es-ES')} €</p>
+              <div className="flex items-center gap-1 mt-1 text-sm">
+                <span className={isPositiveMargin ? "text-primary-600" : "text-red-600"}>
+                  {isPositiveMargin ? <TrendingUp className="inline h-4 w-4 mr-1" /> : <TrendingDown className="inline h-4 w-4 mr-1" />}
+                  {profitMargin}% de margen
+                </span>
               </div>
-              
-              <div className="mt-4 md:mt-0 border-t md:border-t-0 md:border-l border-dashed border-neutral-200 pt-4 md:pt-0 md:pl-6">
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500 mr-4">IVA a liquidar (trimestral):</span>
-                    <span className="font-medium">{financialData.balance.ivaNeto.toLocaleString('es-ES')} €</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500 mr-4">IRPF estimado (trimestral):</span>
-                    <span className="font-medium">{financialData.balance.irpfEstimated.toLocaleString('es-ES')} €</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-neutral-100">
-                    <span className="text-neutral-500 mr-4 font-medium">Beneficio neto estimado:</span>
-                    <span className="font-bold">{financialData.balance.netProfit.toLocaleString('es-ES')} €</span>
-                  </div>
-                </div>
+            </div>
+            
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Ingresos totales:</span>
+                <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Gastos totales:</span>
+                <span className="font-medium">-{financialData.expenses.total.toLocaleString('es-ES')} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Retenciones:</span>
+                <span className="font-medium">-{(stats?.totalWithholdings || 0).toLocaleString('es-ES')} €</span>
               </div>
             </div>
             
             <Button 
               variant="default"
               size="sm" 
-              className="w-full mt-6"
+              className="w-full mt-4"
               onClick={() => navigate("/reports")}
             >
               Ver informes detallados

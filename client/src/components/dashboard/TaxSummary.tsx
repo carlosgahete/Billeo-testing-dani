@@ -62,6 +62,9 @@ const TaxSummary = () => {
           ) : (
             <Progress value={vatPercentage} className="h-2 bg-neutral-200" />
           )}
+          <p className="text-xs text-neutral-500 mt-1">
+            {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
+          </p>
         </div>
         
         <div className="mb-4">
@@ -81,6 +84,31 @@ const TaxSummary = () => {
               className="h-2 bg-neutral-200" 
             />
           )}
+          <p className="text-xs text-neutral-500 mt-1">
+            {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
+          </p>
+        </div>
+        
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-neutral-600">Retenciones</span>
+            {isLoading ? (
+              <Skeleton className="h-4 w-20" />
+            ) : (
+              <span className="text-sm font-medium">{formatCurrency(withholdings)}</span>
+            )}
+          </div>
+          {isLoading ? (
+            <Skeleton className="h-2 w-full" />
+          ) : (
+            <Progress 
+              value={withholdingsPercentage} 
+              className="h-2 bg-neutral-200" 
+            />
+          )}
+          <p className="text-xs text-neutral-500 mt-1">
+            {withholdingsPercentage > 0 ? `${withholdingsPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
+          </p>
         </div>
         
         <div className="text-center mt-6">
