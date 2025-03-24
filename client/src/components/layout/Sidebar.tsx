@@ -109,7 +109,7 @@ const Sidebar = ({
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-8"
+              className="h-6"
             />
           </div>
           
@@ -181,7 +181,7 @@ const Sidebar = ({
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-8"
+              className="h-6"
             />
           </div>
           <button
