@@ -580,7 +580,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                               <Input
                                 type="text"
                                 placeholder="Cantidad"
-                                value={field.value || ''}
+                                defaultValue={field.value || ''}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
@@ -609,7 +609,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                               <Input
                                 type="text"
                                 placeholder="Precio"
-                                value={field.value || ''}
+                                defaultValue={field.value || ''}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
