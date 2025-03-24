@@ -65,7 +65,7 @@ const LoginPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">
-            Financial Management System
+            Billeo
           </CardTitle>
           <p className="text-sm text-neutral-500">
             Enter your credentials to access your account

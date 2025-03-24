@@ -97,7 +97,7 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
               strokeLinejoin="round" 
             />
           </svg>
-          <span className="ml-2 text-xl font-semibold text-primary-700">FinanzaPro</span>
+          <span className="ml-2 text-xl font-semibold text-primary-700">Billeo</span>
         </div>
 
         <DropdownMenu>

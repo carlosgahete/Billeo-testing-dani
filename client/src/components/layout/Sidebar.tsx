@@ -6,7 +6,8 @@ import {
   BarChart3, 
   Building2, 
   Settings,
-  User
+  User,
+  X
 } from "lucide-react";
 
 interface SidebarProps {
@@ -124,7 +125,7 @@ const Sidebar = ({
               strokeLinejoin="round" 
             />
           </svg>
-          <span className="ml-2 text-xl font-semibold text-primary-700">FinanzaPro</span>
+          <span className="ml-2 text-xl font-semibold text-primary-700">Billeo</span>
         </div>
         
         {/* Nav Items */}
@@ -175,30 +176,39 @@ const Sidebar = ({
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Logo */}
-        <div className="h-16 px-6 flex items-center border-b border-neutral-200">
-          <svg 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-8 w-8 text-primary-700"
+        {/* Logo with close button */}
+        <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
+          <div className="flex items-center">
+            <svg 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-8 w-8 text-primary-700"
+            >
+              <path 
+                d="M19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5Z" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+              />
+              <path 
+                d="M3 7L12 13L21 7" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+              />
+            </svg>
+            <span className="ml-2 text-xl font-semibold text-primary-700">Billeo</span>
+          </div>
+          <button
+            className="text-neutral-500 p-1 rounded-full hover:bg-neutral-100"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Cerrar menú"
           >
-            <path 
-              d="M19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5Z" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-            />
-            <path 
-              d="M3 7L12 13L21 7" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-            />
-          </svg>
-          <span className="ml-2 text-xl font-semibold text-primary-700">FinanzaPro</span>
+            <X size={24} />
+          </button>
         </div>
         
         {/* Nav Items */}
