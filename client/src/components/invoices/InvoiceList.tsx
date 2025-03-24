@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Download, Plus, FileDown } from "lucide-react";
+import { Eye, Edit, Trash2, Download, Plus, FileDown, CheckCircle, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -18,6 +18,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { generateInvoicePDF } from "@/lib/pdf";
 
@@ -51,6 +57,82 @@ const StatusBadge = ({ status }: { status: string }) => {
   const { label, variant } = statusMap[status] || { label: status, variant: "default" };
 
   return <Badge variant={variant}>{label}</Badge>;
+};
+
+// Componente para marcar una factura como pagada
+const MarkAsPaidButton = ({ 
+  invoice
+}: { 
+  invoice: Invoice
+}) => {
+  const { toast } = useToast();
+  const [isPending, setIsPending] = useState(false);
+
+  // Si la factura ya está pagada, no mostrar el botón
+  if (invoice.status === 'paid') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" disabled className="text-green-600">
+              <CheckCircle className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Esta factura ya está marcada como pagada</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  const handleMarkAsPaid = async () => {
+    setIsPending(true);
+    try {
+      // Actualizar el estado de la factura a "paid"
+      await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
+        status: "paid"
+      });
+      
+      toast({
+        title: "Factura marcada como pagada",
+        description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
+      });
+      
+      // Invalidar las consultas para actualizar los datos
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `No se pudo marcar la factura como pagada: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-green-600 hover:bg-green-50"
+            onClick={handleMarkAsPaid}
+            disabled={isPending}
+          >
+            <DollarSign className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Marcar como pagada</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 };
 
 const DeleteInvoiceDialog = ({ 
@@ -248,6 +330,8 @@ const InvoiceList = () => {
             >
               <FileDown className="h-4 w-4" />
             </Button>
+            {/* Botón para marcar factura como pagada */}
+            <MarkAsPaidButton invoice={invoice} />
             <DeleteInvoiceDialog
               invoiceId={invoice.id}
               invoiceNumber={invoice.invoiceNumber}

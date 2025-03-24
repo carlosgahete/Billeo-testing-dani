@@ -1076,6 +1076,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter(inv => inv.status === "paid")
         .reduce((sum, inv) => sum + Number(inv.subtotal), 0);
         
+      // Incluir también las facturas que se han marcado como pagadas
+      console.log("Calculando ingresos de facturas pagadas:", 
+        allInvoices
+          .filter(inv => inv.status === "paid")
+          .map(inv => ({ number: inv.invoiceNumber, amount: inv.subtotal }))
+      );
+        
       // Calculate total income - combinando transacciones e ingresos de facturas
       const income = transactionIncome + invoiceIncome;
       
