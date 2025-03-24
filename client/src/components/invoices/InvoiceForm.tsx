@@ -169,12 +169,28 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     mutationFn: async (data: InvoiceFormValues) => {
       console.log("Datos originales:", data);
       
-      // Transformamos las fechas a objetos Date y aseguramos valores correctos
+      // Asegurarnos que las fechas están en formato YYYY-MM-DD
+      const formatDate = (dateString: string) => {
+        // Si ya está en formato ISO o yyyy-mm-dd, lo devolvemos directamente
+        if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+          return dateString.split('T')[0]; // Eliminar parte de tiempo si existe
+        }
+        // Si no, intentamos convertirlo a formato ISO
+        try {
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0];
+        } catch (e) {
+          console.error("Error al formatear fecha:", e);
+          return dateString; // Devolver original si hay error
+        }
+      };
+      
+      // Transformamos las fechas y aseguramos valores correctos
       const formattedData = {
         invoiceNumber: data.invoiceNumber,
         clientId: data.clientId,
-        issueDate: new Date(data.issueDate),
-        dueDate: new Date(data.dueDate),
+        issueDate: formatDate(data.issueDate),
+        dueDate: formatDate(data.dueDate),
         // Convertimos los números a strings para que coincidan con lo que espera el servidor
         subtotal: data.subtotal.toString(),
         tax: data.tax.toString(),
