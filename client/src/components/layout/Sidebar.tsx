@@ -28,18 +28,17 @@ interface NavItemProps {
 }
 
 const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => (
-  <Link href={href}>
-    <a
-      onClick={onClick}
-      className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-        isActive
-          ? "bg-primary-50 text-primary-700"
-          : "text-neutral-600 hover:bg-neutral-100"
-      }`}
-    >
-      <span className="mr-3">{icon}</span>
-      <span>{label}</span>
-    </a>
+  <Link 
+    href={href} 
+    onClick={onClick}
+    className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+      isActive
+        ? "bg-primary/10 text-primary"
+        : "text-neutral-600 hover:bg-neutral-100"
+    }`}
+  >
+    <span className="mr-3">{icon}</span>
+    <span>{label}</span>
   </Link>
 );
 
@@ -116,7 +115,7 @@ const Sidebar = ({
           {/* Toggle sidebar button - hamburger menu */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-neutral-500 p-1 rounded-md hover:bg-neutral-100 transition-colors"
+            className="text-primary p-1 rounded-md hover:bg-primary/10 transition-colors"
             aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -185,7 +184,7 @@ const Sidebar = ({
             />
           </div>
           <button
-            className="text-neutral-500 p-1 rounded-full hover:bg-neutral-100"
+            className="text-primary p-1 rounded-full hover:bg-primary/10"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Cerrar menú"
           >
