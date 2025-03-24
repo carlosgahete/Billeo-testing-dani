@@ -137,15 +137,35 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Create or update invoice mutation
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
+      // Transformamos las fechas a objetos Date
+      const formattedData = {
+        ...data,
+        issueDate: new Date(data.issueDate),
+        dueDate: new Date(data.dueDate),
+        // Convertimos los números a strings para que coincidan con lo que espera el servidor
+        subtotal: data.subtotal.toString(),
+        tax: data.tax.toString(),
+        total: data.total.toString(),
+      };
+      
+      // Transformamos los items de la factura
+      const formattedItems = data.items.map(item => ({
+        ...item,
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice.toString(),
+        taxRate: item.taxRate.toString(),
+        subtotal: item.subtotal ? item.subtotal.toString() : undefined,
+      }));
+      
       if (isEditMode) {
         return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
-          invoice: { ...data, attachments },
-          items: data.items,
+          invoice: { ...formattedData, attachments },
+          items: formattedItems,
         });
       } else {
         return apiRequest("POST", "/api/invoices", {
-          invoice: { ...data, attachments },
-          items: data.items,
+          invoice: { ...formattedData, attachments },
+          items: formattedItems,
         });
       }
     },
