@@ -11,7 +11,10 @@ interface DashboardStats {
     vat: number;
     incomeTax: number;
   };
-  // Add other properties if needed
+  totalWithholdings: number;
+  income: number;
+  expenses: number;
+  result: number;
 }
 
 const TaxSummary = () => {
@@ -31,10 +34,13 @@ const TaxSummary = () => {
   // Default tax values when data is not available
   const vat = data?.taxes?.vat ?? 0;
   const incomeTax = data?.taxes?.incomeTax ?? 0;
+  const withholdings = data?.totalWithholdings ?? 0;
+  const income = data?.income ?? 1; // Usar 1 para evitar división por cero
   
-  // Calculate percentages for progress bars
-  const vatPercentage = Math.min(Math.max((vat / 3000) * 100, 0), 100);
-  const incomeTaxPercentage = Math.min(Math.max((incomeTax / 5000) * 100, 0), 100);
+  // Calculate percentages for progress bars - como porcentaje de ingresos para ser más relevante
+  const vatPercentage = Math.min(Math.max((vat / income) * 100, 0), 100);
+  const incomeTaxPercentage = Math.min(Math.max((incomeTax / income) * 100, 0), 100);
+  const withholdingsPercentage = Math.min(Math.max((withholdings / income) * 100, 0), 100);
 
   return (
     <Card>

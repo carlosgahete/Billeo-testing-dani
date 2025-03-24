@@ -1059,19 +1059,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all transactions for the user
       const allTransactions = await storage.getTransactionsByUserId(userId);
       
-      // Calculate totals
-      const income = allTransactions
-        .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      
-      const expenses = allTransactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      
       // Get all invoices
       const allInvoices = await storage.getInvoicesByUserId(userId);
       
-      // Calculate pending invoices
+      // Calculate totals from transactions
+      const transactionIncome = allTransactions
+        .filter(t => t.type === "income")
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      const transactionExpenses = allTransactions
+        .filter(t => t.type === "expense")
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      // Calculate invoice income (paid invoices only)
+      const invoiceIncome = allInvoices
+        .filter(inv => inv.status === "paid")
+        .reduce((sum, inv) => sum + Number(inv.subtotal), 0);
+        
+      // Calculate total income - combinando transacciones e ingresos de facturas
+      const income = transactionIncome + invoiceIncome;
+      
+      // Calculate total expenses from transactions
+      const expenses = transactionExpenses;
+      
+      // Calculate pending invoices (money expected but not yet received)
       const pendingInvoices = allInvoices
         .filter(inv => inv.status === "pending" || inv.status === "overdue")
         .reduce((sum, inv) => sum + Number(inv.total), 0);
@@ -1080,8 +1091,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter(inv => inv.status === "pending" || inv.status === "overdue")
         .length;
       
-      // Calculate balance
-      const balance = income - expenses;
+      // Calcular las retenciones (IRPF y otros impuestos negativos)
+      let totalWithholdings = 0;
+      
+      // Procesar todos los impuestos adicionales de las facturas
+      allInvoices.forEach(invoice => {
+        if (invoice.additionalTaxes && Array.isArray(invoice.additionalTaxes)) {
+          invoice.additionalTaxes.forEach((tax: any) => {
+            // Si es una retención (valor negativo), la agregamos al total de retenciones
+            if (tax.amount < 0) {
+              if (tax.isPercentage) {
+                // Si es porcentaje, calculamos sobre el subtotal
+                const retentionAmount = Number(invoice.subtotal) * (Math.abs(Number(tax.amount)) / 100);
+                totalWithholdings += retentionAmount;
+              } else {
+                // Si es valor fijo, sumamos directamente
+                totalWithholdings += Math.abs(Number(tax.amount));
+              }
+            }
+          });
+        }
+      });
+      
+      // Calcular el resultado (ingresos - gastos - retenciones)
+      const result = income - expenses - totalWithholdings;
+      
+      // Calculate balance (including withholdings)
+      const balance = result;
       
       // Calculate tax estimates (simplified)
       const vatCollected = allInvoices.reduce((sum, inv) => sum + Number(inv.tax), 0);
@@ -1100,6 +1136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pendingInvoices,
         pendingCount,
         balance,
+        result,
+        totalWithholdings,
         taxes: {
           vat: vatBalance,
           incomeTax

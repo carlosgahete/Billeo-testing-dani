@@ -98,7 +98,10 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
         title="Ingresos totales"
         value={data ? formatCurrency(data.income) : "0,00 €"}
         icon={<Wallet size={20} />}
-        trend={{ value: "12% desde el último mes", isPositive: true }}
+        trend={data && data.income > 0 ? { 
+          value: `Facturación bruta`, 
+          isPositive: true 
+        } : null}
         color="green"
         isLoading={isLoading}
       />
@@ -107,17 +110,20 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
         title="Gastos totales"
         value={data ? formatCurrency(data.expenses) : "0,00 €"}
         icon={<ShoppingCart size={20} />}
-        trend={{ value: "8% desde el último mes", isPositive: false }}
+        trend={data && data.expenses > 0 ? { 
+          value: `Gastos deducibles`, 
+          isPositive: false 
+        } : null}
         color="red"
         isLoading={isLoading}
       />
       
       <MetricCard
-        title="Facturas pendientes"
-        value={data ? formatCurrency(data.pendingInvoices) : "0,00 €"}
-        icon={<Receipt size={20} />}
-        trend={data ? { 
-          value: `${data.pendingCount} facturas por cobrar`, 
+        title="Retenciones"
+        value={data ? formatCurrency(data.totalWithholdings || 0) : "0,00 €"}
+        icon={<AlertTriangle size={20} />}
+        trend={data && data.totalWithholdings > 0 ? { 
+          value: `IRPF y otras retenciones`, 
           isPositive: false 
         } : null}
         color="yellow"
@@ -125,13 +131,34 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
       />
       
       <MetricCard
-        title="Balance neto"
-        value={data ? formatCurrency(data.balance) : "0,00 €"}
+        title="Resultado"
+        value={data ? formatCurrency(data.result || data.balance) : "0,00 €"}
         icon={<PiggyBank size={20} />}
-        trend={{ value: "15% desde el último mes", isPositive: true }}
+        trend={data && (data.result || data.balance) > 0 ? { 
+          value: `Ingresos - Gastos - Retenciones`, 
+          isPositive: true 
+        } : { 
+          value: `Pérdidas en el periodo`, 
+          isPositive: false 
+        }}
         color="blue"
         isLoading={isLoading}
       />
+      
+      {/* Podemos agregar una fila adicional con más métricas */}
+      <div className="lg:col-span-2">
+        <MetricCard
+          title="Facturas pendientes"
+          value={data ? formatCurrency(data.pendingInvoices) : "0,00 €"}
+          icon={<Receipt size={20} />}
+          trend={data ? { 
+            value: `${data.pendingCount} facturas por cobrar`, 
+            isPositive: false 
+          } : null}
+          color="yellow"
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };
