@@ -23,15 +23,12 @@ const LoginPage = () => {
       if (username === "demo" && password === "demo") {
         try {
           // Try to register the demo user first (will fail if it already exists, which is fine)
-          await apiRequest("/api/users", {
-            method: "POST",
-            body: JSON.stringify({
-              name: "Demo User",
-              username: "demo",
-              password: "demo",
-              email: "demo@example.com",
-              role: "admin"
-            }),
+          await apiRequest("/api/users", "POST", {
+            name: "Demo User",
+            username: "demo",
+            password: "demo",
+            email: "demo@example.com",
+            role: "admin"
           });
         } catch (error) {
           // Ignore error if user already exists
@@ -40,9 +37,9 @@ const LoginPage = () => {
       }
 
       // Attempt to login
-      const response = await apiRequest("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
+      const response = await apiRequest("/api/auth/login", "POST", { 
+        username, 
+        password 
       });
 
       if (response) {
