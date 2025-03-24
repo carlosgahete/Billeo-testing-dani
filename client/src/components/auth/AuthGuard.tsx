@@ -22,8 +22,9 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   const { data, isLoading, error } = useQuery<SessionData>({
     queryKey: ["/api/auth/session"],
     retry: false,
-    staleTime: 0, // Don't use stale data
+    staleTime: 1000 * 60, // Cache for 1 minute
     refetchOnMount: true, // Always refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   });
 
   useEffect(() => {

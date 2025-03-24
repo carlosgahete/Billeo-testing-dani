@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import billeoLogo from '../assets/billeo-logo.png';
+
+interface SessionData {
+  authenticated: boolean;
+  user?: {
+    id: number;
+    username: string;
+    name: string;
+    role: string;
+  };
+}
 
 const LoginPage = () => {
   const [, navigate] = useLocation();
@@ -14,6 +25,20 @@ const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check if the user is already authenticated
+  const { data: sessionData, isLoading: isSessionLoading } = useQuery<SessionData>({
+    queryKey: ["/api/auth/session"],
+    retry: false,
+    refetchOnWindowFocus: false
+  });
+  
+  // If user is already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (sessionData?.authenticated) {
+      navigate("/");
+    }
+  }, [sessionData, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,39 +50,35 @@ const LoginPage = () => {
         try {
           // Try to register the demo user first (will fail if it already exists, which is fine)
           await apiRequest("/api/users", "POST", {
-            name: "Demo User",
+            name: "Ana García",
             username: "demo",
             password: "demo",
-            email: "demo@example.com",
-            role: "admin"
+            email: "anagarcia@example.com",
+            role: "Autonomo"
           });
         } catch (error) {
           // Ignore error if user already exists
-          console.log("Demo user might already exist");
+          console.log("Demo user already exists");
         }
       }
 
       // Attempt to login
-      const response = await apiRequest("/api/auth/login", "POST", { 
+      await apiRequest("/api/auth/login", "POST", { 
         username, 
         password 
       });
-
-      if (response) {
-        // Invalidate auth session cache to force refetch
-        await queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
-        
-        // Fetch session info again before redirecting
-        const sessionCheck = await apiRequest("/api/auth/session", "GET");
-        
-        if (sessionCheck && sessionCheck.authenticated) {
-          toast({
-            title: "Inicio de sesión exitoso",
-            description: "Bienvenido al sistema de gestión financiera",
-          });
-          navigate("/");
-        }
-      }
+      
+      // Invalidate auth session cache immediately
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      
+      // Show success message
+      toast({
+        title: "Inicio de sesión exitoso",
+        description: "Bienvenido al sistema de gestión financiera",
+      });
+      
+      // Redirect to dashboard
+      navigate("/");
     } catch (error) {
       toast({
         title: "Error de inicio de sesión",

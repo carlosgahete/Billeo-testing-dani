@@ -16,7 +16,7 @@ import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
 import AuthGuard from "@/components/auth/AuthGuard";
 
-// Protected route component
+// Protected route component - improved with better route handling
 const ProtectedRoute = ({ component: Component, ...rest }: { component: React.ComponentType<any>, path?: string }) => {
   return (
     <AuthGuard>
