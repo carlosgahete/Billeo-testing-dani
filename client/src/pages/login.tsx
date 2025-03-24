@@ -69,7 +69,7 @@ const LoginPage = () => {
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-14"
+              className="h-11"
             />
           </div>
           <p className="text-sm text-neutral-500">
