@@ -69,8 +69,7 @@ export function ClientForm({ open, onOpenChange, onClientCreated }: ClientFormPr
     mutationFn: async (data: ClientFormValues) => {
       return apiRequest("/api/clients", "POST", data);
     },
-    onSuccess: async (response) => {
-      const data = await response.json();
+    onSuccess: (data) => {
       console.log("Cliente creado:", data);
       toast({
         title: "Cliente creado",

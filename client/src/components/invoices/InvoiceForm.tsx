@@ -199,8 +199,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         });
       }
     },
-    onSuccess: async (response) => {
-      const data = await response.json();
+    onSuccess: (data) => {
       console.log("Factura guardada:", data);
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",

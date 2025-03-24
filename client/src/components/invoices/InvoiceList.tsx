@@ -229,7 +229,7 @@ const InvoiceList = () => {
       }
       
       // Get invoice items
-      const { data } = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
+      const data = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
       
       await generateInvoicePDF(invoice, client, data.items);
       
