@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -268,7 +268,7 @@ const TransactionList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="ml-6 md:ml-0">
+        <div className="md:ml-16">
           <h1 className="text-2xl font-bold text-neutral-800">
             Ingresos y Gastos
           </h1>
@@ -357,7 +357,7 @@ const TransactionList = () => {
                 {balance >= 0 ? (
                   <Plus className="h-5 w-5" />
                 ) : (
-                  <Minus className="h-5 w-5" />
+                  <TrendingDown className="h-5 w-5" />
                 )}
               </div>
             </div>
