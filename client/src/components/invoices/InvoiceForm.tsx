@@ -100,6 +100,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       subtotal: 0,
       tax: 0,
       total: 0,
+      additionalTaxes: [],
       status: "pending",
       notes: "",
       attachments: [],
@@ -144,6 +145,15 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     name: "items",
   });
 
+  const {
+    fields: taxFields,
+    append: appendTax,
+    remove: removeTax
+  } = useFieldArray({
+    control: form.control,
+    name: "additionalTaxes",
+  });
+
   // Create or update invoice mutation
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
@@ -159,6 +169,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         subtotal: data.subtotal.toString(),
         tax: data.tax.toString(),
         total: data.total.toString(),
+        additionalTaxes: data.additionalTaxes || [],
         status: data.status,
         notes: data.notes || null,
         attachments: attachments.length > 0 ? attachments : null,
@@ -256,6 +267,13 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
 
   const handleFileUpload = (path: string) => {
     setAttachments([...attachments, path]);
+  };
+
+  // Función para agregar un nuevo impuesto adicional
+  const handleAddTax = () => {
+    appendTax({ name: "", amount: 0 });
+    // Recalcular totales después de agregar impuesto
+    setTimeout(() => calculateTotals(), 0);
   };
 
   // Función que maneja la creación de un nuevo cliente
