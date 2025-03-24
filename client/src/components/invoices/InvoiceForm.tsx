@@ -98,7 +98,11 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showClientForm, setShowClientForm] = useState(false);
   const [showTaxDialog, setShowTaxDialog] = useState(false);
-  const [newTaxData, setNewTaxData] = useState({ name: "", amount: 0, isPercentage: false });
+  const [newTaxData, setNewTaxData] = useState<{ name: string; amount: number; isPercentage: boolean }>({
+    name: '',
+    amount: 0,
+    isPercentage: true
+  });
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
@@ -1085,6 +1089,18 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                     {form.getValues("tax").toFixed(2)} €
                   </span>
                 </div>
+                
+                {/* Mostrar impuestos adicionales */}
+                {additionalTaxes.map((tax, index) => (
+                  <div key={index} className="flex justify-between w-full md:w-80 mb-2">
+                    <span className="text-sm text-muted-foreground">{tax.name}:</span>
+                    <span className="font-medium">
+                      {tax.isPercentage 
+                        ? `${tax.amount.toFixed(2)}% (${((form.getValues("subtotal") * tax.amount) / 100).toFixed(2)} €)`
+                        : `${tax.amount.toFixed(2)} €`}
+                    </span>
+                  </div>
+                ))}
                 
                 <div className="flex justify-between w-full md:w-80 text-lg font-bold">
                   <span>Total:</span>
