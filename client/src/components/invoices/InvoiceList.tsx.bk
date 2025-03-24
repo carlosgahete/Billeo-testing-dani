@@ -65,7 +65,7 @@ interface Client {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  // Definir los tipos de variantes disponibles
+  // Definir los tipos de variantes disponibles basados en los que Badge acepta
   const statusMap: Record<string, { label: string; variant: "default" | "destructive" | "outline" | "secondary" }> = {
     pending: { label: "Pendiente", variant: "default" },
     paid: { label: "Pagada", variant: "outline" },
@@ -279,35 +279,6 @@ const InvoiceList = () => {
     return date.toLocaleDateString("es-ES");
   };
 
-  // Función para manejar "Marcar como pagada" en el menú móvil
-  const handleMarkAsPaid = async (invoice: Invoice) => {
-    try {
-      // Primero obtener los ítems actuales de la factura
-      const response = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
-      
-      // Actualizar el estado de la factura a "paid"
-      await apiRequest(`/api/invoices/${invoice.id}`, "PUT", {
-        invoice: { status: "paid" },
-        items: response?.items || []
-      });
-      
-      toast({
-        title: "Factura marcada como pagada",
-        description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
-      });
-      
-      // Invalidar las consultas para actualizar los datos
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `No se pudo marcar la factura como pagada: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
@@ -403,26 +374,39 @@ const InvoiceList = () => {
                     <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
                   </DropdownMenuItem>
                   {invoice.status !== 'paid' && (
-                    <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice)}>
+                    <DropdownMenuItem onClick={() => {
+                      // Lógica de marcar como pagada
+                      apiRequest(`/api/invoices/${invoice.id}`, "PUT", {
+                        invoice: {
+                          ...invoice,
+                          status: "paid"
+                        }
+                      }).then(() => {
+                        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                        toast({
+                          title: "Factura actualizada",
+                          description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
+                        });
+                      });
+                    }}>
                       <Check className="h-4 w-4 mr-2" /> Marcar como pagada
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => {
-                      // Modal de confirmación para eliminar
-                      if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
-                        apiRequest(`/api/invoices/${invoice.id}`, "DELETE").then(() => {
-                          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                          toast({
-                            title: "Factura eliminada",
-                            description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
-                          });
+                  <DropdownMenuItem onClick={() => {
+                    // Modal de confirmación para eliminar
+                    if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
+                      apiRequest(`/api/invoices/${invoice.id}`, "DELETE").then(() => {
+                        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                        toast({
+                          title: "Factura eliminada",
+                          description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
                         });
-                      }
+                      });
+                    }
                   }}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                    <Trash2 className="h-4 w-4 mr-2 text-destructive" /> 
+                    <span className="text-destructive">Eliminar</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -473,7 +457,7 @@ const InvoiceList = () => {
   }
 
   return (
-    <div className="w-full px-2 md:px-4">
+    <div>
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-neutral-800">
@@ -504,13 +488,11 @@ const InvoiceList = () => {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-gray-200">
-        <DataTable
-          columns={columns}
-          data={invoicesData || []}
-          searchPlaceholder="Buscar facturas..."
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        data={invoicesData || []}
+        searchPlaceholder="Buscar facturas..."
+      />
     </div>
   );
 };

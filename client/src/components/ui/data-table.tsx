@@ -79,14 +79,14 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="whitespace-nowrap">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -105,9 +105,10 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="p-2 md:p-4">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -131,25 +132,29 @@ export function DataTable<TData, TValue>({
       </div>
 
       {pagination && (
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <div className="text-sm text-muted-foreground">
-            Mostrando{" "}
+        <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2 py-4">
+          <div className="text-xs sm:text-sm text-muted-foreground">
+            <span className="hidden sm:inline">Mostrando </span>
             <span className="font-medium">
               {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-            </span>{" "}
-            a{" "}
+            </span>
+            <span className="hidden sm:inline"> a </span>
+            <span className="sm:hidden">-</span>
             <span className="font-medium">
               {Math.min(
                 (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
                 table.getFilteredRowModel().rows.length
               )}
-            </span>{" "}
-            de <span className="font-medium">{table.getFilteredRowModel().rows.length}</span>{" "}
-            resultados
+            </span>
+            <span className="hidden sm:inline"> de </span>
+            <span className="sm:hidden"> / </span>
+            <span className="font-medium">{table.getFilteredRowModel().rows.length}</span>
+            <span className="hidden sm:inline"> resultados</span>
           </div>
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
+              size="sm"
               className="h-8 w-8 p-0"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
@@ -157,8 +162,13 @@ export function DataTable<TData, TValue>({
               <span className="sr-only">Página anterior</span>
               <ChevronLeft className="h-4 w-4" />
             </Button>
+            <span className="text-xs font-medium">
+              Página {table.getState().pagination.pageIndex + 1} de{" "}
+              {table.getPageCount()}
+            </span>
             <Button
               variant="outline"
+              size="sm"
               className="h-8 w-8 p-0"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
