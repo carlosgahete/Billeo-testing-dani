@@ -179,7 +179,7 @@ export async function generateInvoicePDF(
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(100);
     doc.text(
       "FinanzaPro - Sistema de gestión financiera para profesionales y pequeñas empresas",
       105, 285, { align: "center" }
@@ -253,7 +253,7 @@ export async function generateReportPDF(
   
   // Add report details
   doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(0);
   doc.text(`Período: ${period}`, 14, 45);
   doc.text(`Fecha de generación: ${formatDate(new Date().toISOString())}`, 14, 50);
   
@@ -288,7 +288,7 @@ export async function generateReportPDF(
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(100);
     doc.text(
       "FinanzaPro - Sistema de gestión financiera para profesionales y pequeñas empresas",
       105, 285, { align: "center" }
