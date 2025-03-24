@@ -29,7 +29,7 @@ const ReportsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="ml-6 md:ml-0">
         <h1 className="text-2xl font-bold text-neutral-800">Informes</h1>
         <p className="text-neutral-500">
           Analiza tus ingresos, gastos e impuestos para tomar mejores decisiones financieras

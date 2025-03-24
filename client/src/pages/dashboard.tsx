@@ -110,12 +110,10 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-        <div className="ml-6 md:ml-0">
-          <h1 className="text-2xl font-bold text-neutral-800">Resumen Contable</h1>
-          <p className="text-neutral-500">
-            Visión general de tu actividad económica
-          </p>
-        </div>
+        <PageTitle 
+          title="Resumen Contable"
+          description="Visión general de tu actividad económica"
+        />
         
         <div className="flex items-center gap-2 mt-3 sm:mt-0">
           <Select value={year} onValueChange={setYear}>

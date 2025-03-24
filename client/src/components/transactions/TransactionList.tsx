@@ -268,7 +268,7 @@ const TransactionList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
+        <div className="ml-6 md:ml-0">
           <h1 className="text-2xl font-bold text-neutral-800">
             Ingresos y Gastos
           </h1>
