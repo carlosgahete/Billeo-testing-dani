@@ -87,7 +87,7 @@ export async function processReceiptPDF(pdfPath: string): Promise<ExtractedExpen
 }
 
 /**
- * Extrae información de gastos del texto usando heurísticas
+ * Extrae información de gastos del texto usando heurísticas mejoradas
  */
 function extractExpenseInfo(text: string): ExtractedExpense {
   // Normalizar texto: convertir a minúsculas y eliminar acentos
@@ -97,7 +97,6 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   
   // Buscar fecha
   const dateRegex = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/g;
-  // Usar match en lugar de matchAll para compatibilidad
   const dateMatches = normalizedText.match(dateRegex) || [];
   
   let date = new Date().toISOString().split('T')[0]; // Fecha actual por defecto
@@ -125,13 +124,12 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   }
   
   // Buscar importe total
-  // Buscamos patrones comunes para importes totales
   const amountPatterns = [
-    /total:?\s*[\€\$]?\s*(\d+[.,]\d+)/i,
-    /importe:?\s*[\€\$]?\s*(\d+[.,]\d+)/i,
-    /total\s*[\€\$]?\s*(\d+[.,]\d+)/i,
-    /a pagar:?\s*[\€\$]?\s*(\d+[.,]\d+)/i,
-    /[\€\$]\s*(\d+[.,]\d+)/
+    /total\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+)/i,
+    /total:?\s*[\€\$]?\s*([\d.,]+)/i,
+    /importe:?\s*[\€\$]?\s*([\d.,]+)/i,
+    /total\s*[\€\$]?\s*([\d.,]+)/i,
+    /a pagar:?\s*[\€\$]?\s*([\d.,]+)/i
   ];
   
   let amount = 0;
@@ -140,40 +138,128 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     if (match && match[1]) {
       // Limpiar y convertir a número
       amount = parseFloat(match[1].replace(',', '.'));
+      console.log(`Importe detectado: ${amount}€`);
       break;
     }
   }
   
-  // Buscar IVA
+  // Buscar IVA - Patrones mejorados para capturar todos los formatos comunes
   const taxPatterns = [
-    /iva (?:\d+%)?\s*[\€\$]?\s*(\d+[.,]\d+)/i,
-    /i\.v\.a\.?\s*[\€\$]?\s*(\d+[.,]\d+)/i,
-    /impuesto:?\s*[\€\$]?\s*(\d+[.,]\d+)/i
+    // Patrón específico para "IVA 21% de 1.090,00 €228,90 €" 
+    /iva\s+\d+%\s+de\s+[\d.,]+\s*[\€\$]?\s*([\d.,]+)/i,
+    // Patrón para "IVA 21%: 228,90 €"
+    /iva\s+\d+%:?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Patrón general para "IVA" seguido de un número
+    /iva(?:\s+\d+%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Formato I.V.A.
+    /i\.v\.a\.?(?:\s+\d+%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Palabra "impuesto" genérica
+    /impuesto:?\s*[\€\$]?\s*([\d.,]+)/i
   ];
   
   let taxAmount = 0;
   for (const pattern of taxPatterns) {
     const match = normalizedText.match(pattern);
+    console.log(`Probando patrón de IVA: ${pattern.toString()}`);
     if (match && match[1]) {
+      console.log(`¡Coincidencia encontrada! Valor: ${match[1]}`);
+      // Limpiar y convertir a número (sustituir tanto punto como coma por punto decimal)
       taxAmount = parseFloat(match[1].replace(',', '.'));
+      console.log(`IVA detectado: ${taxAmount}€`);
       break;
     }
   }
   
-  // Buscar empresa/vendedor
-  // Generalmente está en las primeras líneas
+  // Si no se encontró un valor de IVA, intentar calcularlo como 21% del importe
+  if (taxAmount === 0 && amount > 0) {
+    console.log("No se encontró el IVA explícitamente, intentando calcularlo...");
+    // Buscar porcentaje de IVA en el texto
+    const ivaPercentMatch = normalizedText.match(/iva\s+(\d+)%/i);
+    let ivaPercent = 21; // Por defecto 21% si no se especifica
+    
+    if (ivaPercentMatch && ivaPercentMatch[1]) {
+      ivaPercent = parseInt(ivaPercentMatch[1]);
+      console.log(`Porcentaje de IVA detectado: ${ivaPercent}%`);
+    }
+    
+    // Estimar el valor del IVA (se puede ajustar este cálculo según sea necesario)
+    const subtotal = amount / (1 + (ivaPercent / 100));
+    taxAmount = amount - subtotal;
+    console.log(`IVA calculado: ${taxAmount.toFixed(2)}€ (${ivaPercent}% de ${subtotal.toFixed(2)}€)`);
+  }
+  
+  // Buscar empresa/vendedor con mayor precisión
   const lines = text.split('\n');
   let vendor = '';
-  if (lines.length > 0) {
-    vendor = lines[0].trim();
-    // Si la primera línea parece una dirección, tomar la segunda
-    if (/calle|avda|plaza|c\/|av\./i.test(vendor) && lines.length > 1) {
-      vendor = lines[1].trim();
+  
+  // Buscar patrones de NIF/CIF en el texto para identificar al emisor
+  const cifPattern = /(?:cif|nif|c\.i\.f|n\.i\.f)(?:\s*:)?\s*([a-z0-9]{8,9})/i;
+  const cifMatch = normalizedText.match(cifPattern);
+  
+  if (cifMatch && cifMatch[1]) {
+    const emisorCIF = cifMatch[1];
+    console.log(`CIF/NIF de emisor detectado: ${emisorCIF}`);
+    
+    // Buscar el nombre asociado a este CIF, suele estar en la línea anterior o posterior
+    const cifPosition = normalizedText.indexOf(emisorCIF.toLowerCase());
+    if (cifPosition > 0) {
+      // Obtener contexto alrededor del CIF (3 líneas antes y después)
+      const contextLines = normalizedText.substring(
+        Math.max(0, normalizedText.lastIndexOf('\n', cifPosition) - 150),
+        normalizedText.indexOf('\n', cifPosition + 50) + 1
+      ).split('\n');
+      
+      // Buscar línea que parezca nombre de empresa (evitando líneas que sean direcciones)
+      for (const line of contextLines) {
+        if (line.length > 4 && 
+            !/calle|avda|plaza|c\/|av\.|cp|codigo postal|:/.test(line) &&
+            !/\d{5}/.test(line)) { // Evitar códigos postales
+          vendor = line.trim();
+          console.log(`Posible nombre de emisor encontrado cerca del CIF: ${vendor}`);
+          break;
+        }
+      }
     }
   }
   
-  // Generar una descripción basada en el vendedor y otros datos
-  let description = vendor ? `Compra en ${vendor}` : 'Gasto detectado por IA';
+  // Si no se encontró vendedor por CIF, intentar por posición en el documento
+  if (!vendor) {
+    // Buscar líneas que parezcan nombres de empresas al principio del documento
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+      const line = lines[i].trim();
+      if (line.length > 3 && 
+          !/calle|avda|plaza|c\/|av\.|cp|codigo postal|fecha|factura|numero|importe|total/.test(line.toLowerCase()) &&
+          !/^\d+/.test(line)) { // Evitar líneas que empiecen con números
+        vendor = line;
+        console.log(`Vendedor detectado por posición: ${vendor}`);
+        break;
+      }
+    }
+  }
+  
+  // Buscar concepto o descripción en la factura
+  let description = '';
+  
+  // Intentar detectar "concepto" o "descripción" en la factura o buscar en la tabla
+  const conceptoPatterns = [
+    /(?:concepto|descripci[oó]n)\s*:?\s*([^\n]+)/i,
+    /DESCRIPCI[ÓO]N[\s\w]*?CANTIDAD[\s\w]*?PRECIO[\s\w]*?IMPORTE.*?\n(.*?)\d+/is
+  ];
+  
+  // Intentar encontrar concepto con los diferentes patrones
+  for (const pattern of conceptoPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      description = match[1].trim();
+      console.log(`Descripción/concepto detectado: ${description}`);
+      break;
+    }
+  }
+  
+  // Si no se encontró concepto, usar el vendedor
+  if (!description) {
+    description = vendor ? `Servicio de ${vendor}` : 'Servicio profesional';
+  }
   
   // Determinar posible categoría basada en palabras clave
   let categoryHint = 'Otros';
@@ -188,6 +274,8 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     categoryHint = 'Servicios';
   } else if (/hotel|alojamiento|booking|airbnb/i.test(normalizedText)) {
     categoryHint = 'Viajes';
+  } else if (/comision|asesoria|consultoria|servicios profesionales|relaciones/i.test(normalizedText)) {
+    categoryHint = 'Servicios Profesionales';
   }
   
   return {
