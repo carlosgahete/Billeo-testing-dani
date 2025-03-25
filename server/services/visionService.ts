@@ -33,6 +33,10 @@ export interface ExtractedExpense {
   categoryHint?: string;
   vendor?: string;
   taxAmount?: number;
+  subtotal?: number;
+  irpfAmount?: number;
+  irpfRate?: number;
+  ivaRate?: number;
 }
 
 /**
@@ -152,49 +156,141 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
+  // Buscar base imponible/subtotal
+  const subtotalPatterns = [
+    /base\s*imponible:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /subtotal:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /importe\s*neto:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /importe\s*sin\s*iva:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i
+  ];
+  
+  let subtotal = 0;
+  for (const pattern of subtotalPatterns) {
+    const match = normalizedText.match(pattern);
+    if (match && match[1]) {
+      let subtotalStr = match[1].trim();
+      if (subtotalStr.includes('.') && subtotalStr.includes(',')) {
+        subtotalStr = subtotalStr.replace(/\./g, '').replace(',', '.');
+      } else if (subtotalStr.includes(',')) {
+        subtotalStr = subtotalStr.replace(',', '.');
+      }
+      subtotal = parseFloat(subtotalStr);
+      console.log(`Base imponible/subtotal detectado: ${subtotal}€`);
+      break;
+    }
+  }
+  
   // Buscar IVA - Patrones mejorados para capturar todos los formatos comunes
   const taxPatterns = [
     // Patrón específico para "IVA 21% de 1.090,00 €228,90 €" 
-    /iva\s+\d+%\s+de\s+[\d.,]+\s*[\€\$]?\s*([\d.,]+)/i,
+    /iva\s+(\d+)%\s+de\s+[\d.,]+\s*[\€\$]?\s*([\d.,]+)/i,
     // Patrón para "IVA 21%: 228,90 €"
-    /iva\s+\d+%:?\s*[\€\$]?\s*([\d.,]+)/i,
+    /iva\s+(\d+)%:?\s*[\€\$]?\s*([\d.,]+)/i,
     // Patrón general para "IVA" seguido de un número
-    /iva(?:\s+\d+%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
+    /iva(?:\s+(\d+)%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
     // Formato I.V.A.
-    /i\.v\.a\.?(?:\s+\d+%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
+    /i\.v\.a\.?(?:\s+(\d+)%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
     // Palabra "impuesto" genérica
     /impuesto:?\s*[\€\$]?\s*([\d.,]+)/i
   ];
   
   let taxAmount = 0;
+  let ivaRate = 21; // Valor por defecto
+  
   for (const pattern of taxPatterns) {
     const match = normalizedText.match(pattern);
     console.log(`Probando patrón de IVA: ${pattern.toString()}`);
-    if (match && match[1]) {
-      console.log(`¡Coincidencia encontrada! Valor: ${match[1]}`);
-      // Limpiar y convertir a número (sustituir tanto punto como coma por punto decimal)
-      taxAmount = parseFloat(match[1].replace(',', '.'));
-      console.log(`IVA detectado: ${taxAmount}€`);
-      break;
+    if (match) {
+      // Si el patrón captura el porcentaje del IVA (primer grupo)
+      if (match[1]) {
+        ivaRate = parseInt(match[1]);
+        console.log(`Porcentaje de IVA detectado: ${ivaRate}%`);
+      }
+      
+      // El último grupo captura siempre el monto
+      const lastIndex = match.length - 1;
+      if (match[lastIndex]) {
+        console.log(`¡Coincidencia encontrada! Valor IVA: ${match[lastIndex]}`);
+        // Limpiar y convertir a número 
+        let taxStr = match[lastIndex].trim();
+        if (taxStr.includes('.') && taxStr.includes(',')) {
+          taxStr = taxStr.replace(/\./g, '').replace(',', '.');
+        } else if (taxStr.includes(',')) {
+          taxStr = taxStr.replace(',', '.');
+        }
+        taxAmount = parseFloat(taxStr);
+        console.log(`IVA detectado: ${taxAmount}€`);
+        break;
+      }
     }
   }
   
-  // Si no se encontró un valor de IVA, intentar calcularlo como 21% del importe
-  if (taxAmount === 0 && amount > 0) {
-    console.log("No se encontró el IVA explícitamente, intentando calcularlo...");
-    // Buscar porcentaje de IVA en el texto
-    const ivaPercentMatch = normalizedText.match(/iva\s+(\d+)%/i);
-    let ivaPercent = 21; // Por defecto 21% si no se especifica
-    
-    if (ivaPercentMatch && ivaPercentMatch[1]) {
-      ivaPercent = parseInt(ivaPercentMatch[1]);
-      console.log(`Porcentaje de IVA detectado: ${ivaPercent}%`);
+  // Buscar IRPF
+  const irpfPatterns = [
+    /irpf\s+(\d+)%:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /retencion(?:\s+(\d+)%)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /retención(?:\s+(\d+)%)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /ret\.?(?:\s+(\d+)%)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i
+  ];
+  
+  let irpfAmount = 0;
+  let irpfRate = 15; // Valor por defecto
+  
+  for (const pattern of irpfPatterns) {
+    const match = normalizedText.match(pattern);
+    if (match) {
+      // Capturar porcentaje si está disponible
+      if (match[1]) {
+        irpfRate = parseInt(match[1]);
+        console.log(`Porcentaje de IRPF detectado: ${irpfRate}%`);
+      }
+      
+      // El último grupo siempre captura el monto
+      const lastIndex = match.length - 1;
+      if (match[lastIndex]) {
+        console.log(`¡Coincidencia encontrada! Valor IRPF: ${match[lastIndex]}`);
+        // Limpiar y convertir a número
+        let irpfStr = match[lastIndex].trim();
+        if (irpfStr.includes('.') && irpfStr.includes(',')) {
+          irpfStr = irpfStr.replace(/\./g, '').replace(',', '.');
+        } else if (irpfStr.includes(',')) {
+          irpfStr = irpfStr.replace(',', '.');
+        }
+        irpfAmount = parseFloat(irpfStr);
+        console.log(`IRPF detectado: ${irpfAmount}€`);
+        break;
+      }
     }
-    
-    // Estimar el valor del IVA (se puede ajustar este cálculo según sea necesario)
-    const subtotal = amount / (1 + (ivaPercent / 100));
-    taxAmount = amount - subtotal;
-    console.log(`IVA calculado: ${taxAmount.toFixed(2)}€ (${ivaPercent}% de ${subtotal.toFixed(2)}€)`);
+  }
+  
+  // Inferencias si no se encontraron valores explícitos
+  
+  // Si tenemos subtotal pero no importe total, calcular el total
+  if (subtotal > 0 && amount === 0) {
+    // Calcular el total a partir del subtotal + IVA - IRPF
+    amount = subtotal + taxAmount - irpfAmount;
+    console.log(`Importe total calculado: ${amount}€`);
+  }
+  
+  // Si tenemos total pero no subtotal, calcular el subtotal
+  if (amount > 0 && subtotal === 0) {
+    // Si tenemos IVA y IRPF explícitos
+    if (taxAmount > 0 || irpfAmount > 0) {
+      subtotal = amount - taxAmount + irpfAmount;
+      console.log(`Subtotal calculado: ${subtotal}€`);
+    } else {
+      // Estimar el subtotal basado en el IVA estándar
+      subtotal = amount / (1 + (ivaRate / 100));
+      taxAmount = amount - subtotal;
+      console.log(`Subtotal estimado: ${subtotal.toFixed(2)}€ (asumiendo IVA ${ivaRate}%)`);
+      console.log(`IVA estimado: ${taxAmount.toFixed(2)}€`);
+    }
+  }
+  
+  // Si tenemos subtotal e IVA, pero no el importe total
+  if (subtotal > 0 && taxAmount > 0 && amount === 0) {
+    amount = subtotal + taxAmount - irpfAmount;
+    console.log(`Importe total calculado: ${amount}€`);
   }
   
   // Buscar empresa/vendedor con mayor precisión
@@ -306,7 +402,11 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     amount,
     categoryHint,
     vendor,
-    taxAmount
+    taxAmount,
+    subtotal,
+    irpfAmount,
+    irpfRate,
+    ivaRate
   };
 }
 
@@ -318,6 +418,25 @@ export function mapToTransaction(
   userId: number, 
   categoryId: number | null
 ): InsertTransaction {
+  // Construir notas detalladas con la información fiscal
+  let taxDetails = [];
+  
+  if (extractedData.subtotal > 0) {
+    taxDetails.push(`Base imponible: ${extractedData.subtotal.toFixed(2)}€`);
+  }
+  
+  if (extractedData.taxAmount > 0) {
+    taxDetails.push(`IVA (${extractedData.ivaRate || 21}%): ${extractedData.taxAmount.toFixed(2)}€`);
+  }
+  
+  if (extractedData.irpfAmount > 0) {
+    taxDetails.push(`IRPF (${extractedData.irpfRate || 15}%): -${extractedData.irpfAmount.toFixed(2)}€`);
+  }
+  
+  const notesText = `Extraído automáticamente de una imagen/PDF. 
+Vendedor: ${extractedData.vendor || 'No detectado'}. 
+${taxDetails.join('. ')}`;
+  
   // Aseguramos que todos los campos requeridos estén presentes
   return {
     userId: userId, // userId es integer en el esquema
@@ -327,6 +446,6 @@ export function mapToTransaction(
     type: 'expense' as const, // Usar 'as const' para asegurar que el tipo sea exactamente 'expense'
     categoryId,
     paymentMethod: 'other',
-    notes: `Extraído automáticamente de una imagen/PDF. Vendedor: ${extractedData.vendor || 'No detectado'}. IVA estimado: ${extractedData.taxAmount || 0}€`
+    notes: notesText
   };
 }

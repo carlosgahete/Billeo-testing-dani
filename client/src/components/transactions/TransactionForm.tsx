@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,11 +26,12 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, FileText, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const transactionSchema = z.object({
@@ -50,6 +51,26 @@ interface TransactionFormProps {
   transactionId?: number;
 }
 
+// Interfaces para tipar correctamente los datos
+interface Category {
+  id: number;
+  name: string;
+  type: "income" | "expense";
+  color: string;
+}
+
+interface Transaction {
+  id: number;
+  description: string;
+  amount: number | string;
+  date: string;
+  type: "income" | "expense";
+  categoryId: number | null;
+  paymentMethod: string;
+  notes?: string;
+  attachments?: string[];
+}
+
 const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -58,12 +79,12 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   const isEditMode = !!transactionId;
 
   // Fetch categories for dropdown
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
   // Fetch transaction data if in edit mode
-  const { data: transactionData, isLoading: transactionLoading } = useQuery({
+  const { data: transactionData, isLoading: transactionLoading } = useQuery<Transaction>({
     queryKey: ["/api/transactions", transactionId],
     enabled: isEditMode,
   });
@@ -83,12 +104,14 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   });
 
   // Initialize form with transaction data when loaded
-  useState(() => {
+  useEffect(() => {
     if (transactionData && !transactionLoading) {
       form.reset({
         ...transactionData,
         date: new Date(transactionData.date),
-        amount: Number(transactionData.amount),
+        amount: typeof transactionData.amount === 'string' 
+          ? parseFloat(transactionData.amount) 
+          : transactionData.amount,
       });
       
       if (transactionData.attachments) {
@@ -122,7 +145,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       navigate("/transactions");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: `Ha ocurrido un error: ${error.message}`,
@@ -139,6 +162,27 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     setAttachments([...attachments, path]);
   };
 
+  // Función para extraer información de IVA de las notas
+  const extractTaxInfo = (notes?: string): string | null => {
+    if (!notes) return null;
+    
+    const taxMatch = notes.match(/IVA estimado: ([\d.,]+)€/);
+    return taxMatch ? taxMatch[1] : null;
+  };
+
+  // Función para extraer información de proveedor de las notas
+  const extractVendorInfo = (notes?: string): string | null => {
+    if (!notes) return null;
+    
+    const vendorMatch = notes.match(/Vendedor: ([^.]+)/);
+    return vendorMatch ? vendorMatch[1] : null;
+  };
+
+  // Verificar si las notas contienen información de OCR
+  const hasOcrData = transactionData?.notes?.includes('Extraído automáticamente');
+  const taxAmount = hasOcrData ? extractTaxInfo(transactionData?.notes) : null;
+  const vendor = hasOcrData ? extractVendorInfo(transactionData?.notes) : null;
+
   if ((isEditMode && transactionLoading) || categoriesLoading) {
     return <div className="flex justify-center p-8">
       <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
@@ -150,11 +194,35 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="flex items-center">
               {isEditMode ? "Editar movimiento" : "Nuevo movimiento"}
+              {hasOcrData && (
+                <Badge variant="outline" className="ml-2 bg-blue-50">
+                  <Receipt className="h-3 w-3 mr-1" />
+                  Escaneado
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {hasOcrData && (
+              <div className="bg-blue-50 p-3 rounded-md mb-4">
+                <h3 className="text-sm font-medium mb-2 text-blue-700">Información detectada automáticamente</h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {vendor && vendor !== "No detectado" && (
+                    <div>
+                      <span className="text-blue-700 font-medium">Vendedor:</span> {vendor}
+                    </div>
+                  )}
+                  {taxAmount && (
+                    <div>
+                      <span className="text-blue-700 font-medium">IVA:</span> {taxAmount}€
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <FormField
               control={form.control}
               name="description"
@@ -280,12 +348,9 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="">Sin categoría</SelectItem>
-                        {categories
-                          ?.filter(
-                            (cat: any) => 
-                              cat.type === form.getValues("type")
-                          )
-                          .map((category: any) => (
+                        {categories && categories
+                          .filter((cat) => cat.type === form.getValues("type"))
+                          .map((category) => (
                             <SelectItem 
                               key={category.id} 
                               value={category.id.toString()}
@@ -356,6 +421,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                   <div className="mt-3 space-y-2">
                     {attachments.map((attachment, index) => (
                       <div key={index} className="flex items-center space-x-2 text-sm">
+                        <FileText className="h-4 w-4 mr-1 text-blue-500" />
                         <span className="flex-1 truncate">
                           {attachment.split('/').pop()}
                         </span>
