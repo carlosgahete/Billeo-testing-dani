@@ -4,6 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   ArrowRight, 
   ReceiptText, 
@@ -11,7 +17,8 @@ import {
   PiggyBank, 
   TrendingDown,
   TrendingUp,
-  ShoppingCart
+  ShoppingCart,
+  Info
 } from "lucide-react";
 
 // Define the expected data structure
@@ -105,79 +112,119 @@ const TaxSummary = () => {
   const expensesPercentage = Math.min(Math.max((expenses / income) * 100, 0), 100);
 
   return (
-    <div className="grid gap-4">
-      {/* Resumen fiscal - más ancho, menos alto */}
-      <Card className="shadow-sm">
-        <CardHeader className="border-b border-gray-200 p-2 bg-gradient-to-r from-blue-50 to-amber-50">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="font-medium text-gray-800 text-sm">Resumen fiscal</CardTitle>
-              <CardDescription className="text-xs text-gray-600">
-                Estimado trimestral
-              </CardDescription>
-            </div>
-            <FileText className="h-4 w-4 text-primary" />
+    <Card className="overflow-hidden h-full">
+      <CardHeader className="bg-blue-50 pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg text-blue-700 flex items-center">
+            <FileText className="mr-2 h-5 w-5" />
+            Resumen fiscal
+          </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                  <Info className="h-4 w-4 text-neutral-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="w-[200px] text-xs">Resumen de los impuestos trimestrales estimados</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-4">
+        {/* IVA - Con estilo destacado */}
+        <div className="p-3 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-base text-blue-700 font-medium flex items-center">
+              <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
+              IVA a pagar
+            </span>
+            {isLoading ? (
+              <Skeleton className="h-6 w-20" />
+            ) : (
+              <span className="text-base font-bold text-blue-700">{formatCurrency(vat)}</span>
+            )}
           </div>
-        </CardHeader>
-        <CardContent className="p-2">
-          <div className="grid grid-cols-1 gap-2">
-            {/* IVA - Con estilo destacado */}
-            <div className="p-2 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-base text-blue-700 font-medium flex items-center">
-                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
-                  IVA a pagar
-                </span>
-                {isLoading ? (
-                  <Skeleton className="h-6 w-20" />
-                ) : (
-                  <span className="text-base font-bold text-blue-700">{formatCurrency(vat)}</span>
-                )}
-              </div>
-              {isLoading ? (
-                <Skeleton className="h-3 w-full" />
-              ) : (
-                <Progress 
-                  value={vatPercentage} 
-                  className="h-4 bg-blue-100"
-                  indicatorClassName="bg-blue-600"
-                />
-              )}
-              <p className="text-xs text-blue-600 mt-1 font-medium">
-                Tipo impositivo: 21%
-              </p>
-            </div>
-            
-            {/* IRPF */}
-            <div className="p-2 bg-white shadow-sm border border-gray-100 rounded-md">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-700 font-medium flex items-center">
-                  <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-1"></span>
-                  IRPF estimado
-                </span>
-                {isLoading ? (
-                  <Skeleton className="h-5 w-20" />
-                ) : (
-                  <span className="text-sm font-semibold">{formatCurrency(incomeTax)}</span>
-                )}
-              </div>
-              {isLoading ? (
-                <Skeleton className="h-3 w-full" />
-              ) : (
-                <Progress 
-                  value={incomeTaxPercentage} 
-                  className="h-3 bg-gray-100"
-                  indicatorClassName="bg-amber-500"
-                />
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Retención: 15%
-              </p>
-            </div>
+          {isLoading ? (
+            <Skeleton className="h-3 w-full" />
+          ) : (
+            <Progress 
+              value={vatPercentage} 
+              className="h-4 bg-blue-100"
+              indicatorClassName="bg-blue-600"
+            />
+          )}
+          <p className="text-xs text-blue-600 mt-1 font-medium">
+            Tipo impositivo: 21%
+          </p>
+        </div>
+        
+        {/* IRPF */}
+        <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md mt-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-gray-700 font-medium flex items-center">
+              <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-1"></span>
+              IRPF estimado
+            </span>
+            {isLoading ? (
+              <Skeleton className="h-5 w-20" />
+            ) : (
+              <span className="text-sm font-semibold">{formatCurrency(incomeTax)}</span>
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          {isLoading ? (
+            <Skeleton className="h-3 w-full" />
+          ) : (
+            <Progress 
+              value={incomeTaxPercentage} 
+              className="h-3 bg-gray-100"
+              indicatorClassName="bg-amber-500"
+            />
+          )}
+          <p className="text-xs text-gray-500 mt-1">
+            Retención: 15%
+          </p>
+        </div>
+        
+        {/* Retenciones acumuladas */}
+        <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md mt-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-gray-700 font-medium flex items-center">
+              <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+              Retenciones acumuladas
+            </span>
+            {isLoading ? (
+              <Skeleton className="h-5 w-20" />
+            ) : (
+              <span className="text-sm font-semibold">{formatCurrency(withholdings)}</span>
+            )}
+          </div>
+          {isLoading ? (
+            <Skeleton className="h-3 w-full" />
+          ) : (
+            <Progress 
+              value={withholdings > 0 ? 100 : 0}
+              className="h-3 bg-gray-100" 
+              indicatorClassName="bg-green-500"
+            />
+          )}
+          <p className="text-xs text-gray-500 mt-1">
+            Retenciones practicadas en facturas
+          </p>
+        </div>
+        
+        <Button 
+          variant="default" 
+          size="sm" 
+          className="w-full mt-4"
+          onClick={() => navigate("/reports")}
+        >
+          Ver informes fiscales
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 
