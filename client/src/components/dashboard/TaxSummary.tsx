@@ -121,17 +121,17 @@ const TaxSummary = () => {
         </CardHeader>
         <CardContent className="p-2">
           <div className="grid grid-cols-1 gap-2">
-            {/* IVA */}
-            <div className="p-2 bg-white shadow-sm border border-gray-100 rounded-md">
+            {/* IVA - Con estilo destacado */}
+            <div className="p-2 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-700 font-medium flex items-center">
+                <span className="text-base text-blue-700 font-medium flex items-center">
                   <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
                   IVA a pagar
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-6 w-20" />
                 ) : (
-                  <span className="text-sm font-semibold">{formatCurrency(vat)}</span>
+                  <span className="text-base font-bold text-blue-700">{formatCurrency(vat)}</span>
                 )}
               </div>
               {isLoading ? (
@@ -139,11 +139,11 @@ const TaxSummary = () => {
               ) : (
                 <Progress 
                   value={vatPercentage} 
-                  className="h-3 bg-gray-100"
-                  indicatorClassName="bg-blue-500"
+                  className="h-4 bg-blue-100"
+                  indicatorClassName="bg-blue-600"
                 />
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-blue-600 mt-1 font-medium">
                 {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
               </p>
             </div>
