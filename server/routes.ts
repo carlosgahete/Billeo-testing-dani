@@ -70,6 +70,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  // Middleware para verificar autenticación de manera consistente
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    // Verificar si el usuario está autenticado mediante passport o mediante sesión
+    if (req.isAuthenticated() || (req.session && req.session.userId)) {
+      return next();
+    }
+    return res.status(401).json({ message: "Not authenticated" });
+  };
+  
   // Create HTTP server
   const httpServer = createServer(app);
 
@@ -1116,13 +1125,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stats and reports
-  app.get("/api/stats/dashboard", async (req: Request, res: Response) => {
+  app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const userId = req.user.id;
+      // Obtenemos el ID de usuario desde passport o desde session
+      const userId = req.isAuthenticated() ? (req.user as any).id : req.session.userId;
       
       // Get all transactions for the user
       const allTransactions = await storage.getTransactionsByUserId(userId);
