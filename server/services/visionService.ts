@@ -421,16 +421,22 @@ export function mapToTransaction(
   // Construir notas detalladas con la información fiscal
   let taxDetails = [];
   
-  if (extractedData.subtotal > 0) {
-    taxDetails.push(`Base imponible: ${extractedData.subtotal.toFixed(2)}€`);
+  const subtotal = extractedData.subtotal || 0;
+  const taxAmount = extractedData.taxAmount || 0;
+  const irpfAmount = extractedData.irpfAmount || 0;
+  const ivaRate = extractedData.ivaRate || 21;
+  const irpfRate = extractedData.irpfRate || 15;
+  
+  if (subtotal > 0) {
+    taxDetails.push(`Base imponible: ${subtotal.toFixed(2)}€`);
   }
   
-  if (extractedData.taxAmount > 0) {
-    taxDetails.push(`IVA (${extractedData.ivaRate || 21}%): ${extractedData.taxAmount.toFixed(2)}€`);
+  if (taxAmount > 0) {
+    taxDetails.push(`IVA (${ivaRate}%): ${taxAmount.toFixed(2)}€`);
   }
   
-  if (extractedData.irpfAmount > 0) {
-    taxDetails.push(`IRPF (${extractedData.irpfRate || 15}%): -${extractedData.irpfAmount.toFixed(2)}€`);
+  if (irpfAmount > 0) {
+    taxDetails.push(`IRPF (${irpfRate}%): -${irpfAmount.toFixed(2)}€`);
   }
   
   const notesText = `Extraído automáticamente de una imagen/PDF. 
