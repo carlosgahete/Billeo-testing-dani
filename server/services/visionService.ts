@@ -123,21 +123,30 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
-  // Buscar importe total
+  // Buscar importe total (mejorado para detectar cantidades grandes)
   const amountPatterns = [
-    /total\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+)/i,
-    /total:?\s*[\€\$]?\s*([\d.,]+)/i,
-    /importe:?\s*[\€\$]?\s*([\d.,]+)/i,
-    /total\s*[\€\$]?\s*([\d.,]+)/i,
-    /a pagar:?\s*[\€\$]?\s*([\d.,]+)/i
+    /total\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /total:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /importe:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /total\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /a pagar:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /total a pagar\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /total\s+\(?eur\)?:?\s*([\d.,]+[.,]?\d*)/i
   ];
   
   let amount = 0;
   for (const pattern of amountPatterns) {
     const match = normalizedText.match(pattern);
     if (match && match[1]) {
-      // Limpiar y convertir a número
-      amount = parseFloat(match[1].replace(',', '.'));
+      // Limpiar y convertir a número (manejo de diferentes formatos de números)
+      let amountStr = match[1].trim();
+      // Manejar formato europeo (1.234,56) y convertirlo a formato punto decimal
+      if (amountStr.includes('.') && amountStr.includes(',')) {
+        amountStr = amountStr.replace(/\./g, '').replace(',', '.');
+      } else if (amountStr.includes(',')) {
+        amountStr = amountStr.replace(',', '.');
+      }
+      amount = parseFloat(amountStr);
       console.log(`Importe detectado: ${amount}€`);
       break;
     }
@@ -243,16 +252,29 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   // Intentar detectar "concepto" o "descripción" en la factura o buscar en la tabla
   const conceptoPatterns = [
     /(?:concepto|descripci[oó]n)\s*:?\s*([^\n]+)/i,
-    /DESCRIPCI[ÓO]N[\s\w]*?CANTIDAD[\s\w]*?PRECIO[\s\w]*?IMPORTE.*?\n(.*?)\d+/is
+    /(?:descripcion|descripción)\s*.*?cantidad.*?precio.*?importe/i
   ];
   
   // Intentar encontrar concepto con los diferentes patrones
-  for (const pattern of conceptoPatterns) {
-    const match = text.match(pattern);
-    if (match && match[1]) {
-      description = match[1].trim();
-      console.log(`Descripción/concepto detectado: ${description}`);
-      break;
+  // Primero intenta encontrar patrones con grupos de captura
+  const match1 = text.match(conceptoPatterns[0]);
+  if (match1 && match1[1]) {
+    description = match1[1].trim();
+    console.log(`Descripción/concepto detectado (patrón 1): ${description}`);
+  } else {
+    // Si encontramos la estructura de una tabla, buscar líneas específicas
+    if (text.match(conceptoPatterns[1])) {
+      // Buscar en el texto líneas que puedan ser conceptos de factura
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (line.length > 5 && 
+            !/total|importe|subtotal|iva|fecha|factura|numero/i.test(line) &&
+            /[a-z]{5,}/i.test(line)) {
+          description = line.trim();
+          console.log(`Descripción/concepto detectado (patrón tabla): ${description}`);
+          break;
+        }
+      }
     }
   }
   
