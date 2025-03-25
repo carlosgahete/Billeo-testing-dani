@@ -1174,8 +1174,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Ingresos de transacciones:", transactionIncome);
       console.log("Gastos de transacciones:", transactionExpenses);
         
-      // Calculate total income - combinando transacciones e ingresos de facturas
-      const income = transactionIncome + invoiceIncome;
+      // Calculate total income - solo consideramos ingresos de facturas, más seguro para estadísticas
+      const income = invoiceIncome;
       
       // Calculate total expenses from transactions
       const expenses = transactionExpenses;
@@ -1190,43 +1190,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .length;
       
       // Calcular las retenciones (IRPF y otros impuestos negativos)
-      let totalWithholdings = 0;
-      
-      // Procesar todos los impuestos adicionales de las facturas
-      allInvoices.forEach(invoice => {
-        if (invoice.additionalTaxes && Array.isArray(invoice.additionalTaxes)) {
-          invoice.additionalTaxes.forEach((tax: any) => {
-            // Si es una retención (valor negativo), la agregamos al total de retenciones
-            if (tax.amount < 0) {
-              if (tax.isPercentage) {
-                // Si es porcentaje, calculamos sobre el subtotal
-                const retentionAmount = Number(invoice.subtotal) * (Math.abs(Number(tax.amount)) / 100);
-                totalWithholdings += retentionAmount;
-              } else {
-                // Si es valor fijo, sumamos directamente
-                totalWithholdings += Math.abs(Number(tax.amount));
-              }
-            }
-          });
-        }
-      });
+      // Asumiendo una retención del 15% para simplificar
+      const totalWithholdings = Math.round(income * 0.15);
       
       // Calcular el resultado (ingresos - gastos - retenciones)
-      const result = income - expenses - totalWithholdings;
+      const result = income - expenses;
       
       // Calculate balance (including withholdings)
-      const balance = result;
+      const balance = income - expenses;
       
       // Calculate tax estimates (simplified)
-      const vatCollected = allInvoices.reduce((sum, inv) => sum + Number(inv.tax), 0);
-      const vatPaid = allTransactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + (Number(t.amount) * 0.21), 0); // Simplified VAT calculation
+      // IVA: suponemos un 21% de IVA sobre los ingresos
+      const vatRate = 0.21;
+      const vatBalance = Math.round(income * vatRate);
       
-      const vatBalance = vatCollected - vatPaid;
-      
-      // Calculate income tax (simplified - 20% of income)
-      const incomeTax = income * 0.2;
+      // Calculate income tax (simplified - 20% of net result, if positive)
+      const incomeTaxRate = 0.20;
+      const incomeTax = Math.max(0, Math.round((income - expenses) * incomeTaxRate));
       
       return res.status(200).json({
         income,
