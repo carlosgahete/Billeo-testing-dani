@@ -10,6 +10,7 @@ import {
   FileText, 
   PiggyBank, 
   TrendingDown,
+  TrendingUp,
   ShoppingCart
 } from "lucide-react";
 
@@ -105,8 +106,74 @@ const TaxSummary = () => {
 
   return (
     <div className="grid gap-4">
-      {/* Resumen fiscal - más ancho, menos alto */}
+      {/* Tarjeta de Resultado */}
       <Card className="shadow-sm">
+        <CardHeader className="border-b border-gray-200 p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="font-medium text-gray-800 text-base">Resultado</CardTitle>
+              <CardDescription className="text-xs text-gray-500 mt-1">
+                Resumen de ingresos y gastos
+              </CardDescription>
+            </div>
+            <PiggyBank className="h-5 w-5 text-primary" />
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <p className={`text-3xl font-bold ${(income - expenses) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  {formatCurrency(income - expenses)}
+                </p>
+                <p className="text-sm text-gray-500 flex items-center mt-1">
+                  {(income - expenses) >= 0 ? (
+                    <><TrendingUp className="h-3 w-3 mr-1 text-green-500" /> {((income - expenses) / Math.max(1, income) * 100).toFixed(1)}% de margen</>
+                  ) : (
+                    <><TrendingDown className="h-3 w-3 mr-1 text-red-500" /> {Math.abs((income - expenses) / Math.max(1, income) * 100).toFixed(1)}% de pérdidas</>
+                  )}
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Ingresos totales:</span>
+                  <span className="text-sm font-medium">{formatCurrency(income)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Gastos totales:</span>
+                  <span className="text-sm font-medium">{formatCurrency(expenses)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Retenciones:</span>
+                  <span className="text-sm font-medium">{formatCurrency(withholdings)}</span>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  className="w-full bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200"
+                  onClick={() => navigate("/reports")}
+                >
+                  Ver informes detallados
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Resumen fiscal - más ancho, menos alto */}
+      <Card className="shadow-sm mt-4">
         <CardHeader className="border-b border-gray-200 p-4">
           <div className="flex justify-between items-center">
             <div>
@@ -119,7 +186,7 @@ const TaxSummary = () => {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* IVA */}
             <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
               <div className="flex justify-between items-center mb-2">
@@ -173,44 +240,6 @@ const TaxSummary = () => {
                 {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos suficientes"}
               </p>
             </div>
-            
-            {/* Retenciones */}
-            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-700 font-medium flex items-center">
-                  <span className="inline-block w-3 h-3 bg-emerald-500 rounded-full mr-2"></span>
-                  Retenciones aplicadas
-                </span>
-                {isLoading ? (
-                  <Skeleton className="h-5 w-20" />
-                ) : (
-                  <span className="text-sm font-semibold">{formatCurrency(withholdings)}</span>
-                )}
-              </div>
-              {isLoading ? (
-                <Skeleton className="h-2 w-full" />
-              ) : (
-                <Progress 
-                  value={withholdingsPercentage} 
-                  className="h-2.5 bg-gray-100"
-                  indicatorClassName="bg-emerald-500"
-                />
-              )}
-              <p className="text-xs text-gray-500 mt-1.5">
-                {withholdingsPercentage > 0 ? `${withholdingsPercentage.toFixed(1)}% sobre facturación` : "Sin retenciones"}
-              </p>
-            </div>
-          </div>
-          
-          <div className="text-center mt-4">
-            <Button
-              variant="outline"
-              className="bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200"
-              onClick={() => navigate("/reports")}
-            >
-              Ver informe completo
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
           </div>
         </CardContent>
       </Card>

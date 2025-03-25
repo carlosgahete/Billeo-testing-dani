@@ -156,7 +156,7 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
             ) : (
               <p className="text-2xl font-bold text-neutral-800">{formatCurrency(data?.expenses || 0)}</p>
             )}
-            {!isLoading && data?.expenses > 0 && (
+            {!isLoading && (data?.expenses || 0) > 0 && (
               <p className="text-xs text-danger-600 flex items-center mt-1">
                 <TrendingDown className="h-3 w-3 mr-1" />
                 Gastos deducibles
