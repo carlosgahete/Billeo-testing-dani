@@ -169,7 +169,7 @@ const Sidebar = ({
               <Avatar className="h-9 w-9">
                 <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
                 <AvatarFallback className="text-xs">
-                  {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
+                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={20} />}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-3">
@@ -249,7 +249,7 @@ const Sidebar = ({
               <Avatar className="h-9 w-9">
                 <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
                 <AvatarFallback className="text-xs">
-                  {user?.name?.split(' ').map(n => n[0]).join('') || <User size={20} />}
+                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={20} />}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-3">
