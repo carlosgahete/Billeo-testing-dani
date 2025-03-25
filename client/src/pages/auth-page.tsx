@@ -91,169 +91,134 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-secondary-50 p-4">
-      <div className="grid w-full max-w-6xl grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        {/* Auth form section */}
-        <div>
-          <Card className="w-full max-w-md mx-auto">
-            <CardHeader className="space-y-3">
-              <div className="flex justify-center">
-                <img 
-                  src={billeoLogo} 
-                  alt="Billeo Logo" 
-                  className="h-11"
-                />
-              </div>
-              <CardDescription className="text-center">
-                Gestión financiera simple para autónomos y pequeñas empresas
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                  <TabsTrigger value="register">Registrarse</TabsTrigger>
-                </TabsList>
-                
-                {/* Login Form */}
-                <TabsContent value="login">
-                  <form onSubmit={handleLoginSubmit}>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-username">Usuario</Label>
-                        <Input
-                          id="login-username"
-                          name="username"
-                          placeholder="demo"
-                          value={loginFormData.username}
-                          onChange={handleLoginChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="login-password">Contraseña</Label>
-                        <Input
-                          id="login-password"
-                          name="password"
-                          type="password"
-                          placeholder="demo"
-                          value={loginFormData.password}
-                          onChange={handleLoginChange}
-                          required
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        type="submit"
-                        disabled={isPending}
-                      >
-                        {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
-                      </Button>
-                      
-                      <div className="text-center text-sm mt-3">
-                        <p className="text-neutral-500">
-                          Cuenta demo: usuario <span className="font-semibold">demo</span> / contraseña <span className="font-semibold">demo</span>
-                        </p>
-                      </div>
-                    </div>
-                  </form>
-                </TabsContent>
-                
-                {/* Register Form */}
-                <TabsContent value="register">
-                  <form onSubmit={handleRegisterSubmit}>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="register-name">Nombre completo</Label>
-                        <Input
-                          id="register-name"
-                          name="name"
-                          placeholder="Ana García"
-                          value={registerFormData.name}
-                          onChange={handleRegisterChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-email">Email</Label>
-                        <Input
-                          id="register-email"
-                          name="email"
-                          type="email"
-                          placeholder="usuario@ejemplo.com"
-                          value={registerFormData.email}
-                          onChange={handleRegisterChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-username">Usuario</Label>
-                        <Input
-                          id="register-username"
-                          name="username"
-                          placeholder="minombre"
-                          value={registerFormData.username}
-                          onChange={handleRegisterChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-password">Contraseña</Label>
-                        <Input
-                          id="register-password"
-                          name="password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={registerFormData.password}
-                          onChange={handleRegisterChange}
-                          required
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        type="submit"
-                        disabled={isPending}
-                      >
-                        {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
-                      </Button>
-                    </div>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Hero section */}
-        <div className="hidden md:block">
-          <div className="space-y-5">
-            <h1 className="text-4xl font-bold tracking-tight text-primary-950">
-              Gestiona tus finanzas sin complicaciones
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Billeo simplifica la gestión contable para autónomos y pequeñas empresas con herramientas intuitivas para facturas, gastos y reportes fiscales.
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-primary-600 font-semibold">1</span>
-                </div>
-                <p className="text-muted-foreground"><span className="font-medium text-primary-950">Facturación automática</span> — Crea facturas profesionales en segundos</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-primary-600 font-semibold">2</span>
-                </div>
-                <p className="text-muted-foreground"><span className="font-medium text-primary-950">Escaneo inteligente</span> — Captura gastos con un simple escaneo</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-primary-600 font-semibold">3</span>
-                </div>
-                <p className="text-muted-foreground"><span className="font-medium text-primary-950">Reportes fiscales</span> — Prepara tus declaraciones sin estrés</p>
-              </div>
+      <div className="w-full max-w-md">
+        <Card className="w-full">
+          <CardHeader className="space-y-3">
+            <div className="flex justify-center">
+              <img 
+                src={billeoLogo} 
+                alt="Billeo Logo" 
+                className="h-11"
+              />
             </div>
-          </div>
-        </div>
+            <CardDescription className="text-center">
+              Gestión financiera simple para autónomos y pequeñas empresas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                <TabsTrigger value="register">Registrarse</TabsTrigger>
+              </TabsList>
+              
+              {/* Login Form */}
+              <TabsContent value="login">
+                <form onSubmit={handleLoginSubmit}>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-username">Usuario</Label>
+                      <Input
+                        id="login-username"
+                        name="username"
+                        placeholder="demo"
+                        value={loginFormData.username}
+                        onChange={handleLoginChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Contraseña</Label>
+                      <Input
+                        id="login-password"
+                        name="password"
+                        type="password"
+                        placeholder="demo"
+                        value={loginFormData.password}
+                        onChange={handleLoginChange}
+                        required
+                      />
+                    </div>
+                    <Button
+                      className="w-full"
+                      type="submit"
+                      disabled={isPending}
+                    >
+                      {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
+                    </Button>
+                    
+                    <div className="text-center text-sm mt-3">
+                      <p className="text-neutral-500">
+                        Cuenta demo: usuario <span className="font-semibold">demo</span> / contraseña <span className="font-semibold">demo</span>
+                      </p>
+                    </div>
+                  </div>
+                </form>
+              </TabsContent>
+              
+              {/* Register Form */}
+              <TabsContent value="register">
+                <form onSubmit={handleRegisterSubmit}>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="register-name">Nombre completo</Label>
+                      <Input
+                        id="register-name"
+                        name="name"
+                        placeholder="Ana García"
+                        value={registerFormData.name}
+                        onChange={handleRegisterChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-email">Email</Label>
+                      <Input
+                        id="register-email"
+                        name="email"
+                        type="email"
+                        placeholder="usuario@ejemplo.com"
+                        value={registerFormData.email}
+                        onChange={handleRegisterChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-username">Usuario</Label>
+                      <Input
+                        id="register-username"
+                        name="username"
+                        placeholder="minombre"
+                        value={registerFormData.username}
+                        onChange={handleRegisterChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">Contraseña</Label>
+                      <Input
+                        id="register-password"
+                        name="password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={registerFormData.password}
+                        onChange={handleRegisterChange}
+                        required
+                      />
+                    </div>
+                    <Button
+                      className="w-full"
+                      type="submit"
+                      disabled={isPending}
+                    >
+                      {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
