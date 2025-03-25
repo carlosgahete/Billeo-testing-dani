@@ -58,16 +58,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   
   // Keep compatibility with old auth endpoint
-  app.get("/api/auth/session", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(200).json({ authenticated: false });
+  app.get("/api/auth/session", async (req, res) => {
+    // Verificar si el usuario está autenticado mediante passport
+    if (req.isAuthenticated()) {
+      const { password, ...userWithoutPassword } = req.user as any;
+      return res.status(200).json({
+        authenticated: true,
+        user: userWithoutPassword
+      });
     }
     
-    const { password, ...userWithoutPassword } = req.user as any;
-    return res.status(200).json({
-      authenticated: true,
-      user: userWithoutPassword
-    });
+    // Si no está autenticado por passport, verificar si hay userId en la sesión
+    if (req.session && req.session.userId) {
+      try {
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          const { password, ...userWithoutPassword } = user;
+          return res.status(200).json({
+            authenticated: true,
+            user: userWithoutPassword
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user from session:", error);
+      }
+    }
+    
+    // Si ninguna de las anteriores, no está autenticado
+    return res.status(200).json({ authenticated: false });
   });
   
   // Middleware para verificar autenticación de manera consistente

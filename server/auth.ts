@@ -48,6 +48,15 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+  
+  // Middleware que se ejecuta después de la autenticación
+  // para guardar el ID de usuario en la sesión
+  app.use((req, res, next) => {
+    if (req.isAuthenticated() && req.user) {
+      req.session.userId = (req.user as SelectUser).id;
+    }
+    next();
+  });
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -146,6 +155,4 @@ export function setupAuth(app: Express) {
     const { password, ...userWithoutPassword } = req.user as SelectUser;
     res.json(userWithoutPassword);
   });
-  
-
 }
