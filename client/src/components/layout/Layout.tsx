@@ -23,14 +23,14 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
-      {/* Header - siempre visible */}
-      <Header 
-        isMobile={isMobile} 
-        mobileMenuOpen={mobileMenuOpen} 
-        setMobileMenuOpen={setMobileMenuOpen} 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
+      {/* Mobile header */}
+      {isMobile && (
+        <Header 
+          isMobile={true} 
+          mobileMenuOpen={mobileMenuOpen} 
+          setMobileMenuOpen={setMobileMenuOpen} 
+        />
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
@@ -43,7 +43,7 @@ const Layout = ({ children }: LayoutProps) => {
         />
 
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : 'pt-16'} ${!isMobile && sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''} ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
           {/* Ya no necesitamos el botón hamburguesa flotante aquí */}
           <div className="p-4 lg:p-6 transition-all duration-300">
             {children}

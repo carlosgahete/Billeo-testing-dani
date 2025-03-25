@@ -16,8 +16,6 @@ interface HeaderProps {
   isMobile: boolean;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
 }
 
 interface Notification {
@@ -28,7 +26,7 @@ interface Notification {
   read: boolean;
 }
 
-const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen, sidebarOpen, setSidebarOpen }: HeaderProps) => {
+const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([
     { 
       id: 1, 
@@ -69,27 +67,15 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen, sidebarOpen, setS
     <header className="bg-white shadow-sm z-10 fixed top-0 left-0 right-0">
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="w-10">
-          {isMobile ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-primary absolute left-2"
-              aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-            >
-              <Menu size={24} />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-primary absolute left-2"
-              aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
-            >
-              <Menu size={24} />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="text-primary absolute left-2"
+            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          >
+            <Menu size={24} />
+          </Button>
         </div>
 
         <div className="flex items-center">
