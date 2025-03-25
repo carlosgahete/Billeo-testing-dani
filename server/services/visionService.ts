@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createCanvas, loadImage } from 'canvas';
 import * as pdfjs from 'pdfjs-dist';
-import * as pdfParse from 'pdf-parse';
+import pdfParse from 'pdf-parse';
 import { InsertTransaction } from '@shared/schema';
 
 // La ruta al archivo de credenciales JSON
@@ -97,23 +97,26 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   const dateMatches = normalizedText.match(dateRegex) || [];
   
   let date = new Date().toISOString().split('T')[0]; // Fecha actual por defecto
+  
   if (dateMatches.length > 0) {
     // Usar la primera fecha encontrada
     const firstDateMatch = dateMatches[0];
     // Extraer los componentes usando grupos de captura
-    const dateComponents = firstDateMatch.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/) || [];
-    
-    if (dateComponents.length >= 4) {
-      const day = dateComponents[1].padStart(2, '0');
-      const month = dateComponents[2].padStart(2, '0');
-      let year = dateComponents[3];
+    if (firstDateMatch) {
+      const dateComponents = firstDateMatch.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/) || [];
       
-      // Ajustar el año si es de dos dígitos
-      if (year.length === 2) {
-        year = `20${year}`;
+      if (dateComponents.length >= 4) {
+        const day = dateComponents[1].padStart(2, '0');
+        const month = dateComponents[2].padStart(2, '0');
+        let year = dateComponents[3];
+        
+        // Ajustar el año si es de dos dígitos
+        if (year.length === 2) {
+          year = `20${year}`;
+        }
+        
+        date = `${year}-${month}-${day}`;
       }
-      
-      date = `${year}-${month}-${day}`;
     }
   }
   
@@ -169,7 +172,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   let description = vendor ? `Compra en ${vendor}` : 'Gasto detectado por IA';
   
   // Determinar posible categoría basada en palabras clave
-  let categoryHint;
+  let categoryHint = 'Otros';
   
   if (/restaurante|cafe|bar|menu|comer|comida|bebida/i.test(normalizedText)) {
     categoryHint = 'Restaurantes';
@@ -181,8 +184,6 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     categoryHint = 'Servicios';
   } else if (/hotel|alojamiento|booking|airbnb/i.test(normalizedText)) {
     categoryHint = 'Viajes';
-  } else {
-    categoryHint = 'Otros';
   }
   
   return {
@@ -204,10 +205,10 @@ export function mapToTransaction(
   categoryId: number | null
 ): Partial<InsertTransaction> {
   return {
-    userId: userId.toString(), // Convertir a string
+    userId: userId, // userId es integer en el esquema
     description: extractedData.description,
-    amount: extractedData.amount,
-    date: new Date(extractedData.date), // Convertir a Date
+    amount: extractedData.amount, // Drizzle convertirá el número a decimal
+    date: new Date(extractedData.date), // date es timestamp en el esquema
     type: 'expense',
     categoryId,
     paymentMethod: 'other',
