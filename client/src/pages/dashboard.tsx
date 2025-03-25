@@ -253,8 +253,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        {/* Resumen de impuestos */}
-        <TaxSummary />
+        {/* Resumen de impuestos - Ocupa 2 columnas en escritorio */}
+        <div className="md:col-span-2">
+          <TaxSummary />
+        </div>
         
         {/* Tarjeta de Resultado */}
         <Card className="overflow-hidden">
