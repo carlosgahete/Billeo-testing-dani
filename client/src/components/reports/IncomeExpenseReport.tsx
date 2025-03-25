@@ -9,7 +9,8 @@ import {
   ScanText, 
   PlusCircle,
   Loader2,
-  Receipt
+  Paperclip,
+  FileCheck
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageTitle } from "@/components/ui/page-title";
@@ -273,6 +274,18 @@ const IncomeExpenseReport = () => {
       return;
     }
     
+    // Validar que hay un archivo adjunto
+    if (!receiptFile) {
+      // Si no hay archivo, mostramos el formulario de adjunción
+      setShowUploadOption(true);
+      toast({
+        title: "Comprobante requerido",
+        description: "Por favor adjunte un comprobante (factura, recibo o imagen) del gasto.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Crear nueva transacción de tipo gasto
@@ -282,7 +295,7 @@ const IncomeExpenseReport = () => {
       date: new Date().toISOString(),
       type: "expense",
       paymentMethod: "efectivo", // Valor por defecto
-      notes: receiptFile ? `Registro con comprobante: ${receiptFile.name}` : "Registro rápido sin comprobante"
+      notes: `Registro con comprobante: ${receiptFile.name}`
     });
   };
 
@@ -330,9 +343,9 @@ const IncomeExpenseReport = () => {
                   size="icon"
                   onClick={() => setShowUploadOption(!showUploadOption)}
                   className="md:h-10 md:w-10"
-                  title={showUploadOption ? "Ocultar opción de adjunto" : "Adjuntar comprobante (opcional)"}
+                  title={showUploadOption ? "Ocultar opción de adjunto" : "Adjuntar comprobante (requerido)"}
                 >
-                  <Receipt className="h-4 w-4" />
+                  <Paperclip className="h-4 w-4" />
                 </Button>
               </div>
               <Button 
@@ -349,19 +362,29 @@ const IncomeExpenseReport = () => {
               </Button>
             </div>
             
-            {/* Campo de archivo opcional */}
+            {/* Campo de archivo requerido */}
             {showUploadOption && (
-              <div className="flex items-center gap-2 p-2 border border-dashed border-muted-foreground/50 rounded-md bg-muted/30">
+              <div className="flex flex-col gap-2 p-3 border border-dashed border-red-300 rounded-md bg-red-50">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="h-4 w-4 text-red-600" />
+                  <p className="text-sm font-medium text-red-800">Adjunte un comprobante (requerido)</p>
+                </div>
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".jpg,.jpeg,.png,.pdf,.webp"
                   className="text-sm flex-1"
+                  required
                 />
-                {receiptFile && (
-                  <div className="text-xs text-muted-foreground">
-                    Se adjuntará: {receiptFile.name}
+                {receiptFile ? (
+                  <div className="text-xs flex items-center gap-1 text-green-700 bg-green-50 p-1 rounded">
+                    <FileCheck className="h-3 w-3" />
+                    Comprobante seleccionado: {receiptFile.name}
+                  </div>
+                ) : (
+                  <div className="text-xs text-red-600">
+                    Seleccione una imagen o PDF del comprobante para continuar
                   </div>
                 )}
               </div>
