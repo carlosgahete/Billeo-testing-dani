@@ -1,8 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -27,8 +35,14 @@ interface DashboardStats {
   result: number;
 }
 
+// Tipos para los períodos fiscales
+type YearType = '2023' | '2024' | '2025';
+type PeriodType = 'all' | 'q1' | 'q2' | 'q3' | 'q4';
+
 const TaxSummary = () => {
   const [, navigate] = useLocation();
+  const [year, setYear] = useState<YearType>('2025');
+  const [period, setPeriod] = useState<PeriodType>('all');
   
   const { data, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
@@ -47,10 +61,35 @@ const TaxSummary = () => {
   const withholdings = data?.totalWithholdings ?? 0;
   
   // Calcular valores trimestrales (simplificado)
-  const vatQ1 = vat * 0.2; // 20% del total anual (ejemplo)
-  const vatQ2 = vat * 0.3; // 30% del total anual (ejemplo)
-  const vatQ3 = vat * 0.2; // 20% del total anual (ejemplo)
-  const vatQ4 = vat * 0.3; // 30% del total anual (ejemplo)
+  const vatByQuarter = {
+    q1: vat * 0.2, // 20% del total anual (ejemplo)
+    q2: vat * 0.3, // 30% del total anual (ejemplo)
+    q3: vat * 0.2, // 20% del total anual (ejemplo)
+    q4: vat * 0.3, // 30% del total anual (ejemplo),
+    all: vat
+  };
+
+  // Calcular retenciones trimestrales (simplificado)
+  const withholdingsByQuarter = {
+    q1: withholdings * 0.2,
+    q2: withholdings * 0.3,
+    q3: withholdings * 0.2,
+    q4: withholdings * 0.3,
+    all: withholdings
+  };
+
+  // Datos del período seleccionado
+  const selectedVat = vatByQuarter[period];
+  const selectedWithholdings = withholdingsByQuarter[period];
+
+  // Nombres descriptivos para los períodos
+  const periodNames = {
+    all: 'Todo el año',
+    q1: '1T (Ene-Mar)',
+    q2: '2T (Abr-Jun)',
+    q3: '3T (Jul-Sep)',
+    q4: '4T (Oct-Dic)'
+  };
 
   return (
     <Card className="overflow-hidden h-full">
@@ -74,73 +113,76 @@ const TaxSummary = () => {
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
-        {/* IVA Trimestral */}
+      <CardContent className="pt-3">
+        {/* Selectores de período */}
+        <div className="flex gap-2 mb-4">
+          <Select value={year} onValueChange={(value) => setYear(value as YearType)}>
+            <SelectTrigger className="w-[110px]">
+              <SelectValue placeholder="Año" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={period} onValueChange={(value) => setPeriod(value as PeriodType)}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo el año</SelectItem>
+              <SelectItem value="q1">1er trimestre</SelectItem>
+              <SelectItem value="q2">2º trimestre</SelectItem>
+              <SelectItem value="q3">3er trimestre</SelectItem>
+              <SelectItem value="q4">4º trimestre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* IVA del período seleccionado */}
         <div className="p-3 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
           <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
             <CalendarDays className="mr-1 h-4 w-4" />
-            IVA por Trimestres
+            IVA a liquidar ({periodNames[period]}, {year})
           </h3>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">1T (Ene-Mar)</span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="text-blue-800 font-medium">{formatCurrency(vatQ1)}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">2T (Abr-Jun)</span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="text-blue-800 font-medium">{formatCurrency(vatQ2)}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">3T (Jul-Sep)</span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="text-blue-800 font-medium">{formatCurrency(vatQ3)}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">4T (Oct-Dic)</span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="text-blue-800 font-medium">{formatCurrency(vatQ4)}</span>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* IVA Anual */}
-        <div className="p-3 bg-blue-50 shadow-sm border border-blue-100 rounded-md mt-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-blue-800">IVA anual</span>
             {isLoading ? (
-              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-6 w-24" />
             ) : (
-              <span className="text-blue-800 font-bold text-lg">{formatCurrency(vat)}</span>
+              <span className="text-blue-800 font-bold text-xl">{formatCurrency(selectedVat)}</span>
             )}
+            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+              21% IVA
+            </span>
           </div>
+          <p className="text-xs text-gray-600 mt-2">
+            {period === 'all' 
+              ? 'Resumen anual de IVA (modelo 390)'
+              : `IVA trimestral - modelo 303 (${periodNames[period]})`}
+          </p>
         </div>
         
-        {/* Retenciones acumuladas */}
+        {/* Retenciones acumuladas del período seleccionado */}
         <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-3">
+          <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center">
+            Retenciones IRPF ({periodNames[period]}, {year})
+          </h3>
           <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-amber-800">Retenciones acumuladas</span>
             {isLoading ? (
-              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-6 w-24" />
             ) : (
-              <span className="text-amber-800 font-bold text-lg">{formatCurrency(withholdings)}</span>
+              <span className="text-amber-800 font-bold text-xl">{formatCurrency(selectedWithholdings)}</span>
             )}
+            <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
+              15% IRPF
+            </span>
           </div>
-          <p className="text-xs text-gray-600 mt-1">
-            Retenciones ya practicadas en tus facturas (15%)
+          <p className="text-xs text-gray-600 mt-2">
+            {period === 'all' 
+              ? 'Retenciones acumuladas en el año (modelo 190)'
+              : `Retenciones del trimestre - modelo 111 (${periodNames[period]})`}
           </p>
         </div>
         
