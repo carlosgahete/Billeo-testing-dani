@@ -88,6 +88,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json({ authenticated: false });
   });
   
+  // Endpoint para diagnóstico de la sesión
+  app.get("/api/debug/session", (req, res) => {
+    return res.status(200).json({
+      sessionExists: !!req.session,
+      sessionId: req.session?.id || null,
+      isAuthenticated: req.isAuthenticated(),
+      hasUserId: !!req.session?.userId,
+      userId: req.session?.userId || null,
+      hasUser: !!req.user,
+      userIdFromReq: req.user ? (req.user as any).id : null,
+      cookies: req.headers.cookie || null
+    });
+  });
+  
   // Middleware para verificar autenticación de manera consistente
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     // Verificar si el usuario está autenticado mediante passport o mediante sesión

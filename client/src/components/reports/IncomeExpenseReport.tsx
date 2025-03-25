@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { 
@@ -7,8 +7,10 @@ import {
   TrendingDown, 
   TrendingUp, 
   ScanText, 
-  PlusCircle 
+  PlusCircle,
+  Loader2
 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageTitle } from "@/components/ui/page-title";
 import {
   Card,
@@ -28,6 +30,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 
 // Función para formatear moneda
 const formatCurrency = (amount: number) => {
@@ -181,6 +184,77 @@ const IncomeExpenseReport = () => {
     isLoadingTransactions || 
     isLoadingCategories;
 
+  // Estado local para formulario de registro rápido
+  const [expenseDescription, setExpenseDescription] = useState("");
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Mutación para crear transacción (gasto rápido)
+  const createTransactionMutation = useMutation({
+    mutationFn: async (transactionData: any) => {
+      const res = await apiRequest("POST", "/api/transactions", transactionData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      // Limpiar formulario
+      setExpenseDescription("");
+      setExpenseAmount("");
+      
+      // Actualizar datos
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      
+      toast({
+        title: "Gasto registrado",
+        description: "El gasto se ha registrado correctamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al registrar gasto",
+        description: error.message || "No se pudo registrar el gasto. Intente nuevamente.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Manejar registro rápido de gasto
+  const handleQuickExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!expenseDescription || !expenseAmount) {
+      toast({
+        title: "Campos incompletos",
+        description: "Por favor ingrese descripción e importe del gasto.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const amount = parseFloat(expenseAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Importe inválido",
+        description: "Por favor ingrese un importe válido mayor que cero.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Crear nueva transacción de tipo gasto
+    createTransactionMutation.mutate({
+      description: expenseDescription,
+      amount: amount,
+      date: new Date().toISOString(),
+      type: "expense",
+      paymentMethod: "efectivo", // Valor por defecto
+      notes: "Registro rápido"
+    });
+    
+    setIsSubmitting(false);
+  };
+
   return (
     <div className="space-y-6">
       <PageTitle 
@@ -188,7 +262,52 @@ const IncomeExpenseReport = () => {
         description="Visualización detallada de todos los ingresos y gastos"
       />
       
-      {/* Acciones rápidas - En la parte superior */}
+      {/* Formulario de registro rápido de gastos */}
+      <Card className="border-2 border-red-100 shadow-sm">
+        <CardHeader className="pb-3 pt-3">
+          <CardTitle className="text-lg font-medium text-red-800 flex items-center">
+            <TrendingDown className="mr-2 h-5 w-5" />
+            Registro rápido de gastos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1">
+              <Input
+                placeholder="Descripción del gasto"
+                value={expenseDescription}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="md:w-1/4">
+              <Input
+                placeholder="Importe (€)"
+                value={expenseAmount}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                type="number"
+                step="0.01"
+                min="0.01"
+                className="w-full"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <PlusCircle className="h-4 w-4 mr-2" />
+              )}
+              Registrar gasto
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      
+      {/* Acciones adicionales */}
       <div className="mb-6 flex flex-wrap gap-3 justify-start">
         <Button 
           onClick={() => navigate("/transactions/create")} 
