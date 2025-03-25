@@ -3,24 +3,42 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createCanvas, loadImage } from 'canvas';
 import * as pdfjs from 'pdfjs-dist';
-import pdfParse from 'pdf-parse';
+import pdfParse from './pdf-parser';
 import { InsertTransaction } from '@shared/schema';
 
-// La ruta al archivo de credenciales JSON
-const credentialsJson = process.env.GOOGLE_CLOUD_CREDENTIALS || '';
-let credentials;
+// Configuración del cliente de Vision API
+let visionClient: ImageAnnotatorClient;
 
 try {
-  // Interpretamos las credenciales como JSON
-  credentials = JSON.parse(credentialsJson);
+  // Verificamos si la variable de entorno es una clave de API directa o un JSON
+  const credentialsEnv = process.env.GOOGLE_CLOUD_CREDENTIALS || '';
+  
+  if (credentialsEnv.startsWith('AIza')) {
+    // Es una clave de API directa
+    visionClient = new ImageAnnotatorClient({
+      apiKey: credentialsEnv
+    });
+  } else {
+    // Intentamos interpretar como JSON
+    try {
+      const credentials = JSON.parse(credentialsEnv);
+      visionClient = new ImageAnnotatorClient({
+        credentials,
+      });
+    } catch (e) {
+      console.error('Error al parsear credenciales como JSON:', e);
+      // Fallback: usamos la cadena como clave de API
+      visionClient = new ImageAnnotatorClient({
+        apiKey: credentialsEnv
+      });
+    }
+  }
 } catch (error) {
-  console.error('Error al parsear credenciales:', error);
+  console.error('Error al inicializar Vision API client:', error);
+  // Creamos un cliente fallback para que no falle la aplicación
+  // (las llamadas al API fallarán, pero la app seguirá funcionando)
+  visionClient = new ImageAnnotatorClient();
 }
-
-// Cliente de Vision API
-const visionClient = new ImageAnnotatorClient({
-  credentials,
-});
 
 // Interfaz para los resultados procesados
 export interface ExtractedExpense {
@@ -203,13 +221,14 @@ export function mapToTransaction(
   extractedData: ExtractedExpense, 
   userId: number, 
   categoryId: number | null
-): Partial<InsertTransaction> {
+): InsertTransaction {
+  // Aseguramos que todos los campos requeridos estén presentes
   return {
     userId: userId, // userId es integer en el esquema
     description: extractedData.description,
-    amount: extractedData.amount, // Drizzle convertirá el número a decimal
+    amount: extractedData.amount.toString(), // Convertir a string para el esquema decimal
     date: new Date(extractedData.date), // date es timestamp en el esquema
-    type: 'expense',
+    type: 'expense' as const, // Usar 'as const' para asegurar que el tipo sea exactamente 'expense'
     categoryId,
     paymentMethod: 'other',
     notes: `Extraído automáticamente de una imagen/PDF. Vendedor: ${extractedData.vendor || 'No detectado'}. IVA estimado: ${extractedData.taxAmount || 0}€`

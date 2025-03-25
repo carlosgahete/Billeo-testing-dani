@@ -1076,6 +1076,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Internal server error" });
     }
   });
+  
+  // Endpoint para procesar documentos (facturas/recibos) usando Vision API
+  app.post("/api/documents/process", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const filePath = req.file.path;
+      const fileExtension = path.extname(req.file.originalname).toLowerCase();
+      
+      console.log(`Procesando documento: ${filePath}, extensión: ${fileExtension}`);
+      
+      // Extraer información del documento según el tipo de archivo
+      let extractedData;
+      
+      if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
+        extractedData = await processReceiptImage(filePath);
+      } else if (fileExtension === '.pdf') {
+        extractedData = await processReceiptPDF(filePath);
+      } else {
+        return res.status(400).json({ 
+          message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG) o un PDF" 
+        });
+      }
+      
+      // Buscar una categoría que coincida con la sugerencia de categoría
+      const categoryHint = extractedData.categoryHint;
+      const allCategories = await storage.getCategoriesByUserId(req.session.userId);
+      
+      // Buscar categoría por nombre similar (sin distinguir mayúsculas/minúsculas)
+      let matchedCategory = allCategories.find(cat => 
+        cat.type === 'expense' && 
+        cat.name.toLowerCase().includes(categoryHint?.toLowerCase() || '')
+      );
+      
+      // Si no encontramos una categoría específica, usamos la primera categoría de gastos o null
+      const categoryId = matchedCategory ? 
+        matchedCategory.id : 
+        (allCategories.find(cat => cat.type === 'expense')?.id || null);
+      
+      // Convertir los datos extraídos a un objeto de transacción
+      const transactionData = mapToTransaction(
+        extractedData, 
+        req.session.userId,
+        categoryId
+      );
+      
+      // Crear la transacción en la base de datos
+      // Asegurarnos de que todos los campos requeridos estén presentes
+      const transactionToCreate = {
+        userId: transactionData.userId,
+        description: transactionData.description,
+        amount: transactionData.amount,
+        date: transactionData.date,
+        type: transactionData.type,
+        categoryId: transactionData.categoryId,
+        paymentMethod: transactionData.paymentMethod || 'other',
+        notes: transactionData.notes
+      };
+      
+      const transaction = await storage.createTransaction(transactionToCreate);
+      
+      return res.status(201).json({
+        message: "Documento procesado con éxito",
+        extractedData,
+        transaction
+      });
+      
+    } catch (error) {
+      console.error("Error procesando documento:", error);
+      return res.status(500).json({ 
+        message: "Error al procesar el documento", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Stats and reports
   app.get("/api/stats/dashboard", async (req: Request, res: Response) => {
