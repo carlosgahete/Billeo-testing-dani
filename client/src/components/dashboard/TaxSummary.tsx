@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,10 +39,26 @@ interface DashboardStats {
 type YearType = '2023' | '2024' | '2025';
 type PeriodType = 'all' | 'q1' | 'q2' | 'q3' | 'q4';
 
+// Función para calcular datos fiscales basados en el año
+const calculateYearlyData = (base: number, year: YearType): number => {
+  const currentYear = new Date().getFullYear();
+  const selectedYear = parseInt(year);
+  
+  // Simulación simple: años pasados tienen menos, años futuros tienen más
+  if (selectedYear < currentYear) {
+    return base * 0.7; // 70% para años pasados
+  } else if (selectedYear > currentYear) {
+    return base * 1.3; // 130% para años futuros
+  }
+  return base; // 100% para año actual
+};
+
 const TaxSummary = () => {
   const [, navigate] = useLocation();
   const [year, setYear] = useState<YearType>('2025');
   const [period, setPeriod] = useState<PeriodType>('all');
+  const [selectedVat, setSelectedVat] = useState<number>(0);
+  const [selectedWithholdings, setSelectedWithholdings] = useState<number>(0);
   
   const { data, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
@@ -56,32 +72,6 @@ const TaxSummary = () => {
     }).format(value);
   };
 
-  // Default tax values when data is not available
-  const vat = data?.taxes?.vat ?? 0;
-  const withholdings = data?.totalWithholdings ?? 0;
-  
-  // Calcular valores trimestrales (simplificado)
-  const vatByQuarter = {
-    q1: vat * 0.2, // 20% del total anual (ejemplo)
-    q2: vat * 0.3, // 30% del total anual (ejemplo)
-    q3: vat * 0.2, // 20% del total anual (ejemplo)
-    q4: vat * 0.3, // 30% del total anual (ejemplo),
-    all: vat
-  };
-
-  // Calcular retenciones trimestrales (simplificado)
-  const withholdingsByQuarter = {
-    q1: withholdings * 0.2,
-    q2: withholdings * 0.3,
-    q3: withholdings * 0.2,
-    q4: withholdings * 0.3,
-    all: withholdings
-  };
-
-  // Datos del período seleccionado
-  const selectedVat = vatByQuarter[period];
-  const selectedWithholdings = withholdingsByQuarter[period];
-
   // Nombres descriptivos para los períodos
   const periodNames = {
     all: 'Todo el año',
@@ -90,6 +80,37 @@ const TaxSummary = () => {
     q3: '3T (Jul-Sep)',
     q4: '4T (Oct-Dic)'
   };
+
+  // Efecto para recalcular valores cuando cambia el período, año o datos
+  useEffect(() => {
+    // Default tax values when data is not available
+    const baseVat = data?.taxes?.vat ?? 0;
+    const baseWithholdings = data?.totalWithholdings ?? 0;
+    
+    // Ajustar por año
+    const yearAdjustedVat = calculateYearlyData(baseVat, year);
+    const yearAdjustedWithholdings = calculateYearlyData(baseWithholdings, year);
+    
+    // Calcular valores por trimestre
+    let periodVat = yearAdjustedVat;
+    let periodWithholdings = yearAdjustedWithholdings;
+    
+    if (period !== 'all') {
+      // Distribución trimestral (podría tener lógica más compleja)
+      const distribution = {
+        q1: 0.2, // 20% en primer trimestre
+        q2: 0.3, // 30% en segundo trimestre
+        q3: 0.2, // 20% en tercer trimestre
+        q4: 0.3  // 30% en cuarto trimestre
+      };
+      
+      periodVat = yearAdjustedVat * distribution[period];
+      periodWithholdings = yearAdjustedWithholdings * distribution[period];
+    }
+    
+    setSelectedVat(periodVat);
+    setSelectedWithholdings(periodWithholdings);
+  }, [data, year, period]);
 
   return (
     <Card className="overflow-hidden h-full">
@@ -116,7 +137,7 @@ const TaxSummary = () => {
       <CardContent className="pt-3">
         {/* Selectores de período */}
         <div className="flex gap-2 mb-4">
-          <Select value={year} onValueChange={(value) => setYear(value as YearType)}>
+          <Select value={year} onValueChange={(value: string) => setYear(value as YearType)}>
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Año" />
             </SelectTrigger>
@@ -127,7 +148,7 @@ const TaxSummary = () => {
             </SelectContent>
           </Select>
           
-          <Select value={period} onValueChange={(value) => setPeriod(value as PeriodType)}>
+          <Select value={period} onValueChange={(value: string) => setPeriod(value as PeriodType)}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
