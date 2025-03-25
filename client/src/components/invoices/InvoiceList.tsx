@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
@@ -62,6 +62,13 @@ interface Invoice {
 interface Client {
   id: number;
   name: string;
+  taxId: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  email?: string;
+  phone?: string;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
