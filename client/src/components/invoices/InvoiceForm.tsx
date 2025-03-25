@@ -1225,7 +1225,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       {/* Formulario de clientes como modal */}
       <ClientForm 
         open={showClientForm} 
-        onOpenChange={setShowClientForm} 
+        onOpenChange={handleClientModalClose} 
         onClientCreated={handleClientCreated}
         clientToEdit={clientToEdit}
       />
