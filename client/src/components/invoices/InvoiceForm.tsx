@@ -103,6 +103,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     amount: 0,
     isPercentage: true
   });
+  const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
@@ -1189,7 +1190,8 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       <ClientForm 
         open={showClientForm} 
         onOpenChange={setShowClientForm} 
-        onClientCreated={handleClientCreated} 
+        onClientCreated={handleClientCreated}
+        clientToEdit={clientToEdit}
       />
 
       {/* Diálogo para agregar impuestos adicionales */}
