@@ -63,7 +63,7 @@ const Dashboard = () => {
   const incomeTotal = stats?.income || 0;
   const expensesTotal = stats?.expenses || 0;
   
-  // Cálculos de IVA (asumiendo una tasa de IVA estándar del 21% en España)
+  // Cálculos de IVA (tasa estándar del 21% en España)
   const ivaRate = 0.21;
   const baseIncomeWithoutVAT = Number((incomeTotal / (1 + ivaRate)).toFixed(2));
   const ivaRepercutido = Number((incomeTotal - baseIncomeWithoutVAT).toFixed(2));
@@ -71,16 +71,24 @@ const Dashboard = () => {
   const baseExpensesWithoutVAT = Number((expensesTotal / (1 + ivaRate)).toFixed(2));
   const ivaSoportado = Number((expensesTotal - baseExpensesWithoutVAT).toFixed(2));
   
-  // Cálculo del resultado y estimaciones de impuestos
+  // Cálculo del resultado bruto
   const balanceTotal = Number((incomeTotal - expensesTotal).toFixed(2));
   const ivaNeto = Number((ivaRepercutido - ivaSoportado).toFixed(2));
   
-  // Estimación de IRPF (asumimos una retención del 15% sobre el beneficio)
-  const irpfRate = 0.15;
-  const irpfEstimated = Number((baseIncomeWithoutVAT * irpfRate).toFixed(2));
+  // Sistema de IRPF para autónomos en España
+  // 1. Retención del 15% aplicada en las facturas (ya se descuenta al cobrar)
+  const retentionRate = 0.15;
+  const withholdings = Number((incomeTotal * retentionRate).toFixed(2));
   
-  // Beneficio neto estimado
-  const netProfit = Number((balanceTotal - ivaNeto - irpfEstimated).toFixed(2));
+  // 2. IRPF total: 20% sobre el beneficio neto
+  const irpfRate = 0.20;
+  const irpfTotalEstimated = Number((balanceTotal * irpfRate).toFixed(2));
+  
+  // 3. IRPF a pagar = Total estimado - Retenciones ya aplicadas
+  const irpfToPay = Math.max(0, Number((irpfTotalEstimated - withholdings).toFixed(2)));
+  
+  // Beneficio neto final
+  const netProfit = Number((balanceTotal - ivaNeto - irpfToPay).toFixed(2));
   
   // Datos financieros organizados
   const financialData = {
@@ -97,7 +105,8 @@ const Dashboard = () => {
     balance: {
       total: balanceTotal,
       ivaNeto: ivaNeto,
-      irpfEstimated: irpfEstimated,
+      irpfEstimated: irpfTotalEstimated,
+      irpfToPay: irpfToPay,
       netProfit: netProfit
     }
   };

@@ -1189,24 +1189,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter(inv => inv.status === "pending" || inv.status === "overdue")
         .length;
       
-      // Calcular las retenciones (IRPF y otros impuestos negativos)
-      // Asumiendo una retención del 15% para simplificar
-      const totalWithholdings = Math.round(income * 0.15);
+      // Calcular las retenciones (IRPF) que ya se han aplicado en las facturas
+      // Retención del 15% sobre la base imponible de facturas 
+      const retentionRate = 0.15;
+      const totalWithholdings = Math.round(income * retentionRate);
       
-      // Calcular el resultado (ingresos - gastos - retenciones)
+      // Calcular el resultado (ingresos - gastos)
       const result = income - expenses;
       
-      // Calculate balance (including withholdings)
+      // Calculate balance
       const balance = income - expenses;
       
-      // Calculate tax estimates (simplified)
-      // IVA: suponemos un 21% de IVA sobre los ingresos
+      // Calculate VAT (IVA) - 21% sobre los ingresos
       const vatRate = 0.21;
       const vatBalance = Math.round(income * vatRate);
       
-      // Calculate income tax (simplified - 20% of net result, if positive)
-      const incomeTaxRate = 0.20;
-      const incomeTax = Math.max(0, Math.round((income - expenses) * incomeTaxRate));
+      // Cálculo del IRPF según el sistema español para autónomos
+      // 20% del beneficio neto (ingresos - gastos)
+      const irpfRate = 0.20;
+      const irpfTotalEstimated = Math.max(0, Math.round((income - expenses) * irpfRate));
+      
+      // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas
+      const incomeTax = Math.max(0, irpfTotalEstimated - totalWithholdings);
       
       return res.status(200).json({
         income,
