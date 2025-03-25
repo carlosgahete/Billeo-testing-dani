@@ -118,24 +118,24 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
   };
 
   return (
-    <div className="mb-2">
-      {/* Primera fila: Métricas principales - 4 columnas en desktop, 2 en tablet */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+    <div className="mb-1">
+      {/* Primera fila: Métricas principales - 3 columnas en desktop, 2 en tablet */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
         <Card className="border border-secondary-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-3">
-            <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-secondary-50 text-secondary-600">
-                <Wallet size={20} />
+          <CardContent className="p-2 pt-1">
+            <div className="flex items-center">
+              <div className="p-1 mr-2 rounded-md bg-secondary-50 text-secondary-600">
+                <Wallet size={18} />
               </div>
-              <p className="text-neutral-600 text-sm font-medium">Ingresos totales</p>
+              <p className="text-neutral-600 text-sm font-medium">Ingresos</p>
             </div>
             {isLoading ? (
-              <Skeleton className="h-7 w-32 mt-1" />
+              <Skeleton className="h-6 w-32" />
             ) : (
-              <p className="text-xl font-bold text-neutral-800">{formatCurrency(data?.income || 0)}</p>
+              <p className="text-lg font-bold text-neutral-800">{formatCurrency(data?.income || 0)}</p>
             )}
             {!isLoading && (
-              <p className="text-xs text-secondary-600 flex items-center mt-1">
+              <p className="text-xs text-secondary-600 flex items-center">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 Facturación bruta
               </p>
@@ -144,20 +144,20 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
         </Card>
         
         <Card className="border border-danger-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-3">
-            <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-danger-50 text-danger-500">
-                <ShoppingCart size={20} />
+          <CardContent className="p-2 pt-1">
+            <div className="flex items-center">
+              <div className="p-1 mr-2 rounded-md bg-danger-50 text-danger-500">
+                <ShoppingCart size={18} />
               </div>
-              <p className="text-neutral-600 text-sm font-medium">Gastos totales</p>
+              <p className="text-neutral-600 text-sm font-medium">Gastos</p>
             </div>
             {isLoading ? (
-              <Skeleton className="h-7 w-32 mt-1" />
+              <Skeleton className="h-6 w-32" />
             ) : (
-              <p className="text-xl font-bold text-neutral-800">{formatCurrency(data?.expenses || 0)}</p>
+              <p className="text-lg font-bold text-neutral-800">{formatCurrency(data?.expenses || 0)}</p>
             )}
             {!isLoading && (data?.expenses || 0) > 0 && (
-              <p className="text-xs text-danger-600 flex items-center mt-1">
+              <p className="text-xs text-danger-600 flex items-center">
                 <TrendingDown className="h-3 w-3 mr-1" />
                 Gastos deducibles
               </p>
@@ -166,48 +166,22 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
         </Card>
         
         <Card className="border border-warning-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-3">
-            <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-warning-50 text-warning-700">
-                <AlertTriangle size={20} />
+          <CardContent className="p-2 pt-1">
+            <div className="flex items-center">
+              <div className="p-1 mr-2 rounded-md bg-warning-50 text-warning-700">
+                <AlertTriangle size={18} />
               </div>
               <p className="text-neutral-600 text-sm font-medium">Retenciones</p>
             </div>
             {isLoading ? (
-              <Skeleton className="h-7 w-32 mt-1" />
+              <Skeleton className="h-6 w-32" />
             ) : (
-              <p className="text-xl font-bold text-neutral-800">{formatCurrency(data?.totalWithholdings || 0)}</p>
+              <p className="text-lg font-bold text-neutral-800">{formatCurrency(data?.totalWithholdings || 0)}</p>
             )}
             {!isLoading && (data?.totalWithholdings || 0) > 0 && (
-              <p className="text-xs text-warning-700 flex items-center mt-1">
+              <p className="text-xs text-warning-700 flex items-center">
                 <TrendingDown className="h-3 w-3 mr-1" />
-                IRPF y otras retenciones
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card className="border border-primary-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-3">
-            <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-primary-50 text-primary-600">
-                <PiggyBank size={20} />
-              </div>
-              <p className="text-neutral-600 text-sm font-medium">Resultado</p>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-7 w-32 mt-1" />
-            ) : (
-              <p className="text-xl font-bold text-neutral-800">{formatCurrency(data?.result || data?.balance || 0)}</p>
-            )}
-            {!isLoading && (
-              <p className={`text-xs ${(data?.result || data?.balance || 0) > 0 ? "text-secondary-600" : "text-danger-600"} flex items-center mt-1`}>
-                {(data?.result || data?.balance || 0) > 0 ? (
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                )}
-                {(data?.result || data?.balance || 0) > 0 ? "Ingresos - Gastos" : "Pérdidas"}
+                IRPF y otras
               </p>
             )}
           </CardContent>
@@ -215,22 +189,22 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
       </div>
       
       {/* Segunda fila: métricas adicionales - 2 columnas siempre */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <Card className="border border-warning-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-3">
-            <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-warning-50 text-warning-700">
-                <Receipt size={20} />
+          <CardContent className="p-2 pt-1">
+            <div className="flex items-center">
+              <div className="p-1 mr-2 rounded-md bg-warning-50 text-warning-700">
+                <Receipt size={18} />
               </div>
               <p className="text-neutral-600 text-sm font-medium">Facturas pendientes</p>
             </div>
             {isLoading ? (
-              <Skeleton className="h-7 w-32 mt-1" />
+              <Skeleton className="h-6 w-32" />
             ) : (
-              <p className="text-xl font-bold text-neutral-800">{formatCurrency(data?.pendingInvoices || 0)}</p>
+              <p className="text-lg font-bold text-neutral-800">{formatCurrency(data?.pendingInvoices || 0)}</p>
             )}
             {!isLoading && (data?.pendingCount || 0) > 0 && (
-              <p className="text-xs text-warning-700 flex items-center mt-1">
+              <p className="text-xs text-warning-700 flex items-center">
                 <TrendingDown className="h-3 w-3 mr-1" />
                 {`${data?.pendingCount || 0} facturas por cobrar`}
               </p>
@@ -239,22 +213,22 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
         </Card>
         
         <Card className="border border-primary-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-3">
-            <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-primary-50 text-primary-600">
-                <TrendingUp size={20} />
+          <CardContent className="p-2 pt-1">
+            <div className="flex items-center">
+              <div className="p-1 mr-2 rounded-md bg-primary-50 text-primary-600">
+                <TrendingUp size={18} />
               </div>
-              <p className="text-neutral-600 text-sm font-medium">Balance trimestral</p>
+              <p className="text-neutral-600 text-sm font-medium">Balance</p>
             </div>
             {isLoading ? (
-              <Skeleton className="h-7 w-32 mt-1" />
+              <Skeleton className="h-6 w-32" />
             ) : (
               <>
-                <p className="text-xl font-bold text-neutral-800">
+                <p className="text-lg font-bold text-neutral-800">
                   {formatCurrency((data?.result || 0) - (data?.taxes?.vat || 0))}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Resultado después de impuestos
+                <p className="text-xs text-gray-500">
+                  Después de impuestos
                 </p>
               </>
             )}
