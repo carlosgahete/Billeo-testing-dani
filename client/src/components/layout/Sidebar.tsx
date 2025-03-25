@@ -1,5 +1,4 @@
 import { useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -14,20 +13,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import billeoLogo from '../../assets/billeo-logo.png';
-
-interface UserSession {
-  authenticated: boolean;
-  user?: {
-    id: number;
-    username: string;
-    name: string;
-    email: string;
-    role: string;
-    profileImage?: string | null;
-  };
-}
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -69,13 +56,7 @@ const Sidebar = ({
 }: SidebarProps) => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
-  
-  // Obtener los datos del usuario
-  const { data: sessionData } = useQuery<UserSession>({
-    queryKey: ["/api/auth/session"],
-  });
-  
-  const user = sessionData?.user;
+  const { user, logoutMutation } = useAuth();
 
   // Close mobile menu when a link is clicked
   const handleNavClick = () => {
@@ -87,13 +68,12 @@ const Sidebar = ({
   // Logout functionality
   const handleLogout = async () => {
     try {
-      await apiRequest("/api/auth/logout", "POST");
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      await logoutMutation.mutateAsync();
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente",
       });
-      navigate("/login");
+      navigate("/auth");
     } catch (error) {
       toast({
         title: "Error",
