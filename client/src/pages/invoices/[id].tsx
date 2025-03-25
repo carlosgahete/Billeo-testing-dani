@@ -47,13 +47,13 @@ const InvoiceDetailPage = () => {
         <div className="flex items-center mb-6">
           <div className="w-14"></div> {/* Espacio para la hamburguesa */}
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="icon" 
             onClick={() => navigate("/invoices")}
-            className="mr-2"
+            className="mr-2 rounded-full border-2 border-primary-500 hover:bg-primary-100"
             aria-label="Volver a facturas"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 text-primary-600" />
           </Button>
           <h1 className="text-2xl font-bold text-neutral-800">Editar factura</h1>
         </div>
