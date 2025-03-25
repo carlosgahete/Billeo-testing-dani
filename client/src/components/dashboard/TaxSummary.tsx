@@ -108,69 +108,69 @@ const TaxSummary = () => {
     <div className="grid gap-4">
       {/* Resumen fiscal - más ancho, menos alto */}
       <Card className="shadow-sm">
-        <CardHeader className="border-b border-gray-200 p-4 bg-gradient-to-r from-blue-50 to-amber-50">
+        <CardHeader className="border-b border-gray-200 p-2 bg-gradient-to-r from-blue-50 to-amber-50">
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="font-medium text-gray-800 text-base">Resumen fiscal</CardTitle>
-              <CardDescription className="text-sm text-gray-600">
-                Valores estimados del trimestre
+              <CardTitle className="font-medium text-gray-800 text-sm">Resumen fiscal</CardTitle>
+              <CardDescription className="text-xs text-gray-600">
+                Estimado trimestral
               </CardDescription>
             </div>
-            <FileText className="h-5 w-5 text-primary" />
+            <FileText className="h-4 w-4 text-primary" />
           </div>
         </CardHeader>
-        <CardContent className="p-3">
-          <div className="grid grid-cols-1 gap-3">
+        <CardContent className="p-2">
+          <div className="grid grid-cols-1 gap-2">
             {/* IVA */}
-            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-base text-gray-700 font-medium flex items-center">
-                  <span className="inline-block w-4 h-4 bg-blue-500 rounded-full mr-2"></span>
+            <div className="p-2 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
                   IVA a pagar
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-5 w-20" />
                 ) : (
-                  <span className="text-base font-semibold">{formatCurrency(vat)}</span>
+                  <span className="text-sm font-semibold">{formatCurrency(vat)}</span>
                 )}
               </div>
               {isLoading ? (
-                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-full" />
               ) : (
                 <Progress 
                   value={vatPercentage} 
-                  className="h-4 bg-gray-100"
+                  className="h-3 bg-gray-100"
                   indicatorClassName="bg-blue-500"
                 />
               )}
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs text-gray-500 mt-1">
                 {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
               </p>
             </div>
             
             {/* IRPF */}
-            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-base text-gray-700 font-medium flex items-center">
-                  <span className="inline-block w-4 h-4 bg-amber-500 rounded-full mr-2"></span>
+            <div className="p-2 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-1"></span>
                   IRPF estimado
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-5 w-20" />
                 ) : (
-                  <span className="text-base font-semibold">{formatCurrency(incomeTax)}</span>
+                  <span className="text-sm font-semibold">{formatCurrency(incomeTax)}</span>
                 )}
               </div>
               {isLoading ? (
-                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-full" />
               ) : (
                 <Progress 
                   value={incomeTaxPercentage} 
-                  className="h-4 bg-gray-100"
+                  className="h-3 bg-gray-100"
                   indicatorClassName="bg-amber-500"
                 />
               )}
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs text-gray-500 mt-1">
                 {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos"}
               </p>
             </div>
