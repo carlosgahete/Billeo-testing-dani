@@ -162,6 +162,7 @@ const TaxSummary = () => {
               <Progress 
                 value={incomeTaxPercentage} 
                 className="h-2 bg-gray-100"
+                indicatorClassName="bg-amber-500"
               />
             )}
             <p className="text-xs text-gray-500 mt-1">
@@ -187,6 +188,7 @@ const TaxSummary = () => {
               <Progress 
                 value={withholdingsPercentage} 
                 className="h-2 bg-gray-100"
+                indicatorClassName="bg-emerald-500"
               />
             )}
             <p className="text-xs text-gray-500 mt-1">
@@ -212,6 +214,7 @@ const TaxSummary = () => {
               <Progress 
                 value={expensesPercentage} 
                 className="h-2 bg-gray-100"
+                indicatorClassName="bg-red-500"
               />
             )}
             <p className="text-xs text-gray-500 mt-1">
