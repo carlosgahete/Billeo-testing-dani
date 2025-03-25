@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@google-cloud/vision": "^5.1.0",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
@@ -45,6 +46,7 @@
     "@tanstack/react-query": "^5.60.5",
     "@tanstack/react-table": "^8.21.2",
     "@types/multer": "^1.4.12",
+    "canvas": "^3.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -65,6 +67,8 @@
     "papaparse": "^5.5.2",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
+    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.0.375",
     "postgres": "^3.4.5",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
