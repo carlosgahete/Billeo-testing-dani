@@ -188,6 +188,36 @@ const IncomeExpenseReport = () => {
         description="Visualización detallada de todos los ingresos y gastos"
       />
       
+      {/* Acciones rápidas - En la parte superior */}
+      <div className="mb-6 flex flex-wrap gap-3 justify-start">
+        <Button 
+          onClick={() => navigate("/transactions/create")} 
+          variant="default" 
+          className="flex items-center gap-2"
+        >
+          <PlusCircle className="h-4 w-4" />
+          Nueva transacción
+        </Button>
+        
+        <Button 
+          onClick={() => navigate("/invoices/create")} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
+          <FilePlus className="h-4 w-4" />
+          Nueva factura
+        </Button>
+        
+        <Button 
+          onClick={() => navigate("/documents/scan")} 
+          variant="secondary" 
+          className="flex items-center gap-2"
+        >
+          <ScanText className="h-4 w-4" />
+          Escanear documento
+        </Button>
+      </div>
+
       <div className="grid gap-6">
         {/* Panel de estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -405,21 +435,7 @@ const IncomeExpenseReport = () => {
               )}
             </div>
             
-            <div className="rounded-md border bg-muted/20 p-4">
-              <h3 className="font-medium mb-2">Registro rápido de gastos</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Puedes registrar gastos subiendo una factura o ticket para su procesamiento automático.
-              </p>
-              <Button 
-                onClick={() => navigate("/documents/scan")} 
-                variant="default" 
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <ScanText className="h-4 w-4" />
-                Escanear documento
-              </Button>
-            </div>
+
           </TabsContent>
         </Tabs>
       </div>
