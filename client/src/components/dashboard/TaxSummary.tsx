@@ -81,70 +81,17 @@ const TaxSummary = () => {
   useEffect(() => {
     if (!data) return;
     
-    // Ahora tenemos facturas en ambos años y todos los trimestres:
-    // 2025: Q1 (1000€), Q2 (1500€), Q3 (800€), Q4 (2000€) = 5300€ total
-    // 2024: Q3 (500€) = 500€ total
+    // Ahora no hay datos después de la eliminación de facturas y transacciones
+    // Mostraremos "No hay datos disponibles" para todos los períodos
     
-    // Valores base según las facturas añadidas
+    // Valores base
     const totalVat = data.taxes?.vat ?? 0;
     const totalWithholdings = data.totalWithholdings ?? 0;
     
-    // Distribución de IVA según las facturas añadidas
-    const vatDistribution2025 = {
-      q1: 210, // Factura de 1000€ subtotal
-      q2: 315, // Factura de 1500€ subtotal
-      q3: 168, // Factura de 800€ subtotal
-      q4: 420, // Factura de 2000€ subtotal
-      all: 1113 // Total anual (suma de los trimestres)
-    };
-    
-    const vatDistribution2024 = {
-      q1: 0,
-      q2: 0,
-      q3: 105, // Factura de 500€ subtotal
-      q4: 0,
-      all: 105 // Total anual (solo Q3)
-    };
-    
-    // Distribución de retenciones según las facturas añadidas
-    const withholdingsDistribution2025 = {
-      q1: 150, // 15% de 1000€
-      q2: 225, // 15% de 1500€
-      q3: 120, // 15% de 800€
-      q4: 300, // 15% de 2000€
-      all: 795 // Total anual (suma de los trimestres)
-    };
-    
-    const withholdingsDistribution2024 = {
-      q1: 0,
-      q2: 0,
-      q3: 75, // 15% de 500€
-      q4: 0,
-      all: 75 // Total anual (solo Q3)
-    };
-    
-    // Verificar si hay datos para el período seleccionado
-    let hasDataForPeriod = true;
-    let periodVat = 0;
-    let periodWithholdings = 0;
-    
-    if (year === '2025') {
-      periodVat = vatDistribution2025[period];
-      periodWithholdings = withholdingsDistribution2025[period];
-    } else if (year === '2024') {
-      if (period === 'q1' || period === 'q2' || period === 'q4') {
-        hasDataForPeriod = false;
-      } else {
-        periodVat = vatDistribution2024[period];
-        periodWithholdings = withholdingsDistribution2024[period];
-      }
-    } else {
-      hasDataForPeriod = false;
-    }
-    
-    setHasData(hasDataForPeriod);
-    setSelectedVat(periodVat);
-    setSelectedWithholdings(periodWithholdings);
+    // Verificar si hay datos - ahora no hay para ningún período
+    setHasData(false);
+    setSelectedVat(0);
+    setSelectedWithholdings(0);
   }, [data, year, period]);
 
   return (
