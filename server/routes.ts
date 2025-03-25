@@ -60,73 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
-  // Authentication endpoints
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
-    try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
-      }
-      
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // Simple session management (not for production)
-      if (!req.session) {
-        return res.status(500).json({ message: "Session management not available" });
-      }
-      
-      req.session.userId = user.id;
-      
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      return res.status(200).json(userWithoutPassword);
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/auth/logout", (req: Request, res: Response) => {
-    if (req.session) {
-      req.session.destroy((err) => {
-        if (err) {
-          return res.status(500).json({ message: "Failed to logout" });
-        }
-        
-        res.clearCookie("financial-app.sid"); // Nombre actualizado para que coincida con la configuración
-        return res.status(200).json({ message: "Logged out successfully" });
-      });
-    } else {
-      return res.status(200).json({ message: "Already logged out" });
-    }
-  });
-
-  app.get("/api/auth/session", async (req: Request, res: Response) => {
-    try {
-      if (!req.session || !req.session.userId) {
-        return res.status(200).json({ authenticated: false });
-      }
-      
-      const user = await storage.getUser(req.session.userId);
-      
-      if (!user) {
-        return res.status(200).json({ authenticated: false });
-      }
-      
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      return res.status(200).json({
-        authenticated: true,
-        user: userWithoutPassword
-      });
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
+  // Auth routes are now handled by the setupAuth function
 
   // User endpoints
   app.post("/api/users", async (req: Request, res: Response) => {
