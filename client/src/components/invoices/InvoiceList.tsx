@@ -89,7 +89,15 @@ const MarkAsPaidButton = ({
 }) => {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
-
+  const queryClient = useQueryClient();
+  
+  // Obtener la función refetch para dashboard stats
+  const { refetch: refetchDashboard } = useQuery({
+    queryKey: ["/api/stats/dashboard"],
+    // No ejecutar la consulta aquí, solo necesitamos la función refetch
+    enabled: false,
+  });
+  
   // Si la factura ya está pagada, no mostrar el botón
   if (invoice.status === 'paid') {
     return (
@@ -125,9 +133,18 @@ const MarkAsPaidButton = ({
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
       
-      // Invalidar las consultas para actualizar los datos
+      // Paso 1: Invalidar las consultas para actualizar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Paso 2: Invalidar explícitamente el dashboard con un timestamp para evitar caché
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Paso 3: Forzar recarga explícita del dashboard con un nuevo fetching
+      setTimeout(() => {
+        refetchDashboard();
+        // Loggear para depuración
+        console.log("⚡ Refetching dashboard stats después de marcar como pagada:", new Date().toISOString());
+      }, 200);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -279,6 +296,13 @@ const InvoiceList = () => {
     return date.toLocaleDateString("es-ES");
   };
 
+  // Obtener la función refetch para dashboard stats (para uso en toda la clase)
+  const { refetch: refetchDashboard } = useQuery({
+    queryKey: ["/api/stats/dashboard"],
+    // No ejecutar la consulta aquí, solo necesitamos la función refetch
+    enabled: false,
+  });
+  
   // Función para manejar "Marcar como pagada" en el menú móvil
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
@@ -296,9 +320,18 @@ const InvoiceList = () => {
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
       });
       
-      // Invalidar las consultas para actualizar los datos
+      // Paso 1: Invalidar las consultas para actualizar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Paso 2: Invalidar explícitamente el dashboard con un timestamp para evitar caché
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Paso 3: Forzar recarga explícita del dashboard con un nuevo fetching
+      setTimeout(() => {
+        refetchDashboard();
+        // Loggear para depuración
+        console.log("⚡ Refetching dashboard stats desde menú móvil:", new Date().toISOString());
+      }, 200);
     } catch (error: any) {
       toast({
         title: "Error",
