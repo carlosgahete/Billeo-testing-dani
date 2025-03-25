@@ -104,7 +104,8 @@ const TaxSummary = () => {
   const expensesPercentage = Math.min(Math.max((expenses / income) * 100, 0), 100);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid gap-4">
+      {/* Resumen fiscal - más ancho, menos alto */}
       <Card className="shadow-sm">
         <CardHeader className="border-b border-gray-200 p-4">
           <div className="flex justify-between items-center">
@@ -118,111 +119,117 @@ const TaxSummary = () => {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600 flex items-center">
-                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                IVA a pagar
-              </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* IVA */}
+            <div className="mb-3 md:mb-0">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-600 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  IVA a pagar
+                </span>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-20" />
+                ) : (
+                  <span className="text-sm font-medium">{formatCurrency(vat)}</span>
+                )}
+              </div>
               {isLoading ? (
-                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-2 w-full" />
               ) : (
-                <span className="text-sm font-medium">{formatCurrency(vat)}</span>
+                <Progress 
+                  value={vatPercentage} 
+                  className="h-2 bg-gray-100"
+                  indicatorClassName="bg-blue-500"
+                />
               )}
+              <p className="text-xs text-gray-500 mt-1">
+                {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos suficientes"}
+              </p>
             </div>
-            {isLoading ? (
-              <Skeleton className="h-2 w-full" />
-            ) : (
-              <Progress 
-                value={vatPercentage} 
-                className="h-2 bg-gray-100"
-                indicatorClassName="bg-blue-500"
-              />
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos suficientes"}
-            </p>
+            
+            {/* IRPF */}
+            <div className="mb-3 md:mb-0">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-600 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                  IRPF estimado
+                </span>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-20" />
+                ) : (
+                  <span className="text-sm font-medium">{formatCurrency(incomeTax)}</span>
+                )}
+              </div>
+              {isLoading ? (
+                <Skeleton className="h-2 w-full" />
+              ) : (
+                <Progress 
+                  value={incomeTaxPercentage} 
+                  className="h-2 bg-gray-100"
+                  indicatorClassName="bg-amber-500"
+                />
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos suficientes"}
+              </p>
+            </div>
+            
+            {/* Retenciones */}
+            <div className="mb-3 md:mb-0">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-600 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                  Retenciones aplicadas
+                </span>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-20" />
+                ) : (
+                  <span className="text-sm font-medium">{formatCurrency(withholdings)}</span>
+                )}
+              </div>
+              {isLoading ? (
+                <Skeleton className="h-2 w-full" />
+              ) : (
+                <Progress 
+                  value={withholdingsPercentage} 
+                  className="h-2 bg-gray-100"
+                  indicatorClassName="bg-emerald-500"
+                />
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                {withholdingsPercentage > 0 ? `${withholdingsPercentage.toFixed(1)}% sobre facturación` : "Sin retenciones"}
+              </p>
+            </div>
+            
+            {/* Gastos deducibles */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-600 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                  Gastos deducibles
+                </span>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-20" />
+                ) : (
+                  <span className="text-sm font-medium">{formatCurrency(expenses)}</span>
+                )}
+              </div>
+              {isLoading ? (
+                <Skeleton className="h-2 w-full" />
+              ) : (
+                <Progress 
+                  value={expensesPercentage} 
+                  className="h-2 bg-gray-100"
+                  indicatorClassName="bg-red-500"
+                />
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                {expensesPercentage > 0 ? `${expensesPercentage.toFixed(1)}% de la facturación` : "Sin gastos registrados"}
+              </p>
+            </div>
           </div>
           
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600 flex items-center">
-                <span className="inline-block w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
-                IRPF estimado
-              </span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-20" />
-              ) : (
-                <span className="text-sm font-medium">{formatCurrency(incomeTax)}</span>
-              )}
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-2 w-full" />
-            ) : (
-              <Progress 
-                value={incomeTaxPercentage} 
-                className="h-2 bg-gray-100"
-                indicatorClassName="bg-amber-500"
-              />
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos suficientes"}
-            </p>
-          </div>
-          
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600 flex items-center">
-                <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
-                Retenciones aplicadas
-              </span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-20" />
-              ) : (
-                <span className="text-sm font-medium">{formatCurrency(withholdings)}</span>
-              )}
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-2 w-full" />
-            ) : (
-              <Progress 
-                value={withholdingsPercentage} 
-                className="h-2 bg-gray-100"
-                indicatorClassName="bg-emerald-500"
-              />
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              {withholdingsPercentage > 0 ? `${withholdingsPercentage.toFixed(1)}% sobre facturación` : "Sin retenciones"}
-            </p>
-          </div>
-          
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600 flex items-center">
-                <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                Gastos deducibles
-              </span>
-              {isLoading ? (
-                <Skeleton className="h-4 w-20" />
-              ) : (
-                <span className="text-sm font-medium">{formatCurrency(expenses)}</span>
-              )}
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-2 w-full" />
-            ) : (
-              <Progress 
-                value={expensesPercentage} 
-                className="h-2 bg-gray-100"
-                indicatorClassName="bg-red-500"
-              />
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              {expensesPercentage > 0 ? `${expensesPercentage.toFixed(1)}% de la facturación` : "Sin gastos registrados"}
-            </p>
-          </div>
-          
-          <div className="text-center mt-6">
+          <div className="text-center mt-4">
             <Button
               variant="outline"
               className="bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200"
@@ -235,6 +242,7 @@ const TaxSummary = () => {
         </CardContent>
       </Card>
       
+      {/* Gastos deducibles */}
       <Card className="shadow-sm">
         <CardHeader className="border-b border-gray-200 p-4">
           <div className="flex justify-between items-center">
@@ -248,73 +256,77 @@ const TaxSummary = () => {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="mb-4 border-b border-gray-100 pb-3">
-            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <ShoppingCart className="h-4 w-4 mr-1 text-gray-500" />
-              Documentación fiscal
-            </h3>
-            <p className="text-xs text-gray-600 mb-2">
-              Para que un gasto sea deducible, necesitas conservar las facturas que acrediten los gastos con:
-            </p>
-            <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
-              <li>NIF emisor y receptor</li>
-              <li>Fecha y número de factura</li>
-              <li>Descripción del servicio o producto</li>
-              <li>Base imponible, IVA y total</li>
-            </ul>
-          </div>
-          
-          <div className="mb-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <TrendingDown className="h-4 w-4 mr-1 text-gray-500" />
-              Añadir gastos
-            </h3>
-            <p className="text-xs text-gray-600 mb-3">
-              Puedes añadir gastos subiendo facturas o manualmente:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => navigate("/transactions/create")}
-              >
-                Añadir manual
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => navigate("/document-scan")}
-              >
-                Escanear factura
-              </Button>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <ShoppingCart className="h-4 w-4 mr-1 text-gray-500" />
+                Documentación fiscal
+              </h3>
+              <p className="text-xs text-gray-600 mb-2">
+                Para que un gasto sea deducible, necesitas conservar las facturas que acrediten los gastos con:
+              </p>
+              <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
+                <li>NIF emisor y receptor</li>
+                <li>Fecha y número de factura</li>
+                <li>Descripción del servicio o producto</li>
+                <li>Base imponible, IVA y total</li>
+              </ul>
             </div>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <PiggyBank className="h-4 w-4 mr-1 text-gray-500" />
-              Tipos de impuestos
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div 
-                className="text-xs bg-gray-50 border border-gray-200 rounded p-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => navigate("/reports")}
-              >
-                <p className="font-medium text-gray-700">IVA</p>
-                <p className="text-gray-600">General: 21%</p>
-                <p className="text-gray-600">Reducido: 10%</p>
-                <p className="text-gray-600">Superr.: 4%</p>
+            
+            <div>
+              <div className="mb-5">
+                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <TrendingDown className="h-4 w-4 mr-1 text-gray-500" />
+                  Añadir gastos
+                </h3>
+                <p className="text-xs text-gray-600 mb-2">
+                  Puedes añadir gastos subiendo facturas o manualmente:
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => navigate("/transactions/create")}
+                  >
+                    Añadir manual
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => navigate("/document-scan")}
+                  >
+                    Escanear factura
+                  </Button>
+                </div>
               </div>
-              <div 
-                className="text-xs bg-gray-50 border border-gray-200 rounded p-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => navigate("/reports")}
-              >
-                <p className="font-medium text-gray-700">IRPF</p>
-                <p className="text-gray-600">General: 15%</p>
-                <p className="text-gray-600">Inicial: 7%</p>
-                <p className="text-gray-600">Otros: Variable</p>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <PiggyBank className="h-4 w-4 mr-1 text-gray-500" />
+                  Tipos de impuestos
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <div 
+                    className="text-xs bg-gray-50 border border-gray-200 rounded p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => navigate("/reports")}
+                  >
+                    <p className="font-medium text-gray-700">IVA</p>
+                    <p className="text-gray-600">General: 21%</p>
+                    <p className="text-gray-600">Reducido: 10%</p>
+                    <p className="text-gray-600">Superr.: 4%</p>
+                  </div>
+                  <div 
+                    className="text-xs bg-gray-50 border border-gray-200 rounded p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => navigate("/reports")}
+                  >
+                    <p className="font-medium text-gray-700">IRPF</p>
+                    <p className="text-gray-600">General: 15%</p>
+                    <p className="text-gray-600">Inicial: 7%</p>
+                    <p className="text-gray-600">Otros: Variable</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
