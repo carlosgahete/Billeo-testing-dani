@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   Card, 
   CardContent, 
@@ -17,6 +18,7 @@ import { Label } from "@/components/ui/label";
 const DocumentScanPage = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -70,6 +72,11 @@ const DocumentScanPage = () => {
       
       setExtractedData(data.extractedData);
       setTransaction(data.transaction);
+      
+      // Invalidar las consultas para actualizar los datos en tiempo real
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
       
       toast({
         title: "Documento procesado",
