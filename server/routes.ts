@@ -42,6 +42,14 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Inicializar la base de datos
+  try {
+    await storage.initializeDatabase();
+    console.log("Base de datos inicializada correctamente");
+  } catch (error) {
+    console.error("Error al inicializar la base de datos:", error);
+  }
+  
   // Create HTTP server
   const httpServer = createServer(app);
 

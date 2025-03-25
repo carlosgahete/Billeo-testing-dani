@@ -15,7 +15,21 @@ import {
   InsertTransaction,
   Task,
   InsertTask,
+  users,
+  companies,
+  clients,
+  invoices,
+  invoiceItems,
+  categories,
+  transactions,
+  tasks
 } from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
+import { db } from "./db";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // User operations
@@ -72,8 +86,425 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
+  
+  // Session store
+  sessionStore: session.Store;
+  
+  // Database initialization
+  initializeDatabase(): Promise<void>;
 }
 
+export class DatabaseStorage implements IStorage {
+  public sessionStore: session.Store;
+
+  constructor() {
+    // Configurar el almacenamiento de sesiones con PostgreSQL
+    this.sessionStore = new PostgresSessionStore({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+      },
+      createTableIfMissing: true
+    });
+  }
+  
+  async initializeDatabase(): Promise<void> {
+    try {
+      // Verificar si existe la tabla de usuarios
+      const result = await db.select({ exists: db.sql`EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public'
+        AND table_name = 'users'
+      )` });
+      
+      if (!result[0] || !result[0].exists) {
+        console.log("Inicializando tablas de base de datos...");
+        
+        // Ejecutar migraciones de Drizzle
+        await db.run(db.sql`
+          CREATE TABLE IF NOT EXISTS "users" (
+            "id" SERIAL PRIMARY KEY,
+            "username" TEXT NOT NULL UNIQUE,
+            "password" TEXT NOT NULL,
+            "name" TEXT NOT NULL,
+            "email" TEXT NOT NULL,
+            "role" TEXT NOT NULL DEFAULT 'user',
+            "profile_image" TEXT
+          );
+          
+          CREATE TABLE IF NOT EXISTS "companies" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "name" TEXT NOT NULL,
+            "tax_id" TEXT NOT NULL,
+            "address" TEXT NOT NULL,
+            "city" TEXT NOT NULL,
+            "postal_code" TEXT NOT NULL,
+            "country" TEXT NOT NULL,
+            "email" TEXT,
+            "phone" TEXT,
+            "logo" TEXT
+          );
+          
+          CREATE TABLE IF NOT EXISTS "clients" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "name" TEXT NOT NULL,
+            "tax_id" TEXT NOT NULL,
+            "address" TEXT NOT NULL,
+            "city" TEXT,
+            "postal_code" TEXT,
+            "country" TEXT,
+            "email" TEXT,
+            "phone" TEXT,
+            "notes" TEXT
+          );
+          
+          CREATE TABLE IF NOT EXISTS "invoices" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "invoice_number" TEXT NOT NULL,
+            "client_id" INTEGER NOT NULL REFERENCES "clients"("id"),
+            "issue_date" TIMESTAMP NOT NULL,
+            "due_date" TIMESTAMP NOT NULL,
+            "subtotal" DECIMAL(10, 2) NOT NULL,
+            "tax" DECIMAL(10, 2) NOT NULL,
+            "total" DECIMAL(10, 2) NOT NULL,
+            "additional_taxes" JSONB,
+            "status" TEXT NOT NULL DEFAULT 'pending',
+            "notes" TEXT,
+            "attachments" TEXT[]
+          );
+          
+          CREATE TABLE IF NOT EXISTS "invoice_items" (
+            "id" SERIAL PRIMARY KEY,
+            "invoice_id" INTEGER NOT NULL REFERENCES "invoices"("id") ON DELETE CASCADE,
+            "description" TEXT NOT NULL,
+            "quantity" DECIMAL(10, 2) NOT NULL,
+            "unit_price" DECIMAL(10, 2) NOT NULL,
+            "tax_rate" DECIMAL(5, 2) NOT NULL,
+            "subtotal" DECIMAL(10, 2) NOT NULL
+          );
+          
+          CREATE TABLE IF NOT EXISTS "categories" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "name" TEXT NOT NULL,
+            "type" TEXT NOT NULL,
+            "color" TEXT
+          );
+          
+          CREATE TABLE IF NOT EXISTS "transactions" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "description" TEXT NOT NULL,
+            "amount" DECIMAL(10, 2) NOT NULL,
+            "date" TIMESTAMP NOT NULL,
+            "type" TEXT NOT NULL,
+            "category_id" INTEGER REFERENCES "categories"("id"),
+            "payment_method" TEXT,
+            "notes" TEXT,
+            "attachments" TEXT[],
+            "invoice_id" INTEGER REFERENCES "invoices"("id")
+          );
+          
+          CREATE TABLE IF NOT EXISTS "tasks" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "title" TEXT NOT NULL,
+            "description" TEXT,
+            "due_date" TIMESTAMP,
+            "completed" BOOLEAN NOT NULL DEFAULT FALSE,
+            "priority" TEXT DEFAULT 'medium'
+          );
+        `);
+        
+        // Crear usuario predeterminado
+        await this.createUser({
+          username: "demo",
+          password: "demo",
+          name: "Ana García",
+          email: "ana@example.com",
+          role: "admin"
+        });
+        
+        // Crear categorías predeterminadas
+        const userId = 1; // Usuario demo
+        
+        await this.createCategory({
+          userId,
+          name: "Ventas",
+          type: "income",
+          color: "#4caf50"
+        });
+        
+        await this.createCategory({
+          userId,
+          name: "Servicios",
+          type: "income",
+          color: "#2196f3"
+        });
+        
+        await this.createCategory({
+          userId,
+          name: "Oficina",
+          type: "expense",
+          color: "#f44336"
+        });
+        
+        await this.createCategory({
+          userId,
+          name: "Suministros",
+          type: "expense",
+          color: "#ff9800"
+        });
+        
+        // Crear tareas de ejemplo
+        await this.createTask({
+          userId,
+          title: "Presentar declaración trimestral",
+          description: "Completar y presentar la declaración trimestral de IVA",
+          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+          completed: false,
+          priority: "high"
+        });
+        
+        await this.createTask({
+          userId,
+          title: "Actualizar datos de empresa",
+          description: "Revisar y actualizar la información de la empresa",
+          dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+          completed: true,
+          priority: "medium"
+        });
+        
+        await this.createTask({
+          userId,
+          title: "Conciliar movimientos bancarios",
+          description: "Revisar y conciliar los últimos movimientos bancarios",
+          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          completed: false,
+          priority: "medium"
+        });
+        
+        console.log("Base de datos inicializada correctamente!");
+      } else {
+        console.log("Las tablas de la base de datos ya existen.");
+      }
+    } catch (error) {
+      console.error("Error al inicializar la base de datos:", error);
+      throw error;
+    }
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  async updateUserProfile(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const result = await db.update(users).set(userData).where(eq(users.id, id)).returning();
+    return result[0];
+  }
+
+  async getCompany(id: number): Promise<Company | undefined> {
+    const result = await db.select().from(companies).where(eq(companies.id, id));
+    return result[0];
+  }
+
+  async getCompanyByUserId(userId: number): Promise<Company | undefined> {
+    const result = await db.select().from(companies).where(eq(companies.userId, userId));
+    return result[0];
+  }
+
+  async createCompany(company: InsertCompany): Promise<Company> {
+    const result = await db.insert(companies).values(company).returning();
+    return result[0];
+  }
+
+  async updateCompany(id: number, companyData: Partial<InsertCompany>): Promise<Company | undefined> {
+    const result = await db.update(companies).set(companyData).where(eq(companies.id, id)).returning();
+    return result[0];
+  }
+
+  async getClient(id: number): Promise<Client | undefined> {
+    const result = await db.select().from(clients).where(eq(clients.id, id));
+    return result[0];
+  }
+
+  async getClientsByUserId(userId: number): Promise<Client[]> {
+    return await db.select().from(clients).where(eq(clients.userId, userId));
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    const result = await db.insert(clients).values(client).returning();
+    return result[0];
+  }
+
+  async updateClient(id: number, clientData: Partial<InsertClient>): Promise<Client | undefined> {
+    const result = await db.update(clients).set(clientData).where(eq(clients.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteClient(id: number): Promise<boolean> {
+    const result = await db.delete(clients).where(eq(clients.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getInvoice(id: number): Promise<Invoice | undefined> {
+    const result = await db.select().from(invoices).where(eq(invoices.id, id));
+    return result[0];
+  }
+
+  async getInvoicesByUserId(userId: number): Promise<Invoice[]> {
+    return await db.select().from(invoices).where(eq(invoices.userId, userId)).orderBy(desc(invoices.issueDate));
+  }
+
+  async getRecentInvoicesByUserId(userId: number, limit: number): Promise<Invoice[]> {
+    return await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.userId, userId))
+      .orderBy(desc(invoices.issueDate))
+      .limit(limit);
+  }
+
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const result = await db.insert(invoices).values({
+      ...invoice,
+      status: invoice.status || "pending",
+      notes: invoice.notes || null,
+      attachments: invoice.attachments || null
+    }).returning();
+    return result[0];
+  }
+
+  async updateInvoice(id: number, invoiceData: Partial<InsertInvoice>): Promise<Invoice | undefined> {
+    const result = await db.update(invoices).set(invoiceData).where(eq(invoices.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteInvoice(id: number): Promise<boolean> {
+    const result = await db.delete(invoices).where(eq(invoices.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getInvoiceItemsByInvoiceId(invoiceId: number): Promise<InvoiceItem[]> {
+    return await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
+  }
+
+  async createInvoiceItem(invoiceItem: InsertInvoiceItem): Promise<InvoiceItem> {
+    const result = await db.insert(invoiceItems).values(invoiceItem).returning();
+    return result[0];
+  }
+
+  async updateInvoiceItem(id: number, itemData: Partial<InsertInvoiceItem>): Promise<InvoiceItem | undefined> {
+    const result = await db.update(invoiceItems).set(itemData).where(eq(invoiceItems.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteInvoiceItem(id: number): Promise<boolean> {
+    const result = await db.delete(invoiceItems).where(eq(invoiceItems.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getCategory(id: number): Promise<Category | undefined> {
+    const result = await db.select().from(categories).where(eq(categories.id, id));
+    return result[0];
+  }
+
+  async getCategoriesByUserId(userId: number): Promise<Category[]> {
+    return await db.select().from(categories).where(eq(categories.userId, userId));
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const result = await db.insert(categories).values(category).returning();
+    return result[0];
+  }
+
+  async updateCategory(id: number, categoryData: Partial<InsertCategory>): Promise<Category | undefined> {
+    const result = await db.update(categories).set(categoryData).where(eq(categories.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    const result = await db.delete(categories).where(eq(categories.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getTransaction(id: number): Promise<Transaction | undefined> {
+    const result = await db.select().from(transactions).where(eq(transactions.id, id));
+    return result[0];
+  }
+
+  async getTransactionsByUserId(userId: number): Promise<Transaction[]> {
+    return await db.select().from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.date));
+  }
+
+  async getRecentTransactionsByUserId(userId: number, limit: number): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.userId, userId))
+      .orderBy(desc(transactions.date))
+      .limit(limit);
+  }
+
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const result = await db.insert(transactions).values(transaction).returning();
+    return result[0];
+  }
+
+  async updateTransaction(id: number, transactionData: Partial<InsertTransaction>): Promise<Transaction | undefined> {
+    const result = await db.update(transactions).set(transactionData).where(eq(transactions.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTransaction(id: number): Promise<boolean> {
+    const result = await db.delete(transactions).where(eq(transactions.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getTask(id: number): Promise<Task | undefined> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id));
+    return result[0];
+  }
+
+  async getTasksByUserId(userId: number): Promise<Task[]> {
+    // Ordenar por completado (incompleto primero) y luego por fecha de vencimiento
+    return await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.userId, userId))
+      .orderBy(tasks.completed, tasks.dueDate);
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const result = await db.insert(tasks).values(task).returning();
+    return result[0];
+  }
+
+  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
+    const result = await db.update(tasks).set(taskData).where(eq(tasks.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id)).returning();
+    return result.length > 0;
+  }
+}
+
+// Clase MemStorage para uso temporal, mantenerla para compatibilidad
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private companies: Map<number, Company>;
@@ -83,6 +514,7 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private transactions: Map<number, Transaction>;
   private tasks: Map<number, Task>;
+  public sessionStore: session.Store;
 
   private userIdCounter: number;
   private companyIdCounter: number;
@@ -102,6 +534,12 @@ export class MemStorage implements IStorage {
     this.categories = new Map();
     this.transactions = new Map();
     this.tasks = new Map();
+    
+    // Usar MemoryStore para la sesión cuando se usa MemStorage
+    const MemoryStore = require('memorystore')(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // 24 horas
+    });
 
     this.userIdCounter = 1;
     this.companyIdCounter = 1;
@@ -177,6 +615,10 @@ export class MemStorage implements IStorage {
       completed: false,
       priority: "medium"
     });
+  }
+  
+  async initializeDatabase(): Promise<void> {
+    console.log("Using in-memory storage, no database initialization required");
   }
 
   // User operations
@@ -452,4 +894,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Crear e inicializar la instancia de almacenamiento con PostgreSQL
+export const storage = new DatabaseStorage();
