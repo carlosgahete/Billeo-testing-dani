@@ -11,6 +11,7 @@ import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
 import TransactionsPage from "@/pages/transactions/index";
 import CreateTransactionPage from "@/pages/transactions/create";
+import DocumentScanPage from "@/pages/document-scan";
 import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
@@ -53,6 +54,7 @@ function Router() {
         <Route path="/invoices/:id" component={(params) => <ProtectedRoute component={InvoiceDetailPage} {...params} />} />
         <Route path="/transactions" component={() => <ProtectedRoute component={TransactionsPage} />} />
         <Route path="/transactions/create" component={() => <ProtectedRoute component={CreateTransactionPage} />} />
+        <Route path="/documents/scan" component={() => <ProtectedRoute component={DocumentScanPage} />} />
         <Route path="/reports" component={() => <ProtectedRoute component={ReportsPage} />} />
         <Route path="/company" component={() => <ProtectedRoute component={CompanyPage} />} />
         <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
