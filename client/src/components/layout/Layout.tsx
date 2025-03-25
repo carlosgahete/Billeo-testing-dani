@@ -23,14 +23,14 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
-      {/* Mobile header */}
-      {isMobile && (
-        <Header 
-          isMobile={true} 
-          mobileMenuOpen={mobileMenuOpen} 
-          setMobileMenuOpen={setMobileMenuOpen} 
-        />
-      )}
+      {/* Header - siempre visible */}
+      <Header 
+        isMobile={isMobile} 
+        mobileMenuOpen={mobileMenuOpen} 
+        setMobileMenuOpen={setMobileMenuOpen} 
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
