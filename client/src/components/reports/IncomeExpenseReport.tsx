@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -8,7 +8,8 @@ import {
   TrendingUp, 
   ScanText, 
   PlusCircle,
-  Loader2
+  Loader2,
+  Receipt
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageTitle } from "@/components/ui/page-title";
@@ -189,16 +190,41 @@ const IncomeExpenseReport = () => {
   const [expenseAmount, setExpenseAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Estado para el archivo de comprobante (opcional)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [showUploadOption, setShowUploadOption] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   // Mutación para crear transacción (gasto rápido)
   const createTransactionMutation = useMutation({
     mutationFn: async (transactionData: any) => {
+      // Primero creamos la transacción
       const res = await apiRequest("POST", "/api/transactions", transactionData);
-      return await res.json();
+      const transaction = await res.json();
+      
+      // Si hay un archivo adjunto, lo subimos como segunda operación
+      if (receiptFile) {
+        const formData = new FormData();
+        formData.append("file", receiptFile);
+        
+        // Enviamos el archivo mediante la API de subida
+        await fetch(`/api/upload?transactionId=${transaction.id}&type=expense`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+      
+      return transaction;
     },
     onSuccess: () => {
       // Limpiar formulario
       setExpenseDescription("");
       setExpenseAmount("");
+      setReceiptFile(null);
+      setShowUploadOption(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       
       // Actualizar datos
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
@@ -216,6 +242,13 @@ const IncomeExpenseReport = () => {
       });
     },
   });
+  
+  // Manejar cambio de archivo
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setReceiptFile(e.target.files[0]);
+    }
+  };
   
   // Manejar registro rápido de gasto
   const handleQuickExpense = (e: React.FormEvent) => {
@@ -249,10 +282,8 @@ const IncomeExpenseReport = () => {
       date: new Date().toISOString(),
       type: "expense",
       paymentMethod: "efectivo", // Valor por defecto
-      notes: "Registro rápido"
+      notes: receiptFile ? `Registro con comprobante: ${receiptFile.name}` : "Registro rápido sin comprobante"
     });
-    
-    setIsSubmitting(false);
   };
 
   return (
@@ -271,38 +302,70 @@ const IncomeExpenseReport = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1">
-              <Input
-                placeholder="Descripción del gasto"
-                value={expenseDescription}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                className="w-full"
-              />
+          <form onSubmit={handleQuickExpense} className="flex flex-col gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1">
+                <Input
+                  placeholder="Descripción del gasto"
+                  value={expenseDescription}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="md:w-1/4">
+                <Input
+                  placeholder="Importe (€)"
+                  value={expenseAmount}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowUploadOption(!showUploadOption)}
+                  className="md:h-10 md:w-10"
+                  title={showUploadOption ? "Ocultar opción de adjunto" : "Adjuntar comprobante (opcional)"}
+                >
+                  <Receipt className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                )}
+                Registrar gasto
+              </Button>
             </div>
-            <div className="md:w-1/4">
-              <Input
-                placeholder="Importe (€)"
-                value={expenseAmount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                type="number"
-                step="0.01"
-                min="0.01"
-                className="w-full"
-              />
-            </div>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <PlusCircle className="h-4 w-4 mr-2" />
-              )}
-              Registrar gasto
-            </Button>
+            
+            {/* Campo de archivo opcional */}
+            {showUploadOption && (
+              <div className="flex items-center gap-2 p-2 border border-dashed border-muted-foreground/50 rounded-md bg-muted/30">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".jpg,.jpeg,.png,.pdf,.webp"
+                  className="text-sm flex-1"
+                />
+                {receiptFile && (
+                  <div className="text-xs text-muted-foreground">
+                    Se adjuntará: {receiptFile.name}
+                  </div>
+                )}
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
