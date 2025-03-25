@@ -7,37 +7,22 @@ import pdfParse from './pdf-parser';
 import { InsertTransaction } from '@shared/schema';
 
 // Configuración del cliente de Vision API
-let visionClient: ImageAnnotatorClient;
+// Inicializar como undefined para inicialización diferida
+let visionClient: ImageAnnotatorClient | undefined;
 
-try {
-  // Verificamos si la variable de entorno es una clave de API directa o un JSON
-  const credentialsEnv = process.env.GOOGLE_CLOUD_CREDENTIALS || '';
-  
-  if (credentialsEnv.startsWith('AIza')) {
-    // Es una clave de API directa
-    visionClient = new ImageAnnotatorClient({
-      apiKey: credentialsEnv
-    });
-  } else {
-    // Intentamos interpretar como JSON
+// Función para obtener o inicializar el cliente Vision
+function getVisionClient(): ImageAnnotatorClient {
+  if (!visionClient) {
     try {
-      const credentials = JSON.parse(credentialsEnv);
-      visionClient = new ImageAnnotatorClient({
-        credentials,
-      });
-    } catch (e) {
-      console.error('Error al parsear credenciales como JSON:', e);
-      // Fallback: usamos la cadena como clave de API
-      visionClient = new ImageAnnotatorClient({
-        apiKey: credentialsEnv
-      });
+      console.log("Inicializando Vision API client bajo demanda...");
+      // Crear una instancia básica para mantener la aplicación funcionando
+      visionClient = new ImageAnnotatorClient();
+    } catch (error) {
+      console.error('Error al inicializar Vision API client:', error);
+      throw new Error('No se pudo inicializar el cliente de Vision API');
     }
   }
-} catch (error) {
-  console.error('Error al inicializar Vision API client:', error);
-  // Creamos un cliente fallback para que no falle la aplicación
-  // (las llamadas al API fallarán, pero la app seguirá funcionando)
-  visionClient = new ImageAnnotatorClient();
+  return visionClient;
 }
 
 // Interfaz para los resultados procesados
@@ -57,8 +42,9 @@ export async function processReceiptImage(imagePath: string): Promise<ExtractedE
   try {
     console.log(`Procesando imagen: ${imagePath}`);
 
-    // Ejecutar OCR en la imagen
-    const [result] = await visionClient.textDetection(imagePath);
+    // Ejecutar OCR en la imagen usando el cliente inicializado bajo demanda
+    const client = getVisionClient();
+    const [result] = await client.textDetection(imagePath);
     const detections = result.textAnnotations || [];
     
     if (detections.length === 0) {

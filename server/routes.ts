@@ -22,7 +22,9 @@ import {
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { processReceiptImage, processReceiptPDF, mapToTransaction } from "./services/visionService";
+// Importación diferida para mejorar tiempo de inicio
+// La funcionalidad de procesamiento de documentos se cargará bajo demanda
+// import { processReceiptImage, processReceiptPDF, mapToTransaction } from "./services/visionService";
 
 // Set up file upload with multer
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -1093,13 +1095,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Procesando documento: ${filePath}, extensión: ${fileExtension}`);
       
+      // Cargar las funciones de procesamiento bajo demanda
+      // para mejorar el tiempo de inicio del servidor
+      const visionService = await import("./services/visionService");
+      
       // Extraer información del documento según el tipo de archivo
       let extractedData;
       
       if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
-        extractedData = await processReceiptImage(filePath);
+        extractedData = await visionService.processReceiptImage(filePath);
       } else if (fileExtension === '.pdf') {
-        extractedData = await processReceiptPDF(filePath);
+        extractedData = await visionService.processReceiptPDF(filePath);
       } else {
         return res.status(400).json({ 
           message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG) o un PDF" 
@@ -1122,7 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (allCategories.find(cat => cat.type === 'expense')?.id || null);
       
       // Convertir los datos extraídos a un objeto de transacción
-      const transactionData = mapToTransaction(
+      const transactionData = visionService.mapToTransaction(
         extractedData, 
         req.session.userId,
         categoryId

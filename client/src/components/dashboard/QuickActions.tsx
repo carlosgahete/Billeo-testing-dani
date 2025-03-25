@@ -37,7 +37,7 @@ const QuickActions = () => {
       <CardHeader className="border-b border-neutral-200 p-4">
         <CardTitle className="font-medium text-neutral-800">Acciones rápidas</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 grid grid-cols-2 gap-3">
+      <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
         <Button
           variant="outline"
           className="p-3 h-auto flex flex-col items-center justify-center hover:bg-neutral-50 border-neutral-200"
@@ -54,6 +54,15 @@ const QuickActions = () => {
         >
           <Receipt className="h-5 w-5 text-primary-600 mb-2" />
           <span className="text-sm text-neutral-700">Registrar gasto</span>
+        </Button>
+        
+        <Button
+          variant="outline"
+          className="p-3 h-auto flex flex-col items-center justify-center hover:bg-neutral-50 border-neutral-200"
+          onClick={() => navigate("/documents/scan")}
+        >
+          <ScanText className="h-5 w-5 text-primary-600 mb-2" />
+          <span className="text-sm text-neutral-700">Escanear documento</span>
         </Button>
         
         <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
