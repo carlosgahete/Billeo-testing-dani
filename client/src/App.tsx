@@ -1,10 +1,10 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
-import LoginPage from "@/pages/login";
+import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
@@ -15,60 +15,77 @@ import DocumentScanPage from "@/pages/document-scan";
 import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
-import AuthGuard from "@/components/auth/AuthGuard";
-
-// Protected route component - improved with better route handling
-const ProtectedRoute = ({ component: Component, ...rest }: { component: React.ComponentType<any>, path?: string }) => {
-  return (
-    <AuthGuard>
-      <Component {...rest} />
-    </AuthGuard>
-  );
-};
+import { ProtectedRoute } from "./lib/protected-route";
+import { AuthProvider } from "@/hooks/use-auth";
 
 function Router() {
-  const [location] = useLocation();
-  const isLoginPage = location === "/login";
-
-  // If we're on the login page, don't wrap with Layout
-  if (isLoginPage) {
-    return (
-      <Switch>
-        <Route path="/login" component={LoginPage} />
-        <Route>
-          <AuthGuard>
-            <NotFound />
-          </AuthGuard>
-        </Route>
-      </Switch>
-    );
-  }
-
-  // For all other routes, wrap with Layout and AuthGuard
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-        <Route path="/invoices" component={() => <ProtectedRoute component={InvoicesPage} />} />
-        <Route path="/invoices/create" component={() => <ProtectedRoute component={CreateInvoicePage} />} />
-        <Route path="/invoices/:id" component={(params) => <ProtectedRoute component={InvoiceDetailPage} {...params} />} />
-        <Route path="/transactions" component={() => <ProtectedRoute component={TransactionsPage} />} />
-        <Route path="/transactions/create" component={() => <ProtectedRoute component={CreateTransactionPage} />} />
-        <Route path="/documents/scan" component={() => <ProtectedRoute component={DocumentScanPage} />} />
-        <Route path="/reports" component={() => <ProtectedRoute component={ReportsPage} />} />
-        <Route path="/company" component={() => <ProtectedRoute component={CompanyPage} />} />
-        <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/">
+        <Layout>
+          <ProtectedRoute path="/" component={Dashboard} />
+        </Layout>
+      </Route>
+      <Route path="/invoices">
+        <Layout>
+          <ProtectedRoute path="/invoices" component={InvoicesPage} />
+        </Layout>
+      </Route>
+      <Route path="/invoices/create">
+        <Layout>
+          <ProtectedRoute path="/invoices/create" component={CreateInvoicePage} />
+        </Layout>
+      </Route>
+      <Route path="/invoices/:id">
+        {(params) => (
+          <Layout>
+            <ProtectedRoute path={`/invoices/${params.id}`} component={InvoiceDetailPage} />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/transactions">
+        <Layout>
+          <ProtectedRoute path="/transactions" component={TransactionsPage} />
+        </Layout>
+      </Route>
+      <Route path="/transactions/create">
+        <Layout>
+          <ProtectedRoute path="/transactions/create" component={CreateTransactionPage} />
+        </Layout>
+      </Route>
+      <Route path="/documents/scan">
+        <Layout>
+          <ProtectedRoute path="/documents/scan" component={DocumentScanPage} />
+        </Layout>
+      </Route>
+      <Route path="/reports">
+        <Layout>
+          <ProtectedRoute path="/reports" component={ReportsPage} />
+        </Layout>
+      </Route>
+      <Route path="/company">
+        <Layout>
+          <ProtectedRoute path="/company" component={CompanyPage} />
+        </Layout>
+      </Route>
+      <Route path="/settings">
+        <Layout>
+          <ProtectedRoute path="/settings" component={SettingsPage} />
+        </Layout>
+      </Route>
+      <Route path="*" component={NotFound} />
+    </Switch>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

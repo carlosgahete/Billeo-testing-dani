@@ -9,6 +9,7 @@ declare module "express-session" {
   }
 }
 import { storage } from "./storage";
+import { setupAuth } from "./auth";
 import { 
   insertUserSchema, 
   insertCompanySchema,
@@ -52,6 +53,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error("Error al inicializar la base de datos:", error);
   }
+  
+  // Setup authentication
+  setupAuth(app);
   
   // Create HTTP server
   const httpServer = createServer(app);
