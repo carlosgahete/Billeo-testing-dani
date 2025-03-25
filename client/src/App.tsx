@@ -15,6 +15,7 @@ import DocumentScanPage from "@/pages/document-scan";
 import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
+import IncomeExpensePage from "@/pages/income-expense";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 
@@ -72,6 +73,11 @@ function Router() {
       <Route path="/settings">
         <Layout>
           <ProtectedRoute path="/settings" component={SettingsPage} />
+        </Layout>
+      </Route>
+      <Route path="/income-expense">
+        <Layout>
+          <ProtectedRoute path="/income-expense" component={IncomeExpensePage} />
         </Layout>
       </Route>
       <Route path="*" component={NotFound} />
