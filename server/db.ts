@@ -8,7 +8,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Crear el cliente SQL
-const queryClient = postgres(process.env.DATABASE_URL);
+export const sql = postgres(process.env.DATABASE_URL);
 
 // Crear la instancia de Drizzle
-export const db = drizzle(queryClient, { schema });
+export const db = drizzle(sql, { schema });

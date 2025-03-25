@@ -25,7 +25,7 @@ import {
   tasks
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
-import { db } from "./db";
+import { db, sql } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -109,18 +109,20 @@ export class DatabaseStorage implements IStorage {
   
   async initializeDatabase(): Promise<void> {
     try {
-      // Verificar si existe la tabla de usuarios
-      const result = await db.select({ exists: db.sql`EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public'
-        AND table_name = 'users'
-      )` });
+      // Verificar si existe la tabla de usuarios usando SQL directo
+      const result = await sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public'
+          AND table_name = 'users'
+        )
+      `;
       
-      if (!result[0] || !result[0].exists) {
+      if (!result[0] || result[0].exists === false) {
         console.log("Inicializando tablas de base de datos...");
         
-        // Ejecutar migraciones de Drizzle
-        await db.run(db.sql`
+        // Ejecutar las consultas SQL para crear las tablas directamente
+        await sql`
           CREATE TABLE IF NOT EXISTS "users" (
             "id" SERIAL PRIMARY KEY,
             "username" TEXT NOT NULL UNIQUE,
@@ -130,7 +132,9 @@ export class DatabaseStorage implements IStorage {
             "role" TEXT NOT NULL DEFAULT 'user',
             "profile_image" TEXT
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "companies" (
             "id" SERIAL PRIMARY KEY,
             "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
@@ -144,7 +148,9 @@ export class DatabaseStorage implements IStorage {
             "phone" TEXT,
             "logo" TEXT
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "clients" (
             "id" SERIAL PRIMARY KEY,
             "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
@@ -158,7 +164,9 @@ export class DatabaseStorage implements IStorage {
             "phone" TEXT,
             "notes" TEXT
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "invoices" (
             "id" SERIAL PRIMARY KEY,
             "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
@@ -174,7 +182,9 @@ export class DatabaseStorage implements IStorage {
             "notes" TEXT,
             "attachments" TEXT[]
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "invoice_items" (
             "id" SERIAL PRIMARY KEY,
             "invoice_id" INTEGER NOT NULL REFERENCES "invoices"("id") ON DELETE CASCADE,
@@ -184,7 +194,9 @@ export class DatabaseStorage implements IStorage {
             "tax_rate" DECIMAL(5, 2) NOT NULL,
             "subtotal" DECIMAL(10, 2) NOT NULL
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "categories" (
             "id" SERIAL PRIMARY KEY,
             "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
@@ -192,7 +204,9 @@ export class DatabaseStorage implements IStorage {
             "type" TEXT NOT NULL,
             "color" TEXT
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "transactions" (
             "id" SERIAL PRIMARY KEY,
             "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
@@ -206,7 +220,9 @@ export class DatabaseStorage implements IStorage {
             "attachments" TEXT[],
             "invoice_id" INTEGER REFERENCES "invoices"("id")
           );
-          
+        `;
+        
+        await sql`
           CREATE TABLE IF NOT EXISTS "tasks" (
             "id" SERIAL PRIMARY KEY,
             "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
@@ -216,7 +232,7 @@ export class DatabaseStorage implements IStorage {
             "completed" BOOLEAN NOT NULL DEFAULT FALSE,
             "priority" TEXT DEFAULT 'medium'
           );
-        `);
+        `;
         
         // Crear usuario predeterminado
         await this.createUser({
@@ -634,7 +650,12 @@ export class MemStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const newUser: User = { ...user, id, profileImage: null };
+    const newUser: User = { 
+      ...user, 
+      id, 
+      profileImage: null,
+      role: user.role || 'user'  // Asegurar que role siempre tenga un valor
+    };
     this.users.set(id, newUser);
     return newUser;
   }
@@ -661,7 +682,13 @@ export class MemStorage implements IStorage {
 
   async createCompany(company: InsertCompany): Promise<Company> {
     const id = this.companyIdCounter++;
-    const newCompany: Company = { ...company, id };
+    const newCompany: Company = { 
+      ...company, 
+      id,
+      email: company.email || null,
+      phone: company.phone || null,
+      logo: company.logo || null
+    };
     this.companies.set(id, newCompany);
     return newCompany;
   }
@@ -688,7 +715,16 @@ export class MemStorage implements IStorage {
 
   async createClient(client: InsertClient): Promise<Client> {
     const id = this.clientIdCounter++;
-    const newClient: Client = { ...client, id };
+    const newClient: Client = { 
+      ...client, 
+      id,
+      email: client.email || null,
+      city: client.city || null,
+      postalCode: client.postalCode || null,
+      country: client.country || null,
+      phone: client.phone || null,
+      notes: client.notes || null
+    };
     this.clients.set(id, newClient);
     return newClient;
   }
@@ -732,7 +768,8 @@ export class MemStorage implements IStorage {
       id,
       status: invoice.status || "pending",
       notes: invoice.notes || null,
-      attachments: invoice.attachments || null
+      attachments: invoice.attachments || null,
+      additionalTaxes: invoice.additionalTaxes || null
     };
     this.invoices.set(id, newInvoice);
     return newInvoice;
@@ -795,7 +832,11 @@ export class MemStorage implements IStorage {
 
   async createCategory(category: InsertCategory): Promise<Category> {
     const id = this.categoryIdCounter++;
-    const newCategory: Category = { ...category, id };
+    const newCategory: Category = { 
+      ...category, 
+      id,
+      color: category.color || null
+    };
     this.categories.set(id, newCategory);
     return newCategory;
   }
@@ -833,7 +874,15 @@ export class MemStorage implements IStorage {
 
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
     const id = this.transactionIdCounter++;
-    const newTransaction: Transaction = { ...transaction, id };
+    const newTransaction: Transaction = { 
+      ...transaction, 
+      id,
+      notes: transaction.notes || null,
+      attachments: transaction.attachments || null,
+      invoiceId: transaction.invoiceId || null,
+      categoryId: transaction.categoryId || null,
+      paymentMethod: transaction.paymentMethod || null
+    };
     this.transactions.set(id, newTransaction);
     return newTransaction;
   }
@@ -875,7 +924,14 @@ export class MemStorage implements IStorage {
 
   async createTask(task: InsertTask): Promise<Task> {
     const id = this.taskIdCounter++;
-    const newTask: Task = { ...task, id };
+    const newTask: Task = { 
+      ...task, 
+      id,
+      dueDate: task.dueDate || null,
+      description: task.description || null,
+      completed: task.completed || false,
+      priority: task.priority || 'medium'
+    };
     this.tasks.set(id, newTask);
     return newTask;
   }
