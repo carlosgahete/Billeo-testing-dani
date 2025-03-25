@@ -144,7 +144,7 @@ const TaxSummary = () => {
                 />
               )}
               <p className="text-xs text-blue-600 mt-1 font-medium">
-                {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
+                Tipo impositivo: 21%
               </p>
             </div>
             
@@ -171,7 +171,7 @@ const TaxSummary = () => {
                 />
               )}
               <p className="text-xs text-gray-500 mt-1">
-                {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos"}
+                Retención: 15%
               </p>
             </div>
           </div>
