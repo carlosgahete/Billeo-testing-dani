@@ -37,7 +37,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Trash2, Plus, FileText, Minus, CalendarIcon } from "lucide-react";
+import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -136,6 +136,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Función para eliminar un cliente
   const deleteClient = (clientId: number) => {
     deleteClientMutation.mutate(clientId);
+  };
+  
+  // Función para editar un cliente
+  const editClient = (client: any) => {
+    setClientToEdit(client);
+    setShowClientForm(true);
   };
 
   // Fetch clients for dropdown
@@ -526,18 +532,34 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     setTimeout(() => calculateTotals(), 0);
   };
 
-  // Función que maneja la creación de un nuevo cliente
+  // Función que maneja la creación o actualización de un cliente
   const handleClientCreated = (newClient: any) => {
     // Actualizar la caché de react-query para incluir el nuevo cliente
     queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     
-    // Seleccionar automáticamente el nuevo cliente en el formulario
-    form.setValue("clientId", newClient.id);
+    // Seleccionar automáticamente el nuevo cliente en el formulario si es uno nuevo
+    if (!clientToEdit) {
+      form.setValue("clientId", newClient.id);
+    }
+    
+    // Limpiar el cliente a editar
+    setClientToEdit(null);
     
     toast({
-      title: "Cliente creado",
-      description: `El cliente ${newClient.name} ha sido creado correctamente`,
+      title: clientToEdit ? "Cliente actualizado" : "Cliente creado",
+      description: clientToEdit 
+        ? `El cliente ${newClient.name} ha sido actualizado correctamente`
+        : `El cliente ${newClient.name} ha sido creado correctamente`,
     });
+  };
+  
+  // Función para manejar el cierre del modal de cliente sin guardar
+  const handleClientModalClose = (open: boolean) => {
+    if (!open) {
+      // Si se cierra el modal, reseteamos el cliente a editar
+      setClientToEdit(null);
+    }
+    setShowClientForm(open);
   };
 
   if ((isEditMode && invoiceLoading) || clientsLoading) {
@@ -594,20 +616,34 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                                         </span>
                                       </div>
                                     </SelectItem>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="ml-2 p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (confirm(`¿Estás seguro de que deseas eliminar el cliente ${client.name}?`)) {
-                                          deleteClient(client.id);
-                                        }
-                                      }}
-                                    >
-                                      <Trash2 className="h-4 w-4 text-red-500" />
-                                    </Button>
+                                    <div className="flex">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          editClient(client);
+                                        }}
+                                      >
+                                        <Pencil className="h-4 w-4 text-blue-500" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="ml-1 p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (confirm(`¿Estás seguro de que deseas eliminar el cliente ${client.name}?`)) {
+                                            deleteClient(client.id);
+                                          }
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 ))}
                                 {clients?.length === 0 && (
