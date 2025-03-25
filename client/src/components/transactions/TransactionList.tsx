@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -300,6 +300,15 @@ const TransactionList = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          <Button
+            variant="outline"
+            className="flex items-center"
+            onClick={() => navigate("/documents/scan")}
+          >
+            <ScanText className="h-4 w-4 mr-2" />
+            Escanear documento
+          </Button>
           
           <Button
             className="flex items-center"

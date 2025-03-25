@@ -5,7 +5,8 @@ import {
   PlusCircle, 
   Receipt, 
   Upload, 
-  Printer 
+  Printer,
+  ScanText
 } from "lucide-react";
 import {
   Dialog,
