@@ -105,91 +105,143 @@ const MetricCard = ({
 const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
   const { data, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
+    // Desactivamos los errores TypeScript sobre las propiedades anulables
+    select: (data) => data as DashboardStats
   });
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', { 
       style: 'currency', 
-      currency: 'EUR' 
+      currency: 'EUR',
+      maximumFractionDigits: 0
     }).format(value);
   };
 
   return (
     <div className="mb-6">
-      {/* Primera fila: Métricas principales */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <MetricCard
-          title="Ingresos totales"
-          value={data ? formatCurrency(data.income) : "0,00 €"}
-          icon={<Wallet size={20} />}
-          trend={data && data.income > 0 ? { 
-            value: `Facturación bruta`, 
-            isPositive: true 
-          } : null}
-          color="green"
-          isLoading={isLoading}
-        />
-        
-        <MetricCard
-          title="Gastos totales"
-          value={data ? formatCurrency(data.expenses) : "0,00 €"}
-          icon={<ShoppingCart size={20} />}
-          trend={data && data.expenses > 0 ? { 
-            value: `Gastos deducibles`, 
-            isPositive: false 
-          } : null}
-          color="red"
-          isLoading={isLoading}
-        />
-        
-        <MetricCard
-          title="Retenciones"
-          value={data ? formatCurrency(data.totalWithholdings || 0) : "0,00 €"}
-          icon={<AlertTriangle size={20} />}
-          trend={data && data.totalWithholdings > 0 ? { 
-            value: `IRPF y otras retenciones`, 
-            isPositive: false 
-          } : null}
-          color="yellow"
-          isLoading={isLoading}
-        />
-        
-        <MetricCard
-          title="Resultado"
-          value={data ? formatCurrency(data.result || data.balance) : "0,00 €"}
-          icon={<PiggyBank size={20} />}
-          trend={data && (data.result || data.balance) > 0 ? { 
-            value: `Ingresos - Gastos - Retenciones`, 
-            isPositive: true 
-          } : { 
-            value: `Pérdidas en el periodo`, 
-            isPositive: false 
-          }}
-          color="blue"
-          isLoading={isLoading}
-        />
-      </div>
-      
-      {/* Segunda fila: métricas adicionales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetricCard
-          title="Facturas pendientes"
-          value={data ? formatCurrency(data.pendingInvoices) : "0,00 €"}
-          icon={<Receipt size={20} />}
-          trend={data ? { 
-            value: `${data.pendingCount || 0} facturas por cobrar`, 
-            isPositive: false 
-          } : null}
-          color="yellow"
-          isLoading={isLoading}
-          className="h-full"
-        />
-        
-        {/* Se podría añadir otra tarjeta aquí si es necesario */}
-        <Card className="border border-gray-200 h-full">
+      {/* Primera fila: Métricas principales - 4 columnas en desktop, 2 en tablet */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <Card className="border border-secondary-100 hover:shadow-md transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-center mb-1">
-              <div className="p-1.5 mr-2 rounded-md bg-blue-50 text-blue-600">
+              <div className="p-1.5 mr-2 rounded-md bg-secondary-50 text-secondary-600">
+                <Wallet size={20} />
+              </div>
+              <p className="text-neutral-600 text-sm font-medium">Ingresos totales</p>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-neutral-800">{formatCurrency(data?.income || 0)}</p>
+            )}
+            {!isLoading && (
+              <p className="text-xs text-secondary-600 flex items-center mt-1">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                Facturación bruta
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-danger-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center mb-1">
+              <div className="p-1.5 mr-2 rounded-md bg-danger-50 text-danger-500">
+                <ShoppingCart size={20} />
+              </div>
+              <p className="text-neutral-600 text-sm font-medium">Gastos totales</p>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-neutral-800">{formatCurrency(data?.expenses || 0)}</p>
+            )}
+            {!isLoading && data?.expenses > 0 && (
+              <p className="text-xs text-danger-600 flex items-center mt-1">
+                <TrendingDown className="h-3 w-3 mr-1" />
+                Gastos deducibles
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-warning-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center mb-1">
+              <div className="p-1.5 mr-2 rounded-md bg-warning-50 text-warning-700">
+                <AlertTriangle size={20} />
+              </div>
+              <p className="text-neutral-600 text-sm font-medium">Retenciones</p>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-neutral-800">{formatCurrency(data?.totalWithholdings || 0)}</p>
+            )}
+            {!isLoading && (data?.totalWithholdings || 0) > 0 && (
+              <p className="text-xs text-warning-700 flex items-center mt-1">
+                <TrendingDown className="h-3 w-3 mr-1" />
+                IRPF y otras retenciones
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-primary-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center mb-1">
+              <div className="p-1.5 mr-2 rounded-md bg-primary-50 text-primary-600">
+                <PiggyBank size={20} />
+              </div>
+              <p className="text-neutral-600 text-sm font-medium">Resultado</p>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-neutral-800">{formatCurrency(data?.result || data?.balance || 0)}</p>
+            )}
+            {!isLoading && (
+              <p className={`text-xs ${(data?.result || data?.balance || 0) > 0 ? "text-secondary-600" : "text-danger-600"} flex items-center mt-1`}>
+                {(data?.result || data?.balance || 0) > 0 ? (
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                )}
+                {(data?.result || data?.balance || 0) > 0 ? "Ingresos - Gastos - Retenciones" : "Pérdidas en el periodo"}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Segunda fila: métricas adicionales - 2 columnas siempre */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border border-warning-100 hover:shadow-md transition-shadow h-full">
+          <CardContent className="p-4">
+            <div className="flex items-center mb-1">
+              <div className="p-1.5 mr-2 rounded-md bg-warning-50 text-warning-700">
+                <Receipt size={20} />
+              </div>
+              <p className="text-neutral-600 text-sm font-medium">Facturas pendientes</p>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-neutral-800">{formatCurrency(data?.pendingInvoices || 0)}</p>
+            )}
+            {!isLoading && (data?.pendingCount || 0) > 0 && (
+              <p className="text-xs text-warning-700 flex items-center mt-1">
+                <TrendingDown className="h-3 w-3 mr-1" />
+                {`${data?.pendingCount || 0} facturas por cobrar`}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-primary-100 hover:shadow-md transition-shadow h-full">
+          <CardContent className="p-4">
+            <div className="flex items-center mb-1">
+              <div className="p-1.5 mr-2 rounded-md bg-primary-50 text-primary-600">
                 <TrendingUp size={20} />
               </div>
               <p className="text-neutral-600 text-sm font-medium">Balance trimestral</p>
@@ -197,14 +249,14 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
             {isLoading ? (
               <Skeleton className="h-8 w-32 mt-1" />
             ) : (
-              <div>
+              <>
                 <p className="text-2xl font-bold text-neutral-800">
                   {formatCurrency((data?.result || 0) - (data?.taxes?.vat || 0))}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Resultado después de impuestos estimados
                 </p>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>

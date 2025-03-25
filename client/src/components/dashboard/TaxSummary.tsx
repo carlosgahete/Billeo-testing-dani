@@ -119,18 +119,18 @@ const TaxSummary = () => {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* IVA */}
-            <div className="mb-3 md:mb-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-600 flex items-center">
-                  <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
                   IVA a pagar
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-20" />
                 ) : (
-                  <span className="text-sm font-medium">{formatCurrency(vat)}</span>
+                  <span className="text-sm font-semibold">{formatCurrency(vat)}</span>
                 )}
               </div>
               {isLoading ? (
@@ -138,26 +138,26 @@ const TaxSummary = () => {
               ) : (
                 <Progress 
                   value={vatPercentage} 
-                  className="h-2 bg-gray-100"
+                  className="h-2.5 bg-gray-100"
                   indicatorClassName="bg-blue-500"
                 />
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1.5">
                 {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos suficientes"}
               </p>
             </div>
             
             {/* IRPF */}
-            <div className="mb-3 md:mb-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-600 flex items-center">
-                  <span className="inline-block w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
                   IRPF estimado
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-20" />
                 ) : (
-                  <span className="text-sm font-medium">{formatCurrency(incomeTax)}</span>
+                  <span className="text-sm font-semibold">{formatCurrency(incomeTax)}</span>
                 )}
               </div>
               {isLoading ? (
@@ -165,26 +165,26 @@ const TaxSummary = () => {
               ) : (
                 <Progress 
                   value={incomeTaxPercentage} 
-                  className="h-2 bg-gray-100"
+                  className="h-2.5 bg-gray-100"
                   indicatorClassName="bg-amber-500"
                 />
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1.5">
                 {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos suficientes"}
               </p>
             </div>
             
             {/* Retenciones */}
-            <div className="mb-3 md:mb-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-gray-600 flex items-center">
-                  <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-3 h-3 bg-emerald-500 rounded-full mr-2"></span>
                   Retenciones aplicadas
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-20" />
                 ) : (
-                  <span className="text-sm font-medium">{formatCurrency(withholdings)}</span>
+                  <span className="text-sm font-semibold">{formatCurrency(withholdings)}</span>
                 )}
               </div>
               {isLoading ? (
@@ -192,55 +192,13 @@ const TaxSummary = () => {
               ) : (
                 <Progress 
                   value={withholdingsPercentage} 
-                  className="h-2 bg-gray-100"
+                  className="h-2.5 bg-gray-100"
                   indicatorClassName="bg-emerald-500"
                 />
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1.5">
                 {withholdingsPercentage > 0 ? `${withholdingsPercentage.toFixed(1)}% sobre facturación` : "Sin retenciones"}
               </p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            <div className="md:col-span-2 bg-slate-50 p-3 rounded-md border border-slate-200">
-              <h4 className="text-xs font-medium text-slate-700 mb-2">Tipos de IVA en España</h4>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center">
-                  <span className="w-3 h-3 bg-blue-600 rounded-full mr-1"></span>
-                  <span className="text-slate-600">21% General</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-1"></span>
-                  <span className="text-slate-600">10% Reducido</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-3 h-3 bg-amber-500 rounded-full mr-1"></span>
-                  <span className="text-slate-600">4% Superreducido</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-3 h-3 bg-gray-400 rounded-full mr-1"></span>
-                  <span className="text-slate-600">0% Exento</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="md:col-span-2 bg-slate-50 p-3 rounded-md border border-slate-200">
-              <h4 className="text-xs font-medium text-slate-700 mb-2">Retenciones IRPF</h4>
-              <div className="grid grid-cols-2 gap-1 text-xs">
-                <div className="flex items-center">
-                  <span className="w-3 h-3 bg-blue-600 rounded-full mr-1"></span>
-                  <span className="text-slate-600">15% General</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-1"></span>
-                  <span className="text-slate-600">7% Inicio actividad</span>
-                </div>
-                <div className="flex items-center col-span-2">
-                  <span className="w-3 h-3 bg-purple-500 rounded-full mr-1"></span>
-                  <span className="text-slate-600">Otros % según profesión</span>
-                </div>
-              </div>
             </div>
           </div>
           
