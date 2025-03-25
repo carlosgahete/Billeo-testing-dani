@@ -59,23 +59,7 @@ export default function AuthPage() {
   // Handle login form submission
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Create a demo user if credentials are "demo/demo"
-    if (loginFormData.username === "demo" && loginFormData.password === "demo") {
-      try {
-        // Try registering a demo user (will fail if already exists, which is fine)
-        await registerMutation.mutateAsync({
-          name: "Ana García",
-          email: "anagarcia@example.com",
-          username: "demo",
-          password: "demo",
-          role: "Autonomo"
-        });
-      } catch (error) {
-        // User might already exist, ignore error and try login anyway
-        console.log("Demo user might already exist");
-      }
-    }
+    console.log("Intentando iniciar sesión con:", loginFormData);
     
     // Proceed with login
     loginMutation.mutate(loginFormData);

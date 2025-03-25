@@ -44,8 +44,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", "/api/login", credentials);
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            throw new Error("Usuario o contraseña incorrectos");
+          } else {
+            const errorData = await res.text();
+            throw new Error(errorData || "Error al iniciar sesión");
+          }
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Login error:", error);
+        throw error;
+      }
     },
     onSuccess: (userData: Omit<SelectUser, "password">) => {
       queryClient.setQueryData(["/api/user"], userData);
@@ -57,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       toast({
         title: "Error de inicio de sesión",
-        description: "Usuario o contraseña incorrectos",
+        description: error.message || "Usuario o contraseña incorrectos",
         variant: "destructive",
       });
     },
@@ -65,8 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation<Omit<SelectUser, "password">, Error, RegisterData>({
     mutationFn: async (userData: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", userData);
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", "/api/register", userData);
+        
+        if (!res.ok) {
+          const errorData = await res.text();
+          throw new Error(errorData || "Error al crear cuenta");
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Register error:", error);
+        throw error;
+      }
     },
     onSuccess: (userData: Omit<SelectUser, "password">) => {
       queryClient.setQueryData(["/api/user"], userData);
@@ -86,7 +112,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      try {
+        const res = await apiRequest("POST", "/api/logout");
+        
+        if (!res.ok) {
+          const errorData = await res.text();
+          throw new Error(errorData || "Error al cerrar sesión");
+        }
+        
+        return;
+      } catch (error) {
+        console.error("Logout error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);

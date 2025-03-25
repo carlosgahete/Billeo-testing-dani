@@ -8,27 +8,28 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest<T = any>(
-  url: string,
   method: string = "GET",
+  url: string,
   data?: unknown | undefined,
-): Promise<T> {
+): Promise<Response> {
+  console.log(`API Request: ${method} ${url}`, data);
+  
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
-
-  await throwIfResNotOk(res);
   
-  // Para métodos GET, siempre devolver el JSON, 
-  // para otros métodos, solo si el Content-Type es application/json
-  if (method === "GET" || (res.headers.get("Content-Type")?.includes("application/json"))) {
-    return await res.json();
+  console.log(`API Response: ${res.status} ${res.statusText}`);
+  
+  // No lanzamos error aquí para que el componente pueda manejar la respuesta
+  // incluso si es un error 401 o 400
+  if (!res.ok) {
+    console.error(`API Error: ${res.status} ${res.statusText}`);
   }
   
-  // Si no hay contenido JSON, devolver un objeto con status
-  return { status: res.status } as T;
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
