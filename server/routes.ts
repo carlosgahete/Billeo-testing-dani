@@ -57,6 +57,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
   
+  // Keep compatibility with old auth endpoint
+  app.get("/api/auth/session", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(200).json({ authenticated: false });
+    }
+    
+    const { password, ...userWithoutPassword } = req.user as any;
+    return res.status(200).json({
+      authenticated: true,
+      user: userWithoutPassword
+    });
+  });
+  
   // Create HTTP server
   const httpServer = createServer(app);
 
@@ -1105,11 +1118,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stats and reports
   app.get("/api/stats/dashboard", async (req: Request, res: Response) => {
     try {
-      if (!req.session || !req.session.userId) {
+      if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       // Get all transactions for the user
       const allTransactions = await storage.getTransactionsByUserId(userId);
