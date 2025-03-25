@@ -93,22 +93,28 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   
   // Buscar fecha
   const dateRegex = /(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/g;
-  const dateMatches = [...normalizedText.matchAll(dateRegex)];
+  // Usar match en lugar de matchAll para compatibilidad
+  const dateMatches = normalizedText.match(dateRegex) || [];
   
   let date = new Date().toISOString().split('T')[0]; // Fecha actual por defecto
   if (dateMatches.length > 0) {
     // Usar la primera fecha encontrada
-    const match = dateMatches[0];
-    const day = match[1].padStart(2, '0');
-    const month = match[2].padStart(2, '0');
-    let year = match[3];
+    const firstDateMatch = dateMatches[0];
+    // Extraer los componentes usando grupos de captura
+    const dateComponents = firstDateMatch.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/) || [];
     
-    // Ajustar el año si es de dos dígitos
-    if (year.length === 2) {
-      year = `20${year}`;
+    if (dateComponents.length >= 4) {
+      const day = dateComponents[1].padStart(2, '0');
+      const month = dateComponents[2].padStart(2, '0');
+      let year = dateComponents[3];
+      
+      // Ajustar el año si es de dos dígitos
+      if (year.length === 2) {
+        year = `20${year}`;
+      }
+      
+      date = `${year}-${month}-${day}`;
     }
-    
-    date = `${year}-${month}-${day}`;
   }
   
   // Buscar importe total
@@ -198,10 +204,10 @@ export function mapToTransaction(
   categoryId: number | null
 ): Partial<InsertTransaction> {
   return {
-    userId,
+    userId: userId.toString(), // Convertir a string
     description: extractedData.description,
     amount: extractedData.amount,
-    date: extractedData.date,
+    date: new Date(extractedData.date), // Convertir a Date
     type: 'expense',
     categoryId,
     paymentMethod: 'other',

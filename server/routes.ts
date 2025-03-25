@@ -22,6 +22,7 @@ import {
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { processReceiptImage, processReceiptPDF, mapToTransaction } from "./services/visionService";
 
 // Set up file upload with multer
 const uploadDir = path.join(process.cwd(), "uploads");
