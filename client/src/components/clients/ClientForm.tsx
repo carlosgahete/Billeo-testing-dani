@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,38 +42,62 @@ interface ClientFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClientCreated: (client: any) => void;
+  clientToEdit?: any; // Cliente a editar (opcional)
 }
 
-export function ClientForm({ open, onOpenChange, onClientCreated }: ClientFormProps) {
+export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }: ClientFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditMode = !!clientToEdit;
 
   // Configuración del formulario
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      name: "",
-      taxId: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      postalCode: "",
-      country: "España",
-      notes: "",
+      name: clientToEdit?.name || "",
+      taxId: clientToEdit?.taxId || "",
+      email: clientToEdit?.email || "",
+      phone: clientToEdit?.phone || "",
+      address: clientToEdit?.address || "",
+      city: clientToEdit?.city || "",
+      postalCode: clientToEdit?.postalCode || "",
+      country: clientToEdit?.country || "España",
+      notes: clientToEdit?.notes || "",
     },
   });
+  
+  // Efecto para actualizar el formulario cuando cambia el cliente a editar
+  useEffect(() => {
+    if (clientToEdit) {
+      form.reset({
+        name: clientToEdit.name || "",
+        taxId: clientToEdit.taxId || "",
+        email: clientToEdit.email || "",
+        phone: clientToEdit.phone || "",
+        address: clientToEdit.address || "",
+        city: clientToEdit.city || "",
+        postalCode: clientToEdit.postalCode || "",
+        country: clientToEdit.country || "España",
+        notes: clientToEdit.notes || "",
+      });
+    }
+  }, [clientToEdit]);
 
-  // Mutación para crear un cliente
+  // Mutación para crear o actualizar un cliente
   const mutation = useMutation({
     mutationFn: async (data: ClientFormValues) => {
-      return apiRequest("/api/clients", "POST", data);
+      if (isEditMode) {
+        return apiRequest(`/api/clients/${clientToEdit.id}`, "PUT", data);
+      } else {
+        return apiRequest("/api/clients", "POST", data);
+      }
     },
     onSuccess: (data) => {
-      console.log("Cliente creado:", data);
       toast({
-        title: "Cliente creado",
-        description: "El cliente se ha creado correctamente",
+        title: isEditMode ? "Cliente actualizado" : "Cliente creado",
+        description: isEditMode 
+          ? "El cliente se ha actualizado correctamente" 
+          : "El cliente se ha creado correctamente",
       });
       onClientCreated(data);
       onOpenChange(false);
@@ -98,7 +122,7 @@ export function ClientForm({ open, onOpenChange, onClientCreated }: ClientFormPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Añadir nuevo cliente</DialogTitle>
+          <DialogTitle>{isEditMode ? "Editar cliente" : "Añadir nuevo cliente"}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -245,7 +269,7 @@ export function ClientForm({ open, onOpenChange, onClientCreated }: ClientFormPr
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Guardando..." : "Guardar cliente"}
+                {isSubmitting ? "Guardando..." : isEditMode ? "Actualizar cliente" : "Guardar cliente"}
               </Button>
             </DialogFooter>
           </form>
