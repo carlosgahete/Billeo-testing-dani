@@ -106,98 +106,32 @@ const TaxSummary = () => {
 
   return (
     <div className="grid gap-4">
-      {/* Tarjeta de Resultado */}
-      <Card className="shadow-sm">
-        <CardHeader className="border-b border-gray-200 p-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="font-medium text-gray-800 text-base">Resultado</CardTitle>
-              <CardDescription className="text-xs text-gray-500 mt-1">
-                Resumen de ingresos y gastos
-              </CardDescription>
-            </div>
-            <PiggyBank className="h-5 w-5 text-primary" />
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          {isLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-full" />
-            </div>
-          ) : (
-            <>
-              <div className="mb-4">
-                <p className={`text-3xl font-bold ${(income - expenses) >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatCurrency(income - expenses)}
-                </p>
-                <p className="text-sm text-gray-500 flex items-center mt-1">
-                  {(income - expenses) >= 0 ? (
-                    <><TrendingUp className="h-3 w-3 mr-1 text-green-500" /> {((income - expenses) / Math.max(1, income) * 100).toFixed(1)}% de margen</>
-                  ) : (
-                    <><TrendingDown className="h-3 w-3 mr-1 text-red-500" /> {Math.abs((income - expenses) / Math.max(1, income) * 100).toFixed(1)}% de pérdidas</>
-                  )}
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Ingresos totales:</span>
-                  <span className="text-sm font-medium">{formatCurrency(income)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Gastos totales:</span>
-                  <span className="text-sm font-medium">{formatCurrency(expenses)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Retenciones:</span>
-                  <span className="text-sm font-medium">{formatCurrency(withholdings)}</span>
-                </div>
-              </div>
-              
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  className="w-full bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200"
-                  onClick={() => navigate("/reports")}
-                >
-                  Ver informes detallados
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
       {/* Resumen fiscal - más ancho, menos alto */}
-      <Card className="shadow-sm mt-4">
-        <CardHeader className="border-b border-gray-200 p-4">
+      <Card className="shadow-sm">
+        <CardHeader className="border-b border-gray-200 p-3">
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="font-medium text-gray-800 text-base">Resumen fiscal</CardTitle>
-              <CardDescription className="text-xs text-gray-500 mt-1">
+              <CardTitle className="font-medium text-gray-800 text-sm">Resumen fiscal</CardTitle>
+              <CardDescription className="text-xs text-gray-500">
                 Valores estimados del trimestre
               </CardDescription>
             </div>
-            <FileText className="h-5 w-5 text-primary" />
+            <FileText className="h-4 w-4 text-primary" />
           </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent className="p-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* IVA */}
-            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-700 font-medium flex items-center">
-                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+            <div className="p-2 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
                   IVA a pagar
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-4 w-16" />
                 ) : (
-                  <span className="text-sm font-semibold">{formatCurrency(vat)}</span>
+                  <span className="text-xs font-semibold">{formatCurrency(vat)}</span>
                 )}
               </div>
               {isLoading ? (
@@ -205,26 +139,26 @@ const TaxSummary = () => {
               ) : (
                 <Progress 
                   value={vatPercentage} 
-                  className="h-2.5 bg-gray-100"
+                  className="h-2 bg-gray-100"
                   indicatorClassName="bg-blue-500"
                 />
               )}
-              <p className="text-xs text-gray-500 mt-1.5">
-                {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos suficientes"}
+              <p className="text-xs text-gray-500 mt-1">
+                {vatPercentage > 0 ? `${vatPercentage.toFixed(1)}% sobre facturación` : "Sin datos"}
               </p>
             </div>
             
             {/* IRPF */}
-            <div className="p-3 bg-white shadow-sm border border-gray-100 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-700 font-medium flex items-center">
-                  <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+            <div className="p-2 bg-white shadow-sm border border-gray-100 rounded-md">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-gray-700 font-medium flex items-center">
+                  <span className="inline-block w-2 h-2 bg-amber-500 rounded-full mr-1"></span>
                   IRPF estimado
                 </span>
                 {isLoading ? (
-                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-4 w-16" />
                 ) : (
-                  <span className="text-sm font-semibold">{formatCurrency(incomeTax)}</span>
+                  <span className="text-xs font-semibold">{formatCurrency(incomeTax)}</span>
                 )}
               </div>
               {isLoading ? (
@@ -232,12 +166,12 @@ const TaxSummary = () => {
               ) : (
                 <Progress 
                   value={incomeTaxPercentage} 
-                  className="h-2.5 bg-gray-100"
+                  className="h-2 bg-gray-100"
                   indicatorClassName="bg-amber-500"
                 />
               )}
-              <p className="text-xs text-gray-500 mt-1.5">
-                {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos suficientes"}
+              <p className="text-xs text-gray-500 mt-1">
+                {incomeTaxPercentage > 0 ? `${incomeTaxPercentage.toFixed(1)}% sobre beneficio` : "Sin datos"}
               </p>
             </div>
           </div>

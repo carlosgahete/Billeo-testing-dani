@@ -109,14 +109,14 @@ const Dashboard = () => {
   const isPositiveMargin = balanceTotal > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+    <div className="space-y-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
         <PageTitle 
           title="Resumen Contable"
           description="Visión general de tu actividad económica"
         />
         
-        <div className="flex items-center gap-2 mt-3 sm:mt-0">
+        <div className="flex items-center gap-2 mt-2 sm:mt-0">
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Año" />
@@ -158,7 +158,7 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
         {/* Tarjeta de Ingresos */}
         <Card className="overflow-hidden">
           <CardHeader className="bg-primary-50 pb-2">
