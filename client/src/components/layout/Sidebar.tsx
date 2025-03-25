@@ -95,9 +95,14 @@ const Sidebar = ({
       label: "Facturas" 
     },
     { 
-      href: "/transactions", 
+      href: "/income-expense", 
       icon: <Wallet size={20} />, 
       label: "Ingresos y Gastos" 
+    },
+    { 
+      href: "/transactions", 
+      icon: <Wallet size={20} />, 
+      label: "Transacciones" 
     },
     { 
       href: "/reports", 
