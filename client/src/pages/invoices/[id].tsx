@@ -49,9 +49,9 @@ const InvoiceDetailPage = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate(`/invoices/${id}`)}
+            onClick={() => navigate("/invoices")}
             className="mr-2"
-            aria-label="Volver"
+            aria-label="Volver a facturas"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
