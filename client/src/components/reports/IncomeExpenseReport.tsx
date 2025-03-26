@@ -84,7 +84,7 @@ interface Category {
 const IncomeExpenseReport = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"income" | "expense">("expense");
+  const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
 
   // Consulta de invoices (ingresos)
   const {
@@ -361,7 +361,7 @@ const IncomeExpenseReport = () => {
         
         {/* Tabs para ingresos y gastos */}
         <Tabs 
-          defaultValue="expense" 
+          defaultValue="income" 
           value={activeTab}
           onValueChange={(value) => setActiveTab(value as "income" | "expense")}
           className="space-y-4"
