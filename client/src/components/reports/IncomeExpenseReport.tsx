@@ -10,7 +10,10 @@ import {
   PlusCircle,
   Loader2,
   FileText,
-  X
+  X,
+  Eye,
+  Edit,
+  FileDown
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 // import { PageTitle } from "@/components/ui/page-title";
@@ -418,7 +421,7 @@ const IncomeExpenseReport = () => {
                 <div className="divide-y">
                   {sortedInvoices.map((invoice) => (
                     <div key={invoice.id} className="p-4 flex justify-between items-center hover:bg-muted/30">
-                      <div>
+                      <div className="flex-1">
                         <div className="font-medium">
                           Factura #{invoice.invoiceNumber} - {getClientName(invoice.clientId)}
                         </div>
@@ -426,13 +429,65 @@ const IncomeExpenseReport = () => {
                           {formatDate(invoice.issueDate)} · {invoice.status === "paid" ? "Pagada" : "Pendiente"}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-initial mr-4">
                         <div className="font-semibold text-green-600">
                           {formatCurrency(invoice.total)}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Base: {formatCurrency(invoice.subtotal)} · IVA: {formatCurrency(invoice.tax)}
                         </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-initial">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate(`/invoices/${invoice.id}`)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Ver detalles</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Editar factura</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleExportInvoicePDF(invoice)}
+                              >
+                                <FileDown className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Exportar a PDF</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                   ))}
