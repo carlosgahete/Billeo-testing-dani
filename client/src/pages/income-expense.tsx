@@ -73,27 +73,7 @@ export default function IncomeExpensePage() {
         </div>
       </header>
 
-      {/* Navegación secundaria */}
-      <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex overflow-x-auto space-x-6 py-2 no-scrollbar">
-            {navigationItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className={`flex items-center py-2 px-3 whitespace-nowrap rounded-md text-sm transition-colors ${
-                  location === item.href 
-                    ? "bg-primary/10 text-primary" 
-                    : "text-neutral-600 hover:bg-neutral-100"
-                }`}
-              >
-                <span className="mr-2">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Se ha eliminado la barra de navegación secundaria */}
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
