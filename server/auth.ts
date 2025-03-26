@@ -169,11 +169,18 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", async (req, res) => {
+  app.get("/api/user", getSessionInfo);
+  app.get("/api/auth/session", getSessionInfo);
+  
+  // Función compartida para obtener información de la sesión
+  async function getSessionInfo(req: any, res: any) {
+    console.log("Verificando sesión - Autenticado:", req.isAuthenticated(), "UserId:", req.session.userId);
+    
     // Verificamos si el usuario está autenticado por passport
     // O si tiene un ID de usuario en la sesión
     if (!req.isAuthenticated() && !req.session.userId) {
-      return res.sendStatus(401);
+      console.log("No autenticado - devolviendo { authenticated: false }");
+      return res.status(200).json({ authenticated: false });
     }
     
     try {
@@ -182,20 +189,32 @@ export function setupAuth(app: Express) {
         const user = await storage.getUser(req.session.userId);
         if (!user) {
           delete req.session.userId;
-          return res.sendStatus(401);
+          console.log("Usuario no encontrado con ID:", req.session.userId);
+          return res.status(200).json({ authenticated: false });
         }
         
         // Omitir la contraseña en la respuesta
         const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
+        console.log("Usuario encontrado por ID de sesión:", userWithoutPassword.username);
+        return res.json({ 
+          authenticated: true,
+          user: userWithoutPassword
+        });
       }
       
       // Usuario autenticado normalmente vía passport
       const { password, ...userWithoutPassword } = req.user as SelectUser;
-      return res.json(userWithoutPassword);
+      console.log("Usuario autenticado por passport:", userWithoutPassword.username);
+      return res.json({ 
+        authenticated: true,
+        user: userWithoutPassword
+      });
     } catch (error) {
       console.error("Error al obtener usuario:", error);
-      return res.sendStatus(500);
+      return res.status(500).json({ 
+        authenticated: false,
+        error: "Error del servidor"
+      });
     }
-  });
+  }
 }
