@@ -112,7 +112,7 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   // Mutation para eliminar clientes
   const deleteClientMutation = useMutation({
     mutationFn: async (clientId: number) => {
-      return await apiRequest(`/api/clients/${clientId}`, "DELETE");
+      return await apiRequest("DELETE", `/api/clients/${clientId}`);
     },
     onSuccess: () => {
       // Invalidar consultas de clientes para actualizar la lista
@@ -375,12 +375,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
           items: formattedItems
         });
         
-        return apiRequest(`/api/invoices/${invoiceId}`, "PUT", {
+        return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
           invoice: completeInvoiceData,
           items: formattedItems,
         });
       } else {
-        return apiRequest("/api/invoices", "POST", {
+        return apiRequest("POST", "/api/invoices", {
           invoice: formattedData,
           items: formattedItems,
         });
