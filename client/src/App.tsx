@@ -7,6 +7,7 @@ import Layout from "@/components/layout/Layout";
 import AuthPage from "@/pages/auth-page-basic";
 import Dashboard from "@/pages/dashboard";
 import HomeDirect from "@/pages/home-direct";
+import LoginDirecto from "@/pages/login-directo";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
@@ -23,7 +24,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth" component={LoginDirecto} />
       <Route path="/home-direct">
         <Layout>
           <HomeDirect />
