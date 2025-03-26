@@ -291,7 +291,7 @@ const IncomeExpenseReport = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-primary mb-4">Ingresos y Gastos</h1>
+      <h1 className="text-2xl font-semibold text-black mb-4 ml-2">Ingresos y Gastos</h1>
 
       <div className="grid gap-6">
         {/* Panel de estadísticas */}
