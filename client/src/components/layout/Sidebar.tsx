@@ -58,14 +58,11 @@ const Sidebar = ({
   const { toast } = useToast();
   const { user, logoutMutation } = useAuth();
 
-  // Close menu when a link is clicked
+  // Close mobile menu when a link is clicked
   const handleNavClick = () => {
-    // Cerramos el menú siempre al hacer clic en un enlace de navegación
     if (isMobile) {
       setMobileMenuOpen(false);
     }
-    // Ya no cerramos automáticamente el sidebar en desktop
-    // para que la navegación sea más cómoda
   };
   
   // Logout functionality
@@ -128,12 +125,12 @@ const Sidebar = ({
   if (!isMobile) {
     return (
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-10 transform transition-all duration-300 ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-10 transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Logo and toggle button */}
-        <div className="h-16 px-6 flex items-center justify-center border-b border-neutral-200">
+        <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
           <div className="flex items-center">
             <img 
               src={billeoLogo} 
@@ -141,10 +138,23 @@ const Sidebar = ({
               className="h-6"
             />
           </div>
+          
+          {/* Toggle sidebar button - hamburger menu */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-primary p-1 rounded-md hover:bg-primary/10 transition-colors"
+            aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
         </div>
         
         {/* Nav Items */}
-        <nav className="p-4 pt-10 space-y-2">
+        <nav className="p-4 space-y-1">
           {navigationItems.map((item, index) => (
             <NavItem
               key={index}
@@ -201,7 +211,7 @@ const Sidebar = ({
 
       {/* Mobile sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 transform transition-all duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 transform transition-all duration-300 ease-in-out ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -224,7 +234,7 @@ const Sidebar = ({
         </div>
         
         {/* Nav Items */}
-        <nav className="p-4 pt-10 space-y-2">
+        <nav className="p-4 space-y-1">
           {navigationItems.map((item, index) => (
             <NavItem
               key={index}

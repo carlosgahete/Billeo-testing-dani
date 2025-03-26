@@ -118,8 +118,8 @@ const Dashboard = () => {
   const isPositiveMargin = balanceTotal > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+    <div className="space-y-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
         <PageTitle 
           title="Resumen Contable"
           description="Visión general de tu actividad económica"
@@ -167,7 +167,7 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
         {/* Tarjeta de Ingresos */}
         <Card className="overflow-hidden">
           <CardHeader className="bg-primary-50 pb-2">
@@ -207,7 +207,7 @@ const Dashboard = () => {
             <Button 
               variant="default" 
               size="sm" 
-              className="w-full mt-6"
+              className="w-full mt-4"
               onClick={() => navigate("/invoices")}
             >
               Ver facturas emitidas
@@ -254,7 +254,7 @@ const Dashboard = () => {
             <Button 
               variant="default" 
               size="sm" 
-              className="w-full mt-6"
+              className="w-full mt-4"
               onClick={() => navigate("/transactions")}
             >
               Ver gastos
@@ -318,7 +318,7 @@ const Dashboard = () => {
             <Button 
               variant="default"
               size="sm" 
-              className="w-full mt-6"
+              className="w-full mt-4"
               onClick={() => navigate("/reports")}
             >
               Ver informes detallados

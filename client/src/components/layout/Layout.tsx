@@ -17,18 +17,20 @@ const Layout = ({ children }: LayoutProps) => {
     if (!isMobile) {
       setMobileMenuOpen(false);
     }
-    // Solo abrimos el sidebar automáticamente la primera vez en desktop
-    // NO forzamos que esté abierto cada vez que cambia el tamaño de la pantalla
+    // Set sidebar based on screen size
+    setSidebarOpen(!isMobile);
   }, [isMobile]);
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
-      {/* Header - solo visible en modo móvil */}
-      <Header 
-        isMobile={isMobile} 
-        mobileMenuOpen={mobileMenuOpen} 
-        setMobileMenuOpen={setMobileMenuOpen} 
-      />
+      {/* Mobile header */}
+      {isMobile && (
+        <Header 
+          isMobile={true} 
+          mobileMenuOpen={mobileMenuOpen} 
+          setMobileMenuOpen={setMobileMenuOpen} 
+        />
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
@@ -40,31 +42,25 @@ const Layout = ({ children }: LayoutProps) => {
           isMobile={isMobile}
         />
         
-        {/* Botón flotante para controlar el sidebar en desktop */}
-        {!isMobile && (
+        {/* Botón flotante para cuando el sidebar está cerrado en desktop */}
+        {!isMobile && !sidebarOpen && (
           <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="fixed top-[4.5rem] left-6 z-50 bg-white rounded-full p-2 shadow-sm text-primary hover:bg-primary/10 transition-colors"
-            aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
+            aria-label="Abrir menú lateral"
           >
-            {sidebarOpen ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            )}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
           </button>
         )}
 
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          <div className="p-4 lg:p-6 mt-10 transition-all duration-300">
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''} ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+          {/* Ya no necesitamos el botón hamburguesa flotante aquí */}
+          <div className="p-4 lg:p-6 transition-all duration-300">
             {children}
           </div>
         </main>
