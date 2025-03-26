@@ -12,9 +12,9 @@ type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<Omit<SelectUser, "password">, Error, LoginData>;
+  loginMutation: UseMutationResult<any, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<SelectUser, "password">, Error, RegisterData>;
+  registerMutation: UseMutationResult<any, Error, RegisterData>;
 };
 
 type LoginData = {
@@ -37,12 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<SelectUser | null, Error>({
+  } = useQuery({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
+  const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       try {
         console.log("Iniciando proceso de login con:", credentials.username);
@@ -50,28 +50,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (!res.ok) {
           console.error(`Error de inicio de sesión: ${res.status}`);
-          if (res.status === 401) {
-            throw new Error("Usuario o contraseña incorrectos");
-          } else {
-            try {
-              const errorData = await res.json();
-              throw new Error(errorData.message || "Error al iniciar sesión");
-            } catch {
-              const errorText = await res.text();
-              throw new Error(errorText || "Error al iniciar sesión");
-            }
-          }
+          throw new Error("Usuario o contraseña incorrectos");
         }
         
-        const userData = await res.json();
-        console.log("Inicio de sesión exitoso, ID de usuario:", userData.id);
-        return userData;
+        return await res.json();
       } catch (error) {
         console.error("Login error:", error);
         throw error;
       }
     },
-    onSuccess: (userData: Omit<SelectUser, "password">) => {
+    onSuccess: (userData: any) => {
       queryClient.setQueryData(["/api/user"], userData);
       toast({
         title: "Inicio de sesión exitoso",
@@ -87,32 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const registerMutation = useMutation<Omit<SelectUser, "password">, Error, RegisterData>({
+  const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      try {
-        console.log("Iniciando registro de usuario:", userData.username);
-        const res = await apiRequest("POST", "/api/register", userData);
-        
-        if (!res.ok) {
-          console.error(`Error de registro: ${res.status}`);
-          try {
-            const errorData = await res.json();
-            throw new Error(errorData.message || "Error al crear cuenta");
-          } catch {
-            const errorText = await res.text();
-            throw new Error(errorText || "Error al crear cuenta");
-          }
-        }
-        
-        const newUserData = await res.json();
-        console.log("Registro exitoso, ID de usuario:", newUserData.id);
-        return newUserData;
-      } catch (error) {
-        console.error("Register error:", error);
-        throw error;
+      const res = await apiRequest("POST", "/api/register", userData);
+      if (!res.ok) {
+        const errorData = await res.text();
+        throw new Error(errorData || "Error al crear cuenta");
       }
+      return await res.json();
     },
-    onSuccess: (userData: Omit<SelectUser, "password">) => {
+    onSuccess: (userData: any) => {
       queryClient.setQueryData(["/api/user"], userData);
       toast({
         title: "Registro exitoso",
@@ -128,28 +100,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const logoutMutation = useMutation<void, Error, void>({
+  const logoutMutation = useMutation({
     mutationFn: async () => {
-      try {
-        console.log("Iniciando cierre de sesión");
-        const res = await apiRequest("POST", "/api/logout");
-        
-        if (!res.ok) {
-          console.error(`Error al cerrar sesión: ${res.status}`);
-          try {
-            const errorData = await res.json();
-            throw new Error(errorData.message || "Error al cerrar sesión");
-          } catch {
-            const errorText = await res.text();
-            throw new Error(errorText || "Error al cerrar sesión");
-          }
-        }
-        
-        console.log("Cierre de sesión exitoso");
-        return;
-      } catch (error) {
-        console.error("Logout error:", error);
-        throw error;
+      const res = await apiRequest("POST", "/api/logout");
+      if (!res.ok) {
+        const errorData = await res.text();
+        throw new Error(errorData || "Error al cerrar sesión");
       }
     },
     onSuccess: () => {
