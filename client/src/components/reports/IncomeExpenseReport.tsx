@@ -84,7 +84,7 @@ interface Category {
 const IncomeExpenseReport = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
+  const [activeTab, setActiveTab] = useState<"income" | "expense">("expense");
 
   // Consulta de invoices (ingresos)
   const {
@@ -295,109 +295,6 @@ const IncomeExpenseReport = () => {
         title="Ingresos y Gastos" 
         description="Visualización detallada de todos los ingresos y gastos"
       />
-      
-      {/* Formulario de registro rápido de gastos */}
-      <Card className="border-2 border-red-100 shadow-sm">
-        <CardHeader className="pb-3 pt-3">
-          <CardTitle className="text-lg font-medium text-red-800 flex items-center">
-            <TrendingDown className="mr-2 h-5 w-5" />
-            Registro rápido de gastos
-          </CardTitle>
-          <CardDescription className="text-xs mt-1">
-            Registra rápidamente un gasto. Debes adjuntar un comprobante (factura, ticket o recibo).
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row items-center gap-2">
-            <div className="flex-1">
-              <Input
-                placeholder="Descripción del gasto"
-                value={expenseDescription}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="md:w-[120px] w-full">
-              <Input
-                placeholder="Importe (€)"
-                value={expenseAmount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                type="number"
-                step="0.01"
-                min="0.01"
-                className="w-full"
-              />
-            </div>
-            
-            <div className="md:w-auto w-full flex items-center gap-1">
-              {!attachmentPath ? (
-                <FileUpload onUpload={handleFileUpload} compact={true} />
-              ) : (
-                <>
-                  <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
-                    <FileText className="h-3 w-3" />
-                    <span className="text-xs">Adjunto</span>
-                  </Badge>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 rounded-full p-0" 
-                    onClick={() => setAttachmentPath(null)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </>
-              )}
-            </div>
-            
-            <div>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
-                size="sm"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                ) : (
-                  <PlusCircle className="h-4 w-4 mr-1" />
-                )}
-                Registrar
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-      
-      {/* Acciones adicionales */}
-      <div className="mb-6 flex flex-wrap gap-3 justify-start">
-        <Button 
-          onClick={() => navigate("/transactions/create")} 
-          variant="default" 
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Nueva transacción
-        </Button>
-        
-        <Button 
-          onClick={() => navigate("/invoices/create")} 
-          variant="outline" 
-          className="flex items-center gap-2"
-        >
-          <FilePlus className="h-4 w-4" />
-          Nueva factura
-        </Button>
-        
-        <Button 
-          onClick={() => navigate("/documents/scan")} 
-          variant="secondary" 
-          className="flex items-center gap-2"
-        >
-          <ScanText className="h-4 w-4" />
-          Escanear documento
-        </Button>
-      </div>
 
       <div className="grid gap-6">
         {/* Panel de estadísticas */}
@@ -465,7 +362,7 @@ const IncomeExpenseReport = () => {
         
         {/* Tabs para ingresos y gastos */}
         <Tabs 
-          defaultValue="income" 
+          defaultValue="expense" 
           value={activeTab}
           onValueChange={(value) => setActiveTab(value as "income" | "expense")}
           className="space-y-4"
@@ -477,6 +374,36 @@ const IncomeExpenseReport = () => {
           
           {/* TAB DE INGRESOS */}
           <TabsContent value="income" className="space-y-4">
+            {/* Acciones adicionales - Solo visibles en la pestaña de ingresos */}
+            <div className="flex flex-wrap gap-3 justify-start mb-4">
+              <Button 
+                onClick={() => navigate("/transactions/create")} 
+                variant="default" 
+                className="flex items-center gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Nueva transacción
+              </Button>
+              
+              <Button 
+                onClick={() => navigate("/invoices/create")} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <FilePlus className="h-4 w-4" />
+                Nueva factura
+              </Button>
+              
+              <Button 
+                onClick={() => navigate("/documents/scan")} 
+                variant="secondary" 
+                className="flex items-center gap-2"
+              >
+                <ScanText className="h-4 w-4" />
+                Escanear documento
+              </Button>
+            </div>
+            
             <div className="rounded-md border">
               <div className="bg-muted/40 p-4">
                 <h3 className="text-sm font-medium">Facturas emitidas</h3>
@@ -572,6 +499,79 @@ const IncomeExpenseReport = () => {
           
           {/* TAB DE GASTOS */}
           <TabsContent value="expense" className="space-y-4">
+            {/* Formulario de registro rápido de gastos - Solo visible en la pestaña de gastos */}
+            <Card className="border-2 border-red-100 shadow-sm">
+              <CardHeader className="pb-3 pt-3">
+                <CardTitle className="text-lg font-medium text-red-800 flex items-center">
+                  <TrendingDown className="mr-2 h-5 w-5" />
+                  Registro rápido de gastos
+                </CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  Registra rápidamente un gasto. Debes adjuntar un comprobante (factura, ticket o recibo).
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row items-center gap-2">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Descripción del gasto"
+                      value={expenseDescription}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="md:w-[120px] w-full">
+                    <Input
+                      placeholder="Importe (€)"
+                      value={expenseAmount}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="md:w-auto w-full flex items-center gap-1">
+                    {!attachmentPath ? (
+                      <FileUpload onUpload={handleFileUpload} compact={true} />
+                    ) : (
+                      <>
+                        <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
+                          <FileText className="h-3 w-3" />
+                          <span className="text-xs">Adjunto</span>
+                        </Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 rounded-full p-0" 
+                          onClick={() => setAttachmentPath(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
+                      size="sm"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <PlusCircle className="h-4 w-4 mr-1" />
+                      )}
+                      Registrar
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+            
             <div className="rounded-md border">
               <div className="bg-muted/40 p-4">
                 <h3 className="text-sm font-medium">Gastos registrados</h3>
@@ -615,8 +615,6 @@ const IncomeExpenseReport = () => {
                 </div>
               )}
             </div>
-            
-
           </TabsContent>
         </Tabs>
       </div>
