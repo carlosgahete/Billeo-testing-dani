@@ -54,29 +54,8 @@ export function setupAuth(app: Express) {
   app.use((req, res, next) => {
     if (req.isAuthenticated() && req.user) {
       req.session.userId = (req.user as SelectUser).id;
-    } else if (req.session.userId) {
-      // Si el usuario no está autenticado vía passport pero tiene un ID en la sesión
-      // intentamos recuperar el usuario para mantener la sesión activa
-      storage.getUser(req.session.userId)
-        .then(user => {
-          if (user) {
-            req.login(user, (err) => {
-              if (err) console.error("Error al restaurar sesión:", err);
-              next();
-            });
-          } else {
-            // Si no se encuentra el usuario, limpiamos la sesión
-            delete req.session.userId;
-            next();
-          }
-        })
-        .catch(err => {
-          console.error("Error al recuperar usuario de sesión:", err);
-          next();
-        });
-    } else {
-      next();
     }
+    next();
   });
 
   passport.use(
@@ -122,7 +101,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/register", async (req, res, next) => {
+  app.post("/api/register", async (req, res, next) => {
     try {
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
@@ -147,7 +126,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: "Credenciales inválidas" });
@@ -162,59 +141,18 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/auth/logout", (req, res, next) => {
+  app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", getSessionInfo);
-  app.get("/api/auth/session", getSessionInfo);
-  
-  // Función compartida para obtener información de la sesión
-  async function getSessionInfo(req: any, res: any) {
-    console.log("Verificando sesión - Autenticado:", req.isAuthenticated(), "UserId:", req.session.userId);
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    // Verificamos si el usuario está autenticado por passport
-    // O si tiene un ID de usuario en la sesión
-    if (!req.isAuthenticated() && !req.session.userId) {
-      console.log("No autenticado - devolviendo { authenticated: false }");
-      return res.status(200).json({ authenticated: false });
-    }
-    
-    try {
-      // Si no tenemos un usuario de passport pero sí tenemos ID en la sesión
-      if (!req.user && req.session.userId) {
-        const user = await storage.getUser(req.session.userId);
-        if (!user) {
-          delete req.session.userId;
-          console.log("Usuario no encontrado con ID:", req.session.userId);
-          return res.status(200).json({ authenticated: false });
-        }
-        
-        // Omitir la contraseña en la respuesta
-        const { password, ...userWithoutPassword } = user;
-        console.log("Usuario encontrado por ID de sesión:", userWithoutPassword.username);
-        return res.json({ 
-          authenticated: true,
-          user: userWithoutPassword
-        });
-      }
-      
-      // Usuario autenticado normalmente vía passport
-      const { password, ...userWithoutPassword } = req.user as SelectUser;
-      console.log("Usuario autenticado por passport:", userWithoutPassword.username);
-      return res.json({ 
-        authenticated: true,
-        user: userWithoutPassword
-      });
-    } catch (error) {
-      console.error("Error al obtener usuario:", error);
-      return res.status(500).json({ 
-        authenticated: false,
-        error: "Error del servidor"
-      });
-    }
-  }
+    // Omitir la contraseña en la respuesta
+    const { password, ...userWithoutPassword } = req.user as SelectUser;
+    res.json(userWithoutPassword);
+  });
 }

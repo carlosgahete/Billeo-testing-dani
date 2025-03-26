@@ -18,17 +18,13 @@ import billeoLogo from '../assets/billeo-logo.png';
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  console.log("Auth page - User:", user, "IsLoading:", isLoading);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
     if (user) {
-      console.log("Usuario ya autenticado, redirigiendo a /");
       navigate("/");
     }
   }, [user, navigate]);
@@ -63,90 +59,19 @@ export default function AuthPage() {
   // Handle login form submission
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     console.log("Intentando iniciar sesión con:", loginFormData);
     
-    try {
-      // Hacer la petición directamente en lugar de usar la mutación
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginFormData),
-        credentials: "include" // importante para las cookies
-      });
-      
-      if (!response.ok) {
-        throw new Error("Usuario o contraseña incorrectos");
-      }
-      
-      const userData = await response.json();
-      console.log("Login exitoso:", userData);
-      
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido al sistema de gestión financiera",
-      });
-      
-      // Redirect to dashboard
-      window.location.href = "/";
-      
-    } catch (error) {
-      console.error("Error de login:", error);
-      toast({
-        title: "Error de inicio de sesión",
-        description: error instanceof Error ? error.message : "Usuario o contraseña incorrectos",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Proceed with login
+    loginMutation.mutate(loginFormData);
   };
 
   // Handle register form submission
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // Hacer la petición directamente en lugar de usar la mutación
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(registerFormData),
-        credentials: "include" // importante para las cookies
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Error al crear cuenta");
-      }
-      
-      const userData = await response.json();
-      console.log("Registro exitoso:", userData);
-      
-      toast({
-        title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada correctamente",
-      });
-      
-      // Redirect to dashboard
-      window.location.href = "/";
-      
-    } catch (error) {
-      console.error("Error de registro:", error);
-      toast({
-        title: "Error de registro",
-        description: error instanceof Error ? error.message : "No se pudo crear la cuenta",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    registerMutation.mutate(registerFormData);
   };
+
+  const isPending = loginMutation.isPending || registerMutation.isPending;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-secondary-50 p-4">
@@ -201,9 +126,9 @@ export default function AuthPage() {
                     <Button
                       className="w-full"
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isPending}
                     >
-                      {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
+                      {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
                     </Button>
                     
                     <div className="text-center text-sm mt-3">
@@ -268,9 +193,9 @@ export default function AuthPage() {
                     <Button
                       className="w-full"
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isPending}
                     >
-                      {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
+                      {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
                     </Button>
                   </div>
                 </form>
