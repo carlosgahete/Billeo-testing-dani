@@ -112,9 +112,17 @@ const IncomeExpenseReport = () => {
         return;
       }
       
-      // Obtener items de la factura
+      // Obtener items de la factura usando el nuevo endpoint específico
+      console.log(`Obteniendo items para factura ID: ${invoice.id}`);
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}/items`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al obtener items de factura");
+      }
+      
       const invoiceItems = await response.json();
+      console.log("Items de factura obtenidos:", invoiceItems);
       
       await generateInvoicePDF(invoice, client, invoiceItems);
       
@@ -126,7 +134,7 @@ const IncomeExpenseReport = () => {
       console.error("Error exportando PDF:", error);
       toast({
         title: "Error al exportar",
-        description: "No se pudo generar el PDF de la factura",
+        description: error instanceof Error ? error.message : "No se pudo generar el PDF de la factura",
         variant: "destructive",
       });
     }

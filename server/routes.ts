@@ -642,6 +642,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Obtener los items de una factura
+  app.get("/api/invoices/:id/items", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const invoiceId = parseInt(req.params.id);
+      const invoice = await storage.getInvoice(invoiceId);
+      
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      if (invoice.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to access this invoice" });
+      }
+      
+      const items = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+      return res.status(200).json(items);
+    } catch (error) {
+      console.error("[SERVER] Error al obtener items de factura:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.delete("/api/invoices/:id", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
