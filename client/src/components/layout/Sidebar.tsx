@@ -144,7 +144,7 @@ const Sidebar = ({
         </div>
         
         {/* Nav Items */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 pt-8 space-y-2">
           {navigationItems.map((item, index) => (
             <NavItem
               key={index}
@@ -224,7 +224,7 @@ const Sidebar = ({
         </div>
         
         {/* Nav Items */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 pt-8 space-y-2">
           {navigationItems.map((item, index) => (
             <NavItem
               key={index}
