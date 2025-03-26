@@ -308,83 +308,61 @@ const IncomeExpenseReport = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleQuickExpense} className="space-y-3">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1">
-                <Input
-                  placeholder="Descripción del gasto"
-                  value={expenseDescription}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div className="md:w-1/4">
-                <Input
-                  placeholder="Importe (€)"
-                  value={expenseAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  className="w-full"
-                />
-              </div>
+          <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row items-center gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder="Descripción del gasto"
+                value={expenseDescription}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="md:w-[120px] w-full">
+              <Input
+                placeholder="Importe (€)"
+                value={expenseAmount}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                type="number"
+                step="0.01"
+                min="0.01"
+                className="w-full"
+              />
             </div>
             
-            <Collapsible
-              open={showAttachment}
-              onOpenChange={setShowAttachment}
-              className="w-full space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-1">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span className="text-sm font-medium">
-                        {attachmentPath ? "Comprobante adjuntado" : "Adjuntar comprobante (obligatorio)"}
-                      </span>
-                      {attachmentPath && (
-                        <Badge variant="outline" className="ml-2 px-1 py-0 h-5">
-                          1 archivo
-                        </Badge>
-                      )}
-                    </div>
+            <div className="md:w-auto w-full flex items-center gap-1">
+              {!attachmentPath ? (
+                <FileUpload onUpload={handleFileUpload} compact={true} />
+              ) : (
+                <>
+                  <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
+                    <FileText className="h-3 w-3" />
+                    <span className="text-xs">Adjunto</span>
+                  </Badge>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 rounded-full p-0" 
+                    onClick={() => setAttachmentPath(null)}
+                  >
+                    <X className="h-3 w-3" />
                   </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent className="space-y-2">
-                <div className="rounded-md border p-2">
-                  <FileUpload onUpload={handleFileUpload} />
-                  {attachmentPath && (
-                    <div className="mt-2 flex items-center justify-between bg-muted/40 p-2 rounded text-sm">
-                      <span className="truncate max-w-[200px]">Archivo adjunto</span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6" 
-                        onClick={() => setAttachmentPath(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                </>
+              )}
+            </div>
             
-            <div className="flex justify-end">
+            <div>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
+                size="sm"
               >
                 {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
                 ) : (
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-1" />
                 )}
-                Registrar gasto
+                Registrar
               </Button>
             </div>
           </form>

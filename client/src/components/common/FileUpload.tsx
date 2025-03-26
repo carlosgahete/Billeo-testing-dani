@@ -2,15 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Upload } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Paperclip, Upload } from "lucide-react";
 
 interface FileUploadProps {
   onUpload: (filePath: string) => void;
   accept?: string;
+  compact?: boolean;
 }
 
-const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png" }: FileUploadProps) => {
+const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false }: FileUploadProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -36,10 +36,13 @@ const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png" }: FileUploadPro
 
       const data = await response.json();
       
-      toast({
-        title: "Archivo subido",
-        description: "El archivo se ha subido correctamente",
-      });
+      // Solo mostrar toast si no estamos en modo compacto
+      if (!compact) {
+        toast({
+          title: "Archivo subido",
+          description: "El archivo se ha subido correctamente",
+        });
+      }
 
       onUpload(data.path);
     } catch (error: any) {
@@ -55,26 +58,35 @@ const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png" }: FileUploadPro
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center">
       <Input
         type="file"
         accept={accept}
         onChange={handleFileChange}
         disabled={isUploading}
-        className="max-w-xs"
+        className="hidden"
         id="file-upload"
       />
       <label htmlFor="file-upload">
         <Button
           type="button"
-          variant="outline"
+          variant={compact ? "ghost" : "outline"}
           size="sm"
           disabled={isUploading}
-          className="cursor-pointer"
+          className={`cursor-pointer whitespace-nowrap ${compact ? 'px-2 h-8' : ''}`}
           onClick={() => document.getElementById("file-upload")?.click()}
         >
-          <Upload className="h-4 w-4 mr-2" />
-          {isUploading ? "Subiendo..." : "Seleccionar archivo"}
+          {compact ? (
+            <>
+              <Paperclip className="h-4 w-4" />
+              {isUploading && <span className="ml-1 text-xs">...</span>}
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-2" />
+              {isUploading ? "Subiendo..." : "Seleccionar archivo"}
+            </>
+          )}
         </Button>
       </label>
     </div>
