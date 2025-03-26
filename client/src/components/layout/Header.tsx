@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, User, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,10 +72,10 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-primary absolute left-2"
+              className="text-primary absolute left-2 z-40"
               aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
             >
-              <Menu size={24} />
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
           )}
         </div>
