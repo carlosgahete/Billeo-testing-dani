@@ -8,7 +8,9 @@ import {
   TrendingUp, 
   ScanText, 
   PlusCircle,
-  Loader2
+  Loader2,
+  FileText,
+  X
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { PageTitle } from "@/components/ui/page-title";
@@ -31,6 +33,13 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
+import FileUpload from "@/components/common/FileUpload";
 
 // Función para formatear moneda
 const formatCurrency = (amount: number) => {
@@ -188,6 +197,8 @@ const IncomeExpenseReport = () => {
   const [expenseDescription, setExpenseDescription] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAttachment, setShowAttachment] = useState(false);
+  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
   
   // Mutación para crear transacción (gasto rápido)
   const createTransactionMutation = useMutation({
@@ -199,6 +210,8 @@ const IncomeExpenseReport = () => {
       // Limpiar formulario
       setExpenseDescription("");
       setExpenseAmount("");
+      setAttachmentPath(null);
+      setShowAttachment(false);
       
       // Actualizar datos
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
@@ -249,10 +262,20 @@ const IncomeExpenseReport = () => {
       date: new Date().toISOString(),
       type: "expense",
       paymentMethod: "efectivo", // Valor por defecto
-      notes: "Registro rápido"
+      notes: "Registro rápido",
+      attachments: attachmentPath ? [attachmentPath] : [] // Incluye el adjunto solo si existe
     });
     
     setIsSubmitting(false);
+  };
+  
+  // Manejar carga de archivo
+  const handleFileUpload = (filePath: string) => {
+    setAttachmentPath(filePath);
+    toast({
+      title: "Archivo adjuntado",
+      description: "El archivo se ha adjuntado correctamente",
+    });
   };
 
   return (
@@ -269,40 +292,90 @@ const IncomeExpenseReport = () => {
             <TrendingDown className="mr-2 h-5 w-5" />
             Registro rápido de gastos
           </CardTitle>
+          <CardDescription className="text-xs mt-1">
+            Registra rápidamente un gasto. Puedes adjuntar un archivo si lo deseas.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1">
-              <Input
-                placeholder="Descripción del gasto"
-                value={expenseDescription}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                className="w-full"
-              />
+          <form onSubmit={handleQuickExpense} className="space-y-3">
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1">
+                <Input
+                  placeholder="Descripción del gasto"
+                  value={expenseDescription}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="md:w-1/4">
+                <Input
+                  placeholder="Importe (€)"
+                  value={expenseAmount}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  className="w-full"
+                />
+              </div>
             </div>
-            <div className="md:w-1/4">
-              <Input
-                placeholder="Importe (€)"
-                value={expenseAmount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                type="number"
-                step="0.01"
-                min="0.01"
-                className="w-full"
-              />
-            </div>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700"
+            
+            <Collapsible
+              open={showAttachment}
+              onOpenChange={setShowAttachment}
+              className="w-full space-y-2"
             >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <PlusCircle className="h-4 w-4 mr-2" />
-              )}
-              Registrar gasto
-            </Button>
+              <div className="flex items-center justify-between">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        {attachmentPath ? "Archivo adjunto" : "Adjuntar archivo (opcional)"}
+                      </span>
+                      {attachmentPath && (
+                        <Badge variant="outline" className="ml-2 px-1 py-0 h-5">
+                          1 archivo
+                        </Badge>
+                      )}
+                    </div>
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent className="space-y-2">
+                <div className="rounded-md border p-2">
+                  <FileUpload onUpload={handleFileUpload} />
+                  {attachmentPath && (
+                    <div className="mt-2 flex items-center justify-between bg-muted/40 p-2 rounded text-sm">
+                      <span className="truncate max-w-[200px]">Archivo adjunto</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6" 
+                        onClick={() => setAttachmentPath(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            <div className="flex justify-end">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                )}
+                Registrar gasto
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
