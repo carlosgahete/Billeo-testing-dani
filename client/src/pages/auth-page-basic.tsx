@@ -52,10 +52,10 @@ export default function AuthPage() {
       
       console.log("Sesión actualizada después del login:", await sessionResponse.json());
       
-      // Redirección manual al dashboard
+      // Redirección manual a la ruta directa sin protección
       setTimeout(() => {
-        console.log("Redirigiendo a / después del login exitoso");
-        window.location.href = "/";
+        console.log("Redirigiendo a /home-direct después del login exitoso");
+        window.location.href = "/home-direct";
       }, 500);
       
     } catch (error) {

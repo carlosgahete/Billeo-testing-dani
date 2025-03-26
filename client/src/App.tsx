@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import AuthPage from "@/pages/auth-page-basic";
 import Dashboard from "@/pages/dashboard";
+import HomeDirect from "@/pages/home-direct";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
@@ -23,6 +24,11 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/home-direct">
+        <Layout>
+          <HomeDirect />
+        </Layout>
+      </Route>
       <Route path="/">
         <Layout>
           <ProtectedRoute path="/" component={Dashboard} />
