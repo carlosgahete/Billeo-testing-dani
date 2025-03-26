@@ -125,7 +125,7 @@ const Sidebar = ({
   if (!isMobile) {
     return (
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-10 transform transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-10 transform transition-all duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -139,13 +139,21 @@ const Sidebar = ({
             />
           </div>
           
-          {/* Botón para cerrar el sidebar */}
+          {/* Toggle sidebar button */}
           <button
-            onClick={() => setSidebarOpen(false)}
-            className="text-primary p-1 rounded-md hover:bg-red-100 transition-colors"
-            aria-label="Cerrar menú lateral"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-primary p-1 rounded-md hover:bg-primary/10 transition-colors"
+            aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
           >
-            <X size={18} />
+            {sidebarOpen ? (
+              <X size={18} />
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            )}
           </button>
         </div>
         
@@ -207,7 +215,7 @@ const Sidebar = ({
 
       {/* Mobile sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 transform transition-all duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 transform transition-all duration-200 ease-in-out ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

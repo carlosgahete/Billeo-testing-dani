@@ -17,8 +17,8 @@ const Layout = ({ children }: LayoutProps) => {
     if (!isMobile) {
       setMobileMenuOpen(false);
     }
-    // Set sidebar based on screen size
-    setSidebarOpen(!isMobile);
+    // Solo abrimos el sidebar automáticamente la primera vez en desktop
+    // NO forzamos que esté abierto cada vez que cambia el tamaño de la pantalla
   }, [isMobile]);
 
   return (
