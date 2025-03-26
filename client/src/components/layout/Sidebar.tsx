@@ -60,14 +60,12 @@ const Sidebar = ({
 
   // Close menu when a link is clicked
   const handleNavClick = () => {
+    // Cerramos el menú siempre al hacer clic en un enlace de navegación
     if (isMobile) {
       setMobileMenuOpen(false);
     } else {
-      // En versión desktop, cerrar el sidebar solo en pantallas pequeñas
-      const screenWidth = window.innerWidth;
-      if (screenWidth < 1200) {
-        setSidebarOpen(false);
-      }
+      // En versión desktop, siempre cerramos el sidebar
+      setSidebarOpen(false);
     }
   };
   
