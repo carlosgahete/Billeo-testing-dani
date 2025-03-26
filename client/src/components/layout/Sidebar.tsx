@@ -58,10 +58,25 @@ const Sidebar = ({
   const { toast } = useToast();
   const { user, logoutMutation } = useAuth();
 
+  // Cierra el sidebar completamente con un solo clic en cualquier página
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+    // Forzar actualización inmediata de la UI para evitar efectos visuales extraños
+    requestAnimationFrame(() => {
+      const mainElement = document.querySelector('main');
+      if (mainElement) {
+        mainElement.style.marginLeft = '0';
+      }
+    });
+  };
+
   // Close mobile menu when a link is clicked
   const handleNavClick = () => {
     if (isMobile) {
       setMobileMenuOpen(false);
+    } else if (location === "/income-expense") {
+      // Extra precaución para la página problemática
+      handleSidebarClose();
     }
   };
   
@@ -141,9 +156,9 @@ const Sidebar = ({
           
           {/* Toggle sidebar button - hamburger menu */}
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={handleSidebarClose}
             className="text-primary p-1 rounded-md hover:bg-primary/10 transition-colors"
-            aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
+            aria-label="Cerrar menú lateral"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"></line>
