@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: LoginData) => {
       try {
         console.log("Iniciando proceso de login con:", credentials.username);
-        const res = await apiRequest("POST", "/api/login", credentials);
+        const res = await apiRequest("POST", "/api/auth/login", credentials);
         
         if (!res.ok) {
           console.error(`Error de inicio de sesión: ${res.status}`);
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", userData);
+      const res = await apiRequest("POST", "/api/auth/register", userData);
       if (!res.ok) {
         const errorData = await res.text();
         throw new Error(errorData || "Error al crear cuenta");
@@ -106,14 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData: any) => {
-      queryClient.setQueryData(["/api/auth/session"], {
+      queryClient.setQueryData<SessionData>(["/api/auth/session"], {
         authenticated: true,
         user: userData
       });
+      
+      // Invalidar la consulta para que se actualice
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      
       toast({
         title: "Registro exitoso",
         description: "Tu cuenta ha sido creada correctamente",
       });
+      
+      // Redirigir a la página principal
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
@@ -126,21 +133,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/logout");
+      const res = await apiRequest("POST", "/api/auth/logout");
       if (!res.ok) {
         const errorData = await res.text();
         throw new Error(errorData || "Error al cerrar sesión");
       }
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/session"], {
+      queryClient.setQueryData<SessionData>(["/api/auth/session"], {
         authenticated: false,
-        user: null
+        user: undefined
       });
+      
+      // Invalidar la consulta para que se actualice
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente",
       });
+      
+      // Redirigir a la página de login
+      window.location.href = "/auth";
     },
     onError: (error: Error) => {
       toast({

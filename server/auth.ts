@@ -122,7 +122,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/auth/register", async (req, res, next) => {
     try {
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
@@ -147,7 +147,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/auth/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: "Credenciales inválidas" });
@@ -162,7 +162,7 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/auth/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
