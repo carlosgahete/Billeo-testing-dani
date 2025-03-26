@@ -128,11 +128,12 @@ const MarkAsPaidButton = ({
     try {
       // Primero obtener los ítems actuales de la factura
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      const invoiceData = await response.json();
       
       // Actualizar el estado de la factura a "paid"
       await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
         invoice: { status: "paid" },
-        items: response?.items || [] // Mantener los items existentes
+        items: invoiceData?.items || [] // Mantener los items existentes
       });
       
       toast({
@@ -275,7 +276,8 @@ const InvoiceList = () => {
       }
       
       // Get invoice items
-      const data = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      const data = await response.json();
       
       await generateInvoicePDF(invoice, client, data.items);
       
@@ -315,11 +317,12 @@ const InvoiceList = () => {
     try {
       // Primero obtener los ítems actuales de la factura
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      const invoiceData = await response.json();
       
       // Actualizar el estado de la factura a "paid"
       await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
         invoice: { status: "paid" },
-        items: response?.items || []
+        items: invoiceData?.items || []
       });
       
       toast({
