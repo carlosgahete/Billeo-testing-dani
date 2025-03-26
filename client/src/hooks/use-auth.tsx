@@ -45,18 +45,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
       try {
+        console.log("Iniciando proceso de login con:", credentials.username);
         const res = await apiRequest("POST", "/api/login", credentials);
         
         if (!res.ok) {
+          console.error(`Error de inicio de sesión: ${res.status}`);
           if (res.status === 401) {
             throw new Error("Usuario o contraseña incorrectos");
           } else {
-            const errorData = await res.text();
-            throw new Error(errorData || "Error al iniciar sesión");
+            try {
+              const errorData = await res.json();
+              throw new Error(errorData.message || "Error al iniciar sesión");
+            } catch {
+              const errorText = await res.text();
+              throw new Error(errorText || "Error al iniciar sesión");
+            }
           }
         }
         
-        return await res.json();
+        const userData = await res.json();
+        console.log("Inicio de sesión exitoso, ID de usuario:", userData.id);
+        return userData;
       } catch (error) {
         console.error("Login error:", error);
         throw error;
@@ -81,14 +90,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation<Omit<SelectUser, "password">, Error, RegisterData>({
     mutationFn: async (userData: RegisterData) => {
       try {
+        console.log("Iniciando registro de usuario:", userData.username);
         const res = await apiRequest("POST", "/api/register", userData);
         
         if (!res.ok) {
-          const errorData = await res.text();
-          throw new Error(errorData || "Error al crear cuenta");
+          console.error(`Error de registro: ${res.status}`);
+          try {
+            const errorData = await res.json();
+            throw new Error(errorData.message || "Error al crear cuenta");
+          } catch {
+            const errorText = await res.text();
+            throw new Error(errorText || "Error al crear cuenta");
+          }
         }
         
-        return await res.json();
+        const newUserData = await res.json();
+        console.log("Registro exitoso, ID de usuario:", newUserData.id);
+        return newUserData;
       } catch (error) {
         console.error("Register error:", error);
         throw error;
@@ -113,13 +131,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
       try {
+        console.log("Iniciando cierre de sesión");
         const res = await apiRequest("POST", "/api/logout");
         
         if (!res.ok) {
-          const errorData = await res.text();
-          throw new Error(errorData || "Error al cerrar sesión");
+          console.error(`Error al cerrar sesión: ${res.status}`);
+          try {
+            const errorData = await res.json();
+            throw new Error(errorData.message || "Error al cerrar sesión");
+          } catch {
+            const errorText = await res.text();
+            throw new Error(errorText || "Error al cerrar sesión");
+          }
         }
         
+        console.log("Cierre de sesión exitoso");
         return;
       } catch (error) {
         console.error("Logout error:", error);
