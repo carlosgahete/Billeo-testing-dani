@@ -51,19 +51,12 @@ export default function IncomeExpensePage() {
     <div className="h-screen flex flex-col bg-neutral-100">
       {/* Header */}
       <header className="bg-white border-b border-neutral-200 py-3 px-4 lg:px-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <img src={billeoLogo} alt="Billeo Logo" className="h-8 mr-4" />
+        <div>
           <h1 className="text-xl font-semibold text-primary">Ingresos y Gastos</h1>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Link href="/">
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              <LayoutDashboard className="h-4 w-4 mr-2" />
-              Dashboard
-            </Button>
-          </Link>
-          
+        <div className="flex items-center">
+          <img src={billeoLogo} alt="Billeo Logo" className="h-8 mr-4" />
           <Avatar className="h-8 w-8 cursor-pointer">
             <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
             <AvatarFallback className="text-xs">
