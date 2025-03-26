@@ -1183,7 +1183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate invoice income (paid invoices only)
       const paidInvoices = allInvoices.filter(inv => inv.status === "paid");
-      const invoiceIncome = paidInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
+      
+      // Ahora usamos el total en lugar del subtotal para reflejar correctamente todos los impuestos (IVA, IRPF, etc.)
+      const invoiceIncome = paidInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
         
       // Registro detallado para depuración
       console.log("=== CÁLCULO DE INGRESOS Y GASTOS ===");
@@ -1215,6 +1217,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Ingresos de facturas:", invoiceIncome);
       console.log("Ingresos de transacciones:", transactionIncome);
       console.log("Gastos de transacciones:", transactionExpenses);
+      
+      // Añadir información detallada de impuestos para depuración
+      console.log("Detalle de facturas e impuestos:");
+      paidInvoices.forEach(invoice => {
+        console.log(`Factura ${invoice.invoiceNumber}: Subtotal=${invoice.subtotal}, Total=${invoice.total}`);
+        
+        // Mostrar impuestos adicionales si existen
+        if (invoice.additionalTaxes) {
+          let additionalTaxes = [];
+          try {
+            if (typeof invoice.additionalTaxes === 'string') {
+              additionalTaxes = JSON.parse(invoice.additionalTaxes);
+            } else if (Array.isArray(invoice.additionalTaxes)) {
+              additionalTaxes = invoice.additionalTaxes;
+            }
+            
+            console.log("  - Impuestos adicionales:", additionalTaxes);
+          } catch (e) {
+            console.log("  - Error al parsear impuestos adicionales");
+          }
+        }
+      });
         
       // Calculate total income - solo consideramos ingresos de facturas, más seguro para estadísticas
       const income = invoiceIncome;
@@ -1232,9 +1256,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .length;
       
       // Calcular las retenciones (IRPF) que ya se han aplicado en las facturas
-      // Retención del 15% sobre la base imponible de facturas 
-      const retentionRate = 0.15;
-      const totalWithholdings = Math.round(income * retentionRate);
+      // Ahora extraemos las retenciones directamente de los impuestos adicionales de cada factura
+      let totalWithholdings = 0;
+      
+      // Iteramos por todas las facturas pagadas para calcular retenciones
+      for (const invoice of paidInvoices) {
+        try {
+          // Comprobamos si hay impuestos adicionales
+          if (invoice.additionalTaxes) {
+            let additionalTaxes = [];
+            
+            // Si es una cadena JSON, intentamos parsearlo
+            if (typeof invoice.additionalTaxes === 'string') {
+              try {
+                additionalTaxes = JSON.parse(invoice.additionalTaxes);
+              } catch (e) {
+                console.log("Error al parsear additionalTaxes como JSON:", e);
+              }
+            } 
+            // Si ya es un array, lo usamos directamente
+            else if (Array.isArray(invoice.additionalTaxes)) {
+              additionalTaxes = invoice.additionalTaxes;
+            }
+            
+            // Buscamos impuestos que sean IRPF (retenciones)
+            for (const tax of additionalTaxes) {
+              if (tax.name && tax.name.toLowerCase().includes('irpf')) {
+                if (tax.isPercentage) {
+                  // Si es un porcentaje, calculamos basado en el subtotal
+                  // El signo negativo en el importe indica que es una retención
+                  let retentionAmount = Number(invoice.subtotal) * Math.abs(Number(tax.amount)) / 100;
+                  totalWithholdings += retentionAmount;
+                } else {
+                  // Si es un valor fijo, sumamos su valor absoluto (ya que las retenciones tienen signo negativo)
+                  totalWithholdings += Math.abs(Number(tax.amount));
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error al procesar retenciones de factura:", e);
+        }
+      }
+      
+      // Registrar el total de retenciones calculadas
+      console.log("Total de retenciones calculadas:", totalWithholdings);
+      
+      // Si no hay retenciones detectadas en las facturas, calculamos una estimación basada en el 15%
+      if (totalWithholdings === 0) {
+        const retentionRate = 0.15;
+        totalWithholdings = Math.round(income * retentionRate);
+        console.log("No se detectaron retenciones en facturas, usando estimación del 15%:", totalWithholdings);
+      }
       
       // Calcular el resultado (ingresos - gastos)
       const result = income - expenses;
