@@ -8,6 +8,12 @@ import { User as SelectUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Definir el tipo para los datos de la sesión
+interface SessionData {
+  authenticated: boolean;
+  user?: SelectUser;
+}
+
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
@@ -37,9 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: sessionData,
     error,
     isLoading,
-  } = useQuery({
+  } = useQuery<SessionData>({
     queryKey: ["/api/auth/session"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    initialData: { authenticated: false }
   });
   
   // Extraer el usuario de la respuesta de la sesión
@@ -64,14 +71,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (userData: any) => {
       // Actualizar el estado de la sesión para reflejar que el usuario está autenticado
-      queryClient.setQueryData(["/api/auth/session"], {
+      queryClient.setQueryData<SessionData>(["/api/auth/session"], {
         authenticated: true,
         user: userData
       });
+      
+      // También invalidamos la consulta para que se vuelva a cargar con la sesión actualizada
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      
       toast({
         title: "Inicio de sesión exitoso",
         description: "Bienvenido al sistema de gestión financiera",
       });
+      
+      // Redirigir a la página principal
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
