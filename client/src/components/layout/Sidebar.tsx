@@ -32,20 +32,40 @@ interface NavItemProps {
   onClick?: () => void;
 }
 
-const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => (
-  <Link 
-    href={href} 
-    onClick={onClick}
-    className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-      isActive
-        ? "bg-primary/10 text-primary"
-        : "text-neutral-600 hover:bg-neutral-100"
-    }`}
-  >
-    <span className="mr-3">{icon}</span>
-    <span>{label}</span>
-  </Link>
-);
+const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => {
+  // Solución específica para la navegación a la página problemática
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick();
+    }
+    
+    // Si estamos navegando específicamente a la página de ingresos/gastos
+    if (href === "/income-expense") {
+      // Esperar a que termine la navegación y forzar el cierre correcto del sidebar
+      setTimeout(() => {
+        const mainElement = document.querySelector('main');
+        if (mainElement) {
+          mainElement.style.marginLeft = '0';
+        }
+      }, 100);
+    }
+  };
+  
+  return (
+    <Link 
+      href={href} 
+      onClick={handleClick}
+      className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+        isActive
+          ? "bg-primary/10 text-primary"
+          : "text-neutral-600 hover:bg-neutral-100"
+      }`}
+    >
+      <span className="mr-3">{icon}</span>
+      <span>{label}</span>
+    </Link>
+  );
+};
 
 const Sidebar = ({ 
   sidebarOpen, 
