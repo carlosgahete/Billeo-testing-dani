@@ -1166,11 +1166,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obtenemos el ID de usuario desde passport o desde session
       const userId = req.isAuthenticated() ? (req.user as any).id : req.session.userId;
       
+      // Obtenemos parámetros de año y trimestre si fueron enviados
+      const year = req.query.year ? String(req.query.year) : new Date().getFullYear().toString();
+      const period = req.query.period ? String(req.query.period) : 'all';
+      
+      // Loguear qué período se está consultando
+      console.log("Consultando datos fiscales para:", { year, period });
+      
+      // Función para filtrar por año y trimestre
+      const isInPeriod = (dateString: string) => {
+        try {
+          const date = new Date(dateString);
+          const dateYear = date.getFullYear().toString();
+          const month = date.getMonth() + 1; // getMonth() devuelve 0-11
+          
+          // Si el año no coincide, excluir
+          if (dateYear !== year) return false;
+          
+          // Si estamos buscando todo el año, incluir
+          if (period === 'all') return true;
+          
+          // Definir en qué trimestre cae el mes
+          const quarter = 
+            month <= 3 ? 'q1' : 
+            month <= 6 ? 'q2' : 
+            month <= 9 ? 'q3' : 'q4';
+            
+          return quarter === period;
+        } catch (e) {
+          console.error("Error al parsear fecha:", dateString, e);
+          return false;
+        }
+      };
+      
       // Get all transactions for the user
-      const allTransactions = await storage.getTransactionsByUserId(userId);
+      let allTransactions = await storage.getTransactionsByUserId(userId);
       
       // Get all invoices
-      const allInvoices = await storage.getInvoicesByUserId(userId);
+      let allInvoices = await storage.getInvoicesByUserId(userId);
+      
+      // Filtrar por período si es necesario
+      allTransactions = allTransactions.filter(t => isInPeriod(t.date));
+      allInvoices = allInvoices.filter(inv => isInPeriod(inv.issueDate));
       
       // Calculate totals from transactions
       const transactionIncome = allTransactions
@@ -1189,6 +1226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       // Registro detallado para depuración
       console.log("=== CÁLCULO DE INGRESOS Y GASTOS ===");
+      console.log("Período filtrado:", year, period);
       console.log("Número total de facturas:", allInvoices.length);
       console.log("Facturas pagadas:", paidInvoices.length);
       console.log("Detalle de facturas pagadas:", 
@@ -1196,7 +1234,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           number: inv.invoiceNumber, 
           status: inv.status,
           subtotal: inv.subtotal,
-          total: inv.total 
+          total: inv.total,
+          fecha: inv.issueDate
         }))
       );
       
@@ -1303,7 +1342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Total de retenciones calculadas:", totalWithholdings);
       
       // Si no hay retenciones detectadas en las facturas, calculamos una estimación basada en el 15%
-      if (totalWithholdings === 0) {
+      if (totalWithholdings === 0 && income > 0) {
         const retentionRate = 0.15;
         totalWithholdings = Math.round(income * retentionRate);
         console.log("No se detectaron retenciones en facturas, usando estimación del 15%:", totalWithholdings);
@@ -1335,6 +1374,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         balance,
         result,
         totalWithholdings,
+        period,
+        year,
         taxes: {
           vat: vatBalance,
           incomeTax

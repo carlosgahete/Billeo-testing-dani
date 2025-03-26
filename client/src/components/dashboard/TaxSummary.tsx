@@ -48,8 +48,15 @@ const TaxSummary = () => {
   const [selectedWithholdings, setSelectedWithholdings] = useState<number>(0);
   const [hasData, setHasData] = useState<boolean>(true);
   
-  const { data, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"],
+  const { data, isLoading, refetch } = useQuery<DashboardStats>({
+    queryKey: ["/api/stats/dashboard", year, period],
+    queryFn: async () => {
+      const response = await fetch(`/api/stats/dashboard?year=${year}&period=${period}`);
+      if (!response.ok) {
+        throw new Error('Error al obtener estadísticas');
+      }
+      return response.json();
+    }
   });
 
   const formatCurrency = (value: number) => {
@@ -81,17 +88,25 @@ const TaxSummary = () => {
   useEffect(() => {
     if (!data) return;
     
-    // Ahora no hay datos después de la eliminación de facturas y transacciones
-    // Mostraremos "No hay datos disponibles" para todos los períodos
-    
     // Valores base
     const totalVat = data.taxes?.vat ?? 0;
     const totalWithholdings = data.totalWithholdings ?? 0;
     
-    // Verificar si hay datos - ahora no hay para ningún período
-    setHasData(false);
-    setSelectedVat(0);
-    setSelectedWithholdings(0);
+    // Verificar si hay datos para el período actual
+    const hasDataForPeriod = totalVat > 0 || totalWithholdings > 0;
+    
+    // Actualizar estado
+    setHasData(hasDataForPeriod);
+    setSelectedVat(totalVat);
+    setSelectedWithholdings(totalWithholdings);
+    
+    console.log("Datos fiscales:", {
+      período: period,
+      año: year,
+      totalVat,
+      totalWithholdings,
+      hasDataForPeriod
+    });
   }, [data, year, period]);
 
   return (
