@@ -34,13 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
   const {
-    data: user,
+    data: sessionData,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/auth/session"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+  
+  // Extraer el usuario de la respuesta de la sesión
+  const user = sessionData?.authenticated ? sessionData.user : null;
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -60,7 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: (userData: any) => {
-      queryClient.setQueryData(["/api/user"], userData);
+      // Actualizar el estado de la sesión para reflejar que el usuario está autenticado
+      queryClient.setQueryData(["/api/auth/session"], {
+        authenticated: true,
+        user: userData
+      });
       toast({
         title: "Inicio de sesión exitoso",
         description: "Bienvenido al sistema de gestión financiera",
@@ -85,7 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData: any) => {
-      queryClient.setQueryData(["/api/user"], userData);
+      queryClient.setQueryData(["/api/auth/session"], {
+        authenticated: true,
+        user: userData
+      });
       toast({
         title: "Registro exitoso",
         description: "Tu cuenta ha sido creada correctamente",
@@ -109,7 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/auth/session"], {
+        authenticated: false,
+        user: null
+      });
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente",
