@@ -34,14 +34,20 @@ const Layout = ({ children }: LayoutProps) => {
     }
   }, [currentLocation, isMobile]);
   
-  // Force close sidebar on specific routes that have the issue
+  // Detección más agresiva para corregir rutas con problemas de sidebar
   useEffect(() => {
-    if (currentLocation === "/income-expense" && !sidebarOpen) {
-      // Ensure sidebar is fully closed when clicking close on the income-expense page
+    if (currentLocation === "/income-expense") {
+      // Usamos un enfoque más directo para la página problemática
       const mainElement = document.querySelector('main');
       if (mainElement) {
-        mainElement.classList.remove('ml-64');
-        mainElement.classList.add('ml-0');
+        // Si detectamos que estamos en esta página, forzamos el estilo inline
+        if (!sidebarOpen) {
+          mainElement.style.marginLeft = '0 !important';
+          mainElement.classList.remove('ml-64');
+          mainElement.classList.add('ml-0');
+        } else {
+          mainElement.style.marginLeft = '16rem !important';
+        }
       }
     }
   }, [currentLocation, sidebarOpen]);
