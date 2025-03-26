@@ -50,7 +50,7 @@ export default function IncomeExpensePage() {
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
       {/* Header */}
-      <header className="bg-white border-b border-neutral-200 py-3 px-4 flex items-center justify-between">
+      <header className="bg-white border-b border-neutral-200 py-3 px-4 lg:px-6 flex items-center justify-between">
         <div className="flex items-center">
           <img src={billeoLogo} alt="Billeo Logo" className="h-8 mr-4" />
           <h1 className="text-xl font-semibold text-primary">Ingresos y Gastos</h1>
@@ -77,7 +77,7 @@ export default function IncomeExpensePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6">
+        <div className="max-w-none mx-auto px-4 lg:px-6 py-4">
           <IncomeExpenseReport />
         </div>
       </main>
