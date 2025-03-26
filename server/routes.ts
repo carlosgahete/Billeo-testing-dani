@@ -499,6 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
       console.log("Received items data:", JSON.stringify(items, null, 2));
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
       
       // Asegurar que todos los campos requeridos estén presentes
       // Convertir las cadenas de fecha ISO en objetos Date
@@ -545,7 +546,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(201).json({ invoice: newInvoice, items: invoiceItems });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Error al crear factura:", error);
+      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
   });
 
