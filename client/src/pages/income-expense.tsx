@@ -1,8 +1,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
-import { LayoutDashboard, Receipt, Wallet, BarChart3, Building2, Settings, Bell, User } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { LayoutDashboard, Receipt, Wallet, BarChart3, Building2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -56,13 +55,7 @@ export default function IncomeExpensePage() {
         </div>
         
         <div className="flex items-center">
-          <img src={billeoLogo} alt="Billeo Logo" className="h-8 mr-4" />
-          <Avatar className="h-8 w-8 cursor-pointer">
-            <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
-            <AvatarFallback className="text-xs">
-              {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={16} />}
-            </AvatarFallback>
-          </Avatar>
+          <img src={billeoLogo} alt="Billeo Logo" className="h-8" />
         </div>
       </header>
 
