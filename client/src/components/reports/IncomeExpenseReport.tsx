@@ -42,7 +42,14 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import FileUpload from "@/components/common/FileUpload";
+import { generateInvoicePDF } from "@/lib/pdf";
 
 // Función para formatear moneda
 const formatCurrency = (amount: number) => {
@@ -68,6 +75,13 @@ interface Invoice {
 interface Client {
   id: number;
   name: string;
+  taxId: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  email?: string;
+  phone?: string;
 }
 
 interface Transaction {
@@ -85,6 +99,38 @@ interface Category {
 }
 
 const IncomeExpenseReport = () => {
+  // Función para exportar facturas a PDF
+  const handleExportInvoicePDF = async (invoice: Invoice) => {
+    try {
+      const client = clients.find(c => c.id === invoice.clientId);
+      if (!client) {
+        toast({
+          title: "Error al exportar",
+          description: "No se pudo encontrar información del cliente",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Obtener items de la factura
+      const response = await apiRequest("GET", `/api/invoices/${invoice.id}/items`);
+      const invoiceItems = await response.json();
+      
+      await generateInvoicePDF(invoice, client, invoiceItems);
+      
+      toast({
+        title: "PDF generado",
+        description: "La factura se ha exportado correctamente",
+      });
+    } catch (error) {
+      console.error("Error exportando PDF:", error);
+      toast({
+        title: "Error al exportar",
+        description: "No se pudo generar el PDF de la factura",
+        variant: "destructive",
+      });
+    }
+  };
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
