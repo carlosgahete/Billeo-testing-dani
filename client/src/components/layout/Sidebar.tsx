@@ -39,9 +39,14 @@ const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => {
       onClick();
     }
     
-    // Si estamos navegando específicamente a la página de ingresos/gastos
+    // Si estamos navegando específicamente a la página de ingresos/gastos 
     if (href === "/income-expense") {
-      // Esperar a que termine la navegación y forzar el cierre correcto del sidebar
+      // Identificar todos los botones de sidebar y asignarles una clase especial 
+      document.querySelectorAll('button[aria-label="Cerrar menú lateral"]').forEach((btn, index) => {
+        btn.classList.add('billeo-sidebar-toggle');
+      });
+      
+      // Forzar cierre del sidebar
       setTimeout(() => {
         const mainElement = document.querySelector('main');
         if (mainElement) {
