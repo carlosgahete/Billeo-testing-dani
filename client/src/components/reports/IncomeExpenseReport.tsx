@@ -300,7 +300,7 @@ const IncomeExpenseReport = () => {
   };
 
   return (
-    <div className="space-y-6 mt-8">
+    <div className="space-y-6">
       <PageTitle 
         title="Ingresos y Gastos" 
         description="Visualización detallada de todos los ingresos y gastos"
