@@ -291,7 +291,7 @@ const IncomeExpenseReport = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center mb-2 mt-0">
+      <div className="flex items-center mb-4 -mt-2">
         <h1 className="text-2xl font-semibold text-black ml-4">Ingresos y Gastos</h1>
       </div>
 
