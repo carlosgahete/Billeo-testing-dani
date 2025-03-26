@@ -291,7 +291,7 @@ const IncomeExpenseReport = () => {
 
   return (
     <div className="space-y-6">
-      {/* Removed PageTitle as it's now in the parent component */}
+      <h1 className="text-2xl font-semibold text-primary mb-4">Ingresos y Gastos</h1>
 
       <div className="grid gap-6">
         {/* Panel de estadísticas */}
