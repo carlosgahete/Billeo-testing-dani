@@ -58,10 +58,16 @@ const Sidebar = ({
   const { toast } = useToast();
   const { user, logoutMutation } = useAuth();
 
-  // Close mobile menu when a link is clicked
+  // Close menu when a link is clicked
   const handleNavClick = () => {
     if (isMobile) {
       setMobileMenuOpen(false);
+    } else {
+      // En versión desktop, cerrar el sidebar solo en pantallas pequeñas
+      const screenWidth = window.innerWidth;
+      if (screenWidth < 1200) {
+        setSidebarOpen(false);
+      }
     }
   };
   
