@@ -15,6 +15,7 @@ import {
   insertCompanySchema,
   insertClientSchema,
   insertInvoiceSchema,
+  invoiceWithTaxesSchema,
   insertInvoiceItemSchema,
   insertCategorySchema,
   insertTransactionSchema,
@@ -514,7 +515,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Processed invoice data:", JSON.stringify(invoiceData, null, 2));
       
-      const invoiceResult = insertInvoiceSchema.safeParse(invoiceData);
+      // Usamos el esquema con soporte para impuestos adicionales
+      const invoiceResult = invoiceWithTaxesSchema.safeParse(invoiceData);
       
       if (!invoiceResult.success) {
         console.log("Validation errors:", JSON.stringify(invoiceResult.error.errors, null, 2));
@@ -582,8 +584,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("[SERVER] Datos completos a actualizar:", JSON.stringify(completeInvoiceData, null, 2));
       
-      // Validar solo los campos que se van a actualizar
-      const invoiceResult = insertInvoiceSchema.partial().safeParse(completeInvoiceData);
+      // Validar solo los campos que se van a actualizar, usando el esquema que soporta impuestos adicionales
+      const invoiceResult = invoiceWithTaxesSchema.partial().safeParse(completeInvoiceData);
       
       if (!invoiceResult.success) {
         console.log("[SERVER] Error de validación:", JSON.stringify(invoiceResult.error.errors, null, 2));
