@@ -45,8 +45,18 @@ export default function AuthPage() {
         description: "Bienvenido de nuevo"
       });
       
+      // Invalidar la sesión actual
+      const sessionResponse = await fetch("/api/auth/session", {
+        credentials: "include"
+      });
+      
+      console.log("Sesión actualizada después del login:", await sessionResponse.json());
+      
       // Redirección manual al dashboard
-      window.location.href = "/";
+      setTimeout(() => {
+        console.log("Redirigiendo a / después del login exitoso");
+        window.location.href = "/";
+      }, 500);
       
     } catch (error) {
       console.error("Error de inicio de sesión:", error);
