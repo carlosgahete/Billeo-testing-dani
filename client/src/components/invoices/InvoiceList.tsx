@@ -127,10 +127,10 @@ const MarkAsPaidButton = ({
     setIsPending(true);
     try {
       // Primero obtener los ítems actuales de la factura
-      const response = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
+      const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
       
       // Actualizar el estado de la factura a "paid"
-      await apiRequest(`/api/invoices/${invoice.id}`, "PUT", {
+      await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
         invoice: { status: "paid" },
         items: response?.items || [] // Mantener los items existentes
       });
@@ -200,7 +200,7 @@ const DeleteInvoiceDialog = ({
   const handleDelete = async () => {
     setIsPending(true);
     try {
-      await apiRequest(`/api/invoices/${invoiceId}`, "DELETE");
+      await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
       toast({
         title: "Factura eliminada",
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
@@ -275,7 +275,7 @@ const InvoiceList = () => {
       }
       
       // Get invoice items
-      const data = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
+      const data = await apiRequest("GET", `/api/invoices/${invoice.id}`);
       
       await generateInvoicePDF(invoice, client, data.items);
       
@@ -314,10 +314,10 @@ const InvoiceList = () => {
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
       // Primero obtener los ítems actuales de la factura
-      const response = await apiRequest(`/api/invoices/${invoice.id}`, "GET");
+      const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
       
       // Actualizar el estado de la factura a "paid"
-      await apiRequest(`/api/invoices/${invoice.id}`, "PUT", {
+      await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
         invoice: { status: "paid" },
         items: response?.items || []
       });
@@ -453,7 +453,7 @@ const InvoiceList = () => {
                     onClick={() => {
                       // Modal de confirmación para eliminar
                       if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
-                        apiRequest(`/api/invoices/${invoice.id}`, "DELETE").then(() => {
+                        apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
                           queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
                           toast({
                             title: "Factura eliminada",
