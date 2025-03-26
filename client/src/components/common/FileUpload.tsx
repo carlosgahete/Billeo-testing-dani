@@ -74,7 +74,7 @@ const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png" }: FileUploadPro
           onClick={() => document.getElementById("file-upload")?.click()}
         >
           <Upload className="h-4 w-4 mr-2" />
-          {isUploading ? "Subiendo..." : "Subir"}
+          {isUploading ? "Subiendo..." : "Seleccionar archivo"}
         </Button>
       </label>
     </div>

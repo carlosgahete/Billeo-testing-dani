@@ -243,6 +243,17 @@ const IncomeExpenseReport = () => {
       return;
     }
     
+    if (!attachmentPath) {
+      toast({
+        title: "Comprobante obligatorio",
+        description: "Debe adjuntar un comprobante (factura, ticket o recibo) para registrar el gasto.",
+        variant: "destructive",
+      });
+      // Abrir automáticamente el panel de adjuntos
+      setShowAttachment(true);
+      return;
+    }
+    
     const amount = parseFloat(expenseAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
@@ -263,7 +274,7 @@ const IncomeExpenseReport = () => {
       type: "expense",
       paymentMethod: "efectivo", // Valor por defecto
       notes: "Registro rápido",
-      attachments: attachmentPath ? [attachmentPath] : [] // Incluye el adjunto solo si existe
+      attachments: [attachmentPath] // Adjunto obligatorio
     });
     
     setIsSubmitting(false);
@@ -293,7 +304,7 @@ const IncomeExpenseReport = () => {
             Registro rápido de gastos
           </CardTitle>
           <CardDescription className="text-xs mt-1">
-            Registra rápidamente un gasto. Puedes adjuntar un archivo si lo deseas.
+            Registra rápidamente un gasto. Debes adjuntar un comprobante (factura, ticket o recibo).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -331,7 +342,7 @@ const IncomeExpenseReport = () => {
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       <span className="text-sm font-medium">
-                        {attachmentPath ? "Archivo adjunto" : "Adjuntar archivo (opcional)"}
+                        {attachmentPath ? "Comprobante adjuntado" : "Adjuntar comprobante (obligatorio)"}
                       </span>
                       {attachmentPath && (
                         <Badge variant="outline" className="ml-2 px-1 py-0 h-5">
