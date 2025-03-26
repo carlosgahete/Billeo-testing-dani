@@ -305,123 +305,6 @@ const IncomeExpenseReport = () => {
         title="Ingresos y Gastos" 
         description="Visualización detallada de todos los ingresos y gastos"
       />
-      
-      {/* Formulario de registro rápido de gastos */}
-      <Card className="border-2 border-red-100 shadow-sm">
-        <CardHeader className="pb-3 pt-3">
-          <CardTitle className="text-lg font-medium text-red-800 flex items-center">
-            <TrendingDown className="mr-2 h-5 w-5" />
-            Registro rápido de gastos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleQuickExpense} className="flex flex-col gap-3">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1">
-                <Input
-                  placeholder="Descripción del gasto"
-                  value={expenseDescription}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div className="md:w-1/4">
-                <Input
-                  placeholder="Importe (€)"
-                  value={expenseAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <Button 
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowUploadOption(!showUploadOption)}
-                  className="md:h-10 md:w-10"
-                  title={showUploadOption ? "Ocultar opción de adjunto" : "Adjuntar comprobante (requerido)"}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                )}
-                Registrar gasto
-              </Button>
-            </div>
-            
-            {/* Campo de archivo requerido */}
-            {showUploadOption && (
-              <div className="flex flex-col gap-2 p-3 border border-dashed border-red-300 rounded-md bg-red-50">
-                <div className="flex items-center gap-2">
-                  <FileCheck className="h-4 w-4 text-red-600" />
-                  <p className="text-sm font-medium text-red-800">Adjunte un comprobante (requerido)</p>
-                </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept=".jpg,.jpeg,.png,.pdf,.webp"
-                  className="text-sm flex-1"
-                  required
-                />
-                {receiptFile ? (
-                  <div className="text-xs flex items-center gap-1 text-green-700 bg-green-50 p-1 rounded">
-                    <FileCheck className="h-3 w-3" />
-                    Comprobante seleccionado: {receiptFile.name}
-                  </div>
-                ) : (
-                  <div className="text-xs text-red-600">
-                    Seleccione una imagen o PDF del comprobante para continuar
-                  </div>
-                )}
-              </div>
-            )}
-          </form>
-        </CardContent>
-      </Card>
-      
-      {/* Acciones adicionales */}
-      <div className="mb-6 flex flex-wrap gap-3 justify-start">
-        <Button 
-          onClick={() => navigate("/transactions/create")} 
-          variant="default" 
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Nueva transacción
-        </Button>
-        
-        <Button 
-          onClick={() => navigate("/invoices/create")} 
-          variant="outline" 
-          className="flex items-center gap-2"
-        >
-          <FilePlus className="h-4 w-4" />
-          Nueva factura
-        </Button>
-        
-        <Button 
-          onClick={() => navigate("/documents/scan")} 
-          variant="secondary" 
-          className="flex items-center gap-2"
-        >
-          <ScanText className="h-4 w-4" />
-          Escanear documento
-        </Button>
-      </div>
 
       <div className="grid gap-6">
         {/* Panel de estadísticas */}
@@ -501,6 +384,36 @@ const IncomeExpenseReport = () => {
           
           {/* TAB DE INGRESOS */}
           <TabsContent value="income" className="space-y-4">
+            {/* Acciones de ingresos */}
+            <div className="mb-6 flex flex-wrap gap-3 justify-start">
+              <Button 
+                onClick={() => navigate("/transactions/create")} 
+                variant="default" 
+                className="flex items-center gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Nueva transacción
+              </Button>
+              
+              <Button 
+                onClick={() => navigate("/invoices/create")} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <FilePlus className="h-4 w-4" />
+                Nueva factura
+              </Button>
+              
+              <Button 
+                onClick={() => navigate("/documents/scan")} 
+                variant="secondary" 
+                className="flex items-center gap-2"
+              >
+                <ScanText className="h-4 w-4" />
+                Escanear documento
+              </Button>
+            </div>
+
             <div className="rounded-md border">
               <div className="bg-muted/40 p-4">
                 <h3 className="text-sm font-medium">Facturas emitidas</h3>
@@ -596,6 +509,93 @@ const IncomeExpenseReport = () => {
           
           {/* TAB DE GASTOS */}
           <TabsContent value="expense" className="space-y-4">
+            {/* Formulario de registro rápido de gastos */}
+            <Card className="border-2 border-red-100 shadow-sm">
+              <CardHeader className="pb-3 pt-3">
+                <CardTitle className="text-lg font-medium text-red-800 flex items-center">
+                  <TrendingDown className="mr-2 h-5 w-5" />
+                  Registro rápido de gastos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleQuickExpense} className="flex flex-col gap-3">
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Descripción del gasto"
+                        value={expenseDescription}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="md:w-1/4">
+                      <Input
+                        placeholder="Importe (€)"
+                        value={expenseAmount}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowUploadOption(!showUploadOption)}
+                        className="md:h-10 md:w-10"
+                        title={showUploadOption ? "Ocultar opción de adjunto" : "Adjuntar comprobante (requerido)"}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                      )}
+                      Registrar gasto
+                    </Button>
+                  </div>
+                  
+                  {/* Campo de archivo requerido */}
+                  {showUploadOption && (
+                    <div className="flex flex-col gap-2 p-3 border border-dashed border-red-300 rounded-md bg-red-50">
+                      <div className="flex items-center gap-2">
+                        <FileCheck className="h-4 w-4 text-red-600" />
+                        <p className="text-sm font-medium text-red-800">Adjunte un comprobante (requerido)</p>
+                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept=".jpg,.jpeg,.png,.pdf,.webp"
+                        className="text-sm flex-1"
+                        required
+                      />
+                      {receiptFile ? (
+                        <div className="text-xs flex items-center gap-1 text-green-700 bg-green-50 p-1 rounded">
+                          <FileCheck className="h-3 w-3" />
+                          Comprobante seleccionado: {receiptFile.name}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-red-600">
+                          Seleccione una imagen o PDF del comprobante para continuar
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </form>
+              </CardContent>
+            </Card>
+            
             <div className="rounded-md border">
               <div className="bg-muted/40 p-4">
                 <h3 className="text-sm font-medium">Gastos registrados</h3>
@@ -628,19 +628,9 @@ const IncomeExpenseReport = () => {
               ) : (
                 <div className="p-8 text-center">
                   <p className="text-sm text-muted-foreground">No hay gastos registrados</p>
-                  <Button 
-                    onClick={() => navigate("/transactions/create")} 
-                    variant="outline" 
-                    size="sm"
-                    className="mt-2"
-                  >
-                    Registrar gasto
-                  </Button>
                 </div>
               )}
             </div>
-            
-
           </TabsContent>
         </Tabs>
       </div>
