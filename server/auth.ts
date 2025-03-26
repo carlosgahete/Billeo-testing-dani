@@ -54,8 +54,29 @@ export function setupAuth(app: Express) {
   app.use((req, res, next) => {
     if (req.isAuthenticated() && req.user) {
       req.session.userId = (req.user as SelectUser).id;
+    } else if (req.session.userId) {
+      // Si el usuario no está autenticado vía passport pero tiene un ID en la sesión
+      // intentamos recuperar el usuario para mantener la sesión activa
+      storage.getUser(req.session.userId)
+        .then(user => {
+          if (user) {
+            req.login(user, (err) => {
+              if (err) console.error("Error al restaurar sesión:", err);
+              next();
+            });
+          } else {
+            // Si no se encuentra el usuario, limpiamos la sesión
+            delete req.session.userId;
+            next();
+          }
+        })
+        .catch(err => {
+          console.error("Error al recuperar usuario de sesión:", err);
+          next();
+        });
+    } else {
+      next();
     }
-    next();
   });
 
   passport.use(
@@ -148,11 +169,33 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/user", async (req, res) => {
+    // Verificamos si el usuario está autenticado por passport
+    // O si tiene un ID de usuario en la sesión
+    if (!req.isAuthenticated() && !req.session.userId) {
+      return res.sendStatus(401);
+    }
     
-    // Omitir la contraseña en la respuesta
-    const { password, ...userWithoutPassword } = req.user as SelectUser;
-    res.json(userWithoutPassword);
+    try {
+      // Si no tenemos un usuario de passport pero sí tenemos ID en la sesión
+      if (!req.user && req.session.userId) {
+        const user = await storage.getUser(req.session.userId);
+        if (!user) {
+          delete req.session.userId;
+          return res.sendStatus(401);
+        }
+        
+        // Omitir la contraseña en la respuesta
+        const { password, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
+      }
+      
+      // Usuario autenticado normalmente vía passport
+      const { password, ...userWithoutPassword } = req.user as SelectUser;
+      return res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error al obtener usuario:", error);
+      return res.sendStatus(500);
+    }
   });
 }
