@@ -207,7 +207,7 @@ const Dashboard = () => {
             <Button 
               variant="default" 
               size="sm" 
-              className="w-full mt-4"
+              className="w-full mt-6"
               onClick={() => navigate("/invoices")}
             >
               Ver facturas emitidas
@@ -254,7 +254,7 @@ const Dashboard = () => {
             <Button 
               variant="default" 
               size="sm" 
-              className="w-full mt-4"
+              className="w-full mt-6"
               onClick={() => navigate("/transactions")}
             >
               Ver gastos
@@ -318,7 +318,7 @@ const Dashboard = () => {
             <Button 
               variant="default"
               size="sm" 
-              className="w-full mt-4"
+              className="w-full mt-6"
               onClick={() => navigate("/reports")}
             >
               Ver informes detallados

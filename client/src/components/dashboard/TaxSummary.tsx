@@ -116,9 +116,9 @@ const TaxSummary = () => {
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="pt-3">
+      <CardContent className="pt-4">
         {/* Selectores de período */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-6">
           <Select value={year} onValueChange={(value: string) => setYear(value as YearType)}>
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Año" />
@@ -169,7 +169,7 @@ const TaxSummary = () => {
             </div>
             
             {/* Retenciones acumuladas del período seleccionado */}
-            <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-3">
+            <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-6">
               <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center">
                 Retenciones IRPF ({periodNames[period]}, {year})
               </h3>
@@ -203,7 +203,7 @@ const TaxSummary = () => {
         <Button 
           variant="default" 
           size="sm" 
-          className="w-full mt-4"
+          className="w-full mt-6"
           onClick={() => navigate("/reports")}
         >
           Ver informes fiscales
