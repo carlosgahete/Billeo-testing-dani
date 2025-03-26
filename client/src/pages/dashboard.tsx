@@ -118,8 +118,8 @@ const Dashboard = () => {
   const isPositiveMargin = balanceTotal > 0;
 
   return (
-    <div className="space-y-6 mt-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <PageTitle 
           title="Resumen Contable"
           description="Visión general de tu actividad económica"

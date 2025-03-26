@@ -64,7 +64,7 @@ const Layout = ({ children }: LayoutProps) => {
 
         {/* Main content */}
         <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          <div className="p-4 lg:p-6 mt-16 transition-all duration-300">
+          <div className="p-4 lg:p-6 mt-12 transition-all duration-300">
             {children}
           </div>
         </main>
