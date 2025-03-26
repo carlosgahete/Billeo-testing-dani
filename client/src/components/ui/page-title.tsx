@@ -8,7 +8,7 @@ interface PageTitleProps {
 
 export function PageTitle({ title, description, className = '' }: PageTitleProps) {
   return (
-    <div className={`md:ml-16 mt-8 ${className}`}>
+    <div className={`md:ml-16 mt-10 pt-2 ${className}`}>
       <h1 className="text-2xl font-bold text-neutral-800">
         {title}
       </h1>
