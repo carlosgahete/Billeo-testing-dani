@@ -13,7 +13,7 @@ import {
   X
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { PageTitle } from "@/components/ui/page-title";
+// import { PageTitle } from "@/components/ui/page-title";
 import {
   Card,
   CardContent,
@@ -291,10 +291,7 @@ const IncomeExpenseReport = () => {
 
   return (
     <div className="space-y-6">
-      <PageTitle 
-        title="Ingresos y Gastos" 
-        description="Visualización detallada de todos los ingresos y gastos"
-      />
+      {/* Removed PageTitle as it's now in the parent component */}
 
       <div className="grid gap-6">
         {/* Panel de estadísticas */}
