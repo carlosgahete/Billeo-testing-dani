@@ -133,7 +133,7 @@ const Sidebar = ({
         }`}
       >
         {/* Logo and toggle button */}
-        <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
+        <div className="h-16 px-6 flex items-center justify-center border-b border-neutral-200">
           <div className="flex items-center">
             <img 
               src={billeoLogo} 
@@ -141,15 +141,6 @@ const Sidebar = ({
               className="h-6"
             />
           </div>
-          
-          {/* Toggle sidebar button */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-primary p-2 rounded-full hover:bg-primary/10 transition-colors"
-            aria-label={sidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
-          >
-            <X size={20} />
-          </button>
         </div>
         
         {/* Nav Items */}
