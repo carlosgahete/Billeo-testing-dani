@@ -446,29 +446,47 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       return sum + itemTax;
     }, 0);
     
-    // Calcular el importe total de impuestos adicionales
+    // Calcular el importe total de impuestos adicionales (incluye impuestos tanto positivos como negativos)
     let additionalTaxesTotal = 0;
     
     // Procesamos cada impuesto adicional según su tipo
     additionalTaxes.forEach(taxItem => {
       if (taxItem.isPercentage) {
         // Si es un porcentaje, calculamos en base al subtotal
+        // El signo del importe determina si es un cargo (+) o un descuento (-)
         const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
         additionalTaxesTotal += percentageTax;
       } else {
-        // Si es un valor monetario, lo añadimos directamente
+        // Si es un valor monetario, lo añadimos directamente manteniendo su signo
         additionalTaxesTotal += toNumber(taxItem.amount, 0);
       }
     });
     
-    // Calcular el total incluyendo todos los impuestos
+    // Calcular el total correctamente: base + IVA líneas + impuestos adicionales
+    // Los impuestos negativos (como IRPF) ya tienen signo negativo en additionalTaxesTotal
     const total = subtotal + tax + additionalTaxesTotal;
+    
+    // Asegurarnos que los valores nunca sean negativos
+    const safeTotal = Math.max(0, total);
     
     form.setValue("subtotal", subtotal);
     form.setValue("tax", tax);
-    form.setValue("total", total);
+    form.setValue("total", safeTotal);
     
-    return { subtotal, tax, additionalTaxesTotal, total };
+    console.log("💰 Cálculo de totales:", {
+      subtotal,
+      tax,
+      additionalTaxesTotal,
+      total: safeTotal,
+      desglose: additionalTaxes.map(tax => ({
+        nombre: tax.name,
+        valor: tax.isPercentage ? 
+          `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
+          `${tax.amount}€`
+      }))
+    });
+    
+    return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
   };
 
   const handleSubmit = (data: InvoiceFormValues) => {
