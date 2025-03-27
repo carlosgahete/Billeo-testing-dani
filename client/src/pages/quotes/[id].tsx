@@ -251,17 +251,47 @@ export default function QuoteDetailsPage() {
 
   return (
     <Layout>
-      <div className="flex items-center mb-6">
-        <RouterLink href="/quotes">
-          <Button variant="ghost" className="mr-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <RouterLink href="/quotes">
+            <Button variant="ghost" className="mr-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver
+            </Button>
+          </RouterLink>
+          <PageTitle
+            title={`Presupuesto #${quote.quoteNumber}`}
+            description={`Emitido el ${formatDate(quote.issueDate)} • ${getStatusBadge(quote.status)}`}
+          />
+        </div>
+        
+        <div>
+          <Button 
+            variant="outline" 
+            onClick={handleSelectFile}
+            disabled={isUploading}
+            className="flex items-center"
+          >
+            {isUploading ? (
+              <>
+                <div className="h-4 w-4 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></div>
+                Subiendo...
+              </>
+            ) : (
+              <>
+                <Image className="mr-2 h-4 w-4" />
+                Subir logo
+              </>
+            )}
           </Button>
-        </RouterLink>
-        <PageTitle
-          title={`Presupuesto #${quote.quoteNumber}`}
-          description={`Emitido el ${formatDate(quote.issueDate)} • ${getStatusBadge(quote.status)}`}
-        />
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileInputChange} 
+            accept="image/*" 
+            className="hidden" 
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -287,27 +317,8 @@ export default function QuoteDetailsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader>
             <CardTitle>Detalles del presupuesto</CardTitle>
-            <Button 
-              variant="outline" 
-              onClick={handleSelectFile}
-              disabled={isUploading}
-              className="flex items-center h-8"
-              size="sm"
-            >
-              {isUploading ? (
-                <>
-                  <div className="h-3 w-3 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></div>
-                  Subiendo...
-                </>
-              ) : (
-                <>
-                  <Image className="mr-2 h-3 w-3" />
-                  Subir logo
-                </>
-              )}
-            </Button>
           </CardHeader>
           <CardContent>
             <dl className="space-y-2">
@@ -330,14 +341,6 @@ export default function QuoteDetailsPage() {
             </dl>
           </CardContent>
         </Card>
-        
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileInputChange} 
-          accept="image/*" 
-          className="hidden" 
-        />
 
         <Card>
           <CardHeader>
