@@ -87,24 +87,12 @@ const Sidebar = ({
   // Cierra el sidebar completamente con un solo clic en cualquier página
   const handleSidebarClose = () => {
     setSidebarOpen(false);
-    
     // Forzar actualización inmediata de la UI para evitar efectos visuales extraños
     requestAnimationFrame(() => {
-      // Asegurarnos de que el elemento main tenga el margen correcto
       const mainElement = document.querySelector('main');
       if (mainElement) {
         mainElement.style.marginLeft = '0';
-        mainElement.classList.remove('ml-64');
-        mainElement.classList.add('ml-0');
       }
-      
-      // Mostrar el botón de hamburguesa flotante después de un pequeño retraso
-      setTimeout(() => {
-        const toggleBtn = document.getElementById('main-sidebar-toggle');
-        if (toggleBtn) {
-          toggleBtn.style.display = 'block';
-        }
-      }, 300);
     });
   };
 
@@ -112,8 +100,8 @@ const Sidebar = ({
   const handleNavClick = () => {
     if (isMobile) {
       setMobileMenuOpen(false);
-    } else if (location === "/income-expense" || location === "/quotes" || location.startsWith("/quotes/")) {
-      // Cerrar el sidebar en páginas problemáticas
+    } else if (location === "/income-expense") {
+      // Extra precaución para la página problemática
       handleSidebarClose();
     }
   };
@@ -182,7 +170,7 @@ const Sidebar = ({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Logo */}
+        {/* Logo and toggle button */}
         <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
           <div className="flex items-center">
             <img 
@@ -192,15 +180,16 @@ const Sidebar = ({
             />
           </div>
           
-          {/* Botón para cerrar el sidebar */}
+          {/* Toggle sidebar button - hamburger menu */}
           <button
             onClick={handleSidebarClose}
             className="text-primary p-1 rounded-md hover:bg-primary/10 transition-colors"
             aria-label="Cerrar menú lateral"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
         </div>
