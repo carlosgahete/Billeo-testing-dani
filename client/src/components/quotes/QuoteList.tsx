@@ -262,15 +262,15 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
               <FileText className="h-12 w-12 text-primary-600" />
             </div>
             <h3 className="text-lg font-medium mb-2">Sin presupuestos</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              No has creado ningún presupuesto todavía. Los presupuestos son una excelente manera de presentar tus servicios a clientes potenciales antes de emitir facturas. Crea tu primer presupuesto para comenzar a convertir prospectos en clientes.
+            <p className="text-muted-foreground mb-4 max-w-md">
+              No has creado ningún presupuesto todavía. Presupuesta tus servicios antes de facturar.
             </p>
+            <Link href="/quotes/create">
+              <Button className="px-8 shadow-sm">Crear presupuesto</Button>
+            </Link>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-center pb-6">
-          <Link href="/quotes/create">
-            <Button className="px-8 shadow-sm">Crear tu primer presupuesto</Button>
-          </Link>
+        <CardFooter className="flex justify-center pb-2">
         </CardFooter>
       </Card>
     );
