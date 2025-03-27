@@ -51,13 +51,23 @@ import {
 import FileUpload from "@/components/common/FileUpload";
 import { generateInvoicePDF } from "@/lib/pdf";
 
-// Función para formatear moneda
-const formatCurrency = (amount: number) => {
+// Función para formatear moneda con protección contra valores no numéricos
+const formatCurrency = (amount: any) => {
+  // Asegurarse de que amount es un número
+  const numericAmount = typeof amount === 'number' 
+    ? amount 
+    : parseFloat(amount) || 0;
+  
+  // Evitar NaN en el formato
+  if (isNaN(numericAmount)) {
+    return '0,00 €';
+  }
+  
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: 2
-  }).format(amount);
+  }).format(numericAmount);
 };
 
 interface Invoice {
@@ -184,12 +194,23 @@ const IncomeExpenseReport = () => {
   const incomeTransactions = transactions.filter(tx => tx.type === "income");
   const expenseTransactions = transactions.filter(tx => tx.type === "expense");
 
-  // Calcular totales
-  const totalInvoiceIncome = paidInvoices.reduce((sum, inv) => sum + inv.total, 0);
-  const totalAdditionalIncome = incomeTransactions.reduce((sum, tx) => sum + tx.amount, 0);
+  // Calcular totales con protección para valores no numéricos
+  const totalInvoiceIncome = paidInvoices.reduce((sum, inv) => {
+    const total = typeof inv.total === 'number' ? inv.total : parseFloat(inv.total as any) || 0;
+    return sum + total;
+  }, 0);
+  
+  const totalAdditionalIncome = incomeTransactions.reduce((sum, tx) => {
+    const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount as any) || 0;
+    return sum + amount;
+  }, 0);
+  
   const totalIncome = totalInvoiceIncome + totalAdditionalIncome;
   
-  const totalExpenses = expenseTransactions.reduce((sum, tx) => sum + tx.amount, 0);
+  const totalExpenses = expenseTransactions.reduce((sum, tx) => {
+    const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount as any) || 0;
+    return sum + amount;
+  }, 0);
 
   // Formateador de fechas
   const formatDate = (dateString: string) => {
