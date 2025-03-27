@@ -649,7 +649,17 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                           <FormItem>
                             <FormLabel>Importe / Porcentaje</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" {...field} />
+                              <Input placeholder="-15" {...field} onChange={(e) => {
+                                // Limpiamos el valor y lo convertimos a número para el campo
+                                const cleanValue = e.target.value.replace(/[€$,\s]/g, '');
+                                field.onChange(cleanValue);
+                                
+                                // Forzar recálculo inmediato
+                                setTimeout(() => {
+                                  const taxes = form.getValues("additionalTaxes") || [];
+                                  form.setValue("additionalTaxes", [...taxes], { shouldValidate: false });
+                                }, 50);
+                              }} />
                             </FormControl>
                             <FormDescription>
                               Usa valor negativo para retenciones
@@ -669,7 +679,15 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                             <input
                               type="checkbox"
                               checked={field.value}
-                              onChange={field.onChange}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                
+                                // Forzar recálculo inmediato
+                                setTimeout(() => {
+                                  const taxes = form.getValues("additionalTaxes") || [];
+                                  form.setValue("additionalTaxes", [...taxes], { shouldValidate: false });
+                                }, 50);
+                              }}
                               className="form-checkbox h-4 w-4"
                             />
                           </FormControl>
