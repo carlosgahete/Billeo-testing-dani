@@ -356,53 +356,65 @@ const InvoiceList = () => {
       accessorKey: "invoiceNumber",
       header: "Nº Factura",
       cell: ({ row }) => (
-        <div className="font-medium text-primary-600">
+        <div className="font-medium text-primary-600 px-2 py-3">
           {row.getValue("invoiceNumber")}
         </div>
       ),
     },
     {
       accessorKey: "clientId",
-      header: () => <span className="hidden md:inline">Cliente</span>,
+      header: () => <span className="hidden md:inline px-2">Cliente</span>,
       cell: ({ row }) => (
-        <div className="hidden md:table-cell">
+        <div className="hidden md:table-cell px-2 py-3">
           {getClientName(row.getValue("clientId"))}
         </div>
       ),
     },
     {
       accessorKey: "issueDate",
-      header: () => <span className="hidden sm:inline">Fecha emisión</span>,
+      header: () => <span className="hidden sm:inline px-2">Fecha emisión</span>,
       cell: ({ row }) => (
-        <div className="hidden sm:table-cell">
+        <div className="hidden sm:table-cell px-2 py-3">
           {formatDate(row.getValue("issueDate"))}
         </div>
       ),
     },
     {
       accessorKey: "dueDate",
-      header: () => <span className="hidden lg:inline">Vencimiento</span>,
+      header: () => <span className="hidden lg:inline px-2">Vencimiento</span>,
       cell: ({ row }) => (
-        <div className="hidden lg:table-cell">
+        <div className="hidden lg:table-cell px-2 py-3">
           {formatDate(row.getValue("dueDate"))}
         </div>
       ),
     },
     {
       accessorKey: "subtotal",
-      header: () => <span className="hidden lg:inline">Base</span>,
+      header: () => <span className="hidden lg:inline px-2">Base</span>,
       cell: ({ row }) => (
-        <div className="hidden lg:table-cell">
-          {Number(row.getValue("subtotal")).toFixed(2)} €
+        <div className="hidden lg:table-cell px-2 py-3">
+          {new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: 'EUR',
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+            useGrouping: true
+          }).format(Number(row.getValue("subtotal")))}
         </div>
       ),
     },
     {
       accessorKey: "tax",
-      header: () => <span className="hidden xl:inline">IVA</span>,
+      header: () => <span className="hidden xl:inline px-2">IVA</span>,
       cell: ({ row }) => (
-        <div className="hidden xl:table-cell">
-          {Number(row.getValue("tax")).toFixed(2)} €
+        <div className="hidden xl:table-cell px-2 py-3">
+          {new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: 'EUR',
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+            useGrouping: true
+          }).format(Number(row.getValue("tax")))}
         </div>
       ),
     },
@@ -410,15 +422,25 @@ const InvoiceList = () => {
       accessorKey: "total",
       header: "Total",
       cell: ({ row }) => (
-        <div className="font-medium">
-          {Number(row.getValue("total")).toFixed(2)} €
+        <div className="font-medium px-2 py-3">
+          {new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: 'EUR',
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+            useGrouping: true
+          }).format(Number(row.getValue("total")))}
         </div>
       ),
     },
     {
       accessorKey: "status",
       header: "Estado",
-      cell: ({ row }) => <StatusBadge status={row.getValue("status")} />,
+      cell: ({ row }) => (
+        <div className="px-2 py-3">
+          <StatusBadge status={row.getValue("status")} />
+        </div>
+      ),
     },
     {
       id: "actions",
