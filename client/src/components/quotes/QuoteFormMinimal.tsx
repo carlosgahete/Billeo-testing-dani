@@ -113,22 +113,44 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         // Items (en este formulario simplificado solo usamos un ítem)
         if (items && items.length > 0) {
           setDescription(items[0].description || '');
-          setAmount(items[0].unitPrice || '0');
+          // Asegurarnos de que el importe es un valor numérico válido
+          const unitPrice = items[0].unitPrice || '0';
+          setAmount(typeof unitPrice === 'string' ? unitPrice : '0');
         }
         
         // Impuestos
         if (quote.additionalTaxes && Array.isArray(quote.additionalTaxes)) {
-          const formattedTaxes = quote.additionalTaxes.map((tax: any, index: number) => ({
-            id: (index + 1).toString(),
-            name: tax.name || '',
-            amount: tax.amount?.toString() || '0',
-            isPercentage: tax.isPercentage || true
-          }));
-          
-          if (formattedTaxes.length > 0) {
-            setTaxes(formattedTaxes);
+          try {
+            const formattedTaxes = quote.additionalTaxes.map((tax: any, index: number) => {
+              // Asegurarnos de que el importe del impuesto es un valor válido
+              let taxAmount = '0';
+              if (tax.amount !== undefined && tax.amount !== null) {
+                taxAmount = typeof tax.amount === 'number' 
+                  ? tax.amount.toString() 
+                  : (typeof tax.amount === 'string' ? tax.amount : '0');
+              }
+              
+              return {
+                id: (index + 1).toString(),
+                name: tax.name || '',
+                amount: taxAmount,
+                isPercentage: tax.isPercentage === false ? false : true
+              };
+            });
+            
+            if (formattedTaxes.length > 0) {
+              setTaxes(formattedTaxes);
+            }
+          } catch (error) {
+            console.error('Error al procesar impuestos:', error);
+            // Si hay algún error, mantener los impuestos por defecto
           }
         }
+        
+        // Después de cargar los datos, forzar un recálculo de totales
+        setTimeout(() => {
+          calculateTotals();
+        }, 100);
       }
     }
   }, [quoteData, quoteId]);
@@ -153,27 +175,48 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
 
   // Función para calcular los totales
   const calculateTotals = () => {
-    // Asegurarse de que amount es un número válido
-    const subtotalValue = parseFloat(amount) || 0;
-    
-    // Calcular el valor de cada impuesto
-    let totalTaxAmount = 0;
-    taxes.forEach(tax => {
-      const taxAmount = parseFloat(tax.amount) || 0;
-      if (tax.isPercentage) {
-        // Si es porcentaje, calcular sobre el subtotal
-        totalTaxAmount += (subtotalValue * taxAmount / 100);
+    try {
+      // Asegurarse de que amount es un número válido
+      const subtotalValue = parseFloat(amount) || 0;
+      
+      // Calcular el valor de cada impuesto
+      let totalTaxAmount = 0;
+      taxes.forEach(tax => {
+        try {
+          const taxAmount = parseFloat(tax.amount) || 0;
+          if (tax.isPercentage) {
+            // Si es porcentaje, calcular sobre el subtotal
+            totalTaxAmount += (subtotalValue * taxAmount / 100);
+          } else {
+            // Si es valor fijo, simplemente sumar
+            totalTaxAmount += taxAmount;
+          }
+        } catch (err) {
+          console.error('Error al calcular impuesto:', err);
+          // Si falla un impuesto, continuamos con el siguiente
+        }
+      });
+      
+      // Verificar que los valores son números válidos antes de actualizar el estado
+      if (isNaN(subtotalValue)) {
+        setSubtotal(0);
       } else {
-        // Si es valor fijo, simplemente sumar
-        totalTaxAmount += taxAmount;
+        setSubtotal(subtotalValue);
       }
-    });
-    
-    // Actualizar estados (asegurándonos de que son números válidos)
-    setSubtotal(subtotalValue);
-    setTotal(subtotalValue + totalTaxAmount);
-    
-    console.log(`Subtotal: ${subtotalValue.toFixed(2)}€, Impuestos: ${totalTaxAmount.toFixed(2)}€, Total: ${(subtotalValue + totalTaxAmount).toFixed(2)}€`);
+      
+      if (isNaN(totalTaxAmount)) {
+        setTotal(subtotalValue);
+      } else {
+        setTotal(subtotalValue + totalTaxAmount);
+      }
+      
+      console.log(`Subtotal: ${subtotalValue.toFixed(2)}€, Impuestos: ${totalTaxAmount.toFixed(2)}€, Total: ${(subtotalValue + totalTaxAmount).toFixed(2)}€`);
+    } catch (error) {
+      console.error('Error en calculateTotals:', error);
+      // Si falla todo, establecemos valores por defecto
+      setSubtotal(0);
+      setTotal(0);
+    }
   };
 
   // Recalcular cuando cambian los valores relevantes
@@ -643,31 +686,45 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               <div className="space-y-2">
                 <div className="flex justify-between text-lg">
                   <span>Subtotal:</span>
-                  <span className="font-medium">{subtotal.toFixed(2)} €</span>
+                  <span className="font-medium">
+                    {(isNaN(subtotal) ? 0 : subtotal).toFixed(2)} €
+                  </span>
                 </div>
                 
                 {taxes.map(tax => {
-                  // Asegurarse de que los cálculos son con números válidos
-                  const taxAmountValue = parseFloat(tax.amount || '0') || 0;
-                  const taxValue = tax.isPercentage 
-                    ? (subtotal * taxAmountValue / 100)
-                    : taxAmountValue;
-                  
-                  return (
-                    <div className="flex justify-between" key={tax.id}>
-                      <span>
-                        {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:
-                      </span>
-                      <span>
-                        {taxValue.toFixed(2)} €
-                      </span>
-                    </div>
-                  );
+                  try {
+                    // Asegurarse de que los cálculos son con números válidos
+                    const taxAmountValue = parseFloat(tax.amount || '0') || 0;
+                    const safeSubtotal = isNaN(subtotal) ? 0 : subtotal;
+                    const taxValue = tax.isPercentage 
+                      ? (safeSubtotal * taxAmountValue / 100)
+                      : taxAmountValue;
+                    
+                    return (
+                      <div className="flex justify-between" key={tax.id}>
+                        <span>
+                          {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:
+                        </span>
+                        <span>
+                          {(isNaN(taxValue) ? 0 : taxValue).toFixed(2)} €
+                        </span>
+                      </div>
+                    );
+                  } catch (err) {
+                    console.error('Error al renderizar impuesto:', err);
+                    // En caso de error, mostrar 0
+                    return (
+                      <div className="flex justify-between" key={tax.id}>
+                        <span>{tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:</span>
+                        <span>0.00 €</span>
+                      </div>
+                    );
+                  }
                 })}
                 
                 <div className="flex justify-between border-t pt-2 mt-2 text-xl font-bold">
                   <span>Total:</span>
-                  <span>{total.toFixed(2)} €</span>
+                  <span>{(isNaN(total) ? 0 : total).toFixed(2)} €</span>
                 </div>
               </div>
             </div>
