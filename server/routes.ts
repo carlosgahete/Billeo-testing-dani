@@ -18,6 +18,7 @@ import {
   invoiceWithTaxesSchema,
   insertInvoiceItemSchema,
   quoteWithTaxesSchema,
+  quoteItemValidationSchema,
   insertQuoteItemSchema,
   insertCategorySchema,
   insertTransactionSchema,
@@ -761,10 +762,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Si hay elementos, crearlos
       if (req.body.items && Array.isArray(req.body.items)) {
         for (const item of req.body.items) {
-          await storage.createQuoteItem({
+          // Validar cada item
+          const itemResult = quoteItemValidationSchema.safeParse({
             ...item,
             quoteId: newQuote.id
           });
+          
+          if (!itemResult.success) {
+            console.log("[SERVER] Error validando item:", JSON.stringify(itemResult.error.errors, null, 2));
+            continue;
+          }
+          
+          await storage.createQuoteItem(itemResult.data);
         }
       }
       

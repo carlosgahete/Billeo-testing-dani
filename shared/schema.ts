@@ -204,9 +204,9 @@ export const quoteWithTaxesSchema = insertQuoteSchema.extend({
   additionalTaxes: z.array(additionalTaxSchema).optional().nullable(),
   // Asegurarnos que los campos numéricos se conviertan correctamente
   clientId: z.preprocess((val) => toNumber(val), z.number()),
-  subtotal: z.preprocess((val) => toNumber(val), z.number()),
-  tax: z.preprocess((val) => toNumber(val), z.number()),
-  total: z.preprocess((val) => toNumber(val), z.number()),
+  subtotal: z.string(),
+  tax: z.string(),
+  total: z.string(),
   // Convertir fechas
   issueDate: z.preprocess((val) => val instanceof Date ? val : new Date(val as string), z.date()),
   validUntil: z.preprocess((val) => val instanceof Date ? val : new Date(val as string), z.date())
@@ -228,6 +228,14 @@ export const quoteItems = pgTable("quote_items", {
 
 export const insertQuoteItemSchema = createInsertSchema(quoteItems).omit({ 
   id: true 
+});
+
+// Esquema validado para que los campos numéricos sean strings
+export const quoteItemValidationSchema = insertQuoteItemSchema.extend({
+  quantity: z.string(),
+  unitPrice: z.string(),
+  taxRate: z.string(),
+  subtotal: z.string()
 });
 export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
 export type QuoteItem = typeof quoteItems.$inferSelect;

@@ -148,29 +148,30 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
         // Asegurar que los valores numéricos sean correctos y del tipo adecuado
         const formattedData = {
           ...data,
-          // Asegurarnos de convertir strings a números explícitamente
+          // Convertir client ID a número ya que aquí es un campo numérico, no string
           clientId: Number(data.clientId),
-          subtotal: Number(subtotal.toFixed(2)),
-          tax: Number(tax.toFixed(2)),
-          total: Number(total.toFixed(2)),
-          // Asegurar que las fechas estén en el formato correcto (ISO string)
-          issueDate: data.issueDate.toISOString(),
-          validUntil: data.validUntil.toISOString(),
+          // Convertir los valores numéricos a string para el backend
+          subtotal: subtotal.toFixed(2),
+          tax: tax.toFixed(2),
+          total: total.toFixed(2),
+          // Las fechas deben ser objetos Date, no strings
+          issueDate: data.issueDate,
+          validUntil: data.validUntil,
           // Asegurar que additionalTaxes esté formateado correctamente
           additionalTaxes: data.additionalTaxes?.map(tax => ({
             ...tax,
             name: tax.name.trim(),
-            amount: Number(tax.amount),
+            amount: tax.amount.toString(),
             isPercentage: Boolean(tax.isPercentage)
           })) || [],
-          // Formatear los items para que todos los valores numéricos sean numbers
+          // Formatear los items para que todos los valores numéricos sean strings
           items: data.items.map(item => ({
             ...item,
             description: item.description.trim(),
-            quantity: Number(item.quantity),
-            unitPrice: Number(item.unitPrice),
-            taxRate: Number(item.taxRate),
-            subtotal: Number((Number(item.quantity) * Number(item.unitPrice)).toFixed(2))
+            quantity: toNumber(item.quantity).toString(),
+            unitPrice: toNumber(item.unitPrice).toString(),
+            taxRate: toNumber(item.taxRate).toString(),
+            subtotal: (toNumber(item.quantity) * toNumber(item.unitPrice)).toFixed(2)
           })),
         };
         
