@@ -278,10 +278,9 @@ export async function generateQuotePDF(
     if (logoPath) {
       try {
         console.log("Preparando logo para PDF desde:", logoPath);
-        const logoUrl = `${window.location.origin}${logoPath}`;
         
-        // Usar la utilidad para convertir la imagen a data URL
-        const logoDataUrl = await getImageAsDataUrl(logoUrl);
+        // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
+        const logoDataUrl = await getImageAsDataUrl(logoPath);
         
         // Añadir la imagen al PDF usando la data URL
         doc.addImage(logoDataUrl, 'PNG', 140, 10, 50, 25);

@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
+import express from "express";
 
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
@@ -57,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error("Error al inicializar la base de datos:", error);
   }
+  
+  // Servir archivos estáticos de la carpeta uploads
+  app.use('/uploads', express.static(uploadDir));
   
   // Setup authentication
   setupAuth(app);
