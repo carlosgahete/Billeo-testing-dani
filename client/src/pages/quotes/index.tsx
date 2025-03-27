@@ -103,7 +103,7 @@ export default function QuotesPage() {
       </div>
 
       {/* Dashboard de presupuestos */}
-      <div className="mb-6 mt-4">
+      <div className="mb-6 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           {/* Tarjeta 1: Resumen de presupuestos */}
           <Card className="overflow-hidden border-none shadow-sm">
