@@ -244,14 +244,23 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   if (displayQuotes.length === 0) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Presupuestos</CardTitle>
           <CardDescription>No hay presupuestos registrados.</CardDescription>
         </CardHeader>
-        <CardFooter>
+        <CardContent className="flex flex-col items-center justify-center py-10">
+          <div className="text-center">
+            <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Sin presupuestos</h3>
+            <p className="text-muted-foreground mb-6">
+              No has creado ningún presupuesto todavía. Crea tu primer presupuesto para comenzar.
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-center">
           <Link href="/quotes/create">
-            <Button>Crear presupuesto</Button>
+            <Button className="px-8">Crear presupuesto</Button>
           </Link>
         </CardFooter>
       </Card>
@@ -260,7 +269,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   return (
     <>
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Presupuestos</CardTitle>
           <CardDescription>
@@ -278,7 +287,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                   <TableHead>Válido hasta</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Estado</TableHead>
-                  {showActions && <TableHead>Acciones</TableHead>}
+                  {showActions && <TableHead className="text-right">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -286,15 +295,15 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                   const client = clientsData.find((c: Client) => c.id === quote.clientId);
                   return (
                     <TableRow key={quote.id}>
-                      <TableCell>{quote.quoteNumber}</TableCell>
+                      <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
                       <TableCell>{client?.name || "Cliente no encontrado"}</TableCell>
                       <TableCell>{formatDate(quote.issueDate)}</TableCell>
                       <TableCell>{formatDate(quote.validUntil)}</TableCell>
-                      <TableCell>{formatCurrency(quote.total)}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(quote.total)}</TableCell>
                       <TableCell>{getStatusBadge(quote.status)}</TableCell>
                       {showActions && (
                         <TableCell>
-                          <div className="flex space-x-2">
+                          <div className="flex justify-end space-x-2">
                             <Link href={`/quotes/${quote.id}`}>
                               <Button
                                 variant="ghost"
@@ -353,7 +362,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
             </Table>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex justify-between items-center pt-6">
           {showActions && (
             <Link href="/quotes/create">
               <Button>Crear presupuesto</Button>
@@ -361,7 +370,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           )}
           {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
             <Link href="/quotes">
-              <Button variant="outline">Ver todos</Button>
+              <Button variant="outline">Ver todos los presupuestos</Button>
             </Link>
           )}
         </CardFooter>
