@@ -95,7 +95,7 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      <div className="mt-4">
+      <div className="mt-2">
         <PageTitle 
           title="Presupuestos" 
           description="Gestiona y envía presupuestos a clientes. Conviértelos en facturas con un clic." 
