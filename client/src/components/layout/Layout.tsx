@@ -94,10 +94,7 @@ const Layout = ({ children }: LayoutProps) => {
         />
         
         {/* Botón flotante para cuando el sidebar está cerrado en desktop */}
-        {!isMobile && !sidebarOpen && !(
-          currentLocation.startsWith("/quotes") || 
-          currentLocation === "/income-expense"
-        ) && (
+        {!isMobile && !sidebarOpen && (
           <button 
             onClick={() => handleSidebarToggle(true)}
             className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
