@@ -231,11 +231,16 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   if (isQuotesLoading || isClientsLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Presupuestos</CardTitle>
+      <Card className="w-full border-none shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle>Tus presupuestos</CardTitle>
           <CardDescription>Cargando presupuestos...</CardDescription>
         </CardHeader>
+        <CardContent className="py-10">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin h-12 w-12 rounded-full border-4 border-primary-100 border-t-primary-600" />
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -244,23 +249,27 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   if (displayQuotes.length === 0) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Presupuestos</CardTitle>
-          <CardDescription>No hay presupuestos registrados.</CardDescription>
+      <Card className="w-full border-none shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle>Tus presupuestos</CardTitle>
+          <CardDescription>
+            Empieza a crear presupuestos profesionales para tus clientes
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-10">
+        <CardContent className="flex flex-col items-center justify-center py-8">
           <div className="text-center">
-            <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <div className="bg-primary-50 p-4 rounded-full inline-block mb-4">
+              <FileText className="h-12 w-12 text-primary-600" />
+            </div>
             <h3 className="text-lg font-medium mb-2">Sin presupuestos</h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-6 max-w-md">
               No has creado ningún presupuesto todavía. Los presupuestos son una excelente manera de presentar tus servicios a clientes potenciales antes de emitir facturas. Crea tu primer presupuesto para comenzar a convertir prospectos en clientes.
             </p>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center pb-6">
           <Link href="/quotes/create">
-            <Button className="px-8">Crear presupuesto</Button>
+            <Button className="px-8 shadow-sm">Crear tu primer presupuesto</Button>
           </Link>
         </CardFooter>
       </Card>
@@ -269,9 +278,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   return (
     <>
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Presupuestos</CardTitle>
+      <Card className="w-full border-none shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle>Tus presupuestos</CardTitle>
           <CardDescription>
             Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades.
           </CardDescription>
