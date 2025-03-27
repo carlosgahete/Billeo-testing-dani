@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,6 +11,8 @@ const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Referencia para el botón hamburguesa flotante
+  const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     // Close mobile menu when switching to desktop
@@ -20,6 +22,17 @@ const Layout = ({ children }: LayoutProps) => {
     // Set sidebar based on screen size
     setSidebarOpen(!isMobile);
   }, [isMobile]);
+  
+  // Efecto para ocultar el botón cuando el sidebar está abierto
+  useEffect(() => {
+    if (hamburgerButtonRef.current) {
+      if (sidebarOpen) {
+        hamburgerButtonRef.current.style.display = 'none';
+      } else {
+        hamburgerButtonRef.current.style.display = 'block';
+      }
+    }
+  }, [sidebarOpen]);
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
@@ -43,8 +56,9 @@ const Layout = ({ children }: LayoutProps) => {
         />
         
         {/* Botón flotante para cuando el sidebar está cerrado en desktop */}
-        {!isMobile && !sidebarOpen && (
+        {!isMobile && (
           <button 
+            ref={hamburgerButtonRef}
             onClick={() => {
               setSidebarOpen(true);
               // Actualizar el margen después del cambio del sidebar
@@ -53,10 +67,16 @@ const Layout = ({ children }: LayoutProps) => {
                 if (mainElement) {
                   mainElement.style.marginLeft = '16rem';
                 }
+                
+                // Ocultar el propio botón
+                if (hamburgerButtonRef.current) {
+                  hamburgerButtonRef.current.style.display = 'none';
+                }
               }, 10);
             }}
-            className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
+            className="fixed top-4 left-4 z-10 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
             aria-label="Abrir menú lateral"
+            style={{ display: sidebarOpen ? 'none' : 'block' }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"></line>
