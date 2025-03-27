@@ -67,8 +67,8 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       {/* Search input */}
-      <div className="flex items-center py-4">
-        <div className="relative flex-1">
+      <div className="flex items-center py-4 px-4">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
@@ -132,7 +132,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {pagination && (
-        <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2 py-4 px-4">
           <div className="text-xs sm:text-sm text-muted-foreground">
             <span className="hidden sm:inline">Mostrando </span>
             <span className="font-medium">
