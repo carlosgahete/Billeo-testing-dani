@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRoute, Link as RouterLink } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -35,7 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Send, FileCheck, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, Send, FileCheck, ArrowLeft, Upload, Image } from "lucide-react";
 
 export default function QuoteDetailsPage() {
   const { user } = useAuth();
@@ -43,6 +43,8 @@ export default function QuoteDetailsPage() {
   const [, params] = useRoute("/quotes/:id");
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [convertAlertOpen, setConvertAlertOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user || !params) {
     return <div>Cargando...</div>;
@@ -139,6 +141,56 @@ export default function QuoteDetailsPage() {
       });
     },
   });
+  
+  // Upload logo mutation
+  const uploadLogoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("quoteLogo", file);
+      
+      const response = await fetch(`/api/quotes/${quoteId}/logo`, {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Error subiendo el logo");
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Logo subido",
+        description: "El logo del presupuesto ha sido actualizado correctamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes", quoteId] });
+      setIsUploading(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsUploading(false);
+    },
+  });
+  
+  // Handle file upload
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadLogoMutation.mutate(file);
+    }
+  };
+  
+  // Trigger file input click
+  const handleSelectFile = () => {
+    fileInputRef.current?.click();
+  };
 
   // Format currency
   const formatCurrency = (amount: number | string) => {
@@ -199,17 +251,47 @@ export default function QuoteDetailsPage() {
 
   return (
     <Layout>
-      <div className="flex items-center mb-6">
-        <RouterLink href="/quotes">
-          <Button variant="ghost" className="mr-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <RouterLink href="/quotes">
+            <Button variant="ghost" className="mr-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver
+            </Button>
+          </RouterLink>
+          <PageTitle
+            title={`Presupuesto #${quote.quoteNumber}`}
+            description={`Emitido el ${formatDate(quote.issueDate)} • ${getStatusBadge(quote.status)}`}
+          />
+        </div>
+        
+        <div>
+          <Button 
+            variant="outline" 
+            onClick={handleSelectFile}
+            disabled={isUploading}
+            className="flex items-center"
+          >
+            {isUploading ? (
+              <>
+                <div className="h-4 w-4 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></div>
+                Subiendo...
+              </>
+            ) : (
+              <>
+                <Image className="mr-2 h-4 w-4" />
+                Subir logo
+              </>
+            )}
           </Button>
-        </RouterLink>
-        <PageTitle
-          title={`Presupuesto #${quote.quoteNumber}`}
-          description={`Emitido el ${formatDate(quote.issueDate)} • ${getStatusBadge(quote.status)}`}
-        />
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileInputChange} 
+            accept="image/*" 
+            className="hidden" 
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

@@ -309,6 +309,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Internal server error" });
     }
   });
+  
+  // Subir logo de la empresa
+  app.post("/api/company/:id/logo", upload.single("companyLogo"), async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const companyId = parseInt(req.params.id);
+      const company = await storage.getCompany(companyId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      if (company.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this company" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const logoPath = `/uploads/${req.file.filename}`;
+      
+      const updatedCompany = await storage.updateCompany(companyId, {
+        logo: logoPath
+      });
+      
+      return res.status(200).json(updatedCompany);
+    } catch (error) {
+      console.error("[SERVER] Error al subir logo de empresa:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Client endpoints
   app.get("/api/clients", async (req: Request, res: Response) => {
@@ -915,6 +950,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Convertir presupuesto a factura
+  // Subir logo para presupuestos
+  app.post("/api/quotes/:id/logo", upload.single("quoteLogo"), async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuote(quoteId);
+      
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this quote" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const logoPath = `/uploads/${req.file.filename}`;
+      
+      // Si no hay campo de attachments, lo creamos como array con el logo
+      const attachments = quote.attachments || [];
+      // Buscamos si ya hay un logo (asumimos que el primer elemento del array es el logo)
+      if (attachments.length > 0) {
+        // Reemplazamos el logo existente
+        attachments[0] = logoPath;
+      } else {
+        // Añadimos el nuevo logo
+        attachments.push(logoPath);
+      }
+      
+      const updatedQuote = await storage.updateQuote(quoteId, {
+        attachments: attachments
+      });
+      
+      return res.status(200).json({
+        quote: updatedQuote,
+        logoPath
+      });
+    } catch (error) {
+      console.error("[SERVER] Error al subir logo de presupuesto:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   app.post("/api/quotes/:id/convert", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {

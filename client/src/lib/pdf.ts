@@ -33,6 +33,7 @@ interface Quote {
   status: string;
   notes?: string;
   additionalTaxes?: AdditionalTax[] | null;
+  attachments?: string[] | null;
 }
 
 interface Client {
@@ -268,7 +269,19 @@ export async function generateQuotePDF(
   doc.setFont("helvetica");
   doc.setFontSize(10);
   
-  // Add company logo and info (placeholder for real data)
+  // Add company logo and info
+  // Check if the quote has a logo
+  const logoPath = quote.attachments && quote.attachments.length > 0 ? quote.attachments[0] : null;
+  
+  if (logoPath) {
+    try {
+      // Add logo in the top right corner
+      doc.addImage(`${window.location.origin}${logoPath}`, 'JPEG', 140, 10, 50, 25, undefined, 'FAST');
+    } catch (error) {
+      console.error("Error adding image to PDF:", error);
+    }
+  }
+  
   doc.setFontSize(20);
   doc.setTextColor(25, 118, 210); // primary color
   doc.text("Billeo", 14, 22);
