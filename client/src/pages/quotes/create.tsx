@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import QuoteForm from "@/components/quotes/QuoteFormBasic";
+import QuoteForm from "@/components/quotes/QuoteFormMinimal";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 
