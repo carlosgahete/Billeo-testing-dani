@@ -24,12 +24,23 @@ const Layout = ({ children }: LayoutProps) => {
   }, [isMobile]);
   
   // Efecto para ocultar el botón cuando el sidebar está abierto
+  // y controlar el layout cuando cambia el estado del sidebar
   useEffect(() => {
     if (hamburgerButtonRef.current) {
       if (sidebarOpen) {
         hamburgerButtonRef.current.style.display = 'none';
       } else {
         hamburgerButtonRef.current.style.display = 'block';
+      }
+    }
+    
+    // Resetear completamente el estilo del main cuando cambia el sidebar
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      if (sidebarOpen) {
+        mainElement.style.marginLeft = '16rem';
+      } else {
+        mainElement.style.marginLeft = '0';
       }
     }
   }, [sidebarOpen]);
@@ -61,18 +72,8 @@ const Layout = ({ children }: LayoutProps) => {
             ref={hamburgerButtonRef}
             onClick={() => {
               setSidebarOpen(true);
-              // Actualizar el margen después del cambio del sidebar
-              setTimeout(() => {
-                const mainElement = document.querySelector('main');
-                if (mainElement) {
-                  mainElement.style.marginLeft = '16rem';
-                }
-                
-                // Ocultar el propio botón
-                if (hamburgerButtonRef.current) {
-                  hamburgerButtonRef.current.style.display = 'none';
-                }
-              }, 10);
+              // No necesitamos setTimeout aquí, el useEffect se encargará
+              // del margen y de ocultar el botón
             }}
             className="fixed top-4 left-4 z-10 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
             aria-label="Abrir menú lateral"
