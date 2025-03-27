@@ -542,7 +542,19 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                           <FormItem>
                             <FormLabel>Cantidad</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" min="0" {...field} />
+                              <Input 
+                                type="number" 
+                                step="0.01" 
+                                min="0" 
+                                {...field}
+                                onBlur={() => {
+                                  // Recalcular al perder el foco
+                                  const items = form.getValues("items");
+                                  if (Array.isArray(items)) {
+                                    form.setValue("items", [...items], { shouldValidate: false });
+                                  }
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -560,12 +572,13 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                                 // Limpiamos el valor y lo convertimos a número para el campo
                                 const cleanValue = e.target.value.replace(/[€$,\s]/g, '');
                                 field.onChange(cleanValue);
-                                
-                                // Forzar recálculo inmediato
-                                setTimeout(() => {
-                                  const items = form.getValues("items");
+                              }} 
+                              onBlur={() => {
+                                // Forzar recálculo solo al perder el foco en lugar de cada pulsación
+                                const items = form.getValues("items");
+                                if (Array.isArray(items)) {
                                   form.setValue("items", [...items], { shouldValidate: false });
-                                }, 50);
+                                }
                               }} />
                             </FormControl>
                             <FormMessage />
@@ -580,7 +593,19 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                           <FormItem>
                             <FormLabel>IVA (%)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" min="0" {...field} />
+                              <Input 
+                                type="number" 
+                                step="0.01" 
+                                min="0" 
+                                {...field}
+                                onBlur={() => {
+                                  // Recalcular al perder el foco
+                                  const items = form.getValues("items");
+                                  if (Array.isArray(items)) {
+                                    form.setValue("items", [...items], { shouldValidate: false });
+                                  }
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -653,12 +678,13 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                                 // Limpiamos el valor y lo convertimos a número para el campo
                                 const cleanValue = e.target.value.replace(/[€$,\s]/g, '');
                                 field.onChange(cleanValue);
-                                
-                                // Forzar recálculo inmediato
-                                setTimeout(() => {
-                                  const taxes = form.getValues("additionalTaxes") || [];
+                              }}
+                              onBlur={() => {
+                                // Forzar recálculo solo al perder el foco en lugar de cada pulsación
+                                const taxes = form.getValues("additionalTaxes");
+                                if (Array.isArray(taxes)) {
                                   form.setValue("additionalTaxes", [...taxes], { shouldValidate: false });
-                                }, 50);
+                                }
                               }} />
                             </FormControl>
                             <FormDescription>
@@ -681,12 +707,13 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                               checked={field.value}
                               onChange={(e) => {
                                 field.onChange(e);
-                                
-                                // Forzar recálculo inmediato
-                                setTimeout(() => {
-                                  const taxes = form.getValues("additionalTaxes") || [];
+                              }}
+                              onBlur={() => {
+                                // Forzar recálculo solo al perder el foco en lugar de cada pulsación
+                                const taxes = form.getValues("additionalTaxes");
+                                if (Array.isArray(taxes)) {
                                   form.setValue("additionalTaxes", [...taxes], { shouldValidate: false });
-                                }, 50);
+                                }
                               }}
                               className="form-checkbox h-4 w-4"
                             />
