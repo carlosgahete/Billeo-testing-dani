@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,11 +42,16 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   const [amount, setAmount] = useState('0');
   const [notes, setNotes] = useState('');
   
-  // Estados para impuestos adicionales
-  const [extraTaxName, setExtraTaxName] = useState('');
-  const [extraTaxAmount, setExtraTaxAmount] = useState('0');
-  const [extraTaxIsPercentage, setExtraTaxIsPercentage] = useState(true);
-  const [hasExtraTax, setHasExtraTax] = useState(false);
+  // Estados para impuestos
+  const [taxes, setTaxes] = useState<Array<{
+    id: string;
+    name: string;
+    amount: string;
+    isPercentage: boolean;
+  }>>([]);
+  const [taxName, setTaxName] = useState('');
+  const [taxAmount, setTaxAmount] = useState('0');
+  const [taxIsPercentage, setTaxIsPercentage] = useState(true);
 
   // Cargar clientes de manera segura
   const { data: clientsData } = useQuery({
@@ -65,6 +70,26 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
 
   // Asegurar que clientsData sea un array
   const clients = Array.isArray(clientsData) ? clientsData : [];
+
+  // Calcular los totales basados en el subtotal y los impuestos
+  const calculateTotals = () => {
+    const subtotal = parseFloat(amount) || 0;
+    let taxesTotal = 0;
+    
+    taxes.forEach(tax => {
+      if (tax.isPercentage) {
+        taxesTotal += subtotal * parseFloat(tax.amount || '0') / 100;
+      } else {
+        taxesTotal += parseFloat(tax.amount || '0');
+      }
+    });
+    
+    return {
+      subtotal,
+      taxesTotal,
+      total: subtotal + taxesTotal
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,25 +115,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     setIsSubmitting(true);
     
     try {
-      // Calcular IVA (21%)
-      const subtotalValue = parseFloat(amount) || 0;
-      const taxValue = subtotalValue * 0.21;
-      // IRPF -15%
-      const irpfValue = subtotalValue * -0.15;
-      const totalValue = subtotalValue + taxValue + irpfValue;
-      
-      // Calcular valor del impuesto adicional si existe
-      let extraTaxValue = 0;
-      if (hasExtraTax && extraTaxName) {
-        if (extraTaxIsPercentage) {
-          extraTaxValue = subtotalValue * (parseFloat(extraTaxAmount) / 100);
-        } else {
-          extraTaxValue = parseFloat(extraTaxAmount);
-        }
-      }
-      
-      // Calcular total incluyendo el impuesto adicional
-      const adjustedTotal = totalValue + extraTaxValue;
+      const { subtotal, total } = calculateTotals();
       
       // Preparar datos para enviar
       const quoteData = {
@@ -116,40 +123,25 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         clientId: parseInt(clientId),
         status,
         notes,
-        subtotal: subtotalValue.toFixed(2),
-        tax: taxValue.toFixed(2),
-        total: adjustedTotal.toFixed(2),
+        subtotal: subtotal.toFixed(2),
+        tax: '0.00', // Ya está incluido en additionalTaxes
+        total: total.toFixed(2),
         issueDate: new Date(),
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        // Añadir IRPF como impuesto adicional y el impuesto extra si existe
-        additionalTaxes: hasExtraTax && extraTaxName
-          ? [
-              {
-                name: 'IRPF',
-                amount: '-15',
-                isPercentage: true
-              },
-              {
-                name: extraTaxName,
-                amount: extraTaxAmount,
-                isPercentage: extraTaxIsPercentage
-              }
-            ]
-          : [
-              {
-                name: 'IRPF',
-                amount: '-15',
-                isPercentage: true
-              }
-            ],
+        // Usar los impuestos introducidos por el usuario
+        additionalTaxes: taxes.map(tax => ({
+          name: tax.name,
+          amount: tax.amount,
+          isPercentage: tax.isPercentage
+        })),
         // Añadir un solo ítem con la descripción y el monto
         items: [
           {
             description: description || 'Servicio profesional',
             quantity: '1',
             unitPrice: amount,
-            taxRate: '21',
-            subtotal: subtotalValue.toFixed(2)
+            taxRate: '0', // Los impuestos se gestionan a nivel de presupuesto
+            subtotal: subtotal.toFixed(2)
           }
         ]
       };
@@ -190,6 +182,8 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       setIsSubmitting(false);
     }
   };
+
+  const { subtotal, taxesTotal, total } = calculateTotals();
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -243,7 +237,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Importe (sin IVA)</Label>
+                <Label htmlFor="amount">Importe (sin impuestos)</Label>
                 <Input
                   id="amount"
                   type="text"
@@ -276,6 +270,117 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               </div>
             </div>
             
+            {/* Impuestos */}
+            <div className="border-t border-b py-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium">Impuestos aplicables</h3>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (!taxName) {
+                      toast({
+                        title: 'Error',
+                        description: 'Introduce un nombre para el impuesto',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    
+                    setTaxes([
+                      ...taxes, 
+                      {
+                        id: Date.now().toString(),
+                        name: taxName,
+                        amount: taxAmount,
+                        isPercentage: taxIsPercentage
+                      }
+                    ]);
+                    setTaxName('');
+                    setTaxAmount('0');
+                  }}
+                >
+                  Añadir impuesto
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="taxName">Nombre</Label>
+                  <Input
+                    id="taxName"
+                    value={taxName}
+                    onChange={(e) => setTaxName(e.target.value)}
+                    placeholder="Ej: IVA, IRPF"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="taxAmount">Valor</Label>
+                  <Input
+                    id="taxAmount"
+                    type="text"
+                    inputMode="decimal"
+                    value={taxAmount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.-]/g, '');
+                      setTaxAmount(value);
+                    }}
+                    placeholder="Ej: 21, -15"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="taxType">Tipo</Label>
+                  <Select
+                    value={taxIsPercentage ? "percentage" : "fixed"}
+                    onValueChange={(value) => setTaxIsPercentage(value === "percentage")}
+                  >
+                    <SelectTrigger id="taxType">
+                      <SelectValue placeholder="Tipo de valor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Porcentaje (%)</SelectItem>
+                      <SelectItem value="fixed">Importe fijo (€)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Lista de impuestos añadidos */}
+              {taxes.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <h4 className="text-sm font-medium">Impuestos añadidos:</h4>
+                  <div className="space-y-2">
+                    {taxes.map((tax) => (
+                      <div 
+                        key={tax.id} 
+                        className="flex justify-between items-center p-2 bg-muted rounded-md"
+                      >
+                        <div>
+                          <span className="font-medium">{tax.name}</span>
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            {tax.isPercentage ? `${tax.amount}%` : `${tax.amount}€`}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setTaxes(taxes.filter((t) => t.id !== tax.id));
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="notes">Notas adicionales</Label>
               <Textarea
@@ -287,105 +392,27 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               />
             </div>
             
-            {/* Impuestos adicionales */}
-            <div className="space-y-2 border-t pt-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="hasExtraTax"
-                  checked={hasExtraTax}
-                  onChange={(e) => setHasExtraTax(e.target.checked)}
-                  className="rounded border-gray-300 focus:ring-primary"
-                />
-                <Label htmlFor="hasExtraTax">Añadir impuesto adicional</Label>
-              </div>
-              
-              {hasExtraTax && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="extraTaxName">Nombre del impuesto</Label>
-                    <Input
-                      id="extraTaxName"
-                      value={extraTaxName}
-                      onChange={(e) => setExtraTaxName(e.target.value)}
-                      placeholder="Ej: Recargo"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="extraTaxAmount">Valor</Label>
-                    <Input
-                      id="extraTaxAmount"
-                      type="text"
-                      inputMode="decimal"
-                      value={extraTaxAmount}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9.-]/g, '');
-                        setExtraTaxAmount(value);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="extraTaxType">Tipo</Label>
-                    <Select
-                      value={extraTaxIsPercentage ? "percentage" : "fixed"}
-                      onValueChange={(value) => setExtraTaxIsPercentage(value === "percentage")}
-                    >
-                      <SelectTrigger id="extraTaxType">
-                        <SelectValue placeholder="Selecciona el tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">Porcentaje (%)</SelectItem>
-                        <SelectItem value="fixed">Importe fijo (€)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-            
             <div className="border-t pt-4 mt-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>{parseFloat(amount || '0').toFixed(2)} €</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>IVA (21%):</span>
-                  <span>{(parseFloat(amount || '0') * 0.21).toFixed(2)} €</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>IRPF (-15%):</span>
-                  <span>{(parseFloat(amount || '0') * -0.15).toFixed(2)} €</span>
+                  <span>{subtotal.toFixed(2)} €</span>
                 </div>
                 
-                {hasExtraTax && extraTaxName && (
-                  <div className="flex justify-between">
-                    <span>{extraTaxName} {extraTaxIsPercentage ? `(${extraTaxAmount}%)` : ''}:</span>
+                {taxes.map((tax) => (
+                  <div className="flex justify-between" key={tax.id}>
+                    <span>{tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:</span>
                     <span>
-                      {extraTaxIsPercentage 
-                        ? (parseFloat(amount || '0') * parseFloat(extraTaxAmount || '0') / 100).toFixed(2)
-                        : parseFloat(extraTaxAmount || '0').toFixed(2)} €
+                      {tax.isPercentage 
+                        ? (subtotal * parseFloat(tax.amount || '0') / 100).toFixed(2)
+                        : parseFloat(tax.amount || '0').toFixed(2)} €
                     </span>
                   </div>
-                )}
+                ))}
                 
                 <div className="flex justify-between border-t pt-2 font-bold">
                   <span>Total:</span>
-                  <span>
-                    {(
-                      parseFloat(amount || '0') + 
-                      parseFloat(amount || '0') * 0.21 + 
-                      parseFloat(amount || '0') * -0.15 +
-                      (hasExtraTax && extraTaxName 
-                        ? (extraTaxIsPercentage 
-                          ? parseFloat(amount || '0') * parseFloat(extraTaxAmount || '0') / 100 
-                          : parseFloat(extraTaxAmount || '0'))
-                        : 0)
-                    ).toFixed(2)} €
-                  </span>
+                  <span>{total.toFixed(2)} €</span>
                 </div>
               </div>
             </div>
