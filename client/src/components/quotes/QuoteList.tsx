@@ -319,14 +319,15 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                       {showActions && (
                         <TableCell>
                           <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Ver y descargar PDF"
-                              onClick={() => window.location.href = `/quotes/${quote.id}`}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <Link href={`/quotes/${quote.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Ver y descargar PDF"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </Link>
                             {quote.status === "draft" && (
                               <Button
                                 variant="ghost"
