@@ -153,6 +153,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
 
   // Función para calcular los totales
   const calculateTotals = () => {
+    // Asegurarse de que amount es un número válido
     const subtotalValue = parseFloat(amount) || 0;
     
     // Calcular el valor de cada impuesto
@@ -168,11 +169,11 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       }
     });
     
-    // Actualizar estados (asegurándonos de que son números)
-    setSubtotal(Number(subtotalValue));
-    setTotal(Number(subtotalValue) + Number(totalTaxAmount));
+    // Actualizar estados (asegurándonos de que son números válidos)
+    setSubtotal(subtotalValue);
+    setTotal(subtotalValue + totalTaxAmount);
     
-    console.log(`Subtotal: ${Number(subtotalValue).toFixed(2)}€, Impuestos: ${Number(totalTaxAmount).toFixed(2)}€, Total: ${Number(subtotalValue + totalTaxAmount).toFixed(2)}€`);
+    console.log(`Subtotal: ${subtotalValue.toFixed(2)}€, Impuestos: ${totalTaxAmount.toFixed(2)}€, Total: ${(subtotalValue + totalTaxAmount).toFixed(2)}€`);
   };
 
   // Recalcular cuando cambian los valores relevantes
@@ -642,25 +643,31 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               <div className="space-y-2">
                 <div className="flex justify-between text-lg">
                   <span>Subtotal:</span>
-                  <span className="font-medium">{Number(subtotal).toFixed(2)} €</span>
+                  <span className="font-medium">{subtotal.toFixed(2)} €</span>
                 </div>
                 
-                {taxes.map(tax => (
-                  <div className="flex justify-between" key={tax.id}>
-                    <span>
-                      {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:
-                    </span>
-                    <span>
-                      {tax.isPercentage 
-                        ? Number(subtotal * parseFloat(tax.amount || '0') / 100).toFixed(2)
-                        : Number(parseFloat(tax.amount || '0')).toFixed(2)} €
-                    </span>
-                  </div>
-                ))}
+                {taxes.map(tax => {
+                  // Asegurarse de que los cálculos son con números válidos
+                  const taxAmountValue = parseFloat(tax.amount || '0') || 0;
+                  const taxValue = tax.isPercentage 
+                    ? (subtotal * taxAmountValue / 100)
+                    : taxAmountValue;
+                  
+                  return (
+                    <div className="flex justify-between" key={tax.id}>
+                      <span>
+                        {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:
+                      </span>
+                      <span>
+                        {taxValue.toFixed(2)} €
+                      </span>
+                    </div>
+                  );
+                })}
                 
                 <div className="flex justify-between border-t pt-2 mt-2 text-xl font-bold">
                   <span>Total:</span>
-                  <span>{Number(total).toFixed(2)} €</span>
+                  <span>{total.toFixed(2)} €</span>
                 </div>
               </div>
             </div>
