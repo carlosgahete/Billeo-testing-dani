@@ -42,6 +42,12 @@ function toNumber(value: any, defaultValue = 0): number {
   if (value === undefined || value === null || value === "") {
     return defaultValue;
   }
+  
+  // Si es un string, eliminar símbolos como € y espacios
+  if (typeof value === 'string') {
+    value = value.replace(/[€$,\s]/g, '');
+  }
+  
   const num = Number(value);
   return isNaN(num) ? defaultValue : num;
 }
