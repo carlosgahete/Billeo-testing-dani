@@ -87,10 +87,23 @@ const Layout = ({ children }: LayoutProps) => {
         )}
 
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''}`}
-             style={{ marginLeft: sidebarOpen ? '16rem' : '0' }}>
-          <div className="p-4 lg:p-6 transition-all duration-300 max-w-6xl mx-auto">
-            {children}
+        <main 
+          className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''}`}
+          style={{ 
+            marginLeft: sidebarOpen ? '16rem' : '0'
+          }}
+        >
+          <div 
+            style={{
+              padding: '0 2rem',
+              maxWidth: '1200px',
+              marginLeft: 'auto',
+              marginRight: 'auto'
+            }}
+          >
+            <div className="py-4 lg:py-6 transition-all duration-300">
+              {children}
+            </div>
           </div>
         </main>
       </div>
