@@ -100,8 +100,8 @@ const Sidebar = ({
   const handleNavClick = () => {
     if (isMobile) {
       setMobileMenuOpen(false);
-    } else if (location === "/income-expense" || location === "/quotes") {
-      // Extra precaución para las páginas problemáticas
+    } else {
+      // Siempre cerramos el sidebar al navegar, independientemente de la página
       handleSidebarClose();
     }
   };
