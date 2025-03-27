@@ -45,6 +45,7 @@ interface Quote {
   total: number;
   status: "draft" | "sent" | "accepted" | "rejected" | "expired";
   notes?: string;
+  attachments?: string[];
 }
 
 interface Client {
@@ -183,7 +184,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
       case "sent":
         return <Badge variant="secondary">Enviado</Badge>;
       case "accepted":
-        return <Badge className="bg-green-500 text-white">Aceptado</Badge>;
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Aceptado</Badge>;
       case "rejected":
         return <Badge variant="destructive">Rechazado</Badge>;
       case "expired":
@@ -259,7 +260,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card>
         <CardHeader>
           <CardTitle>Presupuestos</CardTitle>
           <CardDescription>
@@ -267,29 +268,29 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto -mx-6">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-semibold">Número</TableHead>
-                  <TableHead className="font-semibold">Cliente</TableHead>
-                  <TableHead className="font-semibold">Fecha</TableHead>
-                  <TableHead className="font-semibold">Válido hasta</TableHead>
-                  <TableHead className="font-semibold">Total</TableHead>
-                  <TableHead className="font-semibold">Estado</TableHead>
-                  {showActions && <TableHead className="font-semibold">Acciones</TableHead>}
+                  <TableHead>Número</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Válido hasta</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Estado</TableHead>
+                  {showActions && <TableHead>Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayQuotes.map((quote: Quote) => {
                   const client = clientsData.find((c: Client) => c.id === quote.clientId);
                   return (
-                    <TableRow key={quote.id} className="hover:bg-muted/50">
+                    <TableRow key={quote.id}>
                       <TableCell>{quote.quoteNumber}</TableCell>
                       <TableCell>{client?.name || "Cliente no encontrado"}</TableCell>
                       <TableCell>{formatDate(quote.issueDate)}</TableCell>
                       <TableCell>{formatDate(quote.validUntil)}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(quote.total)}</TableCell>
+                      <TableCell>{formatCurrency(quote.total)}</TableCell>
                       <TableCell>{getStatusBadge(quote.status)}</TableCell>
                       {showActions && (
                         <TableCell>
