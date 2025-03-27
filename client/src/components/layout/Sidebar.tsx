@@ -34,27 +34,14 @@ interface NavItemProps {
 }
 
 const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => {
-  // Solución específica para la navegación a páginas problemáticas
+  // Solución para la navegación en todas las páginas
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       onClick();
     }
     
-    // Si estamos navegando a páginas que necesitan cierre especial del sidebar
-    if (href === "/income-expense" || href === "/quotes") {
-      // Identificar todos los botones de sidebar y asignarles una clase especial 
-      document.querySelectorAll('button[aria-label="Cerrar menú lateral"]').forEach((btn, index) => {
-        btn.classList.add('billeo-sidebar-toggle');
-      });
-      
-      // Forzar cierre del sidebar
-      setTimeout(() => {
-        const mainElement = document.querySelector('main');
-        if (mainElement) {
-          mainElement.style.marginLeft = '0';
-        }
-      }, 100);
-    }
+    // No aplicamos ninguna lógica adicional aquí,
+    // ya que ahora manejamos el cierre del sidebar en handleNavClick
   };
   
   return (
