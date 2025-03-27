@@ -75,12 +75,14 @@ const Sidebar = ({
   const handleSidebarClose = () => {
     setSidebarOpen(false);
     // Forzar actualización inmediata de la UI para evitar efectos visuales extraños
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       const mainElement = document.querySelector('main');
       if (mainElement) {
         mainElement.style.marginLeft = '0';
+        // Aplicar estilo importante para forzar el cambio
+        mainElement.setAttribute('style', 'margin-left: 0 !important');
       }
-    });
+    }, 10);
   };
 
   // Close mobile menu when a link is clicked

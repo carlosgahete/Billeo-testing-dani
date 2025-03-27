@@ -1,8 +1,7 @@
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLocation } from "wouter";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,8 +11,6 @@ const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentLocation] = useLocation();
-  const previousLocation = useRef(currentLocation);
   
   useEffect(() => {
     // Close mobile menu when switching to desktop
@@ -23,54 +20,6 @@ const Layout = ({ children }: LayoutProps) => {
     // Set sidebar based on screen size
     setSidebarOpen(!isMobile);
   }, [isMobile]);
-  
-  // Detect route changes to ensure sidebar state is consistent
-  useEffect(() => {
-    if (currentLocation !== previousLocation.current) {
-      if (isMobile) {
-        setMobileMenuOpen(false); // Close mobile menu on route change
-      }
-      previousLocation.current = currentLocation;
-    }
-  }, [currentLocation, isMobile]);
-  
-  // Detección más agresiva para corregir rutas con problemas de sidebar
-  useEffect(() => {
-    // Rutas que necesitan corrección especial del sidebar
-    const problematicRoutes = ["/income-expense", "/quotes", "/quotes/create"];
-    
-    // Comprobamos si la ruta actual está en la lista de rutas problemáticas
-    // o si comienza con "/quotes/" (para editar/ver detalles de presupuestos)
-    if (problematicRoutes.includes(currentLocation) || currentLocation.startsWith("/quotes/")) {
-      // Usamos un enfoque más directo para las páginas problemáticas
-      const mainElement = document.querySelector('main');
-      if (mainElement) {
-        // Si detectamos que estamos en esta página, forzamos el estilo inline
-        if (!sidebarOpen) {
-          mainElement.style.marginLeft = '0 !important';
-          mainElement.classList.remove('ml-64');
-          mainElement.classList.add('ml-0');
-        } else {
-          mainElement.style.marginLeft = '16rem !important';
-        }
-      }
-    }
-  }, [currentLocation, sidebarOpen]);
-
-  const handleSidebarToggle = (open: boolean) => {
-    setSidebarOpen(open);
-    // Force update main content position immediately
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      if (open) {
-        mainElement.classList.remove('ml-0');
-        mainElement.classList.add('ml-64');
-      } else {
-        mainElement.classList.remove('ml-64');
-        mainElement.classList.add('ml-0');
-      }
-    }
-  }
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
@@ -87,16 +36,25 @@ const Layout = ({ children }: LayoutProps) => {
         {/* Sidebar */}
         <Sidebar 
           sidebarOpen={sidebarOpen} 
-          setSidebarOpen={handleSidebarToggle}
+          setSidebarOpen={setSidebarOpen}
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
           isMobile={isMobile}
         />
         
         {/* Botón flotante para cuando el sidebar está cerrado en desktop */}
-        {!isMobile && !sidebarOpen && !currentLocation.startsWith("/quotes") && (
+        {!isMobile && !sidebarOpen && (
           <button 
-            onClick={() => handleSidebarToggle(true)}
+            onClick={() => {
+              setSidebarOpen(true);
+              // Actualizar el margen después del cambio del sidebar
+              setTimeout(() => {
+                const mainElement = document.querySelector('main');
+                if (mainElement) {
+                  mainElement.style.marginLeft = '16rem';
+                }
+              }, 10);
+            }}
             className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
             aria-label="Abrir menú lateral"
           >
