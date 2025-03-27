@@ -57,7 +57,7 @@ const Layout = ({ children }: LayoutProps) => {
           </button>
         )}
 
-        {/* Main content - Contenido centrado independiente del sidebar */}
+        {/* Main content - Contenido que ocupa todo el espacio disponible */}
         <div 
           className={`
             flex-1 
@@ -67,7 +67,7 @@ const Layout = ({ children }: LayoutProps) => {
             transition-all duration-300
           `}
         >
-          <div className="max-w-4xl mx-auto py-4 lg:py-6 px-4 lg:px-8">
+          <div className="w-full py-4 lg:py-6 px-4 lg:px-8">
             {children}
           </div>
         </div>
