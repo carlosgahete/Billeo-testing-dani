@@ -690,8 +690,8 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
             </div>
             
             {/* Filas de impuestos */}
-            {taxFields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-12 gap-4 items-center text-sm px-2 py-2 rounded-md bg-white border">
+            {Array.isArray(taxFields) && taxFields.map((field, index) => (
+              <div key={field.id || index} className="grid grid-cols-12 gap-4 items-center text-sm px-2 py-2 rounded-md bg-white border">
                 <div className="col-span-5">
                   <FormField
                     control={form.control}
