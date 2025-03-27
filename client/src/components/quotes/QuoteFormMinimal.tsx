@@ -256,9 +256,9 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <form onSubmit={handleSubmit}>
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>{quoteId ? 'Editar Presupuesto' : 'Crear Presupuesto'}</CardTitle>
             <CardDescription>Introduce los datos básicos para el presupuesto</CardDescription>
@@ -341,8 +341,8 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             </div>
             
             {/* Sección de impuestos */}
-            <div className="border p-4 rounded-md">
-              <h3 className="text-sm font-medium mb-3">Impuestos aplicables</h3>
+            <div className="border p-4 rounded-md bg-gray-50/50">
+              <h3 className="text-base font-medium mb-3">Impuestos aplicables</h3>
               
               {/* Lista de impuestos actuales */}
               {taxes.length > 0 && (
@@ -467,9 +467,9 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             
             <div className="border-t pt-4 mt-4">
               <div className="space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-lg">
                   <span>Subtotal:</span>
-                  <span>{subtotal.toFixed(2)} €</span>
+                  <span className="font-medium">{subtotal.toFixed(2)} €</span>
                 </div>
                 
                 {taxes.map(tax => (
@@ -485,7 +485,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                   </div>
                 ))}
                 
-                <div className="flex justify-between border-t pt-2 font-bold">
+                <div className="flex justify-between border-t pt-2 mt-2 text-xl font-bold">
                   <span>Total:</span>
                   <span>{total.toFixed(2)} €</span>
                 </div>
