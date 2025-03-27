@@ -54,15 +54,33 @@ const Layout = ({ children }: LayoutProps) => {
 
   const handleSidebarToggle = (open: boolean) => {
     setSidebarOpen(open);
+    
     // Force update main content position immediately
     const mainElement = document.querySelector('main');
     if (mainElement) {
       if (open) {
         mainElement.classList.remove('ml-0');
         mainElement.classList.add('ml-64');
+        mainElement.style.marginLeft = '16rem';
+        
+        // Ocultar el botón flotante cuando el sidebar está abierto
+        const toggleBtn = document.getElementById('main-sidebar-toggle');
+        if (toggleBtn) {
+          toggleBtn.style.display = 'none';
+        }
       } else {
         mainElement.classList.remove('ml-64');
         mainElement.classList.add('ml-0');
+        mainElement.style.marginLeft = '0';
+        
+        // Asegurarse de que el botón flotante sea visible 
+        // (después de un pequeño retraso para permitir la animación del sidebar)
+        setTimeout(() => {
+          const toggleBtn = document.getElementById('main-sidebar-toggle');
+          if (toggleBtn) {
+            toggleBtn.style.display = 'block';
+          }
+        }, 300);
       }
     }
   }
@@ -92,8 +110,9 @@ const Layout = ({ children }: LayoutProps) => {
         {!isMobile && !sidebarOpen && (
           <button 
             onClick={() => handleSidebarToggle(true)}
-            className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
+            className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors sidebar-toggle-btn"
             aria-label="Abrir menú lateral"
+            id="main-sidebar-toggle"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"></line>
