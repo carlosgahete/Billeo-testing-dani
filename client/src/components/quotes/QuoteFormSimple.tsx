@@ -96,7 +96,7 @@ const QuoteFormSimple = ({ quoteId }: QuoteFormProps) => {
   // Cargar datos del presupuesto si estamos en modo edición
   const { data: quoteData } = useQuery({
     queryKey: ["/api/quotes", quoteId],
-    queryFn: quoteId ? getQueryFn() : () => undefined,
+    queryFn: quoteId ? getQueryFn() : () => Promise.resolve(undefined),
     enabled: !!quoteId,
   });
   
@@ -255,13 +255,15 @@ const QuoteFormSimple = ({ quoteId }: QuoteFormProps) => {
   useEffect(() => {
     if (quoteData && quoteId) {
       try {
-        const quote = quoteData.quote || {};
-        const items = quoteData.items || [];
+        // Asegurarse de que quoteData es un objeto válido y tiene las propiedades necesarias
+        const quoteObject = quoteData as Record<string, any>;
+        const quote = quoteObject?.quote || {};
+        const items = quoteObject?.items || [];
         
         // Buscar el IRPF en additionalTaxes si existe
         let irpfRate = -15; // valor por defecto
         if (quote.additionalTaxes && Array.isArray(quote.additionalTaxes)) {
-          const irpfTax = quote.additionalTaxes.find(tax => 
+          const irpfTax = quote.additionalTaxes.find((tax: Record<string, any>) => 
             tax.name === "IRPF" && tax.isPercentage);
           if (irpfTax) {
             irpfRate = Number(irpfTax.amount);
