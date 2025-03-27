@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import { generateQuotePDF } from "@/lib/pdf";
 
 import {
   Table,
@@ -199,6 +200,44 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+  
+  // Handle download PDF
+  const handleDownloadPDF = async (quote: Quote) => {
+    try {
+      const client = clientsData?.find((c: Client) => c.id === quote.clientId);
+      
+      if (!client) {
+        toast({
+          title: "Error",
+          description: "No se pudo encontrar la información del cliente",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Get quote items
+      const response = await apiRequest("GET", `/api/quotes/${quote.id}`);
+      if (!response.ok) {
+        throw new Error("Error al obtener los detalles del presupuesto");
+      }
+      
+      const data = await response.json();
+      
+      // Generate and download PDF
+      await generateQuotePDF(quote, client, data.items);
+      
+      toast({
+        title: "PDF generado",
+        description: `El presupuesto ${quote.quoteNumber} ha sido exportado a PDF`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `No se pudo generar el PDF: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   // Handle delete
   const handleDelete = (quoteId: number) => {
@@ -319,15 +358,14 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                       {showActions && (
                         <TableCell>
                           <div className="flex justify-end space-x-2">
-                            <Link href={`/quotes/${quote.id}`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="Ver y descargar PDF"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </Link>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Descargar PDF"
+                              onClick={() => handleDownloadPDF(quote)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
                             {quote.status === "draft" && (
                               <Button
                                 variant="ghost"
