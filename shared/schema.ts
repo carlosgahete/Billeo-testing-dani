@@ -190,9 +190,26 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   id: true 
 });
 
+// Helper function to convert string to number
+function toNumber(value: any, defaultValue = 0): number {
+  if (value === undefined || value === null || value === "") {
+    return defaultValue;
+  }
+  const num = Number(value);
+  return isNaN(num) ? defaultValue : num;
+}
+
 // Modificamos el esquema para incluir el campo additionalTaxes como un array de impuestos
 export const quoteWithTaxesSchema = insertQuoteSchema.extend({
-  additionalTaxes: z.array(additionalTaxSchema).optional().nullable()
+  additionalTaxes: z.array(additionalTaxSchema).optional().nullable(),
+  // Asegurarnos que los campos numéricos se conviertan correctamente
+  clientId: z.preprocess((val) => toNumber(val), z.number()),
+  subtotal: z.preprocess((val) => toNumber(val), z.number()),
+  tax: z.preprocess((val) => toNumber(val), z.number()),
+  total: z.preprocess((val) => toNumber(val), z.number()),
+  // Convertir fechas
+  issueDate: z.preprocess((val) => val instanceof Date ? val : new Date(val as string), z.date()),
+  validUntil: z.preprocess((val) => val instanceof Date ? val : new Date(val as string), z.date())
 });
 
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;

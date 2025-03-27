@@ -144,46 +144,64 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
   // Save/update quote mutation
   const quoteMutation = useMutation({
     mutationFn: async (data: QuoteFormValues) => {
-      // Asegurar que los valores numéricos sean correctos y del tipo adecuado
-      const formattedData = {
-        ...data,
-        clientId: parseInt(data.clientId),
-        subtotal: parseFloat(subtotal.toFixed(2)),
-        tax: parseFloat(tax.toFixed(2)),
-        total: parseFloat(total.toFixed(2)),
-        // Asegurar que additionalTaxes esté formateado correctamente
-        additionalTaxes: data.additionalTaxes?.map(tax => ({
-          ...tax,
-          amount: parseFloat(tax.amount.toString())
-        })) || [],
-        // Formatear los items para que todos los valores numéricos sean numbers
-        items: data.items.map(item => ({
-          ...item,
-          quantity: parseFloat(item.quantity.toString()),
-          unitPrice: parseFloat(item.unitPrice.toString()),
-          taxRate: parseFloat(item.taxRate.toString()),
-          subtotal: parseFloat((toNumber(item.quantity) * toNumber(item.unitPrice)).toFixed(2))
-        })),
-      };
-      
-      console.log("Enviando datos:", JSON.stringify(formattedData, null, 2));
-      
-      if (isEditMode) {
-        const res = await apiRequest("PUT", `/api/quotes/${quoteId}`, formattedData);
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => null);
-          console.error("Error detallado:", errorData);
-          throw new Error("Error al actualizar el presupuesto");
+      try {
+        // Asegurar que los valores numéricos sean correctos y del tipo adecuado
+        const formattedData = {
+          ...data,
+          // Asegurarnos de convertir strings a números explícitamente
+          clientId: Number(data.clientId),
+          subtotal: Number(subtotal.toFixed(2)),
+          tax: Number(tax.toFixed(2)),
+          total: Number(total.toFixed(2)),
+          // Asegurar que las fechas estén en el formato correcto (ISO string)
+          issueDate: data.issueDate.toISOString(),
+          validUntil: data.validUntil.toISOString(),
+          // Asegurar que additionalTaxes esté formateado correctamente
+          additionalTaxes: data.additionalTaxes?.map(tax => ({
+            ...tax,
+            name: tax.name.trim(),
+            amount: Number(tax.amount),
+            isPercentage: Boolean(tax.isPercentage)
+          })) || [],
+          // Formatear los items para que todos los valores numéricos sean numbers
+          items: data.items.map(item => ({
+            ...item,
+            description: item.description.trim(),
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            taxRate: Number(item.taxRate),
+            subtotal: Number((Number(item.quantity) * Number(item.unitPrice)).toFixed(2))
+          })),
+        };
+        
+        console.log("Enviando datos formateados:", JSON.stringify(formattedData, null, 2));
+        
+        if (isEditMode) {
+          const res = await apiRequest("PUT", `/api/quotes/${quoteId}`, formattedData);
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({ message: "Error desconocido" }));
+            console.error("Error detallado:", errorData);
+            throw new Error(`Error al actualizar el presupuesto: ${errorData.message || "Error desconocido"}`);
+          }
+          return await res.json();
+        } else {
+          const res = await apiRequest("POST", "/api/quotes", formattedData);
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({ message: "Error desconocido" }));
+            console.error("Error detallado:", errorData);
+            if (errorData.errors && errorData.errors.length > 0) {
+              const errorDetails = errorData.errors.map((e: any) => 
+                `${e.path?.join('.') || 'Campo'}: ${e.message || 'Error'}`
+              ).join(', ');
+              throw new Error(`Error de validación: ${errorDetails}`);
+            }
+            throw new Error(`Error al crear el presupuesto: ${errorData.message || "Error desconocido"}`);
+          }
+          return await res.json();
         }
-        return await res.json();
-      } else {
-        const res = await apiRequest("POST", "/api/quotes", formattedData);
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => null);
-          console.error("Error detallado:", errorData);
-          throw new Error("Error al crear el presupuesto: " + (errorData?.message || "Error desconocido"));
-        }
-        return await res.json();
+      } catch (error) {
+        console.error("Error en mutación:", error);
+        throw error;
       }
     },
     onSuccess: () => {

@@ -518,17 +518,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {
-    const result = await db.insert(quotes).values({
+    // Convertir los valores numéricos a cadenas para manejar los tipos DECIMAL en la base de datos
+    const formattedQuote = {
       ...quote,
+      subtotal: quote.subtotal?.toString() || "0",
+      tax: quote.tax?.toString() || "0",
+      total: quote.total?.toString() || "0",
       status: quote.status || "draft",
       notes: quote.notes || null,
       attachments: quote.attachments || null
-    }).returning();
+    };
+    
+    console.log("[SERVER] Creando presupuesto con datos formateados:", JSON.stringify(formattedQuote, null, 2));
+    
+    const result = await db.insert(quotes).values(formattedQuote).returning();
     return result[0];
   }
 
   async updateQuote(id: number, quoteData: Partial<InsertQuote>): Promise<Quote | undefined> {
-    const result = await db.update(quotes).set(quoteData).where(eq(quotes.id, id)).returning();
+    // Convertir valores numéricos a cadenas en caso de que existan en el quoteData
+    const formattedData = { ...quoteData };
+    
+    if (typeof formattedData.subtotal === "number") {
+      formattedData.subtotal = formattedData.subtotal.toString();
+    }
+    
+    if (typeof formattedData.tax === "number") {
+      formattedData.tax = formattedData.tax.toString();
+    }
+    
+    if (typeof formattedData.total === "number") {
+      formattedData.total = formattedData.total.toString();
+    }
+    
+    console.log("[SERVER] Actualizando presupuesto con datos formateados:", JSON.stringify(formattedData, null, 2));
+    
+    const result = await db.update(quotes).set(formattedData).where(eq(quotes.id, id)).returning();
     return result[0];
   }
 
@@ -543,12 +568,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuoteItem(quoteItem: InsertQuoteItem): Promise<QuoteItem> {
-    const result = await db.insert(quoteItems).values(quoteItem).returning();
+    // Convertir números a strings para los campos decimales
+    const formattedItem = {
+      ...quoteItem,
+      quantity: quoteItem.quantity?.toString() || "1",
+      unitPrice: quoteItem.unitPrice?.toString() || "0",
+      taxRate: quoteItem.taxRate?.toString() || "0",
+      subtotal: quoteItem.subtotal?.toString() || "0"
+    };
+    
+    console.log("[SERVER] Creando item de presupuesto con datos formateados:", JSON.stringify(formattedItem, null, 2));
+    
+    const result = await db.insert(quoteItems).values(formattedItem).returning();
     return result[0];
   }
 
   async updateQuoteItem(id: number, itemData: Partial<InsertQuoteItem>): Promise<QuoteItem | undefined> {
-    const result = await db.update(quoteItems).set(itemData).where(eq(quoteItems.id, id)).returning();
+    // Convertir números a strings para los campos decimales
+    const formattedData = { ...itemData };
+    
+    if (typeof formattedData.quantity === 'number') {
+      formattedData.quantity = formattedData.quantity.toString();
+    }
+    
+    if (typeof formattedData.unitPrice === 'number') {
+      formattedData.unitPrice = formattedData.unitPrice.toString();
+    }
+    
+    if (typeof formattedData.taxRate === 'number') {
+      formattedData.taxRate = formattedData.taxRate.toString();
+    }
+    
+    if (typeof formattedData.subtotal === 'number') {
+      formattedData.subtotal = formattedData.subtotal.toString();
+    }
+    
+    console.log("[SERVER] Actualizando item de presupuesto con datos formateados:", JSON.stringify(formattedData, null, 2));
+    
+    const result = await db.update(quoteItems).set(formattedData).where(eq(quoteItems.id, id)).returning();
     return result[0];
   }
 

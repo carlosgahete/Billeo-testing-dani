@@ -547,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(newInvoice.id);
       
       return res.status(201).json({ invoice: newInvoice, items: invoiceItems });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al crear factura:", error);
       return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
@@ -746,9 +746,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quoteResult = quoteWithTaxesSchema.safeParse(quoteData);
       
       if (!quoteResult.success) {
+        console.log("[SERVER] Error validando presupuesto:", JSON.stringify(quoteResult.error.errors, null, 2));
+        console.log("[SERVER] Datos recibidos:", JSON.stringify(quoteData, null, 2));
         return res.status(400).json({ 
           message: "Invalid quote data", 
-          errors: quoteResult.error.errors 
+          errors: quoteResult.error.errors,
+          received: quoteData
         });
       }
       
@@ -766,9 +769,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       return res.status(201).json(newQuote);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[SERVER] Error al crear presupuesto:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
   });
   
@@ -794,9 +797,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quoteResult = quoteWithTaxesSchema.partial().safeParse(req.body);
       
       if (!quoteResult.success) {
+        console.log("[SERVER] Error validando actualización de presupuesto:", JSON.stringify(quoteResult.error.errors, null, 2));
+        console.log("[SERVER] Datos recibidos para actualización:", JSON.stringify(req.body, null, 2));
         return res.status(400).json({ 
           message: "Invalid quote data", 
-          errors: quoteResult.error.errors 
+          errors: quoteResult.error.errors,
+          received: req.body
         });
       }
       
@@ -830,9 +836,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[SERVER] Presupuesto actualizado correctamente");
       
       return res.status(200).json({ quote: updatedQuote });
-    } catch (error) {
+    } catch (error: any) {
       console.error("[SERVER] Error al actualizar presupuesto:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
   });
   
@@ -933,11 +939,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: quote.userId,
         invoiceNumber: (lastNumber + 1).toString(),
         clientId: quote.clientId,
-        issueDate: new Date().toISOString(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días para pagar
-        subtotal: quote.subtotal,
-        tax: quote.tax,
-        total: quote.total,
+        issueDate: new Date(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días para pagar
+        // Convertir los números a string para evitar problemas con DECIMAL en PostgreSQL
+        subtotal: typeof quote.subtotal === 'string' ? quote.subtotal : quote.subtotal.toString(),
+        tax: typeof quote.tax === 'string' ? quote.tax : quote.tax.toString(),
+        total: typeof quote.total === 'string' ? quote.total : quote.total.toString(),
         additionalTaxes: quote.additionalTaxes,
         status: "pending",
         notes: `Generada a partir del presupuesto #${quote.quoteNumber}. ${quote.notes || ""}`
@@ -963,9 +970,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Quote converted to invoice successfully",
         invoice: newInvoice
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("[SERVER] Error al convertir presupuesto a factura:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
   });
 
