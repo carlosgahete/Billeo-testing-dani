@@ -34,14 +34,14 @@ interface NavItemProps {
 }
 
 const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => {
-  // Solución específica para la navegación a la página problemática
+  // Solución específica para la navegación a páginas problemáticas
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       onClick();
     }
     
-    // Si estamos navegando específicamente a la página de ingresos/gastos 
-    if (href === "/income-expense") {
+    // Si estamos navegando a páginas que necesitan cierre especial del sidebar
+    if (href === "/income-expense" || href === "/quotes") {
       // Identificar todos los botones de sidebar y asignarles una clase especial 
       document.querySelectorAll('button[aria-label="Cerrar menú lateral"]').forEach((btn, index) => {
         btn.classList.add('billeo-sidebar-toggle');
@@ -100,8 +100,8 @@ const Sidebar = ({
   const handleNavClick = () => {
     if (isMobile) {
       setMobileMenuOpen(false);
-    } else if (location === "/income-expense") {
-      // Extra precaución para la página problemática
+    } else if (location === "/income-expense" || location === "/quotes") {
+      // Extra precaución para las páginas problemáticas
       handleSidebarClose();
     }
   };
