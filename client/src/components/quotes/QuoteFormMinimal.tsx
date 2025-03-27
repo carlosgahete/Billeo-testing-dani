@@ -76,13 +76,23 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     const subtotal = parseFloat(amount) || 0;
     let taxesTotal = 0;
     
+    // Recorrer todos los impuestos y acumular su valor
     taxes.forEach(tax => {
+      const taxAmount = parseFloat(tax.amount) || 0;
+      
       if (tax.isPercentage) {
-        taxesTotal += subtotal * parseFloat(tax.amount || '0') / 100;
+        // Si es porcentaje, calcularlo sobre el subtotal
+        const taxValue = subtotal * taxAmount / 100;
+        console.log(`Impuesto ${tax.name}: ${taxAmount}% = ${taxValue}€`);
+        taxesTotal += taxValue;
       } else {
-        taxesTotal += parseFloat(tax.amount || '0');
+        // Si es valor fijo, sumarlo directamente
+        console.log(`Impuesto ${tax.name}: valor fijo = ${taxAmount}€`);
+        taxesTotal += taxAmount;
       }
     });
+    
+    console.log(`Subtotal: ${subtotal}€, Impuestos: ${taxesTotal}€, Total: ${subtotal + taxesTotal}€`);
     
     return {
       subtotal,
@@ -389,7 +399,8 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            setTaxes(taxes.filter((t) => t.id !== tax.id));
+                            console.log('Eliminando impuesto con id:', tax.id);
+                            setTaxes(prevTaxes => prevTaxes.filter((t) => t.id !== tax.id));
                           }}
                         >
                           ×
