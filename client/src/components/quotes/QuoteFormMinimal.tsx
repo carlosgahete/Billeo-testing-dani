@@ -68,6 +68,70 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   // Cálculos de impuestos y totales
   const [subtotal, setSubtotal] = useState(0);
   const [total, setTotal] = useState(0);
+  
+  // Cargar datos del presupuesto existente, si estamos en modo edición
+  const { data: quoteData, isLoading: isLoadingQuote } = useQuery({
+    queryKey: ['/api/quotes', quoteId],
+    queryFn: async () => {
+      if (!quoteId) return null;
+      try {
+        const res = await fetch(`/api/quotes/${quoteId}`);
+        if (!res.ok) throw new Error('Error al cargar el presupuesto');
+        return await res.json();
+      } catch (error) {
+        console.error('Error fetching quote:', error);
+        toast({
+          title: 'Error',
+          description: 'No se pudo cargar el presupuesto',
+          variant: 'destructive',
+        });
+        return null;
+      }
+    },
+    enabled: !!quoteId,
+  });
+
+  // Cuando se cargan los datos del presupuesto, actualizar el formulario
+  useEffect(() => {
+    if (quoteData && quoteId) {
+      console.log('Cargando datos del presupuesto:', quoteData);
+      
+      const { quote, client, items } = quoteData;
+      
+      if (quote) {
+        // Datos básicos
+        setQuoteNumber(quote.quoteNumber || 'P-001');
+        setClientId(quote.clientId?.toString() || '');
+        setStatus(quote.status || 'draft');
+        setNotes(quote.notes || '');
+        
+        // Ver si hay logo
+        if (quote.logoUrl) {
+          setLogoPreview(quote.logoUrl);
+        }
+        
+        // Items (en este formulario simplificado solo usamos un ítem)
+        if (items && items.length > 0) {
+          setDescription(items[0].description || '');
+          setAmount(items[0].unitPrice || '0');
+        }
+        
+        // Impuestos
+        if (quote.additionalTaxes && Array.isArray(quote.additionalTaxes)) {
+          const formattedTaxes = quote.additionalTaxes.map((tax: any, index: number) => ({
+            id: (index + 1).toString(),
+            name: tax.name || '',
+            amount: tax.amount?.toString() || '0',
+            isPercentage: tax.isPercentage || true
+          }));
+          
+          if (formattedTaxes.length > 0) {
+            setTaxes(formattedTaxes);
+          }
+        }
+      }
+    }
+  }, [quoteData, quoteId]);
 
   // Cargar clientes de manera segura
   const { data: clientsData } = useQuery({
@@ -228,7 +292,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     
     try {
       // Preparar datos para enviar
-      const quoteData = {
+      const quoteDataToSend = {
         quoteNumber,
         clientId: parseInt(clientId),
         status,
@@ -259,7 +323,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       const endpoint = quoteId ? `/api/quotes/${quoteId}` : '/api/quotes';
       const method = quoteId ? 'PUT' : 'POST';
       
-      const res = await apiRequest(method, endpoint, quoteData);
+      const res = await apiRequest(method, endpoint, quoteDataToSend);
       
       if (!res.ok) {
         const errorData = await res.json();
@@ -327,6 +391,16 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       setIsSubmitting(false);
     }
   };
+
+  // Mostrar indicador de carga durante la carga de datos del presupuesto
+  if (isLoadingQuote && quoteId) {
+    return (
+      <div className="w-full px-4 flex items-center justify-center py-12">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin text-primary" />
+        <span className="text-lg">Cargando datos del presupuesto...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full px-4">
