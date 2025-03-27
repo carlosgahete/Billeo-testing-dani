@@ -187,17 +187,41 @@ export default function QuotesPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-4">
-              <p className="text-3xl font-bold text-green-600">{totalValue.toLocaleString('es-ES')} €</p>
+              <p className="text-3xl font-bold text-green-600">
+                {new Intl.NumberFormat('es-ES', {
+                  style: 'currency',
+                  currency: 'EUR',
+                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 2,
+                  useGrouping: true
+                }).format(totalValue)}
+              </p>
               <p className="text-sm text-neutral-500 mb-3">Valor total presupuestado</p>
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Presupuestos aceptados:</span>
-                  <span className="font-medium">{acceptedValue.toLocaleString('es-ES')} €</span>
+                  <span className="font-medium">
+                    {new Intl.NumberFormat('es-ES', {
+                      style: 'currency',
+                      currency: 'EUR',
+                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 2,
+                      useGrouping: true
+                    }).format(acceptedValue)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Pendientes de aceptar:</span>
-                  <span className="font-medium">{(totalValue - acceptedValue).toLocaleString('es-ES')} €</span>
+                  <span className="font-medium">
+                    {new Intl.NumberFormat('es-ES', {
+                      style: 'currency',
+                      currency: 'EUR',
+                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 2,
+                      useGrouping: true
+                    }).format(totalValue - acceptedValue)}
+                  </span>
                 </div>
               </div>
               

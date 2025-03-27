@@ -66,7 +66,9 @@ const formatCurrency = (amount: any) => {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
-    minimumFractionDigits: 2
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: true
   }).format(numericAmount);
 };
 

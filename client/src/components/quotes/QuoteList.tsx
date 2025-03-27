@@ -171,7 +171,8 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
       style: "currency",
       currency: "EUR",
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
+      useGrouping: true
     }).format(numericAmount);
   };
 
