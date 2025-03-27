@@ -324,6 +324,51 @@ export class DatabaseStorage implements IStorage {
         
         console.log("Base de datos inicializada correctamente!");
       } else {
+        // Verificar si existen las tablas de quotes y quote_items
+        const quotesResult = await sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            AND table_name = 'quotes'
+          )
+        `;
+        
+        if (!quotesResult[0] || quotesResult[0].exists === false) {
+          console.log("Creando tablas de presupuestos...");
+          
+          await sql`
+            CREATE TABLE IF NOT EXISTS "quotes" (
+              "id" SERIAL PRIMARY KEY,
+              "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+              "quote_number" TEXT NOT NULL,
+              "client_id" INTEGER NOT NULL REFERENCES "clients"("id"),
+              "issue_date" TIMESTAMP NOT NULL,
+              "valid_until" TIMESTAMP NOT NULL,
+              "subtotal" DECIMAL(10, 2) NOT NULL,
+              "tax" DECIMAL(10, 2) NOT NULL,
+              "total" DECIMAL(10, 2) NOT NULL,
+              "additional_taxes" JSONB,
+              "status" TEXT NOT NULL DEFAULT 'draft',
+              "notes" TEXT,
+              "attachments" TEXT[]
+            );
+          `;
+          
+          await sql`
+            CREATE TABLE IF NOT EXISTS "quote_items" (
+              "id" SERIAL PRIMARY KEY,
+              "quote_id" INTEGER NOT NULL REFERENCES "quotes"("id") ON DELETE CASCADE,
+              "description" TEXT NOT NULL,
+              "quantity" DECIMAL(10, 2) NOT NULL,
+              "unit_price" DECIMAL(10, 2) NOT NULL,
+              "tax_rate" DECIMAL(5, 2) NOT NULL,
+              "subtotal" DECIMAL(10, 2) NOT NULL
+            );
+          `;
+          
+          console.log("Tablas de presupuestos creadas correctamente!");
+        }
+        
         console.log("Las tablas de la base de datos ya existen.");
       }
     } catch (error) {
