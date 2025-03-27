@@ -8,7 +8,8 @@ import {
   Settings,
   User,
   X,
-  LogOut
+  LogOut,
+  FileText
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -135,14 +136,14 @@ const Sidebar = ({
       label: "Facturas" 
     },
     { 
+      href: "/quotes", 
+      icon: <FileText size={20} />, 
+      label: "Presupuestos" 
+    },
+    { 
       href: "/income-expense", 
       icon: <Wallet size={20} />, 
       label: "Ingresos y Gastos" 
-    },
-    { 
-      href: "/transactions", 
-      icon: <Wallet size={20} />, 
-      label: "Transacciones" 
     },
     { 
       href: "/reports", 

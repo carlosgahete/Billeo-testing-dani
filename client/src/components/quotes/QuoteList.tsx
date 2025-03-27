@@ -73,13 +73,13 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   const [convertAlertOpen, setConvertAlertOpen] = useState(false);
 
   // Fetch quotes
-  const { data: quotes = [], isLoading: isQuotesLoading } = useQuery({
+  const { data: quotes = [], isLoading: isQuotesLoading } = useQuery<Quote[]>({
     queryKey: ["/api/quotes"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
   // Fetch clients
-  const { data: clientsData = [], isLoading: isClientsLoading } = useQuery({
+  const { data: clientsData = [], isLoading: isClientsLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
@@ -184,7 +184,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
       case "sent":
         return <Badge variant="secondary">Enviado</Badge>;
       case "accepted":
-        return <Badge variant="success" className="bg-green-500 hover:bg-green-600">Aceptado</Badge>;
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Aceptado</Badge>;
       case "rejected":
         return <Badge variant="destructive">Rechazado</Badge>;
       case "expired":
@@ -240,7 +240,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
     );
   }
 
-  const displayQuotes = limit ? quotes.slice(0, limit) : quotes;
+  const displayQuotes = limit && typeof limit === 'number' ? quotes.slice(0, limit) : quotes;
 
   if (displayQuotes.length === 0) {
     return (
@@ -359,7 +359,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
               <Button>Crear presupuesto</Button>
             </Link>
           )}
-          {!showActions && displayQuotes.length >= limit && (
+          {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
             <Link href="/quotes">
               <Button variant="outline">Ver todos</Button>
             </Link>

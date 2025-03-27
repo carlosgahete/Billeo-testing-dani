@@ -57,16 +57,28 @@ const quoteSchema = z.object({
   additionalTaxes: z.array(
     z.object({
       name: z.string().min(1, { message: "El nombre del impuesto es obligatorio" }),
-      amount: z.number().or(z.string().transform(v => toNumber(v))),
+      amount: z.preprocess(
+        (val) => toNumber(val, 0),
+        z.number()
+      ),
       isPercentage: z.boolean().default(true),
     })
   ).optional(),
   items: z.array(
     z.object({
       description: z.string().min(1, { message: "La descripción es obligatoria" }),
-      quantity: z.number().or(z.string().transform(v => toNumber(v))).min(0.01, { message: "La cantidad debe ser mayor que 0" }),
-      unitPrice: z.number().or(z.string().transform(v => toNumber(v))).min(0, { message: "El precio unitario no puede ser negativo" }),
-      taxRate: z.number().or(z.string().transform(v => toNumber(v))).min(0, { message: "El IVA no puede ser negativo" }),
+      quantity: z.preprocess(
+        (val) => toNumber(val, 0),
+        z.number().min(0.01, { message: "La cantidad debe ser mayor que 0" })
+      ),
+      unitPrice: z.preprocess(
+        (val) => toNumber(val, 0),
+        z.number().min(0, { message: "El precio unitario no puede ser negativo" })
+      ),
+      taxRate: z.preprocess(
+        (val) => toNumber(val, 0),
+        z.number().min(0, { message: "El IVA no puede ser negativo" })
+      ),
     })
   ).min(1, { message: "Debe agregar al menos un ítem al presupuesto" }),
 });
@@ -117,13 +129,13 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
   });
 
   // Fetch clients for dropdown
-  const { data: clients = [] } = useQuery({
+  const { data: clients = [] } = useQuery<any[]>({
     queryKey: ["/api/clients"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
   // Fetch quote data for edit mode
-  const { data: quoteData, isLoading: isQuoteLoading } = useQuery({
+  const { data: quoteData, isLoading: isQuoteLoading } = useQuery<any>({
     queryKey: ["/api/quotes", quoteId],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: isEditMode,
@@ -175,7 +187,7 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
 
   // Load quote data into form if editing
   useEffect(() => {
-    if (quoteData && quoteId) {
+    if (quoteData && quoteId && quoteData.quote && quoteData.items) {
       const quote = quoteData.quote;
       
       // Transform date strings to Date objects
@@ -190,7 +202,7 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
       // Reset the form with the quote data
       form.reset({
         ...formattedQuote,
-        items: quoteData.items || [],
+        items: quoteData.items,
       });
     }
   }, [quoteData, quoteId, form]);
