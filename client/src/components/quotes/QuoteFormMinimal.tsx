@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -22,11 +22,19 @@ import {
   CardTitle,
   CardDescription 
 } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 // Interfaz mínima para las props
 interface QuoteFormMinimalProps {
   quoteId?: number;
+}
+
+// Interfaz para un impuesto
+interface Tax {
+  id: string;
+  name: string;
+  amount: string;
+  isPercentage: boolean;
 }
 
 const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
@@ -42,16 +50,15 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   const [amount, setAmount] = useState('0');
   const [notes, setNotes] = useState('');
   
-  // Estados para impuestos
-  const [taxes, setTaxes] = useState<Array<{
-    id: string;
-    name: string;
-    amount: string;
-    isPercentage: boolean;
-  }>>([]);
-  const [taxName, setTaxName] = useState('');
-  const [taxAmount, setTaxAmount] = useState('0');
-  const [taxIsPercentage, setTaxIsPercentage] = useState(true);
+  // Impuestos preestablecidos comunes
+  const [ivaEnabled, setIvaEnabled] = useState(true);
+  const [irpfEnabled, setIrpfEnabled] = useState(true);
+  
+  // Cálculos de impuestos y totales
+  const [subtotal, setSubtotal] = useState(0);
+  const [totalIVA, setTotalIVA] = useState(0);
+  const [totalIRPF, setTotalIRPF] = useState(0);
+  const [total, setTotal] = useState(0);
 
   // Cargar clientes de manera segura
   const { data: clientsData } = useQuery({
@@ -71,35 +78,25 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   // Asegurar que clientsData sea un array
   const clients = Array.isArray(clientsData) ? clientsData : [];
 
-  // Calcular los totales basados en el subtotal y los impuestos
-  const calculateTotals = () => {
-    const subtotal = parseFloat(amount) || 0;
-    let taxesTotal = 0;
+  // Calcular totales cuando cambia el importe o los impuestos
+  useEffect(() => {
+    const subtotalValue = parseFloat(amount) || 0;
+    setSubtotal(subtotalValue);
     
-    // Recorrer todos los impuestos y acumular su valor
-    taxes.forEach(tax => {
-      const taxAmount = parseFloat(tax.amount) || 0;
-      
-      if (tax.isPercentage) {
-        // Si es porcentaje, calcularlo sobre el subtotal
-        const taxValue = subtotal * taxAmount / 100;
-        console.log(`Impuesto ${tax.name}: ${taxAmount}% = ${taxValue}€`);
-        taxesTotal += taxValue;
-      } else {
-        // Si es valor fijo, sumarlo directamente
-        console.log(`Impuesto ${tax.name}: valor fijo = ${taxAmount}€`);
-        taxesTotal += taxAmount;
-      }
-    });
+    // Calcular IVA (21%) si está habilitado
+    const ivaValue = ivaEnabled ? subtotalValue * 0.21 : 0;
+    setTotalIVA(ivaValue);
     
-    console.log(`Subtotal: ${subtotal}€, Impuestos: ${taxesTotal}€, Total: ${subtotal + taxesTotal}€`);
+    // Calcular IRPF (-15%) si está habilitado
+    const irpfValue = irpfEnabled ? subtotalValue * -0.15 : 0;
+    setTotalIRPF(irpfValue);
     
-    return {
-      subtotal,
-      taxesTotal,
-      total: subtotal + taxesTotal
-    };
-  };
+    // Calcular total
+    const totalValue = subtotalValue + ivaValue + irpfValue;
+    setTotal(totalValue);
+    
+    console.log(`Subtotal: ${subtotalValue}€, IVA: ${ivaValue}€, IRPF: ${irpfValue}€, Total: ${totalValue}€`);
+  }, [amount, ivaEnabled, irpfEnabled]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +122,24 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     setIsSubmitting(true);
     
     try {
-      const { subtotal, total } = calculateTotals();
+      // Preparar lista de impuestos adicionales
+      const additionalTaxes = [];
+      
+      if (ivaEnabled) {
+        additionalTaxes.push({
+          name: 'IVA',
+          amount: '21',
+          isPercentage: true
+        });
+      }
+      
+      if (irpfEnabled) {
+        additionalTaxes.push({
+          name: 'IRPF',
+          amount: '-15',
+          isPercentage: true
+        });
+      }
       
       // Preparar datos para enviar
       const quoteData = {
@@ -134,23 +148,18 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         status,
         notes,
         subtotal: subtotal.toFixed(2),
-        tax: '0.00', // Ya está incluido en additionalTaxes
+        tax: totalIVA.toFixed(2), // Solo IVA como impuesto principal
         total: total.toFixed(2),
         issueDate: new Date(),
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        // Usar los impuestos introducidos por el usuario
-        additionalTaxes: taxes.map(tax => ({
-          name: tax.name,
-          amount: tax.amount,
-          isPercentage: tax.isPercentage
-        })),
+        additionalTaxes,
         // Añadir un solo ítem con la descripción y el monto
         items: [
           {
             description: description || 'Servicio profesional',
             quantity: '1',
             unitPrice: amount,
-            taxRate: '0', // Los impuestos se gestionan a nivel de presupuesto
+            taxRate: ivaEnabled ? '21' : '0',
             subtotal: subtotal.toFixed(2)
           }
         ]
@@ -192,8 +201,6 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       setIsSubmitting(false);
     }
   };
-
-  const { subtotal, taxesTotal, total } = calculateTotals();
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -280,136 +287,32 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               </div>
             </div>
             
-            {/* Impuestos */}
-            <div className="border-t border-b py-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">Impuestos aplicables</h3>
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (!taxName.trim()) {
-                      toast({
-                        title: 'Error',
-                        description: 'Introduce un nombre para el impuesto',
-                        variant: 'destructive',
-                      });
-                      return;
-                    }
-                    
-                    // Asegurarse de que el valor del impuesto sea un número válido
-                    const parsedAmount = parseFloat(taxAmount);
-                    if (isNaN(parsedAmount)) {
-                      toast({
-                        title: 'Error',
-                        description: 'El valor del impuesto debe ser un número válido',
-                        variant: 'destructive',
-                      });
-                      return;
-                    }
-                    
-                    console.log('Añadiendo impuesto:', {
-                      name: taxName,
-                      amount: taxAmount,
-                      isPercentage: taxIsPercentage
-                    });
-                    
-                    // Añadir el impuesto a la lista
-                    setTaxes(prevTaxes => [
-                      ...prevTaxes, 
-                      {
-                        id: Date.now().toString(),
-                        name: taxName,
-                        amount: taxAmount,
-                        isPercentage: taxIsPercentage
-                      }
-                    ]);
-                    
-                    // Limpiar los campos
-                    setTaxName('');
-                    setTaxAmount('0');
-                  }}
-                >
-                  Añadir impuesto
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="taxName">Nombre</Label>
-                  <Input
-                    id="taxName"
-                    value={taxName}
-                    onChange={(e) => setTaxName(e.target.value)}
-                    placeholder="Ej: IVA, IRPF"
+            {/* Impuestos simplificados */}
+            <div className="border-t border-b py-4">
+              <h3 className="text-sm font-medium mb-3">Impuestos aplicables</h3>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="ivaEnabled"
+                    checked={ivaEnabled}
+                    onChange={(e) => setIvaEnabled(e.target.checked)}
+                    className="mr-2 rounded border-gray-300"
                   />
+                  <Label htmlFor="ivaEnabled" className="text-sm">IVA (21%)</Label>
                 </div>
                 
-                <div className="space-y-1">
-                  <Label htmlFor="taxAmount">Valor</Label>
-                  <Input
-                    id="taxAmount"
-                    type="text"
-                    inputMode="decimal"
-                    value={taxAmount}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9.-]/g, '');
-                      setTaxAmount(value);
-                    }}
-                    placeholder="Ej: 21, -15"
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="irpfEnabled"
+                    checked={irpfEnabled}
+                    onChange={(e) => setIrpfEnabled(e.target.checked)}
+                    className="mr-2 rounded border-gray-300"
                   />
-                </div>
-                
-                <div className="space-y-1">
-                  <Label htmlFor="taxType">Tipo</Label>
-                  <Select
-                    value={taxIsPercentage ? "percentage" : "fixed"}
-                    onValueChange={(value) => setTaxIsPercentage(value === "percentage")}
-                  >
-                    <SelectTrigger id="taxType">
-                      <SelectValue placeholder="Tipo de valor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percentage">Porcentaje (%)</SelectItem>
-                      <SelectItem value="fixed">Importe fijo (€)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="irpfEnabled" className="text-sm">IRPF (-15%)</Label>
                 </div>
               </div>
-              
-              {/* Lista de impuestos añadidos */}
-              {taxes.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  <h4 className="text-sm font-medium">Impuestos añadidos:</h4>
-                  <div className="space-y-2">
-                    {taxes.map((tax) => (
-                      <div 
-                        key={tax.id} 
-                        className="flex justify-between items-center p-2 bg-muted rounded-md"
-                      >
-                        <div>
-                          <span className="font-medium">{tax.name}</span>
-                          <span className="ml-2 text-sm text-muted-foreground">
-                            {tax.isPercentage ? `${tax.amount}%` : `${tax.amount}€`}
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            console.log('Eliminando impuesto con id:', tax.id);
-                            setTaxes(prevTaxes => prevTaxes.filter((t) => t.id !== tax.id));
-                          }}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
             
             <div className="space-y-2">
@@ -430,16 +333,19 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                   <span>{subtotal.toFixed(2)} €</span>
                 </div>
                 
-                {taxes.map((tax) => (
-                  <div className="flex justify-between" key={tax.id}>
-                    <span>{tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:</span>
-                    <span>
-                      {tax.isPercentage 
-                        ? (subtotal * parseFloat(tax.amount || '0') / 100).toFixed(2)
-                        : parseFloat(tax.amount || '0').toFixed(2)} €
-                    </span>
+                {ivaEnabled && (
+                  <div className="flex justify-between">
+                    <span>IVA (21%):</span>
+                    <span>{totalIVA.toFixed(2)} €</span>
                   </div>
-                ))}
+                )}
+                
+                {irpfEnabled && (
+                  <div className="flex justify-between">
+                    <span>IRPF (-15%):</span>
+                    <span>{totalIRPF.toFixed(2)} €</span>
+                  </div>
+                )}
                 
                 <div className="flex justify-between border-t pt-2 font-bold">
                   <span>Total:</span>
