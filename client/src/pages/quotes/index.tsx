@@ -14,7 +14,7 @@ export default function QuotesPage() {
     <Layout>
       <PageTitle 
         title="Presupuestos" 
-        description="Gestiona tus presupuestos, envíalos a clientes y conviértelos en facturas." 
+        description="Gestiona tus presupuestos, envíalos a clientes y conviértelos fácilmente en facturas. Crea presupuestos detallados que impresionen a tus clientes y aumenten tus posibilidades de venta." 
       />
       <div className="mt-6">
         <QuoteList userId={user.id} showActions={true} />

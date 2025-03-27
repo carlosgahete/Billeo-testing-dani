@@ -254,7 +254,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
             <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Sin presupuestos</h3>
             <p className="text-muted-foreground mb-6">
-              No has creado ningún presupuesto todavía. Crea tu primer presupuesto para comenzar.
+              No has creado ningún presupuesto todavía. Los presupuestos son una excelente manera de presentar tus servicios a clientes potenciales antes de emitir facturas. Crea tu primer presupuesto para comenzar a convertir prospectos en clientes.
             </p>
           </div>
         </CardContent>
@@ -273,7 +273,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
         <CardHeader>
           <CardTitle>Presupuestos</CardTitle>
           <CardDescription>
-            Listado de presupuestos emitidos
+            Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -398,7 +398,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           <AlertDialogHeader>
             <AlertDialogTitle>Convertir a factura</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Deseas convertir este presupuesto en una factura? Se creará una nueva factura con los datos del presupuesto.
+              ¿Deseas convertir este presupuesto en una factura? Se creará una nueva factura con todos los datos del presupuesto, incluyendo cliente, conceptos, importes e impuestos. Esta es la manera más rápida de facturar un trabajo previamente presupuestado y aceptado por el cliente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
