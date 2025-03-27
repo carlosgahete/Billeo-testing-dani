@@ -279,7 +279,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                   variant="outline" 
                   size="sm"
                   onClick={() => {
-                    if (!taxName) {
+                    if (!taxName.trim()) {
                       toast({
                         title: 'Error',
                         description: 'Introduce un nombre para el impuesto',
@@ -288,8 +288,26 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                       return;
                     }
                     
-                    setTaxes([
-                      ...taxes, 
+                    // Asegurarse de que el valor del impuesto sea un número válido
+                    const parsedAmount = parseFloat(taxAmount);
+                    if (isNaN(parsedAmount)) {
+                      toast({
+                        title: 'Error',
+                        description: 'El valor del impuesto debe ser un número válido',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    
+                    console.log('Añadiendo impuesto:', {
+                      name: taxName,
+                      amount: taxAmount,
+                      isPercentage: taxIsPercentage
+                    });
+                    
+                    // Añadir el impuesto a la lista
+                    setTaxes(prevTaxes => [
+                      ...prevTaxes, 
                       {
                         id: Date.now().toString(),
                         name: taxName,
@@ -297,6 +315,8 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                         isPercentage: taxIsPercentage
                       }
                     ]);
+                    
+                    // Limpiar los campos
                     setTaxName('');
                     setTaxAmount('0');
                   }}
