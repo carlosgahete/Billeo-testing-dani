@@ -156,9 +156,9 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
           ...data,
           // Convertir client ID a número ya que aquí es un campo numérico, no string
           clientId: Number(data.clientId),
-          // Convertir los valores numéricos a string para el backend
+          // Calcular y usar estos valores en lugar de los que vienen del formulario
           subtotal: subtotal.toFixed(2),
-          tax: tax.toFixed(2),
+          tax: tax.toFixed(2), 
           total: total.toFixed(2),
           // Las fechas deben ser objetos Date, no strings
           issueDate: data.issueDate,
@@ -254,40 +254,66 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
 
   // Calculate totals when items or taxes change
   useEffect(() => {
-    const items = form.watch("items");
+    const items = form.watch("items") || [];
     const additionalTaxes = form.watch("additionalTaxes") || [];
+    
+    console.log("Items para cálculos:", items);
     
     // Calculate subtotal and tax
     let calculatedSubtotal = 0;
     let calculatedTax = 0;
     
-    items.forEach(item => {
-      const quantity = toNumber(item.quantity);
-      const unitPrice = toNumber(item.unitPrice);
-      const taxRate = toNumber(item.taxRate);
-      
-      const itemSubtotal = quantity * unitPrice;
-      const itemTax = itemSubtotal * (taxRate / 100);
-      
-      calculatedSubtotal += itemSubtotal;
-      calculatedTax += itemTax;
-    });
+    if (items && items.length > 0) {
+      items.forEach(item => {
+        if (!item) return;
+        
+        console.log("Procesando item:", item);
+        const quantity = toNumber(item.quantity);
+        const unitPrice = toNumber(item.unitPrice);
+        const taxRate = toNumber(item.taxRate);
+        
+        console.log(`Después de toNumber: quantity=${quantity}, unitPrice=${unitPrice}, taxRate=${taxRate}`);
+        
+        const itemSubtotal = quantity * unitPrice;
+        const itemTax = itemSubtotal * (taxRate / 100);
+        
+        console.log(`Calculado: itemSubtotal=${itemSubtotal}, itemTax=${itemTax}`);
+        
+        calculatedSubtotal += itemSubtotal;
+        calculatedTax += itemTax;
+      });
+    }
+    
+    console.log(`Subtotal calculado: ${calculatedSubtotal}, Impuesto: ${calculatedTax}`);
     
     // Calculate additional taxes
     let additionalTaxAmount = 0;
-    additionalTaxes.forEach(tax => {
-      if (tax.isPercentage) {
-        additionalTaxAmount += calculatedSubtotal * (toNumber(tax.amount) / 100);
-      } else {
-        additionalTaxAmount += toNumber(tax.amount);
-      }
-    });
+    if (additionalTaxes && additionalTaxes.length > 0) {
+      additionalTaxes.forEach(tax => {
+        if (!tax) return;
+        
+        console.log("Procesando impuesto adicional:", tax);
+        if (tax.isPercentage) {
+          const taxAmount = calculatedSubtotal * (toNumber(tax.amount) / 100);
+          console.log(`Impuesto porcentual: ${tax.name} = ${taxAmount}`);
+          additionalTaxAmount += taxAmount;
+        } else {
+          const taxAmount = toNumber(tax.amount);
+          console.log(`Impuesto fijo: ${tax.name} = ${taxAmount}`);
+          additionalTaxAmount += taxAmount;
+        }
+      });
+    }
     
-    // Update state
+    console.log(`Importe total de impuestos adicionales: ${additionalTaxAmount}`);
+    
+    // Update state values for display
     setSubtotal(calculatedSubtotal);
     setTax(calculatedTax);
     setTotal(calculatedSubtotal + calculatedTax + additionalTaxAmount);
-  }, [form.watch("items"), form.watch("additionalTaxes")]);
+    
+    console.log(`TOTALES FINALES: Subtotal=${calculatedSubtotal}, Tax=${calculatedTax}, Total=${calculatedSubtotal + calculatedTax + additionalTaxAmount}`);
+  }, [form.watch("items"), form.watch("additionalTaxes"), form]);
 
   // Handle form submission
   const handleSubmit = (data: QuoteFormValues) => {
@@ -530,7 +556,17 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                           <FormItem>
                             <FormLabel>Precio unitario</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" min="0" {...field} />
+                              <Input placeholder="0.00" {...field} onChange={(e) => {
+                                // Limpiamos el valor y lo convertimos a número para el campo
+                                const cleanValue = e.target.value.replace(/[€$,\s]/g, '');
+                                field.onChange(cleanValue);
+                                
+                                // Forzar recálculo inmediato
+                                setTimeout(() => {
+                                  const items = form.getValues("items");
+                                  form.setValue("items", [...items], { shouldValidate: false });
+                                }, 50);
+                              }} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
