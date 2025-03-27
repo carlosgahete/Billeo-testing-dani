@@ -41,6 +41,10 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // Estados para los campos básicos
   const [quoteNumber, setQuoteNumber] = useState('P-001');
@@ -165,6 +169,39 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       )
     );
   };
+  
+  // Manejar selección de archivo de logo
+  const handleSelectFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Manejar el cambio en el input de archivo
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Formato no válido",
+          description: "Por favor, sube un archivo de imagen válido (JPEG, PNG, etc.)",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Guardar el archivo para enviarlo posteriormente
+      setLogoFile(file);
+      
+      // Crear una URL para previsualizar la imagen
+      const previewUrl = URL.createObjectURL(file);
+      setLogoPreview(previewUrl);
+      
+      toast({
+        title: "Logo seleccionado",
+        description: "Se usará este logo al crear el presupuesto.",
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,6 +266,42 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         throw new Error(errorData.message || 'Error al guardar el presupuesto');
       }
       
+      const responseData = await res.json();
+      const newQuoteId = responseData.id || quoteId;
+      
+      // Si hay un logo seleccionado, subirlo
+      if (logoFile && newQuoteId) {
+        setIsUploading(true);
+        
+        try {
+          const formData = new FormData();
+          formData.append('quoteLogo', logoFile);
+          
+          const logoRes = await fetch(`/api/quotes/${newQuoteId}/logo`, {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!logoRes.ok) {
+            const errorData = await logoRes.json();
+            throw new Error(errorData.message || 'Error subiendo el logo');
+          }
+          
+          toast({
+            title: "Logo subido",
+            description: "El logo se ha guardado correctamente",
+          });
+        } catch (error) {
+          toast({
+            title: "Error al subir logo",
+            description: error instanceof Error ? error.message : 'Error desconocido',
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploading(false);
+        }
+      }
+      
       // Éxito
       toast({
         title: quoteId ? 'Presupuesto actualizado' : 'Presupuesto creado',
@@ -264,19 +337,30 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               <CardTitle>{quoteId ? 'Editar Presupuesto' : 'Crear Presupuesto'}</CardTitle>
               <CardDescription>Introduce los datos básicos para el presupuesto</CardDescription>
             </div>
-            <Button 
-              type="button"
-              variant="outline" 
-              className="flex items-center h-9"
-              size="sm"
-              onClick={() => toast({
-                title: "Información",
-                description: "El logo se puede subir después de crear el presupuesto, en la vista de detalles."
-              })}
-            >
-              <Image className="mr-2 h-4 w-4" />
-              Subir logo
-            </Button>
+            <div className="flex items-center space-x-2">
+              {logoPreview && (
+                <div className="relative h-9 w-9 rounded-md overflow-hidden border">
+                  <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain" />
+                </div>
+              )}
+              <Button 
+                type="button"
+                variant="outline" 
+                className="flex items-center h-9"
+                size="sm"
+                onClick={handleSelectFile}
+              >
+                <Image className="mr-2 h-4 w-4" />
+                {logoPreview ? "Cambiar logo" : "Subir logo"}
+              </Button>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileInputChange}
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -511,11 +595,11 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             <Button type="button" variant="outline" onClick={() => navigate('/quotes')}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button type="submit" disabled={isSubmitting || isUploading}>
+              {isSubmitting || isUploading ? (
                 <span className="flex items-center">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Guardando...
+                  {isUploading ? 'Subiendo logo...' : 'Guardando...'}
                 </span>
               ) : quoteId ? (
                 'Actualizar presupuesto'
