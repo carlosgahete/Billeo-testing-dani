@@ -798,20 +798,23 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
             </div>
             
             {/* Mostrar impuestos adicionales en el resumen si existen */}
-            {form.getValues("additionalTaxes") && form.getValues("additionalTaxes").length > 0 && (
-              form.getValues("additionalTaxes").map((tax, index) => (
-                tax.name && (
-                  <div key={index} className="flex justify-between py-2">
-                    <span className="text-muted-foreground">{tax.name}:</span>
-                    <span className="font-medium">
-                      {tax.isPercentage 
-                        ? `${tax.amount}%` 
-                        : formatCurrency(Number(tax.amount))}
-                    </span>
-                  </div>
-                )
-              ))
-            )}
+            {form.getValues("additionalTaxes") && Array.isArray(form.getValues("additionalTaxes")) && 
+              form.getValues("additionalTaxes").map((tax, index) => {
+                if (tax && tax.name) {
+                  return (
+                    <div key={index} className="flex justify-between py-2">
+                      <span className="text-muted-foreground">{tax.name}:</span>
+                      <span className="font-medium">
+                        {tax.isPercentage 
+                          ? `${tax.amount}%` 
+                          : formatCurrency(Number(tax.amount || 0))}
+                      </span>
+                    </div>
+                  );
+                }
+                return null;
+              })
+            }
             
             <div className="flex justify-between py-3 border-t mt-2 pt-3">
               <span className="text-lg font-bold">Total:</span>
