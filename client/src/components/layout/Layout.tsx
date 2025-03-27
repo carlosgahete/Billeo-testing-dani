@@ -94,16 +94,9 @@ const Layout = ({ children }: LayoutProps) => {
           }}
         >
           <div 
-            style={{
-              padding: '0 2rem',
-              maxWidth: '1200px',
-              marginLeft: 'auto',
-              marginRight: 'auto'
-            }}
+            className="py-4 lg:py-6 px-4 lg:px-8 transition-all duration-300 w-full"
           >
-            <div className="py-4 lg:py-6 transition-all duration-300">
-              {children}
-            </div>
+            {children}
           </div>
         </main>
       </div>
