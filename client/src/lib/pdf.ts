@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getImageAsDataUrl } from "./image-utils";
 
 interface AdditionalTax {
   name: string;
@@ -66,6 +67,46 @@ interface QuoteItem {
   unitPrice: number;
   taxRate: number;
   subtotal: number;
+}
+
+// Helper functions
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function getStatusText(status: string): string {
+  switch (status) {
+    case "pending":
+      return "Pendiente";
+    case "paid":
+      return "Pagada";
+    case "overdue":
+      return "Vencida";
+    case "canceled":
+      return "Cancelada";
+    default:
+      return status;
+  }
+}
+
+function getStatusColor(status: string): number[] {
+  switch (status) {
+    case "pending":
+      return [245, 124, 0]; // warning (orange)
+    case "paid":
+      return [46, 125, 50]; // success (green)
+    case "overdue":
+      return [211, 47, 47]; // error (red)
+    case "canceled":
+      return [97, 97, 97]; // neutral (gray)
+    default:
+      return [0, 0, 0];
+  }
 }
 
 export async function generateInvoicePDF(
@@ -217,46 +258,6 @@ export async function generateInvoicePDF(
   doc.save(`Factura_${invoice.invoiceNumber}.pdf`);
 }
 
-// Helper functions
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function getStatusText(status: string): string {
-  switch (status) {
-    case "pending":
-      return "Pendiente";
-    case "paid":
-      return "Pagada";
-    case "overdue":
-      return "Vencida";
-    case "canceled":
-      return "Cancelada";
-    default:
-      return status;
-  }
-}
-
-function getStatusColor(status: string): number[] {
-  switch (status) {
-    case "pending":
-      return [245, 124, 0]; // warning (orange)
-    case "paid":
-      return [46, 125, 50]; // success (green)
-    case "overdue":
-      return [211, 47, 47]; // error (red)
-    case "canceled":
-      return [97, 97, 97]; // neutral (gray)
-    default:
-      return [0, 0, 0];
-  }
-}
-
 export async function generateQuotePDF(
   quote: Quote,
   client: Client,
@@ -273,11 +274,18 @@ export async function generateQuotePDF(
     // Check if the quote has a logo
     const logoPath = quote.attachments && quote.attachments.length > 0 ? quote.attachments[0] : null;
     
+    // Cargar el logo si existe
     if (logoPath) {
       try {
-        console.log("Intentando añadir logo al PDF desde:", logoPath);
-        doc.addImage(`${window.location.origin}${logoPath}`, 'PNG', 140, 10, 50, 25, undefined, 'FAST');
-        console.log("Logo añadido correctamente");
+        console.log("Preparando logo para PDF desde:", logoPath);
+        const logoUrl = `${window.location.origin}${logoPath}`;
+        
+        // Usar la utilidad para convertir la imagen a data URL
+        const logoDataUrl = await getImageAsDataUrl(logoUrl);
+        
+        // Añadir la imagen al PDF usando la data URL
+        doc.addImage(logoDataUrl, 'PNG', 140, 10, 50, 25);
+        console.log("Logo añadido correctamente al PDF");
       } catch (logoError) {
         console.error("Error añadiendo logo al PDF:", logoError);
       }
