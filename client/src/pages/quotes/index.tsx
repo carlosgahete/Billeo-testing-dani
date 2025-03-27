@@ -12,12 +12,10 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      <div className="mt-4">
-        <PageTitle 
-          title="Presupuestos" 
-          description="Gestiona tus presupuestos, envíalos a clientes y conviértelos fácilmente en facturas. Crea presupuestos detallados que impresionen a tus clientes y aumenten tus posibilidades de venta." 
-        />
-      </div>
+      <PageTitle 
+        title="Presupuestos" 
+        description="Gestiona tus presupuestos, envíalos a clientes y conviértelos fácilmente en facturas. Crea presupuestos detallados que impresionen a tus clientes y aumenten tus posibilidades de venta." 
+      />
       <div className="mt-6">
         <QuoteList userId={user.id} showActions={true} />
       </div>
