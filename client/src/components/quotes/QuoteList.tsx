@@ -215,7 +215,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
         return;
       }
       
-      // Get quote items
+      // Get complete quote details including items and attachments
       const response = await apiRequest("GET", `/api/quotes/${quote.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener los detalles del presupuesto");
@@ -223,14 +223,42 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
       
       const data = await response.json();
       
-      // Generate and download PDF
-      await generateQuotePDF(quote, client, data.items);
+      // Crear un objeto de imagen para el logo si existe
+      if (data.quote && data.quote.attachments && data.quote.attachments.length > 0) {
+        const logoUrl = `${window.location.origin}${data.quote.attachments[0]}`;
+        console.log("Logo URL para PDF:", logoUrl);
+        
+        try {
+          // Crear un elemento de imagen y cargarlo
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          
+          // Esperar a que se cargue la imagen
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = logoUrl;
+          });
+          
+          console.log("Logo cargado correctamente para PDF");
+        } catch (imgError) {
+          console.error("Error precargando imagen:", imgError);
+        }
+      }
+      
+      // Generate and download PDF with complete data
+      await generateQuotePDF(
+        { ...quote, ...data.quote }, // Combinar propiedades para asegurar que los attachments estén incluidos
+        client, 
+        data.items
+      );
       
       toast({
         title: "PDF generado",
         description: `El presupuesto ${quote.quoteNumber} ha sido exportado a PDF`,
       });
     } catch (error: any) {
+      console.error("Error generando PDF:", error);
       toast({
         title: "Error",
         description: `No se pudo generar el PDF: ${error.message}`,
