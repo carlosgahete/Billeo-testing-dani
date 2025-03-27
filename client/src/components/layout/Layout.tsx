@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,8 +11,6 @@ const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // Referencia para el botón hamburguesa flotante
-  const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     // Close mobile menu when switching to desktop
@@ -22,28 +20,6 @@ const Layout = ({ children }: LayoutProps) => {
     // Set sidebar based on screen size
     setSidebarOpen(!isMobile);
   }, [isMobile]);
-  
-  // Efecto para ocultar el botón cuando el sidebar está abierto
-  // y controlar el layout cuando cambia el estado del sidebar
-  useEffect(() => {
-    if (hamburgerButtonRef.current) {
-      if (sidebarOpen) {
-        hamburgerButtonRef.current.style.display = 'none';
-      } else {
-        hamburgerButtonRef.current.style.display = 'block';
-      }
-    }
-    
-    // Resetear completamente el estilo del main cuando cambia el sidebar
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      if (sidebarOpen) {
-        mainElement.style.marginLeft = '16rem';
-      } else {
-        mainElement.style.marginLeft = '0';
-      }
-    }
-  }, [sidebarOpen]);
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
@@ -57,7 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+        {/* Sidebar - Diseño fijo */}
         <Sidebar 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen}
@@ -67,17 +43,11 @@ const Layout = ({ children }: LayoutProps) => {
         />
         
         {/* Botón flotante para cuando el sidebar está cerrado en desktop */}
-        {!isMobile && (
+        {!isMobile && !sidebarOpen && (
           <button 
-            ref={hamburgerButtonRef}
-            onClick={() => {
-              setSidebarOpen(true);
-              // No necesitamos setTimeout aquí, el useEffect se encargará
-              // del margen y de ocultar el botón
-            }}
+            onClick={() => setSidebarOpen(true)}
             className="fixed top-4 left-4 z-10 bg-white rounded-full p-2 shadow-md text-primary hover:bg-primary/10 transition-colors"
             aria-label="Abrir menú lateral"
-            style={{ display: sidebarOpen ? 'none' : 'block' }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -87,19 +57,20 @@ const Layout = ({ children }: LayoutProps) => {
           </button>
         )}
 
-        {/* Main content */}
-        <main 
-          className={`flex-1 overflow-y-auto transition-all duration-300 ${isMobile ? 'pt-16' : ''}`}
-          style={{ 
-            marginLeft: sidebarOpen ? '16rem' : '0'
-          }}
+        {/* Main content - Contenido centrado independiente del sidebar */}
+        <div 
+          className={`
+            flex-1 
+            overflow-y-auto 
+            ${isMobile ? 'pt-16' : ''}
+            ${sidebarOpen ? 'pl-64' : ''} 
+            transition-all duration-300
+          `}
         >
-          <div 
-            className="py-4 lg:py-6 px-4 lg:px-8 transition-all duration-300 w-full"
-          >
+          <div className="max-w-4xl mx-auto py-4 lg:py-6 px-4 lg:px-8">
             {children}
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
