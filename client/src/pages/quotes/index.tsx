@@ -83,17 +83,64 @@ export default function QuotesPage() {
   const acceptedQuotes = quotes.filter(q => q.status === "accepted").length;
   const rejectedQuotes = quotes.filter(q => q.status === "rejected").length;
   
-  // Calcular total de presupuestos en valor con validación para evitar NaN
+  // Calcular total de presupuestos en valor con validación menos estricta
   const totalValue = quotes.reduce((acc: number, q: Quote) => {
-    // Verificar si q.total es un número válido
-    const total = typeof q.total === 'number' && !isNaN(q.total) ? q.total : 0;
+    // Validar y convertir q.total a un número
+    let total = 0;
+    
+    try {
+      // Si es un string, intentar parsearlo
+      if (typeof q.total === 'string') {
+        total = parseFloat(q.total);
+      } 
+      // Si ya es un número, usarlo directamente
+      else if (typeof q.total === 'number') {
+        total = q.total;
+      }
+      
+      // Verificar si después de la conversión sigue siendo un número válido
+      if (isNaN(total)) {
+        console.warn(`Valor total no válido en presupuesto ${q.quoteNumber}: ${q.total}`);
+        total = 0;
+      }
+      
+    } catch (error) {
+      console.error("Error al procesar total:", error);
+      total = 0;
+    }
+    
     return acc + total;
   }, 0);
   
+  // Debug para ver el total calculado
+  console.log('Valor total de presupuestos calculado:', totalValue);
+  
   const acceptedValue = quotes.filter(q => q.status === "accepted")
     .reduce((acc: number, q: Quote) => {
-      // Verificar si q.total es un número válido
-      const total = typeof q.total === 'number' && !isNaN(q.total) ? q.total : 0;
+      // Validar y convertir q.total a un número
+      let total = 0;
+      
+      try {
+        // Si es un string, intentar parsearlo
+        if (typeof q.total === 'string') {
+          total = parseFloat(q.total);
+        } 
+        // Si ya es un número, usarlo directamente
+        else if (typeof q.total === 'number') {
+          total = q.total;
+        }
+        
+        // Verificar si después de la conversión sigue siendo un número válido
+        if (isNaN(total)) {
+          console.warn(`Valor total no válido en presupuesto aceptado ${q.quoteNumber}: ${q.total}`);
+          total = 0;
+        }
+        
+      } catch (error) {
+        console.error("Error al procesar total de presupuesto aceptado:", error);
+        total = 0;
+      }
+      
       return acc + total;
     }, 0);
   
