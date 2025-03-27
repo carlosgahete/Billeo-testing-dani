@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useRoute } from "wouter";
-import QuoteForm from "@/components/quotes/QuoteForm";
+import QuoteForm from "@/components/quotes/QuoteFormNew";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 
