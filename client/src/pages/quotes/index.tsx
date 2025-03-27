@@ -83,10 +83,19 @@ export default function QuotesPage() {
   const acceptedQuotes = quotes.filter(q => q.status === "accepted").length;
   const rejectedQuotes = quotes.filter(q => q.status === "rejected").length;
   
-  // Calcular total de presupuestos en valor
-  const totalValue = quotes.reduce((acc: number, q: Quote) => acc + q.total, 0);
+  // Calcular total de presupuestos en valor con validación para evitar NaN
+  const totalValue = quotes.reduce((acc: number, q: Quote) => {
+    // Verificar si q.total es un número válido
+    const total = typeof q.total === 'number' && !isNaN(q.total) ? q.total : 0;
+    return acc + total;
+  }, 0);
+  
   const acceptedValue = quotes.filter(q => q.status === "accepted")
-    .reduce((acc: number, q: Quote) => acc + q.total, 0);
+    .reduce((acc: number, q: Quote) => {
+      // Verificar si q.total es un número válido
+      const total = typeof q.total === 'number' && !isNaN(q.total) ? q.total : 0;
+      return acc + total;
+    }, 0);
   
   // Tasa de conversión (% de presupuestos aceptados)
   const conversionRate = totalQuotes > 0 

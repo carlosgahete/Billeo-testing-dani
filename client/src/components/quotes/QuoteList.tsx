@@ -165,16 +165,35 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   // Format currency
   const formatCurrency = (amount: number | string) => {
-    // Asegurar que amount es un número
-    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      useGrouping: true
-    }).format(numericAmount);
+    try {
+      // Validar y convertir amount a un número válido
+      let numericAmount = 0;
+      
+      if (typeof amount === 'string') {
+        // Intentar convertir el string a número
+        numericAmount = parseFloat(amount) || 0;
+      } else if (typeof amount === 'number' && !isNaN(amount)) {
+        // Si ya es un número, usarlo directamente
+        numericAmount = amount;
+      }
+      
+      // Validación final para asegurar que no es NaN
+      if (isNaN(numericAmount)) {
+        numericAmount = 0;
+        console.warn("Se ha detectado un valor NaN en formatCurrency, usando 0 como fallback");
+      }
+      
+      return new Intl.NumberFormat("es-ES", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        useGrouping: true
+      }).format(numericAmount);
+    } catch (error) {
+      console.error("Error en formatCurrency:", error);
+      return "0,00 €"; // Valor por defecto en caso de error
+    }
   };
 
   // Format date
