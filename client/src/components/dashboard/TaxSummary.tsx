@@ -63,7 +63,9 @@ const TaxSummary = () => {
     return new Intl.NumberFormat('es-ES', { 
       style: 'currency', 
       currency: 'EUR',
-      maximumFractionDigits: 0 
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+      useGrouping: true
     }).format(value);
   };
 

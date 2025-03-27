@@ -141,11 +141,17 @@ export default function QuoteDetailsPage() {
   });
 
   // Format currency
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    // Asegurar que amount es un número
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
     return new Intl.NumberFormat("es-ES", {
       style: "currency",
       currency: "EUR",
-    }).format(amount);
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true
+    }).format(numericAmount);
   };
 
   // Format date
