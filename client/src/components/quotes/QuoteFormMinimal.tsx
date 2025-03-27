@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ import {
   CardTitle,
   CardDescription 
 } from '@/components/ui/card';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, X, Image } from 'lucide-react';
 
 // Interfaz mínima para las props
 interface QuoteFormMinimalProps {
@@ -259,9 +259,24 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     <div className="w-full px-4">
       <form onSubmit={handleSubmit}>
         <Card className="w-full">
-          <CardHeader>
-            <CardTitle>{quoteId ? 'Editar Presupuesto' : 'Crear Presupuesto'}</CardTitle>
-            <CardDescription>Introduce los datos básicos para el presupuesto</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle>{quoteId ? 'Editar Presupuesto' : 'Crear Presupuesto'}</CardTitle>
+              <CardDescription>Introduce los datos básicos para el presupuesto</CardDescription>
+            </div>
+            <Button 
+              type="button"
+              variant="outline" 
+              className="flex items-center h-9"
+              size="sm"
+              onClick={() => toast({
+                title: "Información",
+                description: "El logo se puede subir después de crear el presupuesto, en la vista de detalles."
+              })}
+            >
+              <Image className="mr-2 h-4 w-4" />
+              Subir logo
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
