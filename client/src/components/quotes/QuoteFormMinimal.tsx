@@ -100,11 +100,11 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
       }
     });
     
-    // Actualizar estados
-    setSubtotal(subtotalValue);
-    setTotal(subtotalValue + totalTaxAmount);
+    // Actualizar estados (asegurándonos de que son números)
+    setSubtotal(Number(subtotalValue));
+    setTotal(Number(subtotalValue) + Number(totalTaxAmount));
     
-    console.log(`Subtotal: ${subtotalValue}€, Impuestos: ${totalTaxAmount}€, Total: ${subtotalValue + totalTaxAmount}€`);
+    console.log(`Subtotal: ${Number(subtotalValue).toFixed(2)}€, Impuestos: ${Number(totalTaxAmount).toFixed(2)}€, Total: ${Number(subtotalValue + totalTaxAmount).toFixed(2)}€`);
   };
 
   // Recalcular cuando cambian los valores relevantes
@@ -196,9 +196,9 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         clientId: parseInt(clientId),
         status,
         notes,
-        subtotal: subtotal.toFixed(2),
+        subtotal: Number(subtotal).toFixed(2),
         tax: "0.00", // Lo gestionamos con additionalTaxes
-        total: total.toFixed(2),
+        total: Number(total).toFixed(2),
         issueDate: new Date(),
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         additionalTaxes: taxes.map(tax => ({
@@ -213,7 +213,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             quantity: '1',
             unitPrice: amount,
             taxRate: '0', // Lo gestionamos con additionalTaxes
-            subtotal: subtotal.toFixed(2)
+            subtotal: Number(subtotal).toFixed(2)
           }
         ]
       };
@@ -469,7 +469,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
               <div className="space-y-2">
                 <div className="flex justify-between text-lg">
                   <span>Subtotal:</span>
-                  <span className="font-medium">{subtotal.toFixed(2)} €</span>
+                  <span className="font-medium">{Number(subtotal).toFixed(2)} €</span>
                 </div>
                 
                 {taxes.map(tax => (
@@ -479,15 +479,15 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                     </span>
                     <span>
                       {tax.isPercentage 
-                        ? (subtotal * parseFloat(tax.amount || '0') / 100).toFixed(2)
-                        : parseFloat(tax.amount || '0').toFixed(2)} €
+                        ? Number(subtotal * parseFloat(tax.amount || '0') / 100).toFixed(2)
+                        : Number(parseFloat(tax.amount || '0')).toFixed(2)} €
                     </span>
                   </div>
                 ))}
                 
                 <div className="flex justify-between border-t pt-2 mt-2 text-xl font-bold">
                   <span>Total:</span>
-                  <span>{total.toFixed(2)} €</span>
+                  <span>{Number(total).toFixed(2)} €</span>
                 </div>
               </div>
             </div>
