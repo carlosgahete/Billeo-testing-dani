@@ -191,7 +191,12 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold text-primary-600">{financialData.income.total.toLocaleString('es-ES')} €</p>
+            <p className="text-3xl font-bold text-primary-600">
+              {new Intl.NumberFormat('es-ES', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              }).format(financialData.income.total)} €
+            </p>
             
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -238,7 +243,12 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold text-red-600">{financialData.expenses.total.toLocaleString('es-ES')} €</p>
+            <p className="text-3xl font-bold text-red-600">
+              {new Intl.NumberFormat('es-ES', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              }).format(financialData.expenses.total)} €
+            </p>
             
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -291,7 +301,12 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="pt-4">
             <div>
-              <p className="text-3xl font-bold text-neutral-900">{(stats?.result || financialData.balance.netProfit).toLocaleString('es-ES')} €</p>
+              <p className="text-3xl font-bold text-neutral-900">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(stats?.result || financialData.balance.netProfit || 0)} €
+              </p>
               <div className="flex items-center gap-1 mt-1 text-sm">
                 <span className={isPositiveMargin ? "text-primary-600" : "text-red-600"}>
                   {isPositiveMargin ? <TrendingUp className="inline h-4 w-4 mr-1" /> : <TrendingDown className="inline h-4 w-4 mr-1" />}

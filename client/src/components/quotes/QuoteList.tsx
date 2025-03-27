@@ -163,11 +163,16 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   });
 
   // Format currency
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    // Asegurar que amount es un número
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
     return new Intl.NumberFormat("es-ES", {
       style: "currency",
       currency: "EUR",
-    }).format(amount);
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericAmount);
   };
 
   // Format date
