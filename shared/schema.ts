@@ -168,3 +168,49 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
 });
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// Quote Model (Presupuestos)
+export const quotes = pgTable("quotes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  quoteNumber: text("quote_number").notNull(),
+  clientId: integer("client_id").notNull(),
+  issueDate: timestamp("issue_date").notNull(),
+  validUntil: timestamp("valid_until").notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  additionalTaxes: jsonb("additional_taxes"), // Array de impuestos adicionales como IRPF
+  status: text("status").notNull().default("draft"), // draft, sent, accepted, rejected, expired
+  notes: text("notes"),
+  attachments: text("attachments").array(),
+});
+
+export const insertQuoteSchema = createInsertSchema(quotes).omit({ 
+  id: true 
+});
+
+// Modificamos el esquema para incluir el campo additionalTaxes como un array de impuestos
+export const quoteWithTaxesSchema = insertQuoteSchema.extend({
+  additionalTaxes: z.array(additionalTaxSchema).optional().nullable()
+});
+
+export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type Quote = typeof quotes.$inferSelect;
+
+// Quote Items Model
+export const quoteItems = pgTable("quote_items", {
+  id: serial("id").primaryKey(),
+  quoteId: integer("quote_id").notNull(),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+});
+
+export const insertQuoteItemSchema = createInsertSchema(quoteItems).omit({ 
+  id: true 
+});
+export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
+export type QuoteItem = typeof quoteItems.$inferSelect;

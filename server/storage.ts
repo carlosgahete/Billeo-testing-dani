@@ -9,6 +9,10 @@ import {
   InsertInvoice,
   InvoiceItem,
   InsertInvoiceItem,
+  Quote,
+  InsertQuote,
+  QuoteItem,
+  InsertQuoteItem,
   Category,
   InsertCategory,
   Transaction,
@@ -20,6 +24,8 @@ import {
   clients,
   invoices,
   invoiceItems,
+  quotes,
+  quoteItems,
   categories,
   transactions,
   tasks
@@ -64,6 +70,20 @@ export interface IStorage {
   createInvoiceItem(invoiceItem: InsertInvoiceItem): Promise<InvoiceItem>;
   updateInvoiceItem(id: number, invoiceItem: Partial<InsertInvoiceItem>): Promise<InvoiceItem | undefined>;
   deleteInvoiceItem(id: number): Promise<boolean>;
+
+  // Quote operations
+  getQuote(id: number): Promise<Quote | undefined>;
+  getQuotesByUserId(userId: number): Promise<Quote[]>;
+  getRecentQuotesByUserId(userId: number, limit: number): Promise<Quote[]>;
+  createQuote(quote: InsertQuote): Promise<Quote>;
+  updateQuote(id: number, quote: Partial<InsertQuote>): Promise<Quote | undefined>;
+  deleteQuote(id: number): Promise<boolean>;
+
+  // Quote Item operations
+  getQuoteItemsByQuoteId(quoteId: number): Promise<QuoteItem[]>;
+  createQuoteItem(quoteItem: InsertQuoteItem): Promise<QuoteItem>;
+  updateQuoteItem(id: number, quoteItem: Partial<InsertQuoteItem>): Promise<QuoteItem | undefined>;
+  deleteQuoteItem(id: number): Promise<boolean>;
 
   // Category operations
   getCategory(id: number): Promise<Category | undefined>;
@@ -433,6 +453,65 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  // Quote operations
+  async getQuote(id: number): Promise<Quote | undefined> {
+    const result = await db.select().from(quotes).where(eq(quotes.id, id));
+    return result[0];
+  }
+
+  async getQuotesByUserId(userId: number): Promise<Quote[]> {
+    return await db.select().from(quotes).where(eq(quotes.userId, userId)).orderBy(desc(quotes.issueDate));
+  }
+
+  async getRecentQuotesByUserId(userId: number, limit: number): Promise<Quote[]> {
+    return await db
+      .select()
+      .from(quotes)
+      .where(eq(quotes.userId, userId))
+      .orderBy(desc(quotes.issueDate))
+      .limit(limit);
+  }
+
+  async createQuote(quote: InsertQuote): Promise<Quote> {
+    const result = await db.insert(quotes).values({
+      ...quote,
+      status: quote.status || "draft",
+      notes: quote.notes || null,
+      attachments: quote.attachments || null
+    }).returning();
+    return result[0];
+  }
+
+  async updateQuote(id: number, quoteData: Partial<InsertQuote>): Promise<Quote | undefined> {
+    const result = await db.update(quotes).set(quoteData).where(eq(quotes.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteQuote(id: number): Promise<boolean> {
+    const result = await db.delete(quotes).where(eq(quotes.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Quote Item operations
+  async getQuoteItemsByQuoteId(quoteId: number): Promise<QuoteItem[]> {
+    return await db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+  }
+
+  async createQuoteItem(quoteItem: InsertQuoteItem): Promise<QuoteItem> {
+    const result = await db.insert(quoteItems).values(quoteItem).returning();
+    return result[0];
+  }
+
+  async updateQuoteItem(id: number, itemData: Partial<InsertQuoteItem>): Promise<QuoteItem | undefined> {
+    const result = await db.update(quoteItems).set(itemData).where(eq(quoteItems.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteQuoteItem(id: number): Promise<boolean> {
+    const result = await db.delete(quoteItems).where(eq(quoteItems.id, id)).returning();
+    return result.length > 0;
+  }
+
   async getCategory(id: number): Promise<Category | undefined> {
     const result = await db.select().from(categories).where(eq(categories.id, id));
     return result[0];
@@ -527,6 +606,8 @@ export class MemStorage implements IStorage {
   private clients: Map<number, Client>;
   private invoices: Map<number, Invoice>;
   private invoiceItems: Map<number, InvoiceItem>;
+  private quotes: Map<number, Quote>;
+  private quoteItems: Map<number, QuoteItem>;
   private categories: Map<number, Category>;
   private transactions: Map<number, Transaction>;
   private tasks: Map<number, Task>;
@@ -537,6 +618,8 @@ export class MemStorage implements IStorage {
   private clientIdCounter: number;
   private invoiceIdCounter: number;
   private invoiceItemIdCounter: number;
+  private quoteIdCounter: number;
+  private quoteItemIdCounter: number;
   private categoryIdCounter: number;
   private transactionIdCounter: number;
   private taskIdCounter: number;
@@ -547,6 +630,8 @@ export class MemStorage implements IStorage {
     this.clients = new Map();
     this.invoices = new Map();
     this.invoiceItems = new Map();
+    this.quotes = new Map();
+    this.quoteItems = new Map();
     this.categories = new Map();
     this.transactions = new Map();
     this.tasks = new Map();
@@ -562,6 +647,8 @@ export class MemStorage implements IStorage {
     this.clientIdCounter = 1;
     this.invoiceIdCounter = 1;
     this.invoiceItemIdCounter = 1;
+    this.quoteIdCounter = 1;
+    this.quoteItemIdCounter = 1;
     this.categoryIdCounter = 1;
     this.transactionIdCounter = 1;
     this.taskIdCounter = 1;
@@ -947,6 +1034,83 @@ export class MemStorage implements IStorage {
 
   async deleteTask(id: number): Promise<boolean> {
     return this.tasks.delete(id);
+  }
+  
+  // Quote operations
+  async getQuote(id: number): Promise<Quote | undefined> {
+    return this.quotes.get(id);
+  }
+
+  async getQuotesByUserId(userId: number): Promise<Quote[]> {
+    return Array.from(this.quotes.values())
+      .filter((quote) => quote.userId === userId)
+      .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
+  }
+
+  async getRecentQuotesByUserId(userId: number, limit: number): Promise<Quote[]> {
+    return Array.from(this.quotes.values())
+      .filter((quote) => quote.userId === userId)
+      .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
+      .slice(0, limit);
+  }
+
+  async createQuote(quote: InsertQuote): Promise<Quote> {
+    const id = this.quoteIdCounter++;
+    // Ensure all required fields are present with proper defaults
+    const newQuote: Quote = { 
+      ...quote, 
+      id,
+      status: quote.status || "draft",
+      notes: quote.notes || null,
+      attachments: quote.attachments || null,
+      additionalTaxes: quote.additionalTaxes || null
+    };
+    this.quotes.set(id, newQuote);
+    return newQuote;
+  }
+
+  async updateQuote(id: number, quoteData: Partial<InsertQuote>): Promise<Quote | undefined> {
+    const quote = this.quotes.get(id);
+    if (!quote) return undefined;
+
+    const updatedQuote = { ...quote, ...quoteData };
+    this.quotes.set(id, updatedQuote);
+    return updatedQuote;
+  }
+
+  async deleteQuote(id: number): Promise<boolean> {
+    return this.quotes.delete(id);
+  }
+
+  // Quote Item operations
+  async getQuoteItemsByQuoteId(quoteId: number): Promise<QuoteItem[]> {
+    return Array.from(this.quoteItems.values()).filter(
+      (item) => item.quoteId === quoteId
+    );
+  }
+
+  async createQuoteItem(quoteItem: InsertQuoteItem): Promise<QuoteItem> {
+    const id = this.quoteItemIdCounter++;
+    // Ensure the proper data format for quote items
+    const newQuoteItem: QuoteItem = { 
+      ...quoteItem, 
+      id
+    };
+    this.quoteItems.set(id, newQuoteItem);
+    return newQuoteItem;
+  }
+
+  async updateQuoteItem(id: number, itemData: Partial<InsertQuoteItem>): Promise<QuoteItem | undefined> {
+    const quoteItem = this.quoteItems.get(id);
+    if (!quoteItem) return undefined;
+
+    const updatedItem = { ...quoteItem, ...itemData };
+    this.quoteItems.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteQuoteItem(id: number): Promise<boolean> {
+    return this.quoteItems.delete(id);
   }
 }
 

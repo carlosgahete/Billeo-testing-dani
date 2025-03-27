@@ -17,6 +17,8 @@ import {
   insertInvoiceSchema,
   invoiceWithTaxesSchema,
   insertInvoiceItemSchema,
+  quoteWithTaxesSchema,
+  insertQuoteItemSchema,
   insertCategorySchema,
   insertTransactionSchema,
   insertTaskSchema
@@ -664,6 +666,305 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json(items);
     } catch (error) {
       console.error("[SERVER] Error al obtener items de factura:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // ENDPOINTS DE PRESUPUESTOS
+  
+  // Obtener todos los presupuestos
+  app.get("/api/quotes", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quotes = await storage.getQuotesByUserId(req.session.userId);
+      return res.status(200).json(quotes);
+    } catch (error) {
+      console.error("[SERVER] Error al obtener presupuestos:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Obtener presupuestos recientes
+  app.get("/api/quotes/recent", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const limit = parseInt(req.query.limit as string) || 5;
+      const quotes = await storage.getRecentQuotesByUserId(req.session.userId, limit);
+      return res.status(200).json(quotes);
+    } catch (error) {
+      console.error("[SERVER] Error al obtener presupuestos recientes:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Obtener un presupuesto por ID
+  app.get("/api/quotes/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuote(quoteId);
+      
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to access this quote" });
+      }
+      
+      const items = await storage.getQuoteItemsByQuoteId(quoteId);
+      
+      return res.status(200).json({ quote, items });
+    } catch (error) {
+      console.error("[SERVER] Error al obtener presupuesto:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Crear un nuevo presupuesto
+  app.post("/api/quotes", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteData = {
+        ...req.body,
+        userId: req.session.userId
+      };
+      
+      // Validar los datos del presupuesto
+      const quoteResult = quoteWithTaxesSchema.safeParse(quoteData);
+      
+      if (!quoteResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid quote data", 
+          errors: quoteResult.error.errors 
+        });
+      }
+      
+      // Crear presupuesto
+      const newQuote = await storage.createQuote(quoteResult.data);
+      
+      // Si hay elementos, crearlos
+      if (req.body.items && Array.isArray(req.body.items)) {
+        for (const item of req.body.items) {
+          await storage.createQuoteItem({
+            ...item,
+            quoteId: newQuote.id
+          });
+        }
+      }
+      
+      return res.status(201).json(newQuote);
+    } catch (error) {
+      console.error("[SERVER] Error al crear presupuesto:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Actualizar un presupuesto
+  app.put("/api/quotes/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuote(quoteId);
+      
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to update this quote" });
+      }
+      
+      // Validar los datos actualizados del presupuesto
+      const quoteResult = quoteWithTaxesSchema.partial().safeParse(req.body);
+      
+      if (!quoteResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid quote data", 
+          errors: quoteResult.error.errors 
+        });
+      }
+      
+      console.log("[SERVER] Actualizando presupuesto:", quoteId);
+      console.log("[SERVER] Datos recibidos:", req.body);
+      
+      // Actualizar presupuesto
+      const updatedQuote = await storage.updateQuote(quoteId, quoteResult.data);
+      
+      // Si hay elementos nuevos, eliminar los antiguos y crear los nuevos
+      if (req.body.items && Array.isArray(req.body.items)) {
+        console.log("[SERVER] Eliminando items existentes para el presupuesto:", quoteId);
+        
+        // Obtener items existentes y eliminarlos
+        const existingItems = await storage.getQuoteItemsByQuoteId(quoteId);
+        for (const item of existingItems) {
+          await storage.deleteQuoteItem(item.id);
+        }
+        
+        console.log("[SERVER] Creando nuevos items para el presupuesto:", req.body.items.length);
+        
+        // Crear nuevos items
+        for (const item of req.body.items) {
+          await storage.createQuoteItem({
+            ...item,
+            quoteId
+          });
+        }
+      }
+      
+      console.log("[SERVER] Presupuesto actualizado correctamente");
+      
+      return res.status(200).json({ quote: updatedQuote });
+    } catch (error) {
+      console.error("[SERVER] Error al actualizar presupuesto:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Obtener los items de un presupuesto
+  app.get("/api/quotes/:id/items", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuote(quoteId);
+      
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to access this quote" });
+      }
+      
+      const items = await storage.getQuoteItemsByQuoteId(quoteId);
+      return res.status(200).json(items);
+    } catch (error) {
+      console.error("[SERVER] Error al obtener items de presupuesto:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Eliminar un presupuesto
+  app.delete("/api/quotes/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuote(quoteId);
+      
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to delete this quote" });
+      }
+      
+      // Eliminar items primero
+      const items = await storage.getQuoteItemsByQuoteId(quoteId);
+      for (const item of items) {
+        await storage.deleteQuoteItem(item.id);
+      }
+      
+      const deleted = await storage.deleteQuote(quoteId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete quote" });
+      }
+      
+      return res.status(200).json({ message: "Quote deleted successfully" });
+    } catch (error) {
+      console.error("[SERVER] Error al eliminar presupuesto:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Convertir presupuesto a factura
+  app.post("/api/quotes/:id/convert", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuote(quoteId);
+      
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Unauthorized to convert this quote" });
+      }
+      
+      // Obtener el último número de factura para crear uno nuevo
+      const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      let lastNumber = 0;
+      
+      if (invoices.length > 0) {
+        const numbers = invoices.map(inv => parseInt(inv.invoiceNumber)).filter(n => !isNaN(n));
+        if (numbers.length > 0) {
+          lastNumber = Math.max(...numbers);
+        }
+      }
+      
+      // Crear nueva factura a partir del presupuesto
+      const newInvoice = await storage.createInvoice({
+        userId: quote.userId,
+        invoiceNumber: (lastNumber + 1).toString(),
+        clientId: quote.clientId,
+        issueDate: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días para pagar
+        subtotal: quote.subtotal,
+        tax: quote.tax,
+        total: quote.total,
+        additionalTaxes: quote.additionalTaxes,
+        status: "pending",
+        notes: `Generada a partir del presupuesto #${quote.quoteNumber}. ${quote.notes || ""}`
+      });
+      
+      // Copiar items del presupuesto a la factura
+      const quoteItems = await storage.getQuoteItemsByQuoteId(quoteId);
+      for (const item of quoteItems) {
+        await storage.createInvoiceItem({
+          invoiceId: newInvoice.id,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          taxRate: item.taxRate,
+          subtotal: item.subtotal
+        });
+      }
+      
+      // Actualizar el estado del presupuesto a "accepted"
+      await storage.updateQuote(quoteId, { status: "accepted" });
+      
+      return res.status(200).json({ 
+        message: "Quote converted to invoice successfully",
+        invoice: newInvoice
+      });
+    } catch (error) {
+      console.error("[SERVER] Error al convertir presupuesto a factura:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

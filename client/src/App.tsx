@@ -9,6 +9,10 @@ import Dashboard from "@/pages/dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
+import QuotesPage from "@/pages/quotes/index";
+import CreateQuotePage from "@/pages/quotes/create";
+import EditQuotePage from "@/pages/quotes/edit/[id]";
+import QuoteDetailPage from "@/pages/quotes/[id]";
 import TransactionsPage from "@/pages/transactions/index";
 import CreateTransactionPage from "@/pages/transactions/create";
 import DocumentScanPage from "@/pages/document-scan";
@@ -42,6 +46,30 @@ function Router() {
         {(params) => (
           <Layout>
             <ProtectedRoute path={`/invoices/${params.id}`} component={InvoiceDetailPage} />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/quotes">
+        <Layout>
+          <ProtectedRoute path="/quotes" component={QuotesPage} />
+        </Layout>
+      </Route>
+      <Route path="/quotes/create">
+        <Layout>
+          <ProtectedRoute path="/quotes/create" component={CreateQuotePage} />
+        </Layout>
+      </Route>
+      <Route path="/quotes/edit/:id">
+        {(params) => (
+          <Layout>
+            <ProtectedRoute path={`/quotes/edit/${params.id}`} component={EditQuotePage} />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/quotes/:id">
+        {(params) => (
+          <Layout>
+            <ProtectedRoute path={`/quotes/${params.id}`} component={QuoteDetailPage} />
           </Layout>
         )}
       </Route>
