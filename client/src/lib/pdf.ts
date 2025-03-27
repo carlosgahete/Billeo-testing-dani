@@ -299,8 +299,11 @@ export async function generateQuotePDF(
         const width = tmpImg.width * ratio;
         const height = tmpImg.height * ratio;
         
+        // Posición alineada con subtotal (195 - width para alineación a la derecha)
+        const xPosition = 195 - width;
+        
         // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
-        doc.addImage(logoDataUrl, 'PNG', 140, 10, width, height);
+        doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
         console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
       } catch (logoError) {
         console.error("Error añadiendo logo al PDF:", logoError);
