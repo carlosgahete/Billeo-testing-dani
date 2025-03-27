@@ -81,7 +81,9 @@ export const invoices = pgTable("invoices", {
 // Definición del tipo de impuesto adicional
 export const additionalTaxSchema = z.object({
   name: z.string().min(1, { message: "El nombre del impuesto es obligatorio" }),
-  amount: z.number(), // Permitimos valores negativos para impuestos como IRPF
+  amount: z.union([z.string(), z.number()]).transform(val => 
+    typeof val === 'string' ? Number(val) : val
+  ), // Permitimos valores negativos para impuestos como IRPF
   isPercentage: z.boolean().optional() // Indicador de si es un porcentaje o un valor fijo
 });
 
