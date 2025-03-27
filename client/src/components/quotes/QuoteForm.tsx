@@ -269,8 +269,8 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Basic info */}
           <div className="space-y-6">
             <FormField
