@@ -146,10 +146,16 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
     name: "items",
   });
   
-  const { fields: taxFields, append: appendTax, remove: removeTax } = useFieldArray({
+  // Manejar impuestos adicionales de manera separada para evitar problemas de destructuración
+  const taxFieldArray = useFieldArray({
     control: form.control,
     name: "additionalTaxes"
   });
+  
+  // Asignar variables individuales
+  const taxFields = taxFieldArray.fields;
+  const appendTax = taxFieldArray.append;
+  const removeTax = taxFieldArray.remove;
   
   // Calcular subtotal, IVA y total cuando cambian los items
   useEffect(() => {
