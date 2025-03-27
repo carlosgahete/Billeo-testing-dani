@@ -36,8 +36,13 @@ const Layout = ({ children }: LayoutProps) => {
   
   // Detección más agresiva para corregir rutas con problemas de sidebar
   useEffect(() => {
-    if (currentLocation === "/income-expense") {
-      // Usamos un enfoque más directo para la página problemática
+    // Rutas que necesitan corrección especial del sidebar
+    const problematicRoutes = ["/income-expense", "/quotes", "/quotes/create"];
+    
+    // Comprobamos si la ruta actual está en la lista de rutas problemáticas
+    // o si comienza con "/quotes/" (para editar/ver detalles de presupuestos)
+    if (problematicRoutes.includes(currentLocation) || currentLocation.startsWith("/quotes/")) {
+      // Usamos un enfoque más directo para las páginas problemáticas
       const mainElement = document.querySelector('main');
       if (mainElement) {
         // Si detectamos que estamos en esta página, forzamos el estilo inline
