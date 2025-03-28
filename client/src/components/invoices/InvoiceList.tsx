@@ -72,20 +72,34 @@ interface Client {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  // Definir los tipos de variantes disponibles
-  const statusMap: Record<string, { label: string; variant: "default" | "destructive" | "outline" | "secondary" }> = {
-    pending: { label: "Pendiente", variant: "default" },
-    paid: { label: "Pagada", variant: "outline" },
-    overdue: { label: "Vencida", variant: "destructive" },
-    canceled: { label: "Cancelada", variant: "secondary" },
+  // Estilos mejorados para los estados de factura
+  const statusStyles = {
+    pending: "bg-amber-100 text-amber-800 border-0 hover:bg-amber-200 font-medium",
+    paid: "bg-emerald-100 text-emerald-800 border-0 hover:bg-emerald-200 font-medium",
+    overdue: "bg-red-100 text-red-800 border-0 hover:bg-red-200 font-medium",
+    canceled: "bg-neutral-100 text-neutral-800 border-0 hover:bg-neutral-200 font-medium",
+  };
+  
+  const statusIcons = {
+    pending: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-600"></span>,
+    paid: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-600"></span>,
+    overdue: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-600"></span>,
+    canceled: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-neutral-600"></span>,
+  };
+  
+  const labels = {
+    pending: "Pendiente",
+    paid: "Pagada",
+    overdue: "Vencida",
+    canceled: "Cancelada",
   };
 
-  const { label, variant } = statusMap[status] || { label: status, variant: "default" };
-
-  // Aplicar clases personalizadas para manejar colores específicos
-  const badgeClasses = status === 'paid' ? "border-green-500 text-green-600 bg-green-50" : "";
-
-  return <Badge variant={variant} className={badgeClasses}>{label}</Badge>;
+  return (
+    <Badge className={`flex items-center px-2.5 py-0.5 ${statusStyles[status as keyof typeof statusStyles] || "bg-neutral-100 text-neutral-800"}`}>
+      {statusIcons[status as keyof typeof statusIcons]}
+      {labels[status as keyof typeof labels] || status}
+    </Badge>
+  );
 };
 
 // Componente para marcar una factura como pagada
@@ -538,42 +552,33 @@ const InvoiceList = () => {
   }
 
   return (
-    <div className="w-full px-2 md:px-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <div className="md:ml-16">
-          <h1 className="text-2xl font-bold text-neutral-800">
-            Gestión de Facturas
-          </h1>
-          <p className="text-neutral-500">
-            Crea, edita y gestiona todas tus facturas en un solo lugar.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center"
-            size="sm"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Exportar</span>
-          </Button>
-          <Button
-            className="flex items-center"
-            size="sm"
-            onClick={() => navigate("/invoices/create")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nueva factura</span>
-            <span className="sm:hidden">Nueva</span>
-          </Button>
-        </div>
+    <div className="w-full">
+      <div className="flex justify-end gap-2 mb-4">
+        <Button 
+          variant="outline" 
+          className="flex items-center border-blue-200 text-blue-600 hover:bg-blue-50"
+          size="sm"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Exportar todo</span>
+          <span className="sm:hidden">Exportar</span>
+        </Button>
+        <Button
+          className="flex items-center bg-blue-600 hover:bg-blue-700"
+          size="sm"
+          onClick={() => navigate("/invoices/create")}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Nueva factura</span>
+          <span className="sm:hidden">Nueva</span>
+        </Button>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-gray-200">
+      <div className="overflow-hidden rounded-xl border border-blue-100 shadow-sm">
         <DataTable
           columns={columns}
           data={invoicesData || []}
-          searchPlaceholder="Buscar facturas..."
+          searchPlaceholder="Buscar facturas por número, cliente o fecha..."
         />
       </div>
     </div>
