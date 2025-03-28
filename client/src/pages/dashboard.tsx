@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 import TaxSummary from "@/components/dashboard/TaxSummary";
+import ComparisonCharts from "@/components/dashboard/ComparisonCharts";
 import { PageTitle } from "@/components/ui/page-title";
 
 const Dashboard = () => {
@@ -433,7 +434,11 @@ const Dashboard = () => {
         
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
         <div className="md:col-span-4 mt-0">
-          <TaxSummary />
+          {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <TaxSummary />
+            <ComparisonCharts />
+          </div>
         </div>
       </div>
     </div>
