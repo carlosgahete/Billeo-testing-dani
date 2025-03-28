@@ -167,7 +167,110 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+        {/* Tarjeta de Ingresos */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-primary-50 pb-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg text-primary-700 flex items-center">
+                <ArrowUpFromLine className="mr-2 h-5 w-5" />
+                Ingresos
+              </CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                      <Info className="h-4 w-4 text-neutral-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="w-[200px] text-xs">Dinero que entra en tu cuenta como resultado de tu actividad profesional</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-3xl font-bold text-primary-600">
+              {new Intl.NumberFormat('es-ES', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              }).format(financialData.income.total)} €
+            </p>
+            
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Base imponible:</span>
+                <span className="font-medium">{financialData.income.totalWithoutVAT.toLocaleString('es-ES')} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">IVA repercutido:</span>
+                <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
+              </div>
+            </div>
+            
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="w-full mt-4"
+              onClick={() => navigate("/invoices")}
+            >
+              Ver facturas emitidas
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Tarjeta de Gastos */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-red-50 pb-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg text-red-700 flex items-center">
+                <ArrowDownToLine className="mr-2 h-5 w-5" />
+                Gastos
+              </CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                      <Info className="h-4 w-4 text-neutral-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="w-[200px] text-xs">Dinero que sale para cubrir los costos de tu actividad profesional</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-3xl font-bold text-red-600">
+              {new Intl.NumberFormat('es-ES', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              }).format(financialData.expenses.total)} €
+            </p>
+            
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Base imponible:</span>
+                <span className="font-medium">{financialData.expenses.totalWithoutVAT.toLocaleString('es-ES')} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">IVA soportado:</span>
+                <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
+              </div>
+            </div>
+            
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="w-full mt-4"
+              onClick={() => navigate("/transactions")}
+            >
+              Ver gastos
+            </Button>
+          </CardContent>
+        </Card>
         
         {/* Resumen de impuestos */}
         <div>
