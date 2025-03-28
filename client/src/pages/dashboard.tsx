@@ -441,10 +441,6 @@ const Dashboard = () => {
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-green-600 font-semibold">Beneficio Neto:</span>
-                  <span className="font-semibold text-green-600">{totalNeto.toLocaleString('es-ES')} €</span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-neutral-500">Base + IVA (bruto):</span>
                   <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
                 </div>
