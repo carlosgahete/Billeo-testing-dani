@@ -167,7 +167,11 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+        {/* Resumen de impuestos */}
+        <div>
+          <TaxSummary />
+        </div>
         {/* Tarjeta de Ingresos */}
         <Card className="overflow-hidden">
           <CardHeader className="bg-primary-50 pb-2">
