@@ -90,7 +90,10 @@ const Dashboard = () => {
   const irpfToPay = Math.max(0, Number((irpfTotalEstimated - withholdings).toFixed(2)));
   
   // Beneficio neto final
-  const netProfit = Number((balanceTotal - ivaNeto - irpfToPay).toFixed(2));
+  // El balance de IVA (IVA repercutido - IVA soportado) se liquidará con Hacienda,
+  // por lo que no afecta directamente al beneficio neto del autónomo
+  // El beneficio neto real es ingresos - gastos - retenciones - IRPF adicional a pagar
+  const netProfit = Number((balanceTotal - withholdings - irpfToPay).toFixed(2));
   
   // Datos financieros organizados
   const financialData = {
@@ -425,8 +428,8 @@ const Dashboard = () => {
                   <span className="font-medium">-{(stats?.totalWithholdings || 0).toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA (neto):</span>
-                  <span className="font-medium">-{financialData.balance.ivaNeto.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IRPF adicional:</span>
+                  <span className="font-medium">-{financialData.balance.irpfToPay.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
