@@ -32,7 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Trash2, Download, FileText, Send, FileCheck } from "lucide-react";
+import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle } from "lucide-react";
 import { Link } from "wouter";
 
 interface Quote {
@@ -151,6 +151,33 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
       toast({
         title: "Presupuesto enviado",
         description: "El estado del presupuesto ha sido actualizado a 'enviado'.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Reject quote mutation (changes status to rejected)
+  const rejectQuoteMutation = useMutation({
+    mutationFn: async (quoteId: number) => {
+      const res = await apiRequest("PUT", `/api/quotes/${quoteId}`, {
+        status: "rejected"
+      });
+      if (!res.ok) {
+        throw new Error("Error rejecting quote");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Presupuesto rechazado",
+        description: "El estado del presupuesto ha sido actualizado a 'rechazado'.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
     },
@@ -320,6 +347,11 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   const handleSend = (quoteId: number) => {
     sendQuoteMutation.mutate(quoteId);
   };
+  
+  // Handle reject
+  const handleReject = (quoteId: number) => {
+    rejectQuoteMutation.mutate(quoteId);
+  };
 
   if (isQuotesLoading || isClientsLoading) {
     return (
@@ -423,6 +455,16 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                 <Send className="h-4 w-4" />
                               </Button>
                             )}
+                            {quote.status === "sent" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Rechazar presupuesto"
+                                onClick={() => handleReject(quote.id)}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
                             {(quote.status === "sent" || quote.status === "accepted") && (
                               <Button
                                 variant="ghost"
@@ -448,7 +490,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                               size="icon"
                               title="Eliminar"
                               onClick={() => handleDelete(quote.id)}
-                              disabled={quote.status === "accepted"}
+                              disabled={quote.status === "accepted" || quote.status === "rejected"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
