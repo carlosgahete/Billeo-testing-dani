@@ -414,7 +414,7 @@ const Dashboard = () => {
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-green-700 flex items-center">
                   <PiggyBank className="mr-2 h-5 w-5" />
-                  Beneficio Neto
+                  Resultado Final
                 </CardTitle>
                 <TooltipProvider>
                   <Tooltip>
@@ -440,6 +440,10 @@ const Dashboard = () => {
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
+                  <span className="text-green-600 font-semibold">Beneficio Neto:</span>
+                  <span className="font-semibold text-green-600">{totalNeto.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-neutral-500">Base + IVA (bruto):</span>
                   <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
                 </div>
@@ -452,8 +456,8 @@ const Dashboard = () => {
                   <span className="font-medium text-orange-600">{ivaCorrect.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-green-600 font-semibold">Total neto (cobrado):</span>
-                  <span className="font-semibold text-green-600">{totalNeto.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Total neto (cobrado):</span>
+                  <span className="font-medium">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
