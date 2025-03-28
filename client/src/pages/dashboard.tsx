@@ -39,6 +39,15 @@ import TaxSummary from "@/components/dashboard/TaxSummary";
 import ComparisonCharts from "@/components/dashboard/ComparisonCharts";
 import { PageTitle } from "@/components/ui/page-title";
 
+// Interfaces
+interface DashboardStats {
+  income: number;
+  expenses: number;
+  pendingInvoices: number;
+  pendingCount: number;
+  [key: string]: any;
+}
+
 const Dashboard = () => {
   const [, navigate] = useLocation();
   const [year, setYear] = useState("2025");
@@ -48,7 +57,7 @@ const Dashboard = () => {
     queryKey: ["/api/auth/session"],
   });
   
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
   });
 
