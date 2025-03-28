@@ -171,9 +171,9 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-2">
         {/* Primera columna: Tarjeta de Ingresos con facturas pendientes debajo */}
-        <div className="md:col-span-1 space-y-2">
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Ingresos */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-primary-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-primary-700 flex items-center">
@@ -212,6 +212,17 @@ const Dashboard = () => {
                   <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
+              
+              <div className="mt-8 mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => navigate("/invoices")}
+                >
+                  Ver facturas
+                </Button>
+              </div>
             </CardContent>
           </Card>
           
@@ -241,9 +252,9 @@ const Dashboard = () => {
         </div>
         
         {/* Segunda columna: Tarjeta de Gastos con retenciones debajo */}
-        <div className="md:col-span-1 space-y-2">
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Gastos */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-red-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-red-700 flex items-center">
@@ -282,6 +293,17 @@ const Dashboard = () => {
                   <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
+              
+              <div className="mt-8 mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => navigate("/transactions")}
+                >
+                  Ver gastos
+                </Button>
+              </div>
             </CardContent>
           </Card>
           
@@ -311,8 +333,8 @@ const Dashboard = () => {
         </div>
         
         {/* Tarjeta de Resultado */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-neutral-50 pb-2">
+        <Card className="overflow-hidden h-full flex flex-col">
+          <CardHeader className="bg-neutral-50 p-2">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg text-neutral-700 flex items-center">
                 <PiggyBank className="mr-2 h-5 w-5" />
@@ -321,7 +343,7 @@ const Dashboard = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
                       <Info className="h-4 w-4 text-neutral-500" />
                     </Button>
                   </TooltipTrigger>
@@ -332,7 +354,7 @@ const Dashboard = () => {
               </TooltipProvider>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
+          <CardContent className="p-3 flex-grow flex flex-col">
             <div>
               <p className="text-3xl font-bold text-neutral-900">
                 {new Intl.NumberFormat('es-ES', { 
@@ -363,19 +385,21 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <Button 
-              variant="default"
-              size="sm" 
-              className="w-full mt-4"
-              onClick={() => navigate("/reports")}
-            >
-              Ver informes detallados
-            </Button>
+            <div className="mt-auto pt-4">
+              <Button 
+                variant="outline"
+                size="sm" 
+                className="w-full"
+                onClick={() => navigate("/reports")}
+              >
+                Ver informes detallados
+              </Button>
+            </div>
           </CardContent>
         </Card>
         
         {/* Resumen de impuestos */}
-        <div>
+        <div className="h-full">
           <TaxSummary />
         </div>
       </div>
