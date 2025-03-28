@@ -90,10 +90,16 @@ const Dashboard = () => {
   const irpfToPay = Math.max(0, Number((irpfTotalEstimated - withholdings).toFixed(2)));
   
   // Beneficio neto final
-  // El balance de IVA (IVA repercutido - IVA soportado) se liquidará con Hacienda,
-  // por lo que no afecta directamente al beneficio neto del autónomo
-  // El beneficio neto real es ingresos - gastos - retenciones - IRPF adicional a pagar
-  const netProfit = Number((balanceTotal - withholdings - irpfToPay).toFixed(2));
+  // 1. Para los ingresos: cobramos la base imponible + IVA, pero se nos retiene el IRPF
+  // 2. Para los gastos: pagamos la base imponible + IVA
+  // 3. El IVA se liquida con Hacienda (IVA repercutido - IVA soportado)
+  // 4. Cobro efectivo: Base imponible + IVA - IRPF
+  // 5. Pago efectivo: Base imponible + IVA
+  // 6. Beneficio efectivo: Lo que cobro - Lo que pago
+  // Fórmula final: (baseIncomeWithoutVAT + ivaRepercutido - withholdings) - (baseExpensesWithoutVAT + ivaSoportado)
+  const totalCobrado = baseIncomeWithoutVAT - withholdings + ivaRepercutido;
+  const totalPagado = baseExpensesWithoutVAT + ivaSoportado;
+  const netProfit = Number((totalCobrado - totalPagado).toFixed(2));
   
   // Datos financieros organizados
   const financialData = {
@@ -420,16 +426,16 @@ const Dashboard = () => {
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Resultado bruto:</span>
-                  <span className="font-medium">{financialData.balance.total.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Base + IVA (cobro):</span>
+                  <span className="font-medium">{(baseIncomeWithoutVAT + ivaRepercutido).toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Retenciones IRPF:</span>
-                  <span className="font-medium">-{(stats?.totalWithholdings || 0).toLocaleString('es-ES')} €</span>
+                  <span className="font-medium">-{withholdings.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF adicional:</span>
-                  <span className="font-medium">-{financialData.balance.irpfToPay.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Gastos (con IVA):</span>
+                  <span className="font-medium">-{(baseExpensesWithoutVAT + ivaSoportado).toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
