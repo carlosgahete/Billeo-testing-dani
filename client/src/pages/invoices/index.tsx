@@ -25,21 +25,21 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full px-4 space-y-6">
-      {/* Header con nuestro azul corporativo */}
-      <div className="relative overflow-hidden rounded-lg bg-blue-600 py-5 px-5 md:px-6 mb-4 shadow-md">
+      {/* Header con nuestro azul corporativo específico */}
+      <div className="relative overflow-hidden rounded-lg bg-[#2563EB] py-5 px-5 md:px-6 mb-4 shadow-md">
         <div className="relative z-10">
           <h1 className="text-xl md:text-2xl font-bold text-white mb-1 flex items-center">
             <Receipt className="h-5 w-5 mr-2" />
             Gestión de Facturas
           </h1>
-          <p className="text-blue-100 max-w-2xl text-sm">
+          <p className="text-[#E0E8FF] max-w-2xl text-sm">
             Crea, edita y gestiona todas tus facturas profesionales, con datos fiscales actualizados y exportación a PDF.
           </p>
           <div className="mt-3 flex space-x-2">
             <Button 
               variant="secondary" 
               size="sm" 
-              className="bg-white text-blue-600 hover:bg-blue-50 border-none text-xs"
+              className="bg-white text-[#2563EB] hover:bg-blue-50 border-none text-xs"
               onClick={() => navigate("/invoices/create")}
             >
               <Receipt className="h-3.5 w-3.5 mr-1.5" />
@@ -48,7 +48,7 @@ const InvoicesPage = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="bg-transparent text-white border-white hover:bg-blue-700 text-xs"
+              className="bg-transparent text-white border-white hover:bg-[#1E40AF] text-xs"
               onClick={() => navigate("/dashboard")}
             >
               <ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />
@@ -58,7 +58,7 @@ const InvoicesPage = () => {
         </div>
         
         {/* Elemento decorativo más sutil */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-2xl opacity-20 -m-16"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#1E40AF] rounded-full blur-2xl opacity-20 -m-16"></div>
       </div>
       
       {/* Tarjetas de resumen */}
