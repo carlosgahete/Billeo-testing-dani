@@ -33,7 +33,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 interface Quote {
   id: number;
@@ -69,6 +69,7 @@ interface QuoteListProps {
 
 export function QuoteList({ userId, showActions = true, limit }: QuoteListProps) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<number | null>(null);
   const [convertAlertOpen, setConvertAlertOpen] = useState(false);
@@ -126,6 +127,11 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Redirigir a la sección de facturas
+      setTimeout(() => {
+        setLocation("/invoices");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -540,7 +546,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           <AlertDialogHeader>
             <AlertDialogTitle>Convertir a factura</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Deseas convertir este presupuesto en una factura? Se creará una nueva factura con todos los datos del presupuesto, incluyendo cliente, conceptos, importes e impuestos. Esta es la manera más rápida de facturar un trabajo previamente presupuestado y aceptado por el cliente.
+              ¿Deseas convertir este presupuesto en una factura? Se creará una nueva factura con todos los datos del presupuesto, incluyendo cliente, conceptos, importes e impuestos. Una vez convertido, serás redirigido a la sección de facturas para ver y gestionar la factura recién creada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
