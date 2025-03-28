@@ -125,7 +125,7 @@ export default function AuthPage() {
                     </div>
                     <div className="flex justify-center mt-2">
                       <Button
-                        className="bg-blue-500 hover:bg-blue-600 w-2/3"
+                        className="w-2/3"
                         type="submit"
                         disabled={isPending}
                       >
@@ -194,7 +194,7 @@ export default function AuthPage() {
                     </div>
                     <div className="flex justify-center mt-2">
                       <Button
-                        className="bg-blue-500 hover:bg-blue-600 w-2/3"
+                        className="w-2/3"
                         type="submit"
                         disabled={isPending}
                       >
