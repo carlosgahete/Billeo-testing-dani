@@ -355,14 +355,14 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Tarjeta de Resultado Bruto */}
+        {/* Tercera columna: Tarjeta de Ingresos Brutos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-blue-700 flex items-center">
                   <PiggyBank className="mr-2 h-5 w-5" />
-                  Resultado Bruto
+                  Ingresos Brutos
                 </CardTitle>
                 <TooltipProvider>
                   <Tooltip>
@@ -372,7 +372,7 @@ const Dashboard = () => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="w-[200px] text-xs">La diferencia entre ingresos y gastos (antes de impuestos)</p>
+                      <p className="w-[200px] text-xs">El total facturado incluyendo Base Imponible e IVA, antes de retenciones</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -384,24 +384,18 @@ const Dashboard = () => {
                   {new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(totalBruto)} €
+                  }).format(financialData.income.total)} €
                 </p>
-                <div className="flex items-center gap-1 mt-1 text-sm">
-                  <span className={isPositiveMargin ? "text-primary-600" : "text-red-600"}>
-                    {isPositiveMargin ? <TrendingUp className="inline h-4 w-4 mr-1" /> : <TrendingDown className="inline h-4 w-4 mr-1" />}
-                    {profitMargin}% de margen
-                  </span>
-                </div>
               </div>
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Ingresos totales:</span>
-                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Base imponible:</span>
+                  <span className="font-medium">{financialData.income.totalWithoutVAT.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Gastos totales:</span>
-                  <span className="font-medium">-{financialData.expenses.total.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IVA (21%):</span>
+                  <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
             </CardContent>
