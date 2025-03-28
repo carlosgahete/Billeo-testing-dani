@@ -236,11 +236,11 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-8 mb-4">
+              <div className="mt-12 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full"
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
                   onClick={() => navigate("/invoices")}
                 >
                   Ver facturas
@@ -293,11 +293,11 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-8 mb-4">
+              <div className="mt-12 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full"
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
                   onClick={() => navigate("/transactions")}
                 >
                   Ver gastos
