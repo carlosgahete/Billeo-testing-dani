@@ -197,9 +197,9 @@ const Dashboard = () => {
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Ingresos */}
           <Card className="overflow-hidden flex-grow">
-            <CardHeader className="bg-primary-50 p-2">
+            <CardHeader className="bg-emerald-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-primary-700 flex items-center">
+                <CardTitle className="text-lg text-emerald-700 flex items-center">
                   <ArrowUpFromLine className="mr-2 h-5 w-5" />
                   Ingresos
                 </CardTitle>
@@ -218,7 +218,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <p className="text-2xl font-bold text-primary-600">
+              <p className="text-2xl font-bold text-emerald-600">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
