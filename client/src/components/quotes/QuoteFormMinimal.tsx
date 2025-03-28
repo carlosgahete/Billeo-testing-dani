@@ -416,7 +416,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         clientId: parseInt(clientId),
         status,
         notes,
-        subtotal: finalSubtotal.toFixed(2),
+        subtotal: amount, // Usar directamente el valor del input
         tax: "0.00", // Lo gestionamos con additionalTaxes
         total: finalTotal.toFixed(2),
         issueDate: issueDate,
@@ -433,7 +433,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             quantity: '1',
             unitPrice: amount,
             taxRate: '0', // Lo gestionamos con additionalTaxes
-            subtotal: finalSubtotal.toFixed(2)
+            subtotal: amount // Usar el valor original del input como subtotal
           }
         ]
       };
