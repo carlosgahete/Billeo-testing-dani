@@ -168,10 +168,6 @@ const Dashboard = () => {
       <DashboardMetrics userId={user?.user?.id || 0} />
       
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
-        {/* Resumen de impuestos */}
-        <div>
-          <TaxSummary />
-        </div>
         {/* Tarjeta de Ingresos */}
         <Card className="overflow-hidden">
           <CardHeader className="bg-primary-50 pb-2">
@@ -339,6 +335,11 @@ const Dashboard = () => {
             </Button>
           </CardContent>
         </Card>
+        
+        {/* Resumen de impuestos */}
+        <div>
+          <TaxSummary />
+        </div>
       </div>
     </div>
   );
