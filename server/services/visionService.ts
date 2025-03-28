@@ -427,6 +427,19 @@ export function mapToTransaction(
   const ivaRate = extractedData.ivaRate || 21;
   const irpfRate = extractedData.irpfRate || 15;
   
+  // Crear impuestos adicionales si hay IRPF detectado
+  let additionalTaxes = null;
+  if (irpfAmount > 0) {
+    // Crear un array con los impuestos adicionales
+    additionalTaxes = JSON.stringify([
+      {
+        name: 'IRPF',
+        amount: -irpfRate, // Negativo porque es una retención
+        isPercentage: true
+      }
+    ]);
+  }
+  
   if (subtotal > 0) {
     taxDetails.push(`Base imponible: ${subtotal.toFixed(2)}€`);
   }
@@ -443,15 +456,22 @@ export function mapToTransaction(
 Vendedor: ${extractedData.vendor || 'No detectado'}. 
 ${taxDetails.join('. ')}`;
   
+  // Si detectamos IRPF, la descripción debería incluir esta información
+  let description = extractedData.description;
+  if (irpfAmount > 0 && !description.includes('IRPF')) {
+    description += ` (con IRPF ${irpfRate}%)`;
+  }
+  
   // Aseguramos que todos los campos requeridos estén presentes
   return {
     userId: userId, // userId es integer en el esquema
-    description: extractedData.description,
+    description: description,
     amount: extractedData.amount.toString(), // Convertir a string para el esquema decimal
     date: new Date(extractedData.date), // date es timestamp en el esquema
     type: 'expense' as const, // Usar 'as const' para asegurar que el tipo sea exactamente 'expense'
     categoryId,
     paymentMethod: 'other',
-    notes: notesText
+    notes: notesText,
+    additionalTaxes: additionalTaxes
   };
 }

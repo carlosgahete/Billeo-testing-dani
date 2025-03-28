@@ -1571,7 +1571,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: transactionData.type,
         categoryId: transactionData.categoryId,
         paymentMethod: transactionData.paymentMethod || 'other',
-        notes: transactionData.notes
+        notes: transactionData.notes,
+        additionalTaxes: transactionData.additionalTaxes
       };
       
       const transaction = await storage.createTransaction(transactionToCreate);

@@ -146,6 +146,7 @@ export const transactions = pgTable("transactions", {
   notes: text("notes"),
   attachments: text("attachments").array(),
   invoiceId: integer("invoice_id"), // Optional link to an invoice
+  additionalTaxes: text("additional_taxes"), // Para almacenar impuestos como IRPF en formato JSON
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ 
