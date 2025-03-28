@@ -409,10 +409,10 @@ const Dashboard = () => {
           </Card>
           
           {/* Tarjeta de Beneficio Neto */}
-          <Card className="overflow-hidden border-primary-100">
-            <CardHeader className="bg-primary-50 p-2">
+          <Card className="overflow-hidden border-green-100 shadow-md">
+            <CardHeader className="bg-green-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-primary-700 flex items-center">
+                <CardTitle className="text-lg text-green-700 flex items-center">
                   <PiggyBank className="mr-2 h-5 w-5" />
                   Beneficio Neto
                 </CardTitle>
@@ -431,7 +431,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <p className="text-2xl font-bold text-primary-700">
+              <p className="text-2xl font-bold text-green-600">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
@@ -448,8 +448,8 @@ const Dashboard = () => {
                   <span className="font-medium">-{irpfCorrect.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Total neto (cobrado):</span>
-                  <span className="font-medium">{totalNeto.toLocaleString('es-ES')} €</span>
+                  <span className="text-green-600 font-semibold">Total neto (cobrado):</span>
+                  <span className="font-semibold text-green-600">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
