@@ -85,7 +85,9 @@ export default function AuthPage() {
                 className="h-11"
               />
             </div>
-            {/* Descripción eliminada según solicitado */}
+            <CardDescription className="text-center font-medium">
+              Menos papeleo, más Billeo
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
