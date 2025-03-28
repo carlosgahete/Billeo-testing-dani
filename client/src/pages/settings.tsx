@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loader2, Save, Upload, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Card, 
   CardContent, 
@@ -39,6 +40,7 @@ interface UserSession {
 
 const SettingsPage = () => {
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
   const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(true);
   const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
   
@@ -88,6 +90,8 @@ const SettingsPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      // Actualizar los datos del usuario en el sidebar
+      refreshUser();
       setUploadingProfileImage(false);
       toast({
         title: "Imagen actualizada",
@@ -133,6 +137,8 @@ const SettingsPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      // Actualizar los datos del usuario en el sidebar
+      refreshUser();
       toast({
         title: "Perfil actualizado",
         description: "Tu información de perfil ha sido actualizada correctamente",

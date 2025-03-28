@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useCallback } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,15 +7,6 @@ import {
 import { User as SelectUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-type AuthContextType = {
-  user: SelectUser | null;
-  isLoading: boolean;
-  error: Error | null;
-  loginMutation: UseMutationResult<Omit<SelectUser, "password">, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<SelectUser, "password">, Error, RegisterData>;
-};
 
 type LoginData = {
   username: string;
@@ -28,6 +19,16 @@ type RegisterData = LoginData & {
   role?: string;
 };
 
+type AuthContextType = {
+  user: SelectUser | null;
+  isLoading: boolean;
+  error: Error | null;
+  loginMutation: UseMutationResult<Omit<SelectUser, "password">, Error, LoginData>;
+  logoutMutation: UseMutationResult<void, Error, void>;
+  registerMutation: UseMutationResult<Omit<SelectUser, "password">, Error, RegisterData>;
+  refreshUser: () => void;
+};
+
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -37,10 +38,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch
   } = useQuery<SelectUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+  
+  // Función para refrescar manualmente los datos del usuario
+  const refreshUser = useCallback(() => {
+    console.log('Refrescando datos del usuario...');
+    queryClient.invalidateQueries({queryKey: ["/api/user"]});
+    refetch();
+  }, [refetch]);
 
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
@@ -151,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        refreshUser
       }}
     >
       {children}

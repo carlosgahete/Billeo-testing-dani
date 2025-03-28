@@ -69,7 +69,7 @@ const Sidebar = ({
 }: SidebarProps) => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
-  const { user, logoutMutation } = useAuth();
+  const { user, logoutMutation, refreshUser } = useAuth();
 
   // Cierra el sidebar completamente con un solo clic en cualquier página
   const handleSidebarClose = () => {
