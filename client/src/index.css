@@ -39,30 +39,30 @@
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
  
-    --card: 222 47% 11%;
+    --card: 222 45% 13%;
     --card-foreground: 210 40% 98%;
  
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
  
-    --primary: 217 91% 60%;
+    --primary: 187 58% 44%;
     --primary-foreground: 210 40% 98%;
  
-    --secondary: 217 32% 17%;
+    --secondary: 217 32% 20%;
     --secondary-foreground: 210 40% 98%;
  
-    --muted: 217 32% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217 32% 20%;
+    --muted-foreground: 215 25% 75%;
  
-    --accent: 217 32% 17%;
+    --accent: 217 32% 20%;
     --accent-foreground: 210 40% 98%;
  
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 70% 45%;
     --destructive-foreground: 210 40% 98%;
  
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 224 76% 48%;
+    --border: 217 32% 25%;
+    --input: 217 32% 25%;
+    --ring: 224 76% 58%;
   }
 }
  
@@ -123,18 +123,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Estilos para cards de dashboard */
 .dashboard-card {
-  @apply rounded-lg border bg-card shadow-sm overflow-hidden;
+  @apply rounded-lg border bg-card shadow-sm overflow-hidden dark:border-gray-700 dark:shadow-gray-900/30;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .dashboard-card:hover {
   transform: translateY(-4px);
-  @apply shadow-md;
+  @apply shadow-md dark:shadow-gray-900/40;
 }
 
 /* Estilos para estadísticas */
 .stat-card {
-  @apply p-6 rounded-lg border bg-card text-card-foreground shadow-sm;
+  @apply p-6 rounded-lg border bg-card text-card-foreground shadow-sm dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .stat-value {
@@ -195,16 +195,75 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .mobile-nav-item {
-  @apply flex flex-col items-center justify-center px-4 py-2 text-xs text-gray-600;
+  @apply flex flex-col items-center justify-center px-4 py-2 text-xs text-gray-600 dark:text-gray-300;
 }
 
 .mobile-nav-item.active {
   @apply text-primary;
 }
 
+/* Mejoras específicas para modo oscuro */
+.dark h1 {
+  @apply text-gray-50;
+}
+
+.dark h2, .dark h3, .dark h4 {
+  @apply text-gray-100;
+}
+
+.dark p {
+  @apply text-gray-200;
+}
+
+.dark label {
+  @apply text-gray-200;
+}
+
+.dark .text-neutral-500 {
+  @apply text-gray-300;
+}
+
+.dark .text-neutral-800 {
+  @apply text-gray-100;
+}
+
+.dark .text-gray-600 {
+  @apply text-gray-300;
+}
+
+.dark .text-gray-700 {
+  @apply text-gray-200;
+}
+
+.dark .text-gray-800 {
+  @apply text-gray-100;
+}
+
 /* Personalizaciones para tablas responsivas */
 .responsive-table {
   @apply w-full overflow-x-auto;
+}
+
+/* Estilos para tablas en modo oscuro */
+.dark table {
+  @apply border-gray-700;
+}
+
+.dark thead {
+  @apply bg-gray-800 text-gray-200;
+}
+
+.dark tbody tr {
+  @apply border-gray-700;
+}
+
+.dark tbody tr:hover {
+  @apply bg-gray-800;
+}
+
+.dark th, 
+.dark td {
+  @apply text-gray-200 border-gray-700;
 }
 
 /* Personalizaciones para tablas responsivas */
