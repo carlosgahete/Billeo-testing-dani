@@ -85,9 +85,7 @@ export default function AuthPage() {
                 className="h-11"
               />
             </div>
-            <CardDescription className="text-center">
-              Gestión financiera simple para autónomos y pequeñas empresas
-            </CardDescription>
+            {/* Descripción eliminada según solicitado */}
           </CardHeader>
           <CardContent>
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
