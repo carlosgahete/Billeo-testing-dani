@@ -119,14 +119,14 @@ const TaxSummary = () => {
             <FileText className="mr-2 h-5 w-5" />
             Resumen Fiscal
           </CardTitle>
-          <TooltipProvider>
+          <TooltipProvider delayDuration={100}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                <div className="cursor-help">
                   <Info className="h-4 w-4 text-neutral-500" />
-                </Button>
+                </div>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
                 <p className="w-[200px] text-xs">IVA a pagar por trimestres y retenciones acumuladas</p>
               </TooltipContent>
             </Tooltip>

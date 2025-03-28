@@ -129,9 +129,9 @@ const ComparisonCharts = () => {
           <TooltipProvider delayDuration={100}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full cursor-help">
+                <div className="cursor-help">
                   <Info className="h-4 w-4 text-neutral-500" />
-                </Button>
+                </div>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
                 <p className="w-[200px] text-xs">Visualiza y compara tus resultados financieros por trimestres o años</p>

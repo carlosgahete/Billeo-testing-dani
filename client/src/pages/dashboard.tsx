@@ -216,9 +216,9 @@ const Dashboard = () => {
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 rounded-full cursor-help">
+                      <div className="cursor-help">
                         <Info className="h-4 w-4 text-neutral-500" />
-                      </Button>
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
                       <p className="w-[200px] text-xs">Dinero que entra en tu cuenta como resultado de tu actividad profesional</p>
@@ -273,9 +273,9 @@ const Dashboard = () => {
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 rounded-full cursor-help">
+                      <div className="cursor-help">
                         <Info className="h-4 w-4 text-neutral-500" />
-                      </Button>
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
                       <p className="w-[200px] text-xs">Dinero que sale para cubrir los costos de tu actividad profesional</p>
@@ -329,9 +329,9 @@ const Dashboard = () => {
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 rounded-full cursor-help">
+                      <div className="cursor-help">
                         <Info className="h-4 w-4 text-neutral-500" />
-                      </Button>
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
                       <p className="w-[200px] text-xs">El total facturado incluyendo Base Imponible e IVA, antes de retenciones</p>
@@ -400,9 +400,9 @@ const Dashboard = () => {
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 rounded-full cursor-help">
+                      <div className="cursor-help">
                         <Info className="h-4 w-4 text-neutral-500" />
-                      </Button>
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
                       <p className="w-[200px] text-xs">El beneficio final después de descontar impuestos y retenciones</p>
