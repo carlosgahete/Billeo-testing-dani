@@ -53,6 +53,8 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('0');
   const [notes, setNotes] = useState('');
+  const [issueDate, setIssueDate] = useState<Date>(new Date());
+  const [validUntil, setValidUntil] = useState<Date>(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
   
   // Estado para impuestos personalizados
   const [taxes, setTaxes] = useState<Tax[]>([
@@ -108,6 +110,29 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         // Ver si hay logo
         if (quote.logoUrl) {
           setLogoPreview(quote.logoUrl);
+        }
+        
+        // Cargar fechas
+        if (quote.issueDate) {
+          try {
+            const issueDateObj = new Date(quote.issueDate);
+            if (!isNaN(issueDateObj.getTime())) {
+              setIssueDate(issueDateObj);
+            }
+          } catch (error) {
+            console.error('Error al procesar fecha de emisión:', error);
+          }
+        }
+        
+        if (quote.validUntil) {
+          try {
+            const validUntilObj = new Date(quote.validUntil);
+            if (!isNaN(validUntilObj.getTime())) {
+              setValidUntil(validUntilObj);
+            }
+          } catch (error) {
+            console.error('Error al procesar fecha de validez:', error);
+          }
         }
         
         // Items (en este formulario simplificado solo usamos un ítem)
@@ -344,8 +369,8 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         subtotal: Number(subtotal).toFixed(2),
         tax: "0.00", // Lo gestionamos con additionalTaxes
         total: Number(total).toFixed(2),
-        issueDate: new Date(),
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        issueDate: issueDate,
+        validUntil: validUntil,
         additionalTaxes: taxes.map(tax => ({
           name: tax.name,
           amount: tax.amount,
