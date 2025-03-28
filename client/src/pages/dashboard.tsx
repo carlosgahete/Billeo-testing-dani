@@ -448,6 +448,10 @@ const Dashboard = () => {
                   <span className="font-medium">-{irpfCorrect.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-orange-600 font-medium">IVA a liquidar:</span>
+                  <span className="font-medium text-orange-600">{ivaCorrect.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-green-600 font-semibold">Total neto (cobrado):</span>
                   <span className="font-semibold text-green-600">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
