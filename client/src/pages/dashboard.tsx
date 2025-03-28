@@ -457,7 +457,7 @@ const Dashboard = () => {
                   <span className="font-medium text-orange-600">{ivaCorrect.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Total neto (cobrado):</span>
+                  <span className="text-neutral-500 font-bold">Total neto (cobrado):</span>
                   <span className="font-bold">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
