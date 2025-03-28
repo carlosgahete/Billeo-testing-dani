@@ -332,71 +332,117 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tarjeta de Resultado */}
-        <Card className="overflow-hidden h-full flex flex-col">
-          <CardHeader className="bg-neutral-50 p-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-lg text-neutral-700 flex items-center">
-                <PiggyBank className="mr-2 h-5 w-5" />
-                Resultado
-              </CardTitle>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                      <Info className="h-4 w-4 text-neutral-500" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="w-[200px] text-xs">La diferencia entre tus ingresos y tus gastos, incluyendo retenciones</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3 flex-grow flex flex-col">
-            <div>
-              <p className="text-3xl font-bold text-neutral-900">
+        {/* Columna de resultados */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+          {/* Tarjeta de Resultado Bruto */}
+          <Card className="overflow-hidden flex-grow">
+            <CardHeader className="bg-neutral-50 p-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg text-neutral-700 flex items-center">
+                  <PiggyBank className="mr-2 h-5 w-5" />
+                  Resultado Bruto
+                </CardTitle>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                        <Info className="h-4 w-4 text-neutral-500" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-[200px] text-xs">La diferencia entre ingresos y gastos (antes de impuestos)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3">
+              <div>
+                <p className="text-2xl font-bold text-neutral-900">
+                  {new Intl.NumberFormat('es-ES', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  }).format(financialData.balance.total)} €
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-sm">
+                  <span className={isPositiveMargin ? "text-primary-600" : "text-red-600"}>
+                    {isPositiveMargin ? <TrendingUp className="inline h-4 w-4 mr-1" /> : <TrendingDown className="inline h-4 w-4 mr-1" />}
+                    {profitMargin}% de margen
+                  </span>
+                </div>
+              </div>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Ingresos totales:</span>
+                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Gastos totales:</span>
+                  <span className="font-medium">-{financialData.expenses.total.toLocaleString('es-ES')} €</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Tarjeta de Beneficio Neto */}
+          <Card className="overflow-hidden border-primary-100">
+            <CardHeader className="bg-primary-50 p-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg text-primary-700 flex items-center">
+                  <PiggyBank className="mr-2 h-5 w-5" />
+                  Beneficio Neto
+                </CardTitle>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                        <Info className="h-4 w-4 text-neutral-500" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-[200px] text-xs">El beneficio final después de descontar impuestos y retenciones</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-primary-700">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
                 }).format(stats?.result || financialData.balance.netProfit || 0)} €
               </p>
-              <div className="flex items-center gap-1 mt-1 text-sm">
-                <span className={isPositiveMargin ? "text-primary-600" : "text-red-600"}>
-                  {isPositiveMargin ? <TrendingUp className="inline h-4 w-4 mr-1" /> : <TrendingDown className="inline h-4 w-4 mr-1" />}
-                  {profitMargin}% de margen
-                </span>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Resultado bruto:</span>
+                  <span className="font-medium">{financialData.balance.total.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Retenciones IRPF:</span>
+                  <span className="font-medium">-{(stats?.totalWithholdings || 0).toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">IVA (neto):</span>
+                  <span className="font-medium">-{financialData.balance.ivaNeto.toLocaleString('es-ES')} €</span>
+                </div>
               </div>
-            </div>
-            
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Ingresos totales:</span>
-                <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+              
+              <div className="mt-4">
+                <Button 
+                  variant="outline"
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => navigate("/reports")}
+                >
+                  Ver informes detallados
+                </Button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Gastos totales:</span>
-                <span className="font-medium">-{financialData.expenses.total.toLocaleString('es-ES')} €</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Retenciones:</span>
-                <span className="font-medium">-{(stats?.totalWithholdings || 0).toLocaleString('es-ES')} €</span>
-              </div>
-            </div>
-            
-            <div className="mt-auto pt-4">
-              <Button 
-                variant="outline"
-                size="sm" 
-                className="w-full"
-                onClick={() => navigate("/reports")}
-              >
-                Ver informes detallados
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
         
         {/* Resumen de impuestos */}
         <div className="h-full">
