@@ -2,9 +2,15 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import NotFound from "@/pages/not-found";
+import { Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
-import AuthPage from "@/pages/auth-page";
+import AuthPage from "@/pages/auth-page"; // Esta página la mantenemos sin lazy loading
+import { ProtectedRoute } from "./lib/protected-route";
+import { AuthProvider } from "@/hooks/use-auth";
+
+// Por problemas de compatibilidad con tipos, volvemos a los import normales
+// La optimización la haremos a nivel de API y de caché
+import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
@@ -20,8 +26,13 @@ import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
 import IncomeExpensePage from "@/pages/income-expense";
-import { ProtectedRoute } from "./lib/protected-route";
-import { AuthProvider } from "@/hooks/use-auth";
+
+// Componente de carga optimizado
+const LoadingIndicator = () => (
+  <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 function Router() {
   return (

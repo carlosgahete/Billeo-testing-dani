@@ -56,13 +56,14 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false, // Don't refetch when window gets focus to avoid login loop
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime in v4)
-      retry: 1, // Retry once
-      refetchOnMount: true, // Refetch on component mount
+      staleTime: 30 * 60 * 1000, // 30 minutes - aumentado para mejorar rendimiento
+      gcTime: 60 * 60 * 1000, // 60 minutes - aumentado para mantener datos en caché más tiempo
+      retry: 0, // No retries to speed up initial load
+      refetchOnMount: true, // Refetch solo si los datos están obsoletos
+      retryOnMount: false, // No reintentar al montar para mejorar rendimiento inicial
     },
     mutations: {
-      retry: 1,
+      retry: 0, // No retries to speed up mutations
       onError: (error) => {
         console.error('Mutation error:', error);
       }
