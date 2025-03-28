@@ -458,7 +458,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Total neto (cobrado):</span>
-                  <span className="font-medium">{totalNeto.toLocaleString('es-ES')} €</span>
+                  <span className="font-bold">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
             </CardContent>
