@@ -355,9 +355,8 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Columna de resultados */}
+        {/* Tercera columna: Tarjeta de Resultado Bruto */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          {/* Tarjeta de Resultado Bruto */}
           <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-neutral-50 p-2">
               <div className="flex justify-between items-center">
@@ -407,9 +406,11 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
-          {/* Tarjeta de Beneficio Neto */}
-          <Card className="overflow-hidden border-green-100 shadow-md">
+        </div>
+        
+        {/* Cuarta columna: Tarjeta de Resultado Final */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+          <Card className="overflow-hidden border-green-100 shadow-md flex-grow">
             <CardHeader className="bg-green-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-green-700 flex items-center">
@@ -460,23 +461,12 @@ const Dashboard = () => {
                   <span className="font-medium">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
-              
-              <div className="mt-4">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => navigate("/reports")}
-                >
-                  Ver informes detallados
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Resumen de impuestos */}
-        <div className="h-full">
+        {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
+        <div className="md:col-span-4 mt-0">
           <TaxSummary />
         </div>
       </div>
