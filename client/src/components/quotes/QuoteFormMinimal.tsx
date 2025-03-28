@@ -141,6 +141,12 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
           // Asegurarnos de que el importe es un valor numérico válido
           const unitPrice = items[0].unitPrice || '0';
           setAmount(typeof unitPrice === 'string' ? unitPrice : '0');
+          
+          // Establecer el subtotal basado en el item
+          const itemSubtotal = parseFloat(items[0].subtotal || '0');
+          if (!isNaN(itemSubtotal)) {
+            setSubtotal(itemSubtotal);
+          }
         }
         
         // Impuestos
@@ -174,7 +180,18 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
         
         // Después de cargar los datos, forzar un recálculo de totales
         setTimeout(() => {
+          // Forzar el cálculo del subtotal primero 
+          const subtotalValue = parseFloat(amount) || 0;
+          setSubtotal(subtotalValue);
           calculateTotals();
+          console.log('Recálculo de totales después de cargar datos:', {
+            amount,
+            subtotal: subtotalValue,
+            total: (subtotalValue + (taxes.reduce((acc, tax) => {
+              const taxAmount = parseFloat(tax.amount) || 0;
+              return acc + (tax.isPercentage ? (subtotalValue * taxAmount / 100) : taxAmount);
+            }, 0)))
+          });
         }, 100);
       }
     }
@@ -203,6 +220,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     try {
       // Asegurarse de que amount es un número válido
       const subtotalValue = parseFloat(amount) || 0;
+      console.log('Valor de amount usado para cálculo:', amount, '→', subtotalValue);
       
       // Calcular el valor de cada impuesto
       let totalTaxAmount = 0;
@@ -211,10 +229,13 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
           const taxAmount = parseFloat(tax.amount) || 0;
           if (tax.isPercentage) {
             // Si es porcentaje, calcular sobre el subtotal
-            totalTaxAmount += (subtotalValue * taxAmount / 100);
+            const taxValue = (subtotalValue * taxAmount / 100);
+            totalTaxAmount += taxValue;
+            console.log(`Impuesto ${tax.name} (${taxAmount}%): ${taxValue.toFixed(2)}€`);
           } else {
             // Si es valor fijo, simplemente sumar
             totalTaxAmount += taxAmount;
+            console.log(`Impuesto ${tax.name} (fijo): ${taxAmount.toFixed(2)}€`);
           }
         } catch (err) {
           console.error('Error al calcular impuesto:', err);
@@ -247,6 +268,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
   // Recalcular cuando cambian los valores relevantes
   useEffect(() => {
     calculateTotals();
+    console.log('Recalculando totales - Cantidad:', amount, 'Subtotal:', subtotal, 'Total:', total);
   }, [amount, taxes]);
 
   // Añadir un nuevo impuesto
@@ -360,15 +382,37 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
     setIsSubmitting(true);
     
     try {
+      // Forzar un último cálculo para asegurar valores actualizados
+      const finalSubtotal = parseFloat(amount) || 0;
+      
+      // Calcular el total de impuestos
+      let finalTotalTaxAmount = 0;
+      taxes.forEach(tax => {
+        const taxAmount = parseFloat(tax.amount) || 0;
+        if (tax.isPercentage) {
+          finalTotalTaxAmount += (finalSubtotal * taxAmount / 100);
+        } else {
+          finalTotalTaxAmount += taxAmount;
+        }
+      });
+      
+      const finalTotal = finalSubtotal + finalTotalTaxAmount;
+      
+      console.log('Valores finales para enviar:', {
+        subtotal: finalSubtotal,
+        taxAmount: finalTotalTaxAmount,
+        total: finalTotal
+      });
+      
       // Preparar datos para enviar
       const quoteDataToSend = {
         quoteNumber,
         clientId: parseInt(clientId),
         status,
         notes,
-        subtotal: Number(subtotal).toFixed(2),
+        subtotal: finalSubtotal.toFixed(2),
         tax: "0.00", // Lo gestionamos con additionalTaxes
-        total: Number(total).toFixed(2),
+        total: finalTotal.toFixed(2),
         issueDate: issueDate,
         validUntil: validUntil,
         additionalTaxes: taxes.map(tax => ({
@@ -383,7 +427,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
             quantity: '1',
             unitPrice: amount,
             taxRate: '0', // Lo gestionamos con additionalTaxes
-            subtotal: Number(subtotal).toFixed(2)
+            subtotal: finalSubtotal.toFixed(2)
           }
         ]
       };
@@ -576,6 +620,14 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9.]/g, '');
                     setAmount(value);
+                    
+                    // Actualiza inmediatamente el subtotal
+                    const parsedValue = parseFloat(value);
+                    if (!isNaN(parsedValue)) {
+                      setSubtotal(parsedValue);
+                      // Forzar recálculo de impuestos 
+                      setTimeout(calculateTotals, 0);
+                    }
                   }}
                   placeholder="0.00"
                 />
