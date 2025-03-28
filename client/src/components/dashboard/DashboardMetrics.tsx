@@ -122,51 +122,7 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
   return (
     <div className="mb-1">
       {/* Primera fila: Métricas principales - 3 columnas en desktop, 2 en tablet */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
-        <Card className="border border-secondary-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-2 pt-1">
-            <div className="flex items-center">
-              <div className="p-1 mr-2 rounded-md bg-secondary-50 text-secondary-600">
-                <Wallet size={18} />
-              </div>
-              <p className="text-neutral-600 text-sm font-medium">Ingresos</p>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-32" />
-            ) : (
-              <p className="text-lg font-bold text-neutral-800">{formatCurrency(data?.income || 0)}</p>
-            )}
-            {!isLoading && (
-              <p className="text-xs text-secondary-600 flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                Facturación bruta
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card className="border border-danger-100 hover:shadow-md transition-shadow">
-          <CardContent className="p-2 pt-1">
-            <div className="flex items-center">
-              <div className="p-1 mr-2 rounded-md bg-danger-50 text-danger-500">
-                <ShoppingCart size={18} />
-              </div>
-              <p className="text-neutral-600 text-sm font-medium">Gastos</p>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-32" />
-            ) : (
-              <p className="text-lg font-bold text-neutral-800">{formatCurrency(data?.expenses || 0)}</p>
-            )}
-            {!isLoading && (data?.expenses || 0) > 0 && (
-              <p className="text-xs text-danger-600 flex items-center">
-                <TrendingDown className="h-3 w-3 mr-1" />
-                Gastos deducibles
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-2">      
         <Card className="border border-warning-100 hover:shadow-md transition-shadow">
           <CardContent className="p-2 pt-1">
             <div className="flex items-center">
