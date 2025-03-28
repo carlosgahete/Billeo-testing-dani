@@ -25,6 +25,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -443,63 +449,118 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                       {showActions && (
                         <TableCell>
                           <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Descargar PDF"
-                              onClick={() => handleDownloadPDF(quote)}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDownloadPDF(quote)}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Descargar PDF</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
                             {quote.status === "draft" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="Enviar presupuesto"
-                                onClick={() => handleSend(quote.id)}
-                              >
-                                <Send className="h-4 w-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleSend(quote.id)}
+                                    >
+                                      <Send className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Enviar presupuesto</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
+                            
                             {quote.status === "sent" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="Rechazar presupuesto"
-                                onClick={() => handleReject(quote.id)}
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleReject(quote.id)}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Rechazar presupuesto</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
+                            
                             {(quote.status === "sent" || quote.status === "accepted") && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="Convertir a factura"
-                                onClick={() => handleConvert(quote.id)}
-                              >
-                                <FileCheck className="h-4 w-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleConvert(quote.id)}
+                                    >
+                                      <FileCheck className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Convertir a factura</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
-                            <Link href={`/quotes/edit/${quote.id}`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="Editar"
-                                disabled={quote.status === "accepted" || quote.status === "rejected"}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Eliminar"
-                              onClick={() => handleDelete(quote.id)}
-                              disabled={quote.status === "accepted" || quote.status === "rejected"}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span>
+                                    <Link href={`/quotes/edit/${quote.id}`}>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                    </Link>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Editar presupuesto</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDelete(quote.id)}
+                                    disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Eliminar presupuesto</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </TableCell>
                       )}
