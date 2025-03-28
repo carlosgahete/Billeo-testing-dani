@@ -7,6 +7,7 @@ import Layout from "@/components/layout/Layout";
 import AuthPage from "@/pages/auth-page"; // Esta página la mantenemos sin lazy loading
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
 
 // Por problemas de compatibilidad con tipos, volvemos a los import normales
 // La optimización la haremos a nivel de API y de caché
@@ -127,10 +128,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router />
-        <Toaster />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router />
+          <Toaster />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

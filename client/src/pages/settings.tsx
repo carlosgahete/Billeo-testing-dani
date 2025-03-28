@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Save, Upload, User } from "lucide-react";
+import { Loader2, Save, Upload, User, Moon, Sun } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { 
   Card, 
   CardContent, 
@@ -41,8 +42,14 @@ interface UserSession {
 const SettingsPage = () => {
   const { toast } = useToast();
   const { refreshUser } = useAuth();
+  const { theme, setTheme, toggleTheme } = useTheme();
   const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(true);
-  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
+  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(theme === "dark");
+  
+  // Escuchar cambios en el tema global
+  useEffect(() => {
+    setIsDarkModeEnabled(theme === "dark");
+  }, [theme]);
   
   const { data: sessionData, isLoading: userLoading } = useQuery<UserSession>({
     queryKey: ["/api/auth/session"],
@@ -155,6 +162,7 @@ const SettingsPage = () => {
   
   const updatePasswordMutation = useMutation({
     mutationFn: async (data: typeof passwordForm) => {
+      if (!user) throw new Error("User not authenticated");
       return apiRequest("PUT", `/api/users/${user.id}/password`, {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword
@@ -210,9 +218,16 @@ const SettingsPage = () => {
   };
   
   const handleSavePreferences = () => {
+    // Guarda el tema en localStorage
+    localStorage.setItem("theme", theme);
+    
+    // Aquí podrías guardar otras preferencias como las notificaciones por email en el servidor
+    // Ejemplo hipotético: apiRequest("PUT", "/api/user/preferences", { emailNotifications: isEmailNotificationsEnabled })
+    
     toast({
       title: "Preferencias guardadas",
       description: "Tus preferencias han sido guardadas correctamente",
+      variant: "default",
     });
   };
 
@@ -421,7 +436,14 @@ const SettingsPage = () => {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="theme">Modo oscuro</Label>
+                    <div className="flex items-center gap-2">
+                      {isDarkModeEnabled ? (
+                        <Moon className="h-4 w-4 text-primary" />
+                      ) : (
+                        <Sun className="h-4 w-4 text-amber-500" />
+                      )}
+                      <Label htmlFor="theme">Modo oscuro</Label>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       Activa el modo oscuro para reducir la fatiga visual
                     </p>
@@ -429,7 +451,10 @@ const SettingsPage = () => {
                   <Switch
                     id="theme"
                     checked={isDarkModeEnabled}
-                    onCheckedChange={setIsDarkModeEnabled}
+                    onCheckedChange={(checked) => {
+                      setIsDarkModeEnabled(checked);
+                      setTheme(checked ? "dark" : "light");
+                    }}
                   />
                 </div>
               </div>
