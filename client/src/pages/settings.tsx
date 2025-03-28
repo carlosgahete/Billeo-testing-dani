@@ -56,7 +56,8 @@ const SettingsPage = () => {
   
   const [profileForm, setProfileForm] = useState({
     name: "",
-    email: ""
+    email: "",
+    profileImage: ""
   });
   
   // Profile image state
@@ -66,7 +67,24 @@ const SettingsPage = () => {
   const updateProfileImageMutation = useMutation({
     mutationFn: async (imagePath: string) => {
       if (!user) throw new Error("User not authenticated");
-      return apiRequest("POST", `/api/users/${user.id}/profile-image`, { profileImage: imagePath });
+      
+      // Crear un FormData para enviar la imagen correctamente
+      const formData = new FormData();
+      formData.append("profileImage", imagePath);
+      
+      // Realizar la solicitud directamente ya que necesitamos FormData
+      const response = await fetch(`/api/users/${user.id}/profile-image`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al actualizar la imagen de perfil");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
@@ -88,7 +106,13 @@ const SettingsPage = () => {
   
   const handleProfileImageUpload = (filePath: string) => {
     setUploadingProfileImage(true);
-    updateProfileImageMutation.mutate(filePath);
+    // Aquí filePath es la ruta de la imagen ya subida
+    // Actualizamos el perfil de usuario con esta ruta
+    updateProfileMutation.mutate({
+      ...profileForm,
+      profileImage: filePath // Agregar la imagen de perfil a los datos del usuario
+    });
+    setUploadingProfileImage(false);
   };
   
   // Initialize form with user data when loaded
@@ -96,7 +120,8 @@ const SettingsPage = () => {
     if (user && !userLoading) {
       setProfileForm({
         name: user.name || "",
-        email: user.email || ""
+        email: user.email || "",
+        profileImage: user.profileImage || ""
       });
     }
   }, [user, userLoading]);

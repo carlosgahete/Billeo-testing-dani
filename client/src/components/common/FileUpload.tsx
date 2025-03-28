@@ -44,7 +44,9 @@ const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false
         });
       }
 
-      onUpload(data.path);
+      // Asegurarse de que estamos enviando la ruta completa correcta
+      const imagePath = data.path || `/uploads/${data.filename}`;
+      onUpload(imagePath);
     } catch (error: any) {
       toast({
         title: "Error al subir el archivo",
