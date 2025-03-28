@@ -15,9 +15,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import FileUpload from "@/components/common/FileUpload";
+import { Company } from "@shared/schema";
+
+// Aseguramos que los tipos de datos sean correctos
+interface CompanyData extends Partial<Company> {
+  name?: string;
+  taxId?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  email?: string | null;
+  phone?: string | null;
+  logo?: string | null;
+  id?: number;
+}
 
 const companyFormSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
@@ -36,11 +51,11 @@ const CompanyForm = () => {
   const { toast } = useToast();
   const [logo, setLogo] = useState<string | null>(null);
   
-  const { data: company, isLoading } = useQuery({
+  const { data: company, isLoading } = useQuery<CompanyData>({
     queryKey: ["/api/company"],
-    onError: () => {
-      // Company might not exist yet, that's fine
-    }
+    retry: false,
+    staleTime: 0,
+    gcTime: 0
   });
 
   const form = useForm<CompanyFormValues>({
@@ -58,8 +73,11 @@ const CompanyForm = () => {
   });
 
   // Update form values when company data is loaded
-  useState(() => {
+  // Usamos useEffect en lugar de useState para actualizar el formulario cuando cambian los datos
+  // useState no es correcto para efectos secundarios y puede causar problemas de persistencia
+  useEffect(() => {
     if (company && !isLoading) {
+      console.log('Actualizando formulario con datos de empresa:', company);
       form.reset({
         name: company.name,
         taxId: company.taxId,
