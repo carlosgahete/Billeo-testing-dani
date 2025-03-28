@@ -123,13 +123,15 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <Button
-                      className="w-full"
-                      type="submit"
-                      disabled={isPending}
-                    >
-                      {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
-                    </Button>
+                    <div className="flex justify-center mt-2">
+                      <Button
+                        className="bg-blue-500 hover:bg-blue-600 w-2/3"
+                        type="submit"
+                        disabled={isPending}
+                      >
+                        {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
+                      </Button>
+                    </div>
                     
                     <div className="text-center text-sm mt-3">
                       <p className="text-neutral-500">
@@ -190,13 +192,15 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <Button
-                      className="w-full"
-                      type="submit"
-                      disabled={isPending}
-                    >
-                      {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
-                    </Button>
+                    <div className="flex justify-center mt-2">
+                      <Button
+                        className="bg-blue-500 hover:bg-blue-600 w-2/3"
+                        type="submit"
+                        disabled={isPending}
+                      >
+                        {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </TabsContent>
