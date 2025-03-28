@@ -24,9 +24,9 @@ const InvoicesPage = () => {
   }
 
   return (
-    <div className="w-full px-4 space-y-6">
+    <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
       {/* Header con nuestro azul corporativo específico */}
-      <div className="relative overflow-hidden rounded-lg bg-[#2563EB] py-5 px-5 md:px-6 mb-4 shadow-md">
+      <div className="relative overflow-hidden rounded-lg bg-[#2563EB] py-5 px-5 md:px-6 mb-4 shadow-md ml-14 md:ml-0">
         <div className="relative z-10">
           <h1 className="text-xl md:text-2xl font-bold text-white mb-1 flex items-center">
             <Receipt className="h-5 w-5 mr-2" />
@@ -53,7 +53,7 @@ const InvoicesPage = () => {
       </div>
       
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ml-14 md:ml-0">
         <Card className="border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardContent className="p-4 flex items-start">
             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
