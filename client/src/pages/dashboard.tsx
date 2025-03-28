@@ -193,7 +193,7 @@ const Dashboard = () => {
       <DashboardMetrics userId={user?.user?.id || 0} />
       
       <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-2">
-        {/* Primera columna: Tarjeta de Ingresos con facturas pendientes debajo */}
+        {/* Primera columna: Tarjeta de Ingresos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Ingresos */}
           <Card className="overflow-hidden flex-grow">
@@ -246,30 +246,6 @@ const Dashboard = () => {
                   Ver facturas
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* Facturas pendientes */}
-          <Card className="border border-warning-100 hover:shadow-md transition-shadow">
-            <CardContent className="p-3">
-              <div className="flex items-center">
-                <div className="p-1 mr-2 rounded-md bg-warning-50 text-warning-700">
-                  <Receipt size={18} />
-                </div>
-                <p className="text-neutral-600 text-sm font-medium">Facturas pendientes</p>
-              </div>
-              <p className="text-lg font-bold text-neutral-800 mt-1">
-                {new Intl.NumberFormat('es-ES', { 
-                  style: 'currency',
-                  currency: 'EUR',
-                }).format(stats?.pendingInvoices || 0)}
-              </p>
-              {(stats?.pendingCount || 0) > 0 && (
-                <p className="text-xs text-warning-700 flex items-center">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  {`${stats?.pendingCount || 0} facturas por cobrar`}
-                </p>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -355,9 +331,9 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Tarjeta de Ingresos Brutos */}
+        {/* Tercera columna: Tarjeta de Ingresos Brutos y Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden flex-grow">
+          <Card className="overflow-hidden">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-blue-700 flex items-center">
@@ -388,7 +364,7 @@ const Dashboard = () => {
                 </p>
               </div>
               
-              <div className="mt-2 space-y-1 text-sm">
+              <div className="mt-1 space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Base imponible:</span>
                   <span className="font-medium">{financialData.income.totalWithoutVAT.toLocaleString('es-ES')} €</span>
@@ -398,6 +374,30 @@ const Dashboard = () => {
                   <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+          
+          {/* Facturas pendientes */}
+          <Card className="border border-warning-100 hover:shadow-md transition-shadow">
+            <CardContent className="p-3">
+              <div className="flex items-center">
+                <div className="p-1 mr-2 rounded-md bg-warning-50 text-warning-700">
+                  <Receipt size={18} />
+                </div>
+                <p className="text-neutral-600 text-sm font-medium">Facturas pendientes</p>
+              </div>
+              <p className="text-lg font-bold text-neutral-800 mt-1">
+                {new Intl.NumberFormat('es-ES', { 
+                  style: 'currency',
+                  currency: 'EUR',
+                }).format(stats?.pendingInvoices || 0)}
+              </p>
+              {(stats?.pendingCount || 0) > 0 && (
+                <p className="text-xs text-warning-700 flex items-center">
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                  {`${stats?.pendingCount || 0} facturas por cobrar`}
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
