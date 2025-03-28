@@ -122,7 +122,7 @@ const TaxSummary = () => {
           <TooltipProvider delayDuration={100}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="cursor-help">
+                <div className="cursor-pointer">
                   <Info className="h-4 w-4 text-neutral-500" />
                 </div>
               </TooltipTrigger>
