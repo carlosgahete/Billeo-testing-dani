@@ -250,7 +250,7 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Segunda columna: Tarjeta de Gastos con retenciones debajo */}
+        {/* Segunda columna: Tarjeta de Gastos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Gastos */}
           <Card className="overflow-hidden flex-grow">
@@ -303,30 +303,6 @@ const Dashboard = () => {
                   Ver gastos
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* Retenciones */}
-          <Card className="border border-warning-100 hover:shadow-md transition-shadow">
-            <CardContent className="p-3">
-              <div className="flex items-center">
-                <div className="p-1 mr-2 rounded-md bg-warning-50 text-warning-700">
-                  <AlertTriangle size={18} />
-                </div>
-                <p className="text-neutral-600 text-sm font-medium">Retenciones</p>
-              </div>
-              <p className="text-lg font-bold text-neutral-800 mt-1">
-                {new Intl.NumberFormat('es-ES', { 
-                  style: 'currency',
-                  currency: 'EUR',
-                }).format(stats?.totalWithholdings || 0)}
-              </p>
-              {(stats?.totalWithholdings || 0) > 0 && (
-                <p className="text-xs text-warning-700 flex items-center">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  IRPF y otras
-                </p>
-              )}
             </CardContent>
           </Card>
         </div>
