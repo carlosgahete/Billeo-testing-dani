@@ -35,16 +35,7 @@ const InvoicesPage = () => {
           <p className="text-[#E0E8FF] max-w-2xl text-sm">
             Crea, edita y gestiona todas tus facturas profesionales, con datos fiscales actualizados y exportación a PDF.
           </p>
-          <div className="mt-3 flex space-x-2">
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              className="bg-white text-[#2563EB] hover:bg-blue-50 border-none text-xs"
-              onClick={() => navigate("/invoices/create")}
-            >
-              <Receipt className="h-3.5 w-3.5 mr-1.5" />
-              Nueva factura
-            </Button>
+          <div className="mt-3 flex">
             <Button 
               variant="outline" 
               size="sm" 
