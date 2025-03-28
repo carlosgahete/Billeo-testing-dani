@@ -90,16 +90,25 @@ const Dashboard = () => {
   const irpfToPay = Math.max(0, Number((irpfTotalEstimated - withholdings).toFixed(2)));
   
   // Beneficio neto final
-  // 1. Para los ingresos: cobramos la base imponible + IVA, pero se nos retiene el IRPF
-  // 2. Para los gastos: pagamos la base imponible + IVA
+  // Fórmula para el cálculo de los beneficios para autónomos en España:
+  // 1. Base imponible + IVA = Total bruto (lo que facturamos)
+  // 2. Base imponible - IRPF = Total neto (lo que efectivamente cobramos)
   // 3. El IVA se liquida con Hacienda (IVA repercutido - IVA soportado)
-  // 4. Cobro efectivo: Base imponible + IVA - IRPF
-  // 5. Pago efectivo: Base imponible + IVA
-  // 6. Beneficio efectivo: Lo que cobro - Lo que pago
-  // Fórmula final: (baseIncomeWithoutVAT + ivaRepercutido - withholdings) - (baseExpensesWithoutVAT + ivaSoportado)
-  const totalCobrado = baseIncomeWithoutVAT - withholdings + ivaRepercutido;
-  const totalPagado = baseExpensesWithoutVAT + ivaSoportado;
-  const netProfit = Number((totalCobrado - totalPagado).toFixed(2));
+  // 4. Para los ingresos: Base imponible + IVA - IRPF = Lo que efectivamente se cobra
+  // 5. Para los gastos: Base imponible + IVA = Lo que efectivamente se paga
+  // 6. Beneficio neto = Lo efectivamente cobrado - Lo efectivamente pagado
+  
+  // Desglose según las especificaciones:
+  // Base imponible total: 3477€ (Este es el baseIncomeWithoutVAT)
+  // IVA total (21%): 604.17€ (Este es el ivaRepercutido)
+  // IRPF total (15%): 431.55€ (Este son las retenciones withholdings)
+  // Total bruto (con IVA): 4081.17€ (Base + IVA)
+  // Total neto (lo que se cobra efectivamente tras IRPF): 3649.62€ (Base + IVA - IRPF)
+  
+  const totalBruto = baseIncomeWithoutVAT + ivaRepercutido; // Base + IVA
+  const totalNeto = totalBruto - withholdings; // Lo que realmente cobras (Base + IVA - IRPF)
+  const totalPagado = baseExpensesWithoutVAT + ivaSoportado; // Lo que realmente pagas
+  const netProfit = Number((totalNeto - totalPagado).toFixed(2)); // Beneficio neto real
   
   // Datos financieros organizados
   const financialData = {
