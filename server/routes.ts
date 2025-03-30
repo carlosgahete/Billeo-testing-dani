@@ -84,14 +84,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { token, user } = result;
       
-      // En producción, aquí enviaríamos un email con el enlace para restablecer
+      // Importar el servicio de email sólo cuando se necesita
+      const { sendPasswordResetEmail } = await import('./services/emailService');
+      
+      // Enviar email de recuperación
+      const emailResult = await sendPasswordResetEmail(user.email, token, user.username);
+      
       console.log(`Email de recuperación para ${user.email}: ${token}`);
       
-      // En desarrollo, incluimos el token en la respuesta para facilitar pruebas
-      if (process.env.NODE_ENV === 'development') {
+      // En desarrollo, podemos incluir información adicional para depuración
+      if (process.env.NODE_ENV !== 'production') {
         return res.status(200).json({ 
           message: "Email enviado con instrucciones para restablecer contraseña", 
-          token
+          token,
+          previewUrl: emailResult.previewUrl || null
         });
       }
       

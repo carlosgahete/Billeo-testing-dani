@@ -21,6 +21,7 @@ export default function ForgotPasswordPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const forgotPasswordMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -30,6 +31,12 @@ export default function ForgotPasswordPage() {
     onSuccess: (data) => {
       console.log("Solicitud de recuperación exitosa", data);
       setSubmitted(true);
+      
+      // Guardar URL de vista previa si está disponible (modo desarrollo)
+      if (data.previewUrl) {
+        setPreviewUrl(data.previewUrl);
+      }
+      
       toast({
         title: "Email enviado",
         description: "Si el email está registrado, recibirás instrucciones para restablecer tu contraseña",
@@ -109,12 +116,29 @@ export default function ForgotPasswordPage() {
                 <p>
                   Si el email existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña.
                 </p>
-                {/* En desarrollo, mostrar el token para pruebas */}
-                {process.env.NODE_ENV === 'development' && forgotPasswordMutation.data?.token && (
+                {/* En desarrollo, mostrar el token y vista previa para pruebas */}
+                {process.env.NODE_ENV !== 'production' && (
                   <div className="mt-4 p-2 bg-gray-100 rounded text-xs overflow-auto">
-                    <p className="font-mono break-all">
-                      <span className="font-semibold">Token:</span> {forgotPasswordMutation.data.token}
-                    </p>
+                    {forgotPasswordMutation.data?.token && (
+                      <p className="font-mono break-all">
+                        <span className="font-semibold">Token:</span> {forgotPasswordMutation.data.token}
+                      </p>
+                    )}
+                    
+                    {previewUrl && (
+                      <div className="mt-2">
+                        <p className="font-semibold text-blue-600">Vista previa del email:</p>
+                        <a 
+                          href={previewUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline break-all"
+                        >
+                          {previewUrl}
+                        </a>
+                      </div>
+                    )}
+                    
                     <p className="mt-2 text-orange-600 text-xs">
                       (Solo visible en desarrollo)
                     </p>
