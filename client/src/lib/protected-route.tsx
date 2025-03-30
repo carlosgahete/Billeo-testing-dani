@@ -46,3 +46,49 @@ export function ProtectedRoute({
     </Suspense>
   );
 }
+
+export function ProtectedAdminRoute({
+  path,
+  component: Component,
+}: {
+  path: string;
+  component: () => React.JSX.Element;
+}) {
+  const { user, isLoading } = useAuth();
+
+  // Si estamos cargando los datos del usuario, mostrar un indicador de carga
+  if (isLoading) {
+    return (
+      <Route path={path}>
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Route>
+    );
+  }
+
+  // Si no hay usuario o no es administrador, redirigir
+  if (!user) {
+    return (
+      <Route path={path}>
+        <Redirect to="/auth" />
+      </Route>
+    );
+  }
+  
+  // Si el usuario no es administrador, redirigir al dashboard
+  if (user.role !== 'admin') {
+    return (
+      <Route path={path}>
+        <Redirect to="/" />
+      </Route>
+    );
+  }
+
+  // Renderizar el componente dentro de Suspense para cargas asíncronas
+  return (
+    <Suspense fallback={<LazyLoader />}>
+      <Component />
+    </Suspense>
+  );
+}

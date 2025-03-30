@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import AuthPage from "@/pages/auth-page"; // Esta página la mantenemos sin lazy loading
-import { ProtectedRoute } from "./lib/protected-route";
+import { ProtectedRoute, ProtectedAdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 
@@ -28,6 +28,7 @@ import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
+import SelectUserPage from "@/pages/admin/select-user";
 
 // Componente de carga optimizado
 const LoadingIndicator = () => (
@@ -123,8 +124,11 @@ function Router() {
       </Route>
       <Route path="/admin/users">
         <Layout>
-          <ProtectedRoute path="/admin/users" component={UsersManagementPage} />
+          <ProtectedAdminRoute path="/admin/users" component={UsersManagementPage} />
         </Layout>
+      </Route>
+      <Route path="/admin/select-user">
+        <ProtectedAdminRoute path="/admin/select-user" component={SelectUserPage} />
       </Route>
       <Route path="*" component={NotFound} />
     </Switch>

@@ -22,13 +22,16 @@ export default function AuthPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("login");
 
-  // Redirect to dashboard if already logged in - con optimización para evitar recargas innecesarias
+  // Redirect to appropriate page if already logged in
   useEffect(() => {
     if (user) {
-      // Usar un timeout mínimo para mejorar la experiencia de usuario
-      // y evitar parpadeos en la redirección
+      // Use a minimal timeout to improve UX and avoid flicker
       const timer = setTimeout(() => {
-        navigate("/");
+        if (user.role === 'admin') {
+          navigate("/admin/select-user");
+        } else {
+          navigate("/");
+        }
       }, 10);
       return () => clearTimeout(timer);
     }
