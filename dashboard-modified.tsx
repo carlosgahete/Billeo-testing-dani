@@ -334,7 +334,7 @@ const Dashboard = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Base imponible de todas las facturas cobradas (sin IVA). Representa el valor real de tu actividad económica.</p>
+                      <p className="w-[200px] text-xs">Base imponible de todas las facturas cobradas (sin IVA)</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

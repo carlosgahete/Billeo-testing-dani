@@ -1,0 +1,59 @@
+Para que tu IA gestione correctamente el IRPF que debes pagar, debes explicarle paso a paso cómo calcularlo y diferenciarlo del IRPF retenido en tus facturas recibidas. Aquí te dejo un desarrollo detallado:
+
+⸻
+
+1. Definición del IRPF a Mostrar
+
+“El IRPF que quiero que el sistema muestre es el que debo pagar a Hacienda. Es decir, el que yo he retenido en las facturas que emito a mis clientes. No quiero que el sistema me muestre el IRPF que mis proveedores o clientes me han retenido a mí en sus facturas, ya que eso no influye en lo que yo debo ingresar a Hacienda.”
+
+⸻
+
+2. Datos Necesarios para el Cálculo
+
+Para calcular correctamente el IRPF que debes pagar, el sistema debe:
+	•	Obtener todas las facturas emitidas dentro del período fiscal correspondiente (ejemplo: trimestre actual).
+	•	Identificar en cada factura el porcentaje de IRPF retenido (normalmente 15% o 7% para nuevos autónomos en España).
+	•	Calcular el total de IRPF retenido en todas las facturas emitidas.
+
+⸻
+
+3. Fórmula del Cálculo del IRPF a Pagar
+
+El cálculo del IRPF que debes pagar se hace sumando todas las retenciones de IRPF en las facturas emitidas:
+
+\text{IRPF a pagar} = \sum \text{(Base imponible de la factura)} \times \text{(Porcentaje de IRPF)}
+
+Ejemplo:
+Si has emitido tres facturas este trimestre:
+	•	Factura 1: Base imponible 1.000€, IRPF 15% → Retención: 150€
+	•	Factura 2: Base imponible 800€, IRPF 15% → Retención: 120€
+	•	Factura 3: Base imponible 1.200€, IRPF 15% → Retención: 180€
+
+Total de IRPF a pagar = 150€ + 120€ + 180€ = 450€
+
+⸻
+
+4. Implementación en la IA
+
+“El sistema debe calcular el IRPF a pagar sumando todas las retenciones de IRPF aplicadas en mis facturas emitidas dentro del período fiscal seleccionado. No debe incluir el IRPF retenido en facturas recibidas. Este cálculo debe actualizarse automáticamente cuando se emitan nuevas facturas.”
+
+También puedes añadir una opción en el dashboard para visualizar:
+	•	Total de IRPF retenido en facturas emitidas (lo que debes pagar).
+	•	Total de IRPF retenido en facturas recibidas (opcional, pero no afecta lo que debes pagar).
+
+⸻
+
+5. Validaciones y Seguridad
+
+Para evitar errores, el sistema debe:
+	•	Permitir seleccionar el período fiscal (trimestre/año).
+	•	Mostrar un desglose de cada factura con su retención.
+	•	No mezclar IRPF de facturas emitidas con recibidas.
+
+⸻
+
+Conclusión
+
+Si le explicas esto a tu IA, entenderá que debe calcular y mostrar únicamente el IRPF retenido en las facturas que TÚ emites y no el que te han retenido a ti. Así, el sistema reflejará correctamente lo que debes ingresar a Hacienda.
+
+¿Necesitas que lo adapte a algún software específico que estés usando?

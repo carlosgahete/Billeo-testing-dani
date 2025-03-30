@@ -127,7 +127,7 @@ const TaxSummary = () => {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                <p className="w-[200px] text-xs">IVA a pagar por trimestres y retenciones acumuladas</p>
+                <p className="w-[250px] text-xs">Resumen de IVA a pagar al declarar el trimestre y el IRPF retenido en las facturas emitidas</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -188,7 +188,7 @@ const TaxSummary = () => {
             {/* Retenciones acumuladas del período seleccionado */}
             <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-3">
               <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center">
-                Retenciones IRPF ({periodNames[period]}, {year})
+                IRPF practicado a clientes ({periodNames[period]}, {year})
               </h3>
               <div className="flex justify-between items-center">
                 {isLoading ? (
@@ -202,8 +202,8 @@ const TaxSummary = () => {
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 {period === 'all' 
-                  ? 'Retenciones acumuladas en el año (modelo 190)'
-                  : `Retenciones del trimestre - modelo 111 (${periodNames[period]})`}
+                  ? 'IRPF retenido en facturas emitidas (modelo 190)'
+                  : `IRPF retenido en facturas - modelo 111 (${periodNames[period]})`}
               </p>
             </div>
           </>
