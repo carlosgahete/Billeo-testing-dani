@@ -136,11 +136,12 @@ const Sidebar = ({
       icon: <FileText size={20} />, 
       label: "Presupuestos" 
     },
-    { 
-      href: "/reports", 
-      icon: <BarChart3 size={20} />, 
-      label: "Informes" 
-    },
+    // Ocultando temporalmente el apartado de informes
+    // { 
+    //   href: "/reports", 
+    //   icon: <BarChart3 size={20} />, 
+    //   label: "Informes" 
+    // },
     { 
       href: "/company", 
       icon: <Building2 size={20} />, 
