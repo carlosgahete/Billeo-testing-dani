@@ -11,14 +11,23 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
+  Tooltip as RechartTooltip, 
   Legend, 
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area
 } from "recharts";
-import { Download, FileDown, Loader2 } from "lucide-react";
+import { 
+  Download, 
+  FileDown, 
+  Loader2, 
+  BarChart2, 
+  TrendingUp, 
+  Info 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -27,6 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Transaction {
   id: number;
@@ -87,6 +102,9 @@ const ReportGenerator = () => {
     new Date().toISOString().split("T")[0]
   );
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Añadir opción de tipo gráfico
+  const [chartType, setChartType] = useState("bar");
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -263,6 +281,38 @@ const ReportGenerator = () => {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];
 
+  // Formatear moneda para mostrar
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', { 
+      style: 'currency', 
+      currency: 'EUR',
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Preparar datos en el formato para los gráficos de barras/area
+  const prepareChartData = () => {
+    if (reportType === "income-expense") {
+      return [
+        {
+          name: "Actual",
+          ingresos: incomeExpenseData[0].value,
+          gastos: incomeExpenseData[1].value,
+          resultado: incomeExpenseData[0].value - incomeExpenseData[1].value
+        }
+      ];
+    } else if (reportType === "income-categories" || reportType === "expense-categories") {
+      // Convertir los datos por categoría al formato para gráficos de barra
+      return categoryData.map(item => ({
+        name: item.name,
+        valor: item.value
+      }));
+    }
+    return [];
+  };
+
+  const chartData = prepareChartData();
+
   // Estilo común para botón exportar PDF
   const exportButtonClass = `
     flex items-center shadow-md hover:shadow-lg transition-all duration-300
@@ -271,69 +321,102 @@ const ReportGenerator = () => {
   `;
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Generador de informes</CardTitle>
+    <Card className="w-full h-full">
+      <CardHeader className="bg-indigo-50 pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg text-indigo-700 flex items-center">
+            <BarChart2 className="mr-2 h-5 w-5" />
+            Generador de Informes
+          </CardTitle>
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-pointer">
+                  <Info className="h-4 w-4 text-neutral-500" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                <p className="w-[200px] text-xs">Genera y visualiza informes detallados de tu actividad financiera</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="space-y-2">
-            <Label htmlFor="report-type">Tipo de informe</Label>
-            <Select
-              value={reportType}
-              onValueChange={setReportType}
-            >
-              <SelectTrigger id="report-type">
-                <SelectValue placeholder="Tipo de informe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="income-expense">Ingresos y gastos</SelectItem>
-                <SelectItem value="income-categories">Ingresos por categoría</SelectItem>
-                <SelectItem value="expense-categories">Gastos por categoría</SelectItem>
-                <SelectItem value="tax">Informe de impuestos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <CardContent className="p-4">
+        {/* Controles del informe */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Select value={reportType} onValueChange={setReportType}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Tipo de informe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="income-expense">Ingresos y gastos</SelectItem>
+              <SelectItem value="income-categories">Ingresos por categoría</SelectItem>
+              <SelectItem value="expense-categories">Gastos por categoría</SelectItem>
+              <SelectItem value="tax">Informe de impuestos</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className="space-y-2">
-            <Label htmlFor="period">Período</Label>
-            <Select
-              value={period}
-              onValueChange={handlePeriodChange}
-            >
-              <SelectTrigger id="period">
-                <SelectValue placeholder="Seleccionar período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monthly">Mensual</SelectItem>
-                <SelectItem value="quarterly">Trimestral</SelectItem>
-                <SelectItem value="annual">Anual</SelectItem>
-                <SelectItem value="custom">Personalizado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={period} onValueChange={handlePeriodChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Mensual</SelectItem>
+              <SelectItem value="quarterly">Trimestral</SelectItem>
+              <SelectItem value="annual">Anual</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className="space-y-2">
-            <Label htmlFor="start-date">Fecha inicio</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              disabled={period !== "custom"}
-            />
-          </div>
+          {period === "custom" && (
+            <>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-[150px]"
+              />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-[150px]"
+              />
+            </>
+          )}
           
-          <div className="space-y-2">
-            <Label htmlFor="end-date">Fecha fin</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              disabled={period !== "custom"}
-            />
-          </div>
+          <Select value={chartType} onValueChange={setChartType}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Tipo de gráfico" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bar">Barras</SelectItem>
+              <SelectItem value="area">Área</SelectItem>
+              {reportType === "income-categories" || reportType === "expense-categories" ? (
+                <SelectItem value="pie">Circular</SelectItem>
+              ) : null}
+            </SelectContent>
+          </Select>
+          
+          <Button
+            onClick={handleGeneratePDF}
+            disabled={isGenerating}
+            className="ml-auto"
+            variant="outline"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <span>Exportando...</span>
+              </>
+            ) : (
+              <>
+                <FileDown className="h-4 w-4 mr-2" />
+                <span>Exportar PDF</span>
+              </>
+            )}
+          </Button>
         </div>
         
         {isLoading ? (
@@ -350,172 +433,150 @@ const ReportGenerator = () => {
             <TabsContent value="chart" className="space-y-4">
               <div className="h-80 w-full">
                 {reportType === "income-expense" ? (
-                  <div className="flex flex-col h-full">
-                  <div className="mb-4 text-center">
-                    <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200">Comparativa de Ingresos y Gastos</h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Período actual: {getPeriodLabel(period)}</p>
-                  </div>
-
-                  <div className="flex justify-center gap-5 mt-5 relative">
-                    {/* Barra de Ingresos */}
-                    <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
-                      <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
-                        <div 
-                          className="w-full bg-emerald-500 shadow-lg rounded-t-sm relative"
-                          style={{
-                            height: `${Math.min(Math.max(40, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
-                            animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                          }}
-                        >
-                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-emerald-100 dark:border-emerald-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '160px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
-                            <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                              {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Ingresos</span>
-                      </div>
-                    </div>
-                    
-                    {/* Barra de Gastos */}
-                    <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
-                      <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
-                        <div 
-                          className="w-full bg-rose-500 shadow-lg rounded-t-sm relative"
-                          style={{
-                            height: `${Math.min(Math.max(40, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
-                            animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                          }}
-                        >
-                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-rose-100 dark:border-rose-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '160px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
-                            <span className="font-semibold text-xs text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                              {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Gastos</span>
-                      </div>
-                    </div>
-                    
-                    {/* Barra de Balance */}
-                    <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
-                      <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
-                        <div 
-                          className="w-full bg-blue-500 shadow-lg rounded-t-sm relative"
-                          style={{
-                            height: `${Math.min(Math.max(40, ((incomeExpenseData[0].value - incomeExpenseData[1].value) / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
-                            animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                          }}
-                        >
-                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-blue-100 dark:border-blue-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '160px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
-                            <span className="font-semibold text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                              {(incomeExpenseData[0].value - incomeExpenseData[1].value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Balance</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  chartType === "bar" ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" />
+                        <YAxis 
+                          tickFormatter={(value) => `${value > 1000 ? `${value/1000}k` : value}€`}
+                        />
+                        <RechartTooltip 
+                          formatter={(value: number) => formatCurrency(value)}
+                          labelFormatter={(label) => `Período: ${getPeriodLabel(period)}`}
+                        />
+                        <Legend />
+                        <Bar dataKey="ingresos" name="Ingresos" fill="#4ade80" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="gastos" name="Gastos" fill="#f87171" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="resultado" name="Resultado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" />
+                        <YAxis 
+                          tickFormatter={(value) => `${value > 1000 ? `${value/1000}k` : value}€`}
+                        />
+                        <RechartTooltip 
+                          formatter={(value: number) => formatCurrency(value)}
+                          labelFormatter={(label) => `Período: ${getPeriodLabel(period)}`}
+                        />
+                        <Legend />
+                        <Area type="monotone" dataKey="ingresos" name="Ingresos" fill="#4ade80" fillOpacity={0.3} stroke="#4ade80" />
+                        <Area type="monotone" dataKey="gastos" name="Gastos" fill="#f87171" fillOpacity={0.3} stroke="#f87171" />
+                        <Area type="monotone" dataKey="resultado" name="Resultado" fill="#60a5fa" fillOpacity={0.3} stroke="#60a5fa" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )
                 ) : (reportType === "income-categories" || reportType === "expense-categories") ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <defs>
-                        {COLORS.map((color, index) => (
-                          <linearGradient 
-                            key={`gradient-${index}`}
-                            id={`colorGradient-${index}`} 
-                            x1="0" 
-                            y1="0" 
-                            x2="0" 
-                            y2="1"
-                          >
-                            <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-                            <stop offset="100%" stopColor={color} stopOpacity={0.7} />
-                          </linearGradient>
-                        ))}
-                      </defs>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius }) => {
-                          const RADIAN = Math.PI / 180;
-                          const radius = 25 + innerRadius + (outerRadius - innerRadius);
-                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                          
-                          return percent > 0.05 ? (
-                            <text 
-                              x={x} 
-                              y={y} 
-                              fill="#333333"
-                              textAnchor={x > cx ? 'start' : 'end'} 
-                              dominantBaseline="central"
-                              style={{
-                                fontSize: '12px',
-                                fontWeight: 500,
-                                textShadow: '0px 0px 2px white'
-                              }}
+                  chartType === "pie" ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <defs>
+                          {COLORS.map((color, index) => (
+                            <linearGradient 
+                              key={`gradient-${index}`}
+                              id={`colorGradient-${index}`} 
+                              x1="0" 
+                              y1="0" 
+                              x2="0" 
+                              y2="1"
                             >
-                              {`${name}: ${(percent * 100).toFixed(0)}%`}
-                            </text>
-                          ) : null;
-                        }}
-                        outerRadius={100}
-                        innerRadius={50}
-                        paddingAngle={2}
-                        dataKey="value"
+                              <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+                              <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                            const RADIAN = Math.PI / 180;
+                            const radius = 25 + innerRadius + (outerRadius - innerRadius);
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            
+                            return percent > 0.05 ? (
+                              <text 
+                                x={x} 
+                                y={y} 
+                                fill="#333333"
+                                textAnchor={x > cx ? 'start' : 'end'} 
+                                dominantBaseline="central"
+                                style={{
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  textShadow: '0px 0px 2px white'
+                                }}
+                              >
+                                {`${name}: ${(percent * 100).toFixed(0)}%`}
+                              </text>
+                            ) : null;
+                          }}
+                          outerRadius={100}
+                          innerRadius={50}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={`url(#colorGradient-${index % COLORS.length})`}
+                              stroke="#ffffff"
+                              strokeWidth={2}
+                            />
+                          ))}
+                        </Pie>
+                        <RechartTooltip 
+                          formatter={(value: any) => {
+                            const numValue = Number(value);
+                            return isNaN(numValue) 
+                              ? value 
+                              : `${numValue.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+                          }}
+                        />
+                        <Legend 
+                          layout="horizontal"
+                          verticalAlign="bottom"
+                          align="center"
+                          wrapperStyle={{
+                            paddingTop: 20
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={chartData} 
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                        layout="vertical"
                       >
-                        {categoryData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={`url(#colorGradient-${index % COLORS.length})`}
-                            stroke="#ffffff"
-                            strokeWidth={2}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: any) => {
-                          const numValue = Number(value);
-                          return isNaN(numValue) 
-                            ? value 
-                            : `${numValue.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
-                        }}
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          padding: '10px',
-                          border: '1px solid #eaeaea',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                        }}
-                        labelStyle={{
-                          fontWeight: 'bold',
-                          marginBottom: '5px'
-                        }}
-                      />
-                      <Legend 
-                        layout="horizontal"
-                        verticalAlign="bottom"
-                        align="center"
-                        wrapperStyle={{
-                          paddingTop: 20
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                        <XAxis type="number" />
+                        <YAxis 
+                          type="category"
+                          dataKey="name" 
+                          width={150}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <RechartTooltip 
+                          formatter={(value: number) => formatCurrency(value)}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="valor" 
+                          name={reportType === "income-categories" ? "Ingresos" : "Gastos"} 
+                          fill={reportType === "income-categories" ? "#4ade80" : "#f87171"} 
+                          radius={[0, 4, 4, 0]} 
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )
                 ) : (
                   <div className="flex flex-col justify-center items-center h-full text-center">
                     <h3 className="text-xl font-medium mb-3 text-blue-800">Informe de Impuestos</h3>
@@ -579,30 +640,19 @@ const ReportGenerator = () => {
                 )}
               </div>
               
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Resumen</h3>
-                  <p className="text-sm text-neutral-500">
-                    Período: {getPeriodLabel(period)} ({startDate} - {endDate})
-                  </p>
-                </div>
-                <Button
-                  onClick={handleGeneratePDF}
-                  disabled={isGenerating}
-                  className={exportButtonClass}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      <span>Generando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FileDown className="h-5 w-5 mr-2" />
-                      <span>Exportar PDF</span>
-                    </>
-                  )}
-                </Button>
+              {/* Resumen y análisis de tendencia */}
+              <div className="mt-3 bg-slate-50 rounded-md p-3 border border-slate-200">
+                <h3 className="text-sm font-medium flex items-center text-slate-700">
+                  <TrendingUp className="h-4 w-4 mr-1 text-blue-500" />
+                  Análisis de tendencia
+                </h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  {reportType === "income-expense" 
+                    ? `Ingresos: ${formatCurrency(incomeExpenseData[0].value || 0)} | Gastos: ${formatCurrency(incomeExpenseData[1].value || 0)} | Resultado: ${formatCurrency((incomeExpenseData[0].value || 0) - (incomeExpenseData[1].value || 0))}`
+                    : reportType === "tax" 
+                      ? `Tributación estimada para ${getPeriodLabel(period)}: IVA (21%): 1.785,25€ | IRPF: 925,50€`
+                      : `Distribución por categorías: ${categoryData.length} categorías con un total de ${formatCurrency(categoryData.reduce((sum, cat) => sum + cat.value, 0))}`}
+                </p>
               </div>
             </TabsContent>
             
@@ -656,12 +706,12 @@ const ReportGenerator = () => {
                   {isGenerating ? (
                     <>
                       <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      <span>Generando...</span>
+                      <span>Generando PDF...</span>
                     </>
                   ) : (
                     <>
-                      <FileDown className="h-5 w-5 mr-2" />
-                      <span>Exportar PDF</span>
+                      <Download className="h-5 w-5 mr-2" />
+                      <span>Descargar tabla</span>
                     </>
                   )}
                 </Button>
