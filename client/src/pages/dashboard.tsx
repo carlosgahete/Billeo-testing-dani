@@ -317,14 +317,14 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Tarjeta de Ingresos Brutos y Facturas Pendientes */}
+        {/* Tercera columna: Tarjeta de Total Facturado y Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-blue-700 flex items-center">
                   <PiggyBank className="mr-2 h-5 w-5" />
-                  Ingresos Brutos
+                  Total Facturado
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -334,7 +334,7 @@ const Dashboard = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[200px] text-xs">Base imponible de todas las facturas cobradas (sin IVA)</p>
+                      <p className="w-[200px] text-xs">El total facturado incluyendo Base Imponible e IVA (dinero real facturado)</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -346,14 +346,14 @@ const Dashboard = () => {
                   {new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(financialData.income.totalWithoutVAT)} €
+                  }).format(financialData.income.total)} €
                 </p>
               </div>
               
               <div className="mt-1 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Total facturado:</span>
-                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Base imponible:</span>
+                  <span className="font-medium">{financialData.income.totalWithoutVAT.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA (21%):</span>
