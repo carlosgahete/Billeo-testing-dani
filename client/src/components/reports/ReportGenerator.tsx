@@ -260,6 +260,13 @@ const ReportGenerator = () => {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];
 
+  // Estilo común para botón exportar PDF
+  const exportButtonClass = `
+    flex items-center shadow-md hover:shadow-lg transition-all duration-300
+    bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600
+    text-white font-medium px-4 py-2 rounded-lg
+  `;
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -343,66 +350,227 @@ const ReportGenerator = () => {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={incomeExpenseData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+                      barSize={60}
+                      barGap={20}
+                      className="drop-shadow-sm"
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
+                      <defs>
+                        <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#4ade80" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#22c55e" stopOpacity={0.8} />
+                        </linearGradient>
+                        <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f87171" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#ef4444" stopOpacity={0.8} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={12}
+                        fontWeight={500}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={12}
+                        tickFormatter={(value) => 
+                          value >= 1000 
+                            ? `${(value / 1000).toFixed(1)}k €` 
+                            : `${value} €`
+                        }
+                      />
                       <Tooltip 
+                        cursor={{fill: 'rgba(200, 200, 200, 0.1)'}}
                         formatter={(value: any) => {
                           const numValue = Number(value);
-                          return isNaN(numValue) ? value : `${numValue.toFixed(2)} €`;
-                        }} 
+                          return [
+                            isNaN(numValue) 
+                              ? value 
+                              : `${numValue.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`,
+                            ''
+                          ];
+                        }}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          padding: '10px',
+                          border: '1px solid #eaeaea',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                        }}
+                        labelStyle={{
+                          fontWeight: 'bold',
+                          marginBottom: '5px',
+                          textAlign: 'center'
+                        }}
                       />
-                      <Legend />
-                      <Bar dataKey="value" name="Importe (€)" fill="#1976d2" />
+                      <Legend 
+                        wrapperStyle={{
+                          paddingTop: 10
+                        }}
+                      />
+                      {incomeExpenseData.map((entry, index) => (
+                        <Bar 
+                          key={`bar-${index}`}
+                          dataKey="value" 
+                          name="Importe (€)" 
+                          radius={[4, 4, 0, 0]}
+                          fill={entry.name === "Ingresos" ? "url(#incomeGradient)" : "url(#expenseGradient)"}
+                          stackId={index}
+                          data={[entry]}
+                        />
+                      ))}
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (reportType === "income-categories" || reportType === "expense-categories") ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
+                      <defs>
+                        {COLORS.map((color, index) => (
+                          <linearGradient 
+                            key={`gradient-${index}`}
+                            id={`colorGradient-${index}`} 
+                            x1="0" 
+                            y1="0" 
+                            x2="0" 
+                            y2="1"
+                          >
+                            <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+                            <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                          </linearGradient>
+                        ))}
+                      </defs>
                       <Pie
                         data={categoryData}
                         cx="50%"
                         cy="50%"
-                        labelLine={true}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
+                        labelLine={false}
+                        label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = 25 + innerRadius + (outerRadius - innerRadius);
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          
+                          return percent > 0.05 ? (
+                            <text 
+                              x={x} 
+                              y={y} 
+                              fill="#333333"
+                              textAnchor={x > cx ? 'start' : 'end'} 
+                              dominantBaseline="central"
+                              style={{
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                textShadow: '0px 0px 2px white'
+                              }}
+                            >
+                              {`${name}: ${(percent * 100).toFixed(0)}%`}
+                            </text>
+                          ) : null;
+                        }}
+                        outerRadius={100}
+                        innerRadius={50}
+                        paddingAngle={2}
                         dataKey="value"
                       >
                         {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={`url(#colorGradient-${index % COLORS.length})`}
+                            stroke="#ffffff"
+                            strokeWidth={2}
+                          />
                         ))}
                       </Pie>
                       <Tooltip 
                         formatter={(value: any) => {
                           const numValue = Number(value);
-                          return isNaN(numValue) ? value : `${numValue.toFixed(2)} €`;
-                        }} 
+                          return isNaN(numValue) 
+                            ? value 
+                            : `${numValue.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+                        }}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          padding: '10px',
+                          border: '1px solid #eaeaea',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                        }}
+                        labelStyle={{
+                          fontWeight: 'bold',
+                          marginBottom: '5px'
+                        }}
                       />
-                      <Legend />
+                      <Legend 
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        wrapperStyle={{
+                          paddingTop: 20
+                        }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="flex flex-col justify-center items-center h-full text-center">
-                    <h3 className="text-lg font-medium mb-2">Informe de Impuestos</h3>
-                    <p className="text-neutral-600 mb-4">
+                    <h3 className="text-xl font-medium mb-3 text-blue-800">Informe de Impuestos</h3>
+                    <p className="text-neutral-600 mb-6 max-w-xl">
                       Este informe muestra un resumen de tus obligaciones fiscales basado en tus
                       ingresos y gastos durante el período seleccionado.
                     </p>
-                    <div className="grid grid-cols-2 gap-8 w-full max-w-md">
-                      <div className="text-center">
-                        <p className="text-sm text-neutral-500">IVA a pagar</p>
-                        <p className="text-2xl font-bold text-primary-700">
-                          {isLoading ? "..." : "1.785,25 €"}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="flex items-center justify-center mb-3">
+                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium text-blue-700 uppercase tracking-wider mb-1">IVA a pagar</p>
+                        <p className="text-3xl font-bold text-blue-800 mb-2">
+                          {isLoading ? 
+                            <span className="inline-block w-24 h-8 bg-blue-200 animate-pulse rounded"></span> : 
+                            "1.785,25 €"
+                          }
                         </p>
+                        <p className="text-xs text-blue-600">Próximo vencimiento: 20 de abril</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-sm text-neutral-500">IRPF estimado</p>
-                        <p className="text-2xl font-bold text-warning-700">
-                          {isLoading ? "..." : "925,50 €"}
+                      
+                      <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="flex items-center justify-center mb-3">
+                          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium text-amber-700 uppercase tracking-wider mb-1">IRPF estimado</p>
+                        <p className="text-3xl font-bold text-amber-800 mb-2">
+                          {isLoading ? 
+                            <span className="inline-block w-24 h-8 bg-amber-200 animate-pulse rounded"></span> : 
+                            "925,50 €"
+                          }
                         </p>
+                        <p className="text-xs text-amber-600">Declaración anual del 1 al 30 de junio</p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl border border-emerald-200 shadow-sm hover:shadow-md transition-shadow duration-300 md:col-span-2">
+                        <div className="flex items-center justify-center mb-3">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium text-emerald-700 uppercase tracking-wider mb-1">Tributación optimizada</p>
+                        <p className="text-xl font-bold text-emerald-800 mb-2">
+                          Ahorro estimado: 435,75 €
+                        </p>
+                        <p className="text-xs text-emerald-600">Basado en tus gastos deducibles y optimización fiscal</p>
                       </div>
                     </div>
                   </div>
@@ -419,17 +587,17 @@ const ReportGenerator = () => {
                 <Button
                   onClick={handleGeneratePDF}
                   disabled={isGenerating}
-                  className="flex items-center"
+                  className={exportButtonClass}
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generando...
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <span>Generando...</span>
                     </>
                   ) : (
                     <>
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Exportar PDF
+                      <FileDown className="h-5 w-5 mr-2" />
+                      <span>Exportar PDF</span>
                     </>
                   )}
                 </Button>
@@ -481,17 +649,17 @@ const ReportGenerator = () => {
                 <Button
                   onClick={handleGeneratePDF}
                   disabled={isGenerating}
-                  className="flex items-center"
+                  className={exportButtonClass}
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generando...
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <span>Generando...</span>
                     </>
                   ) : (
                     <>
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Exportar PDF
+                      <FileDown className="h-5 w-5 mr-2" />
+                      <span>Exportar PDF</span>
                     </>
                   )}
                 </Button>
