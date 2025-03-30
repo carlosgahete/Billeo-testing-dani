@@ -373,8 +373,8 @@ const ReportGenerator = () => {
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-emerald-200 dark:border-emerald-700">
-                            <span className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">
+                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-emerald-200 dark:border-emerald-700 min-w-[110px]">
+                            <span className="font-semibold text-sm text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
                               {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
@@ -399,8 +399,8 @@ const ReportGenerator = () => {
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-rose-200 dark:border-rose-700">
-                            <span className="font-semibold text-sm text-rose-700 dark:text-rose-300">
+                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-rose-200 dark:border-rose-700 min-w-[110px]">
+                            <span className="font-semibold text-sm text-rose-700 dark:text-rose-300 whitespace-nowrap">
                               {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
@@ -425,8 +425,8 @@ const ReportGenerator = () => {
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-blue-200 dark:border-blue-700">
-                            <span className="font-semibold text-sm text-blue-700 dark:text-blue-300">
+                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-blue-200 dark:border-blue-700 min-w-[110px]">
+                            <span className="font-semibold text-sm text-blue-700 dark:text-blue-300 whitespace-nowrap">
                               {(incomeExpenseData[0].value - incomeExpenseData[1].value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
