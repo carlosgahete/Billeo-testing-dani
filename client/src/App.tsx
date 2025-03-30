@@ -31,6 +31,7 @@ import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
+import ProfilePage from "@/pages/profile-page";
 
 // Componente de carga optimizado
 const LoadingIndicator = () => (
@@ -133,6 +134,11 @@ function Router() {
       </Route>
       <Route path="/admin/select-user">
         <ProtectedAdminRoute path="/admin/select-user" component={SelectUserPage} />
+      </Route>
+      <Route path="/profile">
+        <Layout>
+          <ProtectedRoute path="/profile" component={ProfilePage} />
+        </Layout>
       </Route>
       <Route path="*" component={NotFound} />
     </Switch>

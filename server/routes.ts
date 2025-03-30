@@ -2,12 +2,24 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import express from "express";
+import { scrypt, timingSafeEqual } from "crypto";
+import { promisify } from "util";
 
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
   interface SessionData {
     userId: number;
   }
+}
+
+const scryptAsync = promisify(scrypt);
+
+// Función para comparar contraseñas
+async function comparePasswords(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -51,6 +63,15 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Middleware para verificar autenticación de manera consistente
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    // Verificar si el usuario está autenticado mediante passport o mediante sesión
+    if (req.isAuthenticated() || (req.session && req.session.userId)) {
+      return next();
+    }
+    return res.status(401).json({ message: "Not authenticated" });
+  };
+  
   // Inicializar la base de datos
   try {
     await storage.initializeDatabase();
@@ -150,6 +171,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ message: "Contraseña actualizada exitosamente" });
     } catch (error) {
       console.error("Error al restablecer contraseña:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
+  // Rutas para recuperación de contraseña con preguntas de seguridad
+  app.post("/api/security-question/set", requireAuth, async (req, res) => {
+    try {
+      const { question, answer } = req.body;
+      
+      if (!question || !answer) {
+        return res.status(400).json({ error: "Pregunta y respuesta son requeridas" });
+      }
+      
+      const userId = req.session.userId;
+      const success = await storage.setSecurityQuestion(userId, question, answer);
+      
+      if (!success) {
+        return res.status(500).json({ error: "Error al guardar la pregunta de seguridad" });
+      }
+      
+      return res.status(200).json({ message: "Pregunta de seguridad guardada correctamente" });
+    } catch (error) {
+      console.error("Error al configurar pregunta de seguridad:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
+  app.post("/api/security-question/check", async (req, res) => {
+    try {
+      const { email, answer } = req.body;
+      
+      if (!email || !answer) {
+        return res.status(400).json({ error: "Email y respuesta son requeridos" });
+      }
+      
+      const user = await storage.verifySecurityAnswer(email, answer);
+      
+      if (!user) {
+        return res.status(400).json({ error: "Email o respuesta incorrectos" });
+      }
+      
+      // Crear un token temporal para el restablecimiento
+      const { token } = await storage.createPasswordResetToken(email);
+      
+      return res.status(200).json({ 
+        valid: true, 
+        token,
+        message: "Respuesta correcta, puede restablecer su contraseña" 
+      });
+    } catch (error) {
+      console.error("Error al verificar respuesta de seguridad:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
+  app.get("/api/security-question", async (req, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email es requerido" });
+      }
+      
+      const user = await storage.getUserByEmail(email as string);
+      
+      if (!user || !user.securityQuestion) {
+        return res.status(404).json({ error: "No hay pregunta de seguridad para este usuario" });
+      }
+      
+      return res.status(200).json({ question: user.securityQuestion });
+    } catch (error) {
+      console.error("Error al obtener pregunta de seguridad:", error);
       return res.status(500).json({ error: "Error interno del servidor" });
     }
   });
@@ -418,14 +511,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Middleware para verificar autenticación de manera consistente
-  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-    // Verificar si el usuario está autenticado mediante passport o mediante sesión
-    if (req.isAuthenticated() || (req.session && req.session.userId)) {
-      return next();
+  // Rutas para el perfil de usuario
+  app.get("/api/user/profile", requireAuth, (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      const { password, ...userWithoutPassword } = req.user;
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error al obtener perfil:", error);
+      res.status(500).json({ message: "Error al obtener perfil" });
     }
-    return res.status(401).json({ message: "Not authenticated" });
-  };
+  });
+  
+  app.put("/api/user/profile", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      const userId = req.user.id;
+      const { name, email, businessType } = req.body;
+      
+      // Verificar si el email ya está en uso por otro usuario
+      if (email !== req.user.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "El email ya está en uso por otro usuario" });
+        }
+      }
+      
+      const updatedUser = await storage.updateUserProfile(userId, {
+        name,
+        email,
+        businessType
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Error al actualizar perfil" });
+      }
+      
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error al actualizar perfil:", error);
+      res.status(500).json({ message: "Error al actualizar perfil" });
+    }
+  });
+  
+  app.put("/api/user/password", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      const userId = req.user.id;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Contraseña actual y nueva son requeridas" });
+      }
+      
+      // Verificar la contraseña actual
+      const isPasswordValid = await comparePasswords(currentPassword, req.user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Contraseña actual incorrecta" });
+      }
+      
+      // Actualizar la contraseña
+      const success = await storage.resetPassword(userId, newPassword);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Error al actualizar contraseña" });
+      }
+      
+      res.status(200).json({ message: "Contraseña actualizada correctamente" });
+    } catch (error) {
+      console.error("Error al actualizar contraseña:", error);
+      res.status(500).json({ message: "Error al actualizar contraseña" });
+    }
+  });
   
   // Create HTTP server
   const httpServer = createServer(app);

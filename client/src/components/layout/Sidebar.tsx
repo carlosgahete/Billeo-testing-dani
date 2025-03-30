@@ -209,28 +209,41 @@ const Sidebar = ({
         
         {/* User Menu - Desktop */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
-                <AvatarFallback className="text-xs">
-                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={20} />}
-                </AvatarFallback>
-              </Avatar>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
-                <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
-              </div>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout}
-              className="text-neutral-500 hover:text-red-500"
-              aria-label="Cerrar sesión"
+          <div className="flex flex-col space-y-3">
+            {/* Enlace al perfil */}
+            <Link 
+              href="/profile"
+              onClick={handleNavClick}
+              className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-neutral-100 transition-colors text-neutral-700"
             >
-              <LogOut size={18} />
-            </Button>
+              <User size={18} className="mr-2" />
+              <span>Mi perfil</span>
+            </Link>
+            
+            {/* Usuario y botón de logout */}
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
+                  <AvatarFallback className="text-xs">
+                    {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={20} />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="ml-3">
+                  <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
+                  <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-neutral-500 hover:text-red-500"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={18} />
+              </Button>
+            </div>
           </div>
         </div>
       </aside>
@@ -289,28 +302,41 @@ const Sidebar = ({
         
         {/* User Menu - Mobile */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
-                <AvatarFallback className="text-xs">
-                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={20} />}
-                </AvatarFallback>
-              </Avatar>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
-                <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
-              </div>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout}
-              className="text-neutral-500 hover:text-red-500"
-              aria-label="Cerrar sesión"
+          <div className="flex flex-col space-y-3">
+            {/* Enlace al perfil */}
+            <Link 
+              href="/profile"
+              onClick={handleNavClick}
+              className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-neutral-100 transition-colors text-neutral-700"
             >
-              <LogOut size={18} />
-            </Button>
+              <User size={18} className="mr-2" />
+              <span>Mi perfil</span>
+            </Link>
+            
+            {/* Usuario y botón de logout */}
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user?.profileImage ? user.profileImage : undefined} alt={user?.name || "Usuario"} />
+                  <AvatarFallback className="text-xs">
+                    {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : <User size={20} />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="ml-3">
+                  <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
+                  <p className="text-xs text-neutral-500">{user?.role || "Usuario"}</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-neutral-500 hover:text-red-500"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={18} />
+              </Button>
+            </div>
           </div>
         </div>
       </aside>

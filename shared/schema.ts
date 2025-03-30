@@ -14,6 +14,8 @@ export const users = pgTable("users", {
   profileImage: text("profile_image"),
   resetToken: text("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
+  securityQuestion: text("security_question"),
+  securityAnswer: text("security_answer"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({ 

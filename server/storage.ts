@@ -1,14 +1,4 @@
-import { randomBytes, scrypt, timingSafeEqual } from 'crypto';
-import { promisify } from 'util';
-
-const scryptAsync = promisify(scrypt);
-
-// Implementación de hashPassword en storage.ts para evitar dependencia circular
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
+import { randomBytes, timingSafeEqual } from 'crypto';
 import {
   User,
   InsertUser,
@@ -45,6 +35,7 @@ import { eq, desc } from "drizzle-orm";
 import { db, sql } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import { hashPassword, comparePasswords } from "./auth";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -52,14 +43,16 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUserProfile(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
   loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}>;
+  setSecurityQuestion(userId: number, question: string, answer: string): Promise<boolean>;
+  verifySecurityAnswer(email: string, answer: string): Promise<User | undefined>;
   
   // Métodos para recuperación de contraseña
-  getUserByEmail(email: string): Promise<User | undefined>;
   createPasswordResetToken(email: string): Promise<{ token: string, user: User } | undefined>;
   verifyPasswordResetToken(token: string): Promise<User | undefined>;
   resetPassword(userId: number, newPassword: string): Promise<boolean>;
@@ -442,7 +435,8 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Generar un token aleatorio
-      const token = randomBytes(32).toString('hex');
+      const crypto = require('crypto');
+      const token = crypto.randomBytes(32).toString('hex');
       const expiry = new Date();
       expiry.setHours(expiry.getHours() + 1); // El token expira en 1 hora
       
@@ -508,6 +502,48 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error al resetear contraseña:", error);
       return false;
+    }
+  }
+  
+  async setSecurityQuestion(userId: number, question: string, answer: string): Promise<boolean> {
+    try {
+      // Encriptar la respuesta para mayor seguridad
+      const hashedAnswer = await hashPassword(answer.toLowerCase().trim());
+      
+      // Actualizar la pregunta y respuesta de seguridad
+      const result = await db.update(users)
+        .set({
+          securityQuestion: question,
+          securityAnswer: hashedAnswer
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error al configurar pregunta de seguridad:", error);
+      return false;
+    }
+  }
+  
+  async verifySecurityAnswer(email: string, answer: string): Promise<User | undefined> {
+    try {
+      // Obtener el usuario por email
+      const user = await this.getUserByEmail(email);
+      if (!user || !user.securityQuestion || !user.securityAnswer) {
+        return undefined; // Usuario no encontrado o no tiene pregunta de seguridad
+      }
+      
+      // Verificar la respuesta
+      const isCorrect = await comparePasswords(answer.toLowerCase().trim(), user.securityAnswer);
+      if (!isCorrect) {
+        return undefined; // Respuesta incorrecta
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("Error al verificar respuesta de seguridad:", error);
+      return undefined;
     }
   }
   
