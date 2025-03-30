@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   Select,
   SelectContent,
@@ -26,7 +28,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
-import { CalendarIcon, Loader2, FileText, Receipt } from "lucide-react";
+import { CalendarIcon, Loader2, FileText, Receipt, Download } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -110,11 +112,11 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     description: "",
     amount: 0,
     date: new Date(),
-    type: "expense",
+    type: "expense" as "income" | "expense",
     categoryId: null,
     paymentMethod: "bank_transfer",
     notes: "",
-    attachments: [],
+    attachments: [] as string[],
   };
 
   // Initialize form with default values
@@ -215,6 +217,114 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
 
   const handleFileUpload = (path: string) => {
     setAttachments([...attachments, path]);
+  };
+
+  // Función para generar y descargar el PDF del gasto
+  const downloadTransactionPDF = () => {
+    if (!transactionData) return;
+    
+    // Crear un nuevo documento PDF en formato A4
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+    
+    // Configurar la información del documento
+    const formattedDate = transactionData.date 
+      ? format(new Date(transactionData.date), "dd/MM/yyyy")
+      : format(new Date(), "dd/MM/yyyy");
+    
+    const title = `Comprobante de ${transactionData.type === "income" ? "Ingreso" : "Gasto"}`;
+    const fileName = `${transactionData.type === "income" ? "ingreso" : "gasto"}_${transactionData.id}_${formattedDate.replace(/\//g, "-")}.pdf`;
+    
+    // Añadir título
+    doc.setFontSize(20);
+    doc.setTextColor(40, 99, 235); // Azul principal
+    doc.text(title, 105, 20, { align: "center" });
+    
+    // Añadir fecha y número de referencia
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Fecha: ${formattedDate}`, 20, 30);
+    doc.text(`Ref: #${transactionData.id}`, 20, 35);
+    
+    // Añadir información básica
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    
+    // Tabla con los detalles del gasto
+    autoTable(doc, {
+      startY: 45,
+      head: [["Concepto", "Detalles"]],
+      body: [
+        ["Descripción", transactionData.description],
+        ["Importe", `${transactionData.amount} €`],
+        ["Tipo", transactionData.type === "income" ? "Ingreso" : "Gasto"],
+        ["Método de pago", getPaymentMethodText(transactionData.paymentMethod)],
+        ["Notas", transactionData.notes || "---"]
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [40, 99, 235], textColor: [255, 255, 255] },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 40 },
+        1: { cellWidth: "auto" }
+      },
+    });
+    
+    // Si hay adjuntos, listarlos
+    if (transactionData.attachments && transactionData.attachments.length > 0) {
+      const y = (doc as any).lastAutoTable.finalY + 10;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(40, 99, 235);
+      doc.text("Archivos adjuntos:", 20, y);
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      
+      transactionData.attachments.forEach((attachment, index) => {
+        const fileName = attachment.split('/').pop() || attachment;
+        doc.text(`- ${fileName}`, 25, y + 7 + (index * 5));
+      });
+    }
+    
+    // Pie de página
+    const pageCount = doc.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(
+        `Generado por Billeo - ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: "center" }
+      );
+    }
+    
+    // Descargar el PDF
+    doc.save(fileName);
+    
+    toast({
+      title: "PDF generado correctamente",
+      description: `El archivo ${fileName} se ha descargado`,
+    });
+  };
+  
+  // Función auxiliar para obtener el texto del método de pago
+  const getPaymentMethodText = (method: string): string => {
+    const methods: Record<string, string> = {
+      "cash": "Efectivo",
+      "bank_transfer": "Transferencia bancaria",
+      "credit_card": "Tarjeta de crédito",
+      "debit_card": "Tarjeta de débito",
+      "paypal": "PayPal",
+      "other": "Otro"
+    };
+    
+    return methods[method] || method;
   };
 
   // Función para extraer información de IVA de las notas
@@ -509,6 +619,17 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
           >
             Cancelar
           </Button>
+          {isEditMode && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={downloadTransactionPDF}
+              className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Descargar PDF
+            </Button>
+          )}
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar" : "Crear"}
           </Button>
