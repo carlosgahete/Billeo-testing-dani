@@ -358,86 +358,77 @@ const ReportGenerator = () => {
                   
                   <div className="flex-1 flex items-end justify-around px-4 pb-8 pt-2 relative">
                     {/* Líneas guía horizontales */}
-                    <div className="absolute inset-x-0 bottom-8 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
-                    <div className="absolute inset-x-0 bottom-24 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
-                    <div className="absolute inset-x-0 bottom-40 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
-                    <div className="absolute inset-x-0 bottom-56 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-8 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-24 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-40 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-56 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
                     
                     {/* Barra de Ingresos */}
-                    <div className="flex flex-col items-center z-10 px-4 w-1/3 max-w-[180px]">
-                      <div className="h-[180px] w-full relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex flex-col-reverse">
+                    <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
+                      <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
                         <div 
-                          className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-lg rounded-t-sm relative"
+                          className="w-full bg-emerald-500 shadow-lg rounded-t-sm relative"
                           style={{ 
                             height: `${Math.min(Math.max(30, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-emerald-200 dark:border-emerald-700 min-w-[110px]">
-                            <span className="font-semibold text-sm text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1 rounded-full shadow-sm border border-emerald-100 dark:border-emerald-800 min-w-[120px] text-center">
+                            <span className="font-semibold text-sm text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                               {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30" />
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-col items-center">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
-                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Ingresos</span>
-                        </div>
+                      <div className="mt-4 flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Ingresos</span>
                       </div>
                     </div>
                     
                     {/* Barra de Gastos */}
-                    <div className="flex flex-col items-center z-10 px-4 w-1/3 max-w-[180px]">
-                      <div className="h-[180px] w-full relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex flex-col-reverse">
+                    <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
+                      <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
                         <div 
-                          className="w-full bg-gradient-to-t from-rose-600 to-rose-400 shadow-lg rounded-t-sm relative"
+                          className="w-full bg-rose-500 shadow-lg rounded-t-sm relative"
                           style={{ 
                             height: `${Math.min(Math.max(30, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-rose-200 dark:border-rose-700 min-w-[110px]">
-                            <span className="font-semibold text-sm text-rose-700 dark:text-rose-300 whitespace-nowrap">
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1 rounded-full shadow-sm border border-rose-100 dark:border-rose-800 min-w-[120px] text-center">
+                            <span className="font-semibold text-sm text-rose-600 dark:text-rose-400 whitespace-nowrap">
                               {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30" />
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-col items-center">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-400 to-rose-600"></div>
-                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Gastos</span>
-                        </div>
+                      <div className="mt-4 flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Gastos</span>
                       </div>
                     </div>
                     
-                    {/* Barra de Balance (opcional) */}
-                    <div className="flex flex-col items-center z-10 px-4 w-1/3 max-w-[180px]">
-                      <div className="h-[180px] w-full relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex flex-col-reverse">
+                    {/* Barra de Balance */}
+                    <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
+                      <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
                         <div 
-                          className="w-full bg-gradient-to-t from-blue-600 to-blue-400 shadow-lg rounded-t-sm relative"
+                          className="w-full bg-blue-500 shadow-lg rounded-t-sm relative"
                           style={{ 
                             height: `${Math.min(Math.max(30, ((incomeExpenseData[0].value - incomeExpenseData[1].value) / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-blue-200 dark:border-blue-700 min-w-[110px]">
-                            <span className="font-semibold text-sm text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1 rounded-full shadow-sm border border-blue-100 dark:border-blue-800 min-w-[120px] text-center">
+                            <span className="font-semibold text-sm text-blue-600 dark:text-blue-400 whitespace-nowrap">
                               {(incomeExpenseData[0].value - incomeExpenseData[1].value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30" />
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-col items-center">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
-                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Balance</span>
-                        </div>
+                      <div className="mt-4 flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Balance</span>
                       </div>
                     </div>
                   </div>
