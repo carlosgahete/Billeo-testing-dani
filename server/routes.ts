@@ -2289,13 +2289,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter(inv => inv.status === "pending" || inv.status === "overdue")
         .length;
       
-      // Calcular las retenciones (IRPF) que ya se han aplicado en las facturas
-      // Ahora extraemos las retenciones directamente de los impuestos adicionales de cada factura
-      let totalWithholdings = 0;
+      // Calcular el IRPF que ha sido retenido en las facturas emitidas
+      // Este IRPF es el que el autónomo debe ingresar a Hacienda en cada trimestre
+      let totalIrpfToReport = 0;
       
-      // Iteramos por todas las facturas pagadas para calcular retenciones
+      // Registramos las facturas y sus retenciones para depuración
+      console.log("Detalle de facturas e impuestos:");
+      
+      // Iteramos por todas las facturas pagadas para calcular las retenciones de IRPF
       for (const invoice of paidInvoices) {
         try {
+          console.log(`Factura ${invoice.invoiceNumber}: Subtotal=${invoice.subtotal}, Total=${invoice.total}`);
+          
           // Comprobamos si hay impuestos adicionales
           if (invoice.additionalTaxes) {
             let additionalTaxes = [];
@@ -2313,6 +2318,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               additionalTaxes = invoice.additionalTaxes;
             }
             
+            console.log("  - Impuestos adicionales:", additionalTaxes);
+            
             // Buscamos impuestos que sean IRPF (retenciones)
             for (const tax of additionalTaxes) {
               if (tax.name && tax.name.toLowerCase().includes('irpf')) {
@@ -2320,10 +2327,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Si es un porcentaje, calculamos basado en el subtotal
                   // El signo negativo en el importe indica que es una retención
                   let retentionAmount = Number(invoice.subtotal) * Math.abs(Number(tax.amount)) / 100;
-                  totalWithholdings += retentionAmount;
+                  totalIrpfToReport += retentionAmount;
                 } else {
                   // Si es un valor fijo, sumamos su valor absoluto (ya que las retenciones tienen signo negativo)
-                  totalWithholdings += Math.abs(Number(tax.amount));
+                  totalIrpfToReport += Math.abs(Number(tax.amount));
                 }
               }
             }
@@ -2334,13 +2341,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Registrar el total de retenciones calculadas
-      console.log("Total de retenciones calculadas:", totalWithholdings);
+      console.log("Total de retenciones calculadas:", totalIrpfToReport);
       
-      // Si no hay retenciones detectadas en las facturas, calculamos una estimación basada en el 15%
-      if (totalWithholdings === 0 && income > 0) {
-        const retentionRate = 0.15;
-        totalWithholdings = Math.round(income * retentionRate);
-        console.log("No se detectaron retenciones en facturas, usando estimación del 15%:", totalWithholdings);
+      // Si no hay retenciones detectadas en las facturas pero hay ingresos, calculamos una estimación basada en el 15%
+      // Esto es solo para simular datos en entorno de desarrollo y debería quitarse en producción
+      if (totalIrpfToReport === 0 && income > 0) {
+        const standardRetentionRate = 0.15; // 15% estándar para autónomos
+        totalIrpfToReport = Math.round(income * standardRetentionRate);
+        console.log("No se detectaron retenciones en facturas, usando estimación del 15%:", totalIrpfToReport);
       }
       
       // Calcular el resultado (ingresos - gastos)
@@ -2359,7 +2367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const irpfTotalEstimated = Math.max(0, Math.round((income - expenses) * irpfRate));
       
       // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas
-      const incomeTax = Math.max(0, irpfTotalEstimated - totalWithholdings);
+      const incomeTax = Math.max(0, irpfTotalEstimated - totalIrpfToReport);
       
       return res.status(200).json({
         income,
@@ -2368,7 +2376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pendingCount,
         balance,
         result,
-        totalWithholdings,
+        totalWithholdings: totalIrpfToReport,
         period,
         year,
         taxes: {

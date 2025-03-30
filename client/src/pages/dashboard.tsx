@@ -425,15 +425,52 @@ const Dashboard = () => {
                   <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF retenido por clientes:</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default">
+                        <span className="text-neutral-500">IRPF retenido por clientes:</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
+                        <p className="w-[250px] text-xs">
+                          Suma de todas las retenciones de IRPF aplicadas en tus facturas emitidas. 
+                          Deberás ingresarlo a Hacienda en el modelo 111 (trimestral) o 190 (anual).
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span className="font-medium">-{irpfCorrect.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-orange-600 font-medium">IVA a liquidar:</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default">
+                        <span className="text-orange-600 font-medium">IVA a liquidar:</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
+                        <p className="w-[250px] text-xs">
+                          IVA repercutido que deberás declarar a Hacienda. Se calcula como el 21% 
+                          de la base imponible de tus facturas emitidas (modelo 303 trimestral).
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span className="font-medium text-orange-600">{ivaCorrect.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-900 font-bold">Total neto (cobrado):</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default">
+                        <span className="text-neutral-900 font-bold">Total neto (cobrado):</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
+                        <p className="w-[250px] text-xs">
+                          Cantidad real que recibes después de aplicar impuestos. 
+                          Se calcula como: Base Imponible + IVA - IRPF retenido. 
+                          Representa el dinero efectivamente ingresado en tu cuenta.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span className="font-bold">{totalNeto.toLocaleString('es-ES')} €</span>
                 </div>
               </div>

@@ -166,7 +166,7 @@ const TaxSummary = () => {
             <div className="p-3 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
               <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
                 <CalendarDays className="mr-1 h-4 w-4" />
-                IVA a liquidar ({periodNames[period]}, {year})
+                IVA repercutido a liquidar ({periodNames[period]}, {year})
               </h3>
               <div className="flex justify-between items-center">
                 {isLoading ? (
@@ -183,6 +183,21 @@ const TaxSummary = () => {
                   ? 'Resumen anual de IVA (modelo 390)'
                   : `IVA trimestral - modelo 303 (${periodNames[period]})`}
               </p>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger className="w-full mt-1">
+                    <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-sm p-1 cursor-default">
+                      ℹ️ Resultado de restar IVA repercutido - IVA soportado
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
+                    <p className="w-[250px] text-xs">
+                      El IVA repercutido es el que has cobrado a tus clientes (21% de la base imponible 
+                      de tus facturas emitidas). Se declara trimestralmente a Hacienda a través del modelo 303.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             
             {/* Retenciones acumuladas del período seleccionado */}
@@ -202,9 +217,25 @@ const TaxSummary = () => {
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 {period === 'all' 
-                  ? 'IRPF retenido en facturas emitidas (modelo 190)'
-                  : `IRPF retenido en facturas - modelo 111 (${periodNames[period]})`}
+                  ? 'IRPF retenido en facturas emitidas que deberás ingresar a Hacienda (modelo 190)'
+                  : `IRPF retenido en facturas que deberás ingresar a Hacienda - modelo 111 (${periodNames[period]})`}
               </p>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger className="w-full mt-1">
+                    <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm p-1 cursor-default">
+                      ℹ️ Se calcula como el 15% de la base imponible de cada factura emitida
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
+                    <p className="w-[250px] text-xs">
+                      Este IRPF es el que se ha retenido en tus facturas y tú debes ingresarlo 
+                      a Hacienda. No confundir con el IRPF a pagar como autónomo, que corresponde 
+                      a tus propios impuestos sobre la renta.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </>
         ) : (
