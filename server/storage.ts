@@ -1,3 +1,14 @@
+import { randomBytes, scrypt, timingSafeEqual } from 'crypto';
+import { promisify } from 'util';
+
+const scryptAsync = promisify(scrypt);
+
+// Implementación de hashPassword en storage.ts para evitar dependencia circular
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 import {
   User,
   InsertUser,
@@ -46,6 +57,12 @@ export interface IStorage {
   updateUserProfile(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
   loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}>;
+  
+  // Métodos para recuperación de contraseña
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createPasswordResetToken(email: string): Promise<{ token: string, user: User } | undefined>;
+  verifyPasswordResetToken(token: string): Promise<User | undefined>;
+  resetPassword(userId: number, newPassword: string): Promise<boolean>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -153,7 +170,9 @@ export class DatabaseStorage implements IStorage {
             "name" TEXT NOT NULL,
             "email" TEXT NOT NULL,
             "role" TEXT NOT NULL DEFAULT 'user',
-            "profile_image" TEXT
+            "profile_image" TEXT,
+            "reset_token" TEXT,
+            "reset_token_expiry" TIMESTAMP
           );
         `;
         
@@ -407,6 +426,89 @@ export class DatabaseStorage implements IStorage {
   async deleteUser(id: number): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id)).returning();
     return result.length > 0;
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result[0];
+  }
+  
+  async createPasswordResetToken(email: string): Promise<{ token: string, user: User } | undefined> {
+    try {
+      // Buscar al usuario por email
+      const user = await this.getUserByEmail(email);
+      if (!user) {
+        return undefined; // Usuario no encontrado
+      }
+      
+      // Generar un token aleatorio
+      const token = randomBytes(32).toString('hex');
+      const expiry = new Date();
+      expiry.setHours(expiry.getHours() + 1); // El token expira en 1 hora
+      
+      // Guardar el token y la fecha de expiración en el usuario
+      await db.update(users)
+        .set({
+          resetToken: token,
+          resetTokenExpiry: expiry
+        })
+        .where(eq(users.id, user.id));
+      
+      // Devolver el token y el usuario actualizado
+      return { 
+        token, 
+        user: { ...user, resetToken: token, resetTokenExpiry: expiry } 
+      };
+    } catch (error) {
+      console.error("Error al crear token de recuperación:", error);
+      return undefined;
+    }
+  }
+  
+  async verifyPasswordResetToken(token: string): Promise<User | undefined> {
+    try {
+      // Buscar al usuario con el token
+      const result = await db.select()
+        .from(users)
+        .where(eq(users.resetToken, token));
+      
+      const user = result[0];
+      if (!user) {
+        return undefined; // Token no válido
+      }
+      
+      // Verificar que el token no ha expirado
+      if (!user.resetTokenExpiry || new Date(user.resetTokenExpiry) < new Date()) {
+        return undefined; // Token expirado
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("Error al verificar token de recuperación:", error);
+      return undefined;
+    }
+  }
+  
+  async resetPassword(userId: number, newPassword: string): Promise<boolean> {
+    try {
+      // Encriptar la nueva contraseña
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Actualizar la contraseña y limpiar el token de recuperación
+      const result = await db.update(users)
+        .set({
+          password: hashedPassword,
+          resetToken: null,
+          resetTokenExpiry: null
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error al resetear contraseña:", error);
+      return false;
+    }
   }
   
   async loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}> {

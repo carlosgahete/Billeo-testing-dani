@@ -29,6 +29,8 @@ import SettingsPage from "@/pages/settings";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
 
 // Componente de carga optimizado
 const LoadingIndicator = () => (
@@ -41,6 +43,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
         <Layout>
           <ProtectedRoute path="/" component={Dashboard} />

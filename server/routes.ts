@@ -65,6 +65,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
   
+  // Rutas para recuperación de contraseña
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "El email es requerido" });
+      }
+      
+      // Generar token de restablecimiento
+      const result = await storage.createPasswordResetToken(email);
+      
+      if (!result) {
+        // No devolvemos error para no revelar si el email existe o no
+        return res.status(200).json({ message: "Si el email está registrado, recibirás instrucciones para restablecer tu contraseña" });
+      }
+      
+      const { token, user } = result;
+      
+      // En producción, aquí enviaríamos un email con el enlace para restablecer
+      console.log(`Email de recuperación para ${user.email}: ${token}`);
+      
+      // En desarrollo, incluimos el token en la respuesta para facilitar pruebas
+      if (process.env.NODE_ENV === 'development') {
+        return res.status(200).json({ 
+          message: "Email enviado con instrucciones para restablecer contraseña", 
+          token
+        });
+      }
+      
+      return res.status(200).json({ 
+        message: "Email enviado con instrucciones para restablecer contraseña"
+      });
+    } catch (error) {
+      console.error("Error en recuperación de contraseña:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
+  app.get("/api/reset-password/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      const user = await storage.verifyPasswordResetToken(token);
+      
+      if (!user) {
+        return res.status(400).json({ error: "Token inválido o expirado" });
+      }
+      
+      return res.status(200).json({ valid: true });
+    } catch (error) {
+      console.error("Error al verificar token de recuperación:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: "Token y nueva contraseña son requeridos" });
+      }
+      
+      const user = await storage.verifyPasswordResetToken(token);
+      
+      if (!user) {
+        return res.status(400).json({ error: "Token inválido o expirado" });
+      }
+      
+      const success = await storage.resetPassword(user.id, newPassword);
+      
+      if (!success) {
+        return res.status(500).json({ error: "Error al actualizar la contraseña" });
+      }
+      
+      return res.status(200).json({ message: "Contraseña actualizada exitosamente" });
+    } catch (error) {
+      console.error("Error al restablecer contraseña:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
   // Middleware para verificar si el usuario es administrador
   const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
