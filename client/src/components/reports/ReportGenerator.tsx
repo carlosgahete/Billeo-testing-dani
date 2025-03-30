@@ -373,8 +373,8 @@ const ReportGenerator = () => {
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1 rounded-full shadow-sm border border-emerald-100 dark:border-emerald-800 min-w-[120px] text-center">
-                            <span className="font-semibold text-sm text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1.5 rounded-lg shadow-sm border border-emerald-100 dark:border-emerald-800 min-w-[150px] text-center" style={{ width: 'auto', maxWidth: '180px' }}>
+                            <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400 whitespace-nowrap overflow-visible">
                               {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
@@ -396,8 +396,8 @@ const ReportGenerator = () => {
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1 rounded-full shadow-sm border border-rose-100 dark:border-rose-800 min-w-[120px] text-center">
-                            <span className="font-semibold text-sm text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1.5 rounded-lg shadow-sm border border-rose-100 dark:border-rose-800 min-w-[150px] text-center" style={{ width: 'auto', maxWidth: '180px' }}>
+                            <span className="font-semibold text-xs text-rose-600 dark:text-rose-400 whitespace-nowrap overflow-visible">
                               {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
@@ -419,8 +419,8 @@ const ReportGenerator = () => {
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1 rounded-full shadow-sm border border-blue-100 dark:border-blue-800 min-w-[120px] text-center">
-                            <span className="font-semibold text-sm text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-4 py-1.5 rounded-lg shadow-sm border border-blue-100 dark:border-blue-800 min-w-[150px] text-center" style={{ width: 'auto', maxWidth: '180px' }}>
+                            <span className="font-semibold text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap overflow-visible">
                               {(incomeExpenseData[0].value - incomeExpenseData[1].value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
                           </div>
