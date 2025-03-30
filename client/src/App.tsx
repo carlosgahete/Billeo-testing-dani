@@ -27,6 +27,7 @@ import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
 import IncomeExpensePage from "@/pages/income-expense";
+import UsersManagementPage from "@/pages/admin/users-management";
 
 // Componente de carga optimizado
 const LoadingIndicator = () => (
@@ -118,6 +119,11 @@ function Router() {
       <Route path="/income-expense">
         <Layout>
           <ProtectedRoute path="/income-expense" component={IncomeExpensePage} />
+        </Layout>
+      </Route>
+      <Route path="/admin/users">
+        <Layout>
+          <ProtectedRoute path="/admin/users" component={UsersManagementPage} />
         </Layout>
       </Route>
       <Route path="*" component={NotFound} />

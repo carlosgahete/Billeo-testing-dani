@@ -65,6 +65,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
   
+  // Middleware para verificar si el usuario es administrador
+  const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "No autenticado" });
+      }
+      
+      const user = req.user as any;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "No autorizado. Se requiere rol de administrador." });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Error en middleware requireAdmin:", error);
+      return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  };
+  
+  // ====== RUTAS DE ADMINISTRACIÓN DE USUARIOS ======
+  // Obtener todos los usuarios (solo admin)
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Eliminar contraseñas antes de enviar la respuesta
+      const usersWithoutPasswords = users.map(({ password, ...userData }) => userData);
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error);
+      res.status(500).json({ message: "Error al obtener usuarios" });
+    }
+  });
+  
+  // Crear un nuevo usuario (solo admin)
+  app.post("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      // Validar datos
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Verificar si el usuario ya existe
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "El nombre de usuario ya existe" });
+      }
+      
+      // Crear el usuario (la contraseña se encriptará en auth.ts)
+      const user = await storage.createUser(validatedData);
+      
+      // Omitir la contraseña en la respuesta
+      const { password, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error al crear usuario:", error);
+      res.status(500).json({ message: "Error al crear usuario" });
+    }
+  });
+  
+  // Actualizar un usuario (solo admin)
+  app.put("/api/admin/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+      
+      // Validar que el usuario existe
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      // Actualizar usuario
+      const updatedUser = await storage.updateUserProfile(userId, req.body);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Error al actualizar usuario" });
+      }
+      
+      // Omitir la contraseña en la respuesta
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error al actualizar usuario:", error);
+      res.status(500).json({ message: "Error al actualizar usuario" });
+    }
+  });
+  
+  // Eliminar un usuario (solo admin)
+  app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+      
+      // Verificar que el usuario existe
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      // Evitar que el administrador se elimine a sí mismo
+      if (userId === (req.user as any).id) {
+        return res.status(400).json({ message: "No puedes eliminar tu propia cuenta" });
+      }
+      
+      // Eliminar usuario
+      const deleted = await storage.deleteUser(userId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Error al eliminar usuario" });
+      }
+      
+      res.status(200).json({ message: "Usuario eliminado correctamente" });
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+      res.status(500).json({ message: "Error al eliminar usuario" });
+    }
+  });
+  
+  // Iniciar sesión como otro usuario (solo admin)
+  app.post("/api/admin/login-as/:id", requireAdmin, async (req, res) => {
+    try {
+      const targetUserId = parseInt(req.params.id);
+      if (isNaN(targetUserId)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+      
+      const adminId = (req.user as any).id;
+      const result = await storage.loginAsUser(adminId, targetUserId);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: "No se pudo iniciar sesión como usuario", log: result.log });
+      }
+      
+      // Cambiar el usuario en la sesión
+      const targetUser = await storage.getUser(targetUserId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      // Cerrar la sesión actual y crear una nueva con el usuario objetivo
+      req.logout((err) => {
+        if (err) {
+          console.error("Error al cerrar sesión:", err);
+          return res.status(500).json({ message: "Error al iniciar sesión como usuario" });
+        }
+        
+        req.login(targetUser, (err) => {
+          if (err) {
+            console.error("Error al iniciar sesión como usuario:", err);
+            return res.status(500).json({ message: "Error al iniciar sesión como usuario" });
+          }
+          
+          // Omitir la contraseña en la respuesta
+          const { password, ...userWithoutPassword } = targetUser;
+          
+          // Registrar el evento de inicio de sesión
+          console.log(`[ADMIN] Usuario ${adminId} ha iniciado sesión como ${targetUserId}`);
+          
+          res.status(200).json({
+            message: "Sesión iniciada correctamente como usuario",
+            user: userWithoutPassword,
+            log: result.log
+          });
+        });
+      });
+    } catch (error) {
+      console.error("Error al iniciar sesión como usuario:", error);
+      res.status(500).json({ message: "Error al iniciar sesión como usuario" });
+    }
+  });
+  
   // Keep compatibility with old auth endpoint
   app.get("/api/auth/session", async (req, res) => {
     // Verificar si el usuario está autenticado mediante passport

@@ -41,8 +41,11 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUserProfile(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+  loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -395,6 +398,48 @@ export class DatabaseStorage implements IStorage {
   async updateUserProfile(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
     const result = await db.update(users).set(userData).where(eq(users.id, id)).returning();
     return result[0];
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  async loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}> {
+    try {
+      // Verificar que el usuario que solicita sea admin
+      const admin = await this.getUser(adminId);
+      if (!admin || admin.role !== 'admin') {
+        return { success: false, log: { error: 'No autorizado. Se requiere privilegios de administrador.' } };
+      }
+      
+      // Verificar que el usuario objetivo existe
+      const targetUser = await this.getUser(userId);
+      if (!targetUser) {
+        return { success: false, log: { error: 'Usuario objetivo no encontrado.' } };
+      }
+      
+      // Registrar el acceso en la base de datos (crear una tabla de logs si es necesario)
+      const log = {
+        adminId,
+        adminUsername: admin.username,
+        targetUserId: userId,
+        targetUsername: targetUser.username,
+        timestamp: new Date()
+      };
+      
+      // Aquí deberíamos guardar este registro en una tabla de logs
+      // Por simplicidad, solo lo devolvemos en la respuesta
+      
+      return { success: true, log };
+    } catch (error) {
+      console.error('Error en loginAsUser:', error);
+      return { success: false, log: { error: 'Error interno al intentar iniciar sesión como otro usuario.' } };
+    }
   }
 
   async getCompany(id: number): Promise<Company | undefined> {
@@ -835,6 +880,44 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.username === username
     );
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
+  }
+  
+  async loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}> {
+    try {
+      // Verificar que el usuario que solicita sea admin
+      const admin = await this.getUser(adminId);
+      if (!admin || admin.role !== 'admin') {
+        return { success: false, log: { error: 'No autorizado. Se requiere privilegios de administrador.' } };
+      }
+      
+      // Verificar que el usuario objetivo existe
+      const targetUser = await this.getUser(userId);
+      if (!targetUser) {
+        return { success: false, log: { error: 'Usuario objetivo no encontrado.' } };
+      }
+      
+      // Registrar el acceso (en memoria)
+      const log = {
+        adminId,
+        adminUsername: admin.username,
+        targetUserId: userId,
+        targetUsername: targetUser.username,
+        timestamp: new Date()
+      };
+      
+      return { success: true, log };
+    } catch (error) {
+      console.error('Error en loginAsUser:', error);
+      return { success: false, log: { error: 'Error interno al intentar iniciar sesión como otro usuario.' } };
+    }
   }
 
   async createUser(user: InsertUser): Promise<User> {

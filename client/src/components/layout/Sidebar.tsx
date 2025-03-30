@@ -9,7 +9,8 @@ import {
   User,
   X,
   LogOut,
-  FileText
+  FileText,
+  Users
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -113,7 +114,8 @@ const Sidebar = ({
     }
   };
 
-  const navigationItems = [
+  // Crear items de navegación base
+  const baseNavigationItems = [
     { 
       href: "/", 
       icon: <LayoutDashboard size={20} />, 
@@ -150,6 +152,18 @@ const Sidebar = ({
       label: "Configuración" 
     }
   ];
+  
+  // Agregar elementos de administración si el usuario es administrador
+  const adminItems = user?.role === 'admin' ? [
+    { 
+      href: "/admin/users", 
+      icon: <Users size={20} />, 
+      label: "Gestión de Usuarios" 
+    }
+  ] : [];
+  
+  // Combinar ambos arrays
+  const navigationItems = [...baseNavigationItems, ...adminItems];
 
   // Desktop sidebar
   if (!isMobile) {
