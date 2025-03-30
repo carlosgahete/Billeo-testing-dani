@@ -83,10 +83,26 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     queryKey: ["/api/categories"],
   });
 
-  // Fetch transaction data if in edit mode
+  // Interfaz para la respuesta de autenticación
+  interface AuthResponse {
+    authenticated: boolean;
+    user?: {
+      id: number;
+      username: string;
+      name: string;
+      [key: string]: any;
+    };
+  }
+  
+  // Verificar autenticación primero
+  const { data: authData } = useQuery<AuthResponse>({
+    queryKey: ["/api/auth/session"],
+  });
+
+  // Fetch transaction data if in edit mode and user is authenticated
   const { data: transactionData, isLoading: transactionLoading } = useQuery<Transaction>({
     queryKey: ["/api/transactions", transactionId],
-    enabled: isEditMode,
+    enabled: isEditMode && !!authData?.authenticated,
   });
 
   const form = useForm<TransactionFormValues>({

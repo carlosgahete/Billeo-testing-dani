@@ -4,20 +4,46 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useParams } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const EditTransactionPage = () => {
   const { id } = useParams();
   const transactionId = parseInt(id);
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   console.log("Editing transaction with ID:", transactionId);
   
-  const { isLoading: authLoading } = useQuery({
+  // Interfaz para la respuesta de autenticación
+  interface AuthResponse {
+    authenticated: boolean;
+    user?: {
+      id: number;
+      username: string;
+      name: string;
+      [key: string]: any;
+    };
+  }
+  
+  // Verificar estado de autenticación
+  const { data: authData, isLoading: authLoading } = useQuery<AuthResponse>({
     queryKey: ["/api/auth/session"],
   });
   
-  const [, navigate] = useLocation();
+  // Redireccionar si no está autenticado
+  useEffect(() => {
+    if (!authLoading && (!authData || !authData.authenticated)) {
+      toast({
+        title: "Acceso denegado",
+        description: "Debes iniciar sesión para editar una transacción",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [authData, authLoading, navigate, toast]);
 
-  if (authLoading) {
+  if (authLoading || !authData?.authenticated) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
         <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
