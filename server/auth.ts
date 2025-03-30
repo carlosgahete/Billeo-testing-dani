@@ -113,6 +113,54 @@ export function setupAuth(app: Express) {
         ...req.body,
         password: hashedPassword,
       });
+      
+      // Crear datos predeterminados para el nuevo usuario
+      try {
+        // 1. Crear empresa predeterminada
+        await storage.createCompany({
+          userId: user.id,
+          name: "Mi Empresa",
+          taxId: "X0000000X",
+          address: "Dirección predeterminada",
+          city: "Ciudad",
+          postalCode: "00000",
+          country: "España"
+        });
+        
+        // 2. Crear categorías predeterminadas
+        await storage.createCategory({
+          userId: user.id,
+          name: "Ventas",
+          type: "income",
+          color: "#4caf50"
+        });
+        
+        await storage.createCategory({
+          userId: user.id,
+          name: "Servicios",
+          type: "income",
+          color: "#2196f3"
+        });
+        
+        await storage.createCategory({
+          userId: user.id,
+          name: "Oficina",
+          type: "expense",
+          color: "#f44336"
+        });
+        
+        await storage.createCategory({
+          userId: user.id,
+          name: "Suministros",
+          type: "expense",
+          color: "#ff9800"
+        });
+        
+        console.log(`Datos predeterminados creados para el usuario ${user.id} en el registro`);
+      } catch (initError) {
+        // Si falla la creación de datos predeterminados, lo registramos pero no fallamos la creación del usuario
+        console.error("Error al crear datos predeterminados:", initError);
+      }
 
       // Omitir la contraseña en la respuesta
       const { password, ...userWithoutPassword } = user;

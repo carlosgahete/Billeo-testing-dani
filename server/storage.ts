@@ -890,35 +890,8 @@ export class MemStorage implements IStorage {
     return this.users.delete(id);
   }
   
-  async loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}> {
-    try {
-      // Verificar que el usuario que solicita sea admin
-      const admin = await this.getUser(adminId);
-      if (!admin || admin.role !== 'admin') {
-        return { success: false, log: { error: 'No autorizado. Se requiere privilegios de administrador.' } };
-      }
-      
-      // Verificar que el usuario objetivo existe
-      const targetUser = await this.getUser(userId);
-      if (!targetUser) {
-        return { success: false, log: { error: 'Usuario objetivo no encontrado.' } };
-      }
-      
-      // Registrar el acceso (en memoria)
-      const log = {
-        adminId,
-        adminUsername: admin.username,
-        targetUserId: userId,
-        targetUsername: targetUser.username,
-        timestamp: new Date()
-      };
-      
-      return { success: true, log };
-    } catch (error) {
-      console.error('Error en loginAsUser:', error);
-      return { success: false, log: { error: 'Error interno al intentar iniciar sesión como otro usuario.' } };
-    }
-  }
+  // Implementación de loginAsUser en la clase base DatabaseStorage
+  // La implementación real está en DatabaseStorage
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;

@@ -113,6 +113,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Crear el usuario (la contraseña se encriptará en auth.ts)
       const user = await storage.createUser(validatedData);
       
+      // Crear datos predeterminados para el nuevo usuario
+      try {
+        // 1. Crear empresa predeterminada
+        await storage.createCompany({
+          userId: user.id,
+          name: "Mi Empresa",
+          taxId: "X0000000X",
+          address: "Dirección predeterminada",
+          city: "Ciudad",
+          postalCode: "00000",
+          country: "España"
+        });
+        
+        // 2. Crear categorías predeterminadas
+        await storage.createCategory({
+          userId: user.id,
+          name: "Ventas",
+          type: "income",
+          color: "#4caf50"
+        });
+        
+        await storage.createCategory({
+          userId: user.id,
+          name: "Servicios",
+          type: "income",
+          color: "#2196f3"
+        });
+        
+        await storage.createCategory({
+          userId: user.id,
+          name: "Oficina",
+          type: "expense",
+          color: "#f44336"
+        });
+        
+        await storage.createCategory({
+          userId: user.id,
+          name: "Suministros",
+          type: "expense",
+          color: "#ff9800"
+        });
+        
+        console.log(`Datos predeterminados creados para el usuario ${user.id}`);
+      } catch (initError) {
+        // Si falla la creación de datos predeterminados, lo registramos pero no fallamos la creación del usuario
+        console.error("Error al crear datos predeterminados:", initError);
+      }
+      
       // Omitir la contraseña en la respuesta
       const { password, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
@@ -314,6 +362,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const newUser = await storage.createUser(userResult.data);
+      
+      // Crear datos predeterminados para el nuevo usuario
+      try {
+        // 1. Crear empresa predeterminada
+        await storage.createCompany({
+          userId: newUser.id,
+          name: "Mi Empresa",
+          taxId: "X0000000X",
+          address: "Dirección predeterminada",
+          city: "Ciudad",
+          postalCode: "00000",
+          country: "España"
+        });
+        
+        // 2. Crear categorías predeterminadas
+        await storage.createCategory({
+          userId: newUser.id,
+          name: "Ventas",
+          type: "income",
+          color: "#4caf50"
+        });
+        
+        await storage.createCategory({
+          userId: newUser.id,
+          name: "Servicios",
+          type: "income",
+          color: "#2196f3"
+        });
+        
+        await storage.createCategory({
+          userId: newUser.id,
+          name: "Oficina",
+          type: "expense",
+          color: "#f44336"
+        });
+        
+        await storage.createCategory({
+          userId: newUser.id,
+          name: "Suministros",
+          type: "expense",
+          color: "#ff9800"
+        });
+        
+        console.log(`Datos predeterminados creados para el usuario ${newUser.id}`);
+      } catch (initError) {
+        // Si falla la creación de datos predeterminados, lo registramos pero no fallamos la creación del usuario
+        console.error("Error al crear datos predeterminados:", initError);
+      }
       
       // Return user without password
       const { password: _, ...userWithoutPassword } = newUser;
