@@ -246,7 +246,7 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-12 mb-2">
+              <div className="mt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -254,6 +254,17 @@ const Dashboard = () => {
                   onClick={() => navigate("/invoices")}
                 >
                   Ver facturas
+                </Button>
+              </div>
+              
+              <div className="mt-2 mb-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-green-600 border-green-300 hover:bg-green-50"
+                  onClick={() => navigate("/income-expense?tab=income")}
+                >
+                  Ver ingresos
                 </Button>
               </div>
             </CardContent>
@@ -303,11 +314,11 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-12 mb-2">
+              <div className="mt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
+                  className="w-full text-red-600 border-red-300 hover:bg-red-50"
                   onClick={() => navigate("/income-expense?tab=expense")}
                 >
                   Ver gastos
