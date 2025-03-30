@@ -139,18 +139,18 @@ const TransactionList = () => {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState<string>("all");
 
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
   const isLoading = transactionsLoading || categoriesLoading;
 
   const getCategoryName = (categoryId: number | null) => {
-    if (!categoryId || !categories) return "Sin categoría";
+    if (!categoryId || !categories || !Array.isArray(categories)) return "Sin categoría";
     const category = categories.find((c: Category) => c.id === categoryId);
     return category ? category.name : "Sin categoría";
   };
@@ -180,10 +180,12 @@ const TransactionList = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
   };
 
-  const filteredTransactions = transactions?.filter((transaction: Transaction) => {
-    if (currentTab === "all") return true;
-    return transaction.type === currentTab;
-  });
+  const filteredTransactions = Array.isArray(transactions) 
+    ? transactions.filter((transaction: Transaction) => {
+        if (currentTab === "all") return true;
+        return transaction.type === currentTab;
+      })
+    : [];
 
   const columns: ColumnDef<Transaction>[] = [
     {
@@ -251,16 +253,16 @@ const TransactionList = () => {
   ];
 
   // Calculate totals for the summary cards
-  const incomeTotal = !isLoading 
+  const incomeTotal = !isLoading && Array.isArray(transactions)
     ? transactions
-        ?.filter((t: Transaction) => t.type === "income")
-        .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0) || 0
+        .filter((t: Transaction) => t.type === "income")
+        .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
     
-  const expenseTotal = !isLoading 
+  const expenseTotal = !isLoading && Array.isArray(transactions)
     ? transactions
-        ?.filter((t: Transaction) => t.type === "expense")
-        .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0) || 0
+        .filter((t: Transaction) => t.type === "expense")
+        .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
     
   const balance = incomeTotal - expenseTotal;

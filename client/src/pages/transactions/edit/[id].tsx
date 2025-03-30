@@ -9,6 +9,8 @@ const EditTransactionPage = () => {
   const { id } = useParams();
   const transactionId = parseInt(id);
   
+  console.log("Editing transaction with ID:", transactionId);
+  
   const { isLoading: authLoading } = useQuery({
     queryKey: ["/api/auth/session"],
   });

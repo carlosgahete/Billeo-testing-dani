@@ -106,9 +106,39 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   // Initialize form with transaction data when loaded
   useEffect(() => {
     if (transactionData && !transactionLoading) {
+      console.log("Transaction data loaded:", transactionData);
+      console.log("Date from API:", transactionData.date);
+      
+      // Convierte la fecha con mayor robustez
+      let transactionDate;
+      try {
+        // La fecha puede venir en varios formatos, intentamos procesarla adecuadamente
+        if (typeof transactionData.date === 'string') {
+          // Eliminar la parte de la zona horaria si existe y puede causar problemas
+          const dateStr = transactionData.date.replace(/Z|(\+|\-)\d{2}:\d{2}$/, '');
+          transactionDate = new Date(dateStr);
+          console.log("Parsed date from string:", transactionDate);
+        } else {
+          transactionDate = new Date(transactionData.date);
+          console.log("Parsed date from non-string:", transactionDate);
+        }
+        
+        // Validación adicional
+        if (isNaN(transactionDate.getTime())) {
+          console.error("Invalid date detected, using current date instead");
+          transactionDate = new Date();
+        }
+      } catch (error) {
+        console.error("Error parsing date:", error);
+        transactionDate = new Date();
+      }
+      
+      // Aseguramos que la fecha sea válida antes de actualizar el formulario
+      console.log("Final date to use:", transactionDate);
+      
       form.reset({
         ...transactionData,
-        date: new Date(transactionData.date),
+        date: transactionDate,
         amount: typeof transactionData.amount === 'string' 
           ? parseFloat(transactionData.amount) 
           : transactionData.amount,
@@ -123,8 +153,10 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   // Create or update transaction mutation
   const mutation = useMutation({
     mutationFn: async (data: TransactionFormValues) => {
+      // Format date to ISO string for API request
       const payload = {
         ...data,
+        date: data.date.toISOString(),
         attachments,
       };
       
