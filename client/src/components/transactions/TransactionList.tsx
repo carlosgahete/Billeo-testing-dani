@@ -233,7 +233,7 @@ const TransactionList = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(`/transactions/${transaction.id}?edit=true`)}
+              onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
             >
               <Edit className="h-4 w-4" />
             </Button>

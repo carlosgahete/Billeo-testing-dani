@@ -22,6 +22,7 @@ import EditQuotePage from "@/pages/quotes/edit/[id]";
 import QuoteDetailPage from "@/pages/quotes/[id]";
 import TransactionsPage from "@/pages/transactions/index";
 import CreateTransactionPage from "@/pages/transactions/create";
+import EditTransactionPage from "@/pages/transactions/edit/[id]";
 import DocumentScanPage from "@/pages/document-scan";
 import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
@@ -101,6 +102,13 @@ function Router() {
         <Layout>
           <ProtectedRoute path="/transactions/create" component={CreateTransactionPage} />
         </Layout>
+      </Route>
+      <Route path="/transactions/edit/:id">
+        {(params) => (
+          <Layout>
+            <ProtectedRoute path={`/transactions/edit/${params.id}`} component={EditTransactionPage} />
+          </Layout>
+        )}
       </Route>
       <Route path="/documents/scan">
         <Layout>
