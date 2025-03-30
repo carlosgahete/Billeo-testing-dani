@@ -236,7 +236,7 @@ const DeleteInvoiceDialog = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-red-600 hover:bg-red-50">
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
@@ -509,37 +509,79 @@ const InvoiceList = () => {
             
             {/* Versión desktop: Botones individuales */}
             <div className="hidden md:flex justify-end space-x-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(`/invoices/${invoice.id}`)}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleExportInvoicePDF(invoice)}
-              >
-                <FileDown className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/invoices/${invoice.id}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Ver detalles</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Editar factura</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleExportInvoicePDF(invoice)}
+                    >
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Exportar PDF</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
               {/* Botón para marcar factura como pagada */}
               <MarkAsPaidButton invoice={invoice} />
-              <DeleteInvoiceDialog
-                invoiceId={invoice.id}
-                invoiceNumber={invoice.invoiceNumber}
-                onConfirm={() => {
-                  // Invalidate queries after deletion
-                  queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                }}
-              />
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DeleteInvoiceDialog
+                        invoiceId={invoice.id}
+                        invoiceNumber={invoice.invoiceNumber}
+                        onConfirm={() => {
+                          // Invalidate queries after deletion
+                          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                        }}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Eliminar factura</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </>
         );
