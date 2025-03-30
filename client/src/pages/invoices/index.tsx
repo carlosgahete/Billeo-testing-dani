@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import InvoiceList from "@/components/invoices/InvoiceList";
-import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle } from "lucide-react";
+import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ const InvoicesPage = () => {
       </div>
       
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ml-14 md:ml-0">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 ml-14 md:ml-0">
         <Card className="border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardContent className="p-4 flex items-start">
             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
@@ -63,6 +63,19 @@ const InvoicesPage = () => {
               <p className="text-sm text-neutral-500 mb-1">Facturas Emitidas</p>
               <h3 className="text-2xl font-bold text-neutral-800">{stats?.issuedCount || 0}</h3>
               <p className="text-xs text-neutral-500 mt-1">Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.income || 0)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-green-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardContent className="p-4 flex items-start">
+            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
+              <CalendarDays className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-neutral-500 mb-1">Este Año ({new Date().getFullYear()})</p>
+              <h3 className="text-2xl font-bold text-neutral-800">{stats?.yearCount || 0}</h3>
+              <p className="text-xs text-neutral-500 mt-1">Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.yearIncome || 0)}</p>
             </div>
           </CardContent>
         </Card>

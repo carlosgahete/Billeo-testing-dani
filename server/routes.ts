@@ -2361,8 +2361,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
+      // Filtrar facturas del año actual
+      const currentYearInvoices = allInvoices.filter(inv => {
+        try {
+          const date = new Date(inv.issueDate);
+          const invoiceYear = date.getFullYear().toString();
+          return invoiceYear === currentYear;
+        } catch (e) {
+          console.error("Error al parsear fecha de factura:", inv.issueDate, e);
+          return false;
+        }
+      });
+      
       const quarterCount = currentQuarterInvoices.length;
       const quarterIncome = currentQuarterInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
+      
+      // Estadísticas del año actual
+      const yearCount = currentYearInvoices.length;
+      const yearIncome = currentYearInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
       
       return res.status(200).json({
         income,
@@ -2381,7 +2397,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Añadimos los contadores que faltaban
         issuedCount,
         quarterCount,
-        quarterIncome
+        quarterIncome,
+        // Datos del año actual
+        yearCount,
+        yearIncome
       });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
