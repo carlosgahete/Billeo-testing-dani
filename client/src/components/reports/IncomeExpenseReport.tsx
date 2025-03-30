@@ -742,11 +742,11 @@ const IncomeExpenseReport = () => {
               <Button 
                 onClick={() => navigate("/documents/scan")} 
                 variant="default" 
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white relative"
+                className="flex items-center gap-2 bg-primary text-white relative shadow-md border border-primary/20 hover:bg-primary/90 transition-all"
               >
                 <ScanText className="h-4 w-4" />
-                <span>Escanear documento</span>
-                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                <span className="font-medium">Escanear documento</span>
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm border border-white">
                   +
                 </span>
               </Button>
