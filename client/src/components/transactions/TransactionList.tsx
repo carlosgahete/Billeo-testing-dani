@@ -134,10 +134,16 @@ const DeleteTransactionDialog = ({
 };
 
 const TransactionList = () => {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<string>("all");
+  
+  // Obtener tab de los parámetros de URL
+  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const tabParam = urlParams.get('tab');
+  const initialTab = tabParam === 'income' || tabParam === 'expense' ? tabParam : 'all';
+  
+  const [currentTab, setCurrentTab] = useState<string>(initialTab);
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -381,7 +387,10 @@ const TransactionList = () => {
           <Tabs 
             defaultValue="all" 
             value={currentTab}
-            onValueChange={setCurrentTab}
+            onValueChange={(value) => {
+              setCurrentTab(value);
+              navigate(`/transactions?tab=${value}`, { replace: true });
+            }}
             className="w-full"
           >
             <TabsList>
