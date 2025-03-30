@@ -108,9 +108,16 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "El nombre de usuario ya existe" });
       }
 
+      // Validar el tipo de negocio
+      const businessType = req.body.businessType || "autonomo";
+      if (businessType !== "autonomo" && businessType !== "empresa") {
+        return res.status(400).json({ message: "Tipo de negocio no válido" });
+      }
+
       const hashedPassword = await hashPassword(req.body.password);
       const user = await storage.createUser({
         ...req.body,
+        businessType,
         password: hashedPassword,
       });
       

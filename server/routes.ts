@@ -450,7 +450,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ message: "Username already exists" });
       }
       
-      const newUser = await storage.createUser(userResult.data);
+      // Validar el tipo de negocio
+      const businessType = userResult.data.businessType || "autonomo";
+      if (businessType !== "autonomo" && businessType !== "empresa") {
+        return res.status(400).json({ message: "Tipo de negocio no válido" });
+      }
+      
+      // Asegurarnos de que el tipo de negocio esté incluido
+      const userData = {
+        ...userResult.data,
+        businessType
+      };
+      
+      const newUser = await storage.createUser(userData);
       
       // Crear datos predeterminados para el nuevo usuario
       try {

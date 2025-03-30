@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
 
@@ -49,7 +50,8 @@ export default function AuthPage() {
     email: "",
     username: "",
     password: "",
-    role: "Autonomo", // Default role
+    role: "user", // Default role
+    businessType: "autonomo", // Default: autónomo
   });
 
   // Handle login form changes
@@ -62,6 +64,11 @@ export default function AuthPage() {
   const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setRegisterFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle business type change
+  const handleBusinessTypeChange = (value: string) => {
+    setRegisterFormData((prev) => ({ ...prev, businessType: value }));
   };
 
   // Handle login form submission
@@ -200,7 +207,26 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <div className="flex justify-center mt-2">
+                    
+                    <div className="space-y-2">
+                      <Label>Tipo de negocio</Label>
+                      <RadioGroup
+                        value={registerFormData.businessType}
+                        onValueChange={handleBusinessTypeChange}
+                        className="flex space-x-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="autonomo" id="autonomo" />
+                          <Label htmlFor="autonomo" className="font-normal">Autónomo</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="empresa" id="empresa" />
+                          <Label htmlFor="empresa" className="font-normal">Empresa</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="flex justify-center mt-4">
                       <Button
                         className="w-2/3"
                         type="submit"

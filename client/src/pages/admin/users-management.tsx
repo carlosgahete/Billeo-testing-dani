@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
 import { Loader2, Edit, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Table,
   TableBody,
@@ -66,7 +67,8 @@ export default function UsersManagement() {
     name: "",
     email: "",
     password: "",
-    role: "user"
+    role: "user",
+    businessType: "autonomo"
   });
 
   useEffect(() => {
@@ -211,7 +213,8 @@ export default function UsersManagement() {
           name: "",
           email: "",
           password: "",
-          role: "user"
+          role: "user",
+          businessType: "autonomo"
         });
       } else {
         const errorData = await response.json();
@@ -506,6 +509,26 @@ export default function UsersManagement() {
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-business-type" className="text-right">
+                Tipo de negocio
+              </Label>
+              <RadioGroup
+                id="new-business-type"
+                value={newUser.businessType}
+                onValueChange={(value) => setNewUser({...newUser, businessType: value})}
+                className="flex col-span-3 space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="autonomo" id="create-autonomo" />
+                  <Label htmlFor="create-autonomo" className="font-normal">Autónomo</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="empresa" id="create-empresa" />
+                  <Label htmlFor="create-empresa" className="font-normal">Empresa</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
           
