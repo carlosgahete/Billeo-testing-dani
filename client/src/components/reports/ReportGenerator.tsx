@@ -134,7 +134,11 @@ const ReportGenerator = () => {
   });
 
   // Prepare data for income-expense chart
-  const incomeExpenseData: ChartDataItem[] = [];
+  const incomeExpenseData: ChartDataItem[] = [
+    { name: "Ingresos", value: 0 },
+    { name: "Gastos", value: 0 }
+  ];
+  
   if (filteredTransactions && filteredInvoices) {
     // Ingresos de transacciones
     const transactionIncomeTotal = filteredTransactions
@@ -154,10 +158,9 @@ const ReportGenerator = () => {
       .filter((t: Transaction) => t.type === "expense")
       .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0);
     
-    incomeExpenseData.push(
-      { name: "Ingresos", value: incomeTotal },
-      { name: "Gastos", value: expenseTotal }
-    );
+    // Actualizar los valores
+    incomeExpenseData[0].value = incomeTotal;
+    incomeExpenseData[1].value = expenseTotal;
   }
 
   // Prepare data for category breakdown
@@ -347,84 +350,41 @@ const ReportGenerator = () => {
             <TabsContent value="chart" className="space-y-4">
               <div className="h-80 w-full">
                 {reportType === "income-expense" ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={incomeExpenseData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                      barSize={60}
-                      barGap={20}
-                      className="drop-shadow-sm"
-                    >
-                      <defs>
-                        <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#4ade80" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="#22c55e" stopOpacity={0.8} />
-                        </linearGradient>
-                        <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f87171" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="#ef4444" stopOpacity={0.8} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false}
-                        tickLine={false}
-                        fontSize={12}
-                        fontWeight={500}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        fontSize={12}
-                        tickFormatter={(value) => 
-                          value >= 1000 
-                            ? `${(value / 1000).toFixed(1)}k €` 
-                            : `${value} €`
-                        }
-                      />
-                      <Tooltip 
-                        cursor={{fill: 'rgba(200, 200, 200, 0.1)'}}
-                        formatter={(value: any) => {
-                          const numValue = Number(value);
-                          return [
-                            isNaN(numValue) 
-                              ? value 
-                              : `${numValue.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`,
-                            ''
-                          ];
+                  <div className="grid grid-cols-2 gap-8 h-full pt-4">
+                  <div className="flex flex-col items-center justify-center">
+                    <h3 className="text-lg font-medium text-green-700 mb-3">Ingresos</h3>
+                    <div className="w-full relative">
+                      <div 
+                        className="h-44 bg-gradient-to-b from-green-400 to-green-600 rounded-lg shadow-md transition-all duration-1000 ease-out flex items-end justify-center"
+                        style={{ 
+                          height: `${Math.min(Math.max(30, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 176), 176)}px`,
+                          animation: 'growUp 1.2s ease-out'
                         }}
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          padding: '10px',
-                          border: '1px solid #eaeaea',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      >
+                        <span className="font-semibold text-white px-3 py-2">
+                          {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center">
+                    <h3 className="text-lg font-medium text-red-700 mb-3">Gastos</h3>
+                    <div className="w-full relative">
+                      <div 
+                        className="h-44 bg-gradient-to-b from-red-400 to-red-600 rounded-lg shadow-md transition-all duration-1000 ease-out flex items-end justify-center"
+                        style={{ 
+                          height: `${Math.min(Math.max(30, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 176), 176)}px`,
+                          animation: 'growUp 1.2s ease-out'
                         }}
-                        labelStyle={{
-                          fontWeight: 'bold',
-                          marginBottom: '5px',
-                          textAlign: 'center'
-                        }}
-                      />
-                      <Legend 
-                        wrapperStyle={{
-                          paddingTop: 10
-                        }}
-                      />
-                      {incomeExpenseData.map((entry, index) => (
-                        <Bar 
-                          key={`bar-${index}`}
-                          dataKey="value" 
-                          name="Importe (€)" 
-                          radius={[4, 4, 0, 0]}
-                          fill={entry.name === "Ingresos" ? "url(#incomeGradient)" : "url(#expenseGradient)"}
-                          stackId={index}
-                          data={[entry]}
-                        />
-                      ))}
-                    </BarChart>
-                  </ResponsiveContainer>
+                      >
+                        <span className="font-semibold text-white px-3 py-2">
+                          {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 ) : (reportType === "income-categories" || reportType === "expense-categories") ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
