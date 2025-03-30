@@ -308,7 +308,7 @@ const Dashboard = () => {
                   variant="outline" 
                   size="sm" 
                   className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
-                  onClick={() => navigate("/transactions?tab=expense")}
+                  onClick={() => navigate("/income-expense?tab=expense")}
                 >
                   Ver gastos
                 </Button>

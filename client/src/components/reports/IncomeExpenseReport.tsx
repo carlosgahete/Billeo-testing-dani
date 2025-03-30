@@ -151,8 +151,26 @@ const IncomeExpenseReport = () => {
       });
     }
   };
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // Detectamos si venimos del dashboard directamente por URL o si hay parámetro tab
+  useEffect(() => {
+    // Usar URLSearchParams para leer el parámetro tab de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    // Si hay un parámetro tab y es válido, usarlo
+    if (tabParam === 'income' || tabParam === 'expense') {
+      setActiveTab(tabParam);
+    } 
+    // Si no hay parámetro pero venimos del dashboard, mostrar gastos
+    else if (document.referrer.includes('/dashboard')) {
+      setActiveTab('expense');
+    }
+    // En cualquier otro caso, mostrar ingresos (valor por defecto)
+  }, []);
+  
   const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
 
   // Consulta de invoices (ingresos)
@@ -443,7 +461,13 @@ const IncomeExpenseReport = () => {
         <Tabs 
           defaultValue="income" 
           value={activeTab}
-          onValueChange={(value) => setActiveTab(value as "income" | "expense")}
+          onValueChange={(value) => {
+            setActiveTab(value as "income" | "expense");
+            // Actualizar la URL para reflejar la pestaña activa sin recargar la página
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', value);
+            window.history.replaceState({}, '', url.toString());
+          }}
           className="space-y-4"
         >
           <TabsList className="grid w-full grid-cols-2">
