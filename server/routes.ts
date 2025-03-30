@@ -259,8 +259,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const user = await storage.getUser(userId);
       
-      if (!user || !user.securityQuestion) {
-        return res.status(404).json({ error: "No has configurado una pregunta de seguridad" });
+      if (!user) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+      
+      // Si el usuario no tiene una pregunta de seguridad, devolvemos null en lugar de un error
+      if (!user.securityQuestion) {
+        return res.status(200).json({ question: null });
       }
       
       return res.status(200).json({ question: user.securityQuestion });

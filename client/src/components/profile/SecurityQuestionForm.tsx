@@ -43,12 +43,19 @@ export function SecurityQuestionForm() {
   const [isChangingQuestion, setIsChangingQuestion] = useState(false);
 
   // Consultar la pregunta de seguridad actual
-  const { data: currentSecurityQuestion, isLoading, error } = useQuery({
+  const { data: currentSecurityQuestion, isLoading, error, isError } = useQuery({
     queryKey: ["/api/security-question/current"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/security-question/current", undefined);
-      return response.json();
+      try {
+        const response = await apiRequest("GET", "/api/security-question/current", undefined);
+        return response.json();
+      } catch (err) {
+        // Si el error es 404, significa que no hay pregunta configurada
+        console.log("Error al obtener pregunta de seguridad:", err);
+        return { question: null };
+      }
     },
+    retry: false, // No reintentamos si falla
     enabled: !!user
   });
 
@@ -113,7 +120,7 @@ export function SecurityQuestionForm() {
   }
 
   // Si hay una pregunta configurada y no estamos en modo cambio
-  if (currentSecurityQuestion?.question && !isChangingQuestion) {
+  if (currentSecurityQuestion?.question && currentSecurityQuestion.question !== null && !isChangingQuestion) {
     return (
       <Card className="w-full">
         <CardHeader>
