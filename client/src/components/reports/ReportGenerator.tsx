@@ -350,37 +350,94 @@ const ReportGenerator = () => {
             <TabsContent value="chart" className="space-y-4">
               <div className="h-80 w-full">
                 {reportType === "income-expense" ? (
-                  <div className="grid grid-cols-2 gap-8 h-full pt-4">
-                  <div className="flex flex-col items-center justify-center">
-                    <h3 className="text-lg font-medium text-green-700 mb-3">Ingresos</h3>
-                    <div className="w-full relative">
-                      <div 
-                        className="h-44 bg-gradient-to-b from-green-400 to-green-600 rounded-lg shadow-md transition-all duration-1000 ease-out flex items-end justify-center"
-                        style={{ 
-                          height: `${Math.min(Math.max(30, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 176), 176)}px`,
-                          animation: 'growUp 1.2s ease-out'
-                        }}
-                      >
-                        <span className="font-semibold text-white px-3 py-2">
-                          {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                        </span>
-                      </div>
-                    </div>
+                  <div className="flex flex-col h-full">
+                  <div className="mb-6 text-center">
+                    <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200">Comparativa de Ingresos y Gastos</h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Período actual: {getPeriodLabel(period)}</p>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center">
-                    <h3 className="text-lg font-medium text-red-700 mb-3">Gastos</h3>
-                    <div className="w-full relative">
-                      <div 
-                        className="h-44 bg-gradient-to-b from-red-400 to-red-600 rounded-lg shadow-md transition-all duration-1000 ease-out flex items-end justify-center"
-                        style={{ 
-                          height: `${Math.min(Math.max(30, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 176), 176)}px`,
-                          animation: 'growUp 1.2s ease-out'
-                        }}
-                      >
-                        <span className="font-semibold text-white px-3 py-2">
-                          {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                        </span>
+                  <div className="flex-1 flex items-end justify-around px-4 pb-8 pt-2 relative">
+                    {/* Líneas guía horizontales */}
+                    <div className="absolute inset-x-0 bottom-8 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-24 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-40 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
+                    <div className="absolute inset-x-0 bottom-56 border-t border-dashed border-neutral-200 dark:border-neutral-700 z-0" />
+                    
+                    {/* Barra de Ingresos */}
+                    <div className="flex flex-col items-center z-10 px-4 w-1/3 max-w-[180px]">
+                      <div className="h-[180px] w-full relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex flex-col-reverse">
+                        <div 
+                          className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-lg rounded-t-sm relative"
+                          style={{ 
+                            height: `${Math.min(Math.max(30, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
+                            animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                          }}
+                        >
+                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-emerald-200 dark:border-emerald-700">
+                            <span className="font-semibold text-sm text-emerald-700 dark:text-emerald-300">
+                              {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-col items-center">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Ingresos</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Barra de Gastos */}
+                    <div className="flex flex-col items-center z-10 px-4 w-1/3 max-w-[180px]">
+                      <div className="h-[180px] w-full relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex flex-col-reverse">
+                        <div 
+                          className="w-full bg-gradient-to-t from-rose-600 to-rose-400 shadow-lg rounded-t-sm relative"
+                          style={{ 
+                            height: `${Math.min(Math.max(30, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
+                            animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                          }}
+                        >
+                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-rose-200 dark:border-rose-700">
+                            <span className="font-semibold text-sm text-rose-700 dark:text-rose-300">
+                              {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-col items-center">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-400 to-rose-600"></div>
+                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Gastos</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Barra de Balance (opcional) */}
+                    <div className="flex flex-col items-center z-10 px-4 w-1/3 max-w-[180px]">
+                      <div className="h-[180px] w-full relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex flex-col-reverse">
+                        <div 
+                          className="w-full bg-gradient-to-t from-blue-600 to-blue-400 shadow-lg rounded-t-sm relative"
+                          style={{ 
+                            height: `${Math.min(Math.max(30, ((incomeExpenseData[0].value - incomeExpenseData[1].value) / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
+                            animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                          }}
+                        >
+                          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-full shadow-md border border-blue-200 dark:border-blue-700">
+                            <span className="font-semibold text-sm text-blue-700 dark:text-blue-300">
+                              {(incomeExpenseData[0].value - incomeExpenseData[1].value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-col items-center">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
+                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Balance</span>
+                        </div>
                       </div>
                     </div>
                   </div>
