@@ -351,29 +351,23 @@ const ReportGenerator = () => {
               <div className="h-80 w-full">
                 {reportType === "income-expense" ? (
                   <div className="flex flex-col h-full">
-                  <div className="mb-6 text-center">
+                  <div className="mb-4 text-center">
                     <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200">Comparativa de Ingresos y Gastos</h3>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">Período actual: {getPeriodLabel(period)}</p>
                   </div>
-                  
-                  <div className="flex-1 flex items-end justify-around px-4 pb-8 pt-2 relative">
-                    {/* Líneas guía horizontales */}
-                    <div className="absolute inset-x-0 bottom-8 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
-                    <div className="absolute inset-x-0 bottom-24 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
-                    <div className="absolute inset-x-0 bottom-40 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
-                    <div className="absolute inset-x-0 bottom-56 border-t border-dotted border-neutral-200 dark:border-neutral-700 z-0" />
-                    
+
+                  <div className="flex justify-center gap-5 mt-5 relative">
                     {/* Barra de Ingresos */}
                     <div className="flex flex-col items-center z-10 px-6 w-1/3 max-w-[180px]">
                       <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
                         <div 
                           className="w-full bg-emerald-500 shadow-lg rounded-t-sm relative"
-                          style={{ 
-                            height: `${Math.min(Math.max(30, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
+                          style={{
+                            height: `${Math.min(Math.max(40, (incomeExpenseData[0].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-emerald-100 dark:border-emerald-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '140px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
+                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-emerald-100 dark:border-emerald-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '160px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
                             <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                               {incomeExpenseData[0].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
@@ -391,12 +385,12 @@ const ReportGenerator = () => {
                       <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
                         <div 
                           className="w-full bg-rose-500 shadow-lg rounded-t-sm relative"
-                          style={{ 
-                            height: `${Math.min(Math.max(30, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
+                          style={{
+                            height: `${Math.min(Math.max(40, (incomeExpenseData[1].value / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-rose-100 dark:border-rose-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '140px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
+                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-rose-100 dark:border-rose-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '160px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
                             <span className="font-semibold text-xs text-rose-600 dark:text-rose-400 whitespace-nowrap">
                               {incomeExpenseData[1].value.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
@@ -414,12 +408,12 @@ const ReportGenerator = () => {
                       <div className="h-[180px] w-full relative bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden flex flex-col-reverse">
                         <div 
                           className="w-full bg-blue-500 shadow-lg rounded-t-sm relative"
-                          style={{ 
-                            height: `${Math.min(Math.max(30, ((incomeExpenseData[0].value - incomeExpenseData[1].value) / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
+                          style={{
+                            height: `${Math.min(Math.max(40, ((incomeExpenseData[0].value - incomeExpenseData[1].value) / (Math.max(incomeExpenseData[0].value, incomeExpenseData[1].value) * 1.1)) * 180), 180)}px`,
                             animation: 'growUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-blue-100 dark:border-blue-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '140px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
+                          <div className="absolute top-0 left-0 right-0 -translate-y-full mb-2 px-2 py-1 bg-white dark:bg-neutral-800 rounded-md shadow-sm border border-blue-100 dark:border-blue-800 min-w-[150px] text-center flex justify-center items-center mx-auto" style={{ width: '160px', marginBottom: '5px', marginLeft: 'auto', marginRight: 'auto' }}>
                             <span className="font-semibold text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap">
                               {(incomeExpenseData[0].value - incomeExpenseData[1].value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                             </span>
