@@ -334,7 +334,7 @@ const Dashboard = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[200px] text-xs">El total facturado incluyendo Base Imponible e IVA, antes de retenciones</p>
+                      <p className="w-[200px] text-xs">Base imponible de todas las facturas cobradas (sin IVA)</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -346,14 +346,14 @@ const Dashboard = () => {
                   {new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(financialData.income.total)} €
+                  }).format(financialData.income.totalWithoutVAT)} €
                 </p>
               </div>
               
               <div className="mt-1 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Base imponible:</span>
-                  <span className="font-medium">{financialData.income.totalWithoutVAT.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Total facturado:</span>
+                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA (21%):</span>
