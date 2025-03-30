@@ -127,7 +127,7 @@ const TaxSummary = () => {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                <p className="w-[250px] text-xs">Resumen de IVA a pagar al declarar el trimestre y el IRPF retenido en las facturas emitidas</p>
+                <p className="w-[250px] text-xs">Resumen de IVA a pagar al declarar el trimestre y el IRPF retenido en las facturas recibidas como gastos</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -203,7 +203,7 @@ const TaxSummary = () => {
             {/* Retenciones acumuladas del período seleccionado */}
             <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-3">
               <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center">
-                IRPF practicado a clientes ({periodNames[period]}, {year})
+                IRPF retenido en gastos ({periodNames[period]}, {year})
               </h3>
               <div className="flex justify-between items-center">
                 {isLoading ? (
@@ -217,21 +217,21 @@ const TaxSummary = () => {
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 {period === 'all' 
-                  ? 'IRPF retenido en facturas emitidas que deberás ingresar a Hacienda (modelo 190)'
-                  : `IRPF retenido en facturas que deberás ingresar a Hacienda - modelo 111 (${periodNames[period]})`}
+                  ? 'IRPF retenido en facturas recibidas como gastos que puedes descontar en tu declaración'
+                  : `IRPF retenido en facturas de gastos del periodo (${periodNames[period]})`}
               </p>
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger className="w-full mt-1">
                     <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm p-1 cursor-default">
-                      ℹ️ Se calcula como el 15% de la base imponible de cada factura emitida
+                      ℹ️ Retenciones aplicadas en tus gastos que te has deducido
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
                     <p className="w-[250px] text-xs">
-                      Este IRPF es el que se ha retenido en tus facturas y tú debes ingresarlo 
-                      a Hacienda. No confundir con el IRPF a pagar como autónomo, que corresponde 
-                      a tus propios impuestos sobre la renta.
+                      Este IRPF es el que tus proveedores (como asesores, abogados, etc.) te han 
+                      retenido en las facturas que te han emitido y que aparecen como gastos.
+                      Este importe lo puedes descontar al calcular tu IRPF anual como autónomo.
                     </p>
                   </TooltipContent>
                 </Tooltip>

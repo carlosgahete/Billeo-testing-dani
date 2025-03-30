@@ -428,12 +428,12 @@ const Dashboard = () => {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger className="cursor-default">
-                        <span className="text-neutral-500">IRPF retenido por clientes:</span>
+                        <span className="text-neutral-500">IRPF retenido en gastos:</span>
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
                         <p className="w-[250px] text-xs">
-                          Suma de todas las retenciones de IRPF aplicadas en tus facturas emitidas. 
-                          Deberás ingresarlo a Hacienda en el modelo 111 (trimestral) o 190 (anual).
+                          Suma de todas las retenciones de IRPF aplicadas en las facturas que has recibido 
+                          como gastos. Este IRPF ya pagado se puede descontar de tus impuestos anuales.
                         </p>
                       </TooltipContent>
                     </Tooltip>
