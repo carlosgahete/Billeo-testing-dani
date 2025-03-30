@@ -13,7 +13,8 @@ import {
   X,
   Eye,
   Edit,
-  FileDown
+  FileDown,
+  Download
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 // import { PageTitle } from "@/components/ui/page-title";
@@ -50,6 +51,8 @@ import {
 } from "@/components/ui/tooltip";
 import FileUpload from "@/components/common/FileUpload";
 import { generateInvoicePDF } from "@/lib/pdf";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Función para formatear moneda con protección contra valores no numéricos
 const formatCurrency = (amount: any) => {
@@ -386,6 +389,95 @@ const IncomeExpenseReport = () => {
       description: "El archivo se ha adjuntado correctamente",
     });
   };
+  
+  // Función para generar y descargar el PDF de los gastos
+  const downloadExpensesPDF = () => {
+    if (expenseTransactions.length === 0) {
+      toast({
+        title: "No hay datos",
+        description: "No hay gastos registrados para descargar",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Crear un nuevo documento PDF en formato A4
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+    
+    // Configurar la información del documento
+    const currentDate = format(new Date(), "dd/MM/yyyy");
+    const title = "Registro de Gastos";
+    const fileName = `gastos_${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    
+    // Añadir título
+    doc.setFontSize(20);
+    doc.setTextColor(40, 99, 235); // Azul principal
+    doc.text(title, 105, 20, { align: "center" });
+    
+    // Añadir fecha de generación
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado el: ${currentDate}`, 20, 30);
+    doc.text(`Total registros: ${expenseTransactions.length}`, 20, 35);
+    doc.text(`Importe total: ${formatCurrency(totalExpenses)}`, 20, 40);
+    
+    // Preparar datos para la tabla
+    const tableRows = sortedExpenseTransactions.map(transaction => [
+      transaction.id.toString(),
+      transaction.description,
+      formatDate(transaction.date),
+      getCategoryName(transaction.categoryId),
+      formatCurrency(transaction.amount)
+    ]);
+    
+    // Añadir tabla con los gastos
+    autoTable(doc, {
+      startY: 50,
+      head: [["ID", "Descripción", "Fecha", "Categoría", "Importe"]],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: [40, 99, 235], textColor: [255, 255, 255] },
+      columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 30, halign: 'right' }
+      },
+    });
+    
+    // Pie de página
+    const pageCount = doc.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(
+        `Generado por Billeo - ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: "center" }
+      );
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.width - 20,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    // Descargar el PDF
+    doc.save(fileName);
+    
+    toast({
+      title: "PDF generado correctamente",
+      description: `El archivo ${fileName} se ha descargado`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -654,6 +746,16 @@ const IncomeExpenseReport = () => {
               >
                 <ScanText className="h-4 w-4" />
                 Escanear documento
+              </Button>
+              
+              <Button 
+                onClick={downloadExpensesPDF} 
+                variant="outline" 
+                className="flex items-center gap-2"
+                disabled={expenseTransactions.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                Descargar gastos (PDF)
               </Button>
             </div>
             
