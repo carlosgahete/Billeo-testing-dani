@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { SecurityQuestionForm } from "@/components/profile/SecurityQuestionForm";
 import { SimpleSecurityForm } from "@/components/profile/SimpleSecurityForm";
+import { BasicSecurityForm } from "@/components/profile/BasicSecurityForm";
 import { AlertCircle, LockIcon, UserIcon } from "lucide-react";
 
 const profileFormSchema = z.object({
@@ -371,8 +372,8 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
               
-              {/* Sección de pregunta de seguridad - usando componente simplificado */}
-              <SimpleSecurityForm />
+              {/* Sección de pregunta de seguridad - usando componente básico para compatibilidad */}
+              <BasicSecurityForm />
             </div>
           </TabsContent>
           
