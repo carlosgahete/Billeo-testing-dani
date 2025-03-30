@@ -496,15 +496,6 @@ const IncomeExpenseReport = () => {
                 <FilePlus className="h-4 w-4" />
                 Nueva factura
               </Button>
-              
-              <Button 
-                onClick={() => navigate("/documents/scan")} 
-                variant="secondary" 
-                className="flex items-center gap-2"
-              >
-                <ScanText className="h-4 w-4" />
-                Escanear documento
-              </Button>
             </div>
             
             <div className="rounded-md border">
@@ -654,6 +645,18 @@ const IncomeExpenseReport = () => {
           
           {/* TAB DE GASTOS */}
           <TabsContent value="expense" className="space-y-4">
+            {/* Acciones adicionales - Solo visibles en la pestaña de gastos */}
+            <div className="flex flex-wrap gap-3 justify-start mb-4">
+              <Button 
+                onClick={() => navigate("/documents/scan")} 
+                variant="secondary" 
+                className="flex items-center gap-2"
+              >
+                <ScanText className="h-4 w-4" />
+                Escanear documento
+              </Button>
+            </div>
+            
             {/* Formulario de registro rápido de gastos - Solo visible en la pestaña de gastos */}
             <Card className="border-2 border-red-100 shadow-sm">
               <CardHeader className="pb-3 pt-3">
