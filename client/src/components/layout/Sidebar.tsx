@@ -127,14 +127,14 @@ const Sidebar = ({
       label: "Facturas" 
     },
     { 
-      href: "/quotes", 
-      icon: <FileText size={20} />, 
-      label: "Presupuestos" 
-    },
-    { 
       href: "/income-expense", 
       icon: <Wallet size={20} />, 
       label: "Ingresos y Gastos" 
+    },
+    { 
+      href: "/quotes", 
+      icon: <FileText size={20} />, 
+      label: "Presupuestos" 
     },
     { 
       href: "/reports", 
