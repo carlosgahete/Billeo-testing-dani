@@ -41,14 +41,18 @@ export function SecurityQuestionForm() {
   const { user } = useAuth();
   const [customQuestion, setCustomQuestion] = useState(false);
   const [isChangingQuestion, setIsChangingQuestion] = useState(false);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   // Consultar la pregunta de seguridad actual
   const { data: currentSecurityQuestion, isLoading, error, isError } = useQuery({
     queryKey: ["/api/security-question/current"],
     queryFn: async () => {
       try {
+        console.log("Iniciando consulta de pregunta de seguridad");
         const response = await apiRequest("GET", "/api/security-question/current", undefined);
-        return response.json();
+        const data = await response.json();
+        console.log("Respuesta de pregunta de seguridad:", data);
+        return data;
       } catch (err) {
         // Si el error es 404, significa que no hay pregunta configurada
         console.log("Error al obtener pregunta de seguridad:", err);
@@ -56,6 +60,7 @@ export function SecurityQuestionForm() {
       }
     },
     retry: false, // No reintentamos si falla
+    staleTime: 0, // Siempre obtener los datos más recientes
     enabled: !!user
   });
 
@@ -283,8 +288,32 @@ export function SecurityQuestionForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="text-xs text-muted-foreground">
+      <CardFooter className="text-xs text-muted-foreground flex flex-col">
         <p>La respuesta no distingue entre mayúsculas y minúsculas para mayor facilidad al recuperar tu cuenta.</p>
+        
+        {/* Información de depuración */}
+        <div className="mt-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+            className="text-xs"
+          >
+            {showDebugInfo ? "Ocultar información de depuración" : "Mostrar información de depuración"}
+          </Button>
+          
+          {showDebugInfo && (
+            <div className="mt-2 p-2 bg-muted rounded text-left text-xs overflow-x-auto">
+              <p>Usuario: {user ? JSON.stringify(user.id) : "No autenticado"}</p>
+              <p>QueryKey: {"/api/security-question/current"}</p>
+              <p>isLoading: {isLoading ? "true" : "false"}</p>
+              <p>isError: {isError ? "true" : "false"}</p>
+              <p>Error: {error?.message || "Ninguno"}</p>
+              <p>Datos: {JSON.stringify(currentSecurityQuestion)}</p>
+              <p className="mt-2">Si no ves la pregunta de seguridad, intenta hacer clic en la pestaña "Seguridad" nuevamente.</p>
+            </div>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );
