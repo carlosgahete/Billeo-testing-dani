@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Shield } from "lucide-react";
+import { AlertCircle, InfoIcon, RefreshCw, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const securityQuestionSchema = z.object({
   question: z.string().min(1, "Debes seleccionar una pregunta de seguridad"),
@@ -37,7 +38,19 @@ const securityQuestions = [
 
 export function SecurityQuestionForm() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [customQuestion, setCustomQuestion] = useState(false);
+  const [isChangingQuestion, setIsChangingQuestion] = useState(false);
+
+  // Consultar la pregunta de seguridad actual
+  const { data: currentSecurityQuestion, isLoading, error } = useQuery({
+    queryKey: ["/api/security-question/current"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/security-question/current", undefined);
+      return response.json();
+    },
+    enabled: !!user
+  });
 
   const form = useForm<SecurityQuestionFormData>({
     resolver: zodResolver(securityQuestionSchema),
@@ -47,6 +60,16 @@ export function SecurityQuestionForm() {
     },
   });
 
+  // Actualizar el formulario cuando se carga la pregunta actual
+  useEffect(() => {
+    if (currentSecurityQuestion?.question && !isChangingQuestion) {
+      // Si la pregunta actual no está en nuestra lista, considerarla personalizada
+      const isCustom = !securityQuestions.includes(currentSecurityQuestion.question);
+      setCustomQuestion(isCustom);
+      form.setValue("question", currentSecurityQuestion.question);
+    }
+  }, [currentSecurityQuestion, form, isChangingQuestion]);
+
   const securityQuestionMutation = useMutation({
     mutationFn: async (data: SecurityQuestionFormData) => {
       const response = await apiRequest("POST", "/api/security-question/set", data);
@@ -54,11 +77,11 @@ export function SecurityQuestionForm() {
     },
     onSuccess: () => {
       toast({
-        title: "Pregunta de seguridad guardada",
+        title: "Pregunta de seguridad actualizada",
         description: "Tu pregunta de seguridad ha sido configurada correctamente.",
       });
-      form.reset({ question: "", answer: "" });
-      setCustomQuestion(false);
+      // Reiniciar el estado del formulario
+      setIsChangingQuestion(false);
     },
     onError: (error: Error) => {
       toast({
@@ -73,15 +96,78 @@ export function SecurityQuestionForm() {
     securityQuestionMutation.mutate(data);
   };
 
+  const handleResetForm = () => {
+    setIsChangingQuestion(true);
+    form.reset({ question: "", answer: "" });
+    setCustomQuestion(false);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="flex justify-center items-center py-10">
+          <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Si hay una pregunta configurada y no estamos en modo cambio
+  if (currentSecurityQuestion?.question && !isChangingQuestion) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl">Pregunta de seguridad</CardTitle>
+          </div>
+          <CardDescription>
+            Ya tienes configurada una pregunta de seguridad para recuperar tu cuenta.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 rounded-md bg-secondary">
+              <div className="font-semibold flex items-center gap-2 mb-1">
+                <InfoIcon className="h-4 w-4 text-primary" />
+                <span>Tu pregunta de seguridad actual</span>
+              </div>
+              <p className="text-sm italic">"{currentSecurityQuestion.question}"</p>
+            </div>
+            
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Cambiar pregunta de seguridad</AlertTitle>
+              <AlertDescription>
+                Si deseas cambiar tu pregunta de seguridad, necesitarás proporcionar una nueva respuesta.
+                La respuesta anterior será reemplazada.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="flex justify-end">
+              <Button onClick={handleResetForm}>
+                Cambiar pregunta de seguridad
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
-          <CardTitle className="text-xl">Pregunta de seguridad</CardTitle>
+          <CardTitle className="text-xl">
+            {currentSecurityQuestion?.question ? "Cambiar pregunta de seguridad" : "Configurar pregunta de seguridad"}
+          </CardTitle>
         </div>
         <CardDescription>
-          Configura una pregunta y respuesta de seguridad para recuperar tu cuenta en caso de olvidar tu contraseña.
+          {currentSecurityQuestion?.question 
+            ? "Actualiza tu pregunta y respuesta de seguridad para recuperar tu cuenta." 
+            : "Configura una pregunta y respuesta de seguridad para recuperar tu cuenta en caso de olvidar tu contraseña."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -150,7 +236,9 @@ export function SecurityQuestionForm() {
               name="answer"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Respuesta</FormLabel>
+                  <FormLabel>
+                    {currentSecurityQuestion?.question ? "Nueva respuesta" : "Respuesta"}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Tu respuesta"
@@ -162,13 +250,27 @@ export function SecurityQuestionForm() {
               )}
             />
             
-            <div>
+            <div className="flex justify-between">
+              {isChangingQuestion && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsChangingQuestion(false)}
+                >
+                  Cancelar
+                </Button>
+              )}
               <Button
                 type="submit"
                 disabled={securityQuestionMutation.isPending}
-                className="w-full"
+                className={isChangingQuestion ? "" : "w-full"}
               >
-                {securityQuestionMutation.isPending ? "Guardando..." : "Guardar pregunta de seguridad"}
+                {securityQuestionMutation.isPending 
+                  ? "Guardando..." 
+                  : currentSecurityQuestion?.question 
+                    ? "Actualizar pregunta de seguridad" 
+                    : "Guardar pregunta de seguridad"
+                }
               </Button>
             </div>
           </form>

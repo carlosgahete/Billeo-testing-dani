@@ -226,6 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para obtener la pregunta de seguridad de un usuario por email
   app.get("/api/security-question", async (req, res) => {
     try {
       const { email } = req.query;
@@ -243,6 +244,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ question: user.securityQuestion });
     } catch (error) {
       console.error("Error al obtener pregunta de seguridad:", error);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+  });
+  
+  // Endpoint para obtener la pregunta de seguridad del usuario autenticado
+  app.get("/api/security-question/current", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Usuario no autenticado" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.securityQuestion) {
+        return res.status(404).json({ error: "No has configurado una pregunta de seguridad" });
+      }
+      
+      return res.status(200).json({ question: user.securityQuestion });
+    } catch (error) {
+      console.error("Error al obtener pregunta de seguridad actual:", error);
       return res.status(500).json({ error: "Error interno del servidor" });
     }
   });
