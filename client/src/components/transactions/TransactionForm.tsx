@@ -383,10 +383,10 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                     <FormLabel>Categoría</FormLabel>
                     <Select
                       onValueChange={(value) => 
-                        field.onChange(value ? parseInt(value) : null)
+                        field.onChange(value !== "null" ? parseInt(value) : null)
                       }
                       defaultValue={
-                        field.value ? field.value.toString() : undefined
+                        field.value ? field.value.toString() : "null"
                       }
                     >
                       <FormControl>
@@ -395,7 +395,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sin categoría</SelectItem>
+                        <SelectItem value="null">Sin categoría</SelectItem>
                         {categories && categories
                           .filter((cat) => cat.type === form.getValues("type"))
                           .map((category) => (
