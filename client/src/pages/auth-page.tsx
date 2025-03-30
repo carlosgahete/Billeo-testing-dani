@@ -146,12 +146,6 @@ export default function AuthPage() {
                         ¿Olvidaste tu contraseña?
                       </Link>
                     </div>
-                    
-                    <div className="text-center text-sm mt-3">
-                      <p className="text-neutral-500">
-                        Cuenta demo: usuario <span className="font-semibold">demo</span> / contraseña <span className="font-semibold">demo</span>
-                      </p>
-                    </div>
                   </div>
                 </form>
               </TabsContent>
