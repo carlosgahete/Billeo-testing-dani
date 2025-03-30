@@ -101,22 +101,26 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
 
   // Fetch transaction data if in edit mode and user is authenticated
   const { data: transactionData, isLoading: transactionLoading } = useQuery<Transaction>({
-    queryKey: ["/api/transactions", transactionId],
+    queryKey: [`/api/transactions/${transactionId}`],
     enabled: isEditMode && !!authData?.authenticated,
   });
 
+  // Define default values for the form
+  const defaultValues = {
+    description: "",
+    amount: 0,
+    date: new Date(),
+    type: "expense",
+    categoryId: null,
+    paymentMethod: "bank_transfer",
+    notes: "",
+    attachments: [],
+  };
+
+  // Initialize form with default values
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      description: "",
-      amount: 0,
-      date: new Date(),
-      type: "expense",
-      categoryId: null,
-      paymentMethod: "bank_transfer",
-      notes: "",
-      attachments: [],
-    },
+    defaultValues,
   });
 
   // Initialize form with transaction data when loaded
@@ -190,6 +194,9 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
           : "El movimiento se ha creado correctamente",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      if (isEditMode) {
+        queryClient.invalidateQueries({ queryKey: [`/api/transactions/${transactionId}`] });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       navigate("/transactions");
     },
