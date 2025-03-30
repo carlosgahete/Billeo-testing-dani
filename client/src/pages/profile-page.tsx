@@ -289,90 +289,113 @@ export default function ProfilePage() {
           
           {/* Configuración de seguridad */}
           <TabsContent value="security">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cambiar contraseña</CardTitle>
+                  <CardDescription>
+                    Actualiza tu contraseña para mantener tu cuenta segura
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...passwordForm}>
+                    <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className="space-y-6">
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contraseña actual</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Tu contraseña actual" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nueva contraseña</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Nueva contraseña" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Debe tener al menos 8 caracteres
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirmar contraseña</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Confirma tu nueva contraseña" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex justify-end">
+                        <Button 
+                          type="submit" 
+                          disabled={changePasswordMutation.isPending}
+                        >
+                          {changePasswordMutation.isPending ? "Actualizando..." : "Actualizar contraseña"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+              
+              {/* Sección de pregunta de seguridad */}
+              <SecurityQuestionForm />
+            </div>
+          </TabsContent>
+          
+          {/* Mantenemos la pestaña de pregunta de seguridad para compatibilidad, pero mostramos mensaje */}
+          <TabsContent value="question">
             <Card>
               <CardHeader>
-                <CardTitle>Cambiar contraseña</CardTitle>
+                <CardTitle>Pregunta de seguridad</CardTitle>
                 <CardDescription>
-                  Actualiza tu contraseña para mantener tu cuenta segura
+                  Esta sección se ha movido a la pestaña de Seguridad
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Form {...passwordForm}>
-                  <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className="space-y-6">
-                    <FormField
-                      control={passwordForm.control}
-                      name="currentPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contraseña actual</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Tu contraseña actual" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={passwordForm.control}
-                      name="newPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nueva contraseña</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Nueva contraseña" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Debe tener al menos 8 caracteres
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={passwordForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirmar contraseña</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="Confirma tu nueva contraseña" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex justify-end">
-                      <Button 
-                        type="submit" 
-                        disabled={changePasswordMutation.isPending}
-                      >
-                        {changePasswordMutation.isPending ? "Actualizando..." : "Actualizar contraseña"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <p className="mb-4 text-muted-foreground">La configuración de la pregunta de seguridad ahora se encuentra en la pestaña de Seguridad para un acceso más conveniente.</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab("security")}
+                  >
+                    Ir a configuración de seguridad
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          {/* Pregunta de seguridad */}
-          <TabsContent value="question">
-            <SecurityQuestionForm />
           </TabsContent>
         </Tabs>
       </div>
