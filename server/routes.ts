@@ -2328,6 +2328,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas
       const incomeTax = Math.max(0, irpfTotalEstimated - totalIrpfFromExpensesInvoices);
       
+      // Calcular el total de facturas emitidas (todas)
+      const issuedCount = allInvoices.length;
+      
+      // Calcular las facturas emitidas este trimestre
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear().toString();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentQuarter = 
+        currentMonth <= 3 ? 'q1' : 
+        currentMonth <= 6 ? 'q2' : 
+        currentMonth <= 9 ? 'q3' : 'q4';
+      
+      // Filtrar facturas del trimestre actual
+      const currentQuarterInvoices = allInvoices.filter(inv => {
+        try {
+          const date = new Date(inv.issueDate);
+          const invoiceYear = date.getFullYear().toString();
+          const invoiceMonth = date.getMonth() + 1;
+          
+          if (invoiceYear !== currentYear) return false;
+          
+          const invoiceQuarter = 
+            invoiceMonth <= 3 ? 'q1' : 
+            invoiceMonth <= 6 ? 'q2' : 
+            invoiceMonth <= 9 ? 'q3' : 'q4';
+            
+          return invoiceQuarter === currentQuarter;
+        } catch (e) {
+          console.error("Error al parsear fecha de factura:", inv.issueDate, e);
+          return false;
+        }
+      });
+      
+      const quarterCount = currentQuarterInvoices.length;
+      const quarterIncome = currentQuarterInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
+      
       return res.status(200).json({
         income,
         expenses,
@@ -2341,7 +2377,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         taxes: {
           vat: vatBalance,
           incomeTax
-        }
+        },
+        // Añadimos los contadores que faltaban
+        issuedCount,
+        quarterCount,
+        quarterIncome
       });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
