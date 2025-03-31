@@ -161,17 +161,18 @@ export default function QuotesPage() {
         <p className="text-blue-100 mb-4 text-sm sm:text-base">
           Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
         </p>
-        <div className="flex gap-2">
-          <Link href="/dashboard">
-            <Button variant="secondary" size="sm" className="bg-blue-500 hover:bg-blue-400 text-white border-none">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link href="/dashboard" className="w-full sm:w-auto">
+            <Button variant="secondary" size="sm" className="bg-blue-500 hover:bg-blue-400 text-white border-none w-full sm:w-auto">
               <ChevronLeft className="h-4 w-4 mr-1" />
               Ver Dashboard
             </Button>
           </Link>
-          <Link href="/quotes/create">
-            <Button variant="secondary" size="sm" className="bg-blue-500 hover:bg-blue-400 text-white border-none">
+          <Link href="/quotes/create" className="w-full sm:w-auto">
+            <Button variant="secondary" size="sm" className="bg-blue-500 hover:bg-blue-400 text-white border-none w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-1" />
-              Nuevo Presupuesto
+              <span className="sm:inline">Nuevo Presupuesto</span>
+              <span className="inline sm:hidden">Nuevo</span>
             </Button>
           </Link>
         </div>
