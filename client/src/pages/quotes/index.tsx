@@ -153,28 +153,35 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      <div className="bg-blue-600 text-white rounded-lg p-6 mb-6 mx-0">
-        <div className="flex items-center space-x-2 mb-2">
-          <FileText className="h-5 w-5 flex-shrink-0" />
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Gestión de Presupuestos</h1>
-        </div>
-        <p className="text-blue-100 mb-4 text-sm sm:text-base">
-          Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Link href="/dashboard" className="w-full sm:w-auto">
-            <Button variant="secondary" size="sm" className="bg-blue-500 hover:bg-blue-400 text-white border-none w-full sm:w-auto">
-              <ChevronLeft className="h-4 w-4 mr-1" />
+      {/* Header compacto estilo imagen de referencia */}
+      <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-4 px-5 mb-4 shadow-md mx-0">
+        <div className="flex flex-col">
+          <div className="flex items-center mb-1">
+            <FileText className="h-5 w-5 mr-2 text-white" />
+            <h1 className="text-lg font-bold text-white">Gestión de Presupuestos</h1>
+          </div>
+          <p className="text-[#E0E8FF] text-xs mb-2">
+            Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
+          </p>
+          <div className="flex flex-row gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-transparent text-white border-white hover:bg-[#1E40AF] text-xs"
+              onClick={() => navigate("/dashboard")}
+            >
               Ver Dashboard
             </Button>
-          </Link>
-          <Link href="/quotes/create" className="w-full sm:w-auto">
-            <Button variant="secondary" size="sm" className="bg-blue-500 hover:bg-blue-400 text-white border-none w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-1" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-transparent text-white border-white hover:bg-[#1E40AF] text-xs"
+              onClick={() => navigate("/quotes/create")}
+            >
               <span className="sm:inline">Nuevo Presupuesto</span>
               <span className="inline sm:hidden">Nuevo</span>
             </Button>
-          </Link>
+          </div>
         </div>
       </div>
 
