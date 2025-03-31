@@ -187,13 +187,14 @@ const TaxSummary = () => {
                 <Tooltip>
                   <TooltipTrigger className="w-full mt-1">
                     <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-sm p-1 cursor-default">
-                      ℹ️ Resultado de restar IVA repercutido - IVA soportado
+                      ℹ️ Resultado de restar IVA soportado - IVA repercutido
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
-                    <p className="w-[250px] text-xs">
-                      El IVA repercutido es el que has cobrado a tus clientes (21% de la base imponible 
-                      de tus facturas emitidas). Se declara trimestralmente a Hacienda a través del modelo 303.
+                    <p className="w-[300px] text-xs">
+                      El IVA soportado es el que has pagado a tus proveedores en tus compras y gastos.
+                      El IVA repercutido es el que has cobrado a tus clientes.
+                      La diferencia (a liquidar) se declara trimestralmente en el modelo 303.
                     </p>
                   </TooltipContent>
                 </Tooltip>
