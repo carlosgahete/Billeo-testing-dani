@@ -501,7 +501,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   return (
     <>
       <Card className="w-full border-none shadow-sm">
-        <CardHeader className="pb-3 border-b">
+        <CardHeader className="pb-3 border-b px-2 sm:px-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-primary-700">Tus presupuestos</CardTitle>
@@ -518,9 +518,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-1 sm:px-6">
           <div className="overflow-x-auto -mx-1 sm:mx-0">
-            <Table className="w-full">
+            <Table className="w-full min-w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[60px] md:w-[100px]">Núm.</TableHead>
@@ -699,19 +699,19 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
             </Table>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between items-center pt-6 border-t">
+        <CardFooter className="flex justify-between items-center pt-6 border-t px-2 sm:px-6">
           <div className="md:hidden">
             {showActions && (
               <Link href="/quotes/create">
                 <Button>
-                  <span className="mr-1">+</span> Nuevo presupuesto
+                  <span className="mr-1">+</span> Nuevo
                 </Button>
               </Link>
             )}
           </div>
           {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
             <Link href="/quotes" className="ml-auto">
-              <Button variant="outline">Ver todos los presupuestos</Button>
+              <Button variant="outline">Ver todos</Button>
             </Link>
           )}
           {quotes.length > 0 && (
