@@ -417,15 +417,6 @@ const Dashboard = () => {
                       <span className="text-neutral-500">Facturas emitidas:</span>
                       <span className="font-medium">{stats?.issuedInvoices || 0}</span>
                     </div>
-                    <div className="flex justify-between mt-1 pt-1 border-t border-gray-100">
-                      <span className="text-neutral-500">Facturación media:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('es-ES', { 
-                          minimumFractionDigits: 2, 
-                          maximumFractionDigits: 2 
-                        }).format(stats?.averageInvoiceValue || 0)} €
-                      </span>
-                    </div>
                   </>
                 )}
                 
