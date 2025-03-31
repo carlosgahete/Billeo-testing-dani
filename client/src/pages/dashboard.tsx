@@ -455,70 +455,12 @@ const Dashboard = () => {
             </CardContent>
           </Card>
           
-          {/* Presupuestos Card */}
-          <Card className="overflow-hidden border-purple-100 shadow-sm">
-            <CardHeader className="bg-purple-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-sm text-purple-700 flex items-center font-medium">
-                  <FileCheck className="mr-1.5 h-4 w-4" />
-                  Presupuestos
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-3.5 w-3.5 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Resumen de presupuestos emitidos.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3">
-              <div className="flex flex-wrap gap-2">
-                <div className="flex-1 bg-purple-50 rounded-md p-2 text-center">
-                  <div className="text-xs text-purple-700 mb-1">Aceptados</div>
-                  <div className="text-lg font-semibold text-purple-800">{stats?.acceptedQuotes || 3}</div>
-                </div>
-                <div className="flex-1 bg-gray-50 rounded-md p-2 text-center">
-                  <div className="text-xs text-gray-600 mb-1">Pendientes</div>
-                  <div className="text-lg font-semibold text-gray-700">{stats?.pendingQuotes || 0}</div>
-                </div>
-                <div className="flex-1 bg-red-50 rounded-md p-2 text-center">
-                  <div className="text-xs text-red-700 mb-1">Rechazados</div>
-                  <div className="text-lg font-semibold text-red-700">{stats?.rejectedQuotes || 1}</div>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full text-purple-600 border-purple-200 hover:bg-purple-50 text-xs"
-                  onClick={() => navigate("/quotes")}
-                >
-                  Ver presupuestos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
         
 
         
-        {/* Recuadro amarillo informativo */}
-        <div className="md:col-span-4 mt-2">
-          <div className="bg-yellow-200 rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-medium text-yellow-800 mb-2">Información Fiscal</h3>
-            <p className="text-yellow-700">
-              Como autónomo en España, recuerda que el próximo plazo para presentar el Modelo 303 de IVA trimestral vence el 20 de abril. 
-              La declaración de IRPF del primer trimestre debe presentarse antes del 30 de abril.
-            </p>
-          </div>
-        </div>
-        
+
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
         <div className="md:col-span-4 mt-6">
           {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
