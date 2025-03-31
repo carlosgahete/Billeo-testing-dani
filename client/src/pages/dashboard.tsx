@@ -447,26 +447,55 @@ const Dashboard = () => {
           </Card>
           
           {/* Facturas pendientes */}
-          <Card className="border border-warning-100 hover:shadow-md transition-shadow">
-            <CardContent className="p-3">
-              <div className="flex items-center">
-                <div className="p-1 mr-2 rounded-md bg-warning-50 text-warning-700">
-                  <Receipt size={18} />
-                </div>
-                <p className="text-neutral-600 text-sm font-medium">Facturas pendientes</p>
+          <Card className="overflow-hidden border-warning-100 shadow-sm">
+            <CardHeader className="bg-warning-50 p-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg text-warning-700 flex items-center">
+                  <Receipt className="mr-2 h-5 w-5" />
+                  Facturas pendientes
+                </CardTitle>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="cursor-pointer">
+                        <Info className="h-4 w-4 text-neutral-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                      <p className="w-[250px] text-xs">Facturas emitidas pendientes de cobro.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-              <p className="text-lg font-bold text-neutral-800 mt-1">
-                {new Intl.NumberFormat('es-ES', { 
-                  style: 'currency',
-                  currency: 'EUR',
-                }).format(stats?.pendingInvoices || 0)}
-              </p>
-              {(stats?.pendingCount || 0) > 0 && (
-                <p className="text-xs text-warning-700 flex items-center">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  {`${stats?.pendingCount || 0} facturas por cobrar`}
-                </p>
-              )}
+            </CardHeader>
+            <CardContent className="p-3">
+              <div className="mb-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-neutral-500">Importe total:</span>
+                  <span className="text-lg font-bold text-warning-700">
+                    {new Intl.NumberFormat('es-ES', { 
+                      style: 'currency',
+                      currency: 'EUR',
+                    }).format(stats?.pendingInvoices || 0)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center rounded-md bg-warning-50 p-2 mb-3">
+                <p className="text-xs text-warning-600">Facturas por cobrar:</p>
+                <p className="text-lg font-bold text-warning-700">{stats?.pendingCount || 0}</p>
+              </div>
+              
+              <div className="mt-1 mb-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-warning-600 border-warning-300 hover:bg-warning-50"
+                  onClick={() => navigate("/invoices")}
+                >
+                  Ver facturas
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
