@@ -268,7 +268,7 @@ const Dashboard = () => {
                 </Button>
               </div>
               
-              <div className="mt-2 mb-2">
+              <div className="mt-auto pt-2 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -325,7 +325,7 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-8 mb-2">
+              <div className="mt-auto pt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -444,7 +444,7 @@ const Dashboard = () => {
                 )}
               </div>
               
-              <div className="mt-8 mb-2">
+              <div className="mt-auto pt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -506,7 +506,7 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-8 mb-2">
+              <div className="mt-auto pt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
