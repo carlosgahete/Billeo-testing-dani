@@ -390,19 +390,18 @@ const Dashboard = () => {
         {/* Tercera columna: Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Facturas pendientes */}
-          <Card className="overflow-hidden border-none relative shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 opacity-10 z-0"></div>
-            <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-500 p-3 z-10">
+          <Card className="overflow-hidden border-blue-100 shadow-sm">
+            <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-white flex items-center font-semibold">
-                  <Receipt className="mr-2 h-5 w-5 text-white" strokeWidth={2.5} />
+                <CardTitle className="text-sm text-blue-700 flex items-center font-medium">
+                  <Receipt className="mr-1.5 h-4 w-4" />
                   Facturas pendientes
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-white opacity-80" />
+                        <Info className="h-3.5 w-3.5 text-neutral-500" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -412,11 +411,11 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-4 bg-white z-10">
-              <div className="mb-3">
+            <CardContent className="p-2 bg-white">
+              <div className="mb-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600 font-medium">Importe total:</span>
-                  <span className="text-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                  <span className="text-xs text-neutral-600">Importe total:</span>
+                  <span className="text-base font-semibold text-blue-600">
                     {new Intl.NumberFormat('es-ES', { 
                       style: 'currency', 
                       currency: 'EUR' 
@@ -425,23 +424,19 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex justify-between items-center rounded-md border border-amber-200 bg-amber-50 p-3 mb-3">
-                <div className="flex items-center">
-                  <div className="bg-amber-500 p-1.5 rounded-md mr-2">
-                    <FileCheck className="h-4 w-4 text-white" />
-                  </div>
-                  <p className="text-sm text-amber-700 font-medium">Pendientes de cobro</p>
-                </div>
-                <p className="text-xl font-bold text-amber-700">{stats?.pendingCount || 0}</p>
+              <div className="flex justify-between items-center rounded-md bg-blue-50 p-2 mb-2">
+                <p className="text-xs text-blue-600">Facturas por cobrar:</p>
+                <p className="text-base font-semibold text-blue-700">{stats?.pendingCount || 0}</p>
               </div>
               
-              <div className="mt-3">
+              <div className="mt-2">
                 <Button 
+                  variant="outline"
                   size="sm" 
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white border-none hover:from-amber-600 hover:to-orange-600 hover:shadow-md transition-all"
+                  className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
                   onClick={() => navigate("/invoices")}
                 >
-                  <Eye className="h-4 w-4 mr-1.5" /> Ver facturas
+                  Ver facturas
                 </Button>
               </div>
             </CardContent>
