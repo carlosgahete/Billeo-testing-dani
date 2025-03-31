@@ -328,7 +328,64 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Tarjeta de Base Imponible y Facturas Pendientes */}
+        {/* Cuarta columna: Tarjeta de Resultado Final (Movida a posición 3) */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+          <Card className="overflow-hidden border-green-100 shadow-md flex-grow">
+            <CardHeader className="bg-green-50 p-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg text-green-700 flex items-center">
+                  <PiggyBank className="mr-2 h-5 w-5" />
+                  Resultado Final
+                </CardTitle>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="cursor-pointer">
+                        <Info className="h-4 w-4 text-neutral-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                      <p className="w-[200px] text-xs">El beneficio final después de descontar impuestos y retenciones</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-green-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(totalNeto)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Base + IVA (bruto):</span>
+                  <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default">
+                        <span className="text-neutral-500">IRPF retenido en gastos:</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
+                        <p className="w-[250px] text-xs">
+                          Suma de todas las retenciones de IRPF aplicadas en las facturas que has recibido 
+                          como gastos. Este IRPF ya pagado se puede descontar de tus impuestos anuales.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span className="font-medium">- {irpfCorrect.toLocaleString('es-ES')} €</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Tercera columna: Tarjeta de Base Imponible y Facturas Pendientes (Movida a posición 4) */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden">
             <CardHeader className="bg-blue-50 p-2">
@@ -399,95 +456,7 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Cuarta columna: Tarjeta de Resultado Final */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden border-green-100 shadow-md flex-grow">
-            <CardHeader className="bg-green-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-green-700 flex items-center">
-                  <PiggyBank className="mr-2 h-5 w-5" />
-                  Resultado Final
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[200px] text-xs">El beneficio final después de descontar impuestos y retenciones</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3">
-              <p className="text-2xl font-bold text-green-600">
-                {new Intl.NumberFormat('es-ES', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                }).format(totalNeto)} €
-              </p>
-              
-              <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Base + IVA (bruto):</span>
-                  <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
-                </div>
-                <div className="flex justify-between">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-default">
-                        <span className="text-neutral-500">IRPF retenido en gastos:</span>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
-                        <p className="w-[250px] text-xs">
-                          Suma de todas las retenciones de IRPF aplicadas en las facturas que has recibido 
-                          como gastos. Este IRPF ya pagado se puede descontar de tus impuestos anuales.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <span className="font-medium">-{irpfCorrect.toLocaleString('es-ES')} €</span>
-                </div>
-                <div className="flex justify-between">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-default">
-                        <span className="text-orange-600 font-medium">IVA a liquidar:</span>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
-                        <p className="w-[250px] text-xs">
-                          IVA repercutido que deberás declarar a Hacienda. Se calcula como el 21% 
-                          de la base imponible de tus facturas emitidas (modelo 303 trimestral).
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <span className="font-medium text-orange-600">{ivaCorrect.toLocaleString('es-ES')} €</span>
-                </div>
-                <div className="flex justify-between">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-default">
-                        <span className="text-neutral-900 font-bold">Total neto (cobrado):</span>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
-                        <p className="w-[250px] text-xs">
-                          Cantidad real que recibes después de aplicar impuestos. 
-                          Se calcula como: Base Imponible + IVA - IRPF retenido. 
-                          Representa el dinero efectivamente ingresado en tu cuenta.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <span className="font-bold">{totalNeto.toLocaleString('es-ES')} €</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
         
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
         <div className="md:col-span-4 mt-0">
