@@ -66,7 +66,11 @@ const Dashboard = () => {
       const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}`);
       if (!res.ok) throw new Error("Error al cargar estadísticas");
       return res.json();
-    }
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchInterval: 3000 // Refrescar cada 3 segundos para mantener los datos actualizados
   });
 
   const isLoading = userLoading || statsLoading;

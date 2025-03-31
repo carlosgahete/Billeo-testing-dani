@@ -55,11 +55,11 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false, // Don't refetch when window gets focus to avoid login loop
-      staleTime: 30 * 60 * 1000, // 30 minutes - aumentado para mejorar rendimiento
-      gcTime: 60 * 60 * 1000, // 60 minutes - aumentado para mantener datos en caché más tiempo
+      refetchOnWindowFocus: true, // Permitir recargar datos cuando la ventana recibe foco
+      staleTime: 5 * 1000, // 5 segundos - reducido para mejorar actualización de datos en tiempo real
+      gcTime: 60 * 60 * 1000, // 60 minutes - mantener datos en caché
       retry: 0, // No retries to speed up initial load
-      refetchOnMount: true, // Refetch solo si los datos están obsoletos
+      refetchOnMount: "always", // Siempre refrescar al montar para asegurar datos actualizados
       retryOnMount: false, // No reintentar al montar para mejorar rendimiento inicial
     },
     mutations: {
