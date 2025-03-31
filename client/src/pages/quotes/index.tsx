@@ -281,12 +281,14 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <Link href="/quotes/create">
-                <Button variant="default" size="sm" className="w-full mt-4">
-                  <FilePlus className="h-4 w-4 mr-2" />
-                  Crear nuevo presupuesto
-                </Button>
-              </Link>
+              <div className="pt-[22px]">
+                <Link href="/quotes/create">
+                  <Button variant="default" size="sm" className="w-full">
+                    <FilePlus className="h-4 w-4 mr-2" />
+                    Crear nuevo presupuesto
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
           
@@ -331,17 +333,19 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="w-full mt-4"
-                onClick={() => {
-                  // Aquí se podría implementar un filtro para ver solo los aceptados
-                }}
-              >
-                <CheckSquare className="h-4 w-4 mr-2" />
-                Ver presupuestos aceptados
-              </Button>
+              <div className="pt-[22px]">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    // Aquí se podría implementar un filtro para ver solo los aceptados
+                  }}
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Ver presupuestos aceptados
+                </Button>
+              </div>
             </CardContent>
           </Card>
           
@@ -388,17 +392,19 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="w-full mt-4"
-                onClick={() => {
-                  // Aquí se podría implementar un filtro para ver solo los pendientes
-                }}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Gestionar pendientes
-              </Button>
+              <div className="pt-[22px]">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    // Aquí se podría implementar un filtro para ver solo los pendientes
+                  }}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Gestionar pendientes
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
