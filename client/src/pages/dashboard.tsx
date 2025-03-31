@@ -9,8 +9,6 @@ import {
   TrendingUp,
   TrendingDown,
   Info,
-  Receipt,
-  FileText,
   AlertTriangle,
   Eye,
   FileCheck
@@ -57,7 +55,6 @@ const Dashboard = () => {
   const [, navigate] = useLocation();
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
-  const [docType, setDocType] = useState("invoices"); // "invoices" o "quotes"
   
   const { data: user, isLoading: userLoading } = useQuery<any>({
     queryKey: ["/api/auth/session"],
@@ -213,7 +210,7 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-2 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-2 mt-4">
         {/* Primera columna: Tarjeta de Ingresos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Ingresos */}
@@ -339,125 +336,7 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Documentos Pendientes (Facturas/Presupuestos) */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden flex-grow">
-            <CardHeader className="bg-blue-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-blue-700 flex items-center">
-                  {docType === "invoices" ? (
-                    <Receipt className="mr-2 h-5 w-5" />
-                  ) : (
-                    <FileText className="mr-2 h-5 w-5" />
-                  )}
-                  {docType === "invoices" ? "Facturas pendientes" : "Presupuestos"}
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">
-                        {docType === "invoices" 
-                          ? "Facturas emitidas pendientes de cobro." 
-                          : "Presupuestos enviados pendientes de aceptación."}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3">
-              <div className="mb-3">
-                <div className="flex items-center space-x-2 justify-center bg-gray-50 rounded-md p-1">
-                  <Button 
-                    size="sm" 
-                    variant={docType === "invoices" ? "default" : "outline"} 
-                    onClick={() => setDocType("invoices")}
-                    className={docType === "invoices" ? "bg-blue-600" : ""}
-                  >
-                    <Receipt className="mr-1 h-4 w-4" />
-                    Facturas
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={docType === "quotes" ? "default" : "outline"} 
-                    onClick={() => setDocType("quotes")}
-                    className={docType === "quotes" ? "bg-blue-600" : ""}
-                  >
-                    <FileText className="mr-1 h-4 w-4" />
-                    Presupuestos
-                  </Button>
-                </div>
-              </div>
-              
-              <p className="text-2xl font-bold text-blue-600">
-                {new Intl.NumberFormat('es-ES', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                }).format(docType === "invoices" ? (stats?.pendingInvoices || 0) : (stats?.pendingQuotes || 0))} €
-              </p>
-              
-              <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">
-                    {docType === "invoices" ? "Facturas por cobrar:" : "Presupuestos pendientes:"}
-                  </span>
-                  <span className="font-medium">
-                    {docType === "invoices" ? (stats?.pendingCount || 0) : (stats?.pendingQuotesCount || 0)}
-                  </span>
-                </div>
-                
-                {docType === "invoices" && (
-                  <>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-neutral-500">Facturas emitidas:</span>
-                      <span className="font-medium">{stats?.issuedInvoices || 0}</span>
-                    </div>
-                  </>
-                )}
-                
-                {docType === "quotes" && (
-                  <>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-neutral-500">Presupuestos aceptados:</span>
-                      <span className="font-medium text-green-600">{stats?.acceptedQuotes || 0}</span>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-neutral-500">Presupuestos rechazados:</span>
-                      <span className="font-medium text-red-600">{stats?.rejectedQuotes || 0}</span>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-neutral-500">Total presupuestos:</span>
-                      <span className="font-medium">{stats?.allQuotes || 0}</span>
-                    </div>
-                    <div className="flex justify-between mt-1 pt-1 border-t border-gray-100">
-                      <span className="text-neutral-500">Tasa de conversión:</span>
-                      <span className="font-medium">
-                        {stats?.allQuotes ? Math.round((stats?.acceptedQuotes / stats?.allQuotes) * 100) : 0}%
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              <div className="mt-auto pt-8 mb-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
-                  onClick={() => navigate(docType === "invoices" ? "/invoices" : "/quotes")}
-                >
-                  {docType === "invoices" ? "Ver facturas" : "Ver presupuestos"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
+
         {/* Cuarta columna: Tarjeta de Resultado Final */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden flex-grow">
@@ -521,7 +400,7 @@ const Dashboard = () => {
         </div>
         
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
-        <div className="md:col-span-4 mt-6">
+        <div className="md:col-span-3 mt-6">
           {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <TaxSummary />
