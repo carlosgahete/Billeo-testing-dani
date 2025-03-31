@@ -389,15 +389,6 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {docType === "quotes" && (
-                <div className="mb-2 p-2 bg-blue-50 rounded-md text-xs text-blue-700">
-                  <p className="flex items-center">
-                    <Info className="h-3 w-3 mr-1 flex-shrink-0" />
-                    Los presupuestos te permiten enviar propuestas comerciales a tus clientes antes de emitir facturas.
-                  </p>
-                </div>
-              )}
-              
               <p className="text-2xl font-bold text-blue-600">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
