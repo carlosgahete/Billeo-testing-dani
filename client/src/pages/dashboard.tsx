@@ -411,6 +411,24 @@ const Dashboard = () => {
                   </span>
                 </div>
                 
+                {docType === "invoices" && (
+                  <>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-neutral-500">Facturas emitidas:</span>
+                      <span className="font-medium">{stats?.issuedInvoices || 0}</span>
+                    </div>
+                    <div className="flex justify-between mt-1 pt-1 border-t border-gray-100">
+                      <span className="text-neutral-500">Facturación media:</span>
+                      <span className="font-medium">
+                        {new Intl.NumberFormat('es-ES', { 
+                          minimumFractionDigits: 2, 
+                          maximumFractionDigits: 2 
+                        }).format(stats?.averageInvoiceValue || 0)} €
+                      </span>
+                    </div>
+                  </>
+                )}
+                
                 {docType === "quotes" && (
                   <>
                     <div className="flex justify-between mt-1">
@@ -424,6 +442,12 @@ const Dashboard = () => {
                     <div className="flex justify-between mt-1">
                       <span className="text-neutral-500">Total presupuestos:</span>
                       <span className="font-medium">{stats?.allQuotes || 0}</span>
+                    </div>
+                    <div className="flex justify-between mt-1 pt-1 border-t border-gray-100">
+                      <span className="text-neutral-500">Tasa de conversión:</span>
+                      <span className="font-medium">
+                        {stats?.allQuotes ? Math.round((stats?.acceptedQuotes / stats?.allQuotes) * 100) : 0}%
+                      </span>
                     </div>
                   </>
                 )}
