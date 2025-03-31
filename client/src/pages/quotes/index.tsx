@@ -20,7 +20,9 @@ import {
   Info,
   PieChart,
   DollarSign,
-  FileClock
+  FileClock,
+  ChevronLeft,
+  Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -151,11 +153,28 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      <div className="-mt-5 -mb-1">
-        <PageTitle 
-          title="Presupuestos" 
-          description="Gestiona y envía presupuestos a clientes. Conviértelos en facturas con un clic." 
-        />
+      <div className="bg-primary-600 text-white rounded-lg p-6 mb-6">
+        <div className="flex items-center space-x-2 mb-2">
+          <FileText className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Gestión de Presupuestos</h1>
+        </div>
+        <p className="text-primary-100 mb-4">
+          Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
+        </p>
+        <div className="flex gap-2">
+          <Link href="/dashboard">
+            <Button variant="secondary" size="sm" className="bg-primary-500 hover:bg-primary-400 text-white border-none">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Ver Dashboard
+            </Button>
+          </Link>
+          <Link href="/quotes/create">
+            <Button variant="secondary" size="sm" className="bg-primary-500 hover:bg-primary-400 text-white border-none">
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo Presupuesto
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Dashboard de presupuestos */}
