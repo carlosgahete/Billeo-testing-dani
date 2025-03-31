@@ -250,15 +250,50 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
-        return <Badge variant="outline">Borrador</Badge>;
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+            <Badge variant="outline" className="font-normal text-slate-600 border-slate-200">
+              Borrador
+            </Badge>
+          </div>
+        );
       case "sent":
-        return <Badge variant="secondary">Enviado</Badge>;
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            <Badge variant="secondary" className="font-normal text-blue-600 bg-blue-100">
+              Enviado
+            </Badge>
+          </div>
+        );
       case "accepted":
-        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Aceptado</Badge>;
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <Badge className="bg-green-100 text-green-600 hover:bg-green-200 font-normal">
+              Aceptado
+            </Badge>
+          </div>
+        );
       case "rejected":
-        return <Badge variant="destructive">Rechazado</Badge>;
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+            <Badge variant="destructive" className="bg-red-100 text-red-600 hover:bg-red-200 font-normal">
+              Rechazado
+            </Badge>
+          </div>
+        );
       case "expired":
-        return <Badge variant="destructive">Vencido</Badge>;
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+            <Badge className="bg-amber-100 text-amber-600 hover:bg-amber-200 font-normal">
+              Vencido
+            </Badge>
+          </div>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -466,40 +501,56 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   return (
     <>
       <Card className="w-full border-none shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle>Tus presupuestos</CardTitle>
-          <CardDescription>
-            Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades.
-          </CardDescription>
+        <CardHeader className="pb-3 border-b">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-primary-700">Tus presupuestos</CardTitle>
+              <CardDescription>
+                Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades.
+              </CardDescription>
+            </div>
+            <div className="hidden md:block">
+              <Link href="/quotes/create">
+                <Button className="gap-1">
+                  <span>+</span> Nuevo presupuesto
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Válido hasta</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Estado</TableHead>
-                  {showActions && <TableHead className="text-right">Acciones</TableHead>}
+                  <TableHead className="w-[100px]">Número</TableHead>
+                  <TableHead className="w-[180px]">Cliente</TableHead>
+                  <TableHead className="w-[120px]">Fecha</TableHead>
+                  <TableHead className="w-[120px]">Válido hasta</TableHead>
+                  <TableHead className="w-[120px]">Total</TableHead>
+                  <TableHead className="w-[120px]">Estado</TableHead>
+                  {showActions && <TableHead className="text-right w-[200px]">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayQuotes.map((quote: Quote) => {
                   const client = clientsData.find((c: Client) => c.id === quote.clientId);
                   return (
-                    <TableRow key={quote.id}>
+                    <TableRow 
+                      key={quote.id}
+                      className={quote.status === "accepted" ? "bg-green-50" : 
+                                quote.status === "rejected" ? "bg-red-50" : 
+                                quote.status === "expired" ? "bg-gray-50" : ""}
+                    >
                       <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
-                      <TableCell>{client?.name || "Cliente no encontrado"}</TableCell>
+                      <TableCell className="truncate max-w-[180px]">{client?.name || "Cliente no encontrado"}</TableCell>
                       <TableCell>{formatDate(quote.issueDate)}</TableCell>
                       <TableCell>{formatDate(quote.validUntil)}</TableCell>
                       <TableCell className="font-medium">{formatCurrency(quote.total)}</TableCell>
                       <TableCell>{getStatusBadge(quote.status)}</TableCell>
                       {showActions && (
                         <TableCell>
-                          <div className="flex justify-end space-x-2">
+                          <div className="flex justify-end items-center gap-1">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -507,8 +558,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleDownloadPDF(quote)}
+                                    className="h-8 w-8 rounded-full hover:bg-primary-50"
                                   >
-                                    <Download className="h-4 w-4" />
+                                    <Download className="h-4 w-4 text-primary-600" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -525,8 +577,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleSend(quote.id)}
+                                      className="h-8 w-8 rounded-full hover:bg-blue-50"
                                     >
-                                      <Send className="h-4 w-4" />
+                                      <Send className="h-4 w-4 text-blue-600" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -544,8 +597,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleReject(quote.id)}
+                                      className="h-8 w-8 rounded-full hover:bg-red-50"
                                     >
-                                      <XCircle className="h-4 w-4" />
+                                      <XCircle className="h-4 w-4 text-red-600" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -563,8 +617,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleConvert(quote.id)}
+                                      className="h-8 w-8 rounded-full hover:bg-green-50"
                                     >
-                                      <FileCheck className="h-4 w-4" />
+                                      <FileCheck className="h-4 w-4 text-green-600" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -583,8 +638,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                         variant="ghost"
                                         size="icon"
                                         disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                        className="h-8 w-8 rounded-full hover:bg-amber-50"
                                       >
-                                        <Pencil className="h-4 w-4" />
+                                        <Pencil className="h-4 w-4 text-amber-600" />
                                       </Button>
                                     </Link>
                                   </span>
@@ -603,8 +659,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEmailQuote(quote)}
+                                    className="h-8 w-8 rounded-full hover:bg-blue-50"
                                   >
-                                    <Mail className="h-4 w-4" />
+                                    <Mail className="h-4 w-4 text-blue-600" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -622,8 +679,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     size="icon"
                                     onClick={() => handleDelete(quote.id)}
                                     disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                    className="h-8 w-8 rounded-full hover:bg-red-50"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4 text-red-600" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -641,16 +699,25 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
             </Table>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between items-center pt-6">
-          {showActions && (
-            <Link href="/quotes/create">
-              <Button>Crear presupuesto</Button>
-            </Link>
-          )}
+        <CardFooter className="flex justify-between items-center pt-6 border-t">
+          <div className="md:hidden">
+            {showActions && (
+              <Link href="/quotes/create">
+                <Button>
+                  <span className="mr-1">+</span> Nuevo presupuesto
+                </Button>
+              </Link>
+            )}
+          </div>
           {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
-            <Link href="/quotes">
+            <Link href="/quotes" className="ml-auto">
               <Button variant="outline">Ver todos los presupuestos</Button>
             </Link>
+          )}
+          {quotes.length > 0 && (
+            <p className="text-muted-foreground text-sm ml-auto">
+              Total: {quotes.length} presupuestos
+            </p>
           )}
         </CardFooter>
       </Card>
