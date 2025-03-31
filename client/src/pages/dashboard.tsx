@@ -353,11 +353,11 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-2">
-              <div className="mb-2">
+            <CardContent className="p-3">
+              <div className="mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-600">Total neto:</span>
-                  <span className="text-base font-semibold text-green-600">
+                  <span className="text-sm text-neutral-600 font-medium">Total neto:</span>
+                  <span className="text-xl font-bold text-green-600">
                     {new Intl.NumberFormat('es-ES', { 
                       style: 'currency',
                       currency: 'EUR' 
@@ -366,32 +366,21 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="space-y-1 text-xs mb-3">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Base + IVA (bruto):</span>
-                  <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
+              <div className="space-y-4 text-sm mt-5 mb-4">
+                <div className="flex justify-between items-center bg-green-50 p-2.5 rounded-md">
+                  <span className="text-green-700 font-medium">Base + IVA (bruto):</span>
+                  <span className="font-semibold text-green-800">{new Intl.NumberFormat('es-ES', { 
                     style: 'currency',
                     currency: 'EUR'
                   }).format(totalBruto)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF retenido:</span>
-                  <span className="font-medium">- {new Intl.NumberFormat('es-ES', { 
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-600 font-medium">IRPF retenido:</span>
+                  <span className="font-semibold text-red-600">- {new Intl.NumberFormat('es-ES', { 
                     style: 'currency',
                     currency: 'EUR'
                   }).format(irpfCorrect)}</span>
                 </div>
-              </div>
-              
-              <div className="mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-green-600 border-green-200 hover:bg-green-50 text-xs"
-                  onClick={() => navigate("/taxes")}
-                >
-                  Ver detalles
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -421,11 +410,11 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-2 bg-white">
-              <div className="mb-2">
+            <CardContent className="p-3 bg-white">
+              <div className="mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-600">Importe total:</span>
-                  <span className="text-base font-semibold text-blue-600">
+                  <span className="text-sm text-neutral-600 font-medium">Importe total:</span>
+                  <span className="text-xl font-bold text-blue-600">
                     {new Intl.NumberFormat('es-ES', { 
                       style: 'currency', 
                       currency: 'EUR' 
@@ -434,20 +423,15 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex justify-between items-center rounded-md bg-blue-50 p-2 mb-2">
-                <p className="text-xs text-blue-600">Facturas por cobrar:</p>
-                <p className="text-base font-semibold text-blue-700">{stats?.pendingCount || 0}</p>
-              </div>
-              
-              <div className="mt-2">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
-                  onClick={() => navigate("/invoices")}
-                >
-                  Ver facturas
-                </Button>
+              <div className="space-y-4 text-sm mt-5 mb-4">
+                <div className="flex justify-between items-center bg-blue-50 p-2.5 rounded-md">
+                  <span className="text-blue-700 font-medium">Facturas por cobrar:</span>
+                  <span className="text-xl font-bold text-blue-700">{stats?.pendingCount || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5">
+                  <span className="text-transparent">Espacio</span>
+                  <span className="text-transparent">-</span>
+                </div>
               </div>
             </CardContent>
           </Card>
