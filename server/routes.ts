@@ -2371,9 +2371,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all invoices
       let allInvoices = await storage.getInvoicesByUserId(userId);
       
+      // Get all quotes
+      let allQuotes = await storage.getQuotesByUserId(userId);
+      
       // Filtrar por período si es necesario
       allTransactions = allTransactions.filter(t => isInPeriod(t.date));
       allInvoices = allInvoices.filter(inv => isInPeriod(inv.issueDate));
+      allQuotes = allQuotes.filter(q => isInPeriod(q.issueDate));
       
       // Calculate totals from transactions
       const transactionIncome = allTransactions
@@ -2551,6 +2555,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const yearCount = currentYearInvoices.length;
       const yearIncome = currentYearInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
       
+      // Calcular los presupuestos pendientes
+      const pendingQuotes = allQuotes.filter(q => q.status === "pending");
+      const pendingQuotesCount = pendingQuotes.length;
+      const pendingQuotesTotal = pendingQuotes.reduce((sum, q) => sum + Number(q.total), 0);
+      
+      // Obtener fecha del último presupuesto
+      let lastQuoteDate = null;
+      if (allQuotes.length > 0) {
+        // Ordenar por fecha descendente
+        const sortedQuotes = [...allQuotes].sort((a, b) => {
+          return new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime();
+        });
+        lastQuoteDate = sortedQuotes[0].issueDate;
+      }
+      
       return res.status(200).json({
         income,
         expenses,
@@ -2571,7 +2590,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         quarterIncome,
         // Datos del año actual
         yearCount,
-        yearIncome
+        yearIncome,
+        // Datos de presupuestos pendientes
+        pendingQuotesCount,
+        pendingQuotesTotal,
+        lastQuoteDate
       });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
