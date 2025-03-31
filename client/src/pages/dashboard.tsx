@@ -458,9 +458,9 @@ const Dashboard = () => {
 
         </div>
         
-        {/* Barra amarilla */}
-        <div className="md:col-span-4 mt-2">
-          <div className="bg-yellow-200 rounded-lg h-16 shadow-sm"></div>
+        {/* Cuarta columna: Barra amarilla en el hueco */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+          <div className="bg-yellow-200 rounded-lg h-full shadow-sm"></div>
         </div>
 
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
