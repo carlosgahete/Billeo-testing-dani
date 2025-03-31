@@ -204,7 +204,7 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-2 mt-4">
         {/* Primera columna: Tarjeta de Ingresos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Ingresos */}
@@ -459,8 +459,8 @@ const Dashboard = () => {
         </div>
         
         {/* Cuarta columna: Barra amarilla en el hueco */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <div className="bg-yellow-200 rounded-lg h-full shadow-sm"></div>
+        <div className="md:col-span-4 mt-4 mb-4">
+          <div className="bg-yellow-200 rounded-lg h-16 shadow-sm"></div>
         </div>
 
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
