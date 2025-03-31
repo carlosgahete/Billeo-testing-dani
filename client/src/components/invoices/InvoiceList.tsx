@@ -230,15 +230,40 @@ const DeleteInvoiceDialog = ({
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
 
+  // Función para forzar la recarga del dashboard
+  const forceDashboardRefresh = () => {
+    // 1. Invalidamos la caché del dashboard con parámetros diferentes para evitar 304
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+    
+    // 2. Forzamos una refetch de todas las estadísticas con un timeout para dar tiempo al backend
+    setTimeout(() => {
+      queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+      console.log("⚡ Forzando recarga del dashboard después de eliminar factura:", new Date().toISOString());
+      
+      // 3. Hacemos fetch directo con fetch() para asegurar que se actualiza todo
+      fetch("/api/stats/dashboard?timestamp=" + Date.now());
+    }, 200);
+  };
+
   const handleDelete = async () => {
     setIsPending(true);
     try {
+      // Eliminar la factura
       await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
+      
+      // Notificar al usuario
       toast({
         title: "Factura eliminada",
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
       });
+      
+      // Invalidar todas las consultas relacionadas con facturas
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Invalidar y forzar recarga del dashboard
+      forceDashboardRefresh();
+      
+      // Cerrar el diálogo
       onConfirm();
     } catch (error: any) {
       toast({
@@ -527,7 +552,25 @@ const InvoiceList = () => {
                       // Modal de confirmación para eliminar
                       if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
                         apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
+                          // 1. Invalidar todas las consultas relacionadas con facturas
                           queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                          
+                          // 2. Invalidar explícitamente todas las estadísticas del dashboard
+                          queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                          
+                          // 3. Forzar una recarga completa del dashboard con diferentes parámetros
+                          // para evitar que se use la caché
+                          fetch(`/api/stats/dashboard?timestamp=${Date.now()}`);
+                          setTimeout(() => {
+                            // Hacer otra petición después de un tiempo para asegurar que
+                            // el servidor recargó todos los datos
+                            fetch(`/api/stats/dashboard?refresh=true&t=${Date.now()}`);
+                            console.log("⚡ Forzando recarga del dashboard tras eliminar factura:", Date.now());
+                            
+                            // Refrescar datos después de un corto tiempo
+                            queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+                          }, 300);
+                          
                           toast({
                             title: "Factura eliminada",
                             description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
