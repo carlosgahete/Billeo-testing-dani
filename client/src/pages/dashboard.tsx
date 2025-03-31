@@ -359,22 +359,39 @@ const Dashboard = () => {
                   <span className="text-xs text-neutral-600">Total neto:</span>
                   <span className="text-base font-semibold text-green-600">
                     {new Intl.NumberFormat('es-ES', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    }).format(totalNeto)} €
+                      style: 'currency',
+                      currency: 'EUR' 
+                    }).format(totalNeto)}
                   </span>
                 </div>
               </div>
               
-              <div className="space-y-1 text-xs">
+              <div className="space-y-1 text-xs mb-3">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Base + IVA (bruto):</span>
-                  <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
+                  <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(totalBruto)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IRPF retenido:</span>
-                  <span className="font-medium">- {irpfCorrect.toLocaleString('es-ES')} €</span>
+                  <span className="font-medium">- {new Intl.NumberFormat('es-ES', { 
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(irpfCorrect)}</span>
                 </div>
+              </div>
+              
+              <div className="mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-green-600 border-green-200 hover:bg-green-50 text-xs"
+                  onClick={() => navigate("/taxes")}
+                >
+                  Ver detalles
+                </Button>
               </div>
             </CardContent>
           </Card>
