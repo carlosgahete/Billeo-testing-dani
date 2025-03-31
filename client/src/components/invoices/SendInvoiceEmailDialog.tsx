@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { generateInvoicePDFAsBase64 } from "@/lib/pdf";
 import {
   Dialog,
@@ -14,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -62,15 +63,24 @@ interface Company {
   logo?: string;
 }
 
+interface InvoiceItem {
+  id: number;
+  invoiceId: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  taxRate: number;
+  subtotal: number;
+}
+
 export function SendInvoiceEmailDialog({ 
   invoice, 
   client, 
-  items,
   company
 }: { 
   invoice: Invoice; 
   client: Client;
-  items: any[];
   company: Company | null;
 }) {
   const { toast } = useToast();
@@ -78,6 +88,12 @@ export function SendInvoiceEmailDialog({
   const [recipientEmail, setRecipientEmail] = useState(client?.email || "");
   const [ccEmail, setCcEmail] = useState("");
   const [isPending, setIsPending] = useState(false);
+
+  // Cargar los items de la factura cuando se abre el diálogo
+  const { data: invoiceItems, isLoading: isLoadingItems } = useQuery<any[]>({
+    queryKey: [`/api/invoices/${invoice.id}/items`],
+    enabled: isOpen, // Solo cargar cuando el diálogo está abierto
+  });
 
   const handleSendEmail = async () => {
     if (!recipientEmail) {
@@ -93,7 +109,7 @@ export function SendInvoiceEmailDialog({
       setIsPending(true);
       
       // Generar PDF como base64
-      const pdfBase64 = await generateInvoicePDFAsBase64(invoice, client, items, company);
+      const pdfBase64 = await generateInvoicePDFAsBase64(invoice, client, invoiceItems || [], company);
       
       // Enviar el PDF por email
       const response = await apiRequest("POST", `/api/invoices/${invoice.id}/send-email`, {
@@ -199,9 +215,22 @@ export function SendInvoiceEmailDialog({
           <Button 
             type="submit" 
             onClick={handleSendEmail}
-            disabled={isPending}
+            disabled={isPending || isLoadingItems}
+            className="min-w-[120px]"
           >
-            {isPending ? "Enviando..." : "Enviar factura"}
+            {isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Enviando...
+              </>
+            ) : isLoadingItems ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Preparando...
+              </>
+            ) : (
+              "Enviar factura"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

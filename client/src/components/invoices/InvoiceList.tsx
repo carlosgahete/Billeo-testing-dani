@@ -75,6 +75,20 @@ interface Client {
   phone?: string;
 }
 
+interface Company {
+  id: number;
+  name: string;
+  taxId: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  email?: string;
+  phone?: string;
+  bankAccount?: string;
+  logo?: string;
+}
+
 const StatusBadge = ({ status }: { status: string }) => {
   // Estilos mejorados para los estados de factura
   const statusStyles = {
@@ -281,7 +295,7 @@ const InvoiceList = () => {
   });
   
   // Obtener información de la empresa para los PDFs y emails
-  const { data: companyData } = useQuery({
+  const { data: companyData } = useQuery<Company>({
     queryKey: ["/api/company"],
   });
 
@@ -592,8 +606,7 @@ const InvoiceList = () => {
                         <SendInvoiceEmailDialog 
                           invoice={invoice} 
                           client={clientsData?.find(c => c.id === invoice.clientId) as Client}
-                          items={[]}
-                          company={companyData?.[0]}
+                          company={companyData || null}
                         />
                       )}
                     </div>

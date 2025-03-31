@@ -49,6 +49,20 @@ interface Client {
   phone?: string;
 }
 
+interface Company {
+  id: number;
+  name: string;
+  taxId: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  email?: string;
+  phone?: string;
+  bankAccount?: string;
+  logo?: string;
+}
+
 interface InvoiceItem {
   id: number;
   invoiceId: number;
@@ -264,7 +278,7 @@ export async function generateInvoicePDFAsBase64(
   invoice: Invoice,
   client: Client,
   items: InvoiceItem[],
-  companyInfo: any = null
+  companyInfo: Company | null = null
 ): Promise<string> {
   // Create a new PDF
   const doc = new jsPDF();

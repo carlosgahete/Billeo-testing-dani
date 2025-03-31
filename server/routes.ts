@@ -1698,14 +1698,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Client not found" });
       }
       
-      const invoiceItems = await storage.getInvoiceItems(invoiceId);
+      // Obtener los ítems de la factura directamente desde la API
+      const invoiceResponse = await storage.getInvoice(invoiceId);
+      const invoiceItems = invoiceResponse?.items || [];
       
       // Obtener la información de la empresa
-      const companyResults = await storage.getCompany(req.session.userId);
-      if (!companyResults || companyResults.length === 0) {
+      const companyInfo = await storage.getCompany(req.session.userId);
+      if (!companyInfo) {
         return res.status(404).json({ message: "Company information not found" });
       }
-      const companyInfo = companyResults[0];
       
       // Generar PDF (esta parte será manejada por el cliente)
       // El cliente debe generar el PDF y enviarlo como base64 en el cuerpo de la petición
