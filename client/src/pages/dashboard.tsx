@@ -392,7 +392,7 @@ const Dashboard = () => {
               </div>
               
               {/* Espaciado invisible para igualar la altura */}
-              <div className="py-3.5"></div>
+              <div className="py-2"></div>
             </CardContent>
           </Card>
         </div>
