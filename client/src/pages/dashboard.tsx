@@ -238,28 +238,26 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3 flex flex-col h-full">
-              <div>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(financialData.income.totalWithoutVAT)} €
-                </p>
-                
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Total facturado:</span>
-                    <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">IVA repercutido:</span>
-                    <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
-                  </div>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-emerald-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(financialData.income.totalWithoutVAT)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Total facturado:</span>
+                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">IVA repercutido:</span>
+                  <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
-              <div className="mt-auto space-y-2">
+              <div className="mt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -268,7 +266,9 @@ const Dashboard = () => {
                 >
                   Ver facturas
                 </Button>
-                
+              </div>
+              
+              <div className="mt-auto pt-2 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -306,28 +306,26 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3 flex flex-col h-full">
-              <div>
-                <p className="text-2xl font-bold text-red-600">
-                  {new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(financialData.expenses.total)} €
-                </p>
-                
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Base imponible:</span>
-                    <span className="font-medium">{financialData.expenses.totalWithoutVAT.toLocaleString('es-ES')} €</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">IVA soportado:</span>
-                    <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
-                  </div>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-red-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(financialData.expenses.total)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Base imponible:</span>
+                  <span className="font-medium">{financialData.expenses.totalWithoutVAT.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">IVA soportado:</span>
+                  <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
-              <div className="mt-auto space-y-2">
+              <div className="mt-auto pt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -372,83 +370,81 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3 flex flex-col h-full">
-              <div>
-                <div className="mb-3">
-                  <div className="flex items-center space-x-2 justify-center bg-gray-50 rounded-md p-1">
-                    <Button 
-                      size="sm" 
-                      variant={docType === "invoices" ? "default" : "outline"} 
-                      onClick={() => setDocType("invoices")}
-                      className={docType === "invoices" ? "bg-blue-600" : ""}
-                    >
-                      <Receipt className="mr-1 h-4 w-4" />
-                      Facturas
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={docType === "quotes" ? "default" : "outline"} 
-                      onClick={() => setDocType("quotes")}
-                      className={docType === "quotes" ? "bg-blue-600" : ""}
-                    >
-                      <FileText className="mr-1 h-4 w-4" />
-                      Presupuestos
-                    </Button>
-                  </div>
-                </div>
-                
-                <p className="text-2xl font-bold text-blue-600">
-                  {new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(docType === "invoices" ? (stats?.pendingInvoices || 0) : (stats?.pendingQuotes || 0))} €
-                </p>
-                
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">
-                      {docType === "invoices" ? "Facturas por cobrar:" : "Presupuestos pendientes:"}
-                    </span>
-                    <span className="font-medium">
-                      {docType === "invoices" ? (stats?.pendingCount || 0) : (stats?.pendingQuotesCount || 0)}
-                    </span>
-                  </div>
-                  
-                  {docType === "invoices" && (
-                    <>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-neutral-500">Facturas emitidas:</span>
-                        <span className="font-medium">{stats?.issuedInvoices || 0}</span>
-                      </div>
-                    </>
-                  )}
-                  
-                  {docType === "quotes" && (
-                    <>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-neutral-500">Presupuestos aceptados:</span>
-                        <span className="font-medium text-green-600">{stats?.acceptedQuotes || 0}</span>
-                      </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-neutral-500">Presupuestos rechazados:</span>
-                        <span className="font-medium text-red-600">{stats?.rejectedQuotes || 0}</span>
-                      </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-neutral-500">Total presupuestos:</span>
-                        <span className="font-medium">{stats?.allQuotes || 0}</span>
-                      </div>
-                      <div className="flex justify-between mt-1 pt-1 border-t border-gray-100">
-                        <span className="text-neutral-500">Tasa de conversión:</span>
-                        <span className="font-medium">
-                          {stats?.allQuotes ? Math.round((stats?.acceptedQuotes / stats?.allQuotes) * 100) : 0}%
-                        </span>
-                      </div>
-                    </>
-                  )}
+            <CardContent className="p-3">
+              <div className="mb-3">
+                <div className="flex items-center space-x-2 justify-center bg-gray-50 rounded-md p-1">
+                  <Button 
+                    size="sm" 
+                    variant={docType === "invoices" ? "default" : "outline"} 
+                    onClick={() => setDocType("invoices")}
+                    className={docType === "invoices" ? "bg-blue-600" : ""}
+                  >
+                    <Receipt className="mr-1 h-4 w-4" />
+                    Facturas
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={docType === "quotes" ? "default" : "outline"} 
+                    onClick={() => setDocType("quotes")}
+                    className={docType === "quotes" ? "bg-blue-600" : ""}
+                  >
+                    <FileText className="mr-1 h-4 w-4" />
+                    Presupuestos
+                  </Button>
                 </div>
               </div>
               
-              <div className="mt-auto space-y-2">
+              <p className="text-2xl font-bold text-blue-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(docType === "invoices" ? (stats?.pendingInvoices || 0) : (stats?.pendingQuotes || 0))} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">
+                    {docType === "invoices" ? "Facturas por cobrar:" : "Presupuestos pendientes:"}
+                  </span>
+                  <span className="font-medium">
+                    {docType === "invoices" ? (stats?.pendingCount || 0) : (stats?.pendingQuotesCount || 0)}
+                  </span>
+                </div>
+                
+                {docType === "invoices" && (
+                  <>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-neutral-500">Facturas emitidas:</span>
+                      <span className="font-medium">{stats?.issuedInvoices || 0}</span>
+                    </div>
+                  </>
+                )}
+                
+                {docType === "quotes" && (
+                  <>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-neutral-500">Presupuestos aceptados:</span>
+                      <span className="font-medium text-green-600">{stats?.acceptedQuotes || 0}</span>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-neutral-500">Presupuestos rechazados:</span>
+                      <span className="font-medium text-red-600">{stats?.rejectedQuotes || 0}</span>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-neutral-500">Total presupuestos:</span>
+                      <span className="font-medium">{stats?.allQuotes || 0}</span>
+                    </div>
+                    <div className="flex justify-between mt-1 pt-1 border-t border-gray-100">
+                      <span className="text-neutral-500">Tasa de conversión:</span>
+                      <span className="font-medium">
+                        {stats?.allQuotes ? Math.round((stats?.acceptedQuotes / stats?.allQuotes) * 100) : 0}%
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div className="mt-auto pt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -485,34 +481,32 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3 flex flex-col h-full">
-              <div>
-                <p className="text-2xl font-bold text-green-600">
-                  {new Intl.NumberFormat('es-ES', { 
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-green-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(totalNeto)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Base + IVA (bruto):</span>
+                  <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(totalNeto)} €
-                </p>
-                
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Base + IVA (bruto):</span>
-                    <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    }).format(totalBruto)} €</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">IRPF retenido:</span>
-                    <span className="font-medium text-red-600">- {new Intl.NumberFormat('es-ES', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    }).format(irpfCalculado)} €</span>
-                  </div>
+                  }).format(totalBruto)} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">IRPF retenido:</span>
+                  <span className="font-medium text-red-600">- {new Intl.NumberFormat('es-ES', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  }).format(irpfCalculado)} €</span>
                 </div>
               </div>
               
-              <div className="mt-auto space-y-2">
+              <div className="mt-auto pt-8 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
