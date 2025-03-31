@@ -23,7 +23,7 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { sendInvoiceEmail } from "./services/emailService";
+import { sendInvoiceEmail, sendQuoteEmail } from "./services/emailService";
 import { 
   insertUserSchema, 
   insertCompanySchema,
@@ -1689,8 +1689,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convertir el PDF de base64 a Buffer
       const pdfBuffer = Buffer.from(pdfBase64, 'base64');
       
-      // Enviar correo electrónico
-      const emailResult = await sendInvoiceEmail(
+      // Enviar correo electrónico con la función específica para presupuestos
+      const emailResult = await sendQuoteEmail(
         emailToSend,
         client.name,
         quote.quoteNumber,

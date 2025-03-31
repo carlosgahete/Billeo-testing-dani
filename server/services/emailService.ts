@@ -222,3 +222,101 @@ ${companyName}
     return { success: false, error };
   }
 }
+
+// Función para enviar presupuestos por correo electrónico
+export async function sendQuoteEmail(
+  recipientEmail: string, 
+  recipientName: string, 
+  quoteNumber: string,
+  pdfBuffer: Buffer,
+  companyName: string = 'Billeo',
+  senderEmail: string = 'contacto@billeo.es', // Usar dirección de correo fija y válida
+  ccEmail?: string
+) {
+  console.log("Email del remitente:", senderEmail);
+  if (!transporter) {
+    await initEmailService();
+  }
+  
+  try {
+    // Convertir Buffer a Stream para el adjunto
+    const pdfStream = new Readable();
+    pdfStream.push(pdfBuffer);
+    pdfStream.push(null); // Señal de fin de stream
+    
+    const emailOptions: nodemailer.SendMailOptions = {
+      from: `"${companyName}" <${senderEmail}>`,
+      to: recipientEmail,
+      subject: `Presupuesto ${quoteNumber} - ${companyName}`,
+      text: `
+Estimado/a ${recipientName},
+
+Adjunto encontrará el presupuesto ${quoteNumber} en formato PDF.
+
+Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.
+
+Saludos cordiales,
+${companyName}
+      `,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #2563eb;">${companyName}</h1>
+          </div>
+          
+          <p>Estimado/a <strong>${recipientName}</strong>,</p>
+          
+          <p>Adjunto encontrará el presupuesto <strong>${quoteNumber}</strong> en formato PDF.</p>
+          
+          <p>Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.</p>
+          
+          <p>Saludos cordiales,<br>${companyName}</p>
+          
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8em; color: #888; text-align: center;">
+            <p>© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.</p>
+          </div>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `Presupuesto_${quoteNumber}.pdf`,
+          content: pdfStream,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
+    
+    // Añadir CC si se proporciona
+    if (ccEmail) {
+      emailOptions.cc = ccEmail;
+    }
+    
+    console.log(`Enviando email a: ${recipientEmail}`);
+    console.log(`Desde: ${emailOptions.from}`);
+    console.log(`Asunto: ${emailOptions.subject}`);
+    
+    try {
+      const info = await transporter.sendMail(emailOptions);
+      console.log('Respuesta del servidor SMTP:', info);
+      console.log('Email de presupuesto enviado: %s', info.messageId);
+      
+      // Para cuentas de prueba, mostrar URL de vista previa
+      if (process.env.NODE_ENV !== 'production' && info.messageId && nodemailer.getTestMessageUrl) {
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        console.log('URL de vista previa: %s', previewUrl);
+        return {
+          success: true,
+          previewUrl
+        };
+      }
+    } catch (emailError) {
+      console.error('Error específico al enviar el email:', emailError);
+      throw emailError;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error al enviar presupuesto por correo:', error);
+    return { success: false, error };
+  }
+}
