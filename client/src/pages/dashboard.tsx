@@ -10,7 +10,9 @@ import {
   TrendingDown,
   Info,
   Receipt,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  FileCheck
 } from "lucide-react";
 import { 
   Card, 
@@ -388,18 +390,19 @@ const Dashboard = () => {
         {/* Tercera columna: Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Facturas pendientes */}
-          <Card className="overflow-hidden border-warning-100 shadow-sm">
-            <CardHeader className="bg-warning-50 p-2">
+          <Card className="overflow-hidden border-none relative shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 opacity-10 z-0"></div>
+            <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-500 p-3 z-10">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-warning-700 flex items-center">
-                  <Receipt className="mr-2 h-5 w-5" />
+                <CardTitle className="text-lg text-white flex items-center font-semibold">
+                  <Receipt className="mr-2 h-5 w-5 text-white" strokeWidth={2.5} />
                   Facturas pendientes
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
+                        <Info className="h-4 w-4 text-white opacity-80" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -409,32 +412,36 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3">
-              <div className="mb-2">
+            <CardContent className="p-4 bg-white z-10">
+              <div className="mb-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Importe total:</span>
-                  <span className="text-lg font-bold text-warning-700">
+                  <span className="text-sm text-neutral-600 font-medium">Importe total:</span>
+                  <span className="text-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
                     {new Intl.NumberFormat('es-ES', { 
-                      style: 'currency',
-                      currency: 'EUR',
+                      style: 'currency', 
+                      currency: 'EUR' 
                     }).format(stats?.pendingInvoices || 0)}
                   </span>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center rounded-md bg-warning-50 p-2 mb-3">
-                <p className="text-xs text-warning-600">Facturas por cobrar:</p>
-                <p className="text-lg font-bold text-warning-700">{stats?.pendingCount || 0}</p>
+              <div className="flex justify-between items-center rounded-md border border-amber-200 bg-amber-50 p-3 mb-3">
+                <div className="flex items-center">
+                  <div className="bg-amber-500 p-1.5 rounded-md mr-2">
+                    <FileCheck className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="text-sm text-amber-700 font-medium">Pendientes de cobro</p>
+                </div>
+                <p className="text-xl font-bold text-amber-700">{stats?.pendingCount || 0}</p>
               </div>
               
-              <div className="mt-1 mb-1">
+              <div className="mt-3">
                 <Button 
-                  variant="outline" 
                   size="sm" 
-                  className="w-full text-warning-600 border-warning-300 hover:bg-warning-50"
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white border-none hover:from-amber-600 hover:to-orange-600 hover:shadow-md transition-all"
                   onClick={() => navigate("/invoices")}
                 >
-                  Ver facturas
+                  <Eye className="h-4 w-4 mr-1.5" /> Ver facturas
                 </Button>
               </div>
             </CardContent>
