@@ -332,18 +332,18 @@ const Dashboard = () => {
         
         {/* Cuarta columna: Tarjeta de Resultado Final (Movida a posición 3) */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden border-green-100 shadow-md flex-grow">
+          <Card className="overflow-hidden border-green-100 shadow-sm">
             <CardHeader className="bg-green-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-green-700 flex items-center">
-                  <PiggyBank className="mr-2 h-5 w-5" />
+                <CardTitle className="text-sm text-green-700 flex items-center font-medium">
+                  <PiggyBank className="mr-1.5 h-4 w-4" />
                   Resultado Final
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
+                        <Info className="h-3.5 w-3.5 text-neutral-500" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -353,33 +353,26 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3">
-              <p className="text-2xl font-bold text-green-600">
-                {new Intl.NumberFormat('es-ES', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                }).format(totalNeto)} €
-              </p>
+            <CardContent className="p-2">
+              <div className="mb-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-600">Total neto:</span>
+                  <span className="text-base font-semibold text-green-600">
+                    {new Intl.NumberFormat('es-ES', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    }).format(totalNeto)} €
+                  </span>
+                </div>
+              </div>
               
-              <div className="mt-2 space-y-1 text-sm">
+              <div className="space-y-1 text-xs">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Base + IVA (bruto):</span>
                   <span className="font-medium">{totalBruto.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-default">
-                        <span className="text-neutral-500">IRPF retenido en gastos:</span>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs bg-white shadow-lg z-50">
-                        <p className="w-[250px] text-xs">
-                          Suma de todas las retenciones de IRPF aplicadas en las facturas que has recibido 
-                          como gastos. Este IRPF ya pagado se puede descontar de tus impuestos anuales.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <span className="text-neutral-500">IRPF retenido:</span>
                   <span className="font-medium">- {irpfCorrect.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
