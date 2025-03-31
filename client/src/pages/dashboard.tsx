@@ -445,11 +445,6 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Barra amarilla */}
-        <div className="md:col-span-4 mt-4 mb-4">
-          <div className="bg-yellow-200 rounded-lg h-16 shadow-sm"></div>
-        </div>
-
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
         <div className="md:col-span-4 mt-6">
           {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
