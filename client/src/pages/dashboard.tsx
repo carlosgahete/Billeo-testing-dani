@@ -460,7 +460,7 @@ const Dashboard = () => {
             <CardHeader className="bg-purple-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-sm text-purple-700 flex items-center font-medium">
-                  <FileText className="mr-1.5 h-4 w-4" />
+                  <FileCheck className="mr-1.5 h-4 w-4" />
                   Presupuestos
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
