@@ -83,73 +83,63 @@ const Dashboard = () => {
   const incomeTotal = stats?.income || 0;
   const expensesTotal = stats?.expenses || 0;
   
-  // Cálculos de IVA (tasa estándar del 21% en España)
-  const ivaRate = 0.21;
-  const baseIncomeWithoutVAT = Number((incomeTotal / (1 + ivaRate)).toFixed(2));
-  const ivaRepercutido = Number((incomeTotal - baseIncomeWithoutVAT).toFixed(2));
+  // Obtener IVA e IRPF directamente de la API
+  // Estos valores vienen ya calculados desde el servidor con las reglas correctas
+  const ivaRepercutido = stats?.ivaRepercutido || 0; // IVA cobrado en facturas emitidas
+  const ivaSoportado = stats?.ivaSoportado || 0; // IVA pagado en gastos
+  const irpfRetenidoIngresos = stats?.irpfRetenidoIngresos || 0; // IRPF retenido en facturas emitidas
+  const irpfFromExpensesInvoices = stats?.totalWithholdings || 0; // IRPF retenido en facturas recibidas
   
-  const baseExpensesWithoutVAT = Number((expensesTotal / (1 + ivaRate)).toFixed(2));
-  const ivaSoportado = Number((expensesTotal - baseExpensesWithoutVAT).toFixed(2));
+  // Base imponible (beneficio antes de impuestos)
+  const baseImponible = stats?.baseImponible || Number((incomeTotal - expensesTotal).toFixed(2));
   
-  // Cálculo del resultado bruto
-  const balanceTotal = Number((incomeTotal - expensesTotal).toFixed(2));
+  // Cálculo del IVA neto a liquidar (repercutido - soportado)
   const ivaNeto = Number((ivaRepercutido - ivaSoportado).toFixed(2));
   
-  // Sistema de IRPF para autónomos en España
-  // 1. Retención del 15% aplicada en las facturas (ya se descuenta al cobrar)
-  const retentionRate = 0.15;
-  const withholdings = Number((incomeTotal * retentionRate).toFixed(2));
+  // Balance total (ingresos - gastos)
+  const balanceTotal = Number((incomeTotal - expensesTotal).toFixed(2));
   
-  // 2. IRPF total: 20% sobre el beneficio neto
-  const irpfRate = 0.20;
-  const irpfTotalEstimated = Number((balanceTotal * irpfRate).toFixed(2));
+  // Impuesto sobre la renta a pagar (información del backend)
+  const incomeTax = stats?.taxes?.incomeTax || 0;
   
-  // 3. IRPF a pagar = Total estimado - Retenciones ya aplicadas
-  const irpfToPay = Math.max(0, Number((irpfTotalEstimated - withholdings).toFixed(2)));
-  
-  // Beneficio neto final
-  // Fórmula para el cálculo de los beneficios para autónomos en España:
+  // Cálculos para mostrar el análisis financiero según especificaciones
   // 1. Base imponible + IVA = Total bruto (lo que facturamos)
-  // 2. Base imponible - IRPF = Total neto (lo que efectivamente cobramos)
-  // 3. El IVA se liquida con Hacienda (IVA repercutido - IVA soportado)
-  // 4. Para los ingresos: Base imponible + IVA - IRPF = Lo que efectivamente se cobra
-  // 5. Para los gastos: Base imponible + IVA = Lo que efectivamente se paga
-  // 6. Beneficio neto = Lo efectivamente cobrado - Lo efectivamente pagado
+  const baseIncomeSinIVA = incomeTotal - ivaRepercutido; // Ingresos sin IVA
+  const baseExpensesSinIVA = expensesTotal - ivaSoportado; // Gastos sin IVA
   
-  // Valores según las especificaciones del cliente:
-  // Base imponible total: 2877€
-  // IVA total (21%) = 2877 × 0.21 = 604.17€
-  // IRPF total (15%) = 2877 × 0.15 = 431.55€
-  // Total bruto (Base + IVA) = 2877 + 604.17 = 3481.17€
-  // Total neto (Bruto - IRPF) = 3481.17 - 431.55 = 3049.62€
+  // 2. Total bruto - IRPF = Total neto (lo que efectivamente cobramos)
+  const totalBruto = Number((baseIncomeSinIVA + ivaRepercutido).toFixed(2)); // Base + IVA
   
-  // Cálculos basados en los datos reales del API
-  const baseImponible = baseIncomeWithoutVAT; // Usar el valor real de ingresos sin IVA
-  const ivaCalculado = ivaRepercutido; // Usar el IVA real calculado
-  const irpfCalculado = Number((baseImponible * 0.15).toFixed(2)); // IRPF como 15% de la base imponible
+  // 3. IRPF calculado como porcentaje de la base imponible
+  const irpfRate = 0.15; // Tasa estándar de IRPF
+  const irpfCalculado = irpfRetenidoIngresos || Number((baseIncomeSinIVA * irpfRate).toFixed(2));
   
-  const totalBruto = Number((baseImponible + ivaCalculado).toFixed(2)); // Base + IVA
-  const totalNeto = Number((totalBruto - irpfCalculado).toFixed(2)); // Bruto - IRPF
-  const totalPagado = Number((baseExpensesWithoutVAT + ivaSoportado).toFixed(2)); // Lo que realmente pagas
-  const netProfit = Number((totalNeto - totalPagado).toFixed(2)); // Beneficio neto real
+  // 4. Total neto es lo que realmente se cobra tras aplicar retenciones
+  const totalNeto = Number((totalBruto - irpfCalculado).toFixed(2));
+  
+  // 5. Lo que realmente se paga por los gastos
+  const totalPagado = Number((expensesTotal).toFixed(2));
+  
+  // 6. Beneficio neto real
+  const netProfit = Number((totalNeto - totalPagado).toFixed(2));
   
   // Datos financieros organizados
   const financialData = {
     income: {
       total: incomeTotal,
       ivaRepercutido: ivaRepercutido,
-      totalWithoutVAT: baseIncomeWithoutVAT
+      totalWithoutVAT: baseIncomeSinIVA
     },
     expenses: {
       total: expensesTotal,
       ivaSoportado: ivaSoportado,
-      totalWithoutVAT: baseExpensesWithoutVAT
+      totalWithoutVAT: baseExpensesSinIVA
     },
     balance: {
       total: balanceTotal,
       ivaNeto: ivaNeto,
-      irpfEstimated: irpfTotalEstimated,
-      irpfToPay: irpfToPay,
+      irpfCalculado: irpfCalculado,
+      incomeTax: incomeTax,
       netProfit: netProfit
     }
   };

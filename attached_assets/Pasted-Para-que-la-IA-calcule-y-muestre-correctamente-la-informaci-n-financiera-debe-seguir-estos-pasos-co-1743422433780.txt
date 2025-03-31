@@ -1,0 +1,66 @@
+Para que la IA calcule y muestre correctamente la información financiera, debe seguir estos pasos con precisión:
+
+⸻
+
+1. Recoger los Datos Correctamente
+
+La IA debe obtener los datos de ingresos y gastos desde una fuente confiable, como una base de datos o un sistema de contabilidad. Debe asegurarse de registrar correctamente lo siguiente:
+
+Ingresos (Facturas Emitidas a Clientes)
+	•	Total de ingresos: La suma de todas las facturas emitidas.
+	•	IVA repercutido: La cantidad total de IVA cobrada a los clientes.
+	•	IRPF retenido: La suma de las retenciones de IRPF aplicadas en las facturas.
+
+Gastos (Facturas Recibidas de Proveedores)
+	•	Total de gastos: La suma de todos los gastos registrados.
+	•	IVA soportado: El IVA que se ha pagado en esas facturas.
+	•	IRPF retenido: La suma del IRPF aplicado en las facturas de gastos.
+
+⸻
+
+2. Realizar los Cálculos Correctos
+
+La IA debe calcular los valores clave con estas reglas:
+
+Cálculo del IVA a pagar o compensar
+
+Para saber cuánto IVA debe liquidar, la IA debe restar el IVA que ha pagado en gastos del IVA que ha cobrado en ingresos. Si el resultado es positivo, significa que debe pagar esa cantidad a Hacienda. Si es negativo, significa que puede compensarlo en el futuro.
+
+Cálculo del IRPF a pagar
+
+El IRPF que debe liquidar se obtiene restando el IRPF aplicado en ingresos del IRPF aplicado en gastos. Si el IRPF de ingresos es cero (como en la imagen), la cantidad total de IRPF de los gastos es lo que se tendrá que pagar.
+
+Cálculo del beneficio antes de impuestos
+
+Para saber el resultado final, la IA debe restar los gastos totales de los ingresos totales.
+
+⸻
+
+3. Presentar la Información de Forma Clara
+
+La IA debe mostrar estos datos de manera estructurada, asegurándose de que el usuario pueda ver claramente:
+	•	Los ingresos totales, el IVA repercutido y el IRPF retenido.
+	•	Los gastos totales, el IVA soportado y el IRPF retenido en los gastos.
+	•	El beneficio neto, el IVA a liquidar y el IRPF a liquidar.
+
+La información debe ser fácil de entender y estar bien organizada.
+
+⸻
+
+4. Evitar Errores
+
+Para que la IA funcione bien y no muestre datos incorrectos, debe hacer estas comprobaciones:
+
+✅ Asegurarse de que los números sean correctos y estén en el formato adecuado.
+✅ Revisar que el cálculo del IVA y el IRPF no tenga valores negativos inesperados.
+✅ Redondear las cifras a dos decimales para evitar problemas de precisión.
+
+⸻
+
+5. Adaptación a Diferentes Periodos de Tiempo
+
+La IA debe permitir al usuario elegir el periodo de tiempo que quiere analizar (por ejemplo, un mes, un trimestre o todo el año) y actualizar los cálculos en consecuencia.
+
+⸻
+
+Si la IA sigue este proceso, podrá generar un resumen financiero sin errores y fácil de interpretar. ¿Necesitas que aclare algún punto?

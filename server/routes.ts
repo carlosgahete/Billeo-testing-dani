@@ -2491,17 +2491,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate balance
       const balance = income - expenses;
       
-      // Calculate VAT (IVA) - 21% sobre los ingresos
+      // Cálculo de impuestos según las especificaciones proporcionadas
+      
+      // Análisis de las facturas para extraer IVA repercutido (cobrado) e IRPF retenido (en ingresos)
+      let ivaRepercutido = 0; // IVA que has cobrado en tus facturas a clientes
+      let irpfRetenidoIngresos = 0; // IRPF que te han retenido en las facturas que emites
+      
+      // Análisis detallado de las facturas pagadas para calcular IVA e IRPF
+      paidInvoices.forEach(invoice => {
+        const subtotal = Number(invoice.subtotal) || 0;
+        const total = Number(invoice.total) || 0;
+        
+        // Extraer impuestos adicionales si están disponibles
+        if (invoice.additionalTaxes) {
+          let additionalTaxes = [];
+          try {
+            if (typeof invoice.additionalTaxes === 'string') {
+              additionalTaxes = JSON.parse(invoice.additionalTaxes);
+            } else if (Array.isArray(invoice.additionalTaxes)) {
+              additionalTaxes = invoice.additionalTaxes;
+            }
+            
+            // Buscar IVA e IRPF en los impuestos adicionales
+            additionalTaxes.forEach(tax => {
+              if (tax.name === 'IVA' && tax.isPercentage) {
+                // Calcular IVA repercutido basado en el porcentaje declarado (base * porcentaje / 100)
+                const ivaAmount = subtotal * (tax.amount / 100);
+                ivaRepercutido += ivaAmount;
+              } else if (tax.name === 'IRPF' && tax.isPercentage && tax.amount < 0) {
+                // Calcular IRPF retenido basado en el porcentaje declarado (base * porcentaje / 100)
+                // El IRPF normalmente se declara como porcentaje negativo, por eso usamos Math.abs
+                const irpfAmount = subtotal * (Math.abs(tax.amount) / 100);
+                irpfRetenidoIngresos += irpfAmount;
+              }
+            });
+          } catch (e) {
+            console.log("  - Error al parsear impuestos en factura", invoice.invoiceNumber);
+          }
+        } else {
+          // Si no hay impuestos adicionales especificados, estimamos IVA basado en diferencia
+          // entre total y subtotal (esto es una aproximación y puede no ser precisa)
+          const difference = total - subtotal;
+          if (difference > 0) {
+            // Asumimos que la mayoría de la diferencia es IVA
+            ivaRepercutido += difference;
+          }
+        }
+      });
+      
+      // Redondear a 2 decimales para evitar errores de cálculo
+      ivaRepercutido = Math.round(ivaRepercutido * 100) / 100;
+      irpfRetenidoIngresos = Math.round(irpfRetenidoIngresos * 100) / 100;
+      
+      // Cálculo del IVA soportado (pagado) en gastos
+      // Como simplificación, asumimos que el 21% de los gastos es IVA
       const vatRate = 0.21;
-      const vatBalance = Math.round(income * vatRate);
+      const ivaSoportado = Math.round(expenses * vatRate * 100) / 100;
+      
+      // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
+      const vatBalance = Math.round((ivaRepercutido - ivaSoportado) * 100) / 100;
       
       // Cálculo del IRPF según el sistema español para autónomos
-      // 20% del beneficio neto (ingresos - gastos)
-      const irpfRate = 0.20;
-      const irpfTotalEstimated = Math.max(0, Math.round((income - expenses) * irpfRate));
+      // El IRPF se calcula como un % (15-20%) sobre el beneficio (ingresos - gastos)
+      const irpfRate = 0.15; // Usamos 15% como tipo estándar de IRPF
+      const baseImponible = income - expenses; // Base imponible = beneficio
+      const irpfTotalEstimated = Math.max(0, Math.round(baseImponible * irpfRate * 100) / 100);
       
-      // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas
-      const incomeTax = Math.max(0, irpfTotalEstimated - totalIrpfFromExpensesInvoices);
+      // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas en facturas
+      // Es decir: IRPF calculado - IRPF que ya te han retenido terceros
+      const incomeTax = Math.max(0, Math.round((irpfTotalEstimated - irpfRetenidoIngresos - totalIrpfFromExpensesInvoices) * 100) / 100);
+      
+      console.log("IVA repercutido calculado:", ivaRepercutido);
+      console.log("IVA soportado calculado:", ivaSoportado);
+      console.log("IVA a liquidar:", vatBalance);
+      console.log("IRPF retenido en ingresos:", irpfRetenidoIngresos);
+      console.log("IRPF estimado total:", irpfTotalEstimated);
+      console.log("IRPF a pagar:", incomeTax);
       
       // Calcular el total de facturas emitidas (todas)
       const issuedCount = allInvoices.length;
@@ -2590,7 +2655,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pendingQuotesCount,
         balance,
         result,
+        baseImponible, // Base imponible (ingresos - gastos)
         totalWithholdings: totalIrpfFromExpensesInvoices,
+        irpfRetenidoIngresos, // IRPF retenido en ingresos
+        ivaRepercutido, // IVA repercutido (cobrado)
+        ivaSoportado, // IVA soportado (pagado)
         period,
         year,
         taxes: {
