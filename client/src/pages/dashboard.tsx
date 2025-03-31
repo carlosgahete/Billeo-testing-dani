@@ -204,7 +204,7 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <DashboardMetrics userId={user?.user?.id || 0} />
       
-      <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-2">
         {/* Primera columna: Tarjeta de Ingresos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Tarjeta de Ingresos */}
@@ -330,177 +330,79 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Cuarta columna: Tarjeta de Resultado Final (Movida a posición 3) */}
+        {/* Tercera columna: Presupuestos */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden border-green-100 shadow-sm">
-            <CardHeader className="bg-green-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-sm text-green-700 flex items-center font-medium">
-                  <PiggyBank className="mr-1.5 h-4 w-4" />
-                  Resultado Final
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-3.5 w-3.5 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[200px] text-xs">El beneficio final después de descontar impuestos y retenciones</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pb-5">
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600">Total neto:</span>
-                  <span className="text-lg font-semibold text-green-600">
-                    {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(totalNeto)} €
-                  </span>
-                </div>
-              </div>
-              
-              <div className="mb-2 bg-green-50 p-3 rounded-md flex justify-between">
-                <span className="text-sm">Base + IVA (bruto):</span>
-                <span className="text-sm font-medium">
-                  {new Intl.NumberFormat('es-ES', { 
-                    style: 'decimal',
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  }).format(totalBruto)} €
-                </span>
-              </div>
-              
-              <div className="mb-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">IRPF retenido:</span>
-                  <span className="text-sm font-medium text-red-600">
-                    - {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(irpfCorrect)} €
-                  </span>
-                </div>
-              </div>
-              
-              {/* Espaciado invisible para igualar la altura */}
-              <div className="py-2"></div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Tercera columna: Facturas Pendientes */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          {/* Facturas pendientes */}
-          <Card className="overflow-hidden border-blue-100 shadow-sm mb-4">
-            <CardHeader className="bg-blue-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-sm text-blue-700 flex items-center font-medium">
-                  <Receipt className="mr-1.5 h-4 w-4" />
-                  Facturas pendientes
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-3.5 w-3.5 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Facturas emitidas pendientes de cobro.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pb-5">
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600">Importe total:</span>
-                  <span className="text-lg font-semibold text-blue-600">
-                    {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(stats?.pendingInvoices || 0)} €
-                  </span>
-                </div>
-              </div>
-              
-              <div className="mb-2 bg-blue-50 p-3 rounded-md flex justify-between">
-                <span className="text-sm">Facturas por cobrar:</span>
-                <span className="text-sm font-medium">
-                  {stats?.pendingCount || 0}
-                </span>
-              </div>
-              
-              <div className="mt-5">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
-                  onClick={() => navigate("/invoices")}
-                >
-                  Ver facturas
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Presupuestos Card */}
-          <Card className="overflow-hidden border-purple-100 shadow-sm">
+          {/* Tarjeta de Presupuestos */}
+          <Card className="overflow-hidden border-purple-100 shadow-sm h-full">
             <CardHeader className="bg-purple-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-sm text-purple-700 flex items-center font-medium">
-                  <FileCheck className="mr-1.5 h-4 w-4" />
+                <CardTitle className="text-lg text-purple-700 flex items-center">
+                  <FileCheck className="mr-2 h-5 w-5" />
                   Presupuestos
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-3.5 w-3.5 text-neutral-500" />
+                        <Info className="h-4 w-4 text-neutral-500" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Resumen de presupuestos emitidos.</p>
+                      <p className="w-[250px] text-xs">Resumen de todos los presupuestos emitidos.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3">
-              <div className="flex flex-wrap gap-2">
-                <div className="flex-1 bg-purple-50 rounded-md p-2 text-center">
-                  <div className="text-xs text-purple-700 mb-1">Aceptados</div>
-                  <div className="text-lg font-semibold text-purple-800">{stats?.acceptedQuotes || 3}</div>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="col-span-2 bg-purple-50 rounded-md p-3 text-center">
+                  <div className="text-sm text-purple-700 mb-1">Aceptados</div>
+                  <div className="text-2xl font-semibold text-purple-800">{stats?.acceptedQuotes || 3}</div>
                 </div>
-                <div className="flex-1 bg-gray-50 rounded-md p-2 text-center">
-                  <div className="text-xs text-gray-600 mb-1">Pendientes</div>
-                  <div className="text-lg font-semibold text-gray-700">{stats?.pendingQuotes || 0}</div>
+                
+                <div className="bg-gray-50 rounded-md p-3 text-center">
+                  <div className="text-sm text-gray-600 mb-1">Pendientes</div>
+                  <div className="text-xl font-semibold text-gray-700">{stats?.pendingQuotes || 0}</div>
                 </div>
-                <div className="flex-1 bg-red-50 rounded-md p-2 text-center">
-                  <div className="text-xs text-red-700 mb-1">Rechazados</div>
-                  <div className="text-lg font-semibold text-red-700">{stats?.rejectedQuotes || 1}</div>
+                
+                <div className="bg-red-50 rounded-md p-3 text-center">
+                  <div className="text-sm text-red-700 mb-1">Rechazados</div>
+                  <div className="text-xl font-semibold text-red-700">{stats?.rejectedQuotes || 1}</div>
                 </div>
               </div>
-              <div className="mt-3">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full text-purple-600 border-purple-200 hover:bg-purple-50 text-xs"
-                  onClick={() => navigate("/quotes")}
-                >
-                  Ver presupuestos
-                </Button>
+              
+              <div className="space-y-3 mt-6">
+                <div>
+                  <Button 
+                    variant="outline"
+                    size="sm" 
+                    className="w-full text-purple-600 border-purple-200 hover:bg-purple-50"
+                    onClick={() => navigate("/quotes")}
+                  >
+                    Ver presupuestos
+                  </Button>
+                </div>
+                
+                <div>
+                  <Button 
+                    variant="outline"
+                    size="sm" 
+                    className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
+                    onClick={() => navigate("/quotes/create")}
+                  >
+                    Crear presupuesto
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <div className="flex items-center gap-2 py-2 px-3 bg-purple-50/50 rounded-md">
+                  <AlertTriangle className="h-4 w-4 text-purple-500" />
+                  <p className="text-xs text-gray-600">
+                    Crear presupuestos profesionales aumenta las probabilidades de conseguir clientes.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -509,7 +411,7 @@ const Dashboard = () => {
 
         
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
-        <div className="md:col-span-4 mt-0">
+        <div className="md:col-span-3 mt-0">
           {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
             <TaxSummary />
