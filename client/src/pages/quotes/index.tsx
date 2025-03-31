@@ -153,12 +153,12 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      <div className="bg-blue-600 text-white rounded-lg p-6 mb-6">
+      <div className="bg-blue-600 text-white rounded-lg p-6 mb-6 mx-4 md:mx-0">
         <div className="flex items-center space-x-2 mb-2">
-          <FileText className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Gestión de Presupuestos</h1>
+          <FileText className="h-5 w-5 flex-shrink-0" />
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Gestión de Presupuestos</h1>
         </div>
-        <p className="text-blue-100 mb-4">
+        <p className="text-blue-100 mb-4 text-sm sm:text-base">
           Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
         </p>
         <div className="flex gap-2">
@@ -178,7 +178,7 @@ export default function QuotesPage() {
       </div>
 
       {/* Dashboard de presupuestos */}
-      <div className="mb-6 mt-6">
+      <div className="mb-6 mt-6 mx-4 md:mx-0">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           {/* Tarjeta 1: Resumen de presupuestos */}
           <Card className="overflow-hidden border-none shadow-sm flex flex-col">
@@ -443,7 +443,7 @@ export default function QuotesPage() {
       </div>
 
       {/* Lista de presupuestos */}
-      <div className="mt-2">
+      <div className="mt-2 mx-4 md:mx-0">
         <QuoteList userId={user.id} showActions={true} />
       </div>
     </Layout>
