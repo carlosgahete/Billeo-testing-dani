@@ -189,9 +189,9 @@ const ComparisonCharts = () => {
   
   return (
     <Card className="h-full">
-      <CardHeader className="bg-indigo-50 pb-2">
+      <CardHeader className="bg-purple-50 pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg text-indigo-700 flex items-center">
+          <CardTitle className="text-lg text-purple-700 flex items-center">
             <BarChart2 className="mr-2 h-5 w-5" />
             Comparativa Financiera
           </CardTitle>
@@ -262,7 +262,7 @@ const ComparisonCharts = () => {
                 <Legend />
                 <Bar dataKey="ingresos" name="Ingresos" fill="#4ade80" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="gastos" name="Gastos" fill="#f87171" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="resultado" name="Resultado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="resultado" name="Resultado" fill="#9333ea" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -280,7 +280,7 @@ const ComparisonCharts = () => {
                 <Legend />
                 <Area type="monotone" dataKey="ingresos" name="Ingresos" fill="#4ade80" fillOpacity={0.3} stroke="#4ade80" />
                 <Area type="monotone" dataKey="gastos" name="Gastos" fill="#f87171" fillOpacity={0.3} stroke="#f87171" />
-                <Area type="monotone" dataKey="resultado" name="Resultado" fill="#60a5fa" fillOpacity={0.3} stroke="#60a5fa" />
+                <Area type="monotone" dataKey="resultado" name="Resultado" fill="#9333ea" fillOpacity={0.3} stroke="#9333ea" />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -289,7 +289,7 @@ const ComparisonCharts = () => {
         {/* Resumen de tendencia */}
         <div className="mt-3 bg-slate-50 rounded-md p-3 border border-slate-200">
           <h3 className="text-sm font-medium flex items-center text-slate-700">
-            <TrendingUp className="h-4 w-4 mr-1 text-blue-500" />
+            <TrendingUp className="h-4 w-4 mr-1 text-purple-500" />
             Análisis de tendencia
           </h3>
           <p className="text-xs text-slate-600 mt-1">
