@@ -1,8 +1,9 @@
 import nodemailer from 'nodemailer';
+import { Readable } from 'stream';
 
 // Configuración del transportador de correo
 // Para pruebas, podemos usar una cuenta de prueba de Ethereal
-// En producción, aquí configurarías tu servicio SMTP real (Gmail, SendGrid, etc.)
+// En producción, aquí configurarías tu servicio SMTP real (Hostinger, Gmail, SendGrid, etc.)
 let transporter: nodemailer.Transporter;
 
 // Inicializa el transportador de correo
@@ -24,8 +25,9 @@ export async function initEmailService() {
       console.log(`Cuenta de prueba creada: ${testAccount.user}`);
     } else {
       // Configuración para producción usando variables de entorno
+      // Configurado para Hostinger por defecto
       transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
+        host: process.env.SMTP_HOST || 'smtp.hostinger.com',
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true',
         auth: {
@@ -99,6 +101,92 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
     return { success: true };
   } catch (error) {
     console.error('Error al enviar correo de recuperación:', error);
+    return { success: false, error };
+  }
+}
+
+// Función para enviar facturas por correo electrónico
+export async function sendInvoiceEmail(
+  recipientEmail: string, 
+  recipientName: string, 
+  invoiceNumber: string,
+  pdfBuffer: Buffer,
+  companyName: string = 'Billeo',
+  senderEmail: string = process.env.SMTP_USER || 'noreply@billeo.app',
+  ccEmail?: string
+) {
+  if (!transporter) {
+    await initEmailService();
+  }
+  
+  try {
+    // Convertir Buffer a Stream para el adjunto
+    const pdfStream = new Readable();
+    pdfStream.push(pdfBuffer);
+    pdfStream.push(null); // Señal de fin de stream
+    
+    const emailOptions: nodemailer.SendMailOptions = {
+      from: `"${companyName}" <${senderEmail}>`,
+      to: recipientEmail,
+      subject: `Factura ${invoiceNumber} - ${companyName}`,
+      text: `
+Estimado/a ${recipientName},
+
+Adjunto encontrará la factura ${invoiceNumber} en formato PDF.
+
+Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.
+
+Saludos cordiales,
+${companyName}
+      `,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #2563eb;">${companyName}</h1>
+          </div>
+          
+          <p>Estimado/a <strong>${recipientName}</strong>,</p>
+          
+          <p>Adjunto encontrará la factura <strong>${invoiceNumber}</strong> en formato PDF.</p>
+          
+          <p>Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.</p>
+          
+          <p>Saludos cordiales,<br>${companyName}</p>
+          
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8em; color: #888; text-align: center;">
+            <p>© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.</p>
+          </div>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `Factura_${invoiceNumber}.pdf`,
+          content: pdfStream,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
+    
+    // Añadir CC si se proporciona
+    if (ccEmail) {
+      emailOptions.cc = ccEmail;
+    }
+    
+    const info = await transporter.sendMail(emailOptions);
+    
+    // Para cuentas de prueba, mostrar URL de vista previa
+    if (process.env.NODE_ENV !== 'production' && info.messageId) {
+      console.log('Email de factura enviado: %s', info.messageId);
+      console.log('URL de vista previa: %s', nodemailer.getTestMessageUrl(info));
+      return {
+        success: true,
+        previewUrl: nodemailer.getTestMessageUrl(info)
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error al enviar factura por correo:', error);
     return { success: false, error };
   }
 }

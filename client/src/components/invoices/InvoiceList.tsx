@@ -15,7 +15,8 @@ import {
   CheckCircle, 
   DollarSign, 
   Check, 
-  MoreVertical 
+  MoreVertical,
+  Mail
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -44,6 +45,9 @@ import {
 } from "@/components/ui/tooltip";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { generateInvoicePDF } from "@/lib/pdf";
+import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
+
+
 
 interface Invoice {
   id: number;
@@ -275,6 +279,11 @@ const InvoiceList = () => {
   const { data: clientsData = [], isLoading: clientsLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
   });
+  
+  // Obtener información de la empresa para los PDFs y emails
+  const { data: companyData } = useQuery({
+    queryKey: ["/api/company"],
+  });
 
   const handleExportInvoicePDF = async (invoice: Invoice) => {
     try {
@@ -481,6 +490,17 @@ const InvoiceList = () => {
                   <DropdownMenuItem onClick={() => handleExportInvoicePDF(invoice)}>
                     <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      // Abrir el modal de enviar email (buscar y hacer clic en el diálogo)
+                      const emailButton = document.querySelector(`[data-invoice-id="${invoice.id}"] button[aria-label="Enviar por email"]`);
+                      if (emailButton) {
+                        (emailButton as HTMLButtonElement).click();
+                      }
+                    }}
+                  >
+                    <Mail className="h-4 w-4 mr-2" /> Enviar por email
+                  </DropdownMenuItem>
                   {invoice.status !== 'paid' && (
                     <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice)}>
                       <Check className="h-4 w-4 mr-2" /> Marcar como pagada
@@ -508,7 +528,7 @@ const InvoiceList = () => {
             </div>
             
             {/* Versión desktop: Botones individuales */}
-            <div className="hidden md:flex justify-end space-x-1">
+            <div className="hidden md:flex justify-end space-x-1" data-invoice-id={invoice.id}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -562,6 +582,27 @@ const InvoiceList = () => {
 
               {/* Botón para marcar factura como pagada */}
               <MarkAsPaidButton invoice={invoice} />
+              
+              {/* Botón para enviar factura por email */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      {clientsData?.find(c => c.id === invoice.clientId) && (
+                        <SendInvoiceEmailDialog 
+                          invoice={invoice} 
+                          client={clientsData?.find(c => c.id === invoice.clientId) as Client}
+                          items={[]}
+                          company={companyData?.[0]}
+                        />
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Enviar por email</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               <TooltipProvider>
                 <Tooltip>

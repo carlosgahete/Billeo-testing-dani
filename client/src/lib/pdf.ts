@@ -109,6 +109,7 @@ function getStatusColor(status: string): number[] {
   }
 }
 
+// Función para generar un PDF y descargarlo
 export async function generateInvoicePDF(
   invoice: Invoice,
   client: Client,
@@ -256,6 +257,162 @@ export async function generateInvoicePDF(
   
   // Save the PDF
   doc.save(`Factura_${invoice.invoiceNumber}.pdf`);
+}
+
+// Función para generar un PDF como base64 para enviar por email
+export async function generateInvoicePDFAsBase64(
+  invoice: Invoice,
+  client: Client,
+  items: InvoiceItem[],
+  companyInfo: any = null
+): Promise<string> {
+  // Create a new PDF
+  const doc = new jsPDF();
+  
+  // Set some basic styles
+  doc.setFont("helvetica");
+  doc.setFontSize(10);
+  
+  // Add company logo and info (placeholder for real data)
+  doc.setFontSize(20);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text(companyInfo?.name || "Billeo", 14, 22);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(companyInfo?.taxId || "NIF: B12345678", 14, 30);
+  doc.text(companyInfo?.address || "Dirección", 14, 35);
+  doc.text(`${companyInfo?.postalCode || ""} ${companyInfo?.city || ""}, ${companyInfo?.country || "España"}`, 14, 40);
+  if (companyInfo?.email) doc.text(`Email: ${companyInfo.email}`, 14, 45);
+  if (companyInfo?.phone) doc.text(`Teléfono: ${companyInfo.phone}`, 14, 50);
+  
+  // Add invoice title and number
+  doc.setFontSize(16);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text(`FACTURA Nº: ${invoice.invoiceNumber}`, 140, 22, { align: "right" });
+  
+  // Add invoice details
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(`Fecha de emisión: ${formatDate(invoice.issueDate)}`, 140, 30, { align: "right" });
+  doc.text(`Fecha de vencimiento: ${formatDate(invoice.dueDate)}`, 140, 35, { align: "right" });
+  
+  // Add status
+  const statusText = getStatusText(invoice.status);
+  const statusColor = getStatusColor(invoice.status);
+  doc.setFontSize(12);
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.text(`Estado: ${statusText}`, 140, 45, { align: "right" });
+  
+  // Add client information
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text("CLIENTE", 14, 65);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(client.name, 14, 73);
+  doc.text(`NIF/CIF: ${client.taxId}`, 14, 78);
+  doc.text(client.address, 14, 83);
+  doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 14, 88);
+  if (client.email) doc.text(`Email: ${client.email}`, 14, 93);
+  if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 98);
+  
+  // Add invoice items
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text("DETALLES DE LA FACTURA", 14, 115);
+  
+  // Create the table with items
+  autoTable(doc, {
+    startY: 120,
+    head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
+    body: items.map(item => [
+      item.description,
+      Number(item.quantity).toFixed(2),
+      `${Number(item.unitPrice).toFixed(2)} €`,
+      `${Number(item.taxRate).toFixed(2)}%`,
+      `${Number(item.subtotal).toFixed(2)} €`
+    ]),
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255] },
+    columnStyles: {
+      0: { cellWidth: 80 },
+      1: { halign: 'right' },
+      2: { halign: 'right' },
+      3: { halign: 'right' },
+      4: { halign: 'right' }
+    },
+    margin: { left: 14, right: 14 }
+  });
+  
+  // Add totals
+  // @ts-ignore
+  const finalY = doc.lastAutoTable.finalY + 10;
+  let yOffset = 0;
+  
+  doc.setFontSize(10);
+  doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+  yOffset += 6;
+  
+  doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+  yOffset += 6;
+  
+  // Add additional taxes if they exist
+  if (invoice.additionalTaxes && invoice.additionalTaxes.length > 0) {
+    invoice.additionalTaxes.forEach(tax => {
+      let taxText = tax.name;
+      let taxAmount = tax.amount;
+      
+      // Format differently based on whether it's percentage or fixed
+      if (tax.isPercentage) {
+        taxText += ` (${taxAmount}%)`;
+        taxAmount = (Number(invoice.subtotal) * taxAmount) / 100;
+      }
+      
+      doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
+      doc.text(`${taxAmount.toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+      yOffset += 6;
+    });
+  }
+  
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("TOTAL:", 140, finalY + yOffset + 4, { align: "right" });
+  doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset + 4, { align: "right" });
+  
+  // Add payment details and notes
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("FORMA DE PAGO: Transferencia bancaria", 14, finalY + 30);
+  if (companyInfo?.bankAccount) {
+    doc.text(`IBAN: ${companyInfo.bankAccount}`, 14, finalY + 36);
+  } else {
+    doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, finalY + 36);
+  }
+  
+  if (invoice.notes) {
+    doc.text("NOTAS:", 14, finalY + 46);
+    doc.text(invoice.notes, 14, finalY + 52);
+  }
+  
+  // Add footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(
+      `${companyInfo?.name || "Billeo"} - Sistema de gestión financiera`,
+      105, 285, { align: "center" }
+    );
+    doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
+  }
+  
+  // Return the PDF as base64 string
+  return doc.output('datauristring').split(',')[1];
 }
 
 export async function generateQuotePDF(

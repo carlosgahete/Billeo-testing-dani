@@ -23,6 +23,7 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { sendInvoiceEmail } from "./services/emailService";
 import { 
   insertUserSchema, 
   insertCompanySchema,
@@ -1668,6 +1669,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ message: "Invoice deleted successfully" });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Endpoint para enviar facturas por correo electrónico
+  app.post("/api/invoices/:id/send-email", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const invoiceId = parseInt(req.params.id);
+      
+      // Obtener información de la factura
+      const invoice = await storage.getInvoice(invoiceId);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      // Verificar que la factura pertenece al usuario autenticado
+      if (invoice.userId !== req.session.userId) {
+        return res.status(403).json({ message: "You don't have permission to access this invoice" });
+      }
+      
+      // Obtener cliente y elementos de la factura
+      const client = await storage.getClient(invoice.clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      const invoiceItems = await storage.getInvoiceItems(invoiceId);
+      
+      // Obtener la información de la empresa
+      const companyResults = await storage.getCompany(req.session.userId);
+      if (!companyResults || companyResults.length === 0) {
+        return res.status(404).json({ message: "Company information not found" });
+      }
+      const companyInfo = companyResults[0];
+      
+      // Generar PDF (esta parte será manejada por el cliente)
+      // El cliente debe generar el PDF y enviarlo como base64 en el cuerpo de la petición
+      const { pdfBase64, recipientEmail, ccEmail } = req.body;
+      
+      if (!pdfBase64) {
+        return res.status(400).json({ message: "PDF data is required" });
+      }
+      
+      // Si no se proporcionó un correo específico, usar el del cliente
+      const emailToSend = recipientEmail || client.email;
+      
+      if (!emailToSend) {
+        return res.status(400).json({ message: "Client email is not available. Please provide a recipient email." });
+      }
+      
+      // Convertir el PDF de base64 a Buffer
+      const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+      
+      // Enviar correo electrónico
+      const emailResult = await sendInvoiceEmail(
+        emailToSend,
+        client.name,
+        invoice.invoiceNumber,
+        pdfBuffer,
+        companyInfo.name,
+        companyInfo.email,
+        ccEmail
+      );
+      
+      if (!emailResult.success) {
+        return res.status(500).json({ 
+          message: "Error sending email", 
+          error: emailResult.error 
+        });
+      }
+      
+      // Actualizar el estado de envío de la factura en la base de datos (opcional)
+      // Aquí podrías añadir un campo lastEmailSent a la factura y actualizarlo
+      
+      return res.status(200).json({ 
+        message: "Invoice sent successfully", 
+        previewUrl: emailResult.previewUrl || null
+      });
+    } catch (error) {
+      console.error("Error sending invoice email:", error);
+      return res.status(500).json({ message: "Error sending invoice email" });
     }
   });
 
