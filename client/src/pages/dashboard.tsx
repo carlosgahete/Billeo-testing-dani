@@ -330,7 +330,60 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Tarjeta de Resultado Final */}
+        {/* Tercera columna: Facturas Pendientes */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+          {/* Facturas pendientes */}
+          <Card className="overflow-hidden flex-grow">
+            <CardHeader className="bg-blue-50 p-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg text-blue-700 flex items-center">
+                  <Receipt className="mr-2 h-5 w-5" />
+                  Facturas pendientes
+                </CardTitle>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="cursor-pointer">
+                        <Info className="h-4 w-4 text-neutral-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                      <p className="w-[250px] text-xs">Facturas emitidas pendientes de cobro.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-blue-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(stats?.pendingInvoices || 0)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Facturas por cobrar:</span>
+                  <span className="font-medium">{stats?.pendingCount || 0}</span>
+                </div>
+              </div>
+              
+              <div className="mt-8 mb-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
+                  onClick={() => navigate("/invoices")}
+                >
+                  Ver facturas
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Cuarta columna: Tarjeta de Resultado Final */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-green-50 p-2">
@@ -386,59 +439,6 @@ const Dashboard = () => {
                   onClick={() => navigate("/reports")}
                 >
                   Ver informes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Cuarta columna: Facturas Pendientes */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          {/* Facturas pendientes */}
-          <Card className="overflow-hidden flex-grow">
-            <CardHeader className="bg-blue-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-blue-700 flex items-center">
-                  <Receipt className="mr-2 h-5 w-5" />
-                  Facturas pendientes
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Facturas emitidas pendientes de cobro.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3">
-              <p className="text-2xl font-bold text-blue-600">
-                {new Intl.NumberFormat('es-ES', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                }).format(stats?.pendingInvoices || 0)} €
-              </p>
-              
-              <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Facturas por cobrar:</span>
-                  <span className="font-medium">{stats?.pendingCount || 0}</span>
-                </div>
-              </div>
-              
-              <div className="mt-8 mb-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
-                  onClick={() => navigate("/invoices")}
-                >
-                  Ver facturas
                 </Button>
               </div>
             </CardContent>
