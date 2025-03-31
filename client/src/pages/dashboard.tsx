@@ -353,33 +353,41 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3">
+            <CardContent className="p-4 pb-5">
               <div className="mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600 font-medium">Total neto:</span>
-                  <span className="text-xl font-bold text-green-600">
+                  <span className="text-sm text-neutral-600">Total neto:</span>
+                  <span className="text-lg font-semibold text-green-600">
                     {new Intl.NumberFormat('es-ES', { 
-                      style: 'currency',
-                      currency: 'EUR' 
-                    }).format(totalNeto)}
+                      style: 'decimal',
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    }).format(totalNeto)} €
                   </span>
                 </div>
               </div>
               
-              <div className="space-y-4 text-sm mt-5 mb-4">
-                <div className="flex justify-between items-center bg-green-50 p-2.5 rounded-md">
-                  <span className="text-green-700 font-medium">Base + IVA (bruto):</span>
-                  <span className="font-semibold text-green-800">{new Intl.NumberFormat('es-ES', { 
-                    style: 'currency',
-                    currency: 'EUR'
-                  }).format(totalBruto)}</span>
-                </div>
+              <div className="mb-2 bg-green-50 p-3 rounded-md flex justify-between">
+                <span className="text-sm">Base + IVA (bruto):</span>
+                <span className="text-sm font-medium">
+                  {new Intl.NumberFormat('es-ES', { 
+                    style: 'decimal',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }).format(totalBruto)} €
+                </span>
+              </div>
+              
+              <div className="mb-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-600 font-medium">IRPF retenido:</span>
-                  <span className="font-semibold text-red-600">- {new Intl.NumberFormat('es-ES', { 
-                    style: 'currency',
-                    currency: 'EUR'
-                  }).format(irpfCorrect)}</span>
+                  <span className="text-sm">IRPF retenido:</span>
+                  <span className="text-sm font-medium text-red-600">
+                    - {new Intl.NumberFormat('es-ES', { 
+                      style: 'decimal',
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    }).format(irpfCorrect)} €
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -410,27 +418,28 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-3 bg-white">
+            <CardContent className="p-4 pb-5">
               <div className="mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600 font-medium">Importe total:</span>
-                  <span className="text-xl font-bold text-blue-600">
+                  <span className="text-sm text-neutral-600">Importe total:</span>
+                  <span className="text-lg font-semibold text-blue-600">
                     {new Intl.NumberFormat('es-ES', { 
-                      style: 'currency', 
-                      currency: 'EUR' 
-                    }).format(stats?.pendingInvoices || 0)}
+                      style: 'decimal',
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    }).format(stats?.pendingInvoices || 0)} €
                   </span>
                 </div>
               </div>
               
-              <div className="space-y-2 text-sm mb-4">
-                <div className="flex justify-between items-center bg-blue-50 p-2.5 rounded-md">
-                  <span className="text-blue-700 font-medium">Facturas por cobrar:</span>
-                  <span className="text-xl font-bold text-blue-700">{stats?.pendingCount || 0}</span>
-                </div>
+              <div className="mb-2 bg-blue-50 p-3 rounded-md flex justify-between">
+                <span className="text-sm">Facturas por cobrar:</span>
+                <span className="text-sm font-medium">
+                  {stats?.pendingCount || 0}
+                </span>
               </div>
               
-              <div className="mt-2">
+              <div className="mt-5">
                 <Button 
                   variant="outline"
                   size="sm" 
