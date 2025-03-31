@@ -400,7 +400,7 @@ const Dashboard = () => {
         {/* Tercera columna: Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Facturas pendientes */}
-          <Card className="overflow-hidden border-blue-100 shadow-sm">
+          <Card className="overflow-hidden border-blue-100 shadow-sm mb-4">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-sm text-blue-700 flex items-center font-medium">
@@ -450,6 +450,56 @@ const Dashboard = () => {
                   onClick={() => navigate("/invoices")}
                 >
                   Ver facturas
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Presupuestos Card */}
+          <Card className="overflow-hidden border-purple-100 shadow-sm">
+            <CardHeader className="bg-purple-50 p-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-sm text-purple-700 flex items-center font-medium">
+                  <FileText className="mr-1.5 h-4 w-4" />
+                  Presupuestos
+                </CardTitle>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="cursor-pointer">
+                        <Info className="h-3.5 w-3.5 text-neutral-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                      <p className="w-[250px] text-xs">Resumen de presupuestos emitidos.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3">
+              <div className="flex flex-wrap gap-2">
+                <div className="flex-1 bg-purple-50 rounded-md p-2 text-center">
+                  <div className="text-xs text-purple-700 mb-1">Aceptados</div>
+                  <div className="text-lg font-semibold text-purple-800">{stats?.acceptedQuotes || 3}</div>
+                </div>
+                <div className="flex-1 bg-gray-50 rounded-md p-2 text-center">
+                  <div className="text-xs text-gray-600 mb-1">Pendientes</div>
+                  <div className="text-lg font-semibold text-gray-700">{stats?.pendingQuotes || 0}</div>
+                </div>
+                <div className="flex-1 bg-red-50 rounded-md p-2 text-center">
+                  <div className="text-xs text-red-700 mb-1">Rechazados</div>
+                  <div className="text-lg font-semibold text-red-700">{stats?.rejectedQuotes || 1}</div>
+                </div>
+              </div>
+              <div className="mt-3">
+                <Button 
+                  variant="outline"
+                  size="sm" 
+                  className="w-full text-purple-600 border-purple-200 hover:bg-purple-50 text-xs"
+                  onClick={() => navigate("/quotes")}
+                >
+                  Ver presupuestos
                 </Button>
               </div>
             </CardContent>
