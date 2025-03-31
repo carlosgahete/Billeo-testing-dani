@@ -354,7 +354,7 @@ export default function QuotesPage() {
                   }}
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
-                  Ver presupuestos aceptados
+                  Ver aceptados
                 </Button>
               </div>
             </CardContent>
@@ -415,7 +415,7 @@ export default function QuotesPage() {
                   }}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Gestionar pendientes
+                  Ver pendientes
                 </Button>
               </div>
             </CardContent>
