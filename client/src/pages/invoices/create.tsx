@@ -21,17 +21,21 @@ const CreateInvoicePage = () => {
 
   return (
     <div className="max-w-full">
-      {/* Cabecera estilo imagen de referencia */}
-      <div className="w-full bg-gray-50 py-3 px-4 border-b flex items-center gap-2 mb-6">
+      {/* Cabecera mejorada */}
+      <div className="w-full bg-gradient-to-r from-blue-50 to-gray-50 py-3 px-4 border-b flex items-center gap-3 mb-6 shadow-sm">
+        <div className="w-12 ml-6 hidden sm:block"></div> {/* Espacio para la hamburguesa en desktop */}
+        <div className="sm:hidden w-8"></div> {/* Espacio para la hamburguesa en móvil */}
         <Button 
-          variant="ghost" 
-          size="icon" 
+          variant="outline" 
+          size="sm" 
           onClick={() => navigate("/invoices")}
-          className="h-8 w-8"
+          className="border-blue-200 bg-white hover:bg-blue-50"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 mr-2 text-blue-500" />
+          <span className="text-blue-600">Volver</span>
         </Button>
-        <h1 className="text-base font-semibold text-neutral-800">
+        <h1 className="text-base font-semibold text-neutral-800 ml-2 flex items-center">
+          <Receipt className="h-4 w-4 mr-2 text-blue-500" />
           Crear factura
         </h1>
       </div>
