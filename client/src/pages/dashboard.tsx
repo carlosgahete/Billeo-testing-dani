@@ -508,10 +508,21 @@ const Dashboard = () => {
         
 
         
+        {/* Recuadro amarillo informativo */}
+        <div className="md:col-span-4 mt-2">
+          <div className="bg-yellow-200 rounded-lg p-4 shadow-sm">
+            <h3 className="text-lg font-medium text-yellow-800 mb-2">Información Fiscal</h3>
+            <p className="text-yellow-700">
+              Como autónomo en España, recuerda que el próximo plazo para presentar el Modelo 303 de IVA trimestral vence el 20 de abril. 
+              La declaración de IRPF del primer trimestre debe presentarse antes del 30 de abril.
+            </p>
+          </div>
+        </div>
+        
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
-        <div className="md:col-span-4 mt-0">
+        <div className="md:col-span-4 mt-6">
           {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <TaxSummary />
             <ComparisonCharts />
           </div>
