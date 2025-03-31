@@ -43,19 +43,20 @@ const InvoiceDetailPage = () => {
   
   if (isEditMode) {
     return (
-      <div>
-        <div className="flex items-center mb-6">
-          <div className="w-14"></div> {/* Espacio para la hamburguesa */}
+      <div className="max-w-full">
+        <div className="flex flex-col mb-6 gap-3">
           <Button 
             variant="outline" 
-            size="icon" 
+            size="sm" 
             onClick={() => navigate("/invoices")}
-            className="mr-2 rounded-full border-2 border-primary-500 hover:bg-primary-100"
-            aria-label="Volver a facturas"
+            className="w-full sm:w-auto"
           >
-            <ArrowLeft className="h-5 w-5 text-primary-600" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
           </Button>
-          <h1 className="text-2xl font-bold text-neutral-800">Editar factura</h1>
+          <h1 className="text-xl font-bold text-neutral-800 break-words">
+            Editar factura
+          </h1>
         </div>
         <InvoiceForm invoiceId={invoiceId} />
       </div>

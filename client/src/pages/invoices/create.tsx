@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
 
 const CreateInvoicePage = () => {
   const { isLoading: authLoading } = useQuery({
     queryKey: ["/api/auth/session"],
   });
+  
+  const [, navigate] = useLocation();
 
   if (authLoading) {
     return (
@@ -16,8 +20,21 @@ const CreateInvoicePage = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-neutral-800 mb-6">Crear nueva factura</h1>
+    <div className="max-w-full">
+      <div className="flex flex-col mb-6 gap-3">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => navigate("/invoices")}
+          className="w-full sm:w-auto"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Volver
+        </Button>
+        <h1 className="text-xl font-bold text-neutral-800 break-words">
+          Crear factura
+        </h1>
+      </div>
       <InvoiceForm />
     </div>
   );
