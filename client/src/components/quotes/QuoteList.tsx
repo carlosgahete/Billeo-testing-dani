@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { generateQuotePDF } from "@/lib/pdf";
-import { SendQuoteEmailDialog } from "@/components/quotes/SendQuoteEmailDialog";
 
 import {
   Table,
@@ -90,12 +89,6 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   // Fetch clients
   const { data: clientsData = [], isLoading: isClientsLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
-    queryFn: getQueryFn({ on401: "throw" }),
-  });
-
-  // Fetch company info
-  const { data: companyData } = useQuery({
-    queryKey: ["/api/company"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
@@ -473,26 +466,6 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                               </Tooltip>
                             </TooltipProvider>
                             
-                            {/* Componente para enviar presupuesto por email */}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div>
-                                    {client && (
-                                      <SendQuoteEmailDialog 
-                                        quote={quote}
-                                        client={client}
-                                        company={companyData}
-                                      />
-                                    )}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Enviar por email</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
                             {quote.status === "draft" && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -506,7 +479,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Marcar como enviado</p>
+                                    <p>Enviar presupuesto</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>

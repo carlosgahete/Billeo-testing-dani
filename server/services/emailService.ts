@@ -126,17 +126,16 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
 }
 
 // Función para enviar facturas por correo electrónico
-// Función para enviar documentos por correo electrónico (facturas o presupuestos)
-export async function sendDocumentEmail(
+export async function sendInvoiceEmail(
   recipientEmail: string, 
   recipientName: string, 
-  documentNumber: string,
+  invoiceNumber: string,
   pdfBuffer: Buffer,
-  documentType: 'invoice' | 'quote',
   companyName: string = 'Billeo',
   senderEmail: string = 'contacto@billeo.es', // Usar dirección de correo fija y válida
   ccEmail?: string
 ) {
+  console.log("Email del remitente:", senderEmail);
   if (!transporter) {
     await initEmailService();
   }
@@ -147,26 +146,16 @@ export async function sendDocumentEmail(
     pdfStream.push(pdfBuffer);
     pdfStream.push(null); // Señal de fin de stream
     
-    // Determinar asunto y nombre del archivo según el tipo de documento
-    const isInvoice = documentType === 'invoice';
-    const documentTypeText = isInvoice ? 'Factura' : 'Presupuesto';
-    const subject = `${documentTypeText} ${documentNumber} - ${companyName}`;
-    const filename = `${documentTypeText}_${documentNumber}.pdf`;
-    
     const emailOptions: nodemailer.SendMailOptions = {
       from: `"${companyName}" <${senderEmail}>`,
       to: recipientEmail,
-      subject: subject,
+      subject: `Factura ${invoiceNumber} - ${companyName}`,
       text: `
 Estimado/a ${recipientName},
 
-Adjunto encontrará ${isInvoice ? 'la factura' : 'el presupuesto'} ${documentNumber} en formato PDF.
+Adjunto encontrará la factura ${invoiceNumber} en formato PDF.
 
 Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.
-
-${isInvoice 
-  ? 'Le recordamos que puede realizar el pago mediante transferencia bancaria a la cuenta indicada en la factura.' 
-  : 'Este presupuesto tiene validez por el tiempo indicado en el documento. Para cualquier aclaración no dude en contactarnos.'}
 
 Saludos cordiales,
 ${companyName}
@@ -179,13 +168,9 @@ ${companyName}
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
           
-          <p>Adjunto encontrará ${isInvoice ? 'la factura' : 'el presupuesto'} <strong>${documentNumber}</strong> en formato PDF.</p>
+          <p>Adjunto encontrará la factura <strong>${invoiceNumber}</strong> en formato PDF.</p>
           
           <p>Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.</p>
-          
-          ${isInvoice 
-            ? '<p>Le recordamos que puede realizar el pago mediante transferencia bancaria a la cuenta indicada en la factura.</p>' 
-            : '<p>Este presupuesto tiene validez por el tiempo indicado en el documento. Para cualquier aclaración no dude en contactarnos.</p>'}
           
           <p>Saludos cordiales,<br>${companyName}</p>
           
@@ -196,7 +181,7 @@ ${companyName}
       `,
       attachments: [
         {
-          filename: filename,
+          filename: `Factura_${invoiceNumber}.pdf`,
           content: pdfStream,
           contentType: 'application/pdf'
         }
@@ -215,7 +200,7 @@ ${companyName}
     try {
       const info = await transporter.sendMail(emailOptions);
       console.log('Respuesta del servidor SMTP:', info);
-      console.log('Email enviado: %s', info.messageId);
+      console.log('Email de factura enviado: %s', info.messageId);
       
       // Para cuentas de prueba, mostrar URL de vista previa
       if (process.env.NODE_ENV !== 'production' && info.messageId && nodemailer.getTestMessageUrl) {
@@ -233,55 +218,7 @@ ${companyName}
     
     return { success: true };
   } catch (error) {
-    console.error(`Error al enviar ${documentType === 'invoice' ? 'factura' : 'presupuesto'} por correo:`, error);
+    console.error('Error al enviar factura por correo:', error);
     return { success: false, error };
   }
-}
-
-// Función para enviar facturas por correo electrónico (mantiene compatibilidad con implementación anterior)
-export async function sendInvoiceEmail(
-  recipientEmail: string, 
-  recipientName: string, 
-  invoiceNumber: string,
-  pdfBuffer: Buffer,
-  companyName: string = 'Billeo',
-  senderEmail: string = 'contacto@billeo.es', // Usar dirección de correo fija y válida
-  ccEmail?: string
-) {
-  console.log("Email del remitente:", senderEmail);
-  // Utilizar la nueva función común para enviar documentos
-  return sendDocumentEmail(
-    recipientEmail,
-    recipientName,
-    invoiceNumber,
-    pdfBuffer,
-    'invoice', // Tipo de documento: factura
-    companyName,
-    senderEmail,
-    ccEmail
-  );
-}
-
-// Función para enviar presupuestos por correo electrónico
-export async function sendQuoteEmail(
-  recipientEmail: string,
-  recipientName: string,
-  quoteNumber: string,
-  pdfBuffer: Buffer,
-  companyName: string = 'Billeo',
-  senderEmail: string = 'contacto@billeo.es',
-  ccEmail?: string
-) {
-  console.log("Email del remitente para presupuesto:", senderEmail);
-  // Utilizar la nueva función común para enviar documentos
-  return sendDocumentEmail(
-    recipientEmail,
-    recipientName,
-    quoteNumber,
-    pdfBuffer,
-    'quote', // Tipo de documento: presupuesto
-    companyName,
-    senderEmail,
-    ccEmail
-  );
 }
