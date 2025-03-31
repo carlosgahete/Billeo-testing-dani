@@ -387,12 +387,12 @@ const Dashboard = () => {
         
         {/* Tercera columna: Tarjeta de Base Imponible y Facturas Pendientes (Movida a posición 4) */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden">
-            <CardHeader className="bg-blue-50 p-2">
+          <Card className="overflow-hidden border-indigo-100 shadow-sm">
+            <CardHeader className="bg-indigo-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-blue-700 flex items-center">
-                  <PiggyBank className="mr-2 h-5 w-5" />
-                  Base Imponible
+                <CardTitle className="text-lg text-indigo-700 flex items-center">
+                  <Receipt className="mr-2 h-5 w-5" />
+                  Presupuestos Pendientes
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -402,7 +402,7 @@ const Dashboard = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Base imponible de todas las facturas cobradas (sin IVA). Representa el valor real de tu actividad económica.</p>
+                      <p className="w-[250px] text-xs">Presupuestos enviados a clientes pendientes de aprobación.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -410,23 +410,34 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="p-3">
               <div>
-                <p className="text-2xl font-bold text-blue-700">
+                <p className="text-2xl font-bold text-indigo-700">
                   {new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(financialData.income.totalWithoutVAT)} €
+                    style: 'currency', 
+                    currency: 'EUR' 
+                  }).format(stats?.pendingQuotesTotal || 0)}
                 </p>
               </div>
               
               <div className="mt-1 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Total facturado:</span>
-                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Número de presupuestos:</span>
+                  <span className="font-medium">{stats?.pendingQuotesCount || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA (21%):</span>
-                  <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Último enviado:</span>
+                  <span className="font-medium">{stats?.lastQuoteDate ? new Date(stats.lastQuoteDate).toLocaleDateString('es-ES') : 'N/A'}</span>
                 </div>
+              </div>
+              
+              <div className="mt-6 mb-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-indigo-600 border-indigo-300 hover:bg-indigo-50"
+                  onClick={() => navigate("/quotes")}
+                >
+                  Ver presupuestos
+                </Button>
               </div>
             </CardContent>
           </Card>
