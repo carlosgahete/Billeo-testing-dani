@@ -13,14 +13,20 @@ export async function initEmailService() {
     if (process.env.SMTP_HOST && process.env.SMTP_USERNAME && process.env.SMTP_PASSWORD) {
       // Usar credenciales reales de Hostinger
       console.log('Configurando servicio de email con credenciales de Hostinger...');
+      console.log(`Host: ${process.env.SMTP_HOST}`);
+      console.log('Puerto: 465 (hardcoded)');
+      console.log(`Usuario: ${process.env.SMTP_USERNAME}`);
+      console.log('Secure: true (hardcoded)');
+      
       transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '465'),
-        secure: process.env.SMTP_PORT === '465', // true para puerto 465, false para otros puertos
+        port: 465, // Puerto para Hostinger
+        secure: true, // true para puerto 465
         auth: {
           user: process.env.SMTP_USERNAME,
           pass: process.env.SMTP_PASSWORD,
         },
+        debug: true, // Para ver logs detallados de la conexión SMTP
       });
       console.log('Configuración SMTP con cuenta real completada.');
     } 
@@ -186,16 +192,27 @@ ${companyName}
       emailOptions.cc = ccEmail;
     }
     
-    const info = await transporter.sendMail(emailOptions);
+    console.log(`Enviando email a: ${recipientEmail}`);
+    console.log(`Desde: ${emailOptions.from}`);
+    console.log(`Asunto: ${emailOptions.subject}`);
     
-    // Para cuentas de prueba, mostrar URL de vista previa
-    if (process.env.NODE_ENV !== 'production' && info.messageId) {
+    try {
+      const info = await transporter.sendMail(emailOptions);
+      console.log('Respuesta del servidor SMTP:', info);
       console.log('Email de factura enviado: %s', info.messageId);
-      console.log('URL de vista previa: %s', nodemailer.getTestMessageUrl(info));
-      return {
-        success: true,
-        previewUrl: nodemailer.getTestMessageUrl(info)
-      };
+      
+      // Para cuentas de prueba, mostrar URL de vista previa
+      if (process.env.NODE_ENV !== 'production' && info.messageId && nodemailer.getTestMessageUrl) {
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        console.log('URL de vista previa: %s', previewUrl);
+        return {
+          success: true,
+          previewUrl
+        };
+      }
+    } catch (emailError) {
+      console.error('Error específico al enviar el email:', emailError);
+      throw emailError;
     }
     
     return { success: true };
