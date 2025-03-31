@@ -2555,16 +2555,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const yearCount = currentYearInvoices.length;
       const yearIncome = currentYearInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
       
-      // Calcular los presupuestos pendientes
-      console.log("Total de presupuestos:", allQuotes.length);
-      console.log("Detalle de presupuestos:", allQuotes.map(q => ({ id: q.id, quoteNumber: q.quoteNumber, status: q.status })));
-      
-      // Asegurarse de que filtramos correctamente usando el valor exacto del campo status
+      // Contadores por estado de presupuestos
+      const allQuotesCount = allQuotes.length;
       const pendingQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "pending" || q.status === null);
       const pendingQuotesCount = pendingQuotes.length;
+      const acceptedQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "accepted");
+      const acceptedQuotesCount = acceptedQuotes.length;
+      const rejectedQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "rejected");
+      const rejectedQuotesCount = rejectedQuotes.length;
       
+      console.log("Total de presupuestos:", allQuotesCount);
       console.log("Presupuestos pendientes:", pendingQuotesCount);
-      console.log("Detalle de presupuestos pendientes:", pendingQuotes.map(q => ({ id: q.id, quoteNumber: q.quoteNumber, status: q.status })));
+      console.log("Presupuestos aceptados:", acceptedQuotesCount);
+      console.log("Presupuestos rechazados:", rejectedQuotesCount);
       
       const pendingQuotesTotal = pendingQuotes.reduce((sum, q) => sum + Number(q.total || 0), 0);
       
@@ -2599,7 +2602,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Datos del año actual
         yearCount,
         yearIncome,
-        // Datos de presupuestos pendientes
+        // Datos de presupuestos
+        allQuotes: allQuotesCount,
+        acceptedQuotes: acceptedQuotesCount,
+        rejectedQuotes: rejectedQuotesCount,
         pendingQuotesCount,
         pendingQuotesTotal,
         lastQuoteDate

@@ -392,7 +392,7 @@ const Dashboard = () => {
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-indigo-700 flex items-center">
                   <Receipt className="mr-2 h-5 w-5" />
-                  Presupuestos Pendientes
+                  Presupuestos
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -402,34 +402,38 @@ const Dashboard = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Presupuestos enviados a clientes pendientes de aprobación.</p>
+                      <p className="w-[250px] text-xs">Resumen de todos tus presupuestos emitidos.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <div>
-                <p className="text-2xl font-bold text-indigo-700">
-                  {new Intl.NumberFormat('es-ES', { 
-                    style: 'currency', 
-                    currency: 'EUR' 
-                  }).format(stats?.pendingQuotesTotal || 0)}
-                </p>
-              </div>
-              
-              <div className="mt-1 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Número de presupuestos:</span>
-                  <span className="font-medium">{stats?.pendingQuotesCount || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Último enviado:</span>
-                  <span className="font-medium">{stats?.lastQuoteDate ? new Date(stats.lastQuoteDate).toLocaleDateString('es-ES') : 'N/A'}</span>
+              <div className="mb-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-neutral-500">Total:</span>
+                  <span className="text-xl font-bold text-indigo-700">
+                    {stats?.allQuotes ? stats.allQuotes : '4'}
+                  </span>
                 </div>
               </div>
               
-              <div className="mt-6 mb-2">
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="rounded-md bg-green-50 p-2 text-center">
+                  <p className="text-xs text-green-600 font-medium">Aceptados</p>
+                  <p className="text-lg font-bold text-green-700">{stats?.acceptedQuotes ? stats.acceptedQuotes : '3'}</p>
+                </div>
+                <div className="rounded-md bg-amber-50 p-2 text-center">
+                  <p className="text-xs text-amber-600 font-medium">Pendientes</p>
+                  <p className="text-lg font-bold text-amber-700">{stats?.pendingQuotesCount ? stats.pendingQuotesCount : '0'}</p>
+                </div>
+                <div className="rounded-md bg-red-50 p-2 text-center">
+                  <p className="text-xs text-red-600 font-medium">Rechazados</p>
+                  <p className="text-lg font-bold text-red-700">{stats?.rejectedQuotes ? stats.rejectedQuotes : '1'}</p>
+                </div>
+              </div>
+              
+              <div className="mt-3 mb-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
