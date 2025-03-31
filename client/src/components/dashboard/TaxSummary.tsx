@@ -166,7 +166,7 @@ const TaxSummary = () => {
             <div className="p-3 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
               <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
                 <CalendarDays className="mr-1 h-4 w-4" />
-                IVA repercutido a liquidar ({periodNames[period]}, {year})
+                IVA a liquidar ({periodNames[period]}, {year})
               </h3>
               <div className="flex justify-between items-center">
                 {isLoading ? (

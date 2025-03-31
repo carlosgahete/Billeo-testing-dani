@@ -2664,7 +2664,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         year,
         taxes: {
           vat: vatBalance,
-          incomeTax
+          incomeTax,
+          ivaALiquidar: ivaRepercutido - ivaSoportado
         },
         // Añadimos los contadores que faltaban
         issuedCount,

@@ -48,6 +48,11 @@ interface DashboardStats {
   pendingCount: number;
   pendingQuotes: number;
   pendingQuotesCount: number;
+  taxes: {
+    vat: number;
+    incomeTax: number;
+    ivaALiquidar: number;
+  };
   [key: string]: any;
 }
 
@@ -145,6 +150,11 @@ const Dashboard = () => {
       irpfCalculado: irpfCalculado,
       incomeTax: incomeTax,
       netProfit: netProfit
+    },
+    taxes: {
+      vat: stats?.taxes?.vat || 0,
+      incomeTax: stats?.taxes?.incomeTax || 0,
+      ivaALiquidar: stats?.taxes?.ivaALiquidar || ivaNeto || 0
     }
   };
 
@@ -243,8 +253,8 @@ const Dashboard = () => {
                   <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA soportado:</span>
-                  <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IVA a liquidar:</span>
+                  <span className="font-medium text-blue-600 font-semibold">{(financialData.taxes?.ivaALiquidar || 0).toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
