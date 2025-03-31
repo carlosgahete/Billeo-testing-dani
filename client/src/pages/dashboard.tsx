@@ -385,67 +385,8 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Tarjeta de Base Imponible y Facturas Pendientes (Movida a posición 4) */}
+        {/* Tercera columna: Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden border-indigo-100 shadow-sm">
-            <CardHeader className="bg-indigo-50 p-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-indigo-700 flex items-center">
-                  <Receipt className="mr-2 h-5 w-5" />
-                  Presupuestos
-                </CardTitle>
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Resumen de todos tus presupuestos emitidos.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3">
-              <div className="mb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Total:</span>
-                  <span className="text-xl font-bold text-indigo-700">
-                    {stats?.allQuotes ? stats.allQuotes : '4'}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="rounded-md bg-green-50 p-2 text-center">
-                  <p className="text-xs text-green-600 font-medium">Aceptados</p>
-                  <p className="text-lg font-bold text-green-700">{stats?.acceptedQuotes ? stats.acceptedQuotes : '3'}</p>
-                </div>
-                <div className="rounded-md bg-amber-50 p-2 text-center">
-                  <p className="text-xs text-amber-600 font-medium">Pendientes</p>
-                  <p className="text-lg font-bold text-amber-700">{stats?.pendingQuotesCount ? stats.pendingQuotesCount : '0'}</p>
-                </div>
-                <div className="rounded-md bg-red-50 p-2 text-center">
-                  <p className="text-xs text-red-600 font-medium">Rechazados</p>
-                  <p className="text-lg font-bold text-red-700">{stats?.rejectedQuotes ? stats.rejectedQuotes : '1'}</p>
-                </div>
-              </div>
-              
-              <div className="mt-3 mb-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-indigo-600 border-indigo-300 hover:bg-indigo-50"
-                  onClick={() => navigate("/quotes")}
-                >
-                  Ver presupuestos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
           {/* Facturas pendientes */}
           <Card className="overflow-hidden border-warning-100 shadow-sm">
             <CardHeader className="bg-warning-50 p-2">
