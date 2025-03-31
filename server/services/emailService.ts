@@ -9,9 +9,24 @@ let transporter: nodemailer.Transporter;
 // Inicializa el transportador de correo
 export async function initEmailService() {
   try {
-    // Crear una cuenta de prueba en ethereal.email (solo para desarrollo)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Configurando servicio de email para desarrollo...');
+    // Verificar si tenemos credenciales SMTP configuradas
+    if (process.env.SMTP_HOST && process.env.SMTP_USERNAME && process.env.SMTP_PASSWORD) {
+      // Usar credenciales reales de Hostinger
+      console.log('Configurando servicio de email con credenciales de Hostinger...');
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '465'),
+        secure: process.env.SMTP_PORT === '465', // true para puerto 465, false para otros puertos
+        auth: {
+          user: process.env.SMTP_USERNAME,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+      console.log('Configuración SMTP con cuenta real completada.');
+    } 
+    // Fallback a cuenta de prueba si no hay credenciales configuradas
+    else if (process.env.NODE_ENV !== 'production') {
+      console.log('Configurando servicio de email para desarrollo (cuenta de prueba)...');
       const testAccount = await nodemailer.createTestAccount();
       transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
@@ -24,15 +39,14 @@ export async function initEmailService() {
       });
       console.log(`Cuenta de prueba creada: ${testAccount.user}`);
     } else {
-      // Configuración para producción usando variables de entorno
-      // Configurado para Hostinger por defecto
+      // Configuración predeterminada como último recurso
       transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
+        host: 'smtp.hostinger.com',
+        port: 465,
+        secure: true,
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD,
+          user: process.env.SMTP_USERNAME || 'noreply@billeo.app',
+          pass: process.env.SMTP_PASSWORD || 'password',
         },
       });
     }
@@ -57,7 +71,7 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
   
   try {
     const info = await transporter.sendMail({
-      from: `"Billeo" <${process.env.SMTP_USER || 'noreply@billeo.app'}>`,
+      from: `"Billeo" <${process.env.SMTP_USERNAME || 'noreply@billeo.app'}>`,
       to: email,
       subject: "Recuperación de contraseña - Billeo",
       text: `Hola ${username},\n\nHas solicitado restablecer tu contraseña. Para continuar, haz clic en el siguiente enlace:\n\n${resetUrl}\n\nEste enlace expirará en 1 hora.\n\nSi no solicitaste este cambio, puedes ignorar este correo.\n\nSaludos,\nEquipo de Billeo`,
@@ -112,7 +126,7 @@ export async function sendInvoiceEmail(
   invoiceNumber: string,
   pdfBuffer: Buffer,
   companyName: string = 'Billeo',
-  senderEmail: string = process.env.SMTP_USER || 'noreply@billeo.app',
+  senderEmail: string = process.env.SMTP_USERNAME || 'noreply@billeo.app',
   ccEmail?: string
 ) {
   if (!transporter) {
