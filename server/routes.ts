@@ -2497,10 +2497,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let ivaRepercutido = 0; // IVA que has cobrado en tus facturas a clientes
       let irpfRetenidoIngresos = 0; // IRPF que te han retenido en las facturas que emites
       
+      // Variables para acumular subtotales y totales 
+      let totalSubtotal = 0;
+      let totalBruto = 0;
+
       // Análisis detallado de las facturas pagadas para calcular IVA e IRPF
       paidInvoices.forEach(invoice => {
         const subtotal = Number(invoice.subtotal) || 0;
         const total = Number(invoice.total) || 0;
+        
+        // Acumular para cálculos posteriores
+        totalSubtotal += subtotal;
+        totalBruto += total;
         
         // Extraer impuestos adicionales si están disponibles
         if (invoice.additionalTaxes) {
@@ -2518,11 +2526,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Calcular IVA repercutido basado en el porcentaje declarado (base * porcentaje / 100)
                 const ivaAmount = subtotal * (tax.amount / 100);
                 ivaRepercutido += ivaAmount;
+                console.log(`IVA repercutido en factura ${invoice.invoiceNumber}: ${ivaAmount}€ (${tax.amount}%)`);
               } else if (tax.name === 'IRPF' && tax.isPercentage && tax.amount < 0) {
                 // Calcular IRPF retenido basado en el porcentaje declarado (base * porcentaje / 100)
                 // El IRPF normalmente se declara como porcentaje negativo, por eso usamos Math.abs
                 const irpfAmount = subtotal * (Math.abs(tax.amount) / 100);
                 irpfRetenidoIngresos += irpfAmount;
+                console.log(`IRPF retenido en factura ${invoice.invoiceNumber}: ${irpfAmount}€ (${Math.abs(tax.amount)}%)`);
               }
             });
           } catch (e) {
@@ -2535,9 +2545,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (difference > 0) {
             // Asumimos que la mayoría de la diferencia es IVA
             ivaRepercutido += difference;
+            console.log(`IVA estimado por diferencia en factura ${invoice.invoiceNumber}: ${difference}€`);
           }
         }
       });
+      
+      // Si después de procesar todas las facturas, no tenemos IVA repercutido calculado,
+      // aplicamos el tipo estándar del 21% sobre el total de subtotales
+      if (ivaRepercutido === 0 && paidInvoices.length > 0) {
+        ivaRepercutido = totalSubtotal * 0.21; // IVA estándar en España 21%
+        console.log(`No se pudo determinar el IVA de las facturas. Aplicando IVA estándar del 21% sobre el total: ${ivaRepercutido}€`);
+      }
+      
+      // Si la diferencia entre el total y lo calculado es muy pequeña, usamos la diferencia real
+      const diferenciaTotalCalculada = totalBruto - totalSubtotal;
+      if (Math.abs(diferenciaTotalCalculada - ivaRepercutido) < 1 && diferenciaTotalCalculada > 0) {
+        console.log(`Ajustando IVA de ${ivaRepercutido}€ a ${diferenciaTotalCalculada}€ basado en la diferencia real total-subtotal`);
+        ivaRepercutido = diferenciaTotalCalculada;
+      }
       
       // Redondear a 2 decimales para evitar errores de cálculo
       ivaRepercutido = Math.round(ivaRepercutido * 100) / 100;
