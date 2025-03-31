@@ -282,8 +282,8 @@ export default function QuotesPage() {
               </div>
               
               <Link href="/quotes/create">
-                <Button variant="default" size="sm" className="w-full mt-4">
-                  <FilePlus className="h-4 w-4 mr-2" />
+                <Button variant="default" size="sm" className="w-full mt-4 bg-teal-500 hover:bg-teal-600">
+                  <FileText className="h-4 w-4 mr-2" />
                   Crear nuevo presupuesto
                 </Button>
               </Link>
@@ -334,7 +334,7 @@ export default function QuotesPage() {
               <Button 
                 variant="default" 
                 size="sm" 
-                className="w-full mt-4"
+                className="w-full mt-4 bg-teal-500 hover:bg-teal-600"
                 onClick={() => {
                   // Aquí se podría implementar un filtro para ver solo los aceptados
                 }}
@@ -391,7 +391,7 @@ export default function QuotesPage() {
               <Button 
                 variant="default" 
                 size="sm" 
-                className="w-full mt-4"
+                className="w-full mt-4 bg-teal-500 hover:bg-teal-600"
                 onClick={() => {
                   // Aquí se podría implementar un filtro para ver solo los pendientes
                 }}
