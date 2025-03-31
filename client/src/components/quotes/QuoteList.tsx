@@ -519,17 +519,17 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="overflow-x-auto -mx-1 sm:mx-0">
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">Número</TableHead>
-                  <TableHead className="w-[180px]">Cliente</TableHead>
-                  <TableHead className="w-[120px]">Fecha</TableHead>
-                  <TableHead className="w-[120px]">Válido hasta</TableHead>
-                  <TableHead className="w-[120px]">Total</TableHead>
-                  <TableHead className="w-[120px]">Estado</TableHead>
-                  {showActions && <TableHead className="text-right w-[200px]">Acciones</TableHead>}
+                  <TableHead className="w-[60px] md:w-[100px]">Núm.</TableHead>
+                  <TableHead className="w-[120px] md:w-[180px]">Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px]">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px]">Válido hasta</TableHead>
+                  <TableHead className="w-[100px] md:w-[120px]">Total</TableHead>
+                  <TableHead className="w-[80px] md:w-[120px]">Estado</TableHead>
+                  {showActions && <TableHead className="text-right w-[120px] md:w-[200px]">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -542,15 +542,15 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                 quote.status === "rejected" ? "bg-red-50" : 
                                 quote.status === "expired" ? "bg-gray-50" : ""}
                     >
-                      <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
-                      <TableCell className="truncate max-w-[180px]">{client?.name || "Cliente no encontrado"}</TableCell>
-                      <TableCell>{formatDate(quote.issueDate)}</TableCell>
-                      <TableCell>{formatDate(quote.validUntil)}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(quote.total)}</TableCell>
-                      <TableCell>{getStatusBadge(quote.status)}</TableCell>
+                      <TableCell className="font-medium py-2 px-1 sm:px-4">{quote.quoteNumber}</TableCell>
+                      <TableCell className="truncate max-w-[100px] md:max-w-[180px] py-2 px-1 sm:px-4">{client?.name || "Cliente no encontrado"}</TableCell>
+                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.issueDate)}</TableCell>
+                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.validUntil)}</TableCell>
+                      <TableCell className="font-medium py-2 px-1 sm:px-4">{formatCurrency(quote.total)}</TableCell>
+                      <TableCell className="py-2 px-1 sm:px-4">{getStatusBadge(quote.status)}</TableCell>
                       {showActions && (
-                        <TableCell>
-                          <div className="flex justify-end items-center gap-1">
+                        <TableCell className="py-2 px-1 sm:px-4">
+                          <div className="flex justify-end items-center gap-0.5 sm:gap-1">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -558,7 +558,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleDownloadPDF(quote)}
-                                    className="h-8 w-8 rounded-full hover:bg-primary-50"
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary-50"
                                   >
                                     <Download className="h-4 w-4 text-primary-600" />
                                   </Button>
@@ -577,7 +577,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleSend(quote.id)}
-                                      className="h-8 w-8 rounded-full hover:bg-blue-50"
+                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
                                     >
                                       <Send className="h-4 w-4 text-blue-600" />
                                     </Button>
@@ -597,7 +597,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleReject(quote.id)}
-                                      className="h-8 w-8 rounded-full hover:bg-red-50"
+                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
                                     >
                                       <XCircle className="h-4 w-4 text-red-600" />
                                     </Button>
@@ -617,7 +617,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleConvert(quote.id)}
-                                      className="h-8 w-8 rounded-full hover:bg-green-50"
+                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-green-50"
                                     >
                                       <FileCheck className="h-4 w-4 text-green-600" />
                                     </Button>
@@ -638,7 +638,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                         variant="ghost"
                                         size="icon"
                                         disabled={quote.status === "accepted" || quote.status === "rejected"}
-                                        className="h-8 w-8 rounded-full hover:bg-amber-50"
+                                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-amber-50"
                                       >
                                         <Pencil className="h-4 w-4 text-amber-600" />
                                       </Button>
@@ -659,7 +659,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEmailQuote(quote)}
-                                    className="h-8 w-8 rounded-full hover:bg-blue-50"
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
                                   >
                                     <Mail className="h-4 w-4 text-blue-600" />
                                   </Button>
@@ -679,7 +679,7 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     size="icon"
                                     onClick={() => handleDelete(quote.id)}
                                     disabled={quote.status === "accepted" || quote.status === "rejected"}
-                                    className="h-8 w-8 rounded-full hover:bg-red-50"
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
                                   >
                                     <Trash2 className="h-4 w-4 text-red-600" />
                                   </Button>

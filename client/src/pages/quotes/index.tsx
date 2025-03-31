@@ -444,7 +444,7 @@ export default function QuotesPage() {
       </div>
 
       {/* Lista de presupuestos */}
-      <div className="mt-2 mx-4 md:mx-0">
+      <div className="mt-2 mx-1 md:mx-0">
         <QuoteList userId={user.id} showActions={true} />
       </div>
     </Layout>
