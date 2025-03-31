@@ -1733,7 +1733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         invoice.invoiceNumber,
         pdfBuffer,
         companyInfo.name,
-        companyInfo.email,
+        'contacto@billeo.es', // Usar dirección específica verificada
         ccEmail
       );
       

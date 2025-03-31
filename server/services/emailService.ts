@@ -132,9 +132,10 @@ export async function sendInvoiceEmail(
   invoiceNumber: string,
   pdfBuffer: Buffer,
   companyName: string = 'Billeo',
-  senderEmail: string = process.env.SMTP_USERNAME || 'noreply@billeo.app',
+  senderEmail: string = 'contacto@billeo.es', // Usar dirección de correo fija y válida
   ccEmail?: string
 ) {
+  console.log("Email del remitente:", senderEmail);
   if (!transporter) {
     await initEmailService();
   }
