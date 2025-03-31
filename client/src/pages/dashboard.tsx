@@ -423,15 +423,22 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="space-y-4 text-sm mt-5 mb-4">
+              <div className="space-y-2 text-sm mb-4">
                 <div className="flex justify-between items-center bg-blue-50 p-2.5 rounded-md">
                   <span className="text-blue-700 font-medium">Facturas por cobrar:</span>
                   <span className="text-xl font-bold text-blue-700">{stats?.pendingCount || 0}</span>
                 </div>
-                <div className="flex justify-between items-center p-2.5">
-                  <span className="text-transparent">Espacio</span>
-                  <span className="text-transparent">-</span>
-                </div>
+              </div>
+              
+              <div className="mt-2">
+                <Button 
+                  variant="outline"
+                  size="sm" 
+                  className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
+                  onClick={() => navigate("/invoices")}
+                >
+                  Ver facturas
+                </Button>
               </div>
             </CardContent>
           </Card>
