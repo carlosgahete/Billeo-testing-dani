@@ -330,7 +330,7 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Cuarta columna: Tarjeta de Resultado Final (Movida a posición 3) */}
+        {/* Tercera columna: Tarjeta de Resultado Final */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden border-green-100 shadow-sm">
             <CardHeader className="bg-green-50 p-2">
@@ -397,10 +397,15 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Facturas Pendientes */}
+        {/* Cuarta columna: Ahora la barra amarilla */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+          <div className="bg-yellow-200 rounded-lg h-full shadow-sm"></div>
+        </div>
+        
+        {/* Facturas Pendientes (bajamos esta sección y la hacemos ancho completo) */}
+        <div className="md:col-span-4 space-y-2 mt-2">
           {/* Facturas pendientes */}
-          <Card className="overflow-hidden border-blue-100 shadow-sm mb-4">
+          <Card className="overflow-hidden border-blue-100 shadow-sm">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-sm text-blue-700 flex items-center font-medium">
@@ -422,45 +427,42 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-4 pb-5">
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600">Importe total:</span>
-                  <span className="text-lg font-semibold text-blue-600">
-                    {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(stats?.pendingInvoices || 0)} €
-                  </span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-neutral-600">Importe total:</span>
+                      <span className="text-lg font-semibold text-blue-600">
+                        {new Intl.NumberFormat('es-ES', { 
+                          style: 'decimal',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        }).format(stats?.pendingInvoices || 0)} €
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 p-3 rounded-md flex justify-between">
+                    <span className="text-sm">Facturas por cobrar:</span>
+                    <span className="text-sm font-medium">
+                      {stats?.pendingCount || 0}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="mb-2 bg-blue-50 p-3 rounded-md flex justify-between">
-                <span className="text-sm">Facturas por cobrar:</span>
-                <span className="text-sm font-medium">
-                  {stats?.pendingCount || 0}
-                </span>
-              </div>
-              
-              <div className="mt-5">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
-                  onClick={() => navigate("/invoices")}
-                >
-                  Ver facturas
-                </Button>
+                
+                <div className="md:col-span-2 flex items-center">
+                  <Button 
+                    variant="outline"
+                    size="sm" 
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
+                    onClick={() => navigate("/invoices")}
+                  >
+                    Ver facturas
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
-          
-
-        </div>
-        
-        {/* Cuarta columna: Barra amarilla en el hueco */}
-        <div className="md:col-span-4 mt-4 mb-4">
-          <div className="bg-yellow-200 rounded-lg h-16 shadow-sm"></div>
         </div>
 
         {/* Fila para el resumen fiscal (ocupa todo el ancho) */}
