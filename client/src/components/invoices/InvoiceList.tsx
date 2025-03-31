@@ -598,24 +598,13 @@ const InvoiceList = () => {
               <MarkAsPaidButton invoice={invoice} />
               
               {/* Botón para enviar factura por email */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      {clientsData?.find(c => c.id === invoice.clientId) && (
-                        <SendInvoiceEmailDialog 
-                          invoice={invoice} 
-                          client={clientsData?.find(c => c.id === invoice.clientId) as Client}
-                          company={companyData || null}
-                        />
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Enviar por email</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {clientsData?.find(c => c.id === invoice.clientId) && (
+                <SendInvoiceEmailDialog 
+                  invoice={invoice} 
+                  client={clientsData?.find(c => c.id === invoice.clientId) as Client}
+                  company={companyData || null}
+                />
+              )}
               
               <TooltipProvider>
                 <Tooltip>

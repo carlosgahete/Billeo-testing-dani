@@ -145,6 +145,12 @@ export function SendInvoiceEmailDialog({
     }
   };
 
+  // Agregar un manejador de clic para depuración
+  const handleButtonClick = () => {
+    console.log("Botón 'Enviar por email' presionado");
+    setIsOpen(true);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -155,6 +161,7 @@ export function SendInvoiceEmailDialog({
                 variant="ghost"
                 size="icon"
                 className="text-blue-600 hover:bg-blue-50"
+                onClick={handleButtonClick}
               >
                 <Mail className="h-4 w-4" />
               </Button>
