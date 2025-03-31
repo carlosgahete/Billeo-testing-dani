@@ -332,18 +332,18 @@ const Dashboard = () => {
         
         {/* Tercera columna: Tarjeta de Resultado Final */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden border-green-100 shadow-sm">
+          <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-green-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-sm text-green-700 flex items-center font-medium">
-                  <PiggyBank className="mr-1.5 h-4 w-4" />
+                <CardTitle className="text-lg text-green-700 flex items-center">
+                  <PiggyBank className="mr-2 h-5 w-5" />
                   Resultado Final
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-3.5 w-3.5 text-neutral-500" />
+                        <Info className="h-4 w-4 text-neutral-500" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -353,46 +353,41 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-4 pb-5">
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600">Total neto:</span>
-                  <span className="text-lg font-semibold text-green-600">
-                    {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(totalNeto)} €
-                  </span>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-green-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(totalNeto)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Base + IVA (bruto):</span>
+                  <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  }).format(totalBruto)} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">IRPF retenido:</span>
+                  <span className="font-medium text-red-600">- {new Intl.NumberFormat('es-ES', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  }).format(irpfCorrect)} €</span>
                 </div>
               </div>
               
-              <div className="mb-2 bg-green-50 p-3 rounded-md flex justify-between">
-                <span className="text-sm">Base + IVA (bruto):</span>
-                <span className="text-sm font-medium">
-                  {new Intl.NumberFormat('es-ES', { 
-                    style: 'decimal',
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  }).format(totalBruto)} €
-                </span>
+              <div className="mt-8 mb-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-green-600 border-green-300 hover:bg-green-50"
+                  onClick={() => navigate("/reports")}
+                >
+                  Ver informes
+                </Button>
               </div>
-              
-              <div className="mb-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">IRPF retenido:</span>
-                  <span className="text-sm font-medium text-red-600">
-                    - {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(irpfCorrect)} €
-                  </span>
-                </div>
-              </div>
-              
-              {/* Espaciado invisible para igualar la altura */}
-              <div className="py-2"></div>
             </CardContent>
           </Card>
         </div>
@@ -400,18 +395,18 @@ const Dashboard = () => {
         {/* Cuarta columna: Facturas Pendientes */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           {/* Facturas pendientes */}
-          <Card className="overflow-hidden border-blue-100 shadow-sm mb-4">
+          <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-sm text-blue-700 flex items-center font-medium">
-                  <Receipt className="mr-1.5 h-4 w-4" />
+                <CardTitle className="text-lg text-blue-700 flex items-center">
+                  <Receipt className="mr-2 h-5 w-5" />
                   Facturas pendientes
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-3.5 w-3.5 text-neutral-500" />
+                        <Info className="h-4 w-4 text-neutral-500" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -421,32 +416,26 @@ const Dashboard = () => {
                 </TooltipProvider>
               </div>
             </CardHeader>
-            <CardContent className="p-4 pb-5">
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600">Importe total:</span>
-                  <span className="text-lg font-semibold text-blue-600">
-                    {new Intl.NumberFormat('es-ES', { 
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    }).format(stats?.pendingInvoices || 0)} €
-                  </span>
+            <CardContent className="p-3">
+              <p className="text-2xl font-bold text-blue-600">
+                {new Intl.NumberFormat('es-ES', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).format(stats?.pendingInvoices || 0)} €
+              </p>
+              
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Facturas por cobrar:</span>
+                  <span className="font-medium">{stats?.pendingCount || 0}</span>
                 </div>
               </div>
               
-              <div className="mb-2 bg-blue-50 p-3 rounded-md flex justify-between">
-                <span className="text-sm">Facturas por cobrar:</span>
-                <span className="text-sm font-medium">
-                  {stats?.pendingCount || 0}
-                </span>
-              </div>
-              
-              <div className="mt-5">
+              <div className="mt-8 mb-2">
                 <Button 
-                  variant="outline"
+                  variant="outline" 
                   size="sm" 
-                  className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 text-xs"
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
                   onClick={() => navigate("/invoices")}
                 >
                   Ver facturas
