@@ -390,6 +390,9 @@ const Dashboard = () => {
                   </span>
                 </div>
               </div>
+              
+              {/* Espaciado invisible para igualar la altura */}
+              <div className="py-3.5"></div>
             </CardContent>
           </Card>
         </div>
