@@ -14,8 +14,20 @@ import {
   Eye,
   Edit,
   FileDown,
-  Download
+  Download,
+  Trash2
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 // import { PageTitle } from "@/components/ui/page-title";
 import {
@@ -112,6 +124,70 @@ interface Category {
   id: number;
   name: string;
 }
+
+// Componente para eliminar transacciones
+const DeleteTransactionButton = ({ 
+  transactionId, 
+  description 
+}: { 
+  transactionId: number; 
+  description: string; 
+}) => {
+  const { toast } = useToast();
+  const [isPending, setIsPending] = useState(false);
+
+  const handleDelete = async () => {
+    setIsPending(true);
+    try {
+      await apiRequest("DELETE", `/api/transactions/${transactionId}`);
+      toast({
+        title: "Gasto eliminado",
+        description: `El gasto ha sido eliminado con éxito`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `No se pudo eliminar el gasto: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar este gasto?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta acción eliminará permanentemente el gasto "{description}" y no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              handleDelete();
+            }}
+            disabled={isPending}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            {isPending ? "Eliminando..." : "Eliminar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
 
 const IncomeExpenseReport = () => {
   // Función para exportar facturas a PDF
@@ -856,10 +932,16 @@ const IncomeExpenseReport = () => {
                           {formatDate(transaction.date)} · {getCategoryName(transaction.categoryId)}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-red-600">
-                          {formatCurrency(transaction.amount)}
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="font-semibold text-red-600">
+                            {formatCurrency(transaction.amount)}
+                          </div>
                         </div>
+                        <DeleteTransactionButton 
+                          transactionId={transaction.id}
+                          description={transaction.description}
+                        />
                       </div>
                     </div>
                   ))}

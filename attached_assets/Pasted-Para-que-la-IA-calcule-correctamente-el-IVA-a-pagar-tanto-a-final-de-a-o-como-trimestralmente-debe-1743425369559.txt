@@ -1,0 +1,92 @@
+Para que la IA calcule correctamente el IVA a pagar, tanto a final de año como trimestralmente, debe seguir estos pasos y tener en cuenta lo siguiente:
+
+⸻
+
+1. Recopilación de Datos
+
+La IA debe distinguir dos tipos de IVA:
+	•	IVA repercutido: Es el IVA que se ha cobrado en las facturas de ingresos.
+	•	IVA soportado: Es el IVA que se ha pagado en las facturas de gastos.
+
+Además, la IA debe tener en cuenta que el IVA no siempre es del 21%, ya que algunos productos o servicios pueden llevar tipos reducidos (10% o 4%).
+
+⸻
+
+2. Cálculo del IVA a Liquidar
+
+El IVA a pagar o compensar se calcula con esta fórmula:
+
+IVA \text{ a liquidar} = IVA \text{ repercutido} - IVA \text{ soportado}
+
+Esto significa que:
+	•	Si el IVA repercutido es mayor que el IVA soportado, la empresa debe pagar la diferencia a Hacienda.
+	•	Si el IVA repercutido es menor que el IVA soportado, la empresa tiene un saldo a compensar en los siguientes trimestres o en la declaración anual.
+
+⸻
+
+3. Cálculo Trimestral
+
+Cada trimestre, la IA debe calcular el IVA a liquidar para presentar el modelo fiscal correspondiente. Los trimestres en los que se presenta el IVA son:
+	•	Primer trimestre: Enero - marzo (se declara en abril)
+	•	Segundo trimestre: Abril - junio (se declara en julio)
+	•	Tercer trimestre: Julio - septiembre (se declara en octubre)
+	•	Cuarto trimestre: Octubre - diciembre (se declara en enero del año siguiente)
+
+Para cada trimestre, la IA debe hacer el mismo cálculo:
+IVA repercutido en ese trimestre menos IVA soportado en ese trimestre.
+
+Si el resultado es positivo, la empresa deberá pagar esa cantidad a Hacienda. Si es negativo, se podrá compensar en el siguiente trimestre.
+
+⸻
+
+4. Cálculo Anual
+
+A final de año, la IA debe sumar todos los trimestres y calcular el saldo total. Si en algún trimestre hubo un exceso de IVA soportado (saldo negativo), se podrá compensar con los siguientes trimestres o, si corresponde, solicitar la devolución a Hacienda.
+
+El cálculo anual es simplemente la suma de los cuatro trimestres:
+
+IVA \text{ anual a liquidar} = (IVA \text{ repercutido total}) - (IVA \text{ soportado total})
+
+Si el resultado sigue siendo positivo, se paga a Hacienda. Si es negativo, se puede compensar o solicitar la devolución.
+
+⸻
+
+5. Adaptación a Diferentes Tipos de IVA
+
+Dado que no todo el IVA es del 21%, la IA debe clasificar las facturas según el tipo de IVA que aplican:
+	•	IVA general: 21%
+	•	IVA reducido: 10%
+	•	IVA superreducido: 4%
+
+Para cada factura, debe identificar el tipo de IVA correcto y sumarlo al cálculo total de IVA repercutido o soportado.
+
+⸻
+
+6. Consideraciones Especiales
+	•	Si se añaden gastos después de un trimestre cerrado, la IA debe recalcular el saldo del IVA soportado y ajustar la compensación en el siguiente trimestre.
+	•	Si se emiten facturas con diferentes tipos de IVA, la IA debe calcular cada tipo por separado y luego sumarlos para obtener el total de IVA repercutido y soportado.
+	•	Si hay un exceso de IVA soportado a final de año, se debe indicar si se puede compensar en el siguiente ejercicio o si se solicita devolución.
+
+⸻
+
+Ejemplo de Cálculo
+
+Imaginemos que durante un trimestre se registran estos datos:
+	•	Ingresos: 10.000€ con un IVA del 21% → IVA repercutido: 2.100€
+	•	Gastos: 5.000€ con un IVA del 21% → IVA soportado: 1.050€
+
+Cálculo del IVA a liquidar:
+2.100€ - 1.050€ = 1.050€ \text{ (a pagar a Hacienda)}
+
+Si en el siguiente trimestre el IVA soportado es mayor que el repercutido, esa diferencia se podrá restar del total del año.
+
+⸻
+
+Resumen
+
+✅ La IA debe calcular el IVA trimestre a trimestre y luego sumarlo a final de año.
+✅ Debe identificar correctamente el tipo de IVA en cada factura.
+✅ Debe permitir que se añadan gastos después de un trimestre cerrado y ajustar el cálculo en el siguiente.
+✅ Si hay un saldo negativo de IVA (más soportado que repercutido), se podrá compensar en trimestres futuros o solicitar devolución.
+
+Si la IA sigue estos pasos, podrá calcular el IVA a pagar de forma precisa y sin errores. ¿Necesitas que detalle algo más?
