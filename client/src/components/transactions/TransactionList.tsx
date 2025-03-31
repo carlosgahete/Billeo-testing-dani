@@ -275,8 +275,8 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="md:ml-16">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
           <h1 className="text-2xl font-bold text-neutral-800">
             Ingresos y Gastos
           </h1>
@@ -284,12 +284,13 @@ const TransactionList = () => {
             Gestiona todos tus movimientos económicos
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <Upload className="h-4 w-4 mr-2" />
-                Importar CSV
+              <Button variant="outline" className="flex items-center h-9">
+                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Importar CSV</span>
+                <span className="sm:hidden">Importar</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -311,19 +312,21 @@ const TransactionList = () => {
 
           <Button
             variant="outline"
-            className="flex items-center"
+            className="flex items-center h-9"
             onClick={() => navigate("/documents/scan")}
           >
-            <ScanText className="h-4 w-4 mr-2" />
-            Escanear documento
+            <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Escanear documento</span>
+            <span className="sm:hidden">Escanear</span>
           </Button>
           
           <Button
-            className="flex items-center"
+            className="flex items-center h-9"
             onClick={() => navigate("/transactions/create")}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo movimiento
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Nuevo movimiento</span>
+            <span className="sm:hidden">Nuevo</span>
           </Button>
         </div>
       </div>
