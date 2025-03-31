@@ -64,7 +64,12 @@ const Dashboard = () => {
   });
   
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"],
+    queryKey: ["/api/stats/dashboard", { year, period }],
+    queryFn: async () => {
+      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}`);
+      if (!res.ok) throw new Error("Error al cargar estadísticas");
+      return res.json();
+    }
   });
 
   const isLoading = userLoading || statsLoading;
