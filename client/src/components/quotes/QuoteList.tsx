@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { generateQuotePDF } from "@/lib/pdf";
+import { SendQuoteEmailDialog } from "./SendQuoteEmailDialog";
 
 import {
   Table,
@@ -38,7 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle } from "lucide-react";
+import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 interface Quote {
@@ -79,6 +80,10 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<number | null>(null);
   const [convertAlertOpen, setConvertAlertOpen] = useState(false);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [quoteItems, setQuoteItems] = useState<any[]>([]);
 
   // Fetch quotes
   const { data: quotes = [], isLoading: isQuotesLoading } = useQuery<Quote[]>({
@@ -364,6 +369,52 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
   const handleReject = (quoteId: number) => {
     rejectQuoteMutation.mutate(quoteId);
   };
+  
+  // Handle email quote
+  const handleEmailQuote = async (quote: Quote) => {
+    try {
+      // Buscar la información del cliente
+      const client = clientsData.find((c: Client) => c.id === quote.clientId);
+      if (!client) {
+        toast({
+          title: "Error",
+          description: "No se pudo encontrar la información del cliente",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Obtener información completa del presupuesto y sus elementos
+      const response = await apiRequest("GET", `/api/quotes/${quote.id}`);
+      if (!response.ok) {
+        throw new Error("Error al obtener los detalles del presupuesto");
+      }
+      
+      const data = await response.json();
+      
+      // Obtener información de la empresa
+      const companyResponse = await apiRequest("GET", "/api/company");
+      if (!companyResponse.ok) {
+        throw new Error("Error al obtener los datos de la empresa");
+      }
+      
+      const companyData = await companyResponse.json();
+      
+      // Configurar los datos para el diálogo de envío de correo
+      setSelectedQuote(quote);
+      setSelectedClient(client);
+      setQuoteItems(data.items || []);
+      setSendEmailOpen(true);
+      
+    } catch (error: any) {
+      console.error("Error preparando el envío de correo:", error);
+      toast({
+        title: "Error",
+        description: `No se pudo preparar el envío: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isQuotesLoading || isClientsLoading) {
     return (
@@ -544,6 +595,25 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                               </Tooltip>
                             </TooltipProvider>
                             
+                            {/* Botón de correo electrónico */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEmailQuote(quote)}
+                                  >
+                                    <Mail className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Enviar por correo</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            {/* Botón de eliminar */}
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -618,6 +688,18 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Diálogo para enviar correo electrónico */}
+      {selectedQuote && selectedClient && (
+        <SendQuoteEmailDialog
+          open={sendEmailOpen}
+          onOpenChange={setSendEmailOpen}
+          quote={selectedQuote}
+          client={selectedClient}
+          quoteItems={quoteItems}
+          companyInfo={null} // Se obtendrá dentro del componente
+        />
+      )}
     </>
   );
 }

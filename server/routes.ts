@@ -1637,6 +1637,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para enviar presupuestos por correo electrónico
+  app.post("/api/quotes/:id/send-email", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const quoteId = parseInt(req.params.id);
+      
+      // Obtener información del presupuesto
+      const quote = await storage.getQuote(quoteId);
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      
+      // Verificar que el presupuesto pertenece al usuario autenticado
+      if (quote.userId !== req.session.userId) {
+        return res.status(403).json({ message: "You don't have permission to access this quote" });
+      }
+      
+      // Obtener cliente y elementos del presupuesto
+      const client = await storage.getClient(quote.clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      // Obtener los ítems del presupuesto
+      const quoteItems = await storage.getQuoteItemsByQuoteId(quoteId);
+      
+      // Obtener la información de la empresa
+      const companyInfo = await storage.getCompany(req.session.userId);
+      if (!companyInfo) {
+        return res.status(404).json({ message: "Company information not found" });
+      }
+      
+      // El cliente debe generar el PDF y enviarlo como base64 en el cuerpo de la petición
+      const { pdfBase64, recipientEmail, ccEmail } = req.body;
+      
+      if (!pdfBase64) {
+        return res.status(400).json({ message: "PDF data is required" });
+      }
+      
+      // Si no se proporcionó un correo específico, usar el del cliente
+      const emailToSend = recipientEmail || client.email;
+      
+      if (!emailToSend) {
+        return res.status(400).json({ message: "Client email is not available. Please provide a recipient email." });
+      }
+      
+      // Convertir el PDF de base64 a Buffer
+      const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+      
+      // Enviar correo electrónico
+      const emailResult = await sendInvoiceEmail(
+        emailToSend,
+        client.name,
+        quote.quoteNumber,
+        pdfBuffer,
+        companyInfo.name,
+        'contacto@billeo.es', // Usar dirección específica verificada
+        ccEmail
+      );
+      
+      if (!emailResult.success) {
+        return res.status(500).json({ 
+          message: "Error sending email", 
+          error: emailResult.error 
+        });
+      }
+      
+      // Actualizar el estado del presupuesto a "sent" si estaba en "draft"
+      if (quote.status === "draft") {
+        await storage.updateQuote(quoteId, { status: "sent" });
+      }
+      
+      return res.status(200).json({ 
+        message: "Quote sent successfully", 
+        previewUrl: emailResult.previewUrl || null
+      });
+    } catch (error) {
+      console.error("Error sending quote email:", error);
+      return res.status(500).json({ message: "Error sending quote email" });
+    }
+  });
+  
   app.delete("/api/invoices/:id", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {

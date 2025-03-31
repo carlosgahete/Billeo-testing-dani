@@ -432,8 +432,9 @@ export async function generateInvoicePDFAsBase64(
 export async function generateQuotePDF(
   quote: Quote,
   client: Client,
-  items: QuoteItem[]
-): Promise<void> {
+  items: QuoteItem[],
+  options?: { returnAsBase64?: boolean }
+): Promise<void | string> {
   try {
     // Create a new PDF
     const doc = new jsPDF();
@@ -656,7 +657,12 @@ export async function generateQuotePDF(
       doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
     }
     
-    // Save the PDF
+    // Si se solicita como base64, devolver en ese formato
+    if (options?.returnAsBase64) {
+      return doc.output('datauristring').split(',')[1];
+    }
+    
+    // De lo contrario, guardar como archivo
     doc.save(`Presupuesto_${quote.quoteNumber}.pdf`);
   } catch (error) {
     console.error("Error general generando PDF:", error);
