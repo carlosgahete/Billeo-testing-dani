@@ -63,7 +63,7 @@ const Layout = ({ children }: LayoutProps) => {
             flex-1 
             overflow-y-auto 
             ${isMobile ? 'pt-16' : ''}
-            ${sidebarOpen ? 'pl-64' : ''} 
+            ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
           `}
         >

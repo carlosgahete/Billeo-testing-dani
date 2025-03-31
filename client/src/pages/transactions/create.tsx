@@ -21,18 +21,20 @@ const CreateTransactionPage = () => {
   }
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center mb-6 gap-3">
+    <div className="max-w-full">
+      <div className="flex flex-col mb-6 gap-3">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={() => navigate("/transactions")}
-          className="mr-0 sm:mr-2"
+          className="w-full sm:w-auto"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Volver
         </Button>
-        <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Registrar movimiento</h1>
+        <h1 className="text-xl font-bold text-neutral-800 break-words">
+          Registrar movimiento
+        </h1>
       </div>
       <TransactionForm />
     </div>
