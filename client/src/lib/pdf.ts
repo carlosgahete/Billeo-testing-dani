@@ -429,6 +429,231 @@ export async function generateInvoicePDFAsBase64(
   return doc.output('datauristring').split(',')[1];
 }
 
+// Función para generar un PDF de presupuesto como base64 para enviar por email
+export async function generateQuotePDFAsBase64(
+  quote: Quote,
+  client: Client,
+  items: QuoteItem[],
+  companyInfo: Company | null = null
+): Promise<string> {
+  // Create a new PDF
+  const doc = new jsPDF();
+  
+  // Set some basic styles
+  doc.setFont("helvetica");
+  doc.setFontSize(10);
+  
+  // Add company info
+  doc.setFontSize(20);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text(companyInfo?.name || "Billeo", 14, 22);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(companyInfo?.taxId || "NIF: B12345678", 14, 30);
+  doc.text(companyInfo?.address || "Dirección", 14, 35);
+  doc.text(`${companyInfo?.postalCode || ""} ${companyInfo?.city || ""}, ${companyInfo?.country || "España"}`, 14, 40);
+  if (companyInfo?.email) doc.text(`Email: ${companyInfo.email}`, 14, 45);
+  if (companyInfo?.phone) doc.text(`Teléfono: ${companyInfo.phone}`, 14, 50);
+  
+  // Check if the quote has a logo
+  const logoPath = quote.attachments && quote.attachments.length > 0 ? quote.attachments[0] : 
+                 (companyInfo?.logo ? companyInfo.logo : null);
+  
+  // Cargar el logo si existe
+  if (logoPath) {
+    try {
+      console.log("Preparando logo para PDF desde:", logoPath);
+      
+      // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
+      const logoDataUrl = await getImageAsDataUrl(logoPath);
+      
+      // Crear una imagen temporal para obtener las dimensiones reales y mantener proporciones
+      const tmpImg = new Image();
+      await new Promise<void>((resolve, reject) => {
+        tmpImg.onload = () => resolve();
+        tmpImg.onerror = () => reject(new Error('Error al cargar imagen para calcular proporciones'));
+        tmpImg.src = logoDataUrl;
+      });
+      
+      // Calcular dimensiones manteniendo proporciones (50% más pequeño)
+      const maxWidth = 25; // 50% más pequeño que el original de 50
+      const maxHeight = 12.5; // 50% más pequeño que el original de 25
+      
+      // Calcular el ratio de aspecto
+      const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
+      const width = tmpImg.width * ratio;
+      const height = tmpImg.height * ratio;
+      
+      // Posición alineada con subtotal (195 - width para alineación a la derecha)
+      const xPosition = 195 - width;
+      
+      // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
+      doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
+      console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
+    } catch (logoError) {
+      console.error("Error añadiendo logo al PDF:", logoError);
+    }
+  }
+  
+  // Add quote title and number
+  doc.setFontSize(16);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text(`PRESUPUESTO Nº: ${quote.quoteNumber}`, 140, 22, { align: "right" });
+  
+  // Add quote details
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(`Fecha de emisión: ${formatDate(quote.issueDate)}`, 140, 30, { align: "right" });
+  doc.text(`Válido hasta: ${formatDate(quote.validUntil)}`, 140, 35, { align: "right" });
+  
+  // Add status
+  let statusText;
+  let statusColor = [0, 0, 0];
+  switch (quote.status) {
+    case "draft":
+      statusText = "Borrador";
+      statusColor = [97, 97, 97]; // gray
+      break;
+    case "sent":
+      statusText = "Enviado";
+      statusColor = [245, 124, 0]; // orange
+      break;
+    case "accepted":
+      statusText = "Aceptado";
+      statusColor = [46, 125, 50]; // green
+      break;
+    case "rejected":
+      statusText = "Rechazado";
+      statusColor = [211, 47, 47]; // red
+      break;
+    case "expired":
+      statusText = "Expirado";
+      statusColor = [97, 97, 97]; // gray
+      break;
+    case "invoiced":
+      statusText = "Facturado";
+      statusColor = [46, 125, 50]; // green
+      break;
+    default:
+      statusText = quote.status;
+  }
+  
+  doc.setFontSize(12);
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.text(`Estado: ${statusText}`, 140, 45, { align: "right" });
+  
+  // Add client information
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text("CLIENTE", 14, 65);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(client.name, 14, 73);
+  doc.text(`NIF/CIF: ${client.taxId}`, 14, 78);
+  doc.text(client.address, 14, 83);
+  doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 14, 88);
+  if (client.email) doc.text(`Email: ${client.email}`, 14, 93);
+  if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 98);
+  
+  // Add quote items
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235); // blue-600
+  doc.text("DETALLES DEL PRESUPUESTO", 14, 115);
+  
+  // Create the table with items
+  autoTable(doc, {
+    startY: 120,
+    head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
+    body: items.map(item => [
+      item.description,
+      Number(item.quantity).toFixed(2),
+      `${Number(item.unitPrice).toFixed(2)} €`,
+      `${Number(item.taxRate).toFixed(2)}%`,
+      `${Number(item.subtotal).toFixed(2)} €`
+    ]),
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255] },
+    columnStyles: {
+      0: { cellWidth: 80 },
+      1: { halign: 'right' },
+      2: { halign: 'right' },
+      3: { halign: 'right' },
+      4: { halign: 'right' }
+    },
+    margin: { left: 14, right: 14 }
+  });
+  
+  // Add totals
+  // @ts-ignore
+  const finalY = doc.lastAutoTable.finalY + 10;
+  let yOffset = 0;
+  
+  doc.setFontSize(10);
+  doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(quote.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+  yOffset += 6;
+  
+  doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(quote.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+  yOffset += 6;
+  
+  // Add additional taxes if they exist
+  if (quote.additionalTaxes && quote.additionalTaxes.length > 0) {
+    quote.additionalTaxes.forEach(tax => {
+      let taxText = tax.name;
+      let taxAmount = tax.amount;
+      
+      // Format differently based on whether it's percentage or fixed
+      if (tax.isPercentage) {
+        taxText += ` (${taxAmount}%)`;
+        taxAmount = (Number(quote.subtotal) * taxAmount) / 100;
+      }
+      
+      doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
+      doc.text(`${taxAmount.toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+      yOffset += 6;
+    });
+  }
+  
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("TOTAL:", 140, finalY + yOffset + 4, { align: "right" });
+  doc.text(`${Number(quote.total).toFixed(2)} €`, 195, finalY + yOffset + 4, { align: "right" });
+  
+  // Add notes
+  if (quote.notes) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("NOTAS:", 14, finalY + 30);
+    doc.text(quote.notes, 14, finalY + 36);
+  }
+  
+  // Add footer with validity reminder
+  const validUntilDate = formatDate(quote.validUntil);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(100);
+  doc.text(`Este presupuesto es válido hasta: ${validUntilDate}`, 105, finalY + 50, { align: "center" });
+  
+  // Add footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(
+      `${companyInfo?.name || "Billeo"} - Sistema de gestión financiera`,
+      105, 285, { align: "center" }
+    );
+    doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
+  }
+  
+  // Return the PDF as base64 string
+  return doc.output('datauristring').split(',')[1];
+}
+
 export async function generateQuotePDF(
   quote: Quote,
   client: Client,
