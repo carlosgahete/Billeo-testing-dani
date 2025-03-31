@@ -126,14 +126,14 @@ const Dashboard = () => {
   // Total bruto (Base + IVA) = 2877 + 604.17 = 3481.17€
   // Total neto (Bruto - IRPF) = 3481.17 - 431.55 = 3049.62€
   
-  // Forzamos los valores correctos para el cálculo
-  const baseImponibleCorrecta = 2877; // Valor fijo para coincidir con especificaciones
-  const ivaCorrect = baseImponibleCorrecta * 0.21; // 604.17€
-  const irpfCorrect = baseImponibleCorrecta * 0.15; // 431.55€
+  // Cálculos basados en los datos reales del API
+  const baseImponible = baseIncomeWithoutVAT; // Usar el valor real de ingresos sin IVA
+  const ivaCalculado = ivaRepercutido; // Usar el IVA real calculado
+  const irpfCalculado = Number((baseImponible * 0.15).toFixed(2)); // IRPF como 15% de la base imponible
   
-  const totalBruto = baseImponibleCorrecta + ivaCorrect; // 3481.17€ (Base + IVA)
-  const totalNeto = totalBruto - irpfCorrect; // 3049.62€ (Bruto - IRPF)
-  const totalPagado = baseExpensesWithoutVAT + ivaSoportado; // Lo que realmente pagas
+  const totalBruto = Number((baseImponible + ivaCalculado).toFixed(2)); // Base + IVA
+  const totalNeto = Number((totalBruto - irpfCalculado).toFixed(2)); // Bruto - IRPF
+  const totalPagado = Number((baseExpensesWithoutVAT + ivaSoportado).toFixed(2)); // Lo que realmente pagas
   const netProfit = Number((totalNeto - totalPagado).toFixed(2)); // Beneficio neto real
   
   // Datos financieros organizados
@@ -487,7 +487,7 @@ const Dashboard = () => {
                   <span className="font-medium text-red-600">- {new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(irpfCorrect)} €</span>
+                  }).format(irpfCalculado)} €</span>
                 </div>
               </div>
               
