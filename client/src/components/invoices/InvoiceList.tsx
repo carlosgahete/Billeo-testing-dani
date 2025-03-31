@@ -638,7 +638,7 @@ const InvoiceList = () => {
 
   return (
     <div className="w-full">
-      <div className="flex justify-end gap-2 mb-4 ml-14 md:ml-0">
+      <div className="flex justify-end gap-2 mb-4 mx-4 md:ml-0">
         <Button 
           variant="outline" 
           className="flex items-center border-blue-200 text-blue-600 hover:bg-blue-50"
@@ -659,7 +659,7 @@ const InvoiceList = () => {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-blue-100 shadow-sm ml-14 md:ml-0">
+      <div className="overflow-hidden rounded-xl border border-blue-100 shadow-sm mx-4 md:ml-0">
         <DataTable
           columns={columns}
           data={invoicesData || []}
