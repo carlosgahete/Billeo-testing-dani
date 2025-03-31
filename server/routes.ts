@@ -2556,9 +2556,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const yearIncome = currentYearInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
       
       // Calcular los presupuestos pendientes
-      const pendingQuotes = allQuotes.filter(q => q.status === "pending");
+      console.log("Total de presupuestos:", allQuotes.length);
+      console.log("Detalle de presupuestos:", allQuotes.map(q => ({ id: q.id, quoteNumber: q.quoteNumber, status: q.status })));
+      
+      // Asegurarse de que filtramos correctamente usando el valor exacto del campo status
+      const pendingQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "pending" || q.status === null);
       const pendingQuotesCount = pendingQuotes.length;
-      const pendingQuotesTotal = pendingQuotes.reduce((sum, q) => sum + Number(q.total), 0);
+      
+      console.log("Presupuestos pendientes:", pendingQuotesCount);
+      console.log("Detalle de presupuestos pendientes:", pendingQuotes.map(q => ({ id: q.id, quoteNumber: q.quoteNumber, status: q.status })));
+      
+      const pendingQuotesTotal = pendingQuotes.reduce((sum, q) => sum + Number(q.total || 0), 0);
       
       // Obtener fecha del último presupuesto
       let lastQuoteDate = null;
