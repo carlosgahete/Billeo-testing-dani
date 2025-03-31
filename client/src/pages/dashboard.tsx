@@ -340,9 +340,9 @@ const Dashboard = () => {
         {/* Cuarta columna: Tarjeta de Resultado Final */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
           <Card className="overflow-hidden flex-grow">
-            <CardHeader className="bg-green-50 p-2">
+            <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-green-700 flex items-center">
+                <CardTitle className="text-lg text-blue-700 flex items-center">
                   <PiggyBank className="mr-2 h-5 w-5" />
                   Resultado Final
                 </CardTitle>
@@ -361,7 +361,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-blue-600">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
@@ -389,7 +389,7 @@ const Dashboard = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-green-600 border-green-300 hover:bg-green-50"
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
                   onClick={() => navigate("/reports")}
                 >
                   Ver informes
