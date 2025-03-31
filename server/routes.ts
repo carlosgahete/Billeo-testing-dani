@@ -2586,6 +2586,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expenses,
         pendingInvoices,
         pendingCount,
+        pendingQuotes: pendingQuotesTotal,
+        pendingQuotesCount,
         balance,
         result,
         totalWithholdings: totalIrpfFromExpensesInvoices,

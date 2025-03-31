@@ -10,6 +10,7 @@ import {
   TrendingDown,
   Info,
   Receipt,
+  FileText,
   AlertTriangle,
   Eye,
   FileCheck
@@ -47,6 +48,8 @@ interface DashboardStats {
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
+  pendingQuotes: number;
+  pendingQuotesCount: number;
   [key: string]: any;
 }
 
@@ -54,6 +57,7 @@ const Dashboard = () => {
   const [, navigate] = useLocation();
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
+  const [docType, setDocType] = useState("invoices"); // "invoices" o "quotes"
   
   const { data: user, isLoading: userLoading } = useQuery<any>({
     queryKey: ["/api/auth/session"],
@@ -330,15 +334,18 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tercera columna: Facturas Pendientes */}
+        {/* Tercera columna: Documentos Pendientes (Facturas/Presupuestos) */}
         <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          {/* Facturas pendientes */}
           <Card className="overflow-hidden flex-grow">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-blue-700 flex items-center">
-                  <Receipt className="mr-2 h-5 w-5" />
-                  Facturas pendientes
+                  {docType === "invoices" ? (
+                    <Receipt className="mr-2 h-5 w-5" />
+                  ) : (
+                    <FileText className="mr-2 h-5 w-5" />
+                  )}
+                  {docType === "invoices" ? "Facturas pendientes" : "Presupuestos"}
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -348,24 +355,55 @@ const Dashboard = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                      <p className="w-[250px] text-xs">Facturas emitidas pendientes de cobro.</p>
+                      <p className="w-[250px] text-xs">
+                        {docType === "invoices" 
+                          ? "Facturas emitidas pendientes de cobro." 
+                          : "Presupuestos enviados pendientes de aceptación."}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
             </CardHeader>
             <CardContent className="p-3">
+              <div className="mb-3">
+                <div className="flex items-center space-x-2 justify-center bg-gray-50 rounded-md p-1">
+                  <Button 
+                    size="sm" 
+                    variant={docType === "invoices" ? "default" : "outline"} 
+                    onClick={() => setDocType("invoices")}
+                    className={docType === "invoices" ? "bg-blue-600" : ""}
+                  >
+                    <Receipt className="mr-1 h-4 w-4" />
+                    Facturas
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={docType === "quotes" ? "default" : "outline"} 
+                    onClick={() => setDocType("quotes")}
+                    className={docType === "quotes" ? "bg-blue-600" : ""}
+                  >
+                    <FileText className="mr-1 h-4 w-4" />
+                    Presupuestos
+                  </Button>
+                </div>
+              </div>
+              
               <p className="text-2xl font-bold text-blue-600">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(stats?.pendingInvoices || 0)} €
+                }).format(docType === "invoices" ? (stats?.pendingInvoices || 0) : (stats?.pendingQuotes || 0))} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Facturas por cobrar:</span>
-                  <span className="font-medium">{stats?.pendingCount || 0}</span>
+                  <span className="text-neutral-500">
+                    {docType === "invoices" ? "Facturas por cobrar:" : "Presupuestos pendientes:"}
+                  </span>
+                  <span className="font-medium">
+                    {docType === "invoices" ? (stats?.pendingCount || 0) : (stats?.pendingQuotesCount || 0)}
+                  </span>
                 </div>
               </div>
               
@@ -374,9 +412,9 @@ const Dashboard = () => {
                   variant="outline" 
                   size="sm" 
                   className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
-                  onClick={() => navigate("/invoices")}
+                  onClick={() => navigate(docType === "invoices" ? "/invoices" : "/quotes")}
                 >
-                  Ver facturas
+                  {docType === "invoices" ? "Ver facturas" : "Ver presupuestos"}
                 </Button>
               </div>
             </CardContent>
