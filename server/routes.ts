@@ -1104,20 +1104,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { invoice, items } = req.body;
       
       console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
-      console.log("Received items data:", JSON.stringify(items, null, 2));
-      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      
+      // Generar número de factura siguiendo formato [AÑO]-[NÚMERO] (ej: 2025-001)
+      // Convertir fecha de emisión a objeto Date para obtener el año
+      const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();
+      const currentYear = issueDate.getFullYear();
+      
+      // Buscar la última factura de este año
+      const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      let lastNumber = 0;
+      
+      // Filtrar facturas del año actual y obtener el último número
+      const currentYearInvoices = invoices.filter(inv => {
+        // Verificar si el número de factura tiene el formato correcto (AÑO-NÚMERO)
+        const match = inv.invoiceNumber.match(/^(\d{4})-(\d+)$/);
+        return match && match[1] === currentYear.toString();
+      });
+      
+      if (currentYearInvoices.length > 0) {
+        // Extraer solo los números de secuencia de las facturas del año actual
+        const sequenceNumbers = currentYearInvoices.map(inv => {
+          const match = inv.invoiceNumber.match(/^(\d{4})-(\d+)$/);
+          return match ? parseInt(match[2]) : 0;
+        }).filter(n => !isNaN(n));
+        
+        if (sequenceNumbers.length > 0) {
+          lastNumber = Math.max(...sequenceNumbers);
+        }
+      }
+      
+      // Generar el nuevo número de factura con formato AÑO-NÚMERO (con padding)
+      const nextNumber = lastNumber + 1;
+      const paddedNumber = nextNumber.toString().padStart(3, '0');
+      const newInvoiceNumber = `${currentYear}-${paddedNumber}`;
+      
+      console.log(`Generando nueva factura con número: ${newInvoiceNumber}`);
       
       // Asegurar que todos los campos requeridos estén presentes
       // Convertir las cadenas de fecha ISO en objetos Date
       const invoiceData = {
         ...invoice,
         userId: req.session.userId,
+        invoiceNumber: newInvoiceNumber, // Usar el nuevo formato de número de factura
         status: invoice.status || "pending",
         notes: invoice.notes ?? null,
         attachments: invoice.attachments ?? null,
         // Convertir explícitamente las fechas de string a Date
-        issueDate: invoice.issueDate ? new Date(invoice.issueDate) : new Date(),
-        dueDate: invoice.dueDate ? new Date(invoice.dueDate) : new Date()
+        issueDate: issueDate,
+        dueDate: invoice.dueDate ? new Date(invoice.dueDate) : new Date(issueDate.getTime() + 30 * 24 * 60 * 60 * 1000)
       };
       
       console.log("Processed invoice data:", JSON.stringify(invoiceData, null, 2));
@@ -1584,21 +1618,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to convert this quote" });
       }
       
-      // Obtener el último número de factura para crear uno nuevo
+      // Generar número de factura siguiendo formato [AÑO]-[NÚMERO] (ej: 2025-001)
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      
+      // Buscar la última factura de este año
       const invoices = await storage.getInvoicesByUserId(req.session.userId);
       let lastNumber = 0;
       
-      if (invoices.length > 0) {
-        const numbers = invoices.map(inv => parseInt(inv.invoiceNumber)).filter(n => !isNaN(n));
-        if (numbers.length > 0) {
-          lastNumber = Math.max(...numbers);
+      // Filtrar facturas del año actual y obtener el último número
+      const currentYearInvoices = invoices.filter(inv => {
+        // Verificar si el número de factura tiene el formato correcto (AÑO-NÚMERO)
+        const match = inv.invoiceNumber.match(/^(\d{4})-(\d+)$/);
+        return match && match[1] === currentYear.toString();
+      });
+      
+      if (currentYearInvoices.length > 0) {
+        // Extraer solo los números de secuencia de las facturas del año actual
+        const sequenceNumbers = currentYearInvoices.map(inv => {
+          const match = inv.invoiceNumber.match(/^(\d{4})-(\d+)$/);
+          return match ? parseInt(match[2]) : 0;
+        }).filter(n => !isNaN(n));
+        
+        if (sequenceNumbers.length > 0) {
+          lastNumber = Math.max(...sequenceNumbers);
         }
       }
+      
+      // Generar el nuevo número de factura con formato AÑO-NÚMERO (con padding)
+      const nextNumber = lastNumber + 1;
+      const paddedNumber = nextNumber.toString().padStart(3, '0');
+      const newInvoiceNumber = `${currentYear}-${paddedNumber}`;
+      
+      console.log(`Generando nueva factura desde presupuesto con número: ${newInvoiceNumber}`);
       
       // Crear nueva factura a partir del presupuesto
       const newInvoice = await storage.createInvoice({
         userId: quote.userId,
-        invoiceNumber: (lastNumber + 1).toString(),
+        invoiceNumber: newInvoiceNumber,
         clientId: quote.clientId,
         issueDate: new Date(),
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días para pagar

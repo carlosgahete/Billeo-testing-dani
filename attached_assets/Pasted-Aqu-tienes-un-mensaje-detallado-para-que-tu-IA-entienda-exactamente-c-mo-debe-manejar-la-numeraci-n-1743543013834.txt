@@ -1,0 +1,61 @@
+Aquí tienes un mensaje detallado para que tu IA entienda exactamente cómo debe manejar la numeración de las facturas:
+
+Reglas para la numeración de facturas:
+	1.	Las facturas deben seguir un orden secuencial estricto y no se pueden asignar números anteriores al último generado.
+	•	Si la última factura creada es la 2025-005, la siguiente debe ser 2025-006.
+	•	No se puede crear una nueva factura con un número inferior al último generado.
+	2.	No se pueden reutilizar números de facturas anteriores, incluso si se eliminan.
+	•	Si se genera una factura 2025-005 y luego se elimina, ese número queda reservado y no se podrá usar nuevamente.
+	•	La siguiente factura debe ser 2025-006, sin excepciones.
+	3.	Cada factura tiene un identificador único formado por el año y un número correlativo.
+	•	El formato de la numeración será:
+
+[AÑO]-[NÚMERO]
+
+
+	•	Ejemplo de secuencia correcta:
+
+2025-001, 2025-002, 2025-003, 2025-004, 2025-005...
+
+
+	•	Esto permite identificar fácilmente en qué año fue emitida la factura.
+
+	4.	El contador de facturas se reinicia al cambiar de año.
+	•	El 1 de enero de cada año, el contador vuelve a empezar desde 001, pero con el nuevo año.
+	•	Ejemplo:
+	•	Última factura de 2025: 2025-250
+	•	Primera factura de 2026: 2026-001
+	5.	Nunca debe haber saltos en la numeración.
+	•	No se puede crear una factura 2025-007 si no existe la 2025-006.
+	•	Las facturas deben generarse en orden estricto sin permitir que falten números.
+	6.	No se permite modificar el número de una factura después de haber sido creada.
+	•	Una vez generada, la factura mantiene su número original de forma permanente.
+	•	Si hay errores en la factura, se debe crear una nueva factura rectificativa, pero sin alterar la numeración ya asignada.
+
+Ejemplo práctico:
+
+📌 Facturas generadas:
+
+2025-001, 2025-002, 2025-003, 2025-004, 2025-005
+
+📌 Si se crea una nueva factura, debe ser:
+✅ 2025-006
+❌ No se puede generar: 2025-001, 2025-003, 2025-004 (porque ya existen).
+
+📌 Si se borra 2025-003:
+	•	No se puede reutilizar ese número.
+	•	La siguiente factura debe ser 2025-006, no 2025-003.
+
+📌 Si llega el 1 de enero de 2026:
+	•	La primera factura del año debe ser 2026-001.
+
+Conclusión:
+	•	Las facturas siguen una numeración consecutiva sin excepciones.
+	•	No se pueden asignar números anteriores al último generado.
+	•	Si una factura se borra, su número queda bloqueado y no se reutiliza.
+	•	El contador se reinicia cada año, pero sin afectar la secuencia de facturación.
+	•	No se puede modificar el número de una factura una vez creada.
+
+📌 Esto garantiza que la numeración de facturas sea válida contablemente y cumpla con la normativa fiscal.
+
+Este es el mensaje que puedes darle a tu IA para que siga la numeración correcta. Si necesitas que lo explique de otra manera, dime y lo ajustamos. 🚀
