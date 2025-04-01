@@ -66,15 +66,15 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
   return (
     <header className="bg-white shadow-sm z-10 fixed top-0 left-0 right-0">
       <div className="px-4 h-16 flex justify-between items-center">
-        <div className="w-10">
+        <div className="flex items-center">
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-primary absolute left-2"
+            className="text-primary mr-2 p-1 h-8 w-8"
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
           >
-            <Menu size={24} />
+            <Menu size={20} />
           </Button>
         </div>
 

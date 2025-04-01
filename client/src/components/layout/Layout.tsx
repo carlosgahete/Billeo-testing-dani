@@ -62,7 +62,7 @@ const Layout = ({ children }: LayoutProps) => {
           className={`
             flex-1 
             overflow-y-auto 
-            ${isMobile ? 'pt-16' : ''}
+            ${isMobile ? 'pt-20' : ''}
             ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
           `}

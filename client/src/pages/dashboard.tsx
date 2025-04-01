@@ -166,12 +166,12 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 mt-4">
         <PageTitle 
           title="Resumen Contable"
           description="Visión general de tu actividad económica"
           variant="gradient"
-          className="w-full pl-12 md:pl-0"
+          className="w-full overflow-visible"
         >
           <div className="flex flex-wrap gap-2 pt-1">
             <div className="bg-white rounded-md shadow-sm border p-1.5 flex items-center justify-between w-[120px]">
