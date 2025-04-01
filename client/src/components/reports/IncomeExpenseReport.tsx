@@ -689,13 +689,24 @@ const IncomeExpenseReport = () => {
             
             <Card className="shadow-md border-0 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
-                <h3 className="text-lg font-medium flex items-center">
-                  <FilePlus className="mr-2 h-5 w-5" />
-                  Facturas emitidas
-                  <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-1">
-                    {paidInvoices.length} facturas
-                  </span>
-                </h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium flex items-center">
+                    <FilePlus className="mr-2 h-5 w-5" />
+                    Facturas emitidas
+                    <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-1">
+                      {paidInvoices.length} facturas
+                    </span>
+                  </h3>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate("/invoices/new")}
+                    className="bg-white hover:bg-blue-50 text-blue-600 border-blue-200"
+                    size="sm"
+                  >
+                    <PlusCircle className="mr-1 h-4 w-4" />
+                    Nueva factura
+                  </Button>
+                </div>
               </div>
               
               {isLoading ? (
