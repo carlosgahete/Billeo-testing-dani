@@ -19,13 +19,13 @@ export function PageTitle({
   if (variant === 'gradient') {
     return (
       <div className={`w-full rounded-md mb-3 overflow-hidden ${className}`}>
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-3 shadow-md">
-          <div className="mb-1">
-            <h1 className="text-lg md:text-xl font-bold">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 shadow-md">
+          <div className="mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
               {title}
             </h1>
             {description && (
-              <p className="text-blue-100 text-xs mt-0.5">
+              <p className="text-blue-100 text-xs mt-1">
                 {description}
               </p>
             )}
