@@ -103,11 +103,7 @@ function Router() {
           <ProtectedRoute path="/transactions" component={TransactionsPage} />
         </Layout>
       </Route>
-      <Route path="/transactions/create">
-        <Layout>
-          <ProtectedRoute path="/transactions/create" component={CreateTransactionPage} />
-        </Layout>
-      </Route>
+      {/* Ruta de creación de transacciones eliminada por solicitud del usuario */}
       <Route path="/transactions/edit/:id">
         {(params) => (
           <Layout>

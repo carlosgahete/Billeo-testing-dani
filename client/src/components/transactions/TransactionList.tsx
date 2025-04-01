@@ -322,7 +322,7 @@ const TransactionList = () => {
           
           <Button
             className="flex items-center h-9"
-            onClick={() => navigate("/transactions/create")}
+            onClick={() => navigate("/income-expense?tab=expense")}
           >
             <Plus className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Nuevo movimiento</span>
