@@ -693,8 +693,7 @@ const InvoiceList = () => {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="outline" 
-            className="flex items-center border-white text-white hover:bg-blue-700"
+            className="flex items-center bg-blue-800 text-white hover:bg-blue-900 border-0"
             size="sm"
           >
             <Download className="h-4 w-4 mr-1" />
