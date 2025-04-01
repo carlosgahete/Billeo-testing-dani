@@ -341,8 +341,8 @@ const Dashboard = () => {
                   <span className="font-medium text-green-600">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF deducible:</span>
-                  <span className="font-medium text-green-600">{Math.round(financialData.expenses.totalWithoutVAT * 0.15).toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IRPF a liquidar:</span>
+                  <span className="font-medium text-red-600">{stats?.taxes?.incomeTax.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
