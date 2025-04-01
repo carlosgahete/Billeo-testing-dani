@@ -176,9 +176,8 @@ const Dashboard = () => {
           <div className="flex justify-end items-center mt-1">
             <div className="flex bg-white/10 backdrop-blur-md p-2 rounded-full gap-4">
               <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[80px] flex items-center justify-between p-2 h-8 min-h-0">
-                  <span className="font-semibold text-white text-sm">{year}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-white/80" />
+                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[80px] h-8 min-h-0">
+                  <span className="text-white text-sm font-semibold">{year}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2023">2023</SelectItem>
@@ -190,8 +189,8 @@ const Dashboard = () => {
               <div className="w-px h-5 bg-white/20 self-center"></div>
               
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[140px] flex items-center justify-between p-2 h-8 min-h-0">
-                  <span className="font-semibold text-white text-sm">
+                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[140px] h-8 min-h-0">
+                  <span className="text-white text-sm font-semibold">
                     {period === "all" ? "Todo el año" : 
                      period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
                      period === "m1" ? "Enero" :
@@ -206,7 +205,6 @@ const Dashboard = () => {
                      period === "m10" ? "Octubre" :
                      period === "m11" ? "Noviembre" : "Diciembre"}
                   </span>
-                  <ChevronDown className="h-3.5 w-3.5 text-white/80" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todo el año</SelectItem>
