@@ -562,17 +562,17 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                 </Select>
               </div>
 
-              {/* Fecha de validez (destacada) */}
+              {/* Fecha de validez */}
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="validUntil" className="font-semibold text-red-600">Fecha de validez</Label>
+                <Label htmlFor="validUntil">Fecha de validez</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       id="validUntil"
-                      className={`w-full justify-start border-red-500 bg-red-50 hover:bg-red-100 text-left font-normal`}
+                      className={`w-full justify-start text-left font-normal`}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4 text-red-500" />
+                      <CalendarIcon className="mr-2 h-4 w-4" />
                       {validUntil ? format(validUntil, "d 'de' MMMM 'de' yyyy", { locale: es }) : <span>Selecciona una fecha</span>}
                     </Button>
                   </PopoverTrigger>
@@ -586,7 +586,7 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                     />
                   </PopoverContent>
                 </Popover>
-                <p className="text-xs text-red-600 font-medium">Este presupuesto será válido hasta esta fecha</p>
+                <p className="text-xs text-muted-foreground">Este presupuesto será válido hasta esta fecha</p>
               </div>
             </div>
             
