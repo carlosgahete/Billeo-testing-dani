@@ -503,7 +503,13 @@ export async function generateQuotePDF(
     doc.setFontSize(10);
     doc.setTextColor(0);
     doc.text(`Fecha de emisión: ${formatDate(quote.issueDate)}`, 140, 30, { align: "right" });
+    
+    // Destacar la fecha de validez con un color diferente
+    doc.setTextColor(231, 76, 60); // Color rojo para llamar la atención
+    doc.setFontSize(11);
     doc.text(`Válido hasta: ${formatDate(quote.validUntil)}`, 140, 35, { align: "right" });
+    doc.setTextColor(0);
+    doc.setFontSize(10);
     
     // Add status
     let statusText;
@@ -635,9 +641,24 @@ export async function generateQuotePDF(
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     
-    // Add note about validity
-    doc.text(`Este presupuesto es válido hasta el ${formatDate(quote.validUntil)}.`, 14, finalY + 30);
-    doc.text("Para más información o consultas, no dude en contactarnos.", 14, finalY + 36);
+    // Add note about validity - destacada con un recuadro y texto en negrita
+    const validityText = `Este presupuesto es válido hasta el ${formatDate(quote.validUntil)}.`;
+    
+    // Crear un recuadro para destacar la fecha de validez
+    doc.setDrawColor(231, 76, 60); // Color rojo para el borde
+    doc.setFillColor(253, 237, 236); // Color de fondo rosa claro
+    const textWidth = doc.getStringUnitWidth(validityText) * 10 / doc.internal.scaleFactor;
+    doc.roundedRect(12, finalY + 25, textWidth + 4, 10, 1, 1, 'FD');
+    
+    // Texto de validez en negrita y color destacado
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(231, 76, 60); // Color rojo para el texto
+    doc.text(validityText, 14, finalY + 32);
+    
+    // Volver a configuración normal
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+    doc.text("Para más información o consultas, no dude en contactarnos.", 14, finalY + 42);
     
     if (quote.notes) {
       doc.text("NOTAS:", 14, finalY + 46);

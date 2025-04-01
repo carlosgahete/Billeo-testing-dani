@@ -231,7 +231,8 @@ export async function sendQuoteEmail(
   pdfBuffer: Buffer,
   companyName: string = 'Billeo',
   senderEmail: string = 'contacto@billeo.es', // Usar dirección de correo fija y válida
-  ccEmail?: string
+  ccEmail?: string,
+  validUntil?: string // Añadir fecha de validez como parámetro opcional
 ) {
   console.log("Email del remitente:", senderEmail);
   if (!transporter) {
@@ -244,6 +245,18 @@ export async function sendQuoteEmail(
     pdfStream.push(pdfBuffer);
     pdfStream.push(null); // Señal de fin de stream
     
+    // Formatear la fecha de validez si está disponible
+    let validityMessage = '';
+    if (validUntil) {
+      const date = new Date(validUntil);
+      const formattedDate = date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      validityMessage = `\nEste presupuesto es válido hasta el ${formattedDate}.`;
+    }
+    
     const emailOptions: nodemailer.SendMailOptions = {
       from: `"${companyName}" <${senderEmail}>`,
       to: recipientEmail,
@@ -251,7 +264,7 @@ export async function sendQuoteEmail(
       text: `
 Estimado/a ${recipientName},
 
-Adjunto encontrará el presupuesto ${quoteNumber} en formato PDF.
+Adjunto encontrará el presupuesto ${quoteNumber} en formato PDF.${validityMessage}
 
 Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.
 
@@ -267,6 +280,12 @@ ${companyName}
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
           
           <p>Adjunto encontrará el presupuesto <strong>${quoteNumber}</strong> en formato PDF.</p>
+          
+          ${validUntil ? `<p style="background-color: #FFEBEE; border: 1px solid #E57373; padding: 10px; border-radius: 4px; color: #C62828; font-weight: bold;">Este presupuesto es válido hasta el ${new Date(validUntil).toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })}</p>` : ''}
           
           <p>Por favor, revise los detalles y no dude en contactarnos si tiene alguna pregunta.</p>
           

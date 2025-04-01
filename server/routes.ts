@@ -1697,7 +1697,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pdfBuffer,
         companyInfo.name,
         'contacto@billeo.es', // Usar dirección específica verificada
-        ccEmail
+        ccEmail,
+        quote.validUntil // Pasar la fecha de validez para destacarla en el email
       );
       
       if (!emailResult.success) {
