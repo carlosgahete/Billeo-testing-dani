@@ -699,7 +699,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       if (numericValue > 0 || field.value !== "") {
         field.onChange(numericValue.toString());
       }
-      calculateInvoiceTotals(form);
+      // Aplazamos el cálculo de totales para no interferir con el foco
+      setTimeout(() => calculateInvoiceTotals(form), 100);
     };
   };
   
@@ -1149,7 +1150,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   `items.${index}.quantity` as const,
                                   toNumber(e.target.value, 0)
                                 );
-                                calculateInvoiceTotals(form);
+                                // Aplazamos el cálculo para no perder el foco
+                                setTimeout(() => calculateInvoiceTotals(form), 10);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
@@ -1174,7 +1176,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   `items.${index}.unitPrice` as const,
                                   toNumber(e.target.value, 0)
                                 );
-                                calculateInvoiceTotals(form);
+                                // Aplazamos el cálculo para no perder el foco
+                                setTimeout(() => calculateInvoiceTotals(form), 10);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.unitPrice && (
@@ -1199,7 +1202,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   `items.${index}.taxRate` as const,
                                   toNumber(e.target.value, 21)
                                 );
-                                calculateInvoiceTotals(form);
+                                // Aplazamos el cálculo para no perder el foco
+                                setTimeout(() => calculateInvoiceTotals(form), 10);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.taxRate && (
