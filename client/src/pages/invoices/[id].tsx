@@ -32,6 +32,9 @@ const InvoiceDetailPage = () => {
   
   const { data = { invoice: null, items: [] }, isLoading, isError } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
+    onSuccess: (response) => {
+      console.log("Datos de factura recibidos:", invoiceId, response);
+    }
   });
   
   const { data: clientData, isLoading: clientLoading } = useQuery({
