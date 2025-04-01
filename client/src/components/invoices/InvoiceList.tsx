@@ -682,20 +682,7 @@ const InvoiceList = () => {
 
   return (
     <div className="w-full">
-      {/* Botón de exportar todo */}
-      <div className="flex justify-end gap-2 mb-4 mx-4 md:ml-0">
-        <Button 
-          variant="outline" 
-          className="flex items-center border-blue-200 text-blue-600 hover:bg-blue-50"
-          size="sm"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Exportar todo</span>
-          <span className="sm:hidden">Exportar</span>
-        </Button>
-      </div>
-
-      {/* Encabezado de Facturas Emitidas con el botón Nueva Factura alineado a la derecha */}
+      {/* Encabezado de Facturas Emitidas con ambos botones a la derecha */}
       <div className="overflow-hidden rounded-xl bg-blue-600 text-white p-3 flex justify-between items-center mx-4 md:ml-0 mb-1">
         <div className="flex items-center">
           <FileCheck className="h-5 w-5 mr-2" />
@@ -704,15 +691,26 @@ const InvoiceList = () => {
             {invoicesData?.length || 0} facturas
           </span>
         </div>
-        <Button
-          className="flex items-center bg-white text-blue-600 hover:bg-blue-50"
-          size="sm"
-          onClick={() => navigate("/invoices/create")}
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">Nueva factura</span>
-          <span className="sm:hidden">Nueva</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center border-white text-white hover:bg-blue-700"
+            size="sm"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Exportar todo</span>
+            <span className="sm:hidden">Exportar</span>
+          </Button>
+          <Button
+            className="flex items-center bg-white text-blue-600 hover:bg-blue-50"
+            size="sm"
+            onClick={() => navigate("/invoices/create")}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Nueva factura</span>
+            <span className="sm:hidden">Nueva</span>
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-blue-100 shadow-sm mx-4 md:ml-0">
