@@ -693,13 +693,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   };
 
   // Manejar el evento blur en campos numéricos
-  const handleNumericBlur = (field: any, defaultValue: number = 0) => {
+  const handleNumericBlur = (value: any, defaultValue: number = 0) => {
     return (e: React.FocusEvent<HTMLInputElement>) => {
-      const numericValue = toNumber(field.value, defaultValue);
-      if (numericValue > 0 || field.value !== "") {
-        field.onChange(numericValue.toString());
-      }
-      // Aplazamos el cálculo de totales para no interferir con el foco
+      // Calcular totales al perder el foco, sin manipular el valor directamente
       setTimeout(() => calculateInvoiceTotals(form), 100);
     };
   };
