@@ -149,12 +149,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
-  // Fetch invoice data if in edit mode
-  const { data: invoiceData, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
+  // Fetch invoice data if in edit mode with minimal options
+  const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
     staleTime: 0, // Siempre obtener los datos más recientes
-    cacheTime: 0  // No usar caché para este caso específico
+    refetchOnWindowFocus: false, // Evitar refetch automático al volver a enfocar la ventana
   });
 
   const defaultFormValues = {
@@ -189,9 +189,10 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
 
   // Initialize form with invoice data when loaded
   useEffect(() => {
-    if (isEditMode && invoiceData && invoiceData.invoice) {
+    if (isEditMode && invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData && 'items' in invoiceData) {
       console.log("⚡ Cargando datos de factura para edición:", invoiceData);
       
+      // @ts-ignore - Aseguramos el acceso a las propiedades mediante comprobación previa
       const { invoice, items } = invoiceData;
       
       // Aseguramos que las fechas estén en formato YYYY-MM-DD
@@ -341,7 +342,8 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
         console.log("🔄 Modo edición - ID:", invoiceId);
         
         // Incorporar datos originales si están disponibles
-        const originalInvoice = invoiceData?.invoice || {};
+        // @ts-ignore - Ya verificamos en el useEffect que datos existe
+        const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice : {};
         
         // Asegurar que los impuestos adicionales estén en el formato correcto
         // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
