@@ -649,10 +649,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     onSuccess: (data) => {
       console.log("✅ Factura guardada con éxito:", data);
       
-      // Invalidar consultas para actualizar datos en la UI
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
+      // Invalidar consultas para actualizar datos en la UI con delay
+      // Usando setTimeout para evitar posibles efectos de carrera
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
+      }, 100);
       
       // Mostrar toast de éxito
       toast({
@@ -675,8 +678,14 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     },
   });
 
-  // Manejar el envío del formulario
+  // Manejar el envío del formulario con protección contra doble envío
   const handleSubmit = (data: InvoiceFormValues) => {
+    // Si la mutación ya está en progreso, ignorar
+    if (mutation.isPending) {
+      console.log("🚫 Operación ya en curso, evitando múltiples envíos");
+      return;
+    }
+    
     // Recalcular totales antes de enviar
     const { subtotal, tax, total } = calculateInvoiceTotals(form);
     data.subtotal = subtotal;
@@ -684,6 +693,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     data.total = total;
     
     // Iniciar la mutación
+    console.log("🚀 Iniciando creación/actualización de factura...");
     mutation.mutate(data);
   };
 

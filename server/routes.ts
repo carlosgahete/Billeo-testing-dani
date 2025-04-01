@@ -1140,12 +1140,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Generando nueva factura con número: ${newInvoiceNumber}`);
       
+      // Si el usuario ya proporcionó un número de factura, verificar que no exista duplicado
+      if (invoice.invoiceNumber && invoice.invoiceNumber.trim() !== '') {
+        const existingInvoice = invoices.find(inv => inv.invoiceNumber === invoice.invoiceNumber);
+        if (existingInvoice) {
+          // Si hay duplicado, usamos el número generado automáticamente
+          console.log(`Número de factura ${invoice.invoiceNumber} ya existe, usando número generado: ${newInvoiceNumber}`);
+        } else {
+          // Si no hay duplicado, respetamos el número proporcionado por el usuario
+          console.log(`Usando número de factura proporcionado por el usuario: ${invoice.invoiceNumber}`);
+          // Actualizamos la variable para mantener consistencia en el código
+          newInvoiceNumber = invoice.invoiceNumber;
+        }
+      }
+      
       // Asegurar que todos los campos requeridos estén presentes
       // Convertir las cadenas de fecha ISO en objetos Date
       const invoiceData = {
         ...invoice,
         userId: req.session.userId,
-        invoiceNumber: newInvoiceNumber, // Usar el nuevo formato de número de factura
+        invoiceNumber: newInvoiceNumber, // Usar el nuevo formato de número de factura o el proporcionado por el usuario
         status: invoice.status || "pending",
         notes: invoice.notes ?? null,
         attachments: invoice.attachments ?? null,
