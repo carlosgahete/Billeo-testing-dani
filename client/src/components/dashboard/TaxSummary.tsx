@@ -172,7 +172,9 @@ const TaxSummary = () => {
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="text-blue-800 font-bold text-xl">{formatCurrency(selectedVat)}</span>
+                  <span className="font-bold text-xl text-red-600">
+                    {formatCurrency(selectedVat)}
+                  </span>
                 )}
                 <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
                   21% IVA
