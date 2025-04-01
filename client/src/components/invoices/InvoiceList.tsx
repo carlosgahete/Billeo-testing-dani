@@ -93,17 +93,17 @@ interface Company {
 const StatusBadge = ({ status }: { status: string }) => {
   // Estilos mejorados para los estados de factura
   const statusStyles = {
-    pending: "bg-amber-100 text-amber-800 border-0 hover:bg-amber-200 font-medium",
-    paid: "bg-emerald-100 text-emerald-800 border-0 hover:bg-emerald-200 font-medium",
-    overdue: "bg-red-100 text-red-800 border-0 hover:bg-red-200 font-medium",
-    canceled: "bg-neutral-100 text-neutral-800 border-0 hover:bg-neutral-200 font-medium",
+    pending: "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 font-medium",
+    paid: "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-medium",
+    overdue: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 font-medium",
+    canceled: "bg-neutral-50 text-neutral-700 border border-neutral-200 hover:bg-neutral-100 font-medium",
   };
   
   const statusIcons = {
-    pending: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-600"></span>,
-    paid: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-600"></span>,
-    overdue: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-600"></span>,
-    canceled: <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-neutral-600"></span>,
+    pending: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-amber-500"></span>,
+    paid: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-emerald-500"></span>,
+    overdue: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-500"></span>,
+    canceled: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-neutral-500"></span>,
   };
   
   const labels = {
@@ -114,7 +114,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   };
 
   return (
-    <Badge className={`flex items-center px-2.5 py-0.5 ${statusStyles[status as keyof typeof statusStyles] || "bg-neutral-100 text-neutral-800"}`}>
+    <Badge className={`flex items-center px-2.5 py-1 rounded-lg shadow-sm ${statusStyles[status as keyof typeof statusStyles] || "bg-neutral-50 text-neutral-700 border border-neutral-200"}`}>
       {statusIcons[status as keyof typeof statusIcons]}
       {labels[status as keyof typeof labels] || status}
     </Badge>
