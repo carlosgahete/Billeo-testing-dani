@@ -504,10 +504,17 @@ export async function generateQuotePDF(
     doc.setTextColor(0);
     doc.text(`Fecha de emisión: ${formatDate(quote.issueDate)}`, 140, 30, { align: "right" });
     
-    // Destacar la fecha de validez con un color diferente
-    doc.setTextColor(231, 76, 60); // Color rojo para llamar la atención
+    // Destacar la fecha de validez con el color del tema pero de manera elegante
+    const validDate = new Date(quote.validUntil);
+    const headerFormattedDate = validDate.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+    
+    doc.setTextColor(37, 99, 235); // Color azul corporativo
     doc.setFontSize(11);
-    doc.text(`Válido hasta: ${formatDate(quote.validUntil)}`, 140, 35, { align: "right" });
+    doc.text(`Válido hasta: ${headerFormattedDate}`, 140, 35, { align: "right" });
     doc.setTextColor(0);
     doc.setFontSize(10);
     
@@ -642,18 +649,19 @@ export async function generateQuotePDF(
     doc.setFont("helvetica", "normal");
     
     // Add note about validity - destacada con un recuadro y texto en negrita
-    const validityText = `Este presupuesto es válido hasta el ${formatDate(quote.validUntil)}.`;
+    // Usar el mismo formato de fecha que usamos en el encabezado
+    const validityText = `Este presupuesto es válido hasta el ${headerFormattedDate}`;
     
-    // Crear un recuadro para destacar la fecha de validez
-    doc.setDrawColor(231, 76, 60); // Color rojo para el borde
-    doc.setFillColor(253, 237, 236); // Color de fondo rosa claro
+    // Crear un recuadro para destacar la fecha de validez, pero con estilo más elegante
+    doc.setDrawColor(37, 99, 235); // Color azul para el borde (mismo que el resto del documento)
+    doc.setFillColor(243, 244, 246); // Color de fondo gris muy claro
     const textWidth = doc.getStringUnitWidth(validityText) * 10 / doc.internal.scaleFactor;
-    doc.roundedRect(12, finalY + 25, textWidth + 4, 10, 1, 1, 'FD');
+    doc.roundedRect(12, finalY + 25, textWidth + 8, 12, 2, 2, 'FD');
     
-    // Texto de validez en negrita y color destacado
+    // Texto de validez en negrita con color coherente con el documento
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(231, 76, 60); // Color rojo para el texto
-    doc.text(validityText, 14, finalY + 32);
+    doc.setTextColor(37, 99, 235); // Color azul para el texto
+    doc.text(validityText, 16, finalY + 33);
     
     // Volver a configuración normal
     doc.setFont("helvetica", "normal");
