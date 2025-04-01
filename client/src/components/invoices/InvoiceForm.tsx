@@ -702,18 +702,29 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Agregar un nuevo impuesto adicional
   const handleAddTax = (taxType?: string) => {
+    // Obtener los impuestos actuales
+    const currentTaxes = form.getValues("additionalTaxes") || [];
+    
     if (taxType === 'irpf') {
-      appendTax({ 
-        name: "IRPF", 
-        amount: -15, 
-        isPercentage: true 
-      });
+      // Verificar si ya existe un impuesto IRPF
+      const hasIRPF = currentTaxes.some((tax: any) => tax.name === "IRPF");
+      if (!hasIRPF) {
+        appendTax({ 
+          name: "IRPF", 
+          amount: -15, 
+          isPercentage: true 
+        });
+      }
     } else if (taxType === 'iva') {
-      appendTax({ 
-        name: "IVA adicional", 
-        amount: 21, 
-        isPercentage: true 
-      });
+      // Verificar si ya existe un IVA adicional
+      const hasAdditionalIVA = currentTaxes.some((tax: any) => tax.name === "IVA adicional");
+      if (!hasAdditionalIVA) {
+        appendTax({ 
+          name: "IVA adicional", 
+          amount: 21, 
+          isPercentage: true 
+        });
+      }
     } else {
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
       setShowTaxDialog(true);
