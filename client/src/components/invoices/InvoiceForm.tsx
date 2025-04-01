@@ -154,7 +154,30 @@ type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
 interface InvoiceFormProps {
   invoiceId?: number;
-  initialData?: any; // Datos iniciales para el formulario
+  initialData?: { 
+    invoice: {
+      id: number;
+      invoiceNumber: string;
+      clientId: number;
+      issueDate: string;
+      dueDate: string;
+      status: string;
+      notes?: string;
+      subtotal: number | string;
+      tax: number | string;
+      total: number | string;
+      additionalTaxes?: any;
+      attachments?: string[];
+    };
+    items: Array<{
+      id?: number;
+      description: string;
+      quantity: number | string;
+      unitPrice: number | string;
+      taxRate: number | string;
+      subtotal: number | string;
+    }>;
+  }; 
 }
 
 const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
@@ -337,8 +360,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     else if (isEditMode && invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData && 'items' in invoiceData) {
       console.log("⚡ Cargando datos de factura para edición desde API:", invoiceData);
       
-      // @ts-ignore - Aseguramos el acceso a las propiedades mediante comprobación previa
-      const { invoice, items } = invoiceData;
+      // Ahora con el tipo mejorado ya no necesitamos ignorar el tipo
+      const invoice = invoiceData.invoice as any;
+      const items = invoiceData.items as any[];
       
       // Aseguramos que las fechas estén en formato YYYY-MM-DD
       const formatDateForInput = (dateString: string) => {
@@ -487,8 +511,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         console.log("🔄 Modo edición - ID:", invoiceId);
         
         // Incorporar datos originales si están disponibles
-        // @ts-ignore - Ya verificamos en el useEffect que datos existe
-        const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice : {};
+        const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice as any : {};
         
         // Asegurar que los impuestos adicionales estén en el formato correcto
         // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
