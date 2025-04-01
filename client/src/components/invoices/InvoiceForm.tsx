@@ -297,33 +297,48 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // Esta función procesa los datos externos para formatearlos correctamente para el formulario
   const processExternalData = (externalData: any) => {
-    console.log("🔎 processExternalData recibió:", externalData);
+    // Función de logging centralizada (solo en desarrollo)
+    const log = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
+      if (process.env.NODE_ENV === 'development') {
+        switch (level) {
+          case 'info':
+            console.log(message, data);
+            break;
+          case 'warn':
+            console.warn(message, data);
+            break;
+          case 'error':
+            console.error(message, data);
+            break;
+        }
+      }
+    };
     
     // Verificar si externalData es válido
     if (!externalData) {
-      console.error("⚠️ Datos externos nulos o indefinidos");
+      log('error', "Datos externos nulos o indefinidos");
       return null;
     }
     
     // Verificar si tiene el formato esperado
     if (!externalData.invoice) {
-      console.warn("⚠️ No se encontró la propiedad 'invoice' en los datos externos:", externalData);
+      log('warn', "No se encontró la propiedad 'invoice' en los datos externos:", externalData);
       // Intentar adaptarlo si es un objeto simple
       if (typeof externalData === 'object' && !Array.isArray(externalData)) {
-        console.log("ℹ️ Intentando adaptar datos planos como factura");
+        log('info', "Intentando adaptar datos planos como factura");
         externalData = { 
           invoice: externalData,
           items: externalData.items || []
         };
       } else {
-        console.error("⚠️ No se pudo adaptar los datos externos");
+        log('error', "No se pudo adaptar los datos externos");
         return null;
       }
     }
     
     // Asegurar que exista la propiedad items
     if (!externalData.items) {
-      console.warn("⚠️ No se encontró la propiedad 'items' en los datos, se usará un array vacío");
+      log('warn', "No se encontró la propiedad 'items' en los datos, se usará un array vacío");
       externalData.items = [];
     }
     
@@ -758,57 +773,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          {/* Sección de depuración - sólo visible en desarrollo */}
-          {process.env.NODE_ENV === 'development' && isEditMode && (
-            <Card className="border-2 border-yellow-500 bg-yellow-50">
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-yellow-800 mb-2">Modo Depuración</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium text-yellow-700 text-sm">ID: {invoiceId}</h4>
-                    <p className="text-xs text-yellow-600">
-                      Modo: {isEditMode ? 'Edición' : 'Creación'}
-                    </p>
-                    <p className="text-xs text-yellow-600">
-                      Estado del form: {form.formState.isDirty ? 'Modificado' : 'Sin cambios'}
-                    </p>
-                    <div className="mt-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          console.log('Formulario actual:', form.getValues());
-                          console.log('Datos originales:', debugOriginalData);
-                          console.log('Errores:', form.formState.errors);
-                        }}
-                        className="text-xs h-6 px-2 py-0 bg-yellow-100"
-                      >
-                        Log Form Data
-                      </Button>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-yellow-700 text-sm">Estado del Formulario</h4>
-                    <p className="text-xs text-yellow-600">
-                      {Object.keys(form.formState.errors).length > 0 ? (
-                        <span className="text-red-500">⚠️ Hay errores en el formulario</span>
-                      ) : (
-                        <span className="text-green-500">✅ Formulario válido</span>
-                      )}
-                    </p>
-                    {Object.keys(form.formState.errors).length > 0 && (
-                      <div className="mt-1 text-xs text-red-500">
-                        {Object.entries(form.formState.errors).map(([key, error]) => (
-                          <div key={key}>{key}: {error.message as string}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Datos Factura */}

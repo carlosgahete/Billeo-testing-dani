@@ -71,11 +71,6 @@ export default function EditInvoicePage() {
     }
     
     if (!isLoading && data) {
-      console.log("⚡ Datos de factura cargados:", data);
-      console.log("⚡ Tipo de datos:", typeof data);
-      console.log("⚡ Es array?", Array.isArray(data));
-      console.log("⚡ Keys del objeto:", data ? Object.keys(data) : []);
-      
       try {
         // Procesamiento simplificado para evitar errores de TypeScript
         let formattedData: any = null;
@@ -86,7 +81,6 @@ export default function EditInvoicePage() {
             invoice: data.invoice,
             items: Array.isArray(data.items) ? data.items : []
           };
-          console.log("✅ Formato 1: Datos ya tienen formato esperado");
         }
         // Caso 2: Es un objeto pero no tiene la estructura esperada
         else if (data && typeof data === 'object' && !Array.isArray(data)) {
@@ -113,14 +107,12 @@ export default function EditInvoicePage() {
               invoice: invoiceData,
               items: itemsArray
             };
-            console.log("✅ Formato 2: Datos adaptados de objeto con array de items");
           } else {
             // No hay array, tratamos todo como la factura y creamos items vacíos
             formattedData = {
               invoice: data,
               items: []
             };
-            console.log("⚠️ Formato 3: No se encontraron items, usando datos planos");
           }
         }
         // Caso 3: Los datos son un array
@@ -130,7 +122,6 @@ export default function EditInvoicePage() {
               invoice: data[0],
               items: data.slice(1)
             };
-            console.log("✅ Formato 4: Datos adaptados de array");
           } else {
             throw new Error("Los datos recibidos son un array vacío");
           }
@@ -148,10 +139,8 @@ export default function EditInvoicePage() {
         // Asegurar que items siempre sea un array
         if (!formattedData.items || !Array.isArray(formattedData.items)) {
           formattedData.items = [];
-          console.warn("⚠️ No se encontraron items, se usará un array vacío");
         }
         
-        console.log("✅ Datos formateados finales:", formattedData);
         setInvoiceData(formattedData);
         
       } catch (error: any) {
@@ -175,33 +164,16 @@ export default function EditInvoicePage() {
   
   // Mostrar un mensaje si ocurrió un error al cargar los datos
   if (loadError) {
+    toast({
+      title: "Error al cargar factura",
+      description: loadError,
+      variant: "destructive",
+    });
+    
+    // Si hay un error, mostramos un componente de error en lugar de redirigir
     return (
-      <div className="max-w-full">
-        <div className="w-full bg-gradient-to-r from-blue-600 to-blue-400 py-4 px-5 flex items-center mb-6 shadow-md rounded-lg mx-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate("/invoices")}
-            className="border-white bg-transparent hover:bg-blue-500 text-white hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            <span>Volver</span>
-          </Button>
-          <div className="ml-4 flex-1">
-            <h1 className="text-xl font-bold text-white flex items-center">
-              <Receipt className="h-5 w-5 mr-2" />
-              Error al cargar factura
-            </h1>
-          </div>
-        </div>
-        
-        <div className="p-6 max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold text-red-700 mb-2">
-            Error al cargar datos
-          </h2>
-          <p className="text-red-600 mb-4">
-            {loadError}
-          </p>
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <div className="flex flex-col items-center gap-4">
           <Button onClick={() => navigate("/invoices")}>
             Volver a facturas
           </Button>
