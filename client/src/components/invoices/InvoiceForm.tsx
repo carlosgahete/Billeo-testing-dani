@@ -264,103 +264,113 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     defaultValues: defaultFormValues,
   });
 
-  // Initialize form with invoice data when loaded - either from API or passed in
+  // Initialize form with invoice data when loaded - either from API or passed in directly
   useEffect(() => {
+    // Si no estamos en modo edición, no necesitamos cargar datos
     if (!isEditMode) return;
     
-    // Determinar la fuente de datos a utilizar (initialData o invoiceData)
-    let sourceData = null;
+    // Datos de la factura - preferimos los datos que vienen directamente como prop
+    const sourceData = initialData || invoiceData;
     
-    if (initialData?.invoice && initialData?.items) {
-      console.log("⚡ Usando datos iniciales proporcionados directamente:", initialData);
-      sourceData = initialData;
-    } 
-    else if (invoiceData && 'invoice' in invoiceData && 'items' in invoiceData) {
-      console.log("⚡ Cargando datos de factura para edición desde API:", invoiceData);
-      sourceData = invoiceData;
-    }
+    console.log("📊 Source data para edición:", sourceData);
     
-    // Si no tenemos datos válidos, salir
+    // Si no hay datos en absoluto, salimos
     if (!sourceData) {
-      console.log("⚠️ No se encontraron datos válidos para la factura en modo edición");
+      console.log("⚠️ No hay datos para cargar en el formulario");
       return;
     }
     
     try {
+      // Extraemos la factura y los items
       const { invoice, items } = sourceData;
       
-      // Aseguramos que las fechas estén en formato YYYY-MM-DD
-      const formatDateForInput = (dateString: string) => {
-        if (!dateString) return new Date().toISOString().split("T")[0];
+      if (!invoice || !items) {
+        console.log("⚠️ Los datos no contienen factura o items:", sourceData);
+        return;
+      }
+      
+      console.log("📝 Datos de factura a cargar:", invoice);
+      console.log("📝 Items a cargar:", items);
+      
+      // Función para formatear fechas en YYYY-MM-DD
+      const formatDateToYMD = (dateStr: string) => {
+        if (!dateStr) return new Date().toISOString().split("T")[0];
         try {
-          const date = new Date(dateString);
+          const date = new Date(dateStr);
           return date.toISOString().split("T")[0];
         } catch (e) {
-          console.error("Error al formatear fecha:", e);
-          return dateString;
+          console.error("Error al formatear fecha:", dateStr, e);
+          return dateStr;
         }
       };
       
-      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
-      let additionalTaxesArray: any[] = [];
-      
-      if (invoice?.additionalTaxes) {
-        // Si es una cadena JSON, intentamos parsearlo
+      // Procesamos los impuestos adicionales
+      let additionalTaxes: any[] = [];
+      if (invoice.additionalTaxes) {
         if (typeof invoice.additionalTaxes === 'string') {
           try {
-            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
+            additionalTaxes = JSON.parse(invoice.additionalTaxes);
           } catch (e) {
-            console.error("Error al parsear additionalTaxes como JSON:", e);
-            additionalTaxesArray = [];
+            console.error("Error al parsear additionalTaxes:", e);
+            additionalTaxes = [];
           }
-        } 
-        // Si ya es un array, lo usamos directamente
-        else if (Array.isArray(invoice.additionalTaxes)) {
-          additionalTaxesArray = invoice.additionalTaxes;
+        } else if (Array.isArray(invoice.additionalTaxes)) {
+          additionalTaxes = invoice.additionalTaxes;
         }
       }
       
-      // Transformar los datos para el formulario, con valores por defecto seguros
-      const formattedInvoice = {
-        invoiceNumber: invoice?.invoiceNumber || "",
-        clientId: invoice?.clientId || 0,
-        issueDate: formatDateForInput(invoice?.issueDate || ""),
-        dueDate: formatDateForInput(invoice?.dueDate || ""),
-        status: invoice?.status || "pending",
-        notes: invoice?.notes || "",
-        subtotal: Number(invoice?.subtotal || 0),
-        tax: Number(invoice?.tax || 0),
-        total: Number(invoice?.total || 0),
-        // Mapeamos los items asegurando valores correctos
-        items: (items || []).map((item: any) => ({
-          description: item?.description || "",
-          quantity: Number(item?.quantity || 0),
-          unitPrice: Number(item?.unitPrice || 0),
-          taxRate: Number(item?.taxRate || 21),
-          subtotal: Number(item?.subtotal || 0),
+      // Creamos un objeto con los datos formateados para el formulario
+      const formValues = {
+        // Datos básicos de la factura
+        invoiceNumber: invoice.invoiceNumber || "",
+        clientId: Number(invoice.clientId) || 0,
+        issueDate: formatDateToYMD(invoice.issueDate),
+        dueDate: formatDateToYMD(invoice.dueDate),
+        status: invoice.status || "pending",
+        notes: invoice.notes || "",
+        
+        // Datos financieros
+        subtotal: Number(invoice.subtotal) || 0,
+        tax: Number(invoice.tax) || 0,
+        total: Number(invoice.total) || 0,
+        
+        // Items de la factura - importante convertir todos los valores numéricos
+        items: items.map((item: any) => ({
+          description: item.description || "",
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.unitPrice) || 0,
+          taxRate: Number(item.taxRate) || 21,
+          subtotal: Number(item.quantity) * Number(item.unitPrice) || 0
         })),
-        // Formateamos los impuestos adicionales
-        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
-          name: tax?.name || "",
-          amount: Number(tax?.amount || 0),
-          isPercentage: tax?.isPercentage !== undefined ? tax.isPercentage : false
+        
+        // Impuestos adicionales
+        additionalTaxes: additionalTaxes.map((tax: any) => ({
+          name: tax.name || "",
+          amount: Number(tax.amount) || 0,
+          isPercentage: Boolean(tax.isPercentage)
         }))
       };
       
-      console.log("🔄 Datos formateados para el formulario:", formattedInvoice);
+      console.log("📋 Valores formateados para el formulario:", formValues);
       
-      // Actualizar el formulario con los datos formateados
-      form.reset(formattedInvoice);
+      // Actualizamos el formulario con los nuevos valores
+      form.reset(formValues);
       
-      // Si hay archivos adjuntos, actualizamos el estado
-      if (invoice?.attachments) {
-        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+      // Si la factura tiene archivos adjuntos, los actualizamos
+      if (invoice.attachments) {
+        if (Array.isArray(invoice.attachments)) {
+          setAttachments(invoice.attachments);
+        } else if (typeof invoice.attachments === 'string') {
+          setAttachments([invoice.attachments]);
+        }
       }
       
-      // Recalcular totales después de que el formulario se haya actualizado completamente
+      // Recalculamos totales después de que el formulario se haya actualizado
       setTimeout(() => {
         calculateInvoiceTotals(form);
       }, 200);
+      
+      console.log("✅ Formulario actualizado correctamente con los datos de la factura");
     } catch (error) {
       console.error("❌ Error al cargar los datos de la factura:", error);
       toast({
@@ -369,7 +379,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         variant: "destructive",
       });
     }
-  }, [invoiceData, initialData, isEditMode, form, toast]);
+  }, [isEditMode, invoiceData, initialData, form, toast]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
