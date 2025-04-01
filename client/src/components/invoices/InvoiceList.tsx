@@ -692,23 +692,22 @@ const InvoiceList = () => {
           </span>
         </div>
         <div className="flex gap-2">
-          <Button 
-            className="flex items-center bg-blue-800 text-white hover:bg-blue-900 border-0"
-            size="sm"
+          <button
+            className="apple-style-secondary flex items-center mr-2"
+            onClick={exportAllInvoices}
           >
             <Download className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Exportar todo</span>
             <span className="sm:hidden">Exportar</span>
-          </Button>
-          <Button
-            className="flex items-center bg-white text-blue-600 hover:bg-blue-50"
-            size="sm"
+          </button>
+          <button
+            className="apple-style flex items-center"
             onClick={() => navigate("/invoices/create")}
           >
             <Plus className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Nueva factura</span>
             <span className="sm:hidden">Nueva</span>
-          </Button>
+          </button>
         </div>
       </div>
 

@@ -5,7 +5,15 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     fontFamily: {
-      sans: ["Open Sans", "sans-serif"],
+      sans: [
+        "-apple-system", 
+        "BlinkMacSystemFont", 
+        "San Francisco",
+        "Helvetica Neue", 
+        "Helvetica", 
+        "Arial", 
+        "sans-serif"
+      ],
     },
     extend: {
       borderRadius: {

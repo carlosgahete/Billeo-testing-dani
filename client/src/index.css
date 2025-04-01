@@ -69,9 +69,24 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.011em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;  /* SF Pro uses 500 for medium weight */
+    letter-spacing: -0.021em;
+  }
+  
+  p, li, input, textarea, button {
+    line-height: 1.4;
+    letter-spacing: -0.011em;
   }
 }
 
@@ -121,28 +136,25 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400 font-bold;
 }
 
-/* Estilos para cards de dashboard */
+/* Estilos para cards de dashboard con estilo Apple */
 .dashboard-card {
-  @apply rounded-lg border bg-card shadow-sm overflow-hidden dark:border-gray-700 dark:shadow-gray-900/30;
+  @apply rounded-xl border border-gray-100 bg-card shadow-sm overflow-hidden dark:border-gray-700 dark:shadow-gray-900/20;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.dashboard-card:hover {
-  transform: translateY(-4px);
-  @apply shadow-md dark:shadow-gray-900/40;
-}
-
-/* Estilos para estadísticas */
+/* Estilos para estadísticas con estilo Apple */
 .stat-card {
-  @apply p-6 rounded-lg border bg-card text-card-foreground shadow-sm dark:border-gray-700 dark:shadow-gray-900/30;
+  @apply p-6 rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm dark:border-gray-700 dark:shadow-gray-900/20;
 }
 
 .stat-value {
-  @apply text-2xl md:text-3xl font-bold mt-2;
+  @apply text-2xl md:text-3xl font-medium mt-2;
+  letter-spacing: -0.02em;
 }
 
 .stat-label {
   @apply text-sm text-muted-foreground;
+  letter-spacing: -0.01em;
 }
 
 /* Estilos para etiquetas de estado de facturas */
@@ -208,7 +220,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Personalización de la barra de navegación móvil */
 .mobile-nav {
-  @apply fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex justify-around py-2;
+  @apply fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t flex justify-around py-2;
 }
 
 .mobile-nav-item {
@@ -217,6 +229,33 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .mobile-nav-item.active {
   @apply text-primary;
+}
+
+/* Estilos para botones al estilo Apple */
+button.apple-style {
+  @apply rounded-full bg-primary font-medium px-4 py-2 text-white;
+  letter-spacing: -0.01em;
+  transition: all 0.2s;
+}
+
+button.apple-style:hover {
+  @apply bg-primary/90;
+  transform: translateY(-1px);
+}
+
+button.apple-style:active {
+  transform: translateY(0px);
+}
+
+/* Botones secundarios en estilo Apple */
+button.apple-style-secondary {
+  @apply rounded-full bg-gray-100 font-medium px-4 py-2 text-gray-800;
+  letter-spacing: -0.01em;
+  transition: all 0.2s;
+}
+
+button.apple-style-secondary:hover {
+  @apply bg-gray-200;
 }
 
 /* Mejoras específicas para modo oscuro */
