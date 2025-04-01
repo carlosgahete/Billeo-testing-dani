@@ -32,14 +32,37 @@ const ComparisonCharts = () => {
   const [chartType, setChartType] = useState("bar");
   const [comparisonType, setComparisonType] = useState("quarterly");
   
-  // Datos para los gráficos
+  // Datos para los gráficos - Año completo
   const { data, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard", { year: selectedYear, period: "all" }],
+    // Incluimos comparisonType en la queryKey para que se recargue cuando cambie
+    queryKey: ["/api/stats/dashboard", { year: selectedYear, period: "all", comparisonType }],
     queryFn: async () => {
       const res = await fetch(`/api/stats/dashboard?year=${selectedYear}&period=all`);
       if (!res.ok) throw new Error("Error al cargar estadísticas");
-      return res.json();
-    },
+      
+      // Si estamos en modo trimestral, cargamos los datos de cada trimestre
+      const data = await res.json();
+      
+      if (comparisonType === "quarterly") {
+        // Hacemos consultas paralelas para cada trimestre
+        const [q1Data, q2Data, q3Data, q4Data] = await Promise.all([
+          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q1`).then(r => r.ok ? r.json() : null),
+          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q2`).then(r => r.ok ? r.json() : null),
+          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q3`).then(r => r.ok ? r.json() : null),
+          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q4`).then(r => r.ok ? r.json() : null)
+        ]);
+        
+        // Añadimos los datos trimestrales al resultado
+        data.quarterData = {
+          q1: q1Data,
+          q2: q2Data,
+          q3: q3Data,
+          q4: q4Data
+        };
+      }
+      
+      return data;
+    }
   });
   
   // Formateador de moneda
@@ -51,104 +74,60 @@ const ComparisonCharts = () => {
     }).format(value);
   };
   
-  // Generar datos basados en los datos reales
+  // Generar datos basados en los datos reales por trimestre
   const generateQuarterlyData = (): ChartData[] => {
-    // Datos reales basados en las facturas y transacciones
-    const income = data?.income || 0;
-    const expenses = data?.expenses || 0;
-    const resultado = income - expenses;
+    // Datos para cada trimestre
+    const fetchTrimesterData = async (quarter: string): Promise<ChartData> => {
+      try {
+        const result = await fetch(`/api/stats/dashboard?year=${selectedYear}&period=${quarter}`);
+        const data = await result.json();
+        return {
+          name: quarter.toUpperCase(),
+          ingresos: data.income || 0,
+          gastos: data.expenses || 0,
+          resultado: (data.income || 0) - (data.expenses || 0)
+        };
+      } catch (error) {
+        console.error(`Error obteniendo datos del ${quarter}:`, error);
+        return {
+          name: quarter.toUpperCase(),
+          ingresos: 0,
+          gastos: 0,
+          resultado: 0
+        };
+      }
+    };
     
-    // Datos más realistas para cada trimestre basados en el año seleccionado
-    // El año actual (2025) tiene datos precisos para Q1, proyecciones para Q2-Q4
-    // Los años anteriores tienen datos históricos completos
+    // Usar los datos del trimestre recibido de la API
+    const quarterData = data?.quarterData || {};
     
-    // Definir el mes actual (para determinar qué trimestres ya han pasado)
-    const currentMonth = new Date().getMonth() + 1; // 1-12
-    const currentQuarter = Math.ceil(currentMonth / 3); // 1-4
-    
-    // Calcular distribución por trimestres basado en el año seleccionado
-    if (selectedYear === "2025") { // Año actual
-      return [
-        { 
-          name: "Q1", 
-          ingresos: income, // Q1 está completo con datos reales
-          gastos: expenses, 
-          resultado: resultado
-        },
-        { 
-          name: "Q2", 
-          ingresos: currentQuarter >= 2 ? income * 0.8 : 0, 
-          gastos: currentQuarter >= 2 ? expenses * 0.9 : 0, 
-          resultado: currentQuarter >= 2 ? (income * 0.8) - (expenses * 0.9) : 0
-        },
-        { 
-          name: "Q3", 
-          ingresos: 0, 
-          gastos: 0, 
-          resultado: 0 
-        },
-        { 
-          name: "Q4", 
-          ingresos: 0, 
-          gastos: 0, 
-          resultado: 0 
-        },
-      ];
-    } else if (selectedYear === "2024") { // Año anterior
-      return [
-        { 
-          name: "Q1", 
-          ingresos: income * 0.3, 
-          gastos: expenses * 0.25, 
-          resultado: (income * 0.3) - (expenses * 0.25) 
-        },
-        { 
-          name: "Q2", 
-          ingresos: income * 0.25, 
-          gastos: expenses * 0.25, 
-          resultado: (income * 0.25) - (expenses * 0.25)  
-        },
-        { 
-          name: "Q3", 
-          ingresos: income * 0.2, 
-          gastos: expenses * 0.2, 
-          resultado: (income * 0.2) - (expenses * 0.2) 
-        },
-        { 
-          name: "Q4", 
-          ingresos: income * 0.25, 
-          gastos: expenses * 0.3, 
-          resultado: (income * 0.25) - (expenses * 0.3) 
-        },
-      ];
-    } else { // 2023 o anterior
-      return [
-        { 
-          name: "Q1", 
-          ingresos: income * 0.2, 
-          gastos: expenses * 0.2, 
-          resultado: (income * 0.2) - (expenses * 0.2) 
-        },
-        { 
-          name: "Q2", 
-          ingresos: income * 0.3, 
-          gastos: expenses * 0.3, 
-          resultado: (income * 0.3) - (expenses * 0.3)  
-        },
-        { 
-          name: "Q3", 
-          ingresos: income * 0.3, 
-          gastos: expenses * 0.3, 
-          resultado: (income * 0.3) - (expenses * 0.3) 
-        },
-        { 
-          name: "Q4", 
-          ingresos: income * 0.2, 
-          gastos: expenses * 0.2, 
-          resultado: (income * 0.2) - (expenses * 0.2) 
-        },
-      ];
-    }
+    // Si tenemos datos de la API para los trimestres, usarlos
+    return [
+      { 
+        name: "Q1", 
+        ingresos: quarterData.q1?.income || 0,
+        gastos: quarterData.q1?.expenses || 0,
+        resultado: (quarterData.q1?.income || 0) - (quarterData.q1?.expenses || 0)
+      },
+      { 
+        name: "Q2", 
+        ingresos: quarterData.q2?.income || 0,
+        gastos: quarterData.q2?.expenses || 0,
+        resultado: (quarterData.q2?.income || 0) - (quarterData.q2?.expenses || 0)
+      },
+      { 
+        name: "Q3", 
+        ingresos: quarterData.q3?.income || 0,
+        gastos: quarterData.q3?.expenses || 0,
+        resultado: (quarterData.q3?.income || 0) - (quarterData.q3?.expenses || 0)
+      },
+      { 
+        name: "Q4", 
+        ingresos: quarterData.q4?.income || 0,
+        gastos: quarterData.q4?.expenses || 0,
+        resultado: (quarterData.q4?.income || 0) - (quarterData.q4?.expenses || 0)
+      }
+    ];
   };
   
   const generateYearlyData = (): ChartData[] => {
