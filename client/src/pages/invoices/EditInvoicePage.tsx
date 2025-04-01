@@ -42,16 +42,87 @@ export default function EditInvoicePage() {
     
     if (!isLoading && data) {
       console.log("⚡ Datos de factura cargados:", data);
+      console.log("⚡ Tipo de datos:", typeof data);
+      console.log("⚡ Es array?", Array.isArray(data));
       
-      // Verificar que los datos tienen la estructura esperada
-      if (!data.invoice || !data.items || !Array.isArray(data.items)) {
-        console.error("⚠️ Datos de factura con formato inválido:", data);
-        setLoadError("Los datos de la factura no tienen el formato esperado");
+      // Obtener todas las keys del objeto data para saber qué contiene
+      console.log("⚡ Keys del objeto:", Object.keys(data));
+      
+      // Intentar adaptar diferentes formatos posibles
+      let formattedData;
+      
+      if (data.invoice && data.items) {
+        // Formato esperado: { invoice: {...}, items: [...] }
+        formattedData = data;
+        console.log("✅ Formato 1: Datos ya tienen formato esperado");
+      }
+      else if (!data.invoice && !data.items && typeof data === 'object') {
+        // Es posible que el invoice sea el objeto principal y que los items estén en otra propiedad
+        // Primero buscamos si hay una propiedad que contenga un array
+        let itemsProperty = null;
+        let invoiceData = { ...data };
+        
+        for (const key in data) {
+          if (Array.isArray(data[key])) {
+            itemsProperty = key;
+            break;
+          }
+        }
+        
+        // Si encontramos una propiedad que sea un array, asumimos que son los items
+        if (itemsProperty) {
+          const items = data[itemsProperty];
+          delete invoiceData[itemsProperty]; // Eliminar la propiedad de items
+          
+          formattedData = {
+            invoice: invoiceData,
+            items: items
+          };
+          console.log("✅ Formato 2: Datos adaptados de objeto con array de items");
+        } else {
+          // Tratar todo el objeto como la factura y crear items vacíos
+          formattedData = {
+            invoice: data,
+            items: []
+          };
+          console.log("⚠️ Formato 3: No se encontraron items, usando datos planos");
+        }
+      }
+      else if (Array.isArray(data)) {
+        // Si lo que recibimos es un array, el primer elemento podría ser la factura
+        // y el resto podrían ser los items
+        if (data.length > 0) {
+          formattedData = {
+            invoice: data[0],
+            items: data.slice(1)
+          };
+          console.log("✅ Formato 4: Datos adaptados de array");
+        } else {
+          setLoadError("Los datos recibidos son un array vacío");
+          return;
+        }
+      }
+      else {
+        console.error("⚠️ Formato de datos desconocido:", data);
+        setLoadError("Los datos recibidos tienen un formato desconocido");
         return;
       }
       
-      // Almacenar los datos procesados para pasarlos al formulario
-      setInvoiceData(data);
+      // Validar que tengamos lo mínimo necesario
+      if (!formattedData.invoice) {
+        console.error("⚠️ No se pudo extraer la información de la factura");
+        setLoadError("No se pudo extraer la información de la factura");
+        return;
+      }
+      
+      // Si no hay items, creamos un array vacío
+      if (!formattedData.items || !Array.isArray(formattedData.items)) {
+        formattedData.items = [];
+        console.warn("⚠️ No se encontraron items, se usará un array vacío");
+      }
+      
+      console.log("✅ Datos formateados finales:", formattedData);
+      setInvoiceData(formattedData);
     }
   }, [data, isLoading, isError, error]);
   
