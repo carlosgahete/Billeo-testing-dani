@@ -153,34 +153,38 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery<{ invoice: any; items: any[] }>({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode,
+    staleTime: 0, // Siempre obtener los datos más recientes
+    cacheTime: 0  // No usar caché para este caso específico
   });
+
+  const defaultFormValues = {
+    invoiceNumber: "",
+    clientId: 0,
+    issueDate: new Date().toISOString().split("T")[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    subtotal: 0,
+    tax: 0,
+    total: 0,
+    additionalTaxes: [],
+    status: "pending",
+    notes: "",
+    attachments: [],
+    items: [
+      {
+        description: "",
+        quantity: 1,
+        unitPrice: 0,
+        taxRate: 21,
+        subtotal: 0,
+      },
+    ],
+  };
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
-    defaultValues: {
-      invoiceNumber: "",
-      clientId: 0,
-      issueDate: new Date().toISOString().split("T")[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      subtotal: 0,
-      tax: 0,
-      total: 0,
-      additionalTaxes: [],
-      status: "pending",
-      notes: "",
-      attachments: [],
-      items: [
-        {
-          description: "",
-          quantity: 1,
-          unitPrice: 0,
-          taxRate: 21,
-          subtotal: 0,
-        },
-      ],
-    },
+    defaultValues: defaultFormValues,
   });
 
   // Initialize form with invoice data when loaded
