@@ -174,9 +174,9 @@ const Dashboard = () => {
           className="w-full overflow-visible"
         >
           <div className="flex justify-end items-center mt-1">
-            <div className="flex bg-white/30 backdrop-blur-md p-1 rounded-lg shadow-sm border border-white/40">
+            <div className="flex bg-white/10 backdrop-blur-md p-2 rounded-full gap-4">
               <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md border-0 w-[80px] flex items-center justify-between p-2 h-8 min-h-0">
+                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[80px] flex items-center justify-between p-2 h-8 min-h-0">
                   <span className="font-semibold text-white text-sm">{year}</span>
                   <ChevronDown className="h-3.5 w-3.5 text-white/80" />
                 </SelectTrigger>
@@ -187,10 +187,10 @@ const Dashboard = () => {
                 </SelectContent>
               </Select>
               
-              <div className="w-px h-5 bg-white/30 mx-1 self-center"></div>
+              <div className="w-px h-5 bg-white/20 self-center"></div>
               
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md border-0 w-[140px] flex items-center justify-between p-2 h-8 min-h-0">
+                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[140px] flex items-center justify-between p-2 h-8 min-h-0">
                   <span className="font-semibold text-white text-sm">
                     {period === "all" ? "Todo el año" : 
                      period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
