@@ -1146,12 +1146,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                               placeholder="1"
                               className="border-neutral-200 text-center"
                               onChange={(e) => {
+                                // Solo actualizamos el valor, sin recalcular
                                 form.setValue(
                                   `items.${index}.quantity` as const,
-                                  toNumber(e.target.value, 0)
+                                  e.target.value === '' ? 0 : parseFloat(e.target.value)
                                 );
-                                // Aplazamos el cálculo para no perder el foco
-                                setTimeout(() => calculateInvoiceTotals(form), 10);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
@@ -1172,12 +1171,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                               placeholder="0.00"
                               className="border-neutral-200 text-center"
                               onChange={(e) => {
+                                // Solo actualizamos el valor, sin recalcular
                                 form.setValue(
                                   `items.${index}.unitPrice` as const,
-                                  toNumber(e.target.value, 0)
+                                  e.target.value === '' ? 0 : parseFloat(e.target.value)
                                 );
-                                // Aplazamos el cálculo para no perder el foco
-                                setTimeout(() => calculateInvoiceTotals(form), 10);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.unitPrice && (
@@ -1200,10 +1198,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                               onChange={(e) => {
                                 form.setValue(
                                   `items.${index}.taxRate` as const,
-                                  toNumber(e.target.value, 21)
+                                  e.target.value === '' ? 21 : parseFloat(e.target.value)
                                 );
-                                // Aplazamos el cálculo para no perder el foco
-                                setTimeout(() => calculateInvoiceTotals(form), 10);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.taxRate && (
