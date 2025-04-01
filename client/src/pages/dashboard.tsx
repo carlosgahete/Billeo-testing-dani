@@ -173,12 +173,12 @@ const Dashboard = () => {
           variant="gradient"
           className="w-full"
         >
-          <div className="flex flex-wrap gap-4 pt-2">
-            <div className="bg-white rounded-md shadow-sm border p-3 flex items-center justify-between w-[180px]">
-              <span className="text-base font-medium text-gray-700">{year}</span>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <div className="bg-white rounded-md shadow-sm border p-1.5 flex items-center justify-between w-[120px]">
+              <span className="text-sm font-medium text-gray-700">{year}</span>
               <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-8 border-0 p-0 h-auto bg-transparent">
-                  <ChevronDown className="h-4 w-4 opacity-50" />
+                <SelectTrigger className="w-6 border-0 p-0 h-auto bg-transparent">
+                  <ChevronDown className="h-3 w-3 opacity-50" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2023">2023</SelectItem>
@@ -188,8 +188,8 @@ const Dashboard = () => {
               </Select>
             </div>
             
-            <div className="bg-white rounded-md shadow-sm border p-3 flex items-center justify-between w-[180px]">
-              <span className="text-base font-medium text-gray-700">
+            <div className="bg-white rounded-md shadow-sm border p-1.5 flex items-center justify-between w-[140px]">
+              <span className="text-sm font-medium text-gray-700">
                 {period === "all" ? "Todo el año" : 
                  period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
                  period === "m1" ? "Enero" :
@@ -205,8 +205,8 @@ const Dashboard = () => {
                  period === "m11" ? "Noviembre" : "Diciembre"}
               </span>
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="w-8 border-0 p-0 h-auto bg-transparent">
-                  <ChevronDown className="h-4 w-4 opacity-50" />
+                <SelectTrigger className="w-6 border-0 p-0 h-auto bg-transparent">
+                  <ChevronDown className="h-3 w-3 opacity-50" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todo el año</SelectItem>
