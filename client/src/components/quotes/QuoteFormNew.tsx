@@ -457,17 +457,17 @@ const QuoteForm = ({ quoteId }: QuoteFormProps) => {
                 control={form.control}
                 name="validUntil"
                 render={({ field }) => (
-                  <FormItem className="border-2 border-red-100 rounded-md p-3 bg-red-50">
-                    <FormLabel className="font-semibold text-red-600">Válido hasta</FormLabel>
-                    <FormDescription className="text-xs text-red-500">
-                      Establece la fecha hasta la que será válido este presupuesto. Se destacará en el PDF.
+                  <FormItem>
+                    <FormLabel>Fecha de validez</FormLabel>
+                    <FormDescription className="text-xs">
+                      Establece la fecha hasta la que será válido este presupuesto.
                     </FormDescription>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
-                            className="w-full pl-3 text-left font-normal border-red-200"
+                            className="w-full pl-3 text-left font-normal"
                           >
                             {field.value ? (
                               format(field.value, "dd/MM/yyyy", { locale: es })
