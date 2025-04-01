@@ -690,7 +690,7 @@ const IncomeExpenseReport = () => {
                   <Button 
                     variant="ghost" 
                     onClick={() => navigate("/invoices/new")}
-                    className="bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors duration-200"
+                    className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 transition-colors duration-200"
                     size="sm"
                   >
                     <PlusCircle className="mr-1.5 h-4 w-4" />
