@@ -523,7 +523,7 @@ const InvoiceList = () => {
                   <DropdownMenuItem onClick={() => navigate(`/invoices/${invoice.id}`)}>
                     <Eye className="h-4 w-4 mr-2" /> Ver
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}>
+                  <DropdownMenuItem onClick={() => navigate(`/invoices/edit/${invoice.id}`)}>
                     <Edit className="h-4 w-4 mr-2" /> Editar
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleExportInvoicePDF(invoice)}>
@@ -609,7 +609,7 @@ const InvoiceList = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}
+                      onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>

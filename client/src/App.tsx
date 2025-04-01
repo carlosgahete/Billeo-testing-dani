@@ -16,6 +16,7 @@ import Dashboard from "@/pages/dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
+import EditInvoicePage from "@/pages/invoices/EditInvoicePage";
 import QuotesPage from "@/pages/quotes/index";
 import CreateQuotePage from "@/pages/quotes/create";
 import EditQuotePage from "@/pages/quotes/edit/[id]";
@@ -61,6 +62,13 @@ function Router() {
         <Layout>
           <ProtectedRoute path="/invoices/create" component={CreateInvoicePage} />
         </Layout>
+      </Route>
+      <Route path="/invoices/edit/:id">
+        {(params) => (
+          <Layout>
+            <ProtectedRoute path={`/invoices/edit/${params.id}`} component={EditInvoicePage} />
+          </Layout>
+        )}
       </Route>
       <Route path="/invoices/:id">
         {(params) => (

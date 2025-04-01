@@ -275,11 +275,18 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     const { invoice, items } = externalData;
     
+    console.log("📝 Procesando factura:", invoice);
+    console.log("📝 Procesando items:", items);
+    
     // Formatear fechas
     const formatDate = (dateStr: string) => {
       if (!dateStr) return new Date().toISOString().split("T")[0];
       try {
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          console.warn("⚠️ Fecha inválida:", dateStr);
+          return new Date().toISOString().split("T")[0];
+        }
         return date.toISOString().split("T")[0];
       } catch (e) {
         console.error("Error al formatear fecha:", e);
@@ -289,42 +296,127 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     // Procesar impuestos adicionales
     let additionalTaxes: any[] = [];
-    if (invoice.additionalTaxes) {
-      if (typeof invoice.additionalTaxes === 'string') {
+    
+    // Verificar si hay additionalTaxes o si se llaman taxes
+    const taxesData = invoice.additionalTaxes || invoice.taxes || [];
+    
+    if (taxesData) {
+      if (typeof taxesData === 'string') {
         try {
-          additionalTaxes = JSON.parse(invoice.additionalTaxes);
+          additionalTaxes = JSON.parse(taxesData);
+          console.log("🔄 Impuestos parseados desde string:", additionalTaxes);
         } catch (e) {
-          console.error("Error al parsear additionalTaxes:", e);
+          console.error("❌ Error al parsear additionalTaxes:", e);
         }
-      } else if (Array.isArray(invoice.additionalTaxes)) {
-        additionalTaxes = invoice.additionalTaxes;
+      } else if (Array.isArray(taxesData)) {
+        additionalTaxes = taxesData;
+        console.log("🔄 Impuestos como array:", additionalTaxes);
+      } else {
+        console.warn("⚠️ Formato de impuestos desconocido:", taxesData);
       }
     }
     
+    // Procesar items asegurando conversión de tipos
+    const processedItems = Array.isArray(items) ? items.map((item: any) => {
+      // Obtener valores
+      const description = item.description || "";
+      
+      // Para quantity, unitPrice, taxRate y subtotal intentamos convertir a número
+      let quantity = 1;
+      try {
+        quantity = typeof item.quantity === 'number' ? item.quantity : 
+                   parseFloat(item.quantity || "1");
+        if (isNaN(quantity)) quantity = 1;
+      } catch (e) {
+        console.warn("⚠️ Error al procesar quantity:", e);
+      }
+      
+      let unitPrice = 0;
+      try {
+        unitPrice = typeof item.unitPrice === 'number' ? item.unitPrice : 
+                    parseFloat(item.unitPrice || "0");
+        if (isNaN(unitPrice)) unitPrice = 0;
+        
+        // Si no hay unitPrice pero hay price, usamos price
+        if (unitPrice === 0 && item.price) {
+          unitPrice = typeof item.price === 'number' ? item.price : 
+                      parseFloat(item.price || "0");
+        }
+      } catch (e) {
+        console.warn("⚠️ Error al procesar unitPrice:", e);
+      }
+      
+      let taxRate = 21; // IVA por defecto
+      try {
+        taxRate = typeof item.taxRate === 'number' ? item.taxRate : 
+                  parseFloat(item.taxRate || "21");
+        if (isNaN(taxRate)) taxRate = 21;
+      } catch (e) {
+        console.warn("⚠️ Error al procesar taxRate:", e);
+      }
+      
+      let subtotal = 0;
+      try {
+        subtotal = typeof item.subtotal === 'number' ? item.subtotal : 
+                   parseFloat(item.subtotal || "0");
+        if (isNaN(subtotal)) subtotal = 0;
+        
+        // Si no hay subtotal pero hay cantidad y precio, lo calculamos
+        if (subtotal === 0) {
+          subtotal = quantity * unitPrice;
+        }
+      } catch (e) {
+        console.warn("⚠️ Error al procesar subtotal:", e);
+      }
+      
+      return {
+        description: description,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        taxRate: taxRate,
+        subtotal: subtotal,
+      };
+    }) : [];
+    
+    console.log("✅ Items procesados:", processedItems);
+    
+    // Si no hay items, añadimos uno vacío
+    if (processedItems.length === 0) {
+      processedItems.push({
+        description: "",
+        quantity: 1,
+        unitPrice: 0,
+        taxRate: 21,
+        subtotal: 0,
+      });
+    }
+    
     // Construir el objeto de valores para el formulario
-    return {
+    const result = {
       invoiceNumber: invoice.invoiceNumber || "",
-      clientId: parseInt(invoice.clientId) || 0,
+      clientId: typeof invoice.clientId === 'number' ? invoice.clientId : 
+                parseInt(invoice.clientId) || 0,
       issueDate: formatDate(invoice.issueDate),
       dueDate: formatDate(invoice.dueDate),
       status: invoice.status || "pending",
       notes: invoice.notes || "",
-      subtotal: parseFloat(invoice.subtotal) || 0,
-      tax: parseFloat(invoice.tax) || 0,
-      total: parseFloat(invoice.total) || 0,
-      items: items.map((item: any) => ({
-        description: item.description || "",
-        quantity: parseFloat(item.quantity) || 0,
-        unitPrice: parseFloat(item.unitPrice) || 0,
-        taxRate: parseFloat(item.taxRate) || 21,
-        subtotal: parseFloat(item.subtotal) || 0,
-      })),
+      subtotal: typeof invoice.subtotal === 'number' ? invoice.subtotal : 
+                parseFloat(invoice.subtotal || "0"),
+      tax: typeof invoice.tax === 'number' ? invoice.tax : 
+           parseFloat(invoice.tax || "0"),
+      total: typeof invoice.total === 'number' ? invoice.total : 
+             parseFloat(invoice.total || "0"),
+      items: processedItems,
       additionalTaxes: additionalTaxes.map((tax: any) => ({
         name: tax.name || "",
-        amount: parseFloat(tax.amount) || 0,
+        amount: typeof tax.amount === 'number' ? tax.amount : 
+                parseFloat(tax.amount || "0"),
         isPercentage: Boolean(tax.isPercentage),
       })),
     };
+    
+    console.log("✅ Formulario procesado correctamente:", result);
+    return result;
   };
 
   // Efecto para inicializar el formulario cuando estamos en modo edición
