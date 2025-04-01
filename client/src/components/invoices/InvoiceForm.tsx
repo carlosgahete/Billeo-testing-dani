@@ -589,7 +589,13 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="border-0 shadow-md overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
+                <h3 className="text-lg font-medium flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Datos de la factura
+                </h3>
+              </div>
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <FormField
@@ -597,9 +603,12 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                     name="invoiceNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Número de factura</FormLabel>
+                        <FormLabel className="flex items-center text-blue-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2"></span>
+                          Número de factura
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="F-2023-001" {...field} />
+                          <Input placeholder="F-2023-001" {...field} className="border-blue-200 focus:border-blue-400" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -804,7 +813,13 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md overflow-hidden">
+              <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
+                <h3 className="text-lg font-medium flex items-center">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Información adicional
+                </h3>
+              </div>
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <FormField
@@ -812,12 +827,16 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notas</FormLabel>
+                        <FormLabel className="flex items-center text-green-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></span>
+                          Notas
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Información adicional para la factura..."
                             {...field}
                             value={field.value || ""}
+                            className="border-green-200 focus:border-green-400 min-h-[100px]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -860,9 +879,14 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
             </Card>
           </div>
 
-          <Card>
+          <Card className="border-0 shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-400 p-4 text-white">
+              <h3 className="text-lg font-medium flex items-center">
+                <FileText className="mr-2 h-5 w-5" />
+                Detalles de la factura
+              </h3>
+            </div>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Detalles de la factura</h3>
               
               <div className="mb-4 space-y-4">
                 {fields.map((field, index) => (
@@ -1191,35 +1215,46 @@ const InvoiceForm = ({ invoiceId }: InvoiceFormProps) => {
                 </div>
               )}
               
-              <div className="border-t pt-4 flex flex-col items-end">
-                <div className="flex justify-between w-full md:w-80 mb-2">
-                  <span className="text-sm text-muted-foreground">Subtotal:</span>
-                  <span className="font-medium">
-                    {form.getValues("subtotal").toFixed(2)} €
-                  </span>
-                </div>
-                <div className="flex justify-between w-full md:w-80 mb-2">
-                  <span className="text-sm text-muted-foreground">IVA:</span>
-                  <span className="font-medium">
-                    {form.getValues("tax").toFixed(2)} €
-                  </span>
-                </div>
-                
-                {/* Mostrar impuestos adicionales */}
-                {taxFields.map((field, index) => (
-                  <div key={field.id} className="flex justify-between w-full md:w-80 mb-2">
-                    <span className="text-sm text-muted-foreground">{field.name}:</span>
+              <div className="border-t pt-6 flex flex-col items-end">
+                <div className="bg-slate-50 rounded-lg p-4 w-full md:w-96 shadow-sm">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-slate-600">Subtotal:</span>
                     <span className="font-medium">
-                      {field.isPercentage 
-                        ? `${field.amount.toFixed(2)}% (${((form.getValues("subtotal") * field.amount) / 100).toFixed(2)} €)`
-                        : `${field.amount.toFixed(2)} €`}
+                      {form.getValues("subtotal").toFixed(2)} €
                     </span>
                   </div>
-                ))}
-                
-                <div className="flex justify-between w-full md:w-80 text-lg font-bold">
-                  <span>Total:</span>
-                  <span>{form.getValues("total").toFixed(2)} €</span>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-slate-600">IVA:</span>
+                    <span className="font-medium">
+                      {form.getValues("tax").toFixed(2)} €
+                    </span>
+                  </div>
+                  
+                  {/* Mostrar impuestos adicionales */}
+                  {taxFields.map((field, index) => {
+                    const taxName = form.getValues(`additionalTaxes.${index}.name`);
+                    const taxAmount = form.getValues(`additionalTaxes.${index}.amount`);
+                    const isPercentage = form.getValues(`additionalTaxes.${index}.isPercentage`);
+                    const subtotal = form.getValues("subtotal");
+                    const calculatedAmount = isPercentage ? (subtotal * taxAmount / 100) : taxAmount;
+                    const isNegative = calculatedAmount < 0;
+                    
+                    return (
+                      <div key={field.id} className="flex justify-between mb-2">
+                        <span className="text-sm text-slate-600">
+                          {taxName || "Impuesto"}{isPercentage ? ` (${taxAmount}%)` : ''}:
+                        </span>
+                        <span className={`font-medium ${isNegative ? "text-red-600" : ""}`}>
+                          {calculatedAmount.toFixed(2)} €
+                        </span>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex justify-between mt-3 pt-3 border-t">
+                    <span className="font-semibold">Total:</span>
+                    <span className="font-bold text-lg text-blue-700">{form.getValues("total").toFixed(2)} €</span>
+                  </div>
                 </div>
               </div>
             </CardContent>

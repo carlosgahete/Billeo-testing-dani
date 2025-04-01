@@ -21,23 +21,26 @@ const CreateInvoicePage = () => {
 
   return (
     <div className="max-w-full">
-      {/* Cabecera mejorada */}
-      <div className="w-full bg-gradient-to-r from-blue-50 to-gray-50 py-3 px-4 border-b flex items-center gap-3 mb-6 shadow-sm">
-        <div className="w-12 ml-6 hidden sm:block"></div> {/* Espacio para la hamburguesa en desktop */}
-        <div className="sm:hidden w-8"></div> {/* Espacio para la hamburguesa en móvil */}
+      {/* Cabecera con degradado */}
+      <div className="w-full bg-gradient-to-r from-blue-600 to-blue-400 py-4 px-5 flex items-center mb-6 shadow-md rounded-lg mx-4">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={() => navigate("/invoices")}
-          className="border-blue-200 bg-white hover:bg-blue-50"
+          className="border-white bg-transparent hover:bg-blue-500 text-white hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4 mr-2 text-blue-500" />
-          <span className="text-blue-600">Volver</span>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          <span>Volver</span>
         </Button>
-        <h1 className="text-base font-semibold text-neutral-800 ml-2 flex items-center">
-          <Receipt className="h-4 w-4 mr-2 text-blue-500" />
-          Crear factura
-        </h1>
+        <div className="ml-4 flex-1">
+          <h1 className="text-xl font-bold text-white flex items-center">
+            <Receipt className="h-5 w-5 mr-2" />
+            {authLoading ? "Cargando..." : "Crear nueva factura"}
+          </h1>
+          <p className="text-blue-100 text-sm mt-1">
+            Completa los detalles para generar un documento profesional
+          </p>
+        </div>
       </div>
       
       <InvoiceForm />
