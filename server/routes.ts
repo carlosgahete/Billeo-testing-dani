@@ -526,6 +526,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json({ authenticated: false });
   });
   
+  // Endpoint para obtener datos del usuario actual (compatible con React Query)
+  app.get("/api/user", async (req, res) => {
+    // Verificar si el usuario está autenticado
+    if (req.isAuthenticated()) {
+      const { password, ...userWithoutPassword } = req.user as any;
+      return res.status(200).json(userWithoutPassword);
+    }
+    
+    // Si no está autenticado por passport, verificar si hay userId en la sesión
+    if (req.session && req.session.userId) {
+      try {
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          const { password, ...userWithoutPassword } = user;
+          return res.status(200).json(userWithoutPassword);
+        }
+      } catch (error) {
+        console.error("Error getting user from userId:", error);
+      }
+    }
+    
+    return res.status(401).json({
+      message: "Not authenticated"
+    });
+  });
+  
   // Endpoint para diagnóstico de la sesión
   app.get("/api/debug/session", (req, res) => {
     return res.status(200).json({
@@ -1136,21 +1162,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generar el nuevo número de factura con formato AÑO-NÚMERO (con padding)
       const nextNumber = lastNumber + 1;
       const paddedNumber = nextNumber.toString().padStart(3, '0');
-      const newInvoiceNumber = `${currentYear}-${paddedNumber}`;
+      let finalInvoiceNumber = `${currentYear}-${paddedNumber}`;
       
-      console.log(`Generando nueva factura con número: ${newInvoiceNumber}`);
+      console.log(`Generando nueva factura con número: ${finalInvoiceNumber}`);
       
       // Si el usuario ya proporcionó un número de factura, verificar que no exista duplicado
       if (invoice.invoiceNumber && invoice.invoiceNumber.trim() !== '') {
         const existingInvoice = invoices.find(inv => inv.invoiceNumber === invoice.invoiceNumber);
         if (existingInvoice) {
           // Si hay duplicado, usamos el número generado automáticamente
-          console.log(`Número de factura ${invoice.invoiceNumber} ya existe, usando número generado: ${newInvoiceNumber}`);
+          console.log(`Número de factura ${invoice.invoiceNumber} ya existe, usando número generado: ${finalInvoiceNumber}`);
         } else {
           // Si no hay duplicado, respetamos el número proporcionado por el usuario
           console.log(`Usando número de factura proporcionado por el usuario: ${invoice.invoiceNumber}`);
           // Actualizamos la variable para mantener consistencia en el código
-          newInvoiceNumber = invoice.invoiceNumber;
+          finalInvoiceNumber = invoice.invoiceNumber;
         }
       }
       
@@ -1159,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceData = {
         ...invoice,
         userId: req.session.userId,
-        invoiceNumber: newInvoiceNumber, // Usar el nuevo formato de número de factura o el proporcionado por el usuario
+        invoiceNumber: finalInvoiceNumber, // Usar el nuevo formato de número de factura o el proporcionado por el usuario
         status: invoice.status || "pending",
         notes: invoice.notes ?? null,
         attachments: invoice.attachments ?? null,
