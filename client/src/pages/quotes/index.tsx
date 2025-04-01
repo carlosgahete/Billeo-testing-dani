@@ -154,10 +154,10 @@ export default function QuotesPage() {
   return (
     <Layout>
       {/* Header compacto estilo imagen de referencia */}
-      <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-4 px-5 mb-4 shadow-md mx-0">
+      <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-5 px-6 mb-6 shadow-md mx-0">
         <div className="flex items-center">
-          <FileText className="h-5 w-5 mr-2 text-white" />
-          <h1 className="text-lg font-bold text-white">Gestión de Presupuestos</h1>
+          <FileText className="h-6 w-6 mr-3 text-white" />
+          <h1 className="text-xl font-bold text-white tracking-wide">Gestión de Presupuestos</h1>
         </div>
       </div>
 
