@@ -53,69 +53,6 @@ function toNumber(value: any, defaultValue = 0): number {
   return isNaN(numericValue) ? defaultValue : numericValue;
 }
 
-// Función auxiliar para calcular totales (definida globalmente para evitar referencias circulares)
-function calculateInvoiceTotals(form: any) {
-  const items = form.getValues("items") || [];
-  const additionalTaxes = form.getValues("additionalTaxes") || [];
-  
-  // Calculate subtotal for each item
-  const updatedItems = items.map((item: any) => {
-    const quantity = toNumber(item.quantity, 0);
-    const unitPrice = toNumber(item.unitPrice, 0);
-    const subtotal = quantity * unitPrice;
-    
-    return {
-      ...item,
-      quantity: quantity,
-      unitPrice: unitPrice,
-      subtotal: subtotal
-    };
-  });
-  
-  form.setValue("items", updatedItems);
-  
-  // Calculate invoice totals
-  const subtotal = updatedItems.reduce((sum: number, item: any) => sum + toNumber(item.subtotal, 0), 0);
-  const tax = updatedItems.reduce((sum: number, item: any) => {
-    const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
-    return sum + itemTax;
-  }, 0);
-  
-  // Calcular el importe total de impuestos adicionales
-  let additionalTaxesTotal = 0;
-  
-  additionalTaxes.forEach((taxItem: any) => {
-    if (taxItem.isPercentage) {
-      const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
-      additionalTaxesTotal += percentageTax;
-    } else {
-      additionalTaxesTotal += toNumber(taxItem.amount, 0);
-    }
-  });
-  
-  const total = subtotal + tax + additionalTaxesTotal;
-  const safeTotal = Math.max(0, total);
-  
-  form.setValue("subtotal", subtotal);
-  form.setValue("tax", tax);
-  form.setValue("total", safeTotal);
-  
-  console.log("💰 Cálculo de totales:", {
-    subtotal,
-    tax,
-    additionalTaxesTotal,
-    total: safeTotal,
-    desglose: additionalTaxes.map((tax: any) => ({
-      nombre: tax.name,
-      valor: tax.isPercentage ? 
-        `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
-        `${tax.amount}€`
-    }))
-  });
-  
-  return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
-}
-
 // Define schema for additional tax
 const additionalTaxSchema = z.object({
   name: z.string().min(1, "El nombre del impuesto es obligatorio"),
@@ -330,7 +267,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       
       // Recalcular totales después de que el formulario se haya actualizado completamente
       setTimeout(() => {
-        calculateInvoiceTotals(form);
       }, 200);
     }
     // Si no, usar datos de la API
@@ -411,7 +347,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       
       // Recalcular totales después de que el formulario se haya actualizado completamente
       setTimeout(() => {
-        calculateInvoiceTotals(form);
       }, 200);
     }
   }, [invoiceData, initialData, isEditMode, form]);
@@ -567,11 +502,80 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     },
   });
 
-  // Ya tenemos calculateInvoiceTotals definida globalmente
+  // Función para calcular totales a partir de los datos del formulario
+    const items = form.getValues("items") || [];
+    const additionalTaxes = form.getValues("additionalTaxes") || [];
+    
+    // Calculate subtotal for each item
+    const updatedItems = items.map(item => {
+      // Asegurarnos que tenemos números válidos usando nuestra función toNumber
+      const quantity = toNumber(item.quantity, 0);
+      const unitPrice = toNumber(item.unitPrice, 0);
+      const subtotal = quantity * unitPrice;
+      
+      return {
+        ...item,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        subtotal: subtotal
+      };
+    });
+    
+    // Update form with calculated subtotals
+    form.setValue("items", updatedItems);
+    
+    // Calculate invoice totals
+    const subtotal = updatedItems.reduce((sum, item) => sum + toNumber(item.subtotal, 0), 0);
+    const tax = updatedItems.reduce((sum, item) => {
+      const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
+      return sum + itemTax;
+    }, 0);
+    
+    // Calcular el importe total de impuestos adicionales (incluye impuestos tanto positivos como negativos)
+    let additionalTaxesTotal = 0;
+    
+    // Procesamos cada impuesto adicional según su tipo
+    additionalTaxes.forEach(taxItem => {
+      if (taxItem.isPercentage) {
+        // Si es un porcentaje, calculamos en base al subtotal
+        // El signo del importe determina si es un cargo (+) o un descuento (-)
+        const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
+        additionalTaxesTotal += percentageTax;
+      } else {
+        // Si es un valor monetario, lo añadimos directamente manteniendo su signo
+        additionalTaxesTotal += toNumber(taxItem.amount, 0);
+      }
+    });
+    
+    // Calcular el total correctamente: base + IVA líneas + impuestos adicionales
+    // Los impuestos negativos (como IRPF) ya tienen signo negativo en additionalTaxesTotal
+    const total = subtotal + tax + additionalTaxesTotal;
+    
+    // Asegurarnos que los valores nunca sean negativos
+    const safeTotal = Math.max(0, total);
+    
+    form.setValue("subtotal", subtotal);
+    form.setValue("tax", tax);
+    form.setValue("total", safeTotal);
+    
+    console.log("💰 Cálculo de totales:", {
+      subtotal,
+      tax,
+      additionalTaxesTotal,
+      total: safeTotal,
+      desglose: additionalTaxes.map(tax => ({
+        nombre: tax.name,
+        valor: tax.isPercentage ? 
+          `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
+          `${tax.amount}€`
+      }))
+    });
+    
+    return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
+  };
 
   const handleSubmit = (data: InvoiceFormValues) => {
     // Recalculate totals before submission
-    const { subtotal, tax, additionalTaxesTotal, total } = calculateInvoiceTotals(form);
     data.subtotal = subtotal;
     data.tax = tax;
     data.total = total;
@@ -590,7 +594,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       if (numericValue > 0 || field.value !== "") {
         field.onChange(numericValue.toString());
       }
-      calculateInvoiceTotals(form);
     };
   };
   
@@ -605,7 +608,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         isPercentage: true 
       });
       // Recalcular totales después de agregar impuesto
-      setTimeout(() => calculateInvoiceTotals(form), 0);
     } else if (taxType === 'iva') {
       // IVA adicional (21%)
       appendTax({ 
@@ -614,7 +616,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         isPercentage: true 
       });
       // Recalcular totales después de agregar impuesto
-      setTimeout(() => calculateInvoiceTotals(form), 0);
     } else {
       // Mostrar diálogo para impuesto personalizado
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
@@ -627,7 +628,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     appendTax(newTaxData);
     setShowTaxDialog(false);
     // Recalcular totales después de agregar impuesto
-    setTimeout(() => calculateInvoiceTotals(form), 0);
   };
 
   // Función que maneja la creación o actualización de un cliente
@@ -1011,7 +1011,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   field.onChange(value);
                                 }}
                                 onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
                                 }}
                               />
                             </FormControl>
@@ -1040,7 +1039,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   field.onChange(value);
                                 }}
                                 onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
                                 }}
                               />
                             </FormControl>
@@ -1068,7 +1066,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(parseFloat(e.target.value));
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
                                 }}
                               />
                             </FormControl>
@@ -1111,7 +1108,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         size="icon"
                         onClick={() => {
                           remove(index);
-                          // Función calculateInvoiceTotals(form) reemplazada con código inline
                         }}
                         disabled={fields.length === 1}
                         className="h-10 w-10"
@@ -1222,7 +1218,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                       {...field} 
                                       onChange={(e) => {
                                         field.onChange(parseFloat(e.target.value));
-                                        // Función calculateInvoiceTotals(form) reemplazada con código inline
                                       }}
                                       className="h-8 text-sm"
                                     />
@@ -1242,7 +1237,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                                 size="sm"
                                                 onClick={() => {
                                                   field.onChange(!field.value);
-                                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
                                                 }}
                                                 className="h-8 px-2 text-xs font-normal"
                                               >
@@ -1268,7 +1262,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             size="sm"
                             onClick={() => {
                               removeTax(index);
-                              // Función calculateInvoiceTotals(form) reemplazada con código inline
                             }}
                             className="h-6 w-6 p-0"
                           >

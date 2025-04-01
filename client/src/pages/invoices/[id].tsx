@@ -65,7 +65,7 @@ const InvoiceDetailPage = () => {
             </p>
           </div>
         </div>
-        <InvoiceForm invoiceId={invoiceId} />
+        <InvoiceForm invoiceId={invoiceId} initialData={data} />
       </div>
     );
   }
