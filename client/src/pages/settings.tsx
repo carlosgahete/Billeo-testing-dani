@@ -158,7 +158,7 @@ const SettingsPage = () => {
   }, [user, userLoading]);
   
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: typeof profileForm) => {
+    mutationFn: async (data: Omit<typeof profileForm, 'bankAccount'>) => {
       if (!user) throw new Error("User not authenticated");
       return apiRequest("PUT", `/api/users/${user.id}`, data);
     },
@@ -251,6 +251,7 @@ const SettingsPage = () => {
       name: profileForm.name,
       email: profileForm.email,
       profileImage: profileForm.profileImage
+      // No incluimos bankAccount aquí porque se maneja por separado
     });
     
     // Si hay número de cuenta, actualizamos también la empresa

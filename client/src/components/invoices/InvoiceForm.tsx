@@ -565,17 +565,25 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Efecto para añadir el número de cuenta bancaria a las notas por defecto si no estamos en modo edición
   useEffect(() => {
-    if (!isEditMode && companyData && !companyLoading && companyData.bankAccount) {
+    if (!isEditMode && companyData && !companyLoading) {
       const notesValue = form.getValues("notes");
       
-      // Solo añadimos el texto si las notas están vacías o no contienen ya el número de cuenta
-      if (!notesValue || !notesValue.includes("Número de cuenta")) {
-        const defaultNotes = `Forma de pago: Transferencia bancaria
+      // Verificamos si companyData.bankAccount existe y no está vacío
+      if (companyData.bankAccount && companyData.bankAccount.trim() !== '') {
+        console.log("🏦 Añadiendo información bancaria a las notas:", companyData.bankAccount);
+        
+        // Solo añadimos el texto si las notas están vacías o no contienen ya el número de cuenta
+        if (!notesValue || !notesValue.includes("Número de cuenta")) {
+          const defaultNotes = `Forma de pago: Transferencia bancaria
 Número de cuenta: ${companyData.bankAccount}
         
 ${notesValue || ""}`;
-        
-        form.setValue("notes", defaultNotes);
+          
+          form.setValue("notes", defaultNotes);
+          console.log("✅ Información bancaria añadida a las notas");
+        }
+      } else {
+        console.log("⚠️ No hay número de cuenta bancaria configurado");
       }
     }
   }, [companyData, companyLoading, form, isEditMode]);
