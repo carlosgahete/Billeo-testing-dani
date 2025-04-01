@@ -173,58 +173,62 @@ const Dashboard = () => {
           variant="gradient"
           className="w-full overflow-visible"
         >
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="rounded-lg shadow-sm border bg-white w-[120px] flex items-center justify-between p-2 h-10">
-                <span className="text-sm font-medium text-gray-700">{year}</span>
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="rounded-lg shadow-sm border bg-white w-[140px] flex items-center justify-between p-2 h-10">
-                <span className="text-sm font-medium text-gray-700">
-                  {period === "all" ? "Todo el año" : 
-                   period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                   period === "m1" ? "Enero" :
-                   period === "m2" ? "Febrero" :
-                   period === "m3" ? "Marzo" :
-                   period === "m4" ? "Abril" :
-                   period === "m5" ? "Mayo" :
-                   period === "m6" ? "Junio" :
-                   period === "m7" ? "Julio" :
-                   period === "m8" ? "Agosto" :
-                   period === "m9" ? "Septiembre" :
-                   period === "m10" ? "Octubre" :
-                   period === "m11" ? "Noviembre" : "Diciembre"}
-                </span>
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todo el año</SelectItem>
-                <SelectItem value="q1">1er trimestre</SelectItem>
-                <SelectItem value="q2">2º trimestre</SelectItem>
-                <SelectItem value="q3">3er trimestre</SelectItem>
-                <SelectItem value="q4">4º trimestre</SelectItem>
-                <SelectItem value="m1">Enero</SelectItem>
-                <SelectItem value="m2">Febrero</SelectItem>
-                <SelectItem value="m3">Marzo</SelectItem>
-                <SelectItem value="m4">Abril</SelectItem>
-                <SelectItem value="m5">Mayo</SelectItem>
-                <SelectItem value="m6">Junio</SelectItem>
-                <SelectItem value="m7">Julio</SelectItem>
-                <SelectItem value="m8">Agosto</SelectItem>
-                <SelectItem value="m9">Septiembre</SelectItem>
-                <SelectItem value="m10">Octubre</SelectItem>
-                <SelectItem value="m11">Noviembre</SelectItem>
-                <SelectItem value="m12">Diciembre</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex justify-end items-center mt-1">
+            <div className="flex bg-white/20 backdrop-blur-md p-0.5 rounded-lg shadow-sm border border-white/30">
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger className="bg-transparent hover:bg-white/10 transition-colors duration-150 rounded-md border-0 w-[70px] flex items-center justify-between p-1 h-6 min-h-0 text-xs">
+                  <span className="font-medium text-white">{year}</span>
+                  <ChevronDown className="h-2.5 w-2.5 text-white/70" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2023">2023</SelectItem>
+                  <SelectItem value="2024">2024</SelectItem>
+                  <SelectItem value="2025">2025</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="w-px h-4 bg-white/20 mx-0.5 self-center"></div>
+              
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="bg-transparent hover:bg-white/10 transition-colors duration-150 rounded-md border-0 w-[90px] flex items-center justify-between p-1 h-6 min-h-0 text-xs">
+                  <span className="font-medium text-white">
+                    {period === "all" ? "Todo el año" : 
+                     period.startsWith("q") ? `${period.replace("q", "")}º trim.` : 
+                     period === "m1" ? "Enero" :
+                     period === "m2" ? "Febrero" :
+                     period === "m3" ? "Marzo" :
+                     period === "m4" ? "Abril" :
+                     period === "m5" ? "Mayo" :
+                     period === "m6" ? "Junio" :
+                     period === "m7" ? "Julio" :
+                     period === "m8" ? "Agosto" :
+                     period === "m9" ? "Sept." :
+                     period === "m10" ? "Oct." :
+                     period === "m11" ? "Nov." : "Dic."}
+                  </span>
+                  <ChevronDown className="h-2.5 w-2.5 text-white/70" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todo el año</SelectItem>
+                  <SelectItem value="q1">1er trimestre</SelectItem>
+                  <SelectItem value="q2">2º trimestre</SelectItem>
+                  <SelectItem value="q3">3er trimestre</SelectItem>
+                  <SelectItem value="q4">4º trimestre</SelectItem>
+                  <SelectItem value="m1">Enero</SelectItem>
+                  <SelectItem value="m2">Febrero</SelectItem>
+                  <SelectItem value="m3">Marzo</SelectItem>
+                  <SelectItem value="m4">Abril</SelectItem>
+                  <SelectItem value="m5">Mayo</SelectItem>
+                  <SelectItem value="m6">Junio</SelectItem>
+                  <SelectItem value="m7">Julio</SelectItem>
+                  <SelectItem value="m8">Agosto</SelectItem>
+                  <SelectItem value="m9">Septiembre</SelectItem>
+                  <SelectItem value="m10">Octubre</SelectItem>
+                  <SelectItem value="m11">Noviembre</SelectItem>
+                  <SelectItem value="m12">Diciembre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </PageTitle>
       </div>
