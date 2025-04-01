@@ -20,21 +20,23 @@ export function PageTitle({
     return (
       <div className={`w-full rounded-xl mb-3 overflow-hidden ${className}`}>
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 shadow-md">
-          <div className="mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {title}
-            </h1>
-            {description && (
-              <p className="text-blue-100 text-xs mt-1">
-                {description}
-              </p>
+          <div className="flex justify-between items-start">
+            <div className="mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {title}
+              </h1>
+              {description && (
+                <p className="text-blue-100 text-xs mt-1">
+                  {description}
+                </p>
+              )}
+            </div>
+            {children && (
+              <div className="flex justify-end">
+                {children}
+              </div>
             )}
           </div>
-          {children && (
-            <div className="mt-1.5">
-              {children}
-            </div>
-          )}
         </div>
       </div>
     );
