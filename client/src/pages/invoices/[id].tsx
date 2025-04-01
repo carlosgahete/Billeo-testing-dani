@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation, useRoute, useNavigate } from "wouter";
-import InvoiceForm from "@/components/invoices/InvoiceFormFixed";
+import InvoiceForm from "@/components/invoices/InvoiceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,20 +32,6 @@ const InvoiceDetailPage = () => {
   
   const { data = { invoice: null, items: [] }, isLoading, isError } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
-    onSuccess: (response) => {
-      console.log("Datos de factura recibidos:", invoiceId, response);
-      
-      // Si estamos en modo edición, mostramos una alerta con los datos
-      if (searchParams.get('edit') === 'true' && response && response.invoice) {
-        setTimeout(() => {
-          alert(`Datos de factura cargados: 
-ID: ${response.invoice.id}
-Núm: ${response.invoice.invoiceNumber}
-Items: ${response.items ? response.items.length : 0}
-Total: ${response.invoice.total}`);
-        }, 500);
-      }
-    }
   });
   
   const { data: clientData, isLoading: clientLoading } = useQuery({
