@@ -174,7 +174,7 @@ const Dashboard = () => {
           className="w-full overflow-visible"
         >
           <div className="flex flex-wrap gap-2 pt-1">
-            <div className="bg-white rounded-md shadow-sm border p-1.5 flex items-center justify-between w-[120px]">
+            <div className="bg-white rounded-lg shadow-sm border p-1.5 flex items-center justify-between w-[120px]">
               <span className="text-sm font-medium text-gray-700">{year}</span>
               <Select value={year} onValueChange={setYear}>
                 <SelectTrigger className="w-6 border-0 p-0 h-auto bg-transparent">
@@ -188,7 +188,7 @@ const Dashboard = () => {
               </Select>
             </div>
             
-            <div className="bg-white rounded-md shadow-sm border p-1.5 flex items-center justify-between w-[140px]">
+            <div className="bg-white rounded-lg shadow-sm border p-1.5 flex items-center justify-between w-[140px]">
               <span className="text-sm font-medium text-gray-700">
                 {period === "all" ? "Todo el año" : 
                  period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
