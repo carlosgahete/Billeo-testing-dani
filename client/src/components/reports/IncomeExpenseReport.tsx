@@ -688,129 +688,174 @@ const IncomeExpenseReport = () => {
               </Button>
             </div>
             
-            <div className="rounded-md border">
-              <div className="bg-muted/40 p-4">
-                <h3 className="text-sm font-medium">Facturas emitidas</h3>
+            <Card className="shadow-md border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
+                <h3 className="text-lg font-medium flex items-center">
+                  <FilePlus className="mr-2 h-5 w-5" />
+                  Facturas emitidas
+                  <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-1">
+                    {paidInvoices.length} facturas
+                  </span>
+                </h3>
               </div>
               
               {isLoading ? (
-                <div className="p-4 space-y-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-16 w-full rounded-md" />
+                  <Skeleton className="h-16 w-full rounded-md" />
+                  <Skeleton className="h-16 w-full rounded-md" />
                 </div>
               ) : sortedInvoices.length > 0 ? (
                 <div className="divide-y">
                   {sortedInvoices.map((invoice) => (
-                    <div key={invoice.id} className="p-4 flex justify-between items-center hover:bg-muted/30">
+                    <div key={invoice.id} className="p-5 flex justify-between items-center hover:bg-blue-50 transition-colors group">
                       <div className="flex-1">
-                        <div className="font-medium">
-                          Factura #{invoice.invoiceNumber} - {getClientName(invoice.clientId)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(invoice.issueDate)} · {invoice.status === "paid" ? "Pagada" : "Pendiente"}
+                        <div className="flex items-center">
+                          <div className="bg-blue-100 p-2 rounded-full mr-3 group-hover:bg-blue-200 transition-colors">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-800 group-hover:text-gray-900">
+                              Factura #{invoice.invoiceNumber} - {getClientName(invoice.clientId)}
+                            </div>
+                            <div className="text-sm text-muted-foreground flex items-center mt-1">
+                              <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                                {invoice.status === "paid" ? "Pagada" : "Pendiente"}
+                              </span>
+                              <span>{formatDate(invoice.issueDate)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right flex-initial mr-4">
-                        <div className="font-semibold text-green-600">
-                          {formatCurrency(invoice.total)}
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="text-right">
+                          <div className="font-bold text-green-600 text-lg">
+                            {formatCurrency(invoice.total)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Base: {formatCurrency(invoice.subtotal)} · IVA: {formatCurrency(invoice.tax)}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          Base: {formatCurrency(invoice.subtotal)} · IVA: {formatCurrency(invoice.tax)}
+                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                  onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Ver detalles</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                  onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Editar factura</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                  onClick={() => handleExportInvoicePDF(invoice)}
+                                >
+                                  <FileDown className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Exportar a PDF</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-1 flex-initial">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/invoices/${invoice.id}`)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Ver detalles</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/invoices/${invoice.id}?edit=true`)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Editar factura</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleExportInvoicePDF(invoice)}
-                              >
-                                <FileDown className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Exportar a PDF</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center">
-                  <p className="text-sm text-muted-foreground">No hay facturas disponibles</p>
+                <div className="p-12 text-center">
+                  <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-blue-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">No hay facturas disponibles</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Puedes crear facturas para registrar tus ventas e ingresos
+                  </p>
                   <Button 
                     onClick={() => navigate("/invoices/create")} 
                     variant="outline" 
-                    size="sm"
-                    className="mt-2"
+                    className="gap-2"
                   >
+                    <FilePlus className="h-4 w-4" />
                     Crear factura
                   </Button>
                 </div>
               )}
-            </div>
+            </Card>
             
-            <div className="rounded-md border">
-              <div className="bg-muted/40 p-4">
-                <h3 className="text-sm font-medium">Otros ingresos</h3>
+            <Card className="shadow-md border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
+                <h3 className="text-lg font-medium flex items-center">
+                  <TrendingUp className="mr-2 h-5 w-5" />
+                  Otros ingresos
+                  <span className="ml-2 bg-white text-green-600 text-xs font-semibold rounded-full px-2 py-1">
+                    {incomeTransactions.length} registros
+                  </span>
+                </h3>
               </div>
               
               {isLoading ? (
-                <div className="p-4 space-y-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-16 w-full rounded-md" />
+                  <Skeleton className="h-16 w-full rounded-md" />
                 </div>
               ) : sortedIncomeTransactions.length > 0 ? (
                 <div className="divide-y">
                   {sortedIncomeTransactions.map((transaction) => (
-                    <div key={transaction.id} className="p-4 flex justify-between items-center hover:bg-muted/30">
-                      <div>
-                        <div className="font-medium">{transaction.description}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(transaction.date)} · {getCategoryName(transaction.categoryId)}
+                    <div key={transaction.id} className="p-5 flex justify-between items-center hover:bg-green-50 transition-colors group">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <div className="bg-green-100 p-2 rounded-full mr-3 group-hover:bg-green-200 transition-colors">
+                            <TrendingUp className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-800 group-hover:text-gray-900">
+                              {transaction.description}
+                            </div>
+                            <div className="text-sm text-muted-foreground flex items-center mt-1">
+                              <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                                {getCategoryName(transaction.categoryId)}
+                              </span>
+                              <span>{formatDate(transaction.date)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-green-600">
+                      <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-green-100">
+                        <div className="font-bold text-green-600 text-lg">
                           {formatCurrency(transaction.amount)}
                         </div>
                       </div>
@@ -818,11 +863,17 @@ const IncomeExpenseReport = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center">
-                  <p className="text-sm text-muted-foreground">No hay otros ingresos registrados</p>
+                <div className="p-12 text-center">
+                  <div className="mx-auto w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                    <TrendingUp className="h-8 w-8 text-green-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">No hay otros ingresos registrados</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Puedes registrar aquí otros ingresos que no correspondan a facturas
+                  </p>
                 </div>
               )}
-            </div>
+            </Card>
           </TabsContent>
           
           {/* TAB DE GASTOS */}
