@@ -79,6 +79,11 @@ function Router() {
           <ProtectedRoute path="/quotes/create" component={CreateQuotePage} />
         </Layout>
       </Route>
+      <Route path="/quotes/new/minimal">
+        <Layout>
+          <ProtectedRoute path="/quotes/new/minimal" component={CreateQuotePage} />
+        </Layout>
+      </Route>
       <Route path="/quotes/edit/:id">
         {(params) => (
           <Layout>

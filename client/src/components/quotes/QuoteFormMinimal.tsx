@@ -22,7 +22,15 @@ import {
   CardTitle,
   CardDescription 
 } from '@/components/ui/card';
-import { Loader2, Plus, X, Image } from 'lucide-react';
+import { Loader2, Plus, X, Image, Calendar as CalendarIcon } from 'lucide-react';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 // Interfaz mínima para las props
 interface QuoteFormMinimalProps {
@@ -552,6 +560,33 @@ const QuoteFormMinimal: React.FC<QuoteFormMinimalProps> = ({ quoteId }) => {
                     <SelectItem value="rejected">Rechazado</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Fecha de validez (destacada) */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="validUntil" className="font-semibold text-red-600">Fecha de validez</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      id="validUntil"
+                      className={`w-full justify-start border-red-500 bg-red-50 hover:bg-red-100 text-left font-normal`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-red-500" />
+                      {validUntil ? format(validUntil, "d 'de' MMMM 'de' yyyy", { locale: es }) : <span>Selecciona una fecha</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={validUntil}
+                      onSelect={(date) => date && setValidUntil(date)}
+                      initialFocus
+                      locale={es}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-red-600 font-medium">Este presupuesto será válido hasta esta fecha</p>
               </div>
             </div>
             
