@@ -389,23 +389,23 @@ const Dashboard = () => {
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(totalNeto)} €
+                }).format(financialData.income.total - financialData.expenses.total)} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Base + IVA (bruto):</span>
-                  <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
+                  <span className="text-neutral-500">IVA a liquidar:</span>
+                  <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(totalBruto)} €</span>
+                  }).format(stats?.taxes?.vat || 0)} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF retenido:</span>
-                  <span className="font-medium text-red-600">- {new Intl.NumberFormat('es-ES', { 
+                  <span className="text-neutral-500">IRPF a liquidar:</span>
+                  <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(irpfCalculado)} €</span>
+                  }).format(stats?.taxes?.incomeTax || 0)} €</span>
                 </div>
               </div>
               

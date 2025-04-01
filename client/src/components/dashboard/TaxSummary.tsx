@@ -189,7 +189,7 @@ const TaxSummary = () => {
                 <Tooltip>
                   <TooltipTrigger className="w-full mt-1">
                     <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-sm p-1 cursor-default">
-                      ℹ️ Resultado de restar IVA soportado - IVA repercutido
+                      ℹ️ Resultado de restar IVA repercutido - IVA soportado
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
@@ -206,13 +206,13 @@ const TaxSummary = () => {
             {/* Retenciones acumuladas del período seleccionado */}
             <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-3">
               <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center">
-                IRPF retenido en gastos ({periodNames[period]}, {year})
+                IRPF a liquidar ({periodNames[period]}, {year})
               </h3>
               <div className="flex justify-between items-center">
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="text-amber-800 font-bold text-xl">{formatCurrency(selectedWithholdings)}</span>
+                  <span className="text-amber-800 font-bold text-xl">{formatCurrency(data?.taxes?.incomeTax || 0)}</span>
                 )}
                 <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
                   15% IRPF
@@ -220,21 +220,21 @@ const TaxSummary = () => {
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 {period === 'all' 
-                  ? 'IRPF retenido en facturas recibidas como gastos que puedes descontar en tu declaración'
-                  : `IRPF retenido en facturas de gastos del periodo (${periodNames[period]})`}
+                  ? 'IRPF a pagar en tu declaración anual (IRPF - retenciones)'
+                  : `IRPF a liquidar del periodo (${periodNames[period]})`}
               </p>
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger className="w-full mt-1">
                     <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm p-1 cursor-default">
-                      ℹ️ Retenciones aplicadas en tus gastos que te has deducido
+                      ℹ️ Impuesto sobre la renta a pagar
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
                     <p className="w-[250px] text-xs">
-                      Este IRPF es el que tus proveedores (como asesores, abogados, etc.) te han 
-                      retenido en las facturas que te han emitido y que aparecen como gastos.
-                      Este importe lo puedes descontar al calcular tu IRPF anual como autónomo.
+                      Este es el IRPF que deberás pagar como autónomo después de 
+                      descontar las retenciones ya aplicadas a tus facturas de ingresos.
+                      En la declaración anual se calculará la cantidad final a pagar.
                     </p>
                   </TooltipContent>
                 </Tooltip>
