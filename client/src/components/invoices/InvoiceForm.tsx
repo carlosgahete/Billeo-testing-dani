@@ -4,10 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,6 +16,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+
 import {
   Select,
   SelectContent,
@@ -22,44 +28,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
-import FileUpload from "../common/FileUpload";
-import { ClientForm } from "../clients/ClientForm";
+import { Switch } from "@/components/ui/switch";
 
-// Función auxiliar para convertir texto a número
+import { Building, CalendarIcon, FileText, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
+import FileUpload from "@/components/common/FileUpload";
+import { ClientForm } from "@/components/clients/ClientForm";
+
+// Esquema de validación para facturas
+const invoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, { message: "El número de factura es obligatorio" }),
+  clientId: z.number().min(1, { message: "Debes seleccionar un cliente" }),
+  issueDate: z.string().min(1, { message: "La fecha de emisión es obligatoria" }),
+  dueDate: z.string().min(1, { message: "La fecha de vencimiento es obligatoria" }),
+  status: z.string().min(1, { message: "El estado es obligatorio" }),
+  items: z.array(
+    z.object({
+      description: z.string().min(1, { message: "La descripción es obligatoria" }),
+      quantity: z.number().min(0.01, { message: "La cantidad debe ser mayor que 0" }),
+      unitPrice: z.number().min(0.01, { message: "El precio unitario debe ser mayor que 0" }),
+      taxRate: z.number().min(0, { message: "El IVA no puede ser negativo" }),
+      subtotal: z.number().optional(),
+    })
+  ).min(1, { message: "Debes añadir al menos un concepto" }),
+  notes: z.string().optional(),
+  subtotal: z.number().min(0),
+  tax: z.number().min(0),
+  total: z.number().min(0),
+  additionalTaxes: z.array(
+    z.object({
+      name: z.string().min(1, { message: "El nombre del impuesto es obligatorio" }),
+      amount: z.number(),
+      isPercentage: z.boolean(),
+    })
+  ).optional(),
+});
+
+// Helper para convertir valores a número
 function toNumber(value: any, defaultValue = 0): number {
-  if (value === null || value === undefined || value === '') return defaultValue;
-  if (typeof value === 'number') return value;
-  // Asegurar que las comas se convierten a puntos para operaciones matemáticas
-  const numericValue = parseFloat(String(value).replace(',', '.'));
-  return isNaN(numericValue) ? defaultValue : numericValue;
+  if (value === null || value === undefined || value === "") return defaultValue;
+  
+  // Si ya es un número, devolverlo directamente
+  if (typeof value === "number") return value;
+  
+  // Si es string, intentar convertirlo
+  if (typeof value === "string") {
+    // Reemplazar comas por puntos para manejar formato europeo
+    value = value.replace(",", ".");
+    const parsed = parseFloat(value);
+    if (!isNaN(parsed)) return parsed;
+  }
+  
+  return defaultValue;
 }
 
-// Función auxiliar para calcular totales (definida globalmente para evitar referencias circulares)
+// Función para calcular los totales de la factura basados en el formulario
 function calculateInvoiceTotals(form: any) {
   const items = form.getValues("items") || [];
   const additionalTaxes = form.getValues("additionalTaxes") || [];
   
   // Calculate subtotal for each item
   const updatedItems = items.map((item: any) => {
+    // Asegurarnos que tenemos números válidos usando nuestra función toNumber
     const quantity = toNumber(item.quantity, 0);
     const unitPrice = toNumber(item.unitPrice, 0);
     const subtotal = quantity * unitPrice;
@@ -72,6 +119,7 @@ function calculateInvoiceTotals(form: any) {
     };
   });
   
+  // Update form with calculated subtotals
   form.setValue("items", updatedItems);
   
   // Calculate invoice totals
@@ -81,19 +129,27 @@ function calculateInvoiceTotals(form: any) {
     return sum + itemTax;
   }, 0);
   
-  // Calcular el importe total de impuestos adicionales
+  // Calcular el importe total de impuestos adicionales (incluye impuestos tanto positivos como negativos)
   let additionalTaxesTotal = 0;
   
+  // Procesamos cada impuesto adicional según su tipo
   additionalTaxes.forEach((taxItem: any) => {
     if (taxItem.isPercentage) {
+      // Si es un porcentaje, calculamos en base al subtotal
+      // El signo del importe determina si es un cargo (+) o un descuento (-)
       const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
       additionalTaxesTotal += percentageTax;
     } else {
+      // Si es un valor monetario, lo añadimos directamente manteniendo su signo
       additionalTaxesTotal += toNumber(taxItem.amount, 0);
     }
   });
   
+  // Calcular el total correctamente: base + IVA líneas + impuestos adicionales
+  // Los impuestos negativos (como IRPF) ya tienen signo negativo en additionalTaxesTotal
   const total = subtotal + tax + additionalTaxesTotal;
+  
+  // Asegurarnos que los valores nunca sean negativos
   const safeTotal = Math.max(0, total);
   
   form.setValue("subtotal", subtotal);
@@ -116,40 +172,6 @@ function calculateInvoiceTotals(form: any) {
   return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
 }
 
-// Define schema for additional tax
-const additionalTaxSchema = z.object({
-  name: z.string().min(1, "El nombre del impuesto es obligatorio"),
-  amount: z.coerce.number(), // Permitimos valores negativos para representar retenciones (como el IRPF)
-  isPercentage: z.boolean().default(false) // Indica si es un porcentaje o un valor fijo
-});
-
-// Define schema for line items
-const invoiceItemSchema = z.object({
-  description: z.string().min(1, "La descripción es obligatoria"),
-  quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor que cero"),
-  unitPrice: z.coerce.number().min(0.01, "El precio debe ser mayor que cero"),
-  taxRate: z.coerce.number().min(0, "El IVA no puede ser negativo"),
-  subtotal: z.coerce.number().min(0).optional(),
-});
-
-// Define schema for the whole invoice
-const invoiceSchema = z.object({
-  invoiceNumber: z.string().min(1, "El número de factura es obligatorio"),
-  clientId: z.coerce.number({
-    required_error: "El cliente es obligatorio",
-  }),
-  issueDate: z.string().min(1, "La fecha de emisión es obligatoria"),
-  dueDate: z.string().min(1, "La fecha de vencimiento es obligatoria"),
-  subtotal: z.coerce.number().min(0),
-  tax: z.coerce.number().min(0),
-  total: z.coerce.number().min(0),
-  additionalTaxes: z.array(additionalTaxSchema).optional().default([]),
-  status: z.string().min(1, "El estado es obligatorio"),
-  notes: z.string().nullable().optional(),
-  attachments: z.array(z.string()).nullable().optional(),
-  items: z.array(invoiceItemSchema).min(1, "Agrega al menos un ítem a la factura"),
-});
-
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
 interface InvoiceFormProps {
@@ -158,54 +180,46 @@ interface InvoiceFormProps {
 }
 
 const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
+  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [attachments, setAttachments] = useState<string[]>([]);
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [showTaxDialog, setShowTaxDialog] = useState(false);
-  const [newTaxData, setNewTaxData] = useState<{ name: string; amount: number; isPercentage: boolean }>({
-    name: '',
-    amount: 0,
-    isPercentage: true
-  });
-  const [clientToEdit, setClientToEdit] = useState<any>(null);
-  const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
+  // Modal de creación/edición de clientes
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [clientToEdit, setClientToEdit] = useState<any>(null);
+  
+  // Gestión de impuestos adicionales
+  const [showTaxDialog, setShowTaxDialog] = useState(false);
+  const [newTaxData, setNewTaxData] = useState<any>({ name: "", amount: 0, isPercentage: false });
+  
+  // Archivos adjuntos
+  const [attachments, setAttachments] = useState<string[]>([]);
+  
+  // Modo edición si hay ID
   const isEditMode = !!invoiceId;
   
-  // Mutation para eliminar clientes
-  const deleteClientMutation = useMutation({
-    mutationFn: async (clientId: number) => {
-      return await apiRequest("DELETE", `/api/clients/${clientId}`);
-    },
-    onSuccess: () => {
-      // Invalidar consultas de clientes para actualizar la lista
+  // Editar un cliente existente
+  const editClient = (client: any) => {
+    setClientToEdit(client);
+    setShowClientForm(true);
+  };
+  
+  // Eliminar un cliente
+  const deleteClient = async (clientId: number) => {
+    try {
+      await apiRequest("DELETE", `/api/clients/${clientId}`);
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      
       toast({
         title: "Cliente eliminado",
         description: "El cliente ha sido eliminado correctamente",
       });
-    },
-    onError: (error) => {
-      console.error("Error al eliminar cliente:", error);
+    } catch (error: any) {
       toast({
         title: "Error",
         description: `No se pudo eliminar el cliente: ${error.message}`,
         variant: "destructive",
       });
     }
-  });
-  
-  // Función para eliminar un cliente
-  const deleteClient = (clientId: number) => {
-    deleteClientMutation.mutate(clientId);
-  };
-  
-  // Función para editar un cliente
-  const editClient = (client: any) => {
-    setClientToEdit(client);
-    setShowClientForm(true);
   };
 
   // Fetch clients for dropdown
@@ -228,13 +242,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
-    subtotal: 0,
-    tax: 0,
-    total: 0,
-    additionalTaxes: [],
     status: "pending",
-    notes: "",
-    attachments: [],
     items: [
       {
         description: "",
@@ -244,6 +252,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         subtotal: 0,
       },
     ],
+    notes: "",
+    subtotal: 0,
+    tax: 0,
+    total: 0,
+    additionalTaxes: [],
   };
 
   const form = useForm<InvoiceFormValues>({
@@ -253,92 +266,28 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // Initialize form with invoice data when loaded - either from API or passed in
   useEffect(() => {
-    // Primero intentar usar datos proporcionados directamente
-    if (initialData && isEditMode && initialData.invoice && initialData.items) {
+    if (!isEditMode) return;
+    
+    // Determinar la fuente de datos a utilizar (initialData o invoiceData)
+    let sourceData = null;
+    
+    if (initialData?.invoice && initialData?.items) {
       console.log("⚡ Usando datos iniciales proporcionados directamente:", initialData);
-      
-      const { invoice, items } = initialData;
-      
-      // Aseguramos que las fechas estén en formato YYYY-MM-DD
-      const formatDateForInput = (dateString: string) => {
-        if (!dateString) return new Date().toISOString().split("T")[0];
-        try {
-          const date = new Date(dateString);
-          return date.toISOString().split("T")[0];
-        } catch (e) {
-          console.error("Error al formatear fecha:", e);
-          return dateString;
-        }
-      };
-      
-      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
-      let additionalTaxesArray = [];
-      
-      if (invoice.additionalTaxes) {
-        // Si es una cadena JSON, intentamos parsearlo
-        if (typeof invoice.additionalTaxes === 'string') {
-          try {
-            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
-          } catch (e) {
-            console.error("Error al parsear additionalTaxes como JSON:", e);
-            additionalTaxesArray = [];
-          }
-        } 
-        // Si ya es un array, lo usamos directamente
-        else if (Array.isArray(invoice.additionalTaxes)) {
-          additionalTaxesArray = invoice.additionalTaxes;
-        }
-      }
-      
-      // Transformar los datos para el formulario
-      const formattedInvoice = {
-        ...invoice,
-        invoiceNumber: invoice.invoiceNumber || "",
-        clientId: invoice.clientId || 0,
-        issueDate: formatDateForInput(invoice.issueDate),
-        dueDate: formatDateForInput(invoice.dueDate),
-        status: invoice.status || "pending",
-        notes: invoice.notes || "",
-        subtotal: Number(invoice.subtotal || 0),
-        tax: Number(invoice.tax || 0),
-        total: Number(invoice.total || 0),
-        // Mapeamos los items asegurando valores correctos
-        items: (items || []).map((item: any) => ({
-          description: item.description || "",
-          quantity: Number(item.quantity) || 0,
-          unitPrice: Number(item.unitPrice) || 0,
-          taxRate: Number(item.taxRate) || 21,
-          subtotal: Number(item.subtotal) || 0,
-        })),
-        // Formateamos los impuestos adicionales
-        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
-          name: tax.name || "",
-          amount: Number(tax.amount || 0),
-          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
-        }))
-      };
-      
-      console.log("🔄 Datos formateados para el formulario (initialData):", formattedInvoice);
-      
-      // Actualizar el formulario con los datos formateados
-      form.reset(formattedInvoice);
-      
-      // Si hay archivos adjuntos, actualizamos el estado
-      if (invoice.attachments) {
-        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
-      }
-      
-      // Recalcular totales después de que el formulario se haya actualizado completamente
-      setTimeout(() => {
-        calculateInvoiceTotals(form);
-      }, 200);
-    }
-    // Si no, usar datos de la API
-    else if (isEditMode && invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData && 'items' in invoiceData) {
+      sourceData = initialData;
+    } 
+    else if (invoiceData && 'invoice' in invoiceData && 'items' in invoiceData) {
       console.log("⚡ Cargando datos de factura para edición desde API:", invoiceData);
-      
-      // @ts-ignore - Aseguramos el acceso a las propiedades mediante comprobación previa
-      const { invoice, items } = invoiceData;
+      sourceData = invoiceData;
+    }
+    
+    // Si no tenemos datos válidos, salir
+    if (!sourceData) {
+      console.log("⚠️ No se encontraron datos válidos para la factura en modo edición");
+      return;
+    }
+    
+    try {
+      const { invoice, items } = sourceData;
       
       // Aseguramos que las fechas estén en formato YYYY-MM-DD
       const formatDateForInput = (dateString: string) => {
@@ -353,9 +302,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       };
       
       // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
-      let additionalTaxesArray = [];
+      let additionalTaxesArray: any[] = [];
       
-      if (invoice.additionalTaxes) {
+      if (invoice?.additionalTaxes) {
         // Si es una cadena JSON, intentamos parsearlo
         if (typeof invoice.additionalTaxes === 'string') {
           try {
@@ -371,31 +320,30 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         }
       }
       
-      // Transformar los datos para el formulario
+      // Transformar los datos para el formulario, con valores por defecto seguros
       const formattedInvoice = {
-        ...invoice,
-        invoiceNumber: invoice.invoiceNumber || "",
-        clientId: invoice.clientId || 0,
-        issueDate: formatDateForInput(invoice.issueDate),
-        dueDate: formatDateForInput(invoice.dueDate),
-        status: invoice.status || "pending",
-        notes: invoice.notes || "",
-        subtotal: Number(invoice.subtotal || 0),
-        tax: Number(invoice.tax || 0),
-        total: Number(invoice.total || 0),
+        invoiceNumber: invoice?.invoiceNumber || "",
+        clientId: invoice?.clientId || 0,
+        issueDate: formatDateForInput(invoice?.issueDate || ""),
+        dueDate: formatDateForInput(invoice?.dueDate || ""),
+        status: invoice?.status || "pending",
+        notes: invoice?.notes || "",
+        subtotal: Number(invoice?.subtotal || 0),
+        tax: Number(invoice?.tax || 0),
+        total: Number(invoice?.total || 0),
         // Mapeamos los items asegurando valores correctos
         items: (items || []).map((item: any) => ({
-          description: item.description || "",
-          quantity: Number(item.quantity) || 0,
-          unitPrice: Number(item.unitPrice) || 0,
-          taxRate: Number(item.taxRate) || 21,
-          subtotal: Number(item.subtotal) || 0,
+          description: item?.description || "",
+          quantity: Number(item?.quantity || 0),
+          unitPrice: Number(item?.unitPrice || 0),
+          taxRate: Number(item?.taxRate || 21),
+          subtotal: Number(item?.subtotal || 0),
         })),
         // Formateamos los impuestos adicionales
         additionalTaxes: additionalTaxesArray.map((tax: any) => ({
-          name: tax.name || "",
-          amount: Number(tax.amount || 0),
-          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
+          name: tax?.name || "",
+          amount: Number(tax?.amount || 0),
+          isPercentage: tax?.isPercentage !== undefined ? tax.isPercentage : false
         }))
       };
       
@@ -405,7 +353,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       form.reset(formattedInvoice);
       
       // Si hay archivos adjuntos, actualizamos el estado
-      if (invoice.attachments) {
+      if (invoice?.attachments) {
         setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
       }
       
@@ -413,8 +361,15 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       setTimeout(() => {
         calculateInvoiceTotals(form);
       }, 200);
+    } catch (error) {
+      console.error("❌ Error al cargar los datos de la factura:", error);
+      toast({
+        title: "Error al cargar factura",
+        description: "No se pudieron cargar los datos de la factura correctamente",
+        variant: "destructive",
+      });
     }
-  }, [invoiceData, initialData, isEditMode, form]);
+  }, [invoiceData, initialData, isEditMode, form, toast]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -487,7 +442,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         console.log("🔄 Modo edición - ID:", invoiceId);
         
         // Incorporar datos originales si están disponibles
-        // @ts-ignore - Ya verificamos en el useEffect que datos existe
         const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice : {};
         
         // Asegurar que los impuestos adicionales estén en el formato correcto
@@ -557,7 +511,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       });
       navigate("/invoices");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("❌ Error al guardar factura:", error);
       toast({
         title: "Error",
@@ -566,8 +520,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       });
     },
   });
-
-  // Ya tenemos calculateInvoiceTotals definida globalmente
 
   const handleSubmit = (data: InvoiceFormValues) => {
     // Recalculate totals before submission
@@ -909,49 +861,63 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       <FormItem>
                         <FormLabel className="flex items-center text-green-700">
                           <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></span>
-                          Notas
+                          Notas o condiciones
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Información adicional para la factura..."
+                            placeholder="Añade notas o condiciones específicas a esta factura..."
                             {...field}
-                            value={field.value || ""}
-                            className="border-green-200 focus:border-green-400 min-h-[100px]"
+                            className="min-h-[120px] border-green-200 focus:border-green-400"
                           />
                         </FormControl>
+                        <FormDescription>
+                          Estas notas aparecerán en la factura impresa
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
                   <div>
-                    <FormLabel>Archivos adjuntos</FormLabel>
+                    <Label>Archivos adjuntos</Label>
                     <div className="mt-2">
-                      <FileUpload onUpload={handleFileUpload} />
-                      
-                      <div className="mt-3 space-y-2">
-                        {attachments.map((attachment, index) => (
-                          <div key={index} className="flex items-center space-x-2 text-sm">
-                            <FileText className="h-4 w-4" />
-                            <span className="flex-1 truncate">
-                              {attachment.split('/').pop()}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newAttachments = [...attachments];
-                                newAttachments.splice(index, 1);
-                                setAttachments(newAttachments);
-                              }}
-                              className="h-7 w-7 p-0"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                      <div className="w-full border-dashed border-2 border-green-200 hover:border-green-400 p-4 flex flex-col items-center justify-center">
+                        <Upload className="h-8 w-8 text-green-500 mb-2" />
+                        <span className="text-sm font-medium">Adjuntar un archivo</span>
+                        <span className="text-xs text-muted-foreground mt-1 mb-2">
+                          Seleccione un archivo para subir
+                        </span>
+                        <FileUpload 
+                          onUpload={handleFileUpload} 
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                        />
                       </div>
+
+                      {attachments.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {attachments.map((file, index) => (
+                            <div 
+                              key={index} 
+                              className="flex items-center justify-between p-2 bg-green-50 rounded border border-green-200"
+                            >
+                              <span className="text-sm truncate max-w-[250px]">
+                                {file.split('/').pop()}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setAttachments(attachments.filter((_, i) => i !== index));
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <X className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -960,387 +926,308 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </div>
 
           <Card className="border-0 shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-purple-400 p-4 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
               <h3 className="text-lg font-medium flex items-center">
                 <FileText className="mr-2 h-5 w-5" />
-                Detalles de la factura
+                Conceptos
               </h3>
             </div>
             <CardContent className="pt-6">
-              
-              <div className="mb-4 space-y-4">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="grid grid-cols-12 gap-4 items-start"
-                  >
-                    <div className="col-span-12 md:col-span-5">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.description`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Descripción
-                            </FormLabel>
-                            <FormControl>
-                              <Input placeholder="Descripción" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-3 md:col-span-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.quantity`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Cantidad
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="text"
-                                placeholder="Cantidad"
-                                defaultValue={field.value || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-                                  field.onChange(value);
-                                }}
-                                onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-3 md:col-span-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.unitPrice`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Precio
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="text"
-                                placeholder="Precio"
-                                defaultValue={field.value || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-                                  field.onChange(value);
-                                }}
-                                onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-3 md:col-span-1">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.taxRate`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              IVA %
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="1"
-                                placeholder="IVA %"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(parseFloat(e.target.value));
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-3 md:col-span-1">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.subtotal`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Subtotal
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                disabled
-                                value={
-                                  form.getValues(`items.${index}.quantity`) *
-                                  form.getValues(`items.${index}.unitPrice`)
-                                }
-                                placeholder="Subtotal"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-12 md:col-span-1 flex items-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          remove(index);
-                          // Función calculateInvoiceTotals(form) reemplazada con código inline
-                        }}
-                        disabled={fields.length === 1}
-                        className="h-10 w-10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Eliminar ítem</span>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Esta es la fila con los botones de impuestos, alineados como en la imagen */}
-                <div className="grid grid-cols-12 gap-4 items-center mb-4">
-                  <div className="col-span-8 sm:col-span-9 flex">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        append({
-                          description: "",
-                          quantity: 1,
-                          unitPrice: 0,
-                          taxRate: 21,
-                          subtotal: 0,
-                        });
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Añadir ítem
-                    </Button>
-                  </div>
-                  <div className="col-span-4 sm:col-span-3 flex justify-start gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleAddTax('irpf');
-                      }}
-                      className="text-xs"
-                      title="Añadir retención de IRPF (-15%)"
-                    >
-                      <Minus className="h-3 w-3 mr-1" />
-                      Añadir IRPF
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleAddTax();
-                      }}
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Otro impuesto
-                    </Button>
-                  </div>
+              <div className="space-y-4">
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="min-w-full divide-y divide-neutral-200">
+                    <thead className="bg-neutral-50">
+                      <tr>
+                        <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider w-5/12">
+                          Descripción
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
+                          Cantidad
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
+                          Precio unitario
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-1/12">
+                          IVA %
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
+                          Subtotal
+                        </th>
+                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-1/12">
+                          <span className="sr-only">Acciones</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-neutral-200">
+                      {fields.map((item, index) => (
+                        <tr key={item.id} className={index % 2 === 0 ? "bg-neutral-50" : "bg-white"}>
+                          <td className="px-3 py-2">
+                            <Input
+                              {...form.register(`items.${index}.description` as const)}
+                              placeholder="Descripción del producto o servicio"
+                              className="border-neutral-200"
+                            />
+                            {form.formState.errors.items?.[index]?.description && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {form.formState.errors.items[index]?.description?.message}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input
+                              {...form.register(`items.${index}.quantity` as const, {
+                                valueAsNumber: true,
+                                onBlur: (e) => handleNumericBlur(form.getValues(`items.${index}`).quantity)(e),
+                              })}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="1"
+                              className="border-neutral-200 text-center"
+                              onChange={(e) => {
+                                form.setValue(
+                                  `items.${index}.quantity` as const,
+                                  toNumber(e.target.value, 0)
+                                );
+                                calculateInvoiceTotals(form);
+                              }}
+                            />
+                            {form.formState.errors.items?.[index]?.quantity && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {form.formState.errors.items[index]?.quantity?.message}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input
+                              {...form.register(`items.${index}.unitPrice` as const, {
+                                valueAsNumber: true,
+                                onBlur: (e) => handleNumericBlur(form.getValues(`items.${index}`).unitPrice)(e),
+                              })}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="0.00"
+                              className="border-neutral-200 text-center"
+                              onChange={(e) => {
+                                form.setValue(
+                                  `items.${index}.unitPrice` as const,
+                                  toNumber(e.target.value, 0)
+                                );
+                                calculateInvoiceTotals(form);
+                              }}
+                            />
+                            {form.formState.errors.items?.[index]?.unitPrice && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {form.formState.errors.items[index]?.unitPrice?.message}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input
+                              {...form.register(`items.${index}.taxRate` as const, {
+                                valueAsNumber: true,
+                                onBlur: (e) => handleNumericBlur(form.getValues(`items.${index}`).taxRate, 21)(e),
+                              })}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="21"
+                              className="border-neutral-200 text-center"
+                              onChange={(e) => {
+                                form.setValue(
+                                  `items.${index}.taxRate` as const,
+                                  toNumber(e.target.value, 21)
+                                );
+                                calculateInvoiceTotals(form);
+                              }}
+                            />
+                            {form.formState.errors.items?.[index]?.taxRate && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {form.formState.errors.items[index]?.taxRate?.message}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right align-middle">
+                            <div className="font-medium">
+                              {new Intl.NumberFormat("es-ES", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(
+                                toNumber(form.getValues(`items.${index}.quantity`), 0) *
+                                  toNumber(form.getValues(`items.${index}.unitPrice`), 0)
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                remove(index);
+                                // Recalcular totales después de eliminar el item
+                                setTimeout(() => calculateInvoiceTotals(form), 0);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                              <span className="sr-only">Eliminar</span>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-              
-              
-              {/* Sección de impuestos adicionales - ahora directamente bajo los botones */}
-              {taxFields.length > 0 && (
-                <div className="w-full mt-4 mb-6 border-t border-b py-4">
-                  <div className="mb-2">
-                    <span className="text-sm font-medium">Impuestos adicionales:</span>
-                  </div>
-                  
-                  {taxFields.map((field, index) => (
-                    <div key={field.id} className="mb-4 pl-2 border-l-2 border-muted">
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-5">
-                          <FormField
-                            control={form.control}
-                            name={`additionalTaxes.${index}.name`}
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="sr-only">Nombre</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Nombre" 
-                                    {...field} 
-                                    className="h-8 text-sm"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="col-span-5">
-                          <FormField
-                            control={form.control}
-                            name={`additionalTaxes.${index}.amount`}
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="sr-only">Importe</FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center">
-                                    <Input 
-                                      type="number" 
-                                      placeholder="Importe"
-                                      step="0.01"
-                                      {...field} 
-                                      onChange={(e) => {
-                                        field.onChange(parseFloat(e.target.value));
-                                        // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                      }}
-                                      className="h-8 text-sm"
-                                    />
-                                    
-                                    {/* Indicador de porcentaje o euros */}
-                                    <div className="ml-1">
-                                      <FormField
-                                        control={form.control}
-                                        name={`additionalTaxes.${index}.isPercentage`}
-                                        render={({ field }) => (
-                                          <FormItem className="space-y-0">
-                                            <FormLabel className="sr-only">Tipo</FormLabel>
-                                            <FormControl>
-                                              <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                  field.onChange(!field.value);
-                                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                                }}
-                                                className="h-8 px-2 text-xs font-normal"
-                                              >
-                                                {field.value ? '%' : '€'}
-                                              </Button>
-                                            </FormControl>
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="col-span-2 text-right">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              removeTax(index);
-                              // Función calculateInvoiceTotals(form) reemplazada con código inline
-                            }}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            <span className="sr-only">Eliminar impuesto</span>
-                          </Button>
-                        </div>
-                        
-                        {/* Mostrar el valor calculado después del campo */}
-                        <div className="col-span-12 pl-5 -mt-1">
-                          <span className="text-xs text-muted-foreground">
-                            {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
-                            <span className="font-medium ml-1">
-                              {form.getValues(`additionalTaxes.${index}.isPercentage`) 
-                                ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
-                                : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
-                              }
-                            </span>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    append({
+                      description: "",
+                      quantity: 1,
+                      unitPrice: 0,
+                      taxRate: 21,
+                      subtotal: 0,
+                    });
+                  }}
+                  className="w-full border-dashed border-2"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Añadir concepto
+                </Button>
+
+                {form.formState.errors.items?.message && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {form.formState.errors.items.message as string}
+                  </p>
+                )}
+
+                <div className="mt-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-neutral-700 mb-2">Impuestos adicionales</h4>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleAddTax('irpf')}
+                          className="h-8 text-xs bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                        >
+                          + IRPF (-15%)
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleAddTax('iva')}
+                          className="h-8 text-xs bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                        >
+                          + IVA (21%)
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleAddTax()}
+                          className="h-8 text-xs"
+                        >
+                          + Personalizado
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="sm:text-right">
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium text-neutral-500 mr-8">Subtotal:</span>
+                          <span className="text-sm font-medium">
+                            {new Intl.NumberFormat("es-ES", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(form.getValues("subtotal") || 0)}
                           </span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium text-neutral-500 mr-8">IVA:</span>
+                          <span className="text-sm font-medium">
+                            {new Intl.NumberFormat("es-ES", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(form.getValues("tax") || 0)}
+                          </span>
+                        </div>
+
+                        {/* Mostramos los impuestos adicionales si existen */}
+                        {taxFields.length > 0 && (
+                          <div className="pt-1 border-t border-dashed border-neutral-200">
+                            {taxFields.map((tax, idx) => {
+                              const taxValue = form.getValues(`additionalTaxes.${idx}`);
+                              const taxAmount = taxValue.isPercentage
+                                ? (form.getValues("subtotal") * taxValue.amount) / 100
+                                : taxValue.amount;
+                              
+                              return (
+                                <div key={tax.id} className="flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <span className={`text-sm font-medium ${taxValue.amount < 0 ? 'text-red-500' : 'text-neutral-500'} mr-2`}>
+                                      {taxValue.name}:
+                                    </span>
+                                    <span className="text-xs text-neutral-400">
+                                      {taxValue.isPercentage 
+                                        ? `(${taxValue.amount}%)` 
+                                        : ''}
+                                    </span>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        removeTax(idx);
+                                        // Recalcular totales después de eliminar el impuesto
+                                        setTimeout(() => calculateInvoiceTotals(form), 0);
+                                      }}
+                                      className="ml-1 h-6 w-6 p-0 text-neutral-400 hover:text-red-500"
+                                    >
+                                      <X className="h-3 w-3" />
+                                      <span className="sr-only">Eliminar</span>
+                                    </Button>
+                                  </div>
+                                  <span className={`text-sm font-medium ${taxAmount < 0 ? 'text-red-500' : 'text-neutral-700'}`}>
+                                    {new Intl.NumberFormat("es-ES", {
+                                      style: "currency",
+                                      currency: "EUR",
+                                      signDisplay: 'always'
+                                    }).format(taxAmount)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-neutral-200">
+                          <div className="flex justify-between">
+                            <span className="text-lg font-bold text-neutral-800">Total:</span>
+                            <span className="text-lg font-bold text-blue-600">
+                              {new Intl.NumberFormat("es-ES", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(form.getValues("total") || 0)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="border-t pt-6 flex flex-col items-end">
-                <div className="bg-slate-50 rounded-lg p-4 w-full md:w-96 shadow-sm">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-slate-600">Subtotal:</span>
-                    <span className="font-medium">
-                      {form.getValues("subtotal").toFixed(2)} €
-                    </span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-slate-600">IVA:</span>
-                    <span className="font-medium">
-                      {form.getValues("tax").toFixed(2)} €
-                    </span>
-                  </div>
-                  
-                  {/* Mostrar impuestos adicionales */}
-                  {taxFields.map((field, index) => {
-                    const taxName = form.getValues(`additionalTaxes.${index}.name`);
-                    const taxAmount = form.getValues(`additionalTaxes.${index}.amount`);
-                    const isPercentage = form.getValues(`additionalTaxes.${index}.isPercentage`);
-                    const subtotal = form.getValues("subtotal");
-                    const calculatedAmount = isPercentage ? (subtotal * taxAmount / 100) : taxAmount;
-                    const isNegative = calculatedAmount < 0;
-                    
-                    return (
-                      <div key={field.id} className="flex justify-between mb-2">
-                        <span className="text-sm text-slate-600">
-                          {taxName || "Impuesto"}{isPercentage ? ` (${taxAmount}%)` : ''}:
-                        </span>
-                        <span className={`font-medium ${isNegative ? "text-red-600" : ""}`}>
-                          {calculatedAmount.toFixed(2)} €
-                        </span>
-                      </div>
-                    );
-                  })}
-                  
-                  <div className="flex justify-between mt-3 pt-3 border-t">
-                    <span className="font-semibold">Total:</span>
-                    <span className="font-bold text-lg text-blue-700">{form.getValues("total").toFixed(2)} €</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-4">
             <Button
               type="button"
               variant="outline"
@@ -1348,77 +1235,108 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
             >
               Cancelar
             </Button>
-            <Button type="submit" variant="default" disabled={mutation.isPending}>
-              {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
+            <Button 
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+            >
+              {form.formState.isSubmitting && (
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              {isEditMode ? "Actualizar factura" : "Crear factura"}
             </Button>
           </div>
         </form>
       </Form>
 
-      {/* Formulario de clientes como modal */}
-      <ClientForm 
-        open={showClientForm} 
-        onOpenChange={handleClientModalClose} 
-        onClientCreated={handleClientCreated}
-        clientToEdit={clientToEdit}
-      />
-
-      {/* Diálogo para agregar impuestos adicionales */}
-      <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Agregar nuevo impuesto</DialogTitle>
-            <DialogDescription>
-              Ingresa los datos del impuesto que deseas agregar a la factura.
+      {/* Modal para crear/editar clientes */}
+      <Dialog open={showClientForm} onOpenChange={handleClientModalClose}>
+        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] p-0">
+          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white sticky top-0 z-10">
+            <DialogTitle className="flex items-center text-lg">
+              <Building className="h-5 w-5 mr-2" />
+              {clientToEdit ? "Editar cliente" : "Nuevo cliente"}
+            </DialogTitle>
+            <DialogDescription className="text-blue-100">
+              {clientToEdit ? "Modifica los datos del cliente existente" : "Añade un nuevo cliente a tu lista"}
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="grid gap-4">
-              <div>
-                <label htmlFor="taxName" className="text-sm font-medium">
-                  Nombre del impuesto
-                </label>
-                <input
-                  id="taxName"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
-                  placeholder="Ej: IRPF, tasa municipal, etc."
-                  value={newTaxData.name}
-                  onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="taxAmount" className="text-sm font-medium">
-                  Importe
-                </label>
-                <div className="flex items-center mt-1">
-                  <input
-                    id="taxAmount"
-                    type="number"
-                    step="0.01"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Importe o porcentaje"
-                    value={newTaxData.amount}
-                    onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="ml-2 px-3"
-                    onClick={() => setNewTaxData({...newTaxData, isPercentage: !newTaxData.isPercentage})}
-                  >
-                    {newTaxData.isPercentage ? '%' : '€'}
-                  </Button>
-                </div>
-              </div>
-            </div>
+          <div className="p-4">
+            <ClientForm 
+              clientData={clientToEdit} 
+              onClientCreated={handleClientCreated} 
+            />
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTaxDialog(false)}>Cancelar</Button>
-            <Button onClick={handleAddTaxFromDialog}>Agregar impuesto</Button>
-          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para añadir impuesto personalizado */}
+      <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
+        <DialogContent className="max-w-md overflow-y-auto p-0">
+          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
+            <DialogTitle className="flex items-center text-lg">
+              <Plus className="h-5 w-5 mr-2" />
+              Añadir impuesto personalizado
+            </DialogTitle>
+            <DialogDescription className="text-blue-100">
+              Configura un cargo o descuento adicional
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tax-name">Nombre del impuesto</Label>
+              <Input 
+                id="tax-name" 
+                value={newTaxData.name} 
+                onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
+                placeholder="Ej: Descuento, Recargo, IGIC, etc."
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="tax-amount">Valor</Label>
+              <Input 
+                id="tax-amount" 
+                type="number" 
+                value={newTaxData.amount} 
+                onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
+                placeholder="Introduce el valor"
+              />
+              <p className="text-xs text-muted-foreground">
+                Para descuentos, usa un valor negativo (ej: -10)
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="is-percentage" 
+                checked={newTaxData.isPercentage} 
+                onCheckedChange={(checked) => setNewTaxData({...newTaxData, isPercentage: checked})}
+              />
+              <Label htmlFor="is-percentage">Es un porcentaje</Label>
+            </div>
+            
+            <DialogFooter className="pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowTaxDialog(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleAddTaxFromDialog}
+                disabled={!newTaxData.name}
+                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+              >
+                Añadir
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
