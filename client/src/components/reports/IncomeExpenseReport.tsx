@@ -687,15 +687,13 @@ const IncomeExpenseReport = () => {
                       {paidInvoices.length} facturas
                     </span>
                   </h3>
-                  <Button 
-                    variant="ghost" 
+                  <div 
                     onClick={() => navigate("/invoices/new")}
-                    className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 transition-colors duration-200"
-                    size="sm"
+                    className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-1.5 flex items-center cursor-pointer transition-colors duration-200"
                   >
                     <PlusCircle className="mr-1.5 h-4 w-4" />
-                    Nueva factura
-                  </Button>
+                    <span className="text-sm font-medium">Nueva factura</span>
+                  </div>
                 </div>
               </div>
               
