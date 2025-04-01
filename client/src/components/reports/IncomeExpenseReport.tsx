@@ -675,17 +675,7 @@ const IncomeExpenseReport = () => {
           
           {/* TAB DE INGRESOS */}
           <TabsContent value="income" className="space-y-4">
-            {/* Acciones adicionales - Solo visibles en la pestaña de ingresos */}
-            <div className="flex flex-wrap gap-3 justify-start mb-4">
-              <Button 
-                onClick={() => navigate("/invoices/create")} 
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <FilePlus className="h-4 w-4" />
-                Nueva factura
-              </Button>
-            </div>
+            {/* Se eliminó el botón de "Nueva factura" que estaba aquí */}
             
             <Card className="shadow-md border-0 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
