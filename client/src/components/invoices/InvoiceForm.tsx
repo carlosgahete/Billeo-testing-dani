@@ -230,7 +230,19 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   });
   
   // Obtener información de la empresa para las notas de factura
-  const { data: companyData, isLoading: companyLoading } = useQuery({
+  const { data: companyData, isLoading: companyLoading } = useQuery<{
+    id: number;
+    name: string;
+    taxId: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    email?: string;
+    phone?: string;
+    logo?: string;
+    bankAccount?: string;
+  }>({
     queryKey: ["/api/company"],
   });
 
