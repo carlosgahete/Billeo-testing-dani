@@ -689,10 +689,10 @@ const IncomeExpenseReport = () => {
                   </h3>
                   <div 
                     onClick={() => navigate("/invoices/new")}
-                    className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-1.5 flex items-center cursor-pointer transition-colors duration-200"
+                    className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md text-white px-2 py-1.5 flex items-center cursor-pointer"
                   >
-                    <PlusCircle className="mr-1.5 h-4 w-4" />
-                    <span className="text-sm font-medium">Nueva factura</span>
+                    <span className="font-semibold text-white text-sm">Nueva factura</span>
+                    <PlusCircle className="ml-1.5 h-3.5 w-3.5 text-white/80" />
                   </div>
                 </div>
               </div>
