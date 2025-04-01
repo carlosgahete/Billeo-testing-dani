@@ -337,10 +337,6 @@ const Dashboard = () => {
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Total con IVA:</span>
-                  <span className="font-medium">{financialData.expenses.total.toLocaleString('es-ES')} €</span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-neutral-500">IVA deducible:</span>
                   <span className="font-medium text-green-600">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
                 </div>
