@@ -25,25 +25,10 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Header compacto estilo imagen de referencia */}
-      <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-4 px-5 mb-4 shadow-md mx-4 md:ml-0">
-        <div className="flex flex-col">
-          <div className="flex items-center mb-1">
-            <Receipt className="h-5 w-5 mr-2 text-white" />
-            <h1 className="text-lg font-bold text-white">Gestión de Facturas</h1>
-          </div>
-          <p className="text-[#E0E8FF] text-xs mb-2">
-            Crea, edita y gestiona todas tus facturas profesionales, con datos fiscales actualizados y exportación a PDF.
-          </p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="bg-transparent text-white border-white hover:bg-[#1E40AF] text-xs w-fit"
-            onClick={() => navigate("/dashboard")}
-          >
-            Ver Dashboard
-          </Button>
-        </div>
+      {/* Título de la página */}
+      <div className="flex items-center mx-4 md:ml-0 mb-4">
+        <Receipt className="h-5 w-5 mr-2 text-blue-600" />
+        <h1 className="text-xl font-medium text-gray-800">Gestión de Facturas</h1>
       </div>
       
       {/* Tarjetas de resumen */}
