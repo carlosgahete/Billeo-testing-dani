@@ -798,14 +798,6 @@ const IncomeExpenseReport = () => {
               ) : (
                 <div className="p-8 text-center">
                   <p className="text-sm text-muted-foreground">No hay otros ingresos registrados</p>
-                  <Button 
-                    onClick={() => navigate("/transactions/create")} 
-                    variant="outline" 
-                    size="sm"
-                    className="mt-2"
-                  >
-                    Registrar ingreso
-                  </Button>
                 </div>
               )}
             </div>
@@ -949,14 +941,6 @@ const IncomeExpenseReport = () => {
               ) : (
                 <div className="p-8 text-center">
                   <p className="text-sm text-muted-foreground">No hay gastos registrados</p>
-                  <Button 
-                    onClick={() => navigate("/transactions/create")} 
-                    variant="outline" 
-                    size="sm"
-                    className="mt-2"
-                  >
-                    Registrar gasto
-                  </Button>
                 </div>
               )}
             </div>
