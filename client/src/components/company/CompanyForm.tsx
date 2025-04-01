@@ -31,6 +31,7 @@ interface CompanyData extends Partial<Company> {
   email?: string | null;
   phone?: string | null;
   logo?: string | null;
+  bankAccount?: string | null;
   id?: number;
 }
 
@@ -43,6 +44,7 @@ const companyFormSchema = z.object({
   country: z.string().min(1, "El país es obligatorio"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
+  bankAccount: z.string().optional().or(z.literal("")),
 });
 
 type CompanyFormValues = z.infer<typeof companyFormSchema>;
@@ -69,6 +71,7 @@ const CompanyForm = () => {
       country: "España",
       email: "",
       phone: "",
+      bankAccount: "",
     },
   });
 
@@ -87,6 +90,7 @@ const CompanyForm = () => {
         country: company.country,
         email: company.email || "",
         phone: company.phone || "",
+        bankAccount: company.bankAccount || "",
       });
       
       if (company.logo) {
@@ -268,6 +272,23 @@ const CompanyForm = () => {
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="bankAccount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número de cuenta bancaria (IBAN)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ES12 3456 7890 1234 5678 9012" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Este número de cuenta se incluirá automáticamente en las notas de tus facturas.
+                  </p>
+                </FormItem>
+              )}
+            />
             
             <div>
               <FormLabel>Logo de la empresa</FormLabel>

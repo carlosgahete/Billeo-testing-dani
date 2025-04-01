@@ -228,6 +228,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
   });
+  
+  // Obtener información de la empresa para las notas de factura
+  const { data: companyData, isLoading: companyLoading } = useQuery({
+    queryKey: ["/api/company"],
+  });
 
   // Fetch invoice data if in edit mode using custom queryFn
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
@@ -545,6 +550,23 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       });
     }
   }, [invoiceId, initialData, invoiceData, form, isEditMode, toast]);
+  
+  // Efecto para añadir el número de cuenta bancaria a las notas por defecto si no estamos en modo edición
+  useEffect(() => {
+    if (!isEditMode && companyData && !companyLoading && companyData.bankAccount) {
+      const notesValue = form.getValues("notes");
+      
+      // Solo añadimos el texto si las notas están vacías o no contienen ya el número de cuenta
+      if (!notesValue || !notesValue.includes("Número de cuenta")) {
+        const defaultNotes = `Forma de pago: Transferencia bancaria
+Número de cuenta: ${companyData.bankAccount}
+        
+${notesValue || ""}`;
+        
+        form.setValue("notes", defaultNotes);
+      }
+    }
+  }, [companyData, companyLoading, form, isEditMode]);
   
   // Debug: Imprimir estado del formulario cuando cambia
   useEffect(() => {

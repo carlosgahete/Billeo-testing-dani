@@ -37,6 +37,7 @@ export const companies = pgTable("companies", {
   email: text("email"),
   phone: text("phone"),
   logo: text("logo"),
+  bankAccount: text("bank_account"), // Número de cuenta para transferencias bancarias
 });
 
 export const insertCompanySchema = createInsertSchema(companies).omit({ 

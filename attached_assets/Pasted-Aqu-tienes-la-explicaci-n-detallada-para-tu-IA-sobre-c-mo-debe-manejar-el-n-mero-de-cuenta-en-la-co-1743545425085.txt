@@ -1,0 +1,46 @@
+Aquí tienes la explicación detallada para tu IA sobre cómo debe manejar el número de cuenta en la configuración y en las facturas:
+
+Funcionalidad: Configurar número de cuenta para pagos
+	1.	Agregar un cuadro de texto en la configuración
+	•	En la sección de configuración de la aplicación, se debe incluir un campo de texto donde el cliente pueda ingresar su número de cuenta bancaria.
+	•	Este número de cuenta se guardará y se usará automáticamente en las facturas.
+	2.	Uso en las facturas
+	•	Cuando se genere una factura, en la sección de “Notas o Condiciones”, debe aparecer el siguiente mensaje de forma automática:
+
+Pago mediante transferencia bancaria [número de cuenta]
+
+
+	•	Si el cliente no ha configurado un número de cuenta, la factura puede dejar ese campo vacío o mostrar un mensaje genérico como:
+
+Pago mediante transferencia bancaria. Contacte para más información.
+
+
+	3.	Actualización del número de cuenta
+	•	Si el cliente cambia su número de cuenta en la configuración, las futuras facturas deben reflejar el nuevo número.
+	•	Las facturas ya creadas no deben modificarse automáticamente, solo las nuevas.
+
+Ejemplo práctico
+
+📌 Configuración inicial:
+	•	El cliente ingresa su número de cuenta: “ES12 3456 7890 1234 5678”
+
+📌 Factura generada:
+
+Notas o Condiciones:
+Pago mediante transferencia bancaria ES12 3456 7890 1234 5678
+
+📌 El cliente cambia su número de cuenta a: “ES98 7654 3210 9876 5432”
+	•	Las nuevas facturas mostrarán:
+
+Pago mediante transferencia bancaria ES98 7654 3210 9876 5432
+
+
+	•	Las facturas anteriores seguirán mostrando el número que tenían al momento de su creación.
+
+Conclusión
+	•	El cliente debe poder guardar su número de cuenta en la configuración.
+	•	Las facturas deben incluirlo automáticamente en “Notas o Condiciones”.
+	•	Si el número cambia, solo afecta a facturas futuras, no a las pasadas.
+	•	Si no se configura un número de cuenta, mostrar un mensaje genérico en su lugar.
+
+📌 Con este sistema, el cliente no tendrá que escribir su número de cuenta en cada factura manualmente. 🚀
