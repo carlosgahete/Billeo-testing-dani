@@ -16,7 +16,8 @@ import {
   DollarSign, 
   Check, 
   MoreVertical,
-  Mail
+  Mail,
+  FileCheck
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -681,6 +682,7 @@ const InvoiceList = () => {
 
   return (
     <div className="w-full">
+      {/* Botón de exportar todo */}
       <div className="flex justify-end gap-2 mb-4 mx-4 md:ml-0">
         <Button 
           variant="outline" 
@@ -691,12 +693,23 @@ const InvoiceList = () => {
           <span className="hidden sm:inline">Exportar todo</span>
           <span className="sm:hidden">Exportar</span>
         </Button>
+      </div>
+
+      {/* Encabezado de Facturas Emitidas con el botón Nueva Factura alineado a la derecha */}
+      <div className="overflow-hidden rounded-xl bg-blue-600 text-white p-3 flex justify-between items-center mx-4 md:ml-0 mb-1">
+        <div className="flex items-center">
+          <FileCheck className="h-5 w-5 mr-2" />
+          <h2 className="font-medium">Facturas emitidas</h2>
+          <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-0.5">
+            {invoicesData?.length || 0} facturas
+          </span>
+        </div>
         <Button
-          className="flex items-center bg-blue-600 hover:bg-blue-700"
+          className="flex items-center bg-white text-blue-600 hover:bg-blue-50"
           size="sm"
           onClick={() => navigate("/invoices/create")}
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-1" />
           <span className="hidden sm:inline">Nueva factura</span>
           <span className="sm:hidden">Nueva</span>
         </Button>
