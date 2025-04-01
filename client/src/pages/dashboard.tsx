@@ -332,17 +332,17 @@ const Dashboard = () => {
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(financialData.expenses.totalWithoutVAT)} €
+                }).format(financialData.expenses.total)} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA soportado:</span>
-                  <span className="font-medium text-green-600">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IVA incluido en los gastos:</span>
+                  <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF a liquidar:</span>
-                  <span className="font-medium text-red-600">{stats?.taxes?.incomeTax.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IRPF retenido en los gastos:</span>
+                  <span className="font-medium">{Math.round(financialData.expenses.totalWithoutVAT * 0.15).toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
