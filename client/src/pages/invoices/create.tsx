@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import InvoiceForm from "@/components/invoices/InvoiceForm";
+import InvoiceForm from "@/components/invoices/InvoiceFormFixed";
 import { Loader2, ArrowLeft, Receipt } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
