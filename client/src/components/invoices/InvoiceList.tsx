@@ -375,6 +375,40 @@ const InvoiceList = () => {
     enabled: false,
   });
   
+  // Función para exportar todas las facturas a PDF
+  const exportAllInvoices = async () => {
+    try {
+      toast({
+        title: "Exportando facturas",
+        description: "Preparando la exportación de todas las facturas...",
+      });
+      
+      // Si hay muchas facturas, esto podría tomar tiempo
+      for (const invoice of invoicesData || []) {
+        const client = clientsData?.find((c: Client) => c.id === invoice.clientId);
+        
+        if (!client) continue;
+        
+        // Get invoice items
+        const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+        const data = await response.json();
+        
+        await generateInvoicePDF(invoice, client, data.items);
+      }
+      
+      toast({
+        title: "Exportación completada",
+        description: `Se han exportado ${invoicesData?.length || 0} facturas a PDF`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `No se pudo completar la exportación: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Función para manejar "Marcar como pagada" en el menú móvil
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
