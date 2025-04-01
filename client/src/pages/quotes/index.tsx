@@ -155,14 +155,9 @@ export default function QuotesPage() {
     <Layout>
       {/* Header compacto estilo imagen de referencia */}
       <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-4 px-5 mb-4 shadow-md mx-0">
-        <div className="flex flex-col">
-          <div className="flex items-center mb-1">
-            <FileText className="h-5 w-5 mr-2 text-white" />
-            <h1 className="text-lg font-bold text-white">Gestión de Presupuestos</h1>
-          </div>
-          <p className="text-[#E0E8FF] text-xs">
-            Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
-          </p>
+        <div className="flex items-center">
+          <FileText className="h-5 w-5 mr-2 text-white" />
+          <h1 className="text-lg font-bold text-white">Gestión de Presupuestos</h1>
         </div>
       </div>
 
