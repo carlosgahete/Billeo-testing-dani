@@ -50,10 +50,10 @@ const QuickActions = () => {
         <Button
           variant="outline"
           className="p-3 h-auto flex flex-col items-center justify-center hover:bg-neutral-50 border-neutral-200"
-          onClick={() => navigate("/transactions/create")}
+          onClick={() => navigate("/income-expense?tab=expense")}
         >
           <Receipt className="h-5 w-5 text-primary-600 mb-2" />
-          <span className="text-sm text-neutral-700">Registrar gasto</span>
+          <span className="text-sm text-neutral-700">Gestionar gastos</span>
         </Button>
         
         <Button

@@ -647,14 +647,7 @@ const IncomeExpenseReport = () => {
           <TabsContent value="income" className="space-y-4">
             {/* Acciones adicionales - Solo visibles en la pestaña de ingresos */}
             <div className="flex flex-wrap gap-3 justify-start mb-4">
-              <Button 
-                onClick={() => navigate("/transactions/create")} 
-                variant="default" 
-                className="flex items-center gap-2"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Nueva transacción
-              </Button>
+
               
               <Button 
                 onClick={() => navigate("/invoices/create")} 
