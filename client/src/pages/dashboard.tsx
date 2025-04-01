@@ -174,61 +174,57 @@ const Dashboard = () => {
           className="w-full overflow-visible"
         >
           <div className="flex flex-wrap gap-2 pt-1">
-            <div className="bg-white rounded-lg shadow-sm border p-1.5 flex items-center justify-between w-[120px]">
-              <span className="text-sm font-medium text-gray-700">{year}</span>
-              <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-6 border-0 p-0 h-auto bg-transparent">
-                  <ChevronDown className="h-3 w-3 opacity-50" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2025">2025</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="rounded-lg shadow-sm border bg-white w-[120px] flex items-center justify-between p-2 h-10">
+                <span className="text-sm font-medium text-gray-700">{year}</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+              </SelectContent>
+            </Select>
             
-            <div className="bg-white rounded-lg shadow-sm border p-1.5 flex items-center justify-between w-[140px]">
-              <span className="text-sm font-medium text-gray-700">
-                {period === "all" ? "Todo el año" : 
-                 period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                 period === "m1" ? "Enero" :
-                 period === "m2" ? "Febrero" :
-                 period === "m3" ? "Marzo" :
-                 period === "m4" ? "Abril" :
-                 period === "m5" ? "Mayo" :
-                 period === "m6" ? "Junio" :
-                 period === "m7" ? "Julio" :
-                 period === "m8" ? "Agosto" :
-                 period === "m9" ? "Septiembre" :
-                 period === "m10" ? "Octubre" :
-                 period === "m11" ? "Noviembre" : "Diciembre"}
-              </span>
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="w-6 border-0 p-0 h-auto bg-transparent">
-                  <ChevronDown className="h-3 w-3 opacity-50" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todo el año</SelectItem>
-                  <SelectItem value="q1">1er trimestre</SelectItem>
-                  <SelectItem value="q2">2º trimestre</SelectItem>
-                  <SelectItem value="q3">3er trimestre</SelectItem>
-                  <SelectItem value="q4">4º trimestre</SelectItem>
-                  <SelectItem value="m1">Enero</SelectItem>
-                  <SelectItem value="m2">Febrero</SelectItem>
-                  <SelectItem value="m3">Marzo</SelectItem>
-                  <SelectItem value="m4">Abril</SelectItem>
-                  <SelectItem value="m5">Mayo</SelectItem>
-                  <SelectItem value="m6">Junio</SelectItem>
-                  <SelectItem value="m7">Julio</SelectItem>
-                  <SelectItem value="m8">Agosto</SelectItem>
-                  <SelectItem value="m9">Septiembre</SelectItem>
-                  <SelectItem value="m10">Octubre</SelectItem>
-                  <SelectItem value="m11">Noviembre</SelectItem>
-                  <SelectItem value="m12">Diciembre</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="rounded-lg shadow-sm border bg-white w-[140px] flex items-center justify-between p-2 h-10">
+                <span className="text-sm font-medium text-gray-700">
+                  {period === "all" ? "Todo el año" : 
+                   period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                   period === "m1" ? "Enero" :
+                   period === "m2" ? "Febrero" :
+                   period === "m3" ? "Marzo" :
+                   period === "m4" ? "Abril" :
+                   period === "m5" ? "Mayo" :
+                   period === "m6" ? "Junio" :
+                   period === "m7" ? "Julio" :
+                   period === "m8" ? "Agosto" :
+                   period === "m9" ? "Septiembre" :
+                   period === "m10" ? "Octubre" :
+                   period === "m11" ? "Noviembre" : "Diciembre"}
+                </span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todo el año</SelectItem>
+                <SelectItem value="q1">1er trimestre</SelectItem>
+                <SelectItem value="q2">2º trimestre</SelectItem>
+                <SelectItem value="q3">3er trimestre</SelectItem>
+                <SelectItem value="q4">4º trimestre</SelectItem>
+                <SelectItem value="m1">Enero</SelectItem>
+                <SelectItem value="m2">Febrero</SelectItem>
+                <SelectItem value="m3">Marzo</SelectItem>
+                <SelectItem value="m4">Abril</SelectItem>
+                <SelectItem value="m5">Mayo</SelectItem>
+                <SelectItem value="m6">Junio</SelectItem>
+                <SelectItem value="m7">Julio</SelectItem>
+                <SelectItem value="m8">Agosto</SelectItem>
+                <SelectItem value="m9">Septiembre</SelectItem>
+                <SelectItem value="m10">Octubre</SelectItem>
+                <SelectItem value="m11">Noviembre</SelectItem>
+                <SelectItem value="m12">Diciembre</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </PageTitle>
       </div>
