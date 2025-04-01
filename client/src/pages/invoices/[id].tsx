@@ -34,6 +34,17 @@ const InvoiceDetailPage = () => {
     queryKey: ["/api/invoices", invoiceId],
     onSuccess: (response) => {
       console.log("Datos de factura recibidos:", invoiceId, response);
+      
+      // Si estamos en modo edición, mostramos una alerta con los datos
+      if (searchParams.get('edit') === 'true' && response && response.invoice) {
+        setTimeout(() => {
+          alert(`Datos de factura cargados: 
+ID: ${response.invoice.id}
+Núm: ${response.invoice.invoiceNumber}
+Items: ${response.items ? response.items.length : 0}
+Total: ${response.invoice.total}`);
+        }, 500);
+      }
     }
   });
   
