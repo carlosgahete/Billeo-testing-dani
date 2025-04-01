@@ -557,9 +557,8 @@ const IncomeExpenseReport = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-6 shadow-md mb-6">
-        <h1 className="text-3xl font-bold text-white">Ingresos y Gastos</h1>
-        <p className="text-blue-100 mt-2">Gestiona tu flujo de caja de forma eficiente</p>
+      <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md mb-4">
+        <h1 className="text-2xl font-bold text-white">Ingresos y Gastos</h1>
       </div>
 
       <div className="grid gap-6">
