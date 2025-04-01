@@ -229,10 +229,39 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
-  // Fetch invoice data if in edit mode
+  // Fetch invoice data if in edit mode using custom queryFn
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
     enabled: isEditMode && !initialData, // Solo hacer la consulta si estamos en modo edición y no tenemos datos iniciales
+    retry: 3, // Intentar hasta 3 veces
+    retryDelay: 1000, // Esperar 1 segundo entre reintentos
+    // Función personalizada para obtener datos, similar a la de EditInvoicePage
+    queryFn: async () => {
+      try {
+        // Intentar obtener los datos con el formato estándar
+        const invoiceResponse = await fetch(`/api/invoices/${invoiceId}`);
+        const invoiceData = await invoiceResponse.json();
+        console.log("🔎 InvoiceForm - Respuesta API (formato 1):", invoiceData);
+        
+        if (invoiceData && typeof invoiceData === 'object') {
+          return invoiceData;
+        }
+        
+        // Si falla, intentar obtener la factura y los items por separado
+        console.log("⚠️ InvoiceForm - Formato 1 falló, intentando formato alternativo");
+        const invoiceBasicResponse = await fetch(`/api/invoices/${invoiceId}?basic=true`);
+        const invoiceBasic = await invoiceBasicResponse.json();
+        
+        const invoiceItemsResponse = await fetch(`/api/invoices/${invoiceId}/items`);
+        const invoiceItems = await invoiceItemsResponse.json();
+        
+        console.log("🔎 InvoiceForm - Respuesta API (formato 2):", { invoice: invoiceBasic, items: invoiceItems });
+        return { invoice: invoiceBasic, items: invoiceItems };
+      } catch (err) {
+        console.error("❌ InvoiceForm - Error al obtener datos de la factura:", err);
+        throw new Error("No se pudieron obtener los datos de la factura. Por favor, intenta de nuevo.");
+      }
+    }
   });
 
   // Valores por defecto para un formulario nuevo
@@ -268,9 +297,34 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // Esta función procesa los datos externos para formatearlos correctamente para el formulario
   const processExternalData = (externalData: any) => {
-    if (!externalData || !externalData.invoice || !externalData.items) {
-      console.error("⚠️ Datos externos inválidos:", externalData);
+    console.log("🔎 processExternalData recibió:", externalData);
+    
+    // Verificar si externalData es válido
+    if (!externalData) {
+      console.error("⚠️ Datos externos nulos o indefinidos");
       return null;
+    }
+    
+    // Verificar si tiene el formato esperado
+    if (!externalData.invoice) {
+      console.warn("⚠️ No se encontró la propiedad 'invoice' en los datos externos:", externalData);
+      // Intentar adaptarlo si es un objeto simple
+      if (typeof externalData === 'object' && !Array.isArray(externalData)) {
+        console.log("ℹ️ Intentando adaptar datos planos como factura");
+        externalData = { 
+          invoice: externalData,
+          items: externalData.items || []
+        };
+      } else {
+        console.error("⚠️ No se pudo adaptar los datos externos");
+        return null;
+      }
+    }
+    
+    // Asegurar que exista la propiedad items
+    if (!externalData.items) {
+      console.warn("⚠️ No se encontró la propiedad 'items' en los datos, se usará un array vacío");
+      externalData.items = [];
     }
     
     const { invoice, items } = externalData;

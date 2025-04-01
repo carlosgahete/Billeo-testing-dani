@@ -23,6 +23,7 @@ export default function EditInvoicePage() {
   interface InvoiceData {
     invoice?: any;
     items?: any[];
+    [key: string]: any; // Permitir acceso con índices de tipo string
   }
   
   // Consulta para obtener los datos de la factura
@@ -30,9 +31,38 @@ export default function EditInvoicePage() {
     queryKey: ["/api/invoices", invoiceId],
     refetchOnWindowFocus: false, // No recargar al volver a enfocar la ventana
     staleTime: 0, // No usar caché
+    retry: 3, // Intentar hasta 3 veces
+    retryDelay: 1000, // Esperar 1 segundo entre reintentos
+    // Aquí intentamos obtener directamente la factura si el primer intento falla
+    queryFn: async () => {
+      try {
+        // Intentar obtener los datos con el formato estándar
+        const invoiceResponse = await fetch(`/api/invoices/${invoiceId}`);
+        const invoiceData = await invoiceResponse.json();
+        console.log("🔍 Respuesta API (formato 1):", invoiceData);
+        
+        if (invoiceData && typeof invoiceData === 'object') {
+          return invoiceData;
+        }
+        
+        // Si falla, intentar obtener la factura y los items por separado
+        console.log("⚠️ Formato 1 falló, intentando formato alternativo");
+        const invoiceBasicResponse = await fetch(`/api/invoices/${invoiceId}?basic=true`);
+        const invoiceBasic = await invoiceBasicResponse.json();
+        
+        const invoiceItemsResponse = await fetch(`/api/invoices/${invoiceId}/items`);
+        const invoiceItems = await invoiceItemsResponse.json();
+        
+        console.log("🔍 Respuesta API (formato 2):", { invoice: invoiceBasic, items: invoiceItems });
+        return { invoice: invoiceBasic, items: invoiceItems };
+      } catch (err) {
+        console.error("❌ Error al obtener datos de la factura:", err);
+        throw new Error("No se pudieron obtener los datos de la factura. Por favor, intenta de nuevo.");
+      }
+    }
   });
   
-  // Efecto para procesar los datos una vez se cargan
+  // Efecto para procesar los datos una vez se cargan (versión simplificada)
   useEffect(() => {
     if (isError) {
       console.error("Error al cargar datos de factura:", error);
@@ -44,85 +74,90 @@ export default function EditInvoicePage() {
       console.log("⚡ Datos de factura cargados:", data);
       console.log("⚡ Tipo de datos:", typeof data);
       console.log("⚡ Es array?", Array.isArray(data));
+      console.log("⚡ Keys del objeto:", data ? Object.keys(data) : []);
       
-      // Obtener todas las keys del objeto data para saber qué contiene
-      console.log("⚡ Keys del objeto:", Object.keys(data));
-      
-      // Intentar adaptar diferentes formatos posibles
-      let formattedData;
-      
-      if (data.invoice && data.items) {
-        // Formato esperado: { invoice: {...}, items: [...] }
-        formattedData = data;
-        console.log("✅ Formato 1: Datos ya tienen formato esperado");
-      }
-      else if (!data.invoice && !data.items && typeof data === 'object') {
-        // Es posible que el invoice sea el objeto principal y que los items estén en otra propiedad
-        // Primero buscamos si hay una propiedad que contenga un array
-        let itemsProperty = null;
-        let invoiceData = { ...data };
+      try {
+        // Procesamiento simplificado para evitar errores de TypeScript
+        let formattedData: any = null;
         
-        for (const key in data) {
-          if (Array.isArray(data[key])) {
-            itemsProperty = key;
-            break;
+        // Caso 1: El formato ya es el esperado { invoice: {...}, items: [...] }
+        if (data && data.invoice && ('items' in data)) {
+          formattedData = { 
+            invoice: data.invoice,
+            items: Array.isArray(data.items) ? data.items : []
+          };
+          console.log("✅ Formato 1: Datos ya tienen formato esperado");
+        }
+        // Caso 2: Es un objeto pero no tiene la estructura esperada
+        else if (data && typeof data === 'object' && !Array.isArray(data)) {
+          // Buscar si hay alguna propiedad que sea un array (posibles items)
+          let itemsProperty = '';
+          let itemsArray: any[] = [];
+          const invoiceData = { ...data };
+          
+          // Buscar una propiedad que sea un array para usarla como items
+          Object.keys(data).forEach(key => {
+            if (Array.isArray(data[key as keyof typeof data])) {
+              itemsProperty = key;
+              // Usar type assertion para acceder con seguridad
+              itemsArray = data[key as keyof typeof data] as any[];
+            }
+          });
+          
+          // Si encontramos una propiedad que contenga un array, asumimos que son los items
+          if (itemsProperty && itemsArray.length > 0) {
+            // Eliminar la propiedad de items del objeto principal
+            delete (invoiceData as any)[itemsProperty];
+            
+            formattedData = {
+              invoice: invoiceData,
+              items: itemsArray
+            };
+            console.log("✅ Formato 2: Datos adaptados de objeto con array de items");
+          } else {
+            // No hay array, tratamos todo como la factura y creamos items vacíos
+            formattedData = {
+              invoice: data,
+              items: []
+            };
+            console.log("⚠️ Formato 3: No se encontraron items, usando datos planos");
           }
         }
+        // Caso 3: Los datos son un array
+        else if (Array.isArray(data)) {
+          if (data.length > 0) {
+            formattedData = {
+              invoice: data[0],
+              items: data.slice(1)
+            };
+            console.log("✅ Formato 4: Datos adaptados de array");
+          } else {
+            throw new Error("Los datos recibidos son un array vacío");
+          }
+        }
+        // Caso 4: Formato desconocido
+        else {
+          throw new Error("Formato de datos desconocido");
+        }
         
-        // Si encontramos una propiedad que sea un array, asumimos que son los items
-        if (itemsProperty) {
-          const items = data[itemsProperty];
-          delete invoiceData[itemsProperty]; // Eliminar la propiedad de items
-          
-          formattedData = {
-            invoice: invoiceData,
-            items: items
-          };
-          console.log("✅ Formato 2: Datos adaptados de objeto con array de items");
-        } else {
-          // Tratar todo el objeto como la factura y crear items vacíos
-          formattedData = {
-            invoice: data,
-            items: []
-          };
-          console.log("⚠️ Formato 3: No se encontraron items, usando datos planos");
+        // Validación final
+        if (!formattedData || !formattedData.invoice) {
+          throw new Error("No se pudo extraer la información de la factura");
         }
-      }
-      else if (Array.isArray(data)) {
-        // Si lo que recibimos es un array, el primer elemento podría ser la factura
-        // y el resto podrían ser los items
-        if (data.length > 0) {
-          formattedData = {
-            invoice: data[0],
-            items: data.slice(1)
-          };
-          console.log("✅ Formato 4: Datos adaptados de array");
-        } else {
-          setLoadError("Los datos recibidos son un array vacío");
-          return;
+        
+        // Asegurar que items siempre sea un array
+        if (!formattedData.items || !Array.isArray(formattedData.items)) {
+          formattedData.items = [];
+          console.warn("⚠️ No se encontraron items, se usará un array vacío");
         }
+        
+        console.log("✅ Datos formateados finales:", formattedData);
+        setInvoiceData(formattedData);
+        
+      } catch (error: any) {
+        console.error("❌ Error al procesar datos:", error.message);
+        setLoadError(error.message || "Error al procesar los datos");
       }
-      else {
-        console.error("⚠️ Formato de datos desconocido:", data);
-        setLoadError("Los datos recibidos tienen un formato desconocido");
-        return;
-      }
-      
-      // Validar que tengamos lo mínimo necesario
-      if (!formattedData.invoice) {
-        console.error("⚠️ No se pudo extraer la información de la factura");
-        setLoadError("No se pudo extraer la información de la factura");
-        return;
-      }
-      
-      // Si no hay items, creamos un array vacío
-      if (!formattedData.items || !Array.isArray(formattedData.items)) {
-        formattedData.items = [];
-        console.warn("⚠️ No se encontraron items, se usará un array vacío");
-      }
-      
-      console.log("✅ Datos formateados finales:", formattedData);
-      setInvoiceData(formattedData);
     }
   }, [data, isLoading, isError, error]);
   
