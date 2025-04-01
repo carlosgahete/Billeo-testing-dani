@@ -688,12 +688,12 @@ const IncomeExpenseReport = () => {
                     </span>
                   </h3>
                   <Button 
-                    variant="secondary" 
+                    variant="ghost" 
                     onClick={() => navigate("/invoices/new")}
-                    className="bg-white hover:bg-blue-50 text-blue-600 border-blue-200"
+                    className="bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors duration-200"
                     size="sm"
                   >
-                    <PlusCircle className="mr-1 h-4 w-4" />
+                    <PlusCircle className="mr-1.5 h-4 w-4" />
                     Nueva factura
                   </Button>
                 </div>
