@@ -171,7 +171,7 @@ const Dashboard = () => {
           title="Resumen Contable"
           description="Visión general de tu actividad económica"
           variant="gradient"
-          className="w-full"
+          className="w-full pl-12 md:pl-0"
         >
           <div className="flex flex-wrap gap-2 pt-1">
             <div className="bg-white rounded-md shadow-sm border p-1.5 flex items-center justify-between w-[120px]">
