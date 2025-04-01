@@ -254,7 +254,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA a liquidar:</span>
-                  <span className="font-medium text-blue-600 font-semibold">{(financialData.taxes?.ivaALiquidar || 0).toLocaleString('es-ES')} €</span>
+                  <span className="font-medium text-red-600 font-semibold">{(financialData.taxes?.ivaALiquidar || 0).toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               

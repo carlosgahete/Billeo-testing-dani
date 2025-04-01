@@ -172,7 +172,7 @@ const TaxSummary = () => {
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="font-bold text-xl text-red-600">
+                  <span className="text-blue-800 font-bold text-xl">
                     {formatCurrency(selectedVat)}
                   </span>
                 )}
