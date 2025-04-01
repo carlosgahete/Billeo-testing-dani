@@ -15,7 +15,8 @@ import {
   Edit,
   FileDown,
   Download,
-  Trash2
+  Trash2,
+  Receipt
 } from "lucide-react";
 import {
   AlertDialog,
@@ -29,7 +30,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-// import { PageTitle } from "@/components/ui/page-title";
 import {
   Card,
   CardContent,
@@ -557,75 +557,100 @@ const IncomeExpenseReport = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center mb-4 -mt-5">
-        <h1 className="text-2xl font-semibold text-black ml-6">Ingresos y Gastos</h1>
+      <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-6 shadow-md mb-6">
+        <h1 className="text-3xl font-bold text-white">Ingresos y Gastos</h1>
+        <p className="text-blue-100 mt-2">Gestiona tu flujo de caja de forma eficiente</p>
       </div>
 
       <div className="grid gap-6">
-        {/* Panel de estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+        {/* Panel de estadísticas - Diseño mejorado con tarjetas más atractivas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-700 flex items-center">
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Total Ingresos
+              <CardTitle className="text-sm font-medium flex items-center">
+                <div className="bg-green-100 p-2 rounded-full mr-3">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                </div>
+                <span className="text-green-700 text-lg">Total Ingresos</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-10 w-32" />
               ) : (
-                <div className="text-2xl font-bold">{formatCurrency(totalIncome)}</div>
+                <div className="text-3xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Facturas: {formatCurrency(totalInvoiceIncome)} | 
-                Otros: {formatCurrency(totalAdditionalIncome)}
-              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div className="bg-green-50 p-2 rounded-md">
+                  <span className="text-green-600 font-medium">Facturas:</span>
+                  <div className="font-semibold">{formatCurrency(totalInvoiceIncome)}</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded-md">
+                  <span className="text-green-600 font-medium">Otros:</span>
+                  <div className="font-semibold">{formatCurrency(totalAdditionalIncome)}</div>
+                </div>
+              </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-700 flex items-center">
-                <TrendingDown className="mr-2 h-4 w-4" />
-                Total Gastos
+              <CardTitle className="text-sm font-medium flex items-center">
+                <div className="bg-red-100 p-2 rounded-full mr-3">
+                  <TrendingDown className="h-5 w-5 text-red-600" />
+                </div>
+                <span className="text-red-700 text-lg">Total Gastos</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-10 w-32" />
               ) : (
-                <div className="text-2xl font-bold">{formatCurrency(totalExpenses)}</div>
+                <div className="text-3xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                De {expenseTransactions.length} transacciones
-              </p>
+              <div className="flex items-center mt-3 bg-red-50 p-2 rounded-md">
+                <p className="text-sm text-red-600">
+                  <span className="font-medium">Registros:</span> {expenseTransactions.length} transacciones
+                </p>
+              </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-300"></div>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700 flex items-center">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Resultado
+              <CardTitle className="text-sm font-medium flex items-center">
+                <div className="bg-blue-100 p-2 rounded-full mr-3">
+                  <FilePlus className="h-5 w-5 text-blue-600" />
+                </div>
+                <span className="text-blue-700 text-lg">Resultado</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-10 w-32" />
               ) : (
-                <div className="text-2xl font-bold">
+                <div className="text-3xl font-bold text-blue-700">
                   {formatCurrency(totalIncome - totalExpenses)}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
-              </p>
+              <div className="flex items-center mt-3 bg-blue-50 p-2 rounded-md">
+                <Badge className={`text-sm ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
+                  {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
+                </Badge>
+                <span className="ml-2 text-sm text-blue-600">
+                  {totalIncome > totalExpenses 
+                    ? "¡Buen trabajo! Estás en positivo" 
+                    : "Revisa tus gastos para mejorar el resultado"}
+                </span>
+              </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Tabs para ingresos y gastos */}
+        {/* Tabs para ingresos y gastos con diseño mejorado */}
         <Tabs 
           defaultValue="income" 
           value={activeTab}
@@ -636,19 +661,23 @@ const IncomeExpenseReport = () => {
             url.searchParams.set('tab', value);
             window.history.replaceState({}, '', url.toString());
           }}
-          className="space-y-4"
+          className="space-y-5"
         >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="income">Ingresos</TabsTrigger>
-            <TabsTrigger value="expense">Gastos</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 p-1 bg-blue-50 rounded-xl">
+            <TabsTrigger value="income" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Ingresos
+            </TabsTrigger>
+            <TabsTrigger value="expense" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+              <TrendingDown className="w-5 h-5 mr-2" />
+              Gastos
+            </TabsTrigger>
           </TabsList>
           
           {/* TAB DE INGRESOS */}
           <TabsContent value="income" className="space-y-4">
             {/* Acciones adicionales - Solo visibles en la pestaña de ingresos */}
             <div className="flex flex-wrap gap-3 justify-start mb-4">
-
-              
               <Button 
                 onClick={() => navigate("/invoices/create")} 
                 variant="outline" 
@@ -896,47 +925,79 @@ const IncomeExpenseReport = () => {
               </CardContent>
             </Card>
             
-            <div className="rounded-md border">
-              <div className="bg-muted/40 p-4">
-                <h3 className="text-sm font-medium">Gastos registrados</h3>
+            <Card className="shadow-md border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
+                <h3 className="text-lg font-medium flex items-center">
+                  <TrendingDown className="mr-2 h-5 w-5" />
+                  Lista de Gastos
+                  <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
+                    {expenseTransactions.length} registros
+                  </span>
+                </h3>
               </div>
               
               {isLoading ? (
-                <div className="p-4 space-y-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-16 w-full rounded-md" />
+                  <Skeleton className="h-16 w-full rounded-md" />
+                  <Skeleton className="h-16 w-full rounded-md" />
                 </div>
               ) : sortedExpenseTransactions.length > 0 ? (
                 <div className="divide-y">
                   {sortedExpenseTransactions.map((transaction) => (
-                    <div key={transaction.id} className="p-4 flex justify-between items-center hover:bg-muted/30">
-                      <div>
-                        <div className="font-medium">{transaction.description}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(transaction.date)} · {getCategoryName(transaction.categoryId)}
+                    <div key={transaction.id} className="p-5 flex justify-between items-center hover:bg-red-50 transition-colors group">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <div className="bg-red-100 p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors">
+                            <Receipt className="h-5 w-5 text-red-600" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
+                            <div className="text-sm text-muted-foreground flex items-center mt-1">
+                              <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                                {getCategoryName(transaction.categoryId) || 'Sin categoría'}
+                              </span>
+                              <span>{formatDate(transaction.date)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <div className="font-semibold text-red-600">
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-red-100">
+                          <div className="font-bold text-red-600 text-lg">
                             {formatCurrency(transaction.amount)}
                           </div>
                         </div>
-                        <DeleteTransactionButton 
-                          transactionId={transaction.id}
-                          description={transaction.description}
-                        />
+                        <div className="opacity-80 group-hover:opacity-100 transition-opacity">
+                          <DeleteTransactionButton 
+                            transactionId={transaction.id}
+                            description={transaction.description}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center">
-                  <p className="text-sm text-muted-foreground">No hay gastos registrados</p>
+                <div className="p-12 text-center">
+                  <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                    <Receipt className="h-8 w-8 text-red-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">No hay gastos registrados</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Comienza registrando gastos usando el formulario de arriba o escaneando documentos
+                  </p>
+                  <Button 
+                    onClick={() => navigate("/documents/scan")} 
+                    variant="outline" 
+                    className="gap-2"
+                  >
+                    <ScanText className="h-4 w-4" />
+                    Escanear documento
+                  </Button>
                 </div>
               )}
-            </div>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
