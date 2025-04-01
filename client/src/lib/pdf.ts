@@ -505,8 +505,8 @@ export async function generateQuotePDF(
     doc.text(`Fecha de emisión: ${formatDate(quote.issueDate)}`, 140, 30, { align: "right" });
     
     // Destacar la fecha de validez con el color del tema pero de manera elegante
-    const validDate = new Date(quote.validUntil);
-    const headerFormattedDate = validDate.toLocaleDateString("es-ES", {
+    // Formatear la fecha de validez para una mejor presentación
+    const headerFormattedDate = new Date(quote.validUntil).toLocaleDateString("es-ES", {
       day: "numeric",
       month: "long",
       year: "numeric"

@@ -160,28 +160,9 @@ export default function QuotesPage() {
             <FileText className="h-5 w-5 mr-2 text-white" />
             <h1 className="text-lg font-bold text-white">Gestión de Presupuestos</h1>
           </div>
-          <p className="text-[#E0E8FF] text-xs mb-2">
+          <p className="text-[#E0E8FF] text-xs">
             Crea, envía y gestiona presupuestos para tus clientes. Conviértelos en facturas con un solo clic.
           </p>
-          <div className="flex flex-row gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-transparent text-white border-white hover:bg-[#1E40AF] text-xs"
-              onClick={() => navigate("/dashboard")}
-            >
-              Ver Dashboard
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-transparent text-white border-white hover:bg-[#1E40AF] text-xs"
-              onClick={() => navigate("/quotes/create")}
-            >
-              <span className="sm:inline">Nuevo Presupuesto</span>
-              <span className="inline sm:hidden">Nuevo</span>
-            </Button>
-          </div>
         </div>
       </div>
 
