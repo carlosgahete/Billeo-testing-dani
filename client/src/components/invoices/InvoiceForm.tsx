@@ -35,7 +35,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Popover,
@@ -129,7 +128,7 @@ function calculateInvoiceTotals(form: any) {
     return sum + itemTax;
   }, 0);
   
-  // Calcular el importe total de impuestos adicionales (incluye impuestos tanto positivos como negativos)
+  // Calcular el importe total de impuestos adicionales
   let additionalTaxesTotal = 0;
   
   // Procesamos cada impuesto adicional según su tipo
@@ -195,6 +194,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Archivos adjuntos
   const [attachments, setAttachments] = useState<string[]>([]);
   
+  // Estado para almacenar los datos originales y poder hacerles debug
+  const [debugOriginalData, setDebugOriginalData] = useState<any>(null);
+  
   // Modo edición si hay ID
   const isEditMode = !!invoiceId;
   
@@ -227,14 +229,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
-  // Fetch invoice data if in edit mode with minimal options
+  // Fetch invoice data if in edit mode
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
-    enabled: isEditMode,
-    staleTime: 0, // Siempre obtener los datos más recientes
-    refetchOnWindowFocus: false, // Evitar refetch automático al volver a enfocar la ventana
+    enabled: isEditMode && !initialData, // Solo hacer la consulta si estamos en modo edición y no tenemos datos iniciales
   });
 
+  // Valores por defecto para un formulario nuevo
   const defaultFormValues = {
     invoiceNumber: "",
     clientId: 0,
@@ -259,133 +260,146 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     additionalTaxes: [],
   };
 
+  // Configurar el formulario con react-hook-form
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: defaultFormValues,
   });
 
-  // Initialize form with invoice data when loaded - either from API or passed in directly
+  // Esta función procesa los datos externos para formatearlos correctamente para el formulario
+  const processExternalData = (externalData: any) => {
+    if (!externalData || !externalData.invoice || !externalData.items) {
+      console.error("⚠️ Datos externos inválidos:", externalData);
+      return null;
+    }
+    
+    const { invoice, items } = externalData;
+    
+    // Formatear fechas
+    const formatDate = (dateStr: string) => {
+      if (!dateStr) return new Date().toISOString().split("T")[0];
+      try {
+        const date = new Date(dateStr);
+        return date.toISOString().split("T")[0];
+      } catch (e) {
+        console.error("Error al formatear fecha:", e);
+        return new Date().toISOString().split("T")[0];
+      }
+    };
+    
+    // Procesar impuestos adicionales
+    let additionalTaxes: any[] = [];
+    if (invoice.additionalTaxes) {
+      if (typeof invoice.additionalTaxes === 'string') {
+        try {
+          additionalTaxes = JSON.parse(invoice.additionalTaxes);
+        } catch (e) {
+          console.error("Error al parsear additionalTaxes:", e);
+        }
+      } else if (Array.isArray(invoice.additionalTaxes)) {
+        additionalTaxes = invoice.additionalTaxes;
+      }
+    }
+    
+    // Construir el objeto de valores para el formulario
+    return {
+      invoiceNumber: invoice.invoiceNumber || "",
+      clientId: parseInt(invoice.clientId) || 0,
+      issueDate: formatDate(invoice.issueDate),
+      dueDate: formatDate(invoice.dueDate),
+      status: invoice.status || "pending",
+      notes: invoice.notes || "",
+      subtotal: parseFloat(invoice.subtotal) || 0,
+      tax: parseFloat(invoice.tax) || 0,
+      total: parseFloat(invoice.total) || 0,
+      items: items.map((item: any) => ({
+        description: item.description || "",
+        quantity: parseFloat(item.quantity) || 0,
+        unitPrice: parseFloat(item.unitPrice) || 0,
+        taxRate: parseFloat(item.taxRate) || 21,
+        subtotal: parseFloat(item.subtotal) || 0,
+      })),
+      additionalTaxes: additionalTaxes.map((tax: any) => ({
+        name: tax.name || "",
+        amount: parseFloat(tax.amount) || 0,
+        isPercentage: Boolean(tax.isPercentage),
+      })),
+    };
+  };
+
+  // Efecto para inicializar el formulario cuando estamos en modo edición
   useEffect(() => {
-    // Si no estamos en modo edición, no necesitamos cargar datos
     if (!isEditMode) return;
     
-    // Datos de la factura - preferimos los datos que vienen directamente como prop
-    const sourceData = initialData || invoiceData;
+    console.log("⚡ Modo edición activado, ID:", invoiceId);
+    console.log("⚡ Datos iniciales:", initialData);
+    console.log("⚡ Datos de API:", invoiceData);
     
-    console.log("📊 Source data para edición:", sourceData);
+    // Si tenemos datos, los usamos para inicializar el formulario
+    const dataSource = initialData || invoiceData;
     
-    // Si no hay datos en absoluto, salimos
-    if (!sourceData) {
-      console.log("⚠️ No hay datos para cargar en el formulario");
+    // Si no hay datos, no hacemos nada
+    if (!dataSource) {
+      console.log("⚠️ No hay datos disponibles para inicializar el formulario");
       return;
     }
     
+    // Guardamos los datos originales para depuración
+    setDebugOriginalData(dataSource);
+    
     try {
-      // Extraemos la factura y los items
-      const { invoice, items } = sourceData;
+      // Procesamos los datos externos
+      const formValues = processExternalData(dataSource);
       
-      if (!invoice || !items) {
-        console.log("⚠️ Los datos no contienen factura o items:", sourceData);
+      if (!formValues) {
+        console.error("⚠️ No se pudieron procesar los datos externos");
         return;
       }
       
-      console.log("📝 Datos de factura a cargar:", invoice);
-      console.log("📝 Items a cargar:", items);
+      console.log("📋 Valores formateados para formulario:", formValues);
       
-      // Función para formatear fechas en YYYY-MM-DD
-      const formatDateToYMD = (dateStr: string) => {
-        if (!dateStr) return new Date().toISOString().split("T")[0];
-        try {
-          const date = new Date(dateStr);
-          return date.toISOString().split("T")[0];
-        } catch (e) {
-          console.error("Error al formatear fecha:", dateStr, e);
-          return dateStr;
-        }
-      };
-      
-      // Procesamos los impuestos adicionales
-      let additionalTaxes: any[] = [];
-      if (invoice.additionalTaxes) {
-        if (typeof invoice.additionalTaxes === 'string') {
-          try {
-            additionalTaxes = JSON.parse(invoice.additionalTaxes);
-          } catch (e) {
-            console.error("Error al parsear additionalTaxes:", e);
-            additionalTaxes = [];
-          }
-        } else if (Array.isArray(invoice.additionalTaxes)) {
-          additionalTaxes = invoice.additionalTaxes;
-        }
-      }
-      
-      // Creamos un objeto con los datos formateados para el formulario
-      const formValues = {
-        // Datos básicos de la factura
-        invoiceNumber: invoice.invoiceNumber || "",
-        clientId: Number(invoice.clientId) || 0,
-        issueDate: formatDateToYMD(invoice.issueDate),
-        dueDate: formatDateToYMD(invoice.dueDate),
-        status: invoice.status || "pending",
-        notes: invoice.notes || "",
-        
-        // Datos financieros
-        subtotal: Number(invoice.subtotal) || 0,
-        tax: Number(invoice.tax) || 0,
-        total: Number(invoice.total) || 0,
-        
-        // Items de la factura - importante convertir todos los valores numéricos
-        items: items.map((item: any) => ({
-          description: item.description || "",
-          quantity: Number(item.quantity) || 0,
-          unitPrice: Number(item.unitPrice) || 0,
-          taxRate: Number(item.taxRate) || 21,
-          subtotal: Number(item.quantity) * Number(item.unitPrice) || 0
-        })),
-        
-        // Impuestos adicionales
-        additionalTaxes: additionalTaxes.map((tax: any) => ({
-          name: tax.name || "",
-          amount: Number(tax.amount) || 0,
-          isPercentage: Boolean(tax.isPercentage)
-        }))
-      };
-      
-      console.log("📋 Valores formateados para el formulario:", formValues);
-      
-      // Actualizamos el formulario con los nuevos valores
+      // Resetear el formulario con los valores procesados
       form.reset(formValues);
       
-      // Si la factura tiene archivos adjuntos, los actualizamos
-      if (invoice.attachments) {
-        if (Array.isArray(invoice.attachments)) {
-          setAttachments(invoice.attachments);
-        } else if (typeof invoice.attachments === 'string') {
-          setAttachments([invoice.attachments]);
+      // Actualizar los adjuntos si los hay
+      if (dataSource.invoice?.attachments) {
+        const attachmentData = dataSource.invoice.attachments;
+        if (Array.isArray(attachmentData)) {
+          setAttachments(attachmentData);
+        } else if (typeof attachmentData === 'string') {
+          setAttachments([attachmentData]);
         }
       }
       
-      // Recalculamos totales después de que el formulario se haya actualizado
-      setTimeout(() => {
-        calculateInvoiceTotals(form);
-      }, 200);
+      // Recalcular totales
+      setTimeout(() => calculateInvoiceTotals(form), 100);
       
-      console.log("✅ Formulario actualizado correctamente con los datos de la factura");
+      console.log("✅ Formulario inicializado correctamente");
     } catch (error) {
-      console.error("❌ Error al cargar los datos de la factura:", error);
+      console.error("❌ Error al inicializar formulario:", error);
       toast({
         title: "Error al cargar factura",
         description: "No se pudieron cargar los datos de la factura correctamente",
         variant: "destructive",
       });
     }
-  }, [isEditMode, invoiceData, initialData, form, toast]);
+  }, [invoiceId, initialData, invoiceData, form, isEditMode, toast]);
+  
+  // Debug: Imprimir estado del formulario cuando cambia
+  useEffect(() => {
+    if (isEditMode) {
+      const values = form.getValues();
+      console.log("📊 Estado actual del formulario:", values);
+    }
+  }, [form, isEditMode]);
 
+  // Configuración del Field Array para items
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "items",
   });
 
+  // Configuración del Field Array para impuestos adicionales
   const {
     fields: taxFields,
     append: appendTax,
@@ -395,34 +409,32 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     name: "additionalTaxes",
   });
 
-  // Create or update invoice mutation
+  // Mutación para crear o actualizar factura
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
       console.log("✅ Enviando datos del formulario:", data);
       
-      // Asegurarnos que las fechas están en formato YYYY-MM-DD
+      // Formatear fechas a YYYY-MM-DD
       const formatDate = (dateString: string) => {
-        // Si ya está en formato ISO o yyyy-mm-dd, lo devolvemos directamente
         if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
-          return dateString.split('T')[0]; // Eliminar parte de tiempo si existe
+          return dateString.split('T')[0]; 
         }
-        // Si no, intentamos convertirlo a formato ISO
         try {
           const date = new Date(dateString);
           return date.toISOString().split('T')[0];
         } catch (e) {
           console.error("Error al formatear fecha:", e);
-          return dateString; // Devolver original si hay error
+          return dateString;
         }
       };
       
-      // Transformamos las fechas y aseguramos valores correctos
+      // Datos para la factura
       const formattedData = {
         invoiceNumber: data.invoiceNumber,
         clientId: data.clientId,
         issueDate: formatDate(data.issueDate),
         dueDate: formatDate(data.dueDate),
-        // Convertimos los números a strings para que coincidan con lo que espera el servidor
+        // Convertir números a strings para la API
         subtotal: data.subtotal.toString(),
         tax: data.tax.toString(),
         total: data.total.toString(),
@@ -432,7 +444,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         attachments: attachments.length > 0 ? attachments : null,
       };
       
-      // Transformamos los items de la factura
+      // Datos para los items
       const formattedItems = data.items.map(item => ({
         description: item.description,
         quantity: item.quantity.toString(),
@@ -441,60 +453,32 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         subtotal: (item.subtotal || 0).toString(),
       }));
       
+      // Log de datos formateados
       console.log("🔄 Datos formateados para API:", { 
         invoice: formattedData, 
         items: formattedItems 
       });
       
+      // Si estamos en modo edición, actualizamos; si no, creamos
       if (isEditMode) {
-        // En modo edición, necesitamos asegurarnos de enviar todos los datos importantes
-        // y no perder información existente
-        console.log("🔄 Modo edición - ID:", invoiceId);
+        console.log("🔄 Actualizando factura ID:", invoiceId);
         
-        // Incorporar datos originales si están disponibles
-        const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice : {};
+        // Obtener datos originales para preservar campos que no se modifican
+        const originalInvoice = debugOriginalData?.invoice || {};
         
-        // Asegurar que los impuestos adicionales estén en el formato correcto
-        // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
-        let processedAdditionalTaxes = formattedData.additionalTaxes;
-        
-        console.log("📊 Impuestos antes de procesar:", processedAdditionalTaxes);
-        
-        // Si es un array vacío, asegurarnos de que siga siendo un array
-        if (Array.isArray(processedAdditionalTaxes) && processedAdditionalTaxes.length === 0) {
-          processedAdditionalTaxes = [];
-        }
-        
-        // Mantener los campos originales si no se proporcionan nuevos valores
+        // Datos completos para la actualización
         const completeInvoiceData = {
           ...originalInvoice,
           ...formattedData,
-          // Asegurar campos críticos
-          id: invoiceId,  // Importante incluir el ID explícitamente
-          invoiceNumber: formattedData.invoiceNumber,
-          clientId: formattedData.clientId,
-          issueDate: formattedData.issueDate,
-          dueDate: formattedData.dueDate,
-          subtotal: formattedData.subtotal,
-          tax: formattedData.tax,
-          total: formattedData.total,
-          status: formattedData.status,
-          // Campos opcionales
-          notes: formattedData.notes !== null ? formattedData.notes : originalInvoice.notes,
-          additionalTaxes: processedAdditionalTaxes,
-          attachments: formattedData.attachments || originalInvoice.attachments
+          id: invoiceId,
         };
-        
-        console.log("📤 Enviando actualización completa:", {
-          invoice: completeInvoiceData,
-          items: formattedItems
-        });
         
         return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
           invoice: completeInvoiceData,
           items: formattedItems,
         });
       } else {
+        console.log("🔄 Creando nueva factura");
         return apiRequest("POST", "/api/invoices", {
           invoice: formattedData,
           items: formattedItems,
@@ -502,23 +486,22 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       }
     },
     onSuccess: (data) => {
-      console.log("✅ Factura guardada:", data);
+      console.log("✅ Factura guardada con éxito:", data);
       
-      // Invalidar la lista de facturas para que se actualice automáticamente
+      // Invalidar consultas para actualizar datos en la UI
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      
-      // Invalidar también las estadísticas del dashboard
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      
-      // Invalidar las facturas recientes (si existe esa consulta)
       queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
       
+      // Mostrar toast de éxito
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
         description: isEditMode
           ? "La factura se ha actualizado correctamente"
           : "La factura se ha creado correctamente",
       });
+      
+      // Navegar de vuelta a la lista de facturas
       navigate("/invoices");
     },
     onError: (error: any) => {
@@ -531,21 +514,24 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     },
   });
 
+  // Manejar el envío del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
-    // Recalculate totals before submission
-    const { subtotal, tax, additionalTaxesTotal, total } = calculateInvoiceTotals(form);
+    // Recalcular totales antes de enviar
+    const { subtotal, tax, total } = calculateInvoiceTotals(form);
     data.subtotal = subtotal;
     data.tax = tax;
     data.total = total;
     
+    // Iniciar la mutación
     mutation.mutate(data);
   };
 
+  // Manejar la carga de archivos
   const handleFileUpload = (path: string) => {
     setAttachments([...attachments, path]);
   };
 
-  // Función para manejar el evento onBlur en campos numéricos
+  // Manejar el evento blur en campos numéricos
   const handleNumericBlur = (field: any, defaultValue: number = 0) => {
     return (e: React.FocusEvent<HTMLInputElement>) => {
       const numericValue = toNumber(field.value, defaultValue);
@@ -556,53 +542,44 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     };
   };
   
-  // Función para agregar un nuevo impuesto adicional
+  // Agregar un nuevo impuesto adicional
   const handleAddTax = (taxType?: string) => {
-    // Si se especifica un tipo de impuesto, lo añadimos preconfigurado
     if (taxType === 'irpf') {
-      // IRPF predeterminado (-15%)
       appendTax({ 
         name: "IRPF", 
         amount: -15, 
         isPercentage: true 
       });
-      // Recalcular totales después de agregar impuesto
-      setTimeout(() => calculateInvoiceTotals(form), 0);
     } else if (taxType === 'iva') {
-      // IVA adicional (21%)
       appendTax({ 
         name: "IVA adicional", 
         amount: 21, 
         isPercentage: true 
       });
-      // Recalcular totales después de agregar impuesto
-      setTimeout(() => calculateInvoiceTotals(form), 0);
     } else {
-      // Mostrar diálogo para impuesto personalizado
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
       setShowTaxDialog(true);
     }
-  };
-  
-  // Función para agregar el impuesto desde el diálogo
-  const handleAddTaxFromDialog = () => {
-    appendTax(newTaxData);
-    setShowTaxDialog(false);
+    
     // Recalcular totales después de agregar impuesto
     setTimeout(() => calculateInvoiceTotals(form), 0);
   };
+  
+  // Agregar impuesto desde diálogo
+  const handleAddTaxFromDialog = () => {
+    appendTax(newTaxData);
+    setShowTaxDialog(false);
+    setTimeout(() => calculateInvoiceTotals(form), 0);
+  };
 
-  // Función que maneja la creación o actualización de un cliente
+  // Manejar creación/edición de cliente
   const handleClientCreated = (newClient: any) => {
-    // Actualizar la caché de react-query para incluir el nuevo cliente
     queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     
-    // Seleccionar automáticamente el nuevo cliente en el formulario si es uno nuevo
     if (!clientToEdit) {
       form.setValue("clientId", newClient.id);
     }
     
-    // Limpiar el cliente a editar
     setClientToEdit(null);
     
     toast({
@@ -613,24 +590,82 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     });
   };
   
-  // Función para manejar el cierre del modal de cliente sin guardar
+  // Cerrar modal cliente sin guardar
   const handleClientModalClose = (open: boolean) => {
     if (!open) {
-      // Si se cierra el modal, reseteamos el cliente a editar
       setClientToEdit(null);
     }
     setShowClientForm(open);
   };
 
+  // Mostrar mensaje de carga mientras se carga la información
   if ((isEditMode && invoiceLoading && !initialData) || clientsLoading) {
     return <div className="flex justify-center p-8">Cargando...</div>;
+  }
+
+  // Si estamos en modo debug, mostrar datos originales
+  if (isEditMode && form.formState.isSubmitted && !form.formState.isValid) {
+    console.error("❌ Errores de validación:", form.formState.errors);
   }
 
   return (
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          {/* Sección de depuración - sólo visible en desarrollo */}
+          {process.env.NODE_ENV === 'development' && isEditMode && (
+            <Card className="border-2 border-yellow-500 bg-yellow-50">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-yellow-800 mb-2">Modo Depuración</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-yellow-700 text-sm">ID: {invoiceId}</h4>
+                    <p className="text-xs text-yellow-600">
+                      Modo: {isEditMode ? 'Edición' : 'Creación'}
+                    </p>
+                    <p className="text-xs text-yellow-600">
+                      Estado del form: {form.formState.isDirty ? 'Modificado' : 'Sin cambios'}
+                    </p>
+                    <div className="mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          console.log('Formulario actual:', form.getValues());
+                          console.log('Datos originales:', debugOriginalData);
+                          console.log('Errores:', form.formState.errors);
+                        }}
+                        className="text-xs h-6 px-2 py-0 bg-yellow-100"
+                      >
+                        Log Form Data
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-yellow-700 text-sm">Estado del Formulario</h4>
+                    <p className="text-xs text-yellow-600">
+                      {Object.keys(form.formState.errors).length > 0 ? (
+                        <span className="text-red-500">⚠️ Hay errores en el formulario</span>
+                      ) : (
+                        <span className="text-green-500">✅ Formulario válido</span>
+                      )}
+                    </p>
+                    {Object.keys(form.formState.errors).length > 0 && (
+                      <div className="mt-1 text-xs text-red-500">
+                        {Object.entries(form.formState.errors).map(([key, error]) => (
+                          <div key={key}>{key}: {error.message as string}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Datos Factura */}
             <Card className="border-0 shadow-md overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
                 <h3 className="text-lg font-medium flex items-center">
@@ -650,7 +685,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           Número de factura
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="F-2023-001" {...field} className="border-blue-200 focus:border-blue-400" />
+                          <Input 
+                            placeholder="F-2023-001" 
+                            {...field} 
+                            className="border-blue-200 focus:border-blue-400" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -764,7 +803,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     onSelect={(date) => {
                                       if (date) {
                                         const formattedDate = format(date, "yyyy-MM-dd");
-                                        console.log("Cambiando fecha de emisión a:", formattedDate);
                                         field.onChange(formattedDate);
                                       }
                                     }}
@@ -807,7 +845,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     onSelect={(date) => {
                                       if (date) {
                                         const formattedDate = format(date, "yyyy-MM-dd");
-                                        console.log("Cambiando fecha de vencimiento a:", formattedDate);
                                         field.onChange(formattedDate);
                                       }
                                     }}
@@ -855,6 +892,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
+            {/* Información adicional */}
             <Card className="border-0 shadow-md overflow-hidden">
               <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
                 <h3 className="text-lg font-medium flex items-center">
@@ -935,6 +973,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Card>
           </div>
 
+          {/* Conceptos */}
           <Card className="border-0 shadow-md overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
               <h3 className="text-lg font-medium flex items-center">
@@ -1170,7 +1209,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           </span>
                         </div>
 
-                        {/* Mostramos los impuestos adicionales si existen */}
+                        {/* Impuestos adicionales */}
                         {taxFields.length > 0 && (
                           <div className="pt-1 border-t border-dashed border-neutral-200">
                             {taxFields.map((tax, idx) => {
@@ -1196,7 +1235,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                       size="sm"
                                       onClick={() => {
                                         removeTax(idx);
-                                        // Recalcular totales después de eliminar el impuesto
+                                        // Recalcular totales
                                         setTimeout(() => calculateInvoiceTotals(form), 0);
                                       }}
                                       className="ml-1 h-6 w-6 p-0 text-neutral-400 hover:text-red-500"
@@ -1262,7 +1301,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         </form>
       </Form>
 
-      {/* Modal para crear/editar clientes */}
+      {/* Modal de cliente */}
       <Dialog open={showClientForm} onOpenChange={handleClientModalClose}>
         <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] p-0">
           <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white sticky top-0 z-10">
@@ -1276,14 +1315,16 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </DialogHeader>
           <div className="p-4">
             <ClientForm 
-              clientData={clientToEdit} 
-              onClientCreated={handleClientCreated} 
+              clientToEdit={clientToEdit} 
+              onClientCreated={handleClientCreated}
+              open={true}
+              onOpenChange={() => {}}
             />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal para añadir impuesto personalizado */}
+      {/* Modal de impuesto personalizado */}
       <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
         <DialogContent className="max-w-md overflow-y-auto p-0">
           <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
