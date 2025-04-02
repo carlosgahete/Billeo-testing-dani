@@ -154,50 +154,48 @@ const Dashboard = () => {
   // Impuesto sobre la renta a pagar (información del backend)
   const incomeTax = stats?.taxes?.incomeTax || 0;
   
-  // Cálculos para mostrar el análisis financiero según especificaciones
+  // Usamos directamente los valores que nos da el API en las respuestas
   // 1. INFORMACIÓN DE INGRESOS
-  // La base imponible es la suma de los subtotales de las facturas
-  // Usar el valor real de la API si existe, sino calcular aproximado
-  const baseIncomeSinIVA = Number((incomeTotal / 1.21).toFixed(2)); // Valor real
+  // Para los valores base, usar primero los valores del API y solo calcular si no están disponibles
   
-  // El IVA repercutido es el 21% de la base imponible
-  const ivaRepercutidoCorregido = ivaRepercutido || Math.round(baseIncomeSinIVA * 0.21); // Valor real
+  // Base imponible (ingresos sin IVA)
+  const baseIncomeSinIVA = stats?.baseImponible ? Number(stats.baseImponible) : Math.round(incomeTotal / 1.21);
   
-  // IRPF retenido en ingresos (15% de la base imponible de ingresos) = 1500€
-  // Este valor se resta de los ingresos porque es una retención fiscal
-  // Usar el valor del API si está disponible, o un valor fijo basado en el 15% de la base imponible
-  const irpfRetencionIngresos = irpfFromAPI > 0 ? irpfFromAPI : 1500; // Valor real o fijo
+  // IVA repercutido (cobrado en facturas)
+  const ivaRepercutidoCorregido = ivaRepercutido || Math.round(baseIncomeSinIVA * 0.21);
   
-  // Total bruto incluye IVA
-  const totalBruto = incomeTotal; // Usar el valor real
+  // IRPF retenido en facturas emitidas
+  const irpfRetencionIngresos = irpfFromAPI;
+  
+  // Total con IVA
+  const totalBruto = incomeTotal;
   
   // 2. INFORMACIÓN DE GASTOS
-  // La base imponible de gastos
-  const baseExpensesSinIVA = Number((expensesTotal / 1.21).toFixed(2)); // Valor real aproximado
+  // Base imponible de gastos (sin IVA)
+  const baseExpensesSinIVA = Math.round(expensesTotal / 1.21);
   
-  // El IVA soportado es el 21% de la base imponible
-  const ivaSoportadoCorregido = ivaSoportado || Math.round(baseExpensesSinIVA * 0.21); // Valor real
+  // IVA soportado (pagado en gastos)
+  const ivaSoportadoCorregido = ivaSoportado || Math.round(baseExpensesSinIVA * 0.21);
   
-  // IRPF en gastos (15% de la base imponible de gastos) = 150€
-  // Este valor se suma a los gastos porque es un importe retenido en los pagos
-  const irpfGastos = Math.round(baseExpensesSinIVA * 0.15); // 150€
+  // IRPF en gastos (a ingresar/deducir)
+  const irpfGastos = irpfFromExpensesInvoices || Math.round(baseExpensesSinIVA * 0.15);
   
   // 3. CÁLCULOS DE IMPUESTOS
-  // IVA a liquidar (IVA repercutido - IVA soportado) = 1890€
-  const ivaALiquidarCorregido = ivaRepercutidoCorregido - ivaSoportadoCorregido; // 1890€
+  // IVA a liquidar (a pagar/devolver)
+  const ivaALiquidarCorregido = stats?.taxes?.ivaALiquidar || 
+                               (ivaRepercutidoCorregido - ivaSoportadoCorregido);
   
-  // IRPF total = IRPF en ingresos - IRPF en gastos
-  const irpfTotal = irpfRetencionIngresos - irpfGastos; // 1500 - 150 = 1350€
+  // IRPF total 
+  const irpfTotal = irpfRetencionIngresos - irpfGastos;
   
   // 4. CÁLCULOS DERIVADOS
-  // Beneficio antes de impuestos = Ingresos netos - Gastos netos
-  const beneficioAntesImpuestos = baseIncomeSinIVA - baseExpensesSinIVA; // 10000 - 1000 = 9000€
+  // Beneficio antes de impuestos
+  const beneficioAntesImpuestos = baseIncomeSinIVA - baseExpensesSinIVA;
   
-  // Lo que realmente se paga por los gastos incluyendo IVA (1000 + 210 = 1210€)
-  const totalPagado = baseExpensesSinIVA + ivaSoportadoCorregido;
+  // Total pagado por gastos (con IVA)
+  const totalPagado = expensesTotal;
   
-  // Resultado final = Beneficio antes de impuestos - IRPF total
-  // 9000 - 1350 = 7650€
+  // Resultado final (después de impuestos)
   const netProfit = beneficioAntesImpuestos - irpfTotal;
   
   const financialData = {
