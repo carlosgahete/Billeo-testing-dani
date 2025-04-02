@@ -120,9 +120,9 @@ interface Company {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const statusMap: Record<string, { label: string; variant: "default" | "success" | "destructive" | "warning" | "outline" | "secondary" }> = {
-    pending: { label: "Pendiente", variant: "warning" },
-    paid: { label: "Pagada", variant: "success" },
+  const statusMap: Record<string, { label: string; variant: "default" | "destructive" | "outline" | "secondary" }> = {
+    pending: { label: "Pendiente", variant: "secondary" },
+    paid: { label: "Pagada", variant: "default" },
     overdue: { label: "Vencida", variant: "destructive" },
     canceled: { label: "Cancelada", variant: "outline" },
   };

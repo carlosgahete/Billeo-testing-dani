@@ -269,12 +269,12 @@ const Dashboard = () => {
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Total facturado:</span>
-                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IVA repercutido:</span>
+                  <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA a liquidar:</span>
-                  <span className="font-medium text-red-600 font-semibold">{(financialData.taxes?.ivaALiquidar || 0).toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Total facturado:</span>
+                  <span className="font-medium">{financialData.income.total.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
