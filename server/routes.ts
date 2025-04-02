@@ -2109,6 +2109,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!transactionResult.success) {
+        console.log("Error de validación de transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
+        console.log("Datos recibidos:", JSON.stringify(req.body, null, 2));
         return res.status(400).json({ 
           message: "Invalid transaction data", 
           errors: transactionResult.error.errors 

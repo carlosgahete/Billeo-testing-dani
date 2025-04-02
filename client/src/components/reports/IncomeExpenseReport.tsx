@@ -420,16 +420,8 @@ const IncomeExpenseReport = () => {
       return;
     }
     
-    if (!attachmentPath) {
-      toast({
-        title: "Comprobante obligatorio",
-        description: "Debe adjuntar un comprobante (factura, ticket o recibo) para registrar el gasto.",
-        variant: "destructive",
-      });
-      // Abrir automáticamente el panel de adjuntos
-      setShowAttachment(true);
-      return;
-    }
+    // Ya no obligamos a tener un comprobante adjunto
+    // El gasto puede registrarse sin comprobante
     
     const amount = parseFloat(expenseAmount);
     if (isNaN(amount) || amount <= 0) {
@@ -451,7 +443,7 @@ const IncomeExpenseReport = () => {
       type: "expense",
       paymentMethod: "efectivo", // Valor por defecto
       notes: "Registro rápido",
-      attachments: [attachmentPath] // Adjunto obligatorio
+      attachments: attachmentPath ? [attachmentPath] : []
     });
     
     setIsSubmitting(false);
@@ -909,7 +901,7 @@ const IncomeExpenseReport = () => {
                   Registro rápido de gastos
                 </CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  Registra rápidamente un gasto. Debes adjuntar un comprobante (factura, ticket o recibo).
+                  Registra rápidamente un gasto. Opcionalmente puedes adjuntar un comprobante (factura, ticket o recibo).
                 </CardDescription>
               </CardHeader>
               <CardContent>
