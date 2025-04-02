@@ -226,7 +226,7 @@ const ComparisonCharts = () => {
         </div>
         
         {/* Área del gráfico */}
-        <div className="h-64 mt-2">
+        <div className="h-[180px] mt-2">
           {isLoading ? (
             <div className="w-full h-full flex items-center justify-center">
               <Skeleton className="h-full w-full" />
@@ -238,12 +238,13 @@ const ComparisonCharts = () => {
                 <XAxis dataKey="name" />
                 <YAxis 
                   tickFormatter={(value) => `${value > 1000 ? `${value/1000}k` : value}€`}
+                  width={40}
                 />
                 <RechartTooltip 
                   formatter={(value: number) => formatCurrency(value)}
                   labelFormatter={(label) => comparisonType === "quarterly" ? `Trimestre ${label}` : `Año ${label}`}
                 />
-                <Legend />
+                <Legend verticalAlign="bottom" height={25} />
                 <Bar dataKey="ingresos" name="Ingresos" fill="#4ade80" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="gastos" name="Gastos" fill="#f87171" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="resultado" name="Resultado" fill="#9333ea" radius={[4, 4, 0, 0]} />
@@ -256,12 +257,13 @@ const ComparisonCharts = () => {
                 <XAxis dataKey="name" />
                 <YAxis 
                   tickFormatter={(value) => `${value > 1000 ? `${value/1000}k` : value}€`}
+                  width={40}
                 />
                 <RechartTooltip 
                   formatter={(value: number) => formatCurrency(value)}
                   labelFormatter={(label) => comparisonType === "quarterly" ? `Trimestre ${label}` : `Año ${label}`}
                 />
-                <Legend />
+                <Legend verticalAlign="bottom" height={25} />
                 <Area type="monotone" dataKey="ingresos" name="Ingresos" fill="#4ade80" fillOpacity={0.3} stroke="#4ade80" />
                 <Area type="monotone" dataKey="gastos" name="Gastos" fill="#f87171" fillOpacity={0.3} stroke="#f87171" />
                 <Area type="monotone" dataKey="resultado" name="Resultado" fill="#9333ea" fillOpacity={0.3} stroke="#9333ea" />
@@ -271,7 +273,7 @@ const ComparisonCharts = () => {
         </div>
         
         {/* Resumen de tendencia */}
-        <div className="mt-3 bg-slate-50 rounded-md p-3 border border-slate-200">
+        <div className="mt-3 bg-slate-50 rounded-md p-2 border border-slate-200">
           <h3 className="text-sm font-medium flex items-center text-slate-700">
             <TrendingUp className="h-4 w-4 mr-1 text-purple-500" />
             Análisis de tendencia
