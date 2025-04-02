@@ -2103,14 +2103,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const transactionResult = insertTransactionSchema.safeParse({
+      // Transformar datos para compatibilidad con el esquema
+      const transactionData = {
         ...req.body,
-        userId: req.session.userId
-      });
+        userId: req.session.userId,
+        // Asegurar que amount sea string
+        amount: typeof req.body.amount === 'number' ? req.body.amount.toString() : req.body.amount,
+        // Asegurar que date sea Date para Zod/Drizzle
+        date: req.body.date instanceof Date ? req.body.date : new Date(req.body.date),
+        // Asegurar que attachments sea array
+        attachments: Array.isArray(req.body.attachments) ? req.body.attachments : []
+      };
+      
+      const transactionResult = insertTransactionSchema.safeParse(transactionData);
       
       if (!transactionResult.success) {
         console.log("Error de validación de transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
         console.log("Datos recibidos:", JSON.stringify(req.body, null, 2));
+        console.log("Datos transformados:", JSON.stringify(transactionData, null, 2));
         return res.status(400).json({ 
           message: "Invalid transaction data", 
           errors: transactionResult.error.errors 

@@ -438,8 +438,8 @@ const IncomeExpenseReport = () => {
     // Crear nueva transacción de tipo gasto
     createTransactionMutation.mutate({
       description: expenseDescription,
-      amount: amount,
-      date: new Date().toISOString(),
+      amount: amount.toString(), // Convertir a string como espera el schema
+      date: new Date(), // Enviar como Date en lugar de string
       type: "expense",
       paymentMethod: "efectivo", // Valor por defecto
       notes: "Registro rápido",
