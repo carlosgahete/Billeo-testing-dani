@@ -172,8 +172,8 @@ const Dashboard = () => {
   const totalBruto = incomeTotal;
   
   // 2. INFORMACIÓN DE GASTOS
-  // Base imponible de gastos - La API ya hace el cálculo correcto
-  const baseExpensesSinIVA = Math.round(expensesTotal / 1.21);
+  // Base imponible de gastos - Usar el total de gastos directamente
+  const baseExpensesSinIVA = expensesTotal;
   
   // IVA soportado - La API calcula esto correctamente
   const ivaSoportadoCorregido = stats?.ivaSoportado || Math.round(baseExpensesSinIVA * 0.21);
