@@ -30,8 +30,18 @@ const InvoiceDetailPage = () => {
   
   const invoiceId = parseInt(id as string);
   
-  const { data = { invoice: null, items: [] }, isLoading, isError } = useQuery({
+  const { data = { invoice: null, items: [] }, isLoading, isError, error } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
+    retry: 2,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.error("Error al cargar factura:", err);
+      toast({
+        title: "Error al cargar factura",
+        description: "No se pudo obtener los datos de la factura. Por favor, intenta nuevamente.",
+        variant: "destructive"
+      });
+    }
   });
   
   const { data: clientData, isLoading: clientLoading } = useQuery({

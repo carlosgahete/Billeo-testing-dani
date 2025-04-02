@@ -691,13 +691,12 @@ ${notesValue || ""}`;
     onSuccess: (data) => {
       console.log("✅ Factura guardada con éxito:", data);
       
-      // Invalidar consultas para actualizar datos en la UI con delay
-      // Usando setTimeout para evitar posibles efectos de carrera
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
-      }, 100);
+      // Invalidar consultas para actualizar datos en la UI
+      // Invalidamos primero y después de un pequeño delay navegamos para asegurar 
+      // que los datos están actualizados
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
       
       // Mostrar toast de éxito
       toast({
@@ -707,8 +706,12 @@ ${notesValue || ""}`;
           : "La factura se ha creado correctamente",
       });
       
-      // Navegar de vuelta a la lista de facturas
-      navigate("/invoices");
+      // Aseguramos que se completan todas las operaciones antes de navegar
+      // usando un pequeño retraso
+      setTimeout(() => {
+        console.log("✅ Navegando a la lista de facturas después de guardar");
+        navigate("/invoices");
+      }, 500);
     },
     onError: (error: any) => {
       console.error("❌ Error al guardar factura:", error);

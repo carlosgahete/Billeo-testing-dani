@@ -48,7 +48,36 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { generateInvoicePDF } from "@/lib/pdf";
 import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 
-
+// Función de utilidad para forzar la actualización de datos
+const forceDataRefresh = () => {
+  console.log("🔄 Iniciando actualización completa de datos...");
+  
+  // 1. Primero invalidamos todas las cachés relevantes
+  queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
+  
+  // 2. Esperamos un poco para que el backend procese la acción
+  setTimeout(() => {
+    // 3. Forzamos refetch de todas las estadísticas
+    queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+    queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+    queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
+    
+    console.log("⚡ Forzando recarga de datos:", new Date().toISOString());
+    
+    // 4. Hacemos fetch directo con fetch() para asegurar que se actualiza todo
+    // Añadimos un timestamp para evitar que se use caché
+    fetch("/api/stats/dashboard?timestamp=" + Date.now())
+      .catch(err => console.error("Error al recargar dashboard:", err));
+    
+    // 5. Refrescar nuevamente después de un tiempo adicional
+    setTimeout(() => {
+      queryClient.invalidateQueries();
+      console.log("🔄 Segunda actualización de datos completada");
+    }, 500);
+  }, 200);
+};
 
 interface Invoice {
   id: number;
@@ -91,37 +120,18 @@ interface Company {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  // Estilos mejorados para los estados de factura
-  const statusStyles = {
-    pending: "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 font-medium",
-    paid: "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-medium",
-    overdue: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 font-medium",
-    canceled: "bg-neutral-50 text-neutral-700 border border-neutral-200 hover:bg-neutral-100 font-medium",
-  };
-  
-  const statusIcons = {
-    pending: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-amber-500"></span>,
-    paid: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-emerald-500"></span>,
-    overdue: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-red-500"></span>,
-    canceled: <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-neutral-500"></span>,
-  };
-  
-  const labels = {
-    pending: "Pendiente",
-    paid: "Pagada",
-    overdue: "Vencida",
-    canceled: "Cancelada",
+  const statusMap: Record<string, { label: string; variant: "default" | "success" | "destructive" | "warning" | "outline" | "secondary" }> = {
+    pending: { label: "Pendiente", variant: "warning" },
+    paid: { label: "Pagada", variant: "success" },
+    overdue: { label: "Vencida", variant: "destructive" },
+    canceled: { label: "Cancelada", variant: "outline" },
   };
 
-  return (
-    <Badge className={`flex items-center px-2.5 py-1 rounded-lg shadow-sm ${statusStyles[status as keyof typeof statusStyles] || "bg-neutral-50 text-neutral-700 border border-neutral-200"}`}>
-      {statusIcons[status as keyof typeof statusIcons]}
-      {labels[status as keyof typeof labels] || status}
-    </Badge>
-  );
+  const { label, variant } = statusMap[status] || { label: status, variant: "default" };
+
+  return <Badge variant={variant}>{label}</Badge>;
 };
 
-// Componente para marcar una factura como pagada
 const MarkAsPaidButton = ({ 
   invoice
 }: { 
@@ -129,14 +139,6 @@ const MarkAsPaidButton = ({
 }) => {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
-  const queryClient = useQueryClient();
-  
-  // Obtener la función refetch para dashboard stats
-  const { refetch: refetchDashboard } = useQuery({
-    queryKey: ["/api/stats/dashboard"],
-    // No ejecutar la consulta aquí, solo necesitamos la función refetch
-    enabled: false,
-  });
   
   // Si la factura ya está pagada, no mostrar el botón
   if (invoice.status === 'paid') {
@@ -174,18 +176,8 @@ const MarkAsPaidButton = ({
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
       
-      // Paso 1: Invalidar las consultas para actualizar los datos
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      
-      // Paso 2: Invalidar explícitamente el dashboard con un timestamp para evitar caché
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      
-      // Paso 3: Forzar recarga explícita del dashboard con un nuevo fetching
-      setTimeout(() => {
-        refetchDashboard();
-        // Loggear para depuración
-        console.log("⚡ Refetching dashboard stats después de marcar como pagada:", new Date().toISOString());
-      }, 200);
+      // Forzar actualización de datos
+      forceDataRefresh();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -231,21 +223,6 @@ const DeleteInvoiceDialog = ({
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
 
-  // Función para forzar la recarga del dashboard
-  const forceDashboardRefresh = () => {
-    // 1. Invalidamos la caché del dashboard con parámetros diferentes para evitar 304
-    queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-    
-    // 2. Forzamos una refetch de todas las estadísticas con un timeout para dar tiempo al backend
-    setTimeout(() => {
-      queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-      console.log("⚡ Forzando recarga del dashboard después de eliminar factura:", new Date().toISOString());
-      
-      // 3. Hacemos fetch directo con fetch() para asegurar que se actualiza todo
-      fetch("/api/stats/dashboard?timestamp=" + Date.now());
-    }, 200);
-  };
-
   const handleDelete = async () => {
     setIsPending(true);
     try {
@@ -258,11 +235,8 @@ const DeleteInvoiceDialog = ({
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
       });
       
-      // Invalidar todas las consultas relacionadas con facturas
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      
-      // Invalidar y forzar recarga del dashboard
-      forceDashboardRefresh();
+      // Forzar actualización de datos
+      forceDataRefresh();
       
       // Cerrar el diálogo
       onConfirm();
@@ -367,13 +341,6 @@ const InvoiceList = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES");
   };
-
-  // Obtener la función refetch para dashboard stats (para uso en toda la clase)
-  const { refetch: refetchDashboard } = useQuery({
-    queryKey: ["/api/stats/dashboard"],
-    // No ejecutar la consulta aquí, solo necesitamos la función refetch
-    enabled: false,
-  });
   
   // Función para exportar todas las facturas a PDF
   const exportAllInvoices = async () => {
@@ -427,18 +394,8 @@ const InvoiceList = () => {
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
       });
       
-      // Paso 1: Invalidar las consultas para actualizar los datos
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      
-      // Paso 2: Invalidar explícitamente el dashboard con un timestamp para evitar caché
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      
-      // Paso 3: Forzar recarga explícita del dashboard con un nuevo fetching
-      setTimeout(() => {
-        refetchDashboard();
-        // Loggear para depuración
-        console.log("⚡ Refetching dashboard stats desde menú móvil:", new Date().toISOString());
-      }, 200);
+      // Forzar actualización de datos
+      forceDataRefresh();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -587,24 +544,8 @@ const InvoiceList = () => {
                       // Modal de confirmación para eliminar
                       if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
                         apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
-                          // 1. Invalidar todas las consultas relacionadas con facturas
-                          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                          
-                          // 2. Invalidar explícitamente todas las estadísticas del dashboard
-                          queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-                          
-                          // 3. Forzar una recarga completa del dashboard con diferentes parámetros
-                          // para evitar que se use la caché
-                          fetch(`/api/stats/dashboard?timestamp=${Date.now()}`);
-                          setTimeout(() => {
-                            // Hacer otra petición después de un tiempo para asegurar que
-                            // el servidor recargó todos los datos
-                            fetch(`/api/stats/dashboard?refresh=true&t=${Date.now()}`);
-                            console.log("⚡ Forzando recarga del dashboard tras eliminar factura:", Date.now());
-                            
-                            // Refrescar datos después de un corto tiempo
-                            queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-                          }, 300);
+                          // Forzar actualización de datos
+                          forceDataRefresh();
                           
                           toast({
                             title: "Factura eliminada",
@@ -692,8 +633,8 @@ const InvoiceList = () => {
                         invoiceId={invoice.id}
                         invoiceNumber={invoice.invoiceNumber}
                         onConfirm={() => {
-                          // Invalidate queries after deletion
-                          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                          // Invalidar consultas después de eliminar
+                          forceDataRefresh();
                         }}
                       />
                     </div>
