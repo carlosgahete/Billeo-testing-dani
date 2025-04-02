@@ -112,12 +112,13 @@ const Dashboard = () => {
   const incomeTax = stats?.taxes?.incomeTax || 0;
   
   // Cálculos para mostrar el análisis financiero según especificaciones
-  // 1. Base imponible + IVA = Total bruto (lo que facturamos)
-  const baseIncomeSinIVA = incomeTotal - ivaRepercutido; // Ingresos sin IVA
+  // En el backend, estamos recibiendo el incomeTotal que es ya el total bruto (1060€)
+  // Necesitamos calcular la base imponible restando el IVA repercutido
+  const baseIncomeSinIVA = Number((incomeTotal / 1.21).toFixed(2)); // Ingresos sin IVA (asumiendo IVA 21%)
   const baseExpensesSinIVA = expensesTotal - ivaSoportado; // Gastos sin IVA
   
   // 2. Total bruto - IRPF = Total neto (lo que efectivamente cobramos)
-  const totalBruto = Number((baseIncomeSinIVA + ivaRepercutido).toFixed(2)); // Base + IVA
+  const totalBruto = incomeTotal; // Este es el total que ya viene del backend
   
   // 3. IRPF calculado como porcentaje de la base imponible
   const irpfRate = 0.15; // Tasa estándar de IRPF
