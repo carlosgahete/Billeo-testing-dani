@@ -158,13 +158,12 @@ const Dashboard = () => {
   // baseImponible = suma de los subtotales de las facturas
   // Esto corresponde a 10000.00 según vemos en los logs del servidor
   const baseIncomeSinIVA = stats?.baseImponible || 0; // Usar el valor exacto de la API 
-  // Para los gastos, tenemos que calcular la base imponible sin IVA
-  // Para obtener 1000€ a partir de 1060€, dividimos entre 1.06 (IVA al 6% para pruebas)
-  // O dividimos entre 1.21 para IVA estándar del 21%
-  // Aplicamos un redondeo a 2 decimales para mayor precisión
-  const baseExpensesSinIVA = stats?.expenses ? Math.round(stats.expenses / 1.06) : 0;
-  // El IVA soportado es la diferencia entre el total y la base imponible
-  const ivaSoportadoCorregido = stats?.ivaSoportado || Number((stats.expenses - baseExpensesSinIVA).toFixed(2));
+  // Para los gastos, calculamos la base imponible sin IVA (dividiendo entre 1.21 para IVA estándar del 21%)
+  // Usamos los datos reales de la API en lugar de valores fijos
+  const baseExpensesSinIVA = stats?.expenses ? Math.round(stats.expenses / 1.21) : 0;
+  
+  // El IVA soportado es la diferencia entre el total de gastos y la base imponible
+  const ivaSoportadoCorregido = stats?.ivaSoportado || Math.round(stats?.expenses ? stats.expenses - baseExpensesSinIVA : 0);
   
   // Total bruto es el valor que incluye IVA
   const totalBruto = incomeTotal; // Este es el total que ya viene del backend (1060€)

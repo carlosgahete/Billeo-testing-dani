@@ -163,8 +163,8 @@ const TaxSummary = () => {
         {hasData ? (
           <>
             {/* IVA del período seleccionado */}
-            <div className="p-3 bg-blue-50 shadow-sm border border-blue-100 rounded-md">
-              <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+            <div className="p-3 bg-red-50 shadow-sm border border-red-100 rounded-md">
+              <h3 className="text-sm font-semibold text-red-800 mb-2 flex items-center">
                 <CalendarDays className="mr-1 h-4 w-4" />
                 IVA a liquidar ({periodNames[period]}, {year})
               </h3>
@@ -172,11 +172,11 @@ const TaxSummary = () => {
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="text-blue-800 font-bold text-xl">
-                    {formatCurrency(1890)}
+                  <span className="text-red-600 font-bold text-xl">
+                    {formatCurrency(selectedVat)}
                   </span>
                 )}
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
                   21% IVA
                 </span>
               </div>
@@ -188,7 +188,7 @@ const TaxSummary = () => {
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger className="w-full mt-1">
-                    <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-sm p-1 cursor-default">
+                    <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-sm p-1 cursor-default">
                       ℹ️ Resultado de restar IVA repercutido - IVA soportado
                     </div>
                   </TooltipTrigger>
@@ -212,7 +212,7 @@ const TaxSummary = () => {
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="text-green-800 font-bold text-xl">{formatCurrency(1500)}</span>
+                  <span className="text-green-800 font-bold text-xl">{formatCurrency(selectedWithholdings)}</span>
                 )}
                 <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
                   15% IRPF
