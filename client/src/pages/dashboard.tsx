@@ -394,7 +394,7 @@ const Dashboard = () => {
                   <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF retenido en los gastos:</span>
+                  <span className="text-neutral-500">IRPF a liquidar por gastos:</span>
                   <span className="font-medium text-red-600">-{Math.round(financialData.expenses.totalWithoutVAT * 0.15).toLocaleString('es-ES')} €</span>
                 </div>
               </div>
@@ -454,8 +454,8 @@ const Dashboard = () => {
                   }).format(ivaALiquidarCorregido)} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF a liquidar:</span>
-                  <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
+                  <span className="text-neutral-500">IRPF adelantado:</span>
+                  <span className="font-medium text-green-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
                   }).format(irpfALiquidar)} €</span>
