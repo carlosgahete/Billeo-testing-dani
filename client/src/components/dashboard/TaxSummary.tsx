@@ -204,37 +204,37 @@ const TaxSummary = () => {
             </div>
             
             {/* Retenciones acumuladas del período seleccionado */}
-            <div className="p-3 bg-amber-50 shadow-sm border border-amber-100 rounded-md mt-3">
-              <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center">
-                IRPF a liquidar ({periodNames[period]}, {year})
+            <div className="p-3 bg-green-50 shadow-sm border border-green-100 rounded-md mt-3">
+              <h3 className="text-sm font-semibold text-green-800 mb-2 flex items-center">
+                IRPF adelantado ({periodNames[period]}, {year})
               </h3>
               <div className="flex justify-between items-center">
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="text-amber-800 font-bold text-xl">{formatCurrency(1500)}</span>
+                  <span className="text-green-800 font-bold text-xl">{formatCurrency(1500)}</span>
                 )}
-                <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
                   15% IRPF
                 </span>
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 {period === 'all' 
-                  ? 'IRPF a pagar en tu declaración anual (IRPF - retenciones)'
-                  : `IRPF a liquidar del periodo (${periodNames[period]})`}
+                  ? 'IRPF retenido que te descuentan en facturas emitidas'
+                  : `IRPF adelantado del periodo (${periodNames[period]})`}
               </p>
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger className="w-full mt-1">
-                    <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm p-1 cursor-default">
-                      ℹ️ Impuesto sobre la renta a pagar
+                    <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-sm p-1 cursor-default">
+                      ℹ️ Retenciones a cuenta del IRPF
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs bg-white shadow-lg z-50">
                     <p className="w-[250px] text-xs">
-                      Este es el IRPF que deberás pagar como autónomo después de 
-                      descontar las retenciones ya aplicadas a tus facturas de ingresos.
-                      En la declaración anual se calculará la cantidad final a pagar.
+                      Las retenciones a cuenta del IRPF son cantidades que tus clientes 
+                      retienen de tus facturas y pagan directamente a Hacienda a tu nombre.
+                      Estas retenciones se descontarán de tu declaración anual de IRPF.
                     </p>
                   </TooltipContent>
                 </Tooltip>
