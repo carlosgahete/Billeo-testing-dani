@@ -21,16 +21,35 @@ function getVisionClient(): ImageAnnotatorClient {
         throw new Error('No se encontraron credenciales de Google Cloud Vision');
       }
       
-      // Parsear las credenciales JSON
-      const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
+      // Intentar detectar si es una API key o un JSON de credenciales
+      const apiKeyPattern = /^[A-Za-z0-9_-]+$/;
+      const credentials = process.env.GOOGLE_CLOUD_CREDENTIALS;
       
-      // Crear cliente con credenciales explícitas
-      visionClient = new ImageAnnotatorClient({
-        credentials: credentials
-      });
+      // Comprobar si parece una API key simple
+      if (apiKeyPattern.test(credentials)) {
+        console.log("Usando API key para Vision API");
+        // Usar la API key directamente
+        visionClient = new ImageAnnotatorClient({
+          apiKey: credentials
+        });
+      } else {
+        // Intentar parsear como JSON
+        try {
+          const credentialsJson = JSON.parse(credentials);
+          visionClient = new ImageAnnotatorClient({
+            credentials: credentialsJson
+          });
+        } catch (jsonError) {
+          console.error('Error al parsear credenciales como JSON:', jsonError);
+          // Intentar como último recurso usarla como API key
+          visionClient = new ImageAnnotatorClient({
+            apiKey: credentials
+          });
+        }
+      }
       
       console.log("Cliente de Vision API inicializado correctamente");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al inicializar Vision API client:', error);
       throw new Error(`No se pudo inicializar el cliente de Vision API: ${error.message}`);
     }
@@ -74,7 +93,7 @@ export async function processReceiptImage(imagePath: string): Promise<ExtractedE
 
     // Extraer información relevante del texto
     return extractExpenseInfo(fullText);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al procesar la imagen:', error);
     throw error;
   }
@@ -97,7 +116,7 @@ export async function processReceiptPDF(pdfPath: string): Promise<ExtractedExpen
     
     // Extraer información relevante del texto
     return extractExpenseInfo(fullText);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al procesar el PDF:', error);
     throw error;
   }
