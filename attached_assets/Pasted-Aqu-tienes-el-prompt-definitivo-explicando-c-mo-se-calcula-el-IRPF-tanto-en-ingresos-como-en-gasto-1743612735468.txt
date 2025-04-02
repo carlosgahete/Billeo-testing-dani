@@ -1,0 +1,53 @@
+Aquí tienes el prompt definitivo, explicando cómo se calcula el IRPF tanto en ingresos como en gastos, y detallando todo el proceso de cálculo paso a paso:
+
+⸻
+
+Prompt para la IA:
+
+Quiero que calcules mis ingresos, gastos y resultado final de acuerdo con la siguiente estructura y reglas de cálculo:
+
+1. Ingresos
+	•	Base imponible: Es la suma de los importes netos de todas las facturas que he emitido.
+	•	IVA repercutido: Se calcula aplicando el 21% sobre la base imponible de ingresos.
+	•	IRPF en ingresos: Se calcula aplicando el 15% sobre la base imponible de ingresos. Este valor se resta de los ingresos porque es una retención fiscal.
+
+2. Gastos
+	•	Base imponible: Es la suma de los importes netos de todas las facturas que me han emitido.
+	•	IVA soportado: Se calcula aplicando el 21% sobre la base imponible de gastos.
+	•	IRPF en gastos: Se calcula aplicando el 15% sobre la base imponible de gastos. Este valor se suma a los gastos, ya que es un importe retenido en mis pagos.
+
+3. Cálculo del resultado final
+	•	Beneficio antes de impuestos: Se calcula como Ingresos netos - Gastos netos.
+	•	IVA a pagar: Se calcula como IVA repercutido - IVA soportado.
+	•	IRPF total: Se calcula como IRPF en ingresos - IRPF en gastos.
+	•	Resultado final: Se calcula como Beneficio antes de impuestos - IRPF total.
+
+4. Actualización automática
+
+Cada vez que se realice alguna de estas acciones, el resultado final debe actualizarse automáticamente:
+	•	Añadir un ingreso nuevo → Se suma a la base imponible de ingresos, y se recalculan el IVA repercutido y el IRPF en ingresos.
+	•	Añadir un gasto nuevo → Se suma a la base imponible de gastos, y se recalculan el IVA soportado y el IRPF en gastos.
+	•	Editar un ingreso → Se modifica la base imponible de ingresos y sus impuestos asociados.
+	•	Editar un gasto → Se modifica la base imponible de gastos y sus impuestos asociados.
+	•	Eliminar un ingreso → Se resta de la base imponible de ingresos y se recalculan sus impuestos.
+	•	Eliminar un gasto → Se resta de la base imponible de gastos y se recalculan sus impuestos.
+
+Ejemplo de formato de salida:
+
+Ingresos:  
++ Base imponible: 10,000 €  
++ IVA repercutido (21%): 2,100 €  
+- IRPF en ingresos (15%): -1,500 €  
+
+Gastos:  
+- Base imponible: 1,000 €  
+- IVA soportado (21%): 210 €  
++ IRPF en gastos (15%): 150 €  
+
+Beneficio antes de impuestos: 9,000 €  
+IVA a pagar: 1,890 € (IVA repercutido - IVA soportado)  
+IRPF total: -1,350 € (IRPF en ingresos - IRPF en gastos)  
+
+**Resultado final después de impuestos: 7,650 €**  
+
+Objetivo: Mantener los cálculos actualizados en todo momento para que siempre reflejen la realidad financiera.

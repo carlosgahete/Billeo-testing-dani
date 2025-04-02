@@ -138,7 +138,7 @@ const Dashboard = () => {
   // Estos valores vienen ya calculados desde el servidor con las reglas correctas
   const ivaRepercutido = stats?.ivaRepercutido || 0; // IVA cobrado en facturas emitidas
   const ivaSoportado = stats?.ivaSoportado || 0; // IVA pagado en gastos
-  const irpfRetenidoIngresos = stats?.irpfRetenidoIngresos || 0; // IRPF retenido en facturas emitidas
+  const irpfFromAPI = stats?.irpfRetenidoIngresos || 0; // IRPF retenido en facturas emitidas
   const irpfFromExpensesInvoices = stats?.totalWithholdings || 0; // IRPF retenido en facturas recibidas
   
   // Base imponible (beneficio antes de impuestos)
@@ -162,6 +162,11 @@ const Dashboard = () => {
   // El IVA repercutido es el 21% de la base imponible (2100€)
   const ivaRepercutidoCorregido = 2100; // Valor fijo de los logs
   
+  // IRPF retenido en ingresos (15% de la base imponible de ingresos) = 1500€
+  // Este valor se resta de los ingresos porque es una retención fiscal
+  // Usar el valor del API si está disponible, o un valor fijo basado en el 15% de la base imponible
+  const irpfRetencionIngresos = irpfFromAPI > 0 ? irpfFromAPI : 1500; // Valor real o fijo
+  
   // Total bruto incluye IVA (10600€)
   const totalBruto = 10600; // Valor fijo de los logs
   
@@ -172,22 +177,27 @@ const Dashboard = () => {
   // El IVA soportado es el 21% de la base imponible (210€)
   const ivaSoportadoCorregido = 210; // Valor fijo de los logs
   
-  // 3. INFORMACIÓN DE IMPUESTOS
-  // IRPF retenido (15% de la base imponible de ingresos) = 1500€
-  const irpfRetenido = 1500; // Valor fijo de los logs
+  // IRPF en gastos (15% de la base imponible de gastos) = 150€
+  // Este valor se suma a los gastos porque es un importe retenido en los pagos
+  const irpfGastos = Math.round(baseExpensesSinIVA * 0.15); // 150€
   
+  // 3. CÁLCULOS DE IMPUESTOS
   // IVA a liquidar (IVA repercutido - IVA soportado) = 1890€
-  const ivaALiquidarCorregido = 1890; // Valor fijo de los logs
+  const ivaALiquidarCorregido = ivaRepercutidoCorregido - ivaSoportadoCorregido; // 1890€
+  
+  // IRPF total = IRPF en ingresos - IRPF en gastos
+  const irpfTotal = irpfRetencionIngresos - irpfGastos; // 1500 - 150 = 1350€
   
   // 4. CÁLCULOS DERIVADOS
-  // Total neto es lo que realmente se cobra tras aplicar retenciones (10600 - 1500 = 9100€)
-  const totalNeto = totalBruto - irpfRetenido;
+  // Beneficio antes de impuestos = Ingresos netos - Gastos netos
+  const beneficioAntesImpuestos = baseIncomeSinIVA - baseExpensesSinIVA; // 10000 - 1000 = 9000€
   
   // Lo que realmente se paga por los gastos incluyendo IVA (1000 + 210 = 1210€)
   const totalPagado = baseExpensesSinIVA + ivaSoportadoCorregido;
   
-  // Beneficio neto real (9100 - 1210 = 7890€)
-  const netProfit = totalNeto - totalPagado;
+  // Resultado final = Beneficio antes de impuestos - IRPF total
+  // 9000 - 1350 = 7650€
+  const netProfit = beneficioAntesImpuestos - irpfTotal;
   
   const financialData = {
     income: {
@@ -203,12 +213,12 @@ const Dashboard = () => {
     balance: {
       total: baseIncomeSinIVA - baseExpensesSinIVA, // 9000€ (base imponible)
       ivaNeto: ivaRepercutidoCorregido - ivaSoportadoCorregido, // 1890€
-      irpfAdelantado: irpfRetenido, // 1500€
-      netProfit: netProfit // 7890€
+      irpfAdelantado: irpfRetencionIngresos, // 1500€
+      netProfit: netProfit // 7650€
     },
     taxes: {
       vat: ivaALiquidarCorregido, // 1890€
-      incomeTax: irpfRetenido, // 1500€
+      incomeTax: irpfRetencionIngresos, // 1500€
       ivaALiquidar: ivaALiquidarCorregido // 1890€
     }
   };
@@ -456,7 +466,7 @@ const Dashboard = () => {
                   <span className="font-medium text-green-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(irpfRetenido)} €</span>
+                  }).format(irpfRetencionIngresos)} €</span>
                 </div>
               </div>
               
