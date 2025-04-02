@@ -52,31 +52,37 @@ import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 const forceDataRefresh = () => {
   console.log("🔄 Iniciando actualización completa de datos...");
   
-  // 1. Primero invalidamos todas las cachés relevantes
-  queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
+  // Eliminación completa de datos en caché para forzar recargas frescas
+  queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+  queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+  queryClient.removeQueries({ queryKey: ["/api/invoices/recent"] });
   
-  // 2. Esperamos un poco para que el backend procese la acción
+  // Invalidar todas las consultas relevantes
+  queryClient.invalidateQueries();
+  
+  // Dar tiempo al backend para procesar la acción
   setTimeout(() => {
-    // 3. Forzamos refetch de todas las estadísticas
-    queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-    queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-    queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
-    
-    console.log("⚡ Forzando recarga de datos:", new Date().toISOString());
-    
-    // 4. Hacemos fetch directo con fetch() para asegurar que se actualiza todo
-    // Añadimos un timestamp para evitar que se use caché
-    fetch("/api/stats/dashboard?timestamp=" + Date.now())
-      .catch(err => console.error("Error al recargar dashboard:", err));
-    
-    // 5. Refrescar nuevamente después de un tiempo adicional
-    setTimeout(() => {
-      queryClient.invalidateQueries();
-      console.log("🔄 Segunda actualización de datos completada");
-    }, 500);
-  }, 200);
+    // Hacer peticiones manuales para asegurar datos frescos
+    fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+    })
+    .then(() => {
+      console.log("⚡ Forzando recarga de datos:", new Date().toISOString());
+      
+      // Refrescar explícitamente todas las consultas relevantes
+      queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+      queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
+      
+      // Refrescar nuevamente después de un tiempo adicional con mayor retraso
+      setTimeout(() => {
+        queryClient.invalidateQueries();
+        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+        console.log("🔄 Segunda actualización de datos completada");
+      }, 1000);
+    })
+    .catch(err => console.error("Error al recargar dashboard:", err));
+  }, 300);
 };
 
 interface Invoice {

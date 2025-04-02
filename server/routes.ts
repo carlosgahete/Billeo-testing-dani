@@ -2427,6 +2427,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stats and reports
   app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Configurar encabezados para evitar almacenamiento en caché de datos financieros
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Expires', '0');
+      res.setHeader('Pragma', 'no-cache');
+      
       // Obtenemos el ID de usuario desde passport o desde session
       const userId = req.isAuthenticated() ? (req.user as any).id : req.session.userId;
       
@@ -2434,8 +2439,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const year = req.query.year ? String(req.query.year) : new Date().getFullYear().toString();
       const period = req.query.period ? String(req.query.period) : 'all';
       
+      // Detectar solicitudes de actualización forzada (nocache)
+      const forceRefresh = !!req.query.nocache;
+      
       // Loguear qué período se está consultando
-      console.log("Consultando datos fiscales para:", { year, period });
+      console.log(`📊 Consultando datos fiscales [${forceRefresh ? 'FORZADO' : 'NORMAL'}]:`, { 
+        year, period, timestamp: new Date().toISOString()
+      });
       
       // Función para filtrar por año y trimestre
       const isInPeriod = (dateString: string) => {

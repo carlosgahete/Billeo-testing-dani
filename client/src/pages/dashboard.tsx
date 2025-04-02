@@ -48,6 +48,11 @@ interface DashboardStats {
   pendingCount: number;
   pendingQuotes: number;
   pendingQuotesCount: number;
+  baseImponible?: number;
+  ivaRepercutido?: number;
+  ivaSoportado?: number;
+  irpfRetenidoIngresos?: number;
+  totalWithholdings?: number;
   taxes: {
     vat: number;
     incomeTax: number;
@@ -68,14 +73,26 @@ const Dashboard = () => {
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard", { year, period }],
     queryFn: async () => {
-      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}`);
+      // Añadir un timestamp y encabezados no-cache para garantizar datos frescos siempre
+      const timestamp = Date.now();
+      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}&nocache=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!res.ok) throw new Error("Error al cargar estadísticas");
       return res.json();
     },
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 3000 // Refrescar cada 3 segundos para mantener los datos actualizados
+    refetchInterval: 2000, // Refrescar cada 2 segundos para mantener los datos actualizados
+    staleTime: 0, // Considerar los datos obsoletos inmediatamente
+    gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
+    retry: 3, // Intentar 3 veces si falla
+    retryDelay: 500 // Esperar 500ms entre reintentos
   });
 
   const isLoading = userLoading || statsLoading;
