@@ -123,6 +123,13 @@ const Dashboard = () => {
   // Depurar datos cuando se cargan
   debugData(stats);
   
+  // DEPURACIÓN EXTENDIDA - Mostrar exactamente lo que está llegando en baseImponible
+  console.log("VALOR DE BASE IMPONIBLE:", {
+    directBaseImponible: stats?.baseImponible,
+    tipoBaseImponible: typeof stats?.baseImponible,
+    statsCompleto: stats
+  });
+  
   // Usar datos reales del sistema o valores por defecto si no hay datos
   const incomeTotal = stats?.income || 0;
   const expensesTotal = stats?.expenses || 0;
