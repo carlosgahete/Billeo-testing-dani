@@ -437,7 +437,7 @@ const Dashboard = () => {
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(financialData.income.total - financialData.expenses.total)} €
+                }).format(financialData.income.totalWithoutVAT - financialData.expenses.totalWithoutVAT)} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
