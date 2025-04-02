@@ -147,10 +147,10 @@ const Dashboard = () => {
   const incomeTax = stats?.taxes?.incomeTax || 0;
   
   // Cálculos para mostrar el análisis financiero según especificaciones
-  // Extraer la base imponible (subtotal) de los datos que recibimos del servidor
-  // Si no está disponible en stats.baseImponible, calculamos aproximadamente restando el IVA del total
-  const baseIncomeSinIVA = stats?.baseImponible || 
-    Number((incomeTotal / 1.21).toFixed(2)); // Usando la tasa estándar de IVA (21%) para aproximar
+  // La API devuelve la base imponible (baseImponible) que debemos utilizar directamente
+  // baseImponible = suma de los subtotales de las facturas
+  // Esto corresponde a 10000.00 según vemos en los logs del servidor
+  const baseIncomeSinIVA = stats?.baseImponible || 0; // Usar el valor exacto de la API 
   const baseExpensesSinIVA = expensesTotal - ivaSoportado; // Gastos sin IVA
   
   // Total bruto es el valor que incluye IVA
