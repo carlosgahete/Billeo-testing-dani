@@ -182,8 +182,11 @@ const MarkAsPaidButton = ({
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
       
-      // Forzar actualización de datos
-      forceDataRefresh();
+      // Método más radical: recargar la página completamente
+      // Esto garantiza que todos los datos se vuelvan a cargar frescos desde el servidor
+      setTimeout(() => {
+        window.location.href = '/dashboard?refresh=' + Date.now();
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -241,11 +244,13 @@ const DeleteInvoiceDialog = ({
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
       });
       
-      // Forzar actualización de datos
-      forceDataRefresh();
-      
       // Cerrar el diálogo
       onConfirm();
+      
+      // Recargar para asegurar actualización completa
+      setTimeout(() => {
+        window.location.href = '/dashboard?refresh=' + Date.now();
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -400,8 +405,10 @@ const InvoiceList = () => {
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
       });
       
-      // Forzar actualización de datos
-      forceDataRefresh();
+      // Usar el mismo método de actualización radical para ambas versiones (móvil y desktop)
+      setTimeout(() => {
+        window.location.href = '/dashboard?refresh=' + Date.now();
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -550,13 +557,15 @@ const InvoiceList = () => {
                       // Modal de confirmación para eliminar
                       if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
                         apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
-                          // Forzar actualización de datos
-                          forceDataRefresh();
-                          
                           toast({
                             title: "Factura eliminada",
                             description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
                           });
+                          
+                          // Recargar completamente para garantizar actualización
+                          setTimeout(() => {
+                            window.location.href = '/dashboard?refresh=' + Date.now();
+                          }, 500);
                         });
                       }
                   }}>
