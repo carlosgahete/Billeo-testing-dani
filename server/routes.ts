@@ -24,6 +24,7 @@ async function comparePasswords(supplied: string, stored: string) {
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { sendInvoiceEmail, sendQuoteEmail } from "./services/emailService";
+import * as visionService from "./services/visionService";
 import { 
   insertUserSchema, 
   insertCompanySchema,
@@ -2830,6 +2831,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Endpoint para verificar un gasto con IA
+  app.post("/api/verify-expense", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { description, amount } = req.body;
+      
+      if (!description || !amount) {
+        return res.status(400).json({ message: "Falta la descripción o el importe del gasto" });
+      }
+      
+      // Verificar el gasto utilizando IA
+      const result = await visionService.verifyExpenseWithAI({
+        description,
+        amount
+      });
+      
+      return res.json(result);
+    } catch (error) {
+      console.error("Error al verificar el gasto con IA:", error);
+      return res.status(500).json({ 
+        message: "Error al verificar el gasto",
+        isValid: true, // Por defecto permitimos el gasto aunque haya error
+        suggestion: "No se pudo verificar el gasto con IA, pero puede continuar con el registro"
+      });
     }
   });
 

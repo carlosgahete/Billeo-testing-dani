@@ -211,7 +211,88 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     },
   });
 
+  // Estado para guardar la sugerencia de la IA
+  const [aiVerification, setAiVerification] = useState<{
+    isValid: boolean;
+    suggestion?: string;
+    categoryHint?: string;
+    isLoading: boolean;
+  }>({
+    isValid: true,
+    isLoading: false
+  });
+
+  // Mutación para verificar el gasto con IA
+  const verifyExpenseMutation = useMutation({
+    mutationFn: async (data: { description: string; amount: string }) => {
+      const response = await apiRequest("POST", "/api/verify-expense", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAiVerification({
+        ...data,
+        isLoading: false
+      });
+      
+      // Si el gasto es válido, continuar con el registro
+      if (data.isValid) {
+        // Si tenemos una sugerencia de categoría, intentamos encontrarla
+        if (data.categoryHint && categories) {
+          const suggestedCategory = categories.find(
+            cat => cat.name.toLowerCase().includes(data.categoryHint!.toLowerCase())
+          );
+          
+          if (suggestedCategory && !form.getValues().categoryId) {
+            // Actualizar el formulario con la categoría sugerida
+            form.setValue('categoryId', suggestedCategory.id);
+            
+            toast({
+              title: "Categoría sugerida",
+              description: `Se ha aplicado la categoría sugerida: ${suggestedCategory.name}`,
+            });
+          }
+        }
+        
+        // Proceder con el envío del formulario
+        submitTransaction(form.getValues());
+      }
+    },
+    onError: (error) => {
+      setAiVerification({
+        isValid: true, // Por defecto permitimos continuar
+        suggestion: "No se pudo verificar el gasto. Puedes continuar si la información es correcta.",
+        isLoading: false
+      });
+      
+      toast({
+        title: "Error al verificar el gasto",
+        description: "No se pudo conectar con el servicio de IA, pero puedes continuar con el registro.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSubmit = (data: TransactionFormValues) => {
+    // Solo verificamos los gastos, no los ingresos
+    if (data.type === "expense" && !isEditMode) {
+      setAiVerification({
+        ...aiVerification,
+        isLoading: true
+      });
+      
+      // Verificar el gasto con IA
+      verifyExpenseMutation.mutate({
+        description: data.description,
+        amount: data.amount.toString()
+      });
+    } else {
+      // Si es un ingreso o estamos en modo edición, simplemente enviamos los datos
+      submitTransaction(data);
+    }
+  };
+  
+  // Función que realmente envía los datos a la API
+  const submitTransaction = (data: TransactionFormValues) => {
     mutation.mutate(data);
   };
 
@@ -370,6 +451,42 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Notificación de verificación de IA en proceso */}
+            {aiVerification.isLoading && (
+              <div className="bg-blue-50 p-3 rounded-md mb-4 flex items-center">
+                <Loader2 className="h-4 w-4 mr-2 animate-spin text-blue-600" />
+                <p className="text-sm text-blue-700">
+                  Verificando gasto con IA...
+                </p>
+              </div>
+            )}
+            
+            {/* Mensaje de sugerencia/advertencia de la IA cuando está disponible */}
+            {!aiVerification.isLoading && aiVerification.suggestion && !isEditMode && (
+              <div className={`p-3 rounded-md mb-4 ${aiVerification.isValid ? 'bg-green-50' : 'bg-amber-50'}`}>
+                <h3 className={`text-sm font-medium mb-2 ${aiVerification.isValid ? 'text-green-700' : 'text-amber-700'}`}>
+                  {aiVerification.isValid ? 'Sugerencia de IA' : 'Advertencia de IA'}
+                </h3>
+                <p className="text-sm mb-2">
+                  {aiVerification.suggestion}
+                </p>
+                
+                {!aiVerification.isValid && (
+                  <div className="flex justify-end mt-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => submitTransaction(form.getValues())}
+                      className="text-xs"
+                    >
+                      Registrar de todos modos
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {hasOcrData && (
               <div className="bg-blue-50 p-3 rounded-md mb-4">
                 <h3 className="text-sm font-medium mb-2 text-blue-700">Información detectada automáticamente</h3>

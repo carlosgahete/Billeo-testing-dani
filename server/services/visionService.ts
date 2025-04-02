@@ -443,6 +443,126 @@ function extractExpenseInfo(text: string): ExtractedExpense {
 }
 
 /**
+ * Verifica un gasto manual con IA para determinar si es coherente
+ */
+export async function verifyExpenseWithAI(expenseData: {
+  description: string;
+  amount: string;
+}): Promise<{
+  isValid: boolean;
+  suggestion?: string;
+  categoryHint?: string;
+}> {
+  try {
+    const client = getVisionClient();
+    
+    // Crear un mensaje para que la IA analice
+    const prompt = `Analiza el siguiente gasto empresarial:
+    Descripción: ${expenseData.description}
+    Importe: ${expenseData.amount}€
+    
+    Proporciona un análisis sobre si este gasto parece correcto y coherente. 
+    Considera si el importe parece razonable para el tipo de gasto descrito.
+    Si pudieras categorizar este gasto para contabilidad, ¿en qué categoría lo pondrías?
+    
+    Responde en formato JSON con los siguientes campos:
+    {
+      "isValid": true o false,
+      "reason": "explicación breve",
+      "suggestion": "sugerencia de mejora si aplica",
+      "categoryHint": "categoría sugerida"
+    }`;
+    
+    // Usar la API de documentos para analizar el texto
+    const [result] = await client.documentTextDetection({
+      image: {
+        content: Buffer.from(prompt).toString('base64')
+      }
+    });
+    
+    // Extraer el texto completo de la respuesta
+    const fullText = result.fullTextAnnotation?.text || '';
+    
+    // Intentar extraer el JSON de la respuesta
+    try {
+      // Buscar patrón de JSON en el texto
+      const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        const jsonResponse = JSON.parse(jsonMatch[0]);
+        return {
+          isValid: jsonResponse.isValid,
+          suggestion: jsonResponse.suggestion || jsonResponse.reason,
+          categoryHint: jsonResponse.categoryHint
+        };
+      }
+      
+      // Si no se encuentra un patrón JSON, analizar con heurísticas
+      const isValid = !fullText.toLowerCase().includes("no parece") && 
+                      !fullText.toLowerCase().includes("incoherente") &&
+                      !fullText.toLowerCase().includes("incorrecto");
+                      
+      return {
+        isValid,
+        suggestion: "No se pudo obtener un análisis detallado",
+        categoryHint: guessCategory(expenseData.description)
+      };
+    } catch (parseError) {
+      console.error("Error al parsear la respuesta de la IA:", parseError);
+      // Respuesta por defecto
+      return {
+        isValid: true,
+        suggestion: "No se pudo analizar el gasto con IA, pero se ha registrado",
+        categoryHint: guessCategory(expenseData.description)
+      };
+    }
+  } catch (error) {
+    console.error("Error al verificar el gasto con IA:", error);
+    // En caso de error, permitimos el gasto pero informamos
+    return {
+      isValid: true,
+      suggestion: "No se pudo conectar con el servicio de IA, pero el gasto ha sido registrado",
+      categoryHint: guessCategory(expenseData.description)
+    };
+  }
+}
+
+/**
+ * Intenta adivinar una categoría en base a palabras clave en la descripción
+ */
+function guessCategory(description: string): string {
+  const normalized = description.toLowerCase();
+  
+  if (normalized.includes("comida") || normalized.includes("restaurante") || 
+      normalized.includes("café") || normalized.includes("menu")) {
+    return "Alimentación";
+  }
+  
+  if (normalized.includes("tren") || normalized.includes("taxi") || 
+      normalized.includes("uber") || normalized.includes("cabify") ||
+      normalized.includes("gasolina") || normalized.includes("transporte")) {
+    return "Transporte";
+  }
+  
+  if (normalized.includes("hotel") || normalized.includes("alojamiento") || 
+      normalized.includes("apartamento") || normalized.includes("airbnb")) {
+    return "Alojamiento";
+  }
+  
+  if (normalized.includes("material") || normalized.includes("oficina") || 
+      normalized.includes("papeleria") || normalized.includes("impresora")) {
+    return "Material oficina";
+  }
+  
+  if (normalized.includes("telefono") || normalized.includes("movil") || 
+      normalized.includes("internet") || normalized.includes("fibra")) {
+    return "Telecomunicaciones";
+  }
+  
+  return "Otros gastos";
+}
+
+/**
  * Convierte los datos extraídos a un objeto de transacción
  */
 export function mapToTransaction(
