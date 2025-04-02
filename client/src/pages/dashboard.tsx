@@ -159,10 +159,10 @@ const Dashboard = () => {
   // Esto corresponde a 10000.00 según vemos en los logs del servidor
   const baseIncomeSinIVA = stats?.baseImponible || 0; // Usar el valor exacto de la API 
   // Para los gastos, aplicamos la misma lógica que para los ingresos
-  // Deberíamos obtener la base exacta (1000€), no calcularla
-  const baseExpensesSinIVA = 1000; // Valor exacto para esta demostración
-  // El IVA correcto para una base de 1000€ es 210€ (21%)
-  const ivaSoportadoCorregido = 210; // 21% de 1000€
+  // Calcular la base imponible de gastos sin IVA (dividiendo entre 1.21 para quitar el 21% de IVA)
+  const baseExpensesSinIVA = stats?.expenses ? Number((stats.expenses / 1.21).toFixed(2)) : 0;
+  // El IVA soportado es el 21% de la base imponible de gastos
+  const ivaSoportadoCorregido = stats?.ivaSoportado || Number((baseExpensesSinIVA * 0.21).toFixed(2));
   
   // Total bruto es el valor que incluye IVA
   const totalBruto = incomeTotal; // Este es el total que ya viene del backend (1060€)
@@ -181,12 +181,12 @@ const Dashboard = () => {
   const netProfit = Number((totalNeto - totalPagado).toFixed(2));
   
   // Datos financieros organizados
-  // IVA repercutido correcto (21% de 10.000€)
-  const ivaRepercutidoCorregido = 2100;
-  // Calculamos el valor correcto del IVA a liquidar
-  const ivaALiquidarCorregido = ivaRepercutidoCorregido - ivaSoportadoCorregido; // 2100 - 210 = 1890
-  // IRPF a liquidar (15% de 10.000€)
-  const irpfALiquidar = 1500;
+  // IVA repercutido (21% de la base imponible de ingresos)
+  const ivaRepercutidoCorregido = stats?.ivaRepercutido || Number((baseIncomeSinIVA * 0.21).toFixed(2));
+  // Calculamos el IVA a liquidar
+  const ivaALiquidarCorregido = Number((ivaRepercutidoCorregido - ivaSoportadoCorregido).toFixed(2));
+  // IRPF a liquidar (15% de la base imponible de ingresos)
+  const irpfALiquidar = stats?.irpfRetenidoIngresos || Number((baseIncomeSinIVA * 0.15).toFixed(2));
   
   const financialData = {
     income: {
@@ -207,9 +207,9 @@ const Dashboard = () => {
       netProfit: netProfit
     },
     taxes: {
-      vat: 1890, // IVA a liquidar corregido
+      vat: ivaALiquidarCorregido, // IVA a liquidar dinámico
       incomeTax: stats?.taxes?.incomeTax || 0,
-      ivaALiquidar: 1890 // Valor fijo para este ejemplo
+      ivaALiquidar: ivaALiquidarCorregido
     }
   };
 
@@ -449,14 +449,14 @@ const Dashboard = () => {
                   <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(1890)} €</span>
+                  }).format(ivaALiquidarCorregido)} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IRPF a liquidar:</span>
                   <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
-                  }).format(1500)} €</span>
+                  }).format(irpfALiquidar)} €</span>
                 </div>
               </div>
               
