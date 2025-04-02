@@ -1,0 +1,131 @@
+Aquí tienes la explicación completa, ahora incluyendo cálculos detallados de los gastos y cómo deben actualizarse correctamente al editar facturas hacia arriba o hacia abajo.
+
+⸻
+
+Explicación del error y solución para la IA
+
+Descripción del problema
+
+Actualmente, cuando edito una factura y disminuyo su valor, el Dashboard actualiza correctamente los ingresos, gastos y el resultado final.
+
+Sin embargo, cuando edito una factura y aumento su valor, el Dashboard muestra un resultado incorrecto.
+
+Este error ocurre porque la actualización de los valores no está reflejando correctamente el nuevo valor de la factura editada.
+
+⸻
+
+Causa del error
+
+Cuando edito una factura existente, el sistema debe:
+	1.	Restar el valor anterior de los totales (ingresos o gastos).
+	2.	Sumar el nuevo valor editado a los totales.
+	3.	Recalcular todo correctamente (IVA, IRPF, resultado final, IVA a pagar, etc.).
+
+El error ocurre porque al editar una factura hacia arriba, el sistema parece no estar restando el valor anterior correctamente antes de sumar el nuevo valor.
+
+⸻
+
+Cómo corregirlo
+
+Cada vez que se edite una factura, la actualización del Dashboard debe seguir estos pasos:
+
+1. Si es una factura de ingreso:
+	•	Restar el valor anterior de la base imponible de ingresos.
+	•	Sumar el nuevo valor editado a la base imponible de ingresos.
+	•	Recalcular IVA repercutido: Nuevo valor * 21%.
+	•	Recalcular IRPF en ingresos: Nuevo valor * 15%.
+	•	Actualizar el resultado final.
+
+2. Si es una factura de gasto:
+	•	Restar el valor anterior de la base imponible de gastos.
+	•	Sumar el nuevo valor editado a la base imponible de gastos.
+	•	Recalcular IVA soportado: Nuevo valor * 21%.
+	•	Recalcular IRPF en gastos: Nuevo valor * 15%.
+	•	Actualizar el resultado final.
+
+⸻
+
+Ejemplo práctico
+
+Caso correcto (creación y edición hacia abajo)
+	1.	Creo una factura de ingreso de 10.000 € y una de gasto de 2.000 €
+
+Ingresos:
++ Base imponible: 10.000 €
++ IVA repercutido (21%): 2.100 €
+- IRPF en ingresos (15%): -1.500 €
+
+Gastos:
+- Base imponible: 2.000 €
+- IVA soportado (21%): 420 €
++ IRPF en gastos (15%): 300 €
+
+Beneficio antes de impuestos: 8.000 €
+IVA a pagar: 1.680 € (IVA repercutido - IVA soportado)
+IRPF total: -1.200 € (IRPF en ingresos - IRPF en gastos)
+
+Resultado final después de impuestos: 6.800 €
+
+
+	2.	Edito la factura de ingreso de 10.000 € a 5.000 €
+
+Ingresos:
++ Base imponible: 5.000 €
++ IVA repercutido (21%): 1.050 €
+- IRPF en ingresos (15%): -750 €
+
+Gastos:
+- Base imponible: 2.000 €
+- IVA soportado (21%): 420 €
++ IRPF en gastos (15%): 300 €
+
+Beneficio antes de impuestos: 3.000 €
+IVA a pagar: 630 € (IVA repercutido - IVA soportado)
+IRPF total: -450 € (IRPF en ingresos - IRPF en gastos)
+
+Resultado final después de impuestos: 2.550 €
+
+
+
+✅ Todo funciona correctamente
+
+⸻
+
+Caso incorrecto (edición hacia arriba que falla)
+	3.	Ahora edito la factura de ingreso de 5.000 € y la vuelvo a subir a 10.000 €, pero el Dashboard muestra resultados incorrectos.
+❌ Error posible:
+	•	El sistema sigue considerando la base imponible de 5.000 € en lugar de 10.000 €.
+	•	El IVA repercutido no se recalcula correctamente.
+	•	El IRPF tampoco se actualiza bien.
+🚀 Solución esperada:
+	•	Antes de actualizar la factura, restar el valor anterior de 5.000 €.
+	•	Después, sumar el nuevo valor de 10.000 €.
+	•	Recalcular ingresos, gastos, IVA, IRPF y resultado final.
+
+✅ Resultado corregido al hacer bien los cálculos:
+
+Ingresos:
++ Base imponible: 10.000 €
++ IVA repercutido (21%): 2.100 €
+- IRPF en ingresos (15%): -1.500 €
+
+Gastos:
+- Base imponible: 2.000 €
+- IVA soportado (21%): 420 €
++ IRPF en gastos (15%): 300 €
+
+Beneficio antes de impuestos: 8.000 €
+IVA a pagar: 1.680 € (IVA repercutido - IVA soportado)
+IRPF total: -1.200 € (IRPF en ingresos - IRPF en gastos)
+
+Resultado final después de impuestos: 6.800 €
+
+
+
+⸻
+
+Resumen de la solución
+	1.	Cada vez que edite una factura, primero restar su valor anterior.
+	2.	Después sumar el nuevo valor editado.
+	3.	Actualizar correctamente todos los cálculos de ingresos, gastos, IVA e IRPF.
+	4.	Así, el Dashboard reflejará siempre el valor correcto de ingresos, gastos y resultado final.

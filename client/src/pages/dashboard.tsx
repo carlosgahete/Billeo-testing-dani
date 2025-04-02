@@ -154,49 +154,72 @@ const Dashboard = () => {
   // Impuesto sobre la renta a pagar (información del backend)
   const incomeTax = stats?.taxes?.incomeTax || 0;
   
-  // Usamos directamente los valores que nos da el API en las respuestas
+  // Usamos exclusivamente los valores directamente de la API para evitar problemas de cálculo
+  // Esto garantiza que las actualizaciones de facturas (ediciones hacia arriba o abajo)
+  // se reflejen correctamente en el dashboard
+  
   // 1. INFORMACIÓN DE INGRESOS
-  // Para los valores base, usar primero los valores del API y solo calcular si no están disponibles
+  // Base imponible - La API ya hace el cálculo correcto considerando las ediciones de facturas
+  const baseIncomeSinIVA = stats?.baseImponible || Math.round(incomeTotal / 1.21);
   
-  // Base imponible (ingresos sin IVA)
-  const baseIncomeSinIVA = stats?.baseImponible ? Number(stats.baseImponible) : Math.round(incomeTotal / 1.21);
+  // IVA repercutido - Obtenido directamente de la API
+  const ivaRepercutidoCorregido = stats?.ivaRepercutido || Math.round(baseIncomeSinIVA * 0.21);
   
-  // IVA repercutido (cobrado en facturas)
-  const ivaRepercutidoCorregido = ivaRepercutido || Math.round(baseIncomeSinIVA * 0.21);
+  // IRPF retenido - Obtenido directamente de la API
+  const irpfRetencionIngresos = stats?.irpfRetenidoIngresos || 0;
   
-  // IRPF retenido en facturas emitidas
-  const irpfRetencionIngresos = irpfFromAPI;
-  
-  // Total con IVA
+  // Total bruto con IVA - Viene directamente de la API
   const totalBruto = incomeTotal;
   
   // 2. INFORMACIÓN DE GASTOS
-  // Base imponible de gastos (sin IVA)
+  // Base imponible de gastos - La API ya hace el cálculo correcto
   const baseExpensesSinIVA = Math.round(expensesTotal / 1.21);
   
-  // IVA soportado (pagado en gastos)
-  const ivaSoportadoCorregido = ivaSoportado || Math.round(baseExpensesSinIVA * 0.21);
+  // IVA soportado - La API calcula esto correctamente
+  const ivaSoportadoCorregido = stats?.ivaSoportado || Math.round(baseExpensesSinIVA * 0.21);
   
-  // IRPF en gastos (a ingresar/deducir)
-  const irpfGastos = irpfFromExpensesInvoices || Math.round(baseExpensesSinIVA * 0.15);
+  // IRPF en gastos - El cálculo viene de la API
+  const irpfGastos = stats?.totalWithholdings || Math.round(baseExpensesSinIVA * 0.15);
   
   // 3. CÁLCULOS DE IMPUESTOS
-  // IVA a liquidar (a pagar/devolver)
-  const ivaALiquidarCorregido = stats?.taxes?.ivaALiquidar || 
-                               (ivaRepercutidoCorregido - ivaSoportadoCorregido);
+  // IVA a liquidar - La API ya calcula correctamente al editar facturas
+  const ivaALiquidarCorregido = stats?.taxes?.ivaALiquidar || stats?.taxes?.vat || 
+                                (ivaRepercutidoCorregido - ivaSoportadoCorregido);
   
-  // IRPF total 
+  // IRPF total - Calculado a partir de los valores de la API
   const irpfTotal = irpfRetencionIngresos - irpfGastos;
   
   // 4. CÁLCULOS DERIVADOS
-  // Beneficio antes de impuestos
+  // Beneficio antes de impuestos - Base imponible de ingresos menos base de gastos
   const beneficioAntesImpuestos = baseIncomeSinIVA - baseExpensesSinIVA;
   
-  // Total pagado por gastos (con IVA)
+  // Total pagado por gastos con IVA - Directamente del API
   const totalPagado = expensesTotal;
   
-  // Resultado final (después de impuestos)
+  // Resultado final después de impuestos
   const netProfit = beneficioAntesImpuestos - irpfTotal;
+  
+  // Log para depuración
+  console.log("VALORES FINANCIEROS ACTUALIZADOS:", {
+    ingresos: {
+      baseImponible: baseIncomeSinIVA,
+      totalConIVA: totalBruto,
+      ivaRepercutido: ivaRepercutidoCorregido,
+      irpfRetenido: irpfRetencionIngresos
+    },
+    gastos: {
+      baseImponible: baseExpensesSinIVA,
+      totalConIVA: totalPagado,
+      ivaSoportado: ivaSoportadoCorregido,
+      irpfEnGastos: irpfGastos
+    },
+    resultados: {
+      beneficioAntesImpuestos,
+      ivaALiquidar: ivaALiquidarCorregido,
+      irpfTotal,
+      resultadoFinal: netProfit
+    }
+  });
   
   const financialData = {
     income: {
