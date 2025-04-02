@@ -42,7 +42,7 @@ const QuotesSummary = () => {
             Presupuestos
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 flex items-center justify-center h-[240px]">
+        <CardContent className="p-3 flex items-center justify-center h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
         </CardContent>
       </Card>

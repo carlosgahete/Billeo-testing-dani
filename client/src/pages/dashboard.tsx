@@ -510,19 +510,19 @@ const Dashboard = () => {
         
         {/* Fila para presupuestos, facturas y gráficos de comparación */}
         <div className="md:col-span-3 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Columna 1: Presupuestos (más estrecho) */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-3">
               <QuotesSummary />
             </div>
             
             {/* Columna 2: Facturas (más estrecho) */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-3">
               <InvoicesSummary />
             </div>
             
-            {/* Columna 3: Gráficos de Comparación */}
-            <div className="lg:col-span-1">
+            {/* Columna 3: Gráficos de Comparación (más ancha) */}
+            <div className="lg:col-span-6">
               <ComparisonCharts />
             </div>
           </div>
