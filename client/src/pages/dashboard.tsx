@@ -101,13 +101,14 @@ const Dashboard = () => {
       return res.json();
     },
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnMount: "always", // Siempre recarga al montar el componente
     refetchOnReconnect: true,
-    refetchInterval: 2000, // Refrescar cada 2 segundos para mantener los datos actualizados
+    refetchInterval: 1000, // Actualizar cada segundo para mayor reactividad
     staleTime: 0, // Considerar los datos obsoletos inmediatamente
     gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
     retry: 3, // Intentar 3 veces si falla
-    retryDelay: 500 // Esperar 500ms entre reintentos
+    retryDelay: 300, // Tiempo más corto entre reintentos
+    refetchIntervalInBackground: true // Continuar actualizando incluso cuando la pestaña no está enfocada
   });
 
   const isLoading = userLoading || statsLoading;
@@ -155,27 +156,27 @@ const Dashboard = () => {
   
   // Cálculos para mostrar el análisis financiero según especificaciones
   // 1. INFORMACIÓN DE INGRESOS
-  // La base imponible es la suma de los subtotales de las facturas (10000€)
-  // Si no tenemos el valor exacto de la API, usamos 10000 como valor por defecto
-  const baseIncomeSinIVA = 10000; // Valor fijo de los logs para asegurar precisión
+  // La base imponible es la suma de los subtotales de las facturas
+  // Usar el valor real de la API si existe, sino calcular aproximado
+  const baseIncomeSinIVA = Number((incomeTotal / 1.21).toFixed(2)); // Valor real
   
-  // El IVA repercutido es el 21% de la base imponible (2100€)
-  const ivaRepercutidoCorregido = 2100; // Valor fijo de los logs
+  // El IVA repercutido es el 21% de la base imponible
+  const ivaRepercutidoCorregido = ivaRepercutido || Math.round(baseIncomeSinIVA * 0.21); // Valor real
   
   // IRPF retenido en ingresos (15% de la base imponible de ingresos) = 1500€
   // Este valor se resta de los ingresos porque es una retención fiscal
   // Usar el valor del API si está disponible, o un valor fijo basado en el 15% de la base imponible
   const irpfRetencionIngresos = irpfFromAPI > 0 ? irpfFromAPI : 1500; // Valor real o fijo
   
-  // Total bruto incluye IVA (10600€)
-  const totalBruto = 10600; // Valor fijo de los logs
+  // Total bruto incluye IVA
+  const totalBruto = incomeTotal; // Usar el valor real
   
   // 2. INFORMACIÓN DE GASTOS
-  // La base imponible de gastos es 1000€ según los logs
-  const baseExpensesSinIVA = 1000; // Valor fijo de los logs
+  // La base imponible de gastos
+  const baseExpensesSinIVA = Number((expensesTotal / 1.21).toFixed(2)); // Valor real aproximado
   
-  // El IVA soportado es el 21% de la base imponible (210€)
-  const ivaSoportadoCorregido = 210; // Valor fijo de los logs
+  // El IVA soportado es el 21% de la base imponible
+  const ivaSoportadoCorregido = ivaSoportado || Math.round(baseExpensesSinIVA * 0.21); // Valor real
   
   // IRPF en gastos (15% de la base imponible de gastos) = 150€
   // Este valor se suma a los gastos porque es un importe retenido en los pagos
