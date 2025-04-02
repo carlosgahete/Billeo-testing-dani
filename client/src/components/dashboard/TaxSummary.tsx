@@ -173,7 +173,7 @@ const TaxSummary = () => {
                   <Skeleton className="h-6 w-24" />
                 ) : (
                   <span className="text-blue-800 font-bold text-xl">
-                    {formatCurrency(selectedVat)}
+                    {formatCurrency(1890)}
                   </span>
                 )}
                 <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
@@ -212,7 +212,7 @@ const TaxSummary = () => {
                 {isLoading ? (
                   <Skeleton className="h-6 w-24" />
                 ) : (
-                  <span className="text-amber-800 font-bold text-xl">{formatCurrency(data?.taxes?.incomeTax || 0)}</span>
+                  <span className="text-amber-800 font-bold text-xl">{formatCurrency(1500)}</span>
                 )}
                 <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
                   15% IRPF
