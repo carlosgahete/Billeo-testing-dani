@@ -29,11 +29,15 @@ interface DashboardStats {
   taxes: {
     vat: number;
     incomeTax: number;
+    ivaALiquidar: number;
   };
-  totalWithholdings: number;
+  irpfRetenidoIngresos?: number;
+  totalWithholdings?: number;
+  ivaRepercutido?: number;
+  ivaSoportado?: number;
   income: number;
   expenses: number;
-  result: number;
+  result?: number;
 }
 
 // Tipos para los períodos fiscales
@@ -90,24 +94,28 @@ const TaxSummary = () => {
   useEffect(() => {
     if (!data) return;
     
-    // Valores base
-    const totalVat = data.taxes?.vat ?? 0;
-    const totalWithholdings = data.totalWithholdings ?? 0;
+    // Valores base - Obtener correctamente de la estructura recibida
+    // Primero intentamos usar ivaALiquidar si está disponible
+    const totalVat = data.taxes?.ivaALiquidar ?? data.taxes?.vat ?? 0;
+    
+    // Para IRPF, usar primero irpfRetenidoIngresos si existe
+    const totalWithholdings = data.irpfRetenidoIngresos ?? data.totalWithholdings ?? data.taxes?.incomeTax ?? 0;
     
     // Verificar si hay datos para el período actual
-    const hasDataForPeriod = totalVat > 0 || totalWithholdings > 0;
+    const hasDataForPeriod = data.income > 0 || data.expenses > 0 || totalVat > 0 || totalWithholdings > 0;
     
     // Actualizar estado
     setHasData(hasDataForPeriod);
     setSelectedVat(totalVat);
     setSelectedWithholdings(totalWithholdings);
     
-    console.log("Datos fiscales:", {
+    console.log("Datos fiscales actualizados:", {
       período: period,
       año: year,
-      totalVat,
-      totalWithholdings,
-      hasDataForPeriod
+      ivaALiquidar: totalVat,
+      irpfRetenido: totalWithholdings,
+      hasDataForPeriod,
+      datosCompletos: data
     });
   }, [data, year, period]);
 
