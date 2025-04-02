@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { 
   Loader2, 
@@ -81,16 +81,24 @@ const Dashboard = () => {
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
   
+  // React Query para refrescar datos
+  const queryClient = useQueryClient();
+  
   const { data: user, isLoading: userLoading } = useQuery<any>({
     queryKey: ["/api/auth/session"],
   });
   
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard", { year, period }],
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
+      // Extraer parámetros del queryKey para garantizar los datos más actualizados
+      const [_, params] = queryKey as [string, { year: string, period: string }];
+      
       // Añadir un timestamp y encabezados no-cache para garantizar datos frescos siempre
       const timestamp = Date.now();
-      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}&nocache=${timestamp}`, {
+      console.log(`📊 Consultando datos fiscales [periodo: ${params.period}, año: ${params.year}]`);
+      
+      const res = await fetch(`/api/stats/dashboard?year=${params.year}&period=${params.period}&nocache=${timestamp}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
@@ -100,15 +108,14 @@ const Dashboard = () => {
       if (!res.ok) throw new Error("Error al cargar estadísticas");
       return res.json();
     },
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always", // Siempre recarga al montar el componente
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 1000, // Actualizar cada segundo para mayor reactividad
+    refetchInterval: false, // Desactivamos la actualización automática
     staleTime: 0, // Considerar los datos obsoletos inmediatamente
-    gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
-    retry: 3, // Intentar 3 veces si falla
-    retryDelay: 300, // Tiempo más corto entre reintentos
-    refetchIntervalInBackground: true // Continuar actualizando incluso cuando la pestaña no está enfocada
+    gcTime: 60 * 1000, // Mantener en caché por 1 minuto
+    retry: 1, // Intentar una vez más si falla
+    enabled: Boolean(year && period), // Solo consultar cuando tenemos año y periodo
   });
 
   const isLoading = userLoading || statsLoading;
@@ -260,59 +267,82 @@ const Dashboard = () => {
           variant="gradient"
           className="w-full overflow-visible"
         >
-          <div className="flex justify-end items-center mt-1">
-            <div className="flex bg-white/10 backdrop-blur-md p-2 rounded-full gap-4">
-              <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[80px] h-8 min-h-0">
-                  <span className="text-white text-sm font-semibold">{year}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2025">2025</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <div className="w-px h-5 bg-white/20 self-center"></div>
-              
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[140px] h-8 min-h-0">
-                  <span className="text-white text-sm font-semibold">
-                    {period === "all" ? "Todo el año" : 
-                     period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                     period === "m1" ? "Enero" :
-                     period === "m2" ? "Febrero" :
-                     period === "m3" ? "Marzo" :
-                     period === "m4" ? "Abril" :
-                     period === "m5" ? "Mayo" :
-                     period === "m6" ? "Junio" :
-                     period === "m7" ? "Julio" :
-                     period === "m8" ? "Agosto" :
-                     period === "m9" ? "Septiembre" :
-                     period === "m10" ? "Octubre" :
-                     period === "m11" ? "Noviembre" : "Diciembre"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todo el año</SelectItem>
-                  <SelectItem value="q1">1er trimestre</SelectItem>
-                  <SelectItem value="q2">2º trimestre</SelectItem>
-                  <SelectItem value="q3">3er trimestre</SelectItem>
-                  <SelectItem value="q4">4º trimestre</SelectItem>
-                  <SelectItem value="m1">Enero</SelectItem>
-                  <SelectItem value="m2">Febrero</SelectItem>
-                  <SelectItem value="m3">Marzo</SelectItem>
-                  <SelectItem value="m4">Abril</SelectItem>
-                  <SelectItem value="m5">Mayo</SelectItem>
-                  <SelectItem value="m6">Junio</SelectItem>
-                  <SelectItem value="m7">Julio</SelectItem>
-                  <SelectItem value="m8">Agosto</SelectItem>
-                  <SelectItem value="m9">Septiembre</SelectItem>
-                  <SelectItem value="m10">Octubre</SelectItem>
-                  <SelectItem value="m11">Noviembre</SelectItem>
-                  <SelectItem value="m12">Diciembre</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex justify-end items-center mt-2">
+            <div className="bg-white/10 backdrop-blur-md p-3 rounded-lg border border-white/10 shadow-lg">
+              <p className="text-white/80 text-xs mb-2 font-medium">Filtrar por período</p>
+              <div className="flex items-center gap-4">
+                <div className="space-y-1">
+                  <label className="text-white/70 text-[10px] block ml-1">Ejercicio fiscal</label>
+                  <Select value={year} onValueChange={(value) => {
+                    setYear(value);
+                    console.log("Cambiando año a:", value, "período:", period);
+                    // Invalidar caché y forzar una nueva consulta
+                    queryClient.invalidateQueries({
+                      queryKey: ["/api/stats/dashboard"]
+                    });
+                  }}>
+                    <SelectTrigger className="bg-white/15 hover:bg-white/25 focus:bg-white/30 transition-colors duration-150 rounded-md border-0 w-[90px] h-9">
+                      <span className="text-white text-sm font-semibold">{year}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2023">2023</SelectItem>
+                      <SelectItem value="2024">2024</SelectItem>
+                      <SelectItem value="2025">2025</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="w-px h-10 bg-white/20 self-center"></div>
+                
+                <div className="space-y-1">
+                  <label className="text-white/70 text-[10px] block ml-1">Período</label>
+                  <Select value={period} onValueChange={(value) => {
+                    setPeriod(value);
+                    console.log("Cambiando período a:", value, "año:", year);
+                    // Invalidar caché y forzar una nueva consulta
+                    queryClient.invalidateQueries({
+                      queryKey: ["/api/stats/dashboard"]
+                    });
+                  }}>
+                    <SelectTrigger className="bg-white/15 hover:bg-white/25 focus:bg-white/30 transition-colors duration-150 rounded-md border-0 w-[160px] h-9">
+                      <span className="text-white text-sm font-semibold">
+                        {period === "all" ? "Todo el año" : 
+                         period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                         period === "m1" ? "Enero" :
+                         period === "m2" ? "Febrero" :
+                         period === "m3" ? "Marzo" :
+                         period === "m4" ? "Abril" :
+                         period === "m5" ? "Mayo" :
+                         period === "m6" ? "Junio" :
+                         period === "m7" ? "Julio" :
+                         period === "m8" ? "Agosto" :
+                         period === "m9" ? "Septiembre" :
+                         period === "m10" ? "Octubre" :
+                         period === "m11" ? "Noviembre" : "Diciembre"}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todo el año</SelectItem>
+                      <SelectItem value="q1">1er trimestre</SelectItem>
+                      <SelectItem value="q2">2º trimestre</SelectItem>
+                      <SelectItem value="q3">3er trimestre</SelectItem>
+                      <SelectItem value="q4">4º trimestre</SelectItem>
+                      <SelectItem value="m1">Enero</SelectItem>
+                      <SelectItem value="m2">Febrero</SelectItem>
+                      <SelectItem value="m3">Marzo</SelectItem>
+                      <SelectItem value="m4">Abril</SelectItem>
+                      <SelectItem value="m5">Mayo</SelectItem>
+                      <SelectItem value="m6">Junio</SelectItem>
+                      <SelectItem value="m7">Julio</SelectItem>
+                      <SelectItem value="m8">Agosto</SelectItem>
+                      <SelectItem value="m9">Septiembre</SelectItem>
+                      <SelectItem value="m10">Octubre</SelectItem>
+                      <SelectItem value="m11">Noviembre</SelectItem>
+                      <SelectItem value="m12">Diciembre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
         </PageTitle>
@@ -512,22 +542,60 @@ const Dashboard = () => {
           {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Resumen Fiscal */}
-            <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-indigo-500 to-indigo-100 p-2">
+            <Card className="overflow-hidden shadow-md">
+              <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg text-white flex items-center">
                     <PiggyBank className="mr-2 h-5 w-5" />
                     Resumen Fiscal
                   </CardTitle>
                 </div>
+                <CardDescription className="text-white/80 text-xs mt-1">
+                  {period === "all" ? "Año completo" : 
+                  period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                  "Mes seleccionado"} ({year})
+                </CardDescription>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-4">
+              <CardContent className="p-6">
+                <div className="space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* IVA Repercutido */}
+                    <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">IVA Repercutido</h3>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-blue-600">
+                          {new Intl.NumberFormat('es-ES', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                          }).format(stats?.ivaRepercutido || 0)} €
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* IVA Soportado */}
+                    <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">IVA Soportado</h3>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-blue-600">
+                          {new Intl.NumberFormat('es-ES', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                          }).format(stats?.ivaSoportado || 0)} €
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="h-px bg-gray-100 w-full my-2"></div>
+                  
                   {/* IRPF Adelantado */}
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">IRPF Adelantado</h3>
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold text-green-600">
+                  <div className="bg-white border border-gray-100 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-600">IRPF Adelantado</h3>
+                      <p className="text-xs text-gray-500 mt-1">Retenciones a tu favor</p>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-xl font-bold text-green-600">
                         {new Intl.NumberFormat('es-ES', { 
                           minimumFractionDigits: 2, 
                           maximumFractionDigits: 2 
@@ -536,8 +604,8 @@ const Dashboard = () => {
                       <TooltipProvider delayDuration={100}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="cursor-pointer">
-                              <Info className="h-4 w-4 text-neutral-500" />
+                            <div className="cursor-pointer ml-2">
+                              <Info className="h-4 w-4 text-neutral-400" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -549,10 +617,13 @@ const Dashboard = () => {
                   </div>
                   
                   {/* IVA a Liquidar */}
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">IVA a Liquidar</h3>
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold text-red-600">
+                  <div className="bg-white border border-gray-100 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-600">IVA a Liquidar</h3>
+                      <p className="text-xs text-gray-500 mt-1">Declaración trimestral</p>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-xl font-bold text-red-600">
                         {new Intl.NumberFormat('es-ES', { 
                           minimumFractionDigits: 2, 
                           maximumFractionDigits: 2 
@@ -561,8 +632,8 @@ const Dashboard = () => {
                       <TooltipProvider delayDuration={100}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="cursor-pointer">
-                              <Info className="h-4 w-4 text-neutral-500" />
+                            <div className="cursor-pointer ml-2">
+                              <Info className="h-4 w-4 text-neutral-400" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -577,7 +648,7 @@ const Dashboard = () => {
             </Card>
             
             {/* Comparativa Financiera */}
-            <ComparisonCharts />
+            <ComparisonCharts year={year} period={period} />
           </div>
         </div>
       </div>
