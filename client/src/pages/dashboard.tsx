@@ -38,6 +38,8 @@ import { useLocation } from "wouter";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 
 import ComparisonCharts from "@/components/dashboard/ComparisonCharts";
+import QuotesSummary from "@/components/dashboard/QuotesSummary";
+import InvoicesSummary from "@/components/dashboard/InvoicesSummary";
 import { PageTitle } from "@/components/ui/page-title";
 
 // Interfaces
@@ -506,11 +508,23 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Fila para los gráficos de comparación (ocupa todo el ancho) */}
+        {/* Fila para presupuestos, facturas y gráficos de comparación */}
         <div className="md:col-span-3 mt-6">
-          {/* Sección de Gráficos de Comparación */}
-          <div className="grid grid-cols-1 gap-4">
-            <ComparisonCharts />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Columna 1: Presupuestos */}
+            <div className="lg:col-span-1">
+              <QuotesSummary />
+            </div>
+            
+            {/* Columna 2: Facturas */}
+            <div className="lg:col-span-1">
+              <InvoicesSummary />
+            </div>
+            
+            {/* Columna 3: Gráficos de Comparación */}
+            <div className="lg:col-span-1">
+              <ComparisonCharts />
+            </div>
           </div>
         </div>
       </div>

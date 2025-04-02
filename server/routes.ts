@@ -2821,7 +2821,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Datos del año actual
         yearCount,
         yearIncome,
-        // Datos de presupuestos
+        // Información estructurada para el componente de Facturas
+        invoices: {
+          total: issuedCount,
+          pending: pendingCount,
+          paid: issuedCount - pendingCount,
+          overdue: 0, // Por ahora no tenemos este dato, se podría calcular en el futuro
+          totalAmount: invoiceIncome
+        },
+        // Información estructurada para el componente de Presupuestos
+        quotes: {
+          total: allQuotesCount,
+          pending: pendingQuotesCount,
+          accepted: acceptedQuotesCount,
+          rejected: rejectedQuotesCount
+        },
+        // Datos de presupuestos (mantener compatibilidad)
         allQuotes: allQuotesCount,
         acceptedQuotes: acceptedQuotesCount,
         rejectedQuotes: rejectedQuotesCount,
