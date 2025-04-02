@@ -15,11 +15,24 @@ function getVisionClient(): ImageAnnotatorClient {
   if (!visionClient) {
     try {
       console.log("Inicializando Vision API client bajo demanda...");
-      // Crear una instancia básica para mantener la aplicación funcionando
-      visionClient = new ImageAnnotatorClient();
+      
+      // Verificar si tenemos credenciales en variables de entorno
+      if (!process.env.GOOGLE_CLOUD_CREDENTIALS) {
+        throw new Error('No se encontraron credenciales de Google Cloud Vision');
+      }
+      
+      // Parsear las credenciales JSON
+      const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
+      
+      // Crear cliente con credenciales explícitas
+      visionClient = new ImageAnnotatorClient({
+        credentials: credentials
+      });
+      
+      console.log("Cliente de Vision API inicializado correctamente");
     } catch (error) {
       console.error('Error al inicializar Vision API client:', error);
-      throw new Error('No se pudo inicializar el cliente de Vision API');
+      throw new Error(`No se pudo inicializar el cliente de Vision API: ${error.message}`);
     }
   }
   return visionClient;
