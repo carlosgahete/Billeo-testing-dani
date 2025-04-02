@@ -95,11 +95,13 @@ const TaxSummary = () => {
     if (!data) return;
     
     // Valores base - Obtener correctamente de la estructura recibida
-    // Primero intentamos usar ivaALiquidar si está disponible
-    const totalVat = data.taxes?.ivaALiquidar ?? data.taxes?.vat ?? 0;
+    // Para IVA a liquidar, usar los valores directamente desde la API
+    const ivaRepercutido = data.ivaRepercutido || 0;
+    const ivaSoportado = data.ivaSoportado || 0;
+    const totalVat = ivaRepercutido - ivaSoportado;
     
     // Para IRPF, usar primero irpfRetenidoIngresos si existe
-    const totalWithholdings = data.irpfRetenidoIngresos ?? data.totalWithholdings ?? data.taxes?.incomeTax ?? 0;
+    const totalWithholdings = data.irpfRetenidoIngresos || 0;
     
     // Verificar si hay datos para el período actual
     const hasDataForPeriod = data.income > 0 || data.expenses > 0 || totalVat > 0 || totalWithholdings > 0;
@@ -112,6 +114,8 @@ const TaxSummary = () => {
     console.log("Datos fiscales actualizados:", {
       período: period,
       año: year,
+      ivaRepercutido,
+      ivaSoportado,
       ivaALiquidar: totalVat,
       irpfRetenido: totalWithholdings,
       hasDataForPeriod,

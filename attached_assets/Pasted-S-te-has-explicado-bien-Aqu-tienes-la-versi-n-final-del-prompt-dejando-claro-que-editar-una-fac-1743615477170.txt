@@ -1,0 +1,139 @@
+Sí, te has explicado bien. Aquí tienes la versión final del prompt, dejando claro que editar una factura de ingreso NO debe afectar a los gastos y viceversa.
+
+⸻
+
+Explicación del error y solución para la IA
+
+Descripción del problema
+
+Actualmente, cuando edito una factura y disminuyo su valor, el Dashboard actualiza bien los ingresos, gastos y resultado final.
+
+Sin embargo, cuando edito una factura y aumento su valor, el Dashboard muestra un resultado incorrecto.
+
+Además, los ingresos y los gastos deben actualizarse de manera independiente.
+	•	Si edito una factura de ingreso, no debe afectar en nada a la casilla de gastos.
+	•	Si edito una factura de gasto, no debe afectar en nada a la casilla de ingresos.
+
+⸻
+
+Causa del error
+
+Cuando edito una factura existente, el sistema debe hacer lo siguiente:
+	1.	Si es una factura de ingreso:
+	•	Restar su valor anterior de la base imponible de ingresos.
+	•	Sumar el nuevo valor editado a la base imponible de ingresos.
+	•	No tocar la casilla de gastos.
+	•	Recalcular el IVA repercutido y el IRPF en ingresos.
+	•	Actualizar el resultado final.
+	2.	Si es una factura de gasto:
+	•	Restar su valor anterior de la base imponible de gastos.
+	•	Sumar el nuevo valor editado a la base imponible de gastos.
+	•	No tocar la casilla de ingresos.
+	•	Recalcular el IVA soportado y el IRPF en gastos.
+	•	Actualizar el resultado final.
+
+⚠️ Error actual: Parece que al editar una factura de ingreso, también se está afectando la casilla de gastos o viceversa. Esto es incorrecto.
+
+⸻
+
+Cómo corregirlo
+
+Cuando se edite una factura:
+
+✅ Si es una factura de ingreso:
+	•	Solo deben actualizarse los ingresos.
+	•	Los gastos deben permanecer iguales.
+	•	Se debe recalcular el IVA repercutido y el IRPF en ingresos.
+	•	Se debe actualizar el resultado final correctamente.
+
+✅ Si es una factura de gasto:
+	•	Solo deben actualizarse los gastos.
+	•	Los ingresos deben permanecer iguales.
+	•	Se debe recalcular el IVA soportado y el IRPF en gastos.
+	•	Se debe actualizar el resultado final correctamente.
+
+⸻
+
+Ejemplo práctico
+
+Caso correcto (edición de una factura de ingreso, sin afectar gastos)
+	1.	Tengo una factura de ingreso de 10.000 € y una de gasto de 2.000 €
+
+Ingresos:
++ Base imponible: 10.000 €
++ IVA repercutido (21%): 2.100 €
+- IRPF en ingresos (15%): -1.500 €
+
+Gastos:
+- Base imponible: 2.000 €
+- IVA soportado (21%): 420 €
++ IRPF en gastos (15%): 300 €
+
+Beneficio antes de impuestos: 8.000 €
+IVA a pagar: 1.680 € (IVA repercutido - IVA soportado)
+IRPF total: -1.200 € (IRPF en ingresos - IRPF en gastos)
+
+**Resultado final después de impuestos: 6.800 €**
+
+
+	2.	Edito la factura de ingreso de 10.000 € a 5.000 € → SOLO cambia la sección de ingresos.
+
+Ingresos:
++ Base imponible: 5.000 €
++ IVA repercutido (21%): 1.050 €
+- IRPF en ingresos (15%): -750 €
+
+Gastos: (NO CAMBIAN)  
+- Base imponible: 2.000 €
+- IVA soportado (21%): 420 €
++ IRPF en gastos (15%): 300 €
+
+Beneficio antes de impuestos: 3.000 €
+IVA a pagar: 630 € (IVA repercutido - IVA soportado)
+IRPF total: -450 € (IRPF en ingresos - IRPF en gastos)
+
+**Resultado final después de impuestos: 2.550 €**
+
+
+
+✅ Todo funciona correctamente. La casilla de gastos NO cambia.
+
+⸻
+
+Caso incorrecto (si editar ingresos afectara gastos, lo cual es un error)
+	3.	Ahora edito la factura de ingreso de 5.000 € a 10.000 €, pero el Dashboard muestra mal los gastos.
+❌ Error posible:
+	•	La base imponible de gastos ha cambiado, lo cual no debería ocurrir.
+	•	El IVA soportado o el IRPF en gastos también se han modificado incorrectamente.
+🚀 Solución esperada:
+	•	Antes de actualizar la factura, restar el valor anterior de ingresos.
+	•	Después, sumar el nuevo valor editado.
+	•	NO tocar la casilla de gastos.
+
+✅ Resultado corregido al hacer bien los cálculos:
+
+Ingresos:
++ Base imponible: 10.000 €
++ IVA repercutido (21%): 2.100 €
+- IRPF en ingresos (15%): -1.500 €
+
+Gastos: (NO CAMBIAN)  
+- Base imponible: 2.000 €
+- IVA soportado (21%): 420 €
++ IRPF en gastos (15%): 300 €
+
+Beneficio antes de impuestos: 8.000 €
+IVA a pagar: 1.680 € (IVA repercutido - IVA soportado)
+IRPF total: -1.200 € (IRPF en ingresos - IRPF en gastos)
+
+**Resultado final después de impuestos: 6.800 €**
+
+
+
+⸻
+
+Resumen de la solución
+	1.	Cada vez que edites una factura de ingreso, solo deben cambiar los valores de ingresos.
+	2.	Cada vez que edites una factura de gasto, solo deben cambiar los valores de gastos.
+	3.	Los ingresos y los gastos deben actualizarse de manera completamente independiente.
+	4.	Así, el Dashboard reflejará siempre el valor correcto de ingresos, gastos y resultado final.
