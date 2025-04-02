@@ -477,18 +477,19 @@ const Dashboard = () => {
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA a liquidar:</span>
-                  <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(ivaALiquidarCorregido)} €</span>
+                  <span className="text-neutral-500">Margen de beneficio:</span>
+                  <span className={`font-medium ${isPositiveMargin ? 'text-green-600' : 'text-red-600'}`}>
+                    {profitMargin}%
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF adelantado:</span>
-                  <span className="font-medium text-green-600">{new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(irpfRetencionIngresos)} €</span>
+                  <span className="text-neutral-500">Base imponible:</span>
+                  <span className="font-medium">
+                    {new Intl.NumberFormat('es-ES', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    }).format(financialData.balance.total)} €
+                  </span>
                 </div>
               </div>
               
@@ -506,10 +507,76 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Fila para los gráficos de comparación (ocupa todo el ancho) */}
+        {/* Fila para el resumen fiscal y gráficos de comparación */}
         <div className="md:col-span-3 mt-6">
-          {/* Sección de Gráficos de Comparación */}
-          <div className="grid grid-cols-1 gap-4">
+          {/* Sección de Resumen Fiscal y Gráficos de Comparación */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Resumen Fiscal */}
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-indigo-500 to-indigo-100 p-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg text-white flex items-center">
+                    <PiggyBank className="mr-2 h-5 w-5" />
+                    Resumen Fiscal
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  {/* IRPF Adelantado */}
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">IRPF Adelantado</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-green-600">
+                        {new Intl.NumberFormat('es-ES', { 
+                          minimumFractionDigits: 2, 
+                          maximumFractionDigits: 2 
+                        }).format(stats?.irpfRetenidoIngresos || 0)} €
+                      </span>
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-pointer">
+                              <Info className="h-4 w-4 text-neutral-500" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                            <p className="w-[250px] text-xs">IRPF retenido en tus facturas emitidas. Este importe se descontará de tu declaración anual.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                  
+                  {/* IVA a Liquidar */}
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">IVA a Liquidar</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-red-600">
+                        {new Intl.NumberFormat('es-ES', { 
+                          minimumFractionDigits: 2, 
+                          maximumFractionDigits: 2 
+                        }).format(stats?.taxes?.ivaALiquidar || 0)} €
+                      </span>
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-pointer">
+                              <Info className="h-4 w-4 text-neutral-500" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                            <p className="w-[250px] text-xs">Diferencia entre el IVA que has cobrado y el que has pagado. Este importe deberás ingresarlo a Hacienda.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Comparativa Financiera */}
             <ComparisonCharts />
           </div>
         </div>
