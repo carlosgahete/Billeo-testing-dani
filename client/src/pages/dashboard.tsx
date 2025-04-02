@@ -61,6 +61,21 @@ interface DashboardStats {
   [key: string]: any;
 }
 
+// Añadir función de utilidad para depuración
+const debugData = (data: any) => {
+  console.log("DATOS DEL DASHBOARD:", data);
+  if (data?.baseImponible) {
+    console.log("Base Imponible desde API:", data.baseImponible);
+  } else {
+    console.log("⚠️ Base Imponible NO disponible en API");
+  }
+  
+  if (data?.income) {
+    console.log("Income Total:", data.income);
+    console.log("Income sin IVA (approx):", Number((data.income / 1.21).toFixed(2)));
+  }
+};
+
 const Dashboard = () => {
   const [, navigate] = useLocation();
   const [year, setYear] = useState("2025");
@@ -105,6 +120,9 @@ const Dashboard = () => {
     );
   }
   
+  // Depurar datos cuando se cargan
+  debugData(stats);
+  
   // Usar datos reales del sistema o valores por defecto si no hay datos
   const incomeTotal = stats?.income || 0;
   const expensesTotal = stats?.expenses || 0;
@@ -129,8 +147,10 @@ const Dashboard = () => {
   const incomeTax = stats?.taxes?.incomeTax || 0;
   
   // Cálculos para mostrar el análisis financiero según especificaciones
-  // Sabemos que el subtotal de la factura es 1000€ exactos (desde los logs del servidor)
-  const baseIncomeSinIVA = 1000; // Base imponible exacta (subtotal)
+  // Extraer la base imponible (subtotal) de los datos que recibimos del servidor
+  // Si no está disponible en stats.baseImponible, calculamos aproximadamente restando el IVA del total
+  const baseIncomeSinIVA = stats?.baseImponible || 
+    Number((incomeTotal / 1.21).toFixed(2)); // Usando la tasa estándar de IVA (21%) para aproximar
   const baseExpensesSinIVA = expensesTotal - ivaSoportado; // Gastos sin IVA
   
   // Total bruto es el valor que incluye IVA
