@@ -20,6 +20,8 @@ interface Invoice {
   status: string;
   notes?: string;
   additionalTaxes?: AdditionalTax[] | null;
+  logo?: string | null;
+  attachments?: string[] | null;
 }
 
 interface Quote {
@@ -135,6 +137,45 @@ export async function generateInvoicePDF(
   // Set some basic styles
   doc.setFont("helvetica");
   doc.setFontSize(10);
+  
+  // Check if the invoice has a logo
+  const logoPath = invoice.logo || null;
+  
+  // Cargar el logo si existe
+  if (logoPath) {
+    try {
+      console.log("Preparando logo para PDF desde:", logoPath);
+      
+      // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
+      const logoDataUrl = await getImageAsDataUrl(logoPath);
+      
+      // Crear una imagen temporal para obtener las dimensiones reales y mantener proporciones
+      const tmpImg = new Image();
+      await new Promise<void>((resolve, reject) => {
+        tmpImg.onload = () => resolve();
+        tmpImg.onerror = () => reject(new Error('Error al cargar imagen para calcular proporciones'));
+        tmpImg.src = logoDataUrl;
+      });
+      
+      // Calcular dimensiones manteniendo proporciones (50% más pequeño)
+      const maxWidth = 25; // 50% más pequeño que el original de 50
+      const maxHeight = 12.5; // 50% más pequeño que el original de 25
+      
+      // Calcular el ratio de aspecto
+      const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
+      const width = tmpImg.width * ratio;
+      const height = tmpImg.height * ratio;
+      
+      // Posición alineada con subtotal (195 - width para alineación a la derecha)
+      const xPosition = 195 - width;
+      
+      // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
+      doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
+      console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
+    } catch (logoError) {
+      console.error("Error añadiendo logo al PDF:", logoError);
+    }
+  }
   
   // Add company logo and info (placeholder for real data)
   doc.setFontSize(20);
@@ -286,6 +327,45 @@ export async function generateInvoicePDFAsBase64(
   // Set some basic styles
   doc.setFont("helvetica");
   doc.setFontSize(10);
+  
+  // Check if the invoice has a logo
+  const logoPath = invoice.logo || null;
+  
+  // Cargar el logo si existe
+  if (logoPath) {
+    try {
+      console.log("Preparando logo para PDF email desde:", logoPath);
+      
+      // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
+      const logoDataUrl = await getImageAsDataUrl(logoPath);
+      
+      // Crear una imagen temporal para obtener las dimensiones reales y mantener proporciones
+      const tmpImg = new Image();
+      await new Promise<void>((resolve, reject) => {
+        tmpImg.onload = () => resolve();
+        tmpImg.onerror = () => reject(new Error('Error al cargar imagen para calcular proporciones'));
+        tmpImg.src = logoDataUrl;
+      });
+      
+      // Calcular dimensiones manteniendo proporciones (50% más pequeño)
+      const maxWidth = 25; // 50% más pequeño que el original de 50
+      const maxHeight = 12.5; // 50% más pequeño que el original de 25
+      
+      // Calcular el ratio de aspecto
+      const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
+      const width = tmpImg.width * ratio;
+      const height = tmpImg.height * ratio;
+      
+      // Posición alineada con subtotal (195 - width para alineación a la derecha)
+      const xPosition = 195 - width;
+      
+      // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
+      doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
+      console.log("Logo añadido correctamente al PDF email con dimensiones proporcionales:", width, height);
+    } catch (logoError) {
+      console.error("Error añadiendo logo al PDF email:", logoError);
+    }
+  }
   
   // Add company logo and info (placeholder for real data)
   doc.setFontSize(20);
