@@ -180,6 +180,69 @@ interface InvoiceFormProps {
   initialData?: any; // Datos iniciales para el formulario
 }
 
+// Componente personalizado para campos de entrada numérica que mantiene el foco
+const PriceInput = ({ 
+  initialValue = 0, 
+  onValueChange, 
+  placeholder = "0.00",
+  className = "border-neutral-200 text-center" 
+}: { 
+  initialValue?: number; 
+  onValueChange: (value: number) => void;
+  placeholder?: string;
+  className?: string;
+}) => {
+  const [inputValue, setInputValue] = useState<string>(initialValue.toString());
+  
+  // Cuando cambia el valor externo, actualizar la visualización
+  useEffect(() => {
+    setInputValue(initialValue.toString());
+  }, [initialValue]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue); // Actualizar la visualización inmediatamente
+    
+    // Intentar convertir a número y llamar al callback si es válido
+    try {
+      const cleanedValue = newValue.replace(/[^\d,.]/g, '').replace(',', '.');
+      if (cleanedValue) {
+        const numValue = parseFloat(cleanedValue);
+        if (!isNaN(numValue)) {
+          onValueChange(numValue);
+        }
+      }
+    } catch (error) {
+      // Ignorar errores de conversión
+    }
+  };
+  
+  const handleBlur = () => {
+    // Al perder foco, asegurarse de que el valor es válido
+    try {
+      const cleanedValue = inputValue.replace(/[^\d,.]/g, '').replace(',', '.');
+      const numValue = parseFloat(cleanedValue) || 0;
+      onValueChange(numValue);
+      setInputValue(numValue.toString());
+    } catch (error) {
+      setInputValue('0');
+      onValueChange(0);
+    }
+  };
+  
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={inputValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      placeholder={placeholder}
+      className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    />
+  );
+};
+
 const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -1199,39 +1262,14 @@ ${notesValue || ""}`;
                             )}
                           </td>
                           <td className="px-3 py-2">
-                            <Input
-                              defaultValue={form.getValues(`items.${index}.quantity`)}
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="1"
-                              className="border-neutral-200 text-center"
-                              onBlur={(e) => {
-                                // Convertir a número en el evento onBlur
-                                const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-                                const numValue = parseFloat(value) || 0;
+                            <PriceInput 
+                              initialValue={form.getValues(`items.${index}.quantity`)}
+                              onValueChange={(numValue) => {
                                 form.setValue(`items.${index}.quantity` as const, numValue);
                                 calculateInvoiceTotals(form);
                               }}
-                              onChange={(e) => {
-                                // Intentar convertir a número para el cálculo
-                                try {
-                                  const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-                                  if (value) {
-                                    const numValue = parseFloat(value);
-                                    if (!isNaN(numValue)) {
-                                      // Actualizar el valor interno sin interferir con el input
-                                      form.setValue(`items.${index}.quantity` as const, numValue, {
-                                        shouldDirty: true,
-                                        shouldTouch: false,
-                                        shouldValidate: false
-                                      });
-                                      setTimeout(() => calculateInvoiceTotals(form), 0);
-                                    }
-                                  }
-                                } catch (err) {
-                                  // Si hay algún error, no hacer nada
-                                }
-                              }}
+                              placeholder="1"
+                            
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
                               <p className="text-xs text-red-500 mt-1">
@@ -1240,39 +1278,13 @@ ${notesValue || ""}`;
                             )}
                           </td>
                           <td className="px-3 py-2">
-                            <Input
-                              defaultValue={form.getValues(`items.${index}.unitPrice`)}
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="0.00"
-                              className="border-neutral-200 text-center"
-                              onBlur={(e) => {
-                                // Convertir a número en el evento onBlur
-                                const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-                                const numValue = parseFloat(value) || 0;
+                            <PriceInput 
+                              initialValue={form.getValues(`items.${index}.unitPrice`)}
+                              onValueChange={(numValue) => {
                                 form.setValue(`items.${index}.unitPrice` as const, numValue);
                                 calculateInvoiceTotals(form);
                               }}
-                              onChange={(e) => {
-                                // Intentar convertir a número para el cálculo
-                                try {
-                                  const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-                                  if (value) {
-                                    const numValue = parseFloat(value);
-                                    if (!isNaN(numValue)) {
-                                      // Actualizar el valor interno sin interferir con el input
-                                      form.setValue(`items.${index}.unitPrice` as const, numValue, {
-                                        shouldDirty: true,
-                                        shouldTouch: false,
-                                        shouldValidate: false
-                                      });
-                                      setTimeout(() => calculateInvoiceTotals(form), 0);
-                                    }
-                                  }
-                                } catch (err) {
-                                  // Si hay algún error, no hacer nada
-                                }
-                              }}
+                              placeholder="0.00"
                             />
                             {form.formState.errors.items?.[index]?.unitPrice && (
                               <p className="text-xs text-red-500 mt-1">
@@ -1281,39 +1293,14 @@ ${notesValue || ""}`;
                             )}
                           </td>
                           <td className="px-3 py-2">
-                            <Input
-                              defaultValue={form.getValues(`items.${index}.taxRate`)}
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="21"
-                              className="border-neutral-200 text-center"
-                              onBlur={(e) => {
-                                // Convertir a número en el evento onBlur
-                                const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-                                const numValue = parseFloat(value) || 21;
-                                form.setValue(`items.${index}.taxRate` as const, numValue);
+                            <PriceInput 
+                              initialValue={form.getValues(`items.${index}.taxRate`)}
+                              onValueChange={(numValue) => {
+                                form.setValue(`items.${index}.taxRate` as const, numValue || 21);
                                 calculateInvoiceTotals(form);
                               }}
-                              onChange={(e) => {
-                                // Intentar convertir a número para el cálculo
-                                try {
-                                  const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-                                  if (value) {
-                                    const numValue = parseFloat(value);
-                                    if (!isNaN(numValue)) {
-                                      // Actualizar el valor interno sin interferir con el input
-                                      form.setValue(`items.${index}.taxRate` as const, numValue, {
-                                        shouldDirty: true,
-                                        shouldTouch: false,
-                                        shouldValidate: false
-                                      });
-                                      setTimeout(() => calculateInvoiceTotals(form), 0);
-                                    }
-                                  }
-                                } catch (err) {
-                                  // Si hay algún error, no hacer nada
-                                }
-                              }}
+                              placeholder="21"
+                            
                             />
                             {form.formState.errors.items?.[index]?.taxRate && (
                               <p className="text-xs text-red-500 mt-1">
