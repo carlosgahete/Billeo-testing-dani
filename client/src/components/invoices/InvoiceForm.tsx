@@ -1604,10 +1604,17 @@ ${notesValue || ""}`;
               <Label htmlFor="tax-amount">Valor</Label>
               <Input 
                 id="tax-amount" 
-                type="number" 
+                type="text" 
+                inputMode="decimal" 
                 value={newTaxData.amount} 
-                onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
-                placeholder="Introduce el valor"
+                onChange={(e) => {
+                  // Permitir números negativos y validar que sea un número
+                  const value = e.target.value;
+                  if (value === '' || value === '-' || /^-?\d*\.?\d*$/.test(value)) {
+                    setNewTaxData({...newTaxData, amount: value === '' ? 0 : parseFloat(value) || 0});
+                  }
+                }}
+                placeholder="Introduce el valor (ej: -15 para retenciones)"
               />
               <p className="text-xs text-muted-foreground">
                 Para descuentos, usa un valor negativo (ej: -10)
