@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -54,6 +54,34 @@ interface Category {
   type: "income" | "expense";
   color: string;
 }
+
+// Componente para mostrar vista previa de imagen si el gasto tiene una imagen asociada
+const ExpenseImagePreview = ({ notes }: { notes?: string }) => {
+  if (!notes) return null;
+  
+  // Buscar la URL de la imagen en las notas
+  const imageMatch = notes.match(/📄 Imagen:\s*([^\n]+)/);
+  if (!imageMatch || !imageMatch[1]) return null;
+  
+  const imageUrl = imageMatch[1].trim();
+  
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700">
+          <Image className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center">
+        <img 
+          src={imageUrl} 
+          alt="Documento del gasto" 
+          className="max-w-full max-h-[85vh] object-contain" 
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const PaymentMethodBadge = ({ method }: { method: string }) => {
   const methodMap: Record<string, { label: string; variant: "default" | "outline" | "secondary" }> = {
@@ -265,6 +293,11 @@ const TransactionList = () => {
         
         return (
           <div className="flex justify-end space-x-1">
+            {/* Botón para ver la imagen si es un gasto con imagen */}
+            {transaction.type === 'expense' && transaction.notes && (
+              <ExpenseImagePreview notes={transaction.notes} />
+            )}
+            
             <Button
               variant="ghost"
               size="icon"
