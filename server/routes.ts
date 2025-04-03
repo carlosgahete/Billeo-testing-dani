@@ -2152,13 +2152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to update this transaction" });
       }
       
-      // Asegurar que la descripción nunca sea nula
-      const transactionData = {
-        ...req.body,
-        description: req.body.description || "Sin descripción"
-      };
-      
-      const transactionResult = insertTransactionSchema.partial().safeParse(transactionData);
+      const transactionResult = insertTransactionSchema.partial().safeParse(req.body);
       
       if (!transactionResult.success) {
         return res.status(400).json({ 
@@ -2416,7 +2410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Asegurarnos de que todos los campos requeridos estén presentes
       const transactionToCreate = {
         userId: transactionData.userId,
-        description: transactionData.description || "Factura escaneada",
+        description: transactionData.description,
         amount: transactionData.amount,
         date: transactionData.date,
         type: transactionData.type,

@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { 
   Card, 
   CardContent, 
@@ -27,7 +22,6 @@ const DocumentScanPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [processedDocumentUrl, setProcessedDocumentUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
   const [editedData, setEditedData] = useState<any>(null);
@@ -78,73 +72,7 @@ const DocumentScanPage = () => {
       const data = await response.json();
       
       setExtractedData(data.extractedData);
-      
-      // Guardar la URL de la imagen procesada
-      let documentUrl = null;
-      if (file.type.startsWith("image/")) {
-        documentUrl = previewUrl;
-        setProcessedDocumentUrl(documentUrl);
-      } else if (data.documentUrl) {
-        documentUrl = data.documentUrl;
-        setProcessedDocumentUrl(documentUrl);
-      }
-      
-      // Actualizar la transacción con la URL de la imagen si está disponible
-      if (documentUrl && data.transaction && data.transaction.id) {
-        const notesWithImage = data.transaction.notes ? 
-          `${data.transaction.notes}\n📄 Imagen: ${documentUrl}` : 
-          `Datos extraídos del documento escaneado\n📄 Imagen: ${documentUrl}`;
-        
-        try {
-          // Verificar que tenemos todos los datos necesarios
-          // Verificar que data.transaction existe antes de intentar acceder a sus propiedades
-          if (data.transaction) {
-            if (!data.transaction.description) {
-              console.warn("La transacción no tiene descripción, usando una predeterminada");
-              data.transaction.description = "Factura escaneada";
-            }
-
-            // Actualizar la transacción para incluir la URL de la imagen
-            const updatedTransaction = {
-              ...data.transaction,
-              notes: notesWithImage
-            };
-            
-            const response = await fetch(`/api/transactions/${data.transaction.id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(updatedTransaction),
-              credentials: 'include'
-            });
-            
-            if (response.ok) {
-              const updatedData = await response.json();
-              setTransaction(updatedData);
-            } else {
-              setTransaction(data.transaction);
-            }
-          } else {
-            console.warn("No se recibió una transacción del servidor");
-            // Si no hay transacción, establecemos una vacía para evitar errores
-            setTransaction(null);
-          }
-        } catch (error) {
-          console.error("Error al actualizar la transacción con la imagen:", error);
-          if (data.transaction) {
-            setTransaction(data.transaction);
-          } else {
-            setTransaction(null);
-          }
-        }
-      } else {
-        if (data.transaction) {
-          setTransaction(data.transaction);
-        } else {
-          setTransaction(null);
-        }
-      }
+      setTransaction(data.transaction);
       
       // Invalidar las consultas para actualizar los datos en tiempo real
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
@@ -219,22 +147,13 @@ const DocumentScanPage = () => {
       const clientName = editedData.client || 'Proveedor';
       const updatedDescription = `Factura - ${clientName}`;
       
-      // Preservar la URL de la imagen si existe en las notas actuales
-      let updatedNotes = transaction.notes || `Datos fiscales actualizados manualmente:\nBase Imponible: ${editedData.subtotal} €\nIVA (${editedData.ivaRate}%): ${editedData.taxAmount} €\nIRPF (${editedData.irpfRate}%): ${editedData.irpfAmount} €\nTotal: ${editedData.amount} €`;
-      
-      // Extraer URL de imagen de las notas si existe
-      const imageMatch = transaction.notes?.match(/📄 Imagen:\s*([^\n]+)/);
-      if (imageMatch && imageMatch[1] && !updatedNotes.includes('📄 Imagen:')) {
-        updatedNotes += `\n📄 Imagen: ${imageMatch[1].trim()}`;
-      }
-      
       // Crear el objeto de actualización
       const updatedTransaction = {
         id: transaction.id,
         amount: parseFloat(editedData.amount),
         description: updatedDescription,
         additionalTaxes: JSON.stringify(taxes),
-        notes: updatedNotes
+        notes: transaction.notes || `Datos fiscales actualizados manualmente:\nBase Imponible: ${editedData.subtotal} €\nIVA (${editedData.ivaRate}%): ${editedData.taxAmount} €\nIRPF (${editedData.irpfRate}%): ${editedData.irpfAmount} €\nTotal: ${editedData.amount} €`
       };
       
       // Enviar la actualización al servidor
@@ -317,25 +236,14 @@ const DocumentScanPage = () => {
 
               {previewUrl && (
                 <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Vista previa: <span className="text-xs text-blue-600">(Haz clic para ampliar)</span></p>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="border rounded-md overflow-hidden w-full max-h-[300px] flex items-center justify-center cursor-pointer hover:border-blue-300 transition-colors">
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="max-w-full max-h-[300px] object-contain" 
-                        />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center">
-                      <img 
-                        src={previewUrl} 
-                        alt="Vista ampliada" 
-                        className="max-w-full max-h-[85vh] object-contain" 
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <p className="text-sm font-medium mb-2">Vista previa:</p>
+                  <div className="border rounded-md overflow-hidden w-full max-h-[300px] flex items-center justify-center">
+                    <img 
+                      src={previewUrl} 
+                      alt="Preview" 
+                      className="max-w-full max-h-[300px] object-contain" 
+                    />
+                  </div>
                 </div>
               )}
 
@@ -592,38 +500,6 @@ const DocumentScanPage = () => {
                   </div>
                 </div>
 
-                {processedDocumentUrl && (
-                  <>
-                    <Separator />
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-3">Documento procesado</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Imagen del documento analizado: <span className="text-xs text-blue-600">(Haz clic para ampliar)</span>
-                      </p>
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <div className="border rounded-md overflow-hidden w-full max-h-[250px] flex items-center justify-center cursor-pointer hover:border-blue-300 transition-colors">
-                            <img 
-                              src={processedDocumentUrl} 
-                              alt="Documento procesado" 
-                              className="max-w-full max-h-[250px] object-contain" 
-                            />
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center">
-                          <img 
-                            src={processedDocumentUrl} 
-                            alt="Vista ampliada del documento" 
-                            className="max-w-full max-h-[85vh] object-contain" 
-                          />
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </>
-                )}
-                
                 <Separator />
 
                 <div>

@@ -12,15 +12,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, Image, FileImage } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +25,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,34 +54,6 @@ interface Category {
   type: "income" | "expense";
   color: string;
 }
-
-// Componente para mostrar vista previa de imagen si el gasto tiene una imagen asociada
-const ExpenseImagePreview = ({ notes }: { notes?: string }) => {
-  if (!notes) return null;
-  
-  // Buscar la URL de la imagen en las notas
-  const imageMatch = notes.match(/📄 Imagen:\s*([^\n]+)/);
-  if (!imageMatch || !imageMatch[1]) return null;
-  
-  const imageUrl = imageMatch[1].trim();
-  
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700">
-          <Image className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center">
-        <img 
-          src={imageUrl} 
-          alt="Documento del gasto" 
-          className="max-w-full max-h-[85vh] object-contain" 
-        />
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 const PaymentMethodBadge = ({ method }: { method: string }) => {
   const methodMap: Record<string, { label: string; variant: "default" | "outline" | "secondary" }> = {
@@ -258,7 +230,7 @@ const TransactionList = () => {
         // Si no es un gasto o no tiene proveedor, mostrar la descripción normal
         return (
           <div className="max-w-[200px] truncate">
-            {description || "Sin descripción"}
+            {description}
           </div>
         );
       },
@@ -291,16 +263,8 @@ const TransactionList = () => {
       cell: ({ row }) => {
         const transaction = row.original;
         
-        // Asegurarnos de que transaction.description existe
-        const safeDescription = transaction.description || "Sin descripción";
-        
         return (
           <div className="flex justify-end space-x-1">
-            {/* Botón para ver la imagen si es un gasto con imagen */}
-            {transaction.type === 'expense' && transaction.notes && (
-              <ExpenseImagePreview notes={transaction.notes} />
-            )}
-            
             <Button
               variant="ghost"
               size="icon"
@@ -310,7 +274,7 @@ const TransactionList = () => {
             </Button>
             <DeleteTransactionDialog
               transactionId={transaction.id}
-              description={safeDescription}
+              description={transaction.description}
               onConfirm={() => {
                 // Already invalidating in the dialog component
               }}
