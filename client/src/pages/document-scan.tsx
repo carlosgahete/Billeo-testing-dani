@@ -203,16 +203,36 @@ const DocumentScanPage = () => {
                       <span className="text-muted-foreground">Descripción:</span>
                       <span>{extractedData.description}</span>
                     </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">Importe:</span>
-                      <span className="font-medium">{extractedData.amount.toFixed(2)} €</span>
-                    </div>
-                    {extractedData.taxAmount > 0 && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-muted-foreground">IVA (estimado):</span>
-                        <span>{extractedData.taxAmount.toFixed(2)} €</span>
+                    
+                    {/* Información fiscal destacada */}
+                    <div className="bg-blue-50 rounded-md p-3 my-3 border border-blue-200">
+                      <h4 className="font-medium text-blue-800 mb-2">Información Fiscal</h4>
+                      
+                      {/* Base Imponible */}
+                      <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
+                        <span className="font-medium text-blue-700">💰 Base Imponible:</span>
+                        <span className="font-medium">{extractedData.subtotal ? extractedData.subtotal.toFixed(2) : '0.00'} €</span>
                       </div>
-                    )}
+                      
+                      {/* IVA */}
+                      <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
+                        <span className="font-medium text-blue-700">➕ IVA ({extractedData.ivaRate || 21}%):</span>
+                        <span>{extractedData.taxAmount ? extractedData.taxAmount.toFixed(2) : '0.00'} €</span>
+                      </div>
+                      
+                      {/* IRPF */}
+                      <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
+                        <span className="font-medium text-blue-700">➖ IRPF ({extractedData.irpfRate || 15}%):</span>
+                        <span className="text-red-600">-{extractedData.irpfAmount ? extractedData.irpfAmount.toFixed(2) : '0.00'} €</span>
+                      </div>
+                      
+                      {/* Total */}
+                      <div className="flex justify-between font-bold">
+                        <span className="text-blue-800">💵 Total:</span>
+                        <span className="text-blue-800">{extractedData.amount.toFixed(2)} €</span>
+                      </div>
+                    </div>
+                    
                     {extractedData.vendor && (
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Proveedor:</span>
@@ -243,16 +263,44 @@ const DocumentScanPage = () => {
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="font-medium">Importe:</span>
-                      <span>{Number(transaction.amount).toFixed(2)} €</span>
+                      <span className="font-semibold">{Number(transaction.amount).toFixed(2)} €</span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="font-medium">Tipo:</span>
                       <span>Gasto</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between mb-2">
                       <span className="font-medium">Fecha:</span>
                       <span>{new Date(transaction.date).toLocaleDateString('es-ES')}</span>
                     </div>
+                    
+                    {/* Mostrar impuestos si están presentes en la transacción */}
+                    {transaction.additionalTaxes && (
+                      <>
+                        <div className="border-t border-neutral-200 my-2 pt-2">
+                          <h4 className="font-medium text-neutral-700 mb-2">Impuestos incluidos:</h4>
+                          {JSON.parse(transaction.additionalTaxes).map((tax: any, index: number) => (
+                            <div key={index} className="flex justify-between mb-1 pl-2">
+                              <span className="text-neutral-600">{tax.name} ({Math.abs(tax.amount)}%):</span>
+                              <span className={tax.amount < 0 ? "text-red-600" : "text-blue-600"}>
+                                {tax.amount < 0 ? "Retención" : "Aplicado"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Mostrar extracto de las notas si existen */}
+                    {transaction.notes && (
+                      <div className="border-t border-neutral-200 mt-2 pt-2">
+                        <h4 className="font-medium text-neutral-700 mb-1">Detalles fiscales:</h4>
+                        <div className="text-neutral-600 text-xs bg-neutral-100 p-2 rounded max-h-20 overflow-y-auto whitespace-pre-line">
+                          {transaction.notes.substring(0, 200)}
+                          {transaction.notes.length > 200 ? '...' : ''}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <Button 
