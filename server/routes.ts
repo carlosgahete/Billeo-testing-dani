@@ -2715,6 +2715,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("IRPF estimado total:", irpfTotalEstimated);
       console.log("IRPF a pagar:", incomeTax);
       
+      // Debug: Objeto completo para ver qué estructura está enviándose al frontend
+      const taxStats = {
+        ivaRepercutido,
+        ivaSoportado,
+        ivaLiquidar: vatBalance,
+        irpfRetenido: irpfRetenidoIngresos,
+        irpfTotal: irpfTotalEstimated,
+        irpfPagar: incomeTax
+      };
+      console.log("OBJETO COMPLETO TAXSTATS:", JSON.stringify(taxStats, null, 2));
+      
       // Calcular el total de facturas emitidas (todas)
       const issuedCount = allInvoices.length;
       
@@ -2813,6 +2824,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           vat: vatBalance,
           incomeTax,
           ivaALiquidar: ivaRepercutido - ivaSoportado
+        },
+        // Datos fiscales estructurados para el panel de impuestos
+        taxStats: {
+          ivaRepercutido,
+          ivaSoportado,
+          ivaLiquidar: vatBalance,
+          irpfRetenido: irpfRetenidoIngresos,
+          irpfTotal: irpfTotalEstimated,
+          irpfPagar: incomeTax
         },
         // Añadimos los contadores que faltaban
         issuedCount,
