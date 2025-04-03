@@ -67,46 +67,80 @@ const AnalyticsPage = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("financial");
   const [timeFrame, setTimeFrame] = useState("yearly");
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   
-  // Obtener datos del dashboard para los análisis
+  // Obtener datos del dashboard para los análisis con actualización en tiempo real
   const {
     data: dashboardStats,
     isLoading,
     error,
+    refetch: refetchDashboard,
   } = useQuery({
     queryKey: ["/api/stats/dashboard"],
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
   });
 
-  // Consultar facturas para análisis
+  // Consultar facturas para análisis con actualización en tiempo real
   const {
     data: invoices = [],
     isLoading: isLoadingInvoices,
+    refetch: refetchInvoices,
   } = useQuery({
     queryKey: ["/api/invoices"],
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
   });
 
-  // Consultar presupuestos para análisis
+  // Consultar presupuestos para análisis con actualización en tiempo real
   const {
     data: quotes = [],
     isLoading: isLoadingQuotes,
+    refetch: refetchQuotes, 
   } = useQuery({
     queryKey: ["/api/quotes"],
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
   });
 
-  // Consultar transacciones para análisis
+  // Consultar transacciones para análisis con actualización en tiempo real
   const {
     data: transactions = [],
     isLoading: isLoadingTransactions,
+    refetch: refetchTransactions,
   } = useQuery({
     queryKey: ["/api/transactions"],
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
   });
+  
+  // Efecto para forzar actualización manual de todos los datos al cambiar de pestaña
+  useEffect(() => {
+    const refreshAllData = () => {
+      refetchDashboard();
+      refetchInvoices();
+      refetchQuotes();
+      refetchTransactions();
+      setLastUpdate(new Date()); // Actualizar la marca de tiempo
+    };
+    
+    // Refrescar datos cuando cambie la pestaña activa
+    refreshAllData();
+    
+    // También configuramos un intervalo para refrescar los datos regularmente
+    const refreshInterval = setInterval(refreshAllData, 10000); // Cada 10 segundos
+    
+    return () => {
+      clearInterval(refreshInterval); // Limpiar intervalo al desmontar
+    };
+  }, [activeTab, timeFrame, refetchDashboard, refetchInvoices, refetchQuotes, refetchTransactions]);
 
   // Mostrar mensaje de error si hay algún problema
   useEffect(() => {
@@ -293,7 +327,13 @@ const AnalyticsPage = () => {
       {/* Cabecera con título y filtros */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-          <h1 className="text-2xl font-bold text-white mb-3 md:mb-0">Analítica Empresarial</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-white mb-3 md:mb-0">Analítica Empresarial</h1>
+            <div className="ml-3 px-2 py-1 bg-white/15 rounded-full flex items-center text-xs text-white">
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+              Actualización en tiempo real
+            </div>
+          </div>
           <div className="flex items-center space-x-2">
             <Select
               value={timeFrame}
@@ -724,6 +764,12 @@ const AnalyticsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Información de última actualización */}
+      <div className="text-xs text-gray-500 text-right mt-4 flex items-center justify-end">
+        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+        <span>Última actualización: {lastUpdate.toLocaleTimeString()}</span>
+      </div>
     </div>
   );
 };
