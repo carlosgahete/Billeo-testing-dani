@@ -1200,7 +1200,7 @@ ${notesValue || ""}`;
                           </td>
                           <td className="px-3 py-2">
                             <Input
-                              value={form.getValues(`items.${index}.quantity`)}
+                              defaultValue={form.getValues(`items.${index}.quantity`)}
                               type="text"
                               inputMode="decimal"
                               placeholder="1"
@@ -1213,17 +1213,18 @@ ${notesValue || ""}`;
                                 calculateInvoiceTotals(form);
                               }}
                               onChange={(e) => {
-                                // Almacenar el valor como es en una variable temporal
-                                const tempField = `temp_quantity_${index}`;
-                                (form as any).setValue(tempField, e.target.value);
-                                
                                 // Intentar convertir a número para el cálculo
                                 try {
                                   const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
                                   if (value) {
                                     const numValue = parseFloat(value);
                                     if (!isNaN(numValue)) {
-                                      form.setValue(`items.${index}.quantity` as const, numValue);
+                                      // Actualizar el valor interno sin interferir con el input
+                                      form.setValue(`items.${index}.quantity` as const, numValue, {
+                                        shouldDirty: true,
+                                        shouldTouch: false,
+                                        shouldValidate: false
+                                      });
                                       setTimeout(() => calculateInvoiceTotals(form), 0);
                                     }
                                   }
@@ -1240,7 +1241,7 @@ ${notesValue || ""}`;
                           </td>
                           <td className="px-3 py-2">
                             <Input
-                              value={form.getValues(`items.${index}.unitPrice`)}
+                              defaultValue={form.getValues(`items.${index}.unitPrice`)}
                               type="text"
                               inputMode="decimal"
                               placeholder="0.00"
@@ -1253,17 +1254,18 @@ ${notesValue || ""}`;
                                 calculateInvoiceTotals(form);
                               }}
                               onChange={(e) => {
-                                // Almacenar el valor como es en una variable temporal
-                                const tempField = `temp_unitPrice_${index}`;
-                                (form as any).setValue(tempField, e.target.value);
-                                
                                 // Intentar convertir a número para el cálculo
                                 try {
                                   const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
                                   if (value) {
                                     const numValue = parseFloat(value);
                                     if (!isNaN(numValue)) {
-                                      form.setValue(`items.${index}.unitPrice` as const, numValue);
+                                      // Actualizar el valor interno sin interferir con el input
+                                      form.setValue(`items.${index}.unitPrice` as const, numValue, {
+                                        shouldDirty: true,
+                                        shouldTouch: false,
+                                        shouldValidate: false
+                                      });
                                       setTimeout(() => calculateInvoiceTotals(form), 0);
                                     }
                                   }
@@ -1280,7 +1282,7 @@ ${notesValue || ""}`;
                           </td>
                           <td className="px-3 py-2">
                             <Input
-                              value={form.getValues(`items.${index}.taxRate`)}
+                              defaultValue={form.getValues(`items.${index}.taxRate`)}
                               type="text"
                               inputMode="decimal"
                               placeholder="21"
@@ -1293,17 +1295,18 @@ ${notesValue || ""}`;
                                 calculateInvoiceTotals(form);
                               }}
                               onChange={(e) => {
-                                // Almacenar el valor como es en una variable temporal
-                                const tempField = `temp_taxRate_${index}`;
-                                (form as any).setValue(tempField, e.target.value);
-                                
                                 // Intentar convertir a número para el cálculo
                                 try {
                                   const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
                                   if (value) {
                                     const numValue = parseFloat(value);
                                     if (!isNaN(numValue)) {
-                                      form.setValue(`items.${index}.taxRate` as const, numValue);
+                                      // Actualizar el valor interno sin interferir con el input
+                                      form.setValue(`items.${index}.taxRate` as const, numValue, {
+                                        shouldDirty: true,
+                                        shouldTouch: false,
+                                        shouldValidate: false
+                                      });
                                       setTimeout(() => calculateInvoiceTotals(form), 0);
                                     }
                                   }
