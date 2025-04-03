@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Image, Receipt, ArrowLeft } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -26,6 +26,8 @@ const DocumentScanPage = () => {
   const [extractedData, setExtractedData] = useState<any>(null);
   const [editedData, setEditedData] = useState<any>(null);
   const [transaction, setTransaction] = useState<any>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [isResultZoomed, setIsResultZoomed] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -236,14 +238,58 @@ const DocumentScanPage = () => {
 
               {previewUrl && (
                 <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Vista previa:</p>
-                  <div className="border rounded-md overflow-hidden w-full max-h-[300px] flex items-center justify-center">
-                    <img 
-                      src={previewUrl} 
-                      alt="Preview" 
-                      className="max-w-full max-h-[300px] object-contain" 
-                    />
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm font-medium">Vista previa:</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setIsZoomed(!isZoomed)}
+                      className="h-8 px-2"
+                    >
+                      {isZoomed ? (
+                        <>
+                          <ZoomOut className="h-4 w-4 mr-1" />
+                          Reducir
+                        </>
+                      ) : (
+                        <>
+                          <ZoomIn className="h-4 w-4 mr-1" />
+                          Ampliar
+                        </>
+                      )}
+                    </Button>
                   </div>
+                  
+                  {isZoomed ? (
+                    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                      <div className="relative w-full max-w-4xl mx-auto">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setIsZoomed(false)}
+                          className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <div className="bg-white p-2 rounded-md w-full overflow-auto">
+                          <img 
+                            src={previewUrl} 
+                            alt="Vista ampliada" 
+                            className="w-full h-auto object-contain max-h-[80vh]" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border rounded-md overflow-hidden w-full max-h-[300px] flex items-center justify-center">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview" 
+                        className="max-w-full max-h-[300px] object-contain cursor-pointer" 
+                        onClick={() => setIsZoomed(true)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -507,6 +553,64 @@ const DocumentScanPage = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Se ha creado automáticamente la siguiente transacción:
                   </p>
+                  
+                  {/* Mostrar la imagen de la factura procesada */}
+                  {previewUrl && (
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm font-medium">Documento procesado:</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setIsResultZoomed(!isResultZoomed)}
+                          className="h-8 px-2"
+                        >
+                          {isResultZoomed ? (
+                            <>
+                              <ZoomOut className="h-4 w-4 mr-1" />
+                              Reducir
+                            </>
+                          ) : (
+                            <>
+                              <ZoomIn className="h-4 w-4 mr-1" />
+                              Ampliar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {isResultZoomed ? (
+                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                          <div className="relative w-full max-w-4xl mx-auto">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => setIsResultZoomed(false)}
+                              className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <div className="bg-white p-2 rounded-md w-full overflow-auto">
+                              <img 
+                                src={previewUrl} 
+                                alt="Vista ampliada" 
+                                className="w-full h-auto object-contain max-h-[80vh]" 
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border rounded-md overflow-hidden w-full max-h-[200px] flex items-center justify-center mb-4">
+                          <img 
+                            src={previewUrl} 
+                            alt="Documento procesado" 
+                            className="max-w-full max-h-[200px] object-contain cursor-pointer" 
+                            onClick={() => setIsResultZoomed(true)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="bg-neutral-50 rounded-md p-3 text-sm">
                     <div className="flex justify-between mb-2">
