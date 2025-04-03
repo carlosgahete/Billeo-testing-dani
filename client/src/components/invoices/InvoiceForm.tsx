@@ -885,17 +885,30 @@ ${notesValue || ""}`;
   // Agregar impuesto desde diálogo
   const handleAddTaxFromDialog = () => {
     console.log("Añadiendo impuesto personalizado:", newTaxData);
-    // Asegurar que los valores negativos se manejan correctamente
-    const tax = {
-      ...newTaxData,
-      // Si el usuario escribió un signo menos, asegurarse de que se respeta
-      amount: typeof newTaxData.amount === 'string' && newTaxData.amount.includes('-') 
-        ? parseFloat(newTaxData.amount) 
-        : newTaxData.amount
-    };
-    appendTax(tax);
-    setShowTaxDialog(false);
-    setTimeout(() => calculateInvoiceTotals(form), 0);
+    
+    // Asegurar que los valores se convierten correctamente a número
+    const amount = typeof newTaxData.amount === 'string' 
+      ? parseFloat(newTaxData.amount) 
+      : Number(newTaxData.amount);
+    
+    // Solo agregar impuesto si el nombre no está vacío y el monto es un número válido
+    if (newTaxData.name && !isNaN(amount)) {
+      const tax = {
+        ...newTaxData,
+        amount: amount // Usar el valor numérico convertido
+      };
+      
+      appendTax(tax);
+      setShowTaxDialog(false);
+      setTimeout(() => calculateInvoiceTotals(form), 0);
+    } else {
+      // Mostrar error si el valor no es válido
+      toast({
+        title: "Valor no válido",
+        description: "Por favor introduce un valor numérico válido",
+        variant: "destructive",
+      });
+    }
   };
 
   // Manejar creación/edición de cliente
