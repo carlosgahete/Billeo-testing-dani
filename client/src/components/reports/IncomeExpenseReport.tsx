@@ -678,7 +678,7 @@ const IncomeExpenseReport = () => {
                     </span>
                   </h3>
                   <div 
-                    onClick={() => navigate("/invoices/new")}
+                    onClick={() => navigate("/invoices/create")}
                     className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md text-white px-2 py-1.5 flex items-center cursor-pointer"
                   >
                     <span className="font-semibold text-white text-sm">Nueva factura</span>
