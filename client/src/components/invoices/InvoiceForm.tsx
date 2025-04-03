@@ -1340,7 +1340,15 @@ ${notesValue || ""}`;
                             )}
                           </td>
                           <td className="px-3 py-2 text-center align-middle">
-                            {/* Celda de impuestos - Vacía a nivel de línea */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowTaxDialog(true)}
+                              className="h-6 px-2 text-xs bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                            >
+                              Añadir
+                            </Button>
                           </td>
                           <td className="px-3 py-2 text-right align-middle">
                             <div className="font-medium">
