@@ -572,14 +572,12 @@ const IncomeExpenseReport = () => {
               ) : (
                 <div className="text-3xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
               )}
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="mt-3 space-y-2 text-sm">
                 <div className="bg-green-50 p-2 rounded-md">
-                  <span className="text-green-600 font-medium">Facturas:</span>
-                  <div className="font-semibold">{formatCurrency(totalInvoiceIncome)}</div>
+                  <span className="text-green-600 font-medium">Facturas: {formatCurrency(totalInvoiceIncome)}</span>
                 </div>
                 <div className="bg-green-50 p-2 rounded-md">
-                  <span className="text-green-600 font-medium">Otros:</span>
-                  <div className="font-semibold">{formatCurrency(totalAdditionalIncome)}</div>
+                  <span className="text-green-600 font-medium">Otros: {formatCurrency(totalAdditionalIncome)}</span>
                 </div>
               </div>
             </CardContent>
@@ -601,10 +599,10 @@ const IncomeExpenseReport = () => {
               ) : (
                 <div className="text-3xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
               )}
-              <div className="flex items-center mt-3 bg-red-50 p-2 rounded-md">
-                <p className="text-sm text-red-600">
-                  <span className="font-medium">Registros:</span> {expenseTransactions.length} transacciones
-                </p>
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="bg-red-50 p-2 rounded-md">
+                  <span className="text-red-600 font-medium">Registros: {expenseTransactions.length} transacciones</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -627,7 +625,7 @@ const IncomeExpenseReport = () => {
                   {formatCurrency(totalIncome - totalExpenses)}
                 </div>
               )}
-              <div className="flex items-center mt-3 bg-blue-50 p-2 rounded-md">
+              <div className="mt-3 bg-blue-50 p-2 rounded-md">
                 <Badge className={`text-sm ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
                   {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
                 </Badge>
