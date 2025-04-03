@@ -939,28 +939,29 @@ ${taxDetails.join('\n')}
 
 Extraído automáticamente mediante reconocimiento de texto.`;
   
-  // Usar el cliente como título/descripción de la transacción si está disponible
-  // Si no, usar la descripción original
+  // Generar una descripción simple basada en el proveedor del documento
+  // Esta descripción puede ser reemplazada fácilmente por el usuario
   let description = '';
   
-  if (extractedData.client && extractedData.client.trim() !== '') {
-    // Si hay un cliente detectado, usarlo como título principal con formato "Factura - [Cliente]"
-    description = `Factura - ${extractedData.client}`;
-    console.log(`Usando el cliente detectado como título de la transacción: "${description}"`);
-  } else {
-    // Si no hay cliente, usar la descripción original
+  // Usar la descripción directamente si está disponible
+  if (extractedData.description && extractedData.description.trim() !== '') {
     description = extractedData.description;
-    console.log(`No se detectó cliente, usando descripción original: "${description}"`);
-    
-    // Si tenemos un vendedor, mejorar la descripción
-    if (extractedData.vendor && !description.includes(extractedData.vendor)) {
-      description = `Factura de ${extractedData.vendor}`;
+    console.log(`Usando descripción detectada: "${description}"`);
+  } 
+  // De lo contrario, combinar cliente y proveedor (si están disponibles)
+  else if (extractedData.client || extractedData.vendor) {
+    if (extractedData.vendor) {
+      description = extractedData.vendor;
+      console.log(`Usando proveedor como descripción: "${description}"`);
+    } else if (extractedData.client) {
+      description = extractedData.client;
+      console.log(`Usando cliente como descripción: "${description}"`);
     }
-  }
-  
-  // Si detectamos IRPF, la descripción debería incluir esta información
-  if (irpfAmount > 0 && !description.toLowerCase().includes('irpf')) {
-    description += ` (con retención IRPF ${irpfRate}%)`;
+  } 
+  // Si no hay información suficiente, usar una descripción genérica
+  else {
+    description = "Gasto";
+    console.log(`Sin datos suficientes, usando descripción predeterminada: "${description}"`);
   }
   
   // Aseguramos que todos los campos requeridos estén presentes
