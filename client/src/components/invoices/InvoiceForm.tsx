@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import LogoUpload from "@/components/common/LogoUpload";
 
 import {
   Form,
@@ -43,7 +44,7 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 
-import { Building, CalendarIcon, FileText, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { Building, CalendarIcon, FileText, Image, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -71,6 +72,7 @@ const invoiceSchema = z.object({
   subtotal: z.number().min(0),
   tax: z.number().min(0),
   total: z.number().min(0),
+  logo: z.string().optional().nullable(),
   additionalTaxes: z.array(
     z.object({
       name: z.string().min(1, { message: "El nombre del impuesto es obligatorio" }),
@@ -287,6 +289,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Archivos adjuntos
   const [attachments, setAttachments] = useState<string[]>([]);
   
+  // Logo de la factura
+  const [logo, setLogo] = useState<string | null>(null);
+  
   // Estado para almacenar los datos originales y poder hacerles debug
   const [debugOriginalData, setDebugOriginalData] = useState<any>(null);
   
@@ -396,6 +401,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     subtotal: 0,
     tax: 0,
     total: 0,
+    logo: null,
     additionalTaxes: [],
   };
 
@@ -648,6 +654,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           setAttachments([attachmentData]);
         }
       }
+        
+      // Actualizar el logo si existe
+      if (dataSource.invoice?.logo) {
+        setLogo(dataSource.invoice.logo);
+      }
       
       // Recalcular totales
       setTimeout(() => calculateInvoiceTotals(form), 100);
@@ -769,6 +780,7 @@ ${notesValue || ""}`;
         subtotal: data.subtotal.toString(),
         tax: data.tax.toString(),
         total: data.total.toString(),
+        logo: data.logo,
         additionalTaxes: data.additionalTaxes || [],
         status: data.status,
         notes: data.notes || null,
@@ -905,6 +917,15 @@ ${notesValue || ""}`;
     data.tax = tax;
     data.total = total;
     
+    // Incluir el logo en los datos del formulario
+    data.logo = logo;
+    
+    // Incluir los archivos adjuntos
+    if (attachments.length > 0) {
+      // @ts-ignore - ignorar error de tipado ya que sabemos que el esquema permite archivos
+      data.attachments = attachments;
+    }
+    
     // Eliminar impuestos duplicados si existen
     if (data.additionalTaxes && data.additionalTaxes.length > 0) {
       // Objeto para rastrear impuestos por nombre
@@ -924,7 +945,7 @@ ${notesValue || ""}`;
     }
     
     // Iniciar la mutación
-    console.log("🚀 Iniciando creación/actualización de factura...");
+    console.log("🚀 Iniciando creación/actualización de factura con logo:", data.logo);
     mutation.mutate(data);
   };
 
@@ -1325,20 +1346,74 @@ ${notesValue || ""}`;
                     )}
                   />
 
-                  <div>
-                    <Label>Archivos adjuntos</Label>
-                    <div className="mt-2">
-                      <div className="w-full border-dashed border-2 border-green-200 hover:border-green-400 p-4 flex flex-col items-center justify-center">
-                        <Upload className="h-8 w-8 text-green-500 mb-2" />
-                        <span className="text-sm font-medium">Adjuntar un archivo</span>
-                        <span className="text-xs text-muted-foreground mt-1 mb-2">
-                          Seleccione un archivo para subir
-                        </span>
-                        <FileUpload 
-                          onUpload={handleFileUpload} 
-                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Logo de factura</Label>
+                      <div className="mt-2">
+                        <FormField
+                          control={form.control}
+                          name="logo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <LogoUpload
+                                  initialLogo={field.value || null}
+                                  onUpload={(path) => {
+                                    field.onChange(path);
+                                    setLogo(path);
+                                  }}
+                                  onRemove={() => {
+                                    field.onChange(null);
+                                    setLogo(null);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                       </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Archivos adjuntos</Label>
+                        <div className="mt-2">
+                          <div className="w-full border-dashed border-2 border-green-200 hover:border-green-400 p-4 flex flex-col items-center justify-center">
+                            <Upload className="h-8 w-8 text-green-500 mb-2" />
+                            <span className="text-sm font-medium">Adjuntar un archivo</span>
+                            <span className="text-xs text-muted-foreground mt-1 mb-2">
+                              Seleccione un archivo para subir
+                            </span>
+                            <FileUpload 
+                              onUpload={handleFileUpload} 
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label>Logo de factura</Label>
+                        <div className="mt-2">
+                          <div className="w-full border-dashed border-2 border-blue-200 hover:border-blue-400 p-4 flex flex-col items-center justify-center">
+                            <div className="h-8 w-8 text-blue-500 mb-2 flex items-center justify-center">
+                              <FileText className="h-6 w-6" />
+                            </div>
+                            <span className="text-sm font-medium">Logo de factura</span>
+                            <span className="text-xs text-muted-foreground mt-1 mb-2">
+                              Logo para mostrar en la factura
+                            </span>
+                            <LogoUpload 
+                              initialLogo={logo}
+                              onUpload={(path) => setLogo(path)}
+                              onRemove={() => setLogo(null)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2">
 
                       {attachments.length > 0 && (
                         <div className="mt-3 space-y-2">
@@ -1367,7 +1442,6 @@ ${notesValue || ""}`;
                       )}
                     </div>
                   </div>
-                </div>
               </CardContent>
             </Card>
           </div>

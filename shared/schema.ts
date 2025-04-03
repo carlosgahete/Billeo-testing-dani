@@ -82,6 +82,7 @@ export const invoices = pgTable("invoices", {
   status: text("status").notNull().default("pending"), // pending, paid, overdue, canceled
   notes: text("notes"),
   attachments: text("attachments").array(),
+  logo: text("logo"), // Logo para la factura (opcional)
 });
 
 // Definición del tipo de impuesto adicional
