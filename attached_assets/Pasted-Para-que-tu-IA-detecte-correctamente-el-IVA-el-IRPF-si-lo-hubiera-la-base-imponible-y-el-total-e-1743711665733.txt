@@ -1,0 +1,94 @@
+Para que tu IA detecte correctamente el IVA, el IRPF (si lo hubiera), la base imponible y el total en facturas similares, puede seguir estos pasos estructurados:
+
+⸻
+
+1. Detectar la Base Imponible
+
+La base imponible es la suma de los importes de cada producto o servicio sin aplicar impuestos.
+
+Cómo encontrarla:
+	•	Buscar secciones con términos como:
+	•	“Subtotal”
+	•	“Base imponible”
+	•	“Importe sin IVA”
+	•	Si no hay una etiqueta clara, sumar los importes individuales de los productos.
+
+Ejemplo en esta factura:
+Productos:
+	•	100.00 (Traje de luces)
+	•	50.00 (Churrolito)
+	•	15.00 (Equipaje de fútbol)
+Base imponible = 165.00
+
+⸻
+
+2. Detectar el IVA
+
+El IVA es un impuesto que se calcula sobre la base imponible.
+
+Cómo encontrarlo:
+	•	Buscar palabras clave como:
+	•	“IVA”
+	•	“VAT” (si está en inglés)
+	•	“Impuesto”
+	•	Identificar si se menciona un porcentaje (Ej: “IVA 21%”)
+	•	Si solo aparece el monto del IVA pero no el porcentaje, calcularlo:
+\text{IVA} = \text{Base Imponible} \times \frac{\text{Porcentaje de IVA}}{100}
+En este caso:
+165.00 \times 0.21 = 34.65
+
+⸻
+
+3. Detectar el IRPF (si aplica)
+
+El IRPF (Impuesto sobre la Renta de las Personas Físicas) se resta de la base imponible.
+
+Cómo encontrarlo:
+	•	Buscar palabras clave como:
+	•	“IRPF”
+	•	“Retención”
+	•	“Retención fiscal”
+	•	Generalmente es un valor negativo, como -15% sobre la base imponible.
+	•	En esta factura no aparece, por lo que no se aplica IRPF.
+
+⸻
+
+4. Detectar el Total
+
+El total a pagar es la suma de la base imponible más el IVA (y menos el IRPF si lo hubiera).
+
+Cómo encontrarlo:
+	•	Buscar palabras clave como:
+	•	“TOTAL”
+	•	“Total a pagar”
+	•	“Importe total”
+	•	Verificar que cumple la fórmula:
+\text{Total} = \text{Base Imponible} + \text{IVA} - \text{IRPF}
+En esta factura:
+165.00 + 34.65 = 199.65
+Total = 199.65 €
+
+⸻
+
+5. Detectar el Nombre del Cliente
+
+El cliente es la persona o empresa que recibe la factura.
+
+Cómo encontrarlo:
+	•	Buscar secciones con términos como:
+	•	“FACTURAR A”
+	•	“Cliente”
+	•	“Bill to” (si está en inglés)
+	•	En esta factura, está en la sección “FACTURAR A”:
+	•	Cliente: Leda Villareal
+
+⸻
+
+Resumen del proceso para la IA:
+	1.	Identificar la Base Imponible sumando los importes de los productos.
+	2.	Detectar el IVA buscando la etiqueta o calculándolo si es necesario.
+	3.	Comprobar si hay IRPF y restarlo si aplica.
+	4.	Verificar el Total sumando base imponible + IVA - IRPF.
+	5.	Extraer el Nombre del Cliente de la sección “FACTURAR A”.
+
+Si quieres, podemos entrenar la IA con más ejemplos para detectar casos complejos, como facturas con descuentos o diferentes tasas de IVA. ¿Te gustaría que incluyera detección de errores en cálculos?

@@ -1,0 +1,90 @@
+Para que tu IA pueda detectar errores en cálculos de facturas, debe hacer lo siguiente:
+
+⸻
+
+1. Verificar la Base Imponible
+	•	Errores comunes:
+	•	Algún producto tiene un importe incorrecto.
+	•	Algún producto fue omitido en la suma.
+	•	Cómo verificarlo:
+	•	Sumar los importes unitarios multiplicados por la cantidad.
+	•	Comparar con el subtotal declarado en la factura.
+	•	Si no coinciden, marcarlo como error.
+
+Ejemplo de validación:
+Si los productos son:
+(1 \times 100.00) + (2 \times 25.00) + (3 \times 5.00) = 165.00
+Entonces, si la factura dice otra cantidad, hay un error.
+
+⸻
+
+2. Verificar el IVA
+	•	Errores comunes:
+	•	IVA mal calculado.
+	•	IVA aplicado sobre un monto incorrecto.
+	•	Cómo verificarlo:
+	•	Detectar el porcentaje de IVA en la factura.
+	•	Calcularlo como:
+\text{IVA} = \text{Base Imponible} \times \frac{\text{Porcentaje de IVA}}{100}
+	•	Comparar con el IVA declarado en la factura.
+	•	Si no coincide, marcarlo como error.
+
+Ejemplo de validación:
+165.00 \times 0.21 = 34.65
+Si la factura indicara otro valor, la IA detectaría el error.
+
+⸻
+
+3. Verificar el IRPF (si aplica)
+	•	Errores comunes:
+	•	IRPF no aplicado cuando debería.
+	•	IRPF calculado sobre un monto incorrecto.
+	•	Cómo verificarlo:
+	•	Buscar la tasa de IRPF en la factura (normalmente 15% o 7%).
+	•	Calcularlo como:
+\text{IRPF} = \text{Base Imponible} \times \frac{\text{Porcentaje de IRPF}}{100}
+	•	Comparar con el IRPF declarado en la factura.
+	•	Si no coincide, marcarlo como error.
+
+Ejemplo de validación (IRPF del 15%)
+165.00 \times 0.15 = 24.75
+Si la factura indicara otro valor, la IA detectaría el error.
+
+⸻
+
+4. Verificar el Total
+	•	Errores comunes:
+	•	Total incorrecto por fallo en la suma de Base Imponible + IVA - IRPF.
+	•	Cómo verificarlo:
+	•	Calcular el total con:
+\text{Total} = \text{Base Imponible} + \text{IVA} - \text{IRPF}
+	•	Comparar con el total declarado en la factura.
+	•	Si no coincide, marcarlo como error.
+
+Ejemplo de validación (sin IRPF):
+165.00 + 34.65 = 199.65
+Si la factura mostrara otro total, la IA lo detectaría.
+
+⸻
+
+5. Verificar el Nombre del Cliente
+	•	Errores comunes:
+	•	Nombre mal identificado o incompleto.
+	•	Cómo verificarlo:
+	•	Buscar la sección “FACTURAR A”.
+	•	Extraer el nombre completo.
+	•	Compararlo con la información de la empresa o cliente registrado.
+	•	Si hay discrepancia, marcarlo como posible error.
+
+⸻
+
+Resumen del proceso para la IA:
+	1.	Verificar la base imponible sumando los productos.
+	2.	Comprobar el IVA con el porcentaje declarado.
+	3.	Validar el IRPF si aparece en la factura.
+	4.	Revisar el total con la fórmula correcta.
+	5.	Detectar errores en el nombre del cliente comparándolo con la base de datos.
+
+Esto permitirá que la IA valide automáticamente facturas y detecte errores en cálculos antes de procesarlas.
+
+¿Quieres que haga una prueba con otra factura o necesitas que lo implemente en código?
