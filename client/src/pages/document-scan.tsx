@@ -151,9 +151,14 @@ const DocumentScanPage = () => {
       
       // Crear el objeto de actualización
       const updatedTransaction = {
-        id: transaction.id,
-        amount: parseFloat(editedData.amount),
+        // Asegurarnos de incluir todos los campos requeridos
+        userId: transaction.userId,
+        amount: editedData.amount.toString(), // Enviamos como string ya que el decimal en Postgres es tipo string
         description: updatedDescription,
+        date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date), 
+        type: transaction.type || 'expense',
+        // Campos opcionales
+        categoryId: transaction.categoryId,
         additionalTaxes: JSON.stringify(taxes),
         notes: transaction.notes || `Datos fiscales actualizados manualmente:\nBase Imponible: ${editedData.subtotal} €\nIVA (${editedData.ivaRate}%): ${editedData.taxAmount} €\nIRPF (${editedData.irpfRate}%): ${editedData.irpfAmount} €\nTotal: ${editedData.amount} €`
       };
