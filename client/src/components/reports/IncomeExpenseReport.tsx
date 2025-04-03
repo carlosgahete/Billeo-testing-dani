@@ -65,6 +65,7 @@ import FileUpload from "@/components/common/FileUpload";
 import { generateInvoicePDF } from "@/lib/pdf";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import DownloadTransactionButton from "@/components/transactions/DownloadTransactionButton";
 
 // Función para formatear moneda con protección contra valores no numéricos
 const formatCurrency = (amount: any) => {
@@ -1013,7 +1014,10 @@ const IncomeExpenseReport = () => {
                             {formatCurrency(transaction.amount)}
                           </div>
                         </div>
-                        <div className="opacity-80 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center opacity-80 group-hover:opacity-100 transition-opacity">
+                          <DownloadTransactionButton 
+                            transactionId={transaction.id}
+                          />
                           <DeleteTransactionButton 
                             transactionId={transaction.id}
                             description={transaction.description}
