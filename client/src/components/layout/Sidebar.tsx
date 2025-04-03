@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 import { 
   LayoutDashboard, 
   Receipt, 
+  Wallet, 
   BarChart3, 
   Building2, 
   Settings,
@@ -127,6 +128,11 @@ const Sidebar = ({
       href: "/invoices", 
       icon: <Receipt size={20} />, 
       label: "Facturas" 
+    },
+    { 
+      href: "/income-expense", 
+      icon: <Wallet size={20} />, 
+      label: "Ingresos y Gastos" 
     },
     { 
       href: "/quotes", 
