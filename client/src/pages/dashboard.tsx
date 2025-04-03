@@ -223,22 +223,29 @@ const Dashboard = () => {
     }
   });
   
+  // Cálculo de valores netos (con IRPF ya aplicado/restado)
+  const ingresoNeto = baseIncomeSinIVA - irpfRetencionIngresos; // Ingresos sin IVA y con IRPF ya restado
+  const gastoNeto = baseExpensesSinIVA - irpfGastos; // Gastos sin IVA y con IRPF ya aplicado
+  
   const financialData = {
     income: {
       total: totalBruto, // 10600€
       ivaRepercutido: ivaRepercutidoCorregido, // 2100€
-      totalWithoutVAT: baseIncomeSinIVA // 10000€
+      totalWithoutVAT: baseIncomeSinIVA, // 10000€ (sin IVA)
+      totalNeto: ingresoNeto // Valor neto descontando el IRPF
     },
     expenses: {
       total: totalPagado, // 1210€
       ivaSoportado: ivaSoportadoCorregido, // 210€
-      totalWithoutVAT: baseExpensesSinIVA // 1000€
+      totalWithoutVAT: baseExpensesSinIVA, // 1000€ (sin IVA)
+      totalNeto: gastoNeto // Valor neto considerando IRPF
     },
     balance: {
       total: baseIncomeSinIVA - baseExpensesSinIVA, // 9000€ (base imponible)
       ivaNeto: ivaRepercutidoCorregido - ivaSoportadoCorregido, // 1890€
       irpfAdelantado: irpfRetencionIngresos, // 1500€
-      netProfit: netProfit // 7650€
+      netProfit: netProfit, // 7650€
+      totalNeto: ingresoNeto - gastoNeto // Balance neto final
     },
     taxes: {
       vat: ivaALiquidarCorregido, // 1890€
@@ -353,13 +360,17 @@ const Dashboard = () => {
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(financialData.income.totalWithoutVAT)} €
+                }).format(financialData.income.totalNeto)} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA repercutido:</span>
-                  <span className="font-medium">{financialData.income.ivaRepercutido.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Base imponible (sin IVA):</span>
+                  <span className="font-medium">{financialData.income.totalWithoutVAT.toLocaleString('es-ES')} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">IRPF retenido:</span>
+                  <span className="font-medium text-red-600">-{irpfRetencionIngresos.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
@@ -417,17 +428,17 @@ const Dashboard = () => {
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(financialData.expenses.totalWithoutVAT)} €
+                }).format(financialData.expenses.totalNeto)} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IVA incluido en los gastos:</span>
-                  <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">Base imponible (sin IVA):</span>
+                  <span className="font-medium">{financialData.expenses.totalWithoutVAT.toLocaleString('es-ES')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF a liquidar por gastos:</span>
-                  <span className="font-medium text-red-600">-{Math.round(financialData.expenses.totalWithoutVAT * 0.15).toLocaleString('es-ES')} €</span>
+                  <span className="text-neutral-500">IRPF en gastos:</span>
+                  <span className="font-medium text-green-600">+{irpfGastos.toLocaleString('es-ES')} €</span>
                 </div>
               </div>
               
@@ -474,23 +485,23 @@ const Dashboard = () => {
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(financialData.income.totalWithoutVAT - financialData.expenses.totalWithoutVAT)} €
+                }).format(financialData.balance.totalNeto)} €
               </p>
               
               <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Base imponible (sin impuestos):</span>
+                  <span className="font-medium">{new Intl.NumberFormat('es-ES', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  }).format(financialData.income.totalWithoutVAT - financialData.expenses.totalWithoutVAT)} €</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA a liquidar:</span>
                   <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
                   }).format(ivaALiquidarCorregido)} €</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">IRPF adelantado:</span>
-                  <span className="font-medium text-green-600">{new Intl.NumberFormat('es-ES', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }).format(irpfRetencionIngresos)} €</span>
                 </div>
               </div>
               
