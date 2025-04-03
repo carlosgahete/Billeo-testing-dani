@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const transactionSchema = z.object({
+  title: z.string().optional(),
   description: z.string().min(1, "La descripción es obligatoria"),
   amount: z.coerce.number().min(0.01, "El importe debe ser mayor que cero"),
   date: z.date(),
@@ -63,6 +64,7 @@ interface Category {
 
 interface Transaction {
   id: number;
+  title?: string;
   description: string;
   amount: number | string;
   date: string;
@@ -109,6 +111,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
 
   // Define default values for the form
   const defaultValues = {
+    title: "",
     description: "",
     amount: 0,
     date: new Date(),
@@ -158,8 +161,12 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
       // Aseguramos que la fecha sea válida antes de actualizar el formulario
       console.log("Final date to use:", transactionDate);
       
+      // Si no hay un título en los datos, usar la descripción como título
+      const title = transactionData.title || transactionData.description;
+      
       form.reset({
         ...transactionData,
+        title: title, // Usar título existente o la descripción como título
         date: transactionDate,
         amount: typeof transactionData.amount === 'string' 
           ? parseFloat(transactionData.amount) 
@@ -550,6 +557,20 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
               </div>
             )}
             
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título del gasto</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Título que aparecerá en la lista de gastos" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="description"

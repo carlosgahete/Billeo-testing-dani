@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface Transaction {
   id: number;
+  title?: string;
   description: string;
   amount: number;
   date: string;
@@ -108,7 +109,17 @@ const TransactionItem = ({
         </div>
         <div>
           {/* Detectar proveedor en gastos escaneados */}
-          {transaction.type === 'expense' && transaction.notes && transaction.notes.includes('🏢 Proveedor:') ? (
+          {/* Si hay un título definido, mostrarlo como título principal */}
+          {transaction.title ? (
+            <>
+              <p className="text-sm font-medium truncate max-w-[180px]">
+                {transaction.title}
+              </p>
+              <p className="text-xs text-gray-600 truncate max-w-[180px]">
+                {transaction.description}
+              </p>
+            </>
+          ) : transaction.type === 'expense' && transaction.notes && transaction.notes.includes('🏢 Proveedor:') ? (
             <>
               {/* Extraer el proveedor de las notas */}
               {(() => {

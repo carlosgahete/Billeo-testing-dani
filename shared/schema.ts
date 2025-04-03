@@ -144,6 +144,7 @@ export type Category = typeof categories.$inferSelect;
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  title: text("title"), // Título opcional para mostrar en la lista
   description: text("description").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   date: timestamp("date").notNull(),
