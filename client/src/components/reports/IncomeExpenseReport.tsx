@@ -252,13 +252,15 @@ const IncomeExpenseReport = () => {
   
   const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
 
-  // Consulta de invoices (ingresos)
+  // Consulta de invoices (ingresos) con refetchOnMount para asegurar datos actualizados
   const {
     data: invoices = [],
     isLoading: isLoadingInvoices,
     error: invoicesError,
   } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
+    refetchOnMount: true, // Forzar recarga al montar el componente
+    refetchOnWindowFocus: true, // Recargar cuando la ventana obtiene el foco
   });
 
   // Consulta de clientes para mostrar nombres
@@ -276,6 +278,8 @@ const IncomeExpenseReport = () => {
     error: transactionsError,
   } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
+    refetchOnMount: true, // Forzar recarga al montar el componente
+    refetchOnWindowFocus: true, // Recargar cuando la ventana obtiene el foco
   });
 
   // Consulta de categorías para mostrar nombres

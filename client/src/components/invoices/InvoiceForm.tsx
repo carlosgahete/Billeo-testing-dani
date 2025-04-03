@@ -867,6 +867,9 @@ ${notesValue || ""}`;
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
       
+      // Invalidar todas las consultas para garantizar que se actualice la vista en Ingresos y Gastos
+      queryClient.invalidateQueries();
+      
       // Mostrar toast de éxito
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
