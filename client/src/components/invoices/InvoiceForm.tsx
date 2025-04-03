@@ -1418,37 +1418,8 @@ ${notesValue || ""}`;
 
                 <div className="mt-6 space-y-4">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-700 mb-2">Impuestos adicionales</h4>
-                      <div className="flex flex-wrap gap-2">
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleAddTax('irpf')}
-                          className="h-8 text-xs bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
-                        >
-                          + IRPF (-15%)
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleAddTax('iva')}
-                          className="h-8 text-xs bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
-                        >
-                          + IVA (21%)
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleAddTax()}
-                          className="h-8 text-xs"
-                        >
-                          + Personalizado
-                        </Button>
-                      </div>
+                    <div className="hidden">
+                      {/* Sección de botones de impuestos eliminada */}
                     </div>
                     <div className="sm:text-right">
                       <div className="space-y-1">
