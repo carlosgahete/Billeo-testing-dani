@@ -6,6 +6,29 @@ import * as pdfjs from 'pdfjs-dist';
 import pdfParse from './pdf-parser';
 import { InsertTransaction } from '@shared/schema';
 
+/**
+ * Función para simplificar el nombre del cliente
+ * Extrae solo la parte principal de un nombre evitando información adicional
+ */
+function simplifyClientName(text: string): string {
+  // 1. Quitar caracteres especiales y conservar solo letras, números y espacios
+  const cleanText = text.replace(/[^\w\sÀ-ÖØ-öø-ÿ]/g, ' ');
+  
+  // 2. Dividir en palabras y tomar las primeras (máximo 3)
+  const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+  let simpleName = words.slice(0, Math.min(3, words.length)).join(' ');
+  
+  // 3. Eliminar artículos y partículas comunes si están al principio
+  simpleName = simpleName.replace(/^(el|la|los|las|un|una|unos|unas|de|del|y)\s+/i, '');
+  
+  // 4. Convertir a mayúsculas la primera letra de cada palabra
+  simpleName = simpleName.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+  
+  return simpleName;
+}
+
 // Configuración del cliente de Vision API
 // Inicializar como undefined para inicialización diferida
 let visionClient: ImageAnnotatorClient | undefined;
@@ -502,7 +525,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   // Buscar cliente (quien recibe la factura)
   console.log("=== BUSCANDO CLIENTE DE LA FACTURA ===");
   let client = '';
-  
+
   // 1. Buscar por títulos explícitos para el cliente
   const clientTitlePatterns = [
     /cliente\s*:?\s*([^\n:]{3,50})/i,
@@ -515,8 +538,11 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   for (const pattern of clientTitlePatterns) {
     const match = normalizedText.match(pattern);
     if (match && match[1]) {
-      client = match[1].trim();
-      console.log(`Cliente encontrado por título explícito: "${client}"`);
+      // Extraer solo el nombre principal del cliente (primeras palabras hasta coma, punto o número)
+      const fullClientText = match[1].trim();
+      client = simplifyClientName(fullClientText);
+      
+      console.log(`Cliente encontrado por título explícito: "${client}" (original: "${fullClientText}")`);
       break;
     }
   }
@@ -541,8 +567,13 @@ function extractExpenseInfo(text: string): ExtractedExpense {
               !/calle|avda|plaza|c\/|av\.|cp|codigo postal|telefono|email|cif|nif|c\.i\.f|n\.i\.f/i.test(line) &&
               !/^\d+/.test(line) && 
               !/\d{5}/.test(line)) {
-            client = line.trim();
-            console.log(`Cliente encontrado en sección de datos de cliente: "${client}"`);
+            
+            // Extraer solo el nombre principal del cliente
+            const fullClientText = line.trim();
+            // Usar la misma función de simplificación
+            client = simplifyClientName(fullClientText);
+            
+            console.log(`Cliente encontrado en sección de datos de cliente: "${client}" (original: "${fullClientText}")`);
             break;
           }
         }
@@ -584,19 +615,10 @@ function extractExpenseInfo(text: string): ExtractedExpense {
               !/^(cif|nif|c\.i\.f|n\.i\.f)/.test(line.toLowerCase()) &&
               line.trim() !== vendor) {
             
-            // Comprobar si es un nombre de empresa
-            const companyPattern = /(.+?)\s*,?\s*(sl|sa|scp|cb|srl|sas|slne|sl unipersonal)/i;
-            const companyMatch = line.match(companyPattern);
-            
-            if (companyMatch) {
-              client = companyMatch[0].trim();
-              console.log(`Nombre de cliente con formato legal encontrado cerca del segundo CIF: "${client}"`);
-              break;
-            } else {
-              client = line.trim();
-              console.log(`Posible nombre de cliente encontrado cerca del segundo CIF: "${client}"`);
-              break;
-            }
+            // Usar la función simplifyClientName para extraer el nombre principal
+            client = simplifyClientName(line.trim());
+            console.log(`Nombre de cliente encontrado cerca del segundo CIF: "${client}" (original: "${line.trim()}")`);
+            break;
           }
         }
       }
