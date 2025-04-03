@@ -182,10 +182,9 @@ const MarkAsPaidButton = ({
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
       
-      // Método más radical: recargar la página completamente
-      // Esto garantiza que todos los datos se vuelvan a cargar frescos desde el servidor
+      // Usar un enfoque más seguro, dirigiendo directamente a la página de facturas
       setTimeout(() => {
-        window.location.href = '/dashboard?refresh=' + Date.now();
+        window.location.href = '/invoices';
       }, 500);
     } catch (error: any) {
       toast({
@@ -247,9 +246,9 @@ const DeleteInvoiceDialog = ({
       // Cerrar el diálogo
       onConfirm();
       
-      // Recargar para asegurar actualización completa
+      // Redireccionar a la página de facturas
       setTimeout(() => {
-        window.location.href = '/dashboard?refresh=' + Date.now();
+        window.location.href = '/invoices';
       }, 500);
     } catch (error: any) {
       toast({
@@ -405,9 +404,9 @@ const InvoiceList = () => {
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
       });
       
-      // Usar el mismo método de actualización radical para ambas versiones (móvil y desktop)
+      // Redireccionar a la página de facturas
       setTimeout(() => {
-        window.location.href = '/dashboard?refresh=' + Date.now();
+        window.location.href = '/invoices';
       }, 500);
     } catch (error: any) {
       toast({
@@ -562,9 +561,9 @@ const InvoiceList = () => {
                             description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
                           });
                           
-                          // Recargar completamente para garantizar actualización
+                          // Redireccionar a la página de facturas
                           setTimeout(() => {
-                            window.location.href = '/dashboard?refresh=' + Date.now();
+                            window.location.href = '/invoices';
                           }, 500);
                         });
                       }

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useLocation, useRoute, useNavigate } from "wouter";
+import { useParams, useLocation, useRoute } from "wouter";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
