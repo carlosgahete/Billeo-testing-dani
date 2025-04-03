@@ -290,7 +290,9 @@ const IncomeExpenseReport = () => {
     queryKey: ["/api/categories"],
   });
 
-  // Filtrar solo facturas pagadas (ingresos)
+  // Usar todas las facturas para mostrar en la vista
+  const allInvoices = invoices;
+  // Filtrar solo facturas pagadas para cálculo de ingresos
   const paidInvoices = invoices.filter(invoice => invoice.status === "paid");
 
   // Filtrar transacciones por tipo
@@ -356,7 +358,7 @@ const IncomeExpenseReport = () => {
   };
 
   // Ordenar facturas y transacciones por fecha (más reciente primero)
-  const sortedInvoices = [...paidInvoices].sort((a, b) => 
+  const sortedInvoices = [...allInvoices].sort((a, b) => 
     new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
   );
 
@@ -678,7 +680,7 @@ const IncomeExpenseReport = () => {
                     <FilePlus className="mr-2 h-5 w-5" />
                     Facturas emitidas
                     <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-1">
-                      {paidInvoices.length} facturas
+                      {allInvoices.length} facturas
                     </span>
                   </h3>
                   <div 
