@@ -125,6 +125,10 @@ export async function processReceiptPDF(pdfPath: string): Promise<ExtractedExpen
 /**
  * Extrae información de gastos del texto usando heurísticas mejoradas
  */
+/**
+ * Extrae información detallada de facturas de gastos de un texto usando análisis OCR
+ * Mejorado para detectar correctamente la Base Imponible, IVA e IRPF según los requisitos
+ */
 function extractExpenseInfo(text: string): ExtractedExpense {
   // Normalizar texto: convertir a minúsculas y eliminar acentos
   const normalizedText = text.toLowerCase()
@@ -161,6 +165,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   
   // Buscar importe total (mejorado para detectar cantidades grandes)
   const amountPatterns = [
+    /total\s*a\s*pagar\s*:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /total\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /total:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /importe:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
@@ -188,9 +193,10 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
-  // Buscar base imponible/subtotal
+  // Buscar base imponible/subtotal - Mejorado según requisitos
   const subtotalPatterns = [
-    /base\s*imponible:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /base\s*imponible\s*:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /base\s*:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /subtotal:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /importe\s*neto:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /importe\s*sin\s*iva:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i
@@ -257,12 +263,14 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
-  // Buscar IRPF
+  // Buscar IRPF - Mejorado para facturas de gastos según requisitos
+  // En facturas de gastos, el IRPF es una deducción (valor negativo)
   const irpfPatterns = [
-    /irpf\s+(\d+)%:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
-    /retencion(?:\s+(\d+)%)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
-    /retención(?:\s+(\d+)%)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
-    /ret\.?(?:\s+(\d+)%)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i
+    /irpf\s+\(?-?(\d+)%\)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /irpf(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /retencion(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /retención(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    /ret\.?(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i
   ];
   
   let irpfAmount = 0;
@@ -289,13 +297,33 @@ function extractExpenseInfo(text: string): ExtractedExpense {
           irpfStr = irpfStr.replace(',', '.');
         }
         irpfAmount = parseFloat(irpfStr);
+        // En facturas de gastos, el IRPF debe ser positivo para cálculos internos
+        if (irpfAmount < 0) {
+          irpfAmount = Math.abs(irpfAmount);
+        }
         console.log(`IRPF detectado: ${irpfAmount}€`);
         break;
       }
     }
   }
   
+  // Verificar si el documento contiene patrones que indiquen que es una factura con IRPF
+  const hasIrpfIndicators = /irpf|retencion|retención|profesional|autónomo|autonomo/i.test(normalizedText);
+  
   // Inferencias si no se encontraron valores explícitos
+  
+  // Si tenemos subtotal pero no IVA, calcularlo
+  if (subtotal > 0 && taxAmount === 0) {
+    // Calcular IVA basado en la tasa estándar
+    taxAmount = subtotal * (ivaRate / 100);
+    console.log(`IVA calculado: ${taxAmount.toFixed(2)}€ (${ivaRate}% de ${subtotal}€)`);
+  }
+  
+  // Si tenemos subtotal, posibles indicadores de IRPF, pero no monto de IRPF, calcularlo
+  if (subtotal > 0 && hasIrpfIndicators && irpfAmount === 0) {
+    irpfAmount = subtotal * (irpfRate / 100);
+    console.log(`IRPF calculado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal}€)`);
+  }
   
   // Si tenemos subtotal pero no importe total, calcular el total
   if (subtotal > 0 && amount === 0) {
@@ -312,17 +340,29 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       console.log(`Subtotal calculado: ${subtotal}€`);
     } else {
       // Estimar el subtotal basado en el IVA estándar
+      // Fórmula: Base imponible = Total / (1 + (IVA% / 100))
       subtotal = amount / (1 + (ivaRate / 100));
       taxAmount = amount - subtotal;
       console.log(`Subtotal estimado: ${subtotal.toFixed(2)}€ (asumiendo IVA ${ivaRate}%)`);
       console.log(`IVA estimado: ${taxAmount.toFixed(2)}€`);
+      
+      // Si hay indicadores de IRPF, estimar también el IRPF
+      if (hasIrpfIndicators) {
+        irpfAmount = subtotal * (irpfRate / 100);
+        console.log(`IRPF estimado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal.toFixed(2)}€)`);
+      }
     }
   }
   
-  // Si tenemos subtotal e IVA, pero no el importe total
-  if (subtotal > 0 && taxAmount > 0 && amount === 0) {
-    amount = subtotal + taxAmount - irpfAmount;
-    console.log(`Importe total calculado: ${amount}€`);
+  // Verificación de coherencia: Total debe ser Base + IVA - IRPF
+  const calculatedTotal = parseFloat((subtotal + taxAmount - irpfAmount).toFixed(2));
+  if (Math.abs(amount - calculatedTotal) > 0.1) {
+    console.log(`⚠️ Advertencia: El total (${amount}€) no coincide con Base + IVA - IRPF (${calculatedTotal}€)`);
+    // Ajustar el total si la diferencia es significativa
+    if (Math.abs(amount - calculatedTotal) > 1) {
+      console.log(`⚠️ Ajustando total para mantener coherencia fiscal`);
+      amount = calculatedTotal;
+    }
   }
   
   // Buscar empresa/vendedor con mayor precisión
@@ -565,53 +605,76 @@ function guessCategory(description: string): string {
 /**
  * Convierte los datos extraídos a un objeto de transacción
  */
-export function mapToTransaction(
+export /**
+ * Mapea la información extraída de un documento a una transacción
+ * Formatea correctamente la información fiscal para que se muestre de forma clara
+ */
+function mapToTransaction(
   extractedData: ExtractedExpense, 
   userId: number, 
   categoryId: number | null
 ): InsertTransaction {
-  // Construir notas detalladas con la información fiscal
-  let taxDetails = [];
-  
+  // Obtener valores fiscales
   const subtotal = extractedData.subtotal || 0;
   const taxAmount = extractedData.taxAmount || 0;
   const irpfAmount = extractedData.irpfAmount || 0;
   const ivaRate = extractedData.ivaRate || 21;
   const irpfRate = extractedData.irpfRate || 15;
   
-  // Crear impuestos adicionales si hay IRPF detectado
-  let additionalTaxes = null;
-  if (irpfAmount > 0) {
-    // Crear un array con los impuestos adicionales
-    additionalTaxes = JSON.stringify([
-      {
-        name: 'IRPF',
-        amount: -irpfRate, // Negativo porque es una retención
-        isPercentage: true
-      }
-    ]);
-  }
+  // Construir detalles fiscales mejorados según los requisitos
+  const taxDetails = [];
   
   if (subtotal > 0) {
-    taxDetails.push(`Base imponible: ${subtotal.toFixed(2)}€`);
+    taxDetails.push(`💰 Base Imponible: ${subtotal.toFixed(2)}€`);
   }
   
   if (taxAmount > 0) {
-    taxDetails.push(`IVA (${ivaRate}%): ${taxAmount.toFixed(2)}€`);
+    taxDetails.push(`➕ IVA (${ivaRate}%): +${taxAmount.toFixed(2)}€`);
   }
   
   if (irpfAmount > 0) {
-    taxDetails.push(`IRPF (${irpfRate}%): -${irpfAmount.toFixed(2)}€`);
+    // En facturas de gastos, el IRPF es una retención que REDUCE el importe a pagar
+    taxDetails.push(`➖ IRPF (${irpfRate}%): -${irpfAmount.toFixed(2)}€`);
   }
   
-  const notesText = `Extraído automáticamente de una imagen/PDF. 
-Vendedor: ${extractedData.vendor || 'No detectado'}. 
-${taxDetails.join('. ')}`;
+  // Añadir el total a pagar como último detalle
+  const total = subtotal + taxAmount - irpfAmount;
+  taxDetails.push(`💵 Total a pagar: ${total.toFixed(2)}€`);
+  
+  // Crear impuestos adicionales para almacenar en la base de datos
+  let additionalTaxes = [];
+  
+  // Siempre añadir el IVA como un impuesto adicional
+  if (ivaRate > 0) {
+    additionalTaxes.push({
+      name: 'IVA',
+      amount: ivaRate, // Positivo para IVA
+      isPercentage: true
+    });
+  }
+  
+  // Añadir IRPF si está presente
+  if (irpfRate > 0) {
+    additionalTaxes.push({
+      name: 'IRPF',
+      amount: -irpfRate, // Negativo porque es una retención
+      isPercentage: true
+    });
+  }
+  
+  // Construir notas detalladas con la información fiscal
+  const notesText = `📌 Factura de Gasto
+📅 Fecha: ${new Date(extractedData.date).toLocaleDateString('es-ES')}
+🏢 Proveedor: ${extractedData.vendor || 'No detectado'}
+
+${taxDetails.join('\n')}
+
+Extraído automáticamente mediante reconocimiento de texto.`;
   
   // Si detectamos IRPF, la descripción debería incluir esta información
   let description = extractedData.description;
-  if (irpfAmount > 0 && !description.includes('IRPF')) {
-    description += ` (con IRPF ${irpfRate}%)`;
+  if (irpfAmount > 0 && !description.toLowerCase().includes('irpf')) {
+    description += ` (con retención IRPF ${irpfRate}%)`;
   }
   
   // Aseguramos que todos los campos requeridos estén presentes
@@ -624,6 +687,6 @@ ${taxDetails.join('. ')}`;
     categoryId,
     paymentMethod: 'other',
     notes: notesText,
-    additionalTaxes: additionalTaxes
+    additionalTaxes: additionalTaxes.length > 0 ? JSON.stringify(additionalTaxes) : null
   };
 }
