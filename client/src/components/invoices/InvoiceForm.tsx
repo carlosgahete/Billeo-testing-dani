@@ -192,70 +192,79 @@ const PriceInput = ({
   placeholder?: string;
   className?: string;
 }) => {
-  // Referencia para mantener el valor interno sin necesidad de re-renderizar
+  // Usamos una referencia para evitar re-renders completos
   const inputRef = React.useRef<HTMLInputElement>(null);
   
-  // Usamos una ref para almacenar el valor interno
-  const valueRef = React.useRef<number>(initialValue);
-  
-  // Cuando cambia el valor externo, actualizar la visualización sin cambiar el foco
+  // Asegurar que tenemos el valor inicial correcto
   useEffect(() => {
-    valueRef.current = initialValue;
-    // Solo actualizamos el valor visible si el input no tiene foco
-    if (inputRef.current && document.activeElement !== inputRef.current) {
+    if (inputRef.current && !inputRef.current.value) {
       inputRef.current.value = initialValue.toString();
     }
+  }, []);
+  
+  // Este useEffect solo actualiza el valor visible cuando cambia el initialValue
+  // y SOLO si el input no tiene el foco actualmente
+  useEffect(() => {
+    if (!inputRef.current || document.activeElement === inputRef.current) {
+      return;
+    }
+    
+    inputRef.current.value = initialValue.toString();
   }, [initialValue]);
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    
-    // Intentar convertir a número y llamar al callback si es válido
-    try {
-      const cleanedValue = newValue.replace(/[^\d,.]/g, '').replace(',', '.');
-      if (cleanedValue) {
-        const numValue = parseFloat(cleanedValue);
-        if (!isNaN(numValue)) {
-          // Almacenamos el valor en la ref pero no actualizamos el estado
-          valueRef.current = numValue;
-          // Usamos setTimeout para evitar que el efecto ocurra durante la entrada
-          setTimeout(() => onValueChange(numValue), 0);
-        }
-      }
-    } catch (error) {
-      // Ignorar errores de conversión
-    }
-  };
+  // Timer para procesar los cambios con un pequeño retraso
+  const timerRef = React.useRef<any>(null);
   
-  const handleBlur = () => {
-    // Al perder foco, asegurarse de que el valor es válido
+  // Función para procesar un valor y enviarlo al padre
+  const processValue = React.useCallback((value: string) => {
+    if (!value) return;
+    
     try {
-      if (!inputRef.current) return;
+      // Limpiar el valor: remover caracteres no numéricos y convertir comas a puntos
+      const cleanedValue = value.replace(/[^\d,.]/g, '').replace(',', '.');
+      const numValue = parseFloat(cleanedValue);
       
-      const cleanedValue = inputRef.current.value.replace(/[^\d,.]/g, '').replace(',', '.');
-      const numValue = parseFloat(cleanedValue) || 0;
-      
-      // Actualizar el valor y la visualización
-      valueRef.current = numValue;
-      inputRef.current.value = numValue.toString();
-      onValueChange(numValue);
-    } catch (error) {
-      if (inputRef.current) {
-        inputRef.current.value = '0';
+      if (!isNaN(numValue)) {
+        onValueChange(numValue);
       }
-      valueRef.current = 0;
-      onValueChange(0);
+    } catch (error) {
+      console.log("Error al procesar valor numérico:", error);
     }
-  };
+  }, [onValueChange]);
   
   return (
     <input
       ref={inputRef}
       type="text"
       inputMode="decimal"
-      defaultValue={initialValue}
-      onChange={handleChange}
-      onBlur={handleBlur}
+      defaultValue={initialValue || ""}
+      onChange={(e) => {
+        // Cancelar cualquier timer pendiente
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+        
+        // Configurar un nuevo timer para procesar el valor después de que el usuario termine de escribir
+        timerRef.current = setTimeout(() => {
+          processValue(e.target.value);
+        }, 300); // Retraso de 300ms
+      }}
+      onBlur={(e) => {
+        // Cancelar cualquier timer pendiente
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+        
+        // Procesar el valor inmediatamente al perder el foco
+        processValue(e.target.value);
+        
+        // Formatear el valor si es necesario
+        if (inputRef.current) {
+          const cleanedValue = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+          const numValue = parseFloat(cleanedValue) || 0;
+          inputRef.current.value = numValue.toString();
+        }
+      }}
       placeholder={placeholder}
       className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     />
