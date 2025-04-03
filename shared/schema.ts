@@ -159,6 +159,50 @@ export const transactions = pgTable("transactions", {
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ 
   id: true 
 });
+
+// Helper function to convert string or number to string
+function toStringAmount(value: any, defaultValue = "0"): string {
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+  
+  // Si ya es un string, lo devolvemos tal cual
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  // Si es un número, lo convertimos a string
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+  
+  // En cualquier otro caso, intentamos convertir a string
+  return String(value);
+}
+
+// Definimos un esquema flexible para transacciones que acepta variedad de formatos para campos numéricos
+export const transactionFlexibleSchema = insertTransactionSchema.extend({
+  // Permitir que amount sea tanto string como número, pero siempre guardarlo como string
+  amount: z.union([z.string(), z.number()]).transform(val => toStringAmount(val)),
+  // Permitir que categoryId sea null, undefined, string o número
+  categoryId: z.union([z.number(), z.string(), z.null(), z.undefined()])
+    .transform(val => {
+      if (val === null || val === undefined || val === '' || val === 'null') {
+        return null;
+      }
+      if (typeof val === 'string') {
+        const num = parseInt(val, 10);
+        return isNaN(num) ? null : num;
+      }
+      return val;
+    }).nullable(),
+  // Asegurar que la fecha sea un objeto Date válido
+  date: z.union([z.string(), z.date()]).transform(val => {
+    if (val instanceof Date) return val;
+    return new Date(val);
+  }),
+});
+
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 

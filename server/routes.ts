@@ -37,6 +37,7 @@ import {
   insertQuoteItemSchema,
   insertCategorySchema,
   insertTransactionSchema,
+  transactionFlexibleSchema,
   insertTaskSchema
 } from "@shared/schema";
 import multer from "multer";
@@ -2116,7 +2117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attachments: Array.isArray(req.body.attachments) ? req.body.attachments : []
       };
       
-      const transactionResult = insertTransactionSchema.safeParse(transactionData);
+      const transactionResult = transactionFlexibleSchema.safeParse(transactionData);
       
       if (!transactionResult.success) {
         console.log("Error de validación de transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
@@ -2168,19 +2169,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.date = new Date(req.body.date);
       }
       
-      // Convertir amount a número si viene como string
-      if (req.body.amount && typeof req.body.amount === 'string') {
-        req.body.amount = parseFloat(req.body.amount);
-      }
-      
-      // Si categoryId es una cadena vacía o null, lo establecemos como null
-      if (req.body.categoryId === '' || req.body.categoryId === 'null') {
-        req.body.categoryId = null;
-      }
-      
       console.log("Datos preprocesados para validación:", JSON.stringify(req.body, null, 2));
       
-      const transactionResult = insertTransactionSchema.partial().safeParse(req.body);
+      // Usar el esquema flexible que maneja automáticamente las conversiones de tipo
+      const transactionResult = transactionFlexibleSchema.partial().safeParse(req.body);
       
       if (!transactionResult.success) {
         console.log("Error de validación al actualizar transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
