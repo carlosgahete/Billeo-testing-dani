@@ -1208,11 +1208,13 @@ ${notesValue || ""}`;
                               placeholder="1"
                               className="border-neutral-200 text-center"
                               onChange={(e) => {
-                                // Solo actualizamos el valor, sin recalcular
+                                // Actualizamos el valor y recalculamos los totales inmediatamente
                                 form.setValue(
                                   `items.${index}.quantity` as const,
                                   e.target.value === '' ? 0 : parseFloat(e.target.value)
                                 );
+                                // Recalcular inmediatamente para actualización en tiempo real
+                                setTimeout(() => calculateInvoiceTotals(form), 0);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
@@ -1233,11 +1235,13 @@ ${notesValue || ""}`;
                               placeholder="0.00"
                               className="border-neutral-200 text-center"
                               onChange={(e) => {
-                                // Solo actualizamos el valor, sin recalcular
+                                // Actualizamos el valor y recalculamos los totales inmediatamente
                                 form.setValue(
                                   `items.${index}.unitPrice` as const,
                                   e.target.value === '' ? 0 : parseFloat(e.target.value)
                                 );
+                                // Recalcular inmediatamente para actualización en tiempo real
+                                setTimeout(() => calculateInvoiceTotals(form), 0);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.unitPrice && (
@@ -1262,6 +1266,8 @@ ${notesValue || ""}`;
                                   `items.${index}.taxRate` as const,
                                   e.target.value === '' ? 21 : parseFloat(e.target.value)
                                 );
+                                // Recalcular inmediatamente para actualización en tiempo real
+                                setTimeout(() => calculateInvoiceTotals(form), 0);
                               }}
                             />
                             {form.formState.errors.items?.[index]?.taxRate && (
