@@ -147,16 +147,21 @@ const DocumentScanPage = () => {
         });
       }
       
-      // Actualizar la descripción para seguir el formato "Factura - [Cliente]"
-      const clientName = editedData.client || 'Proveedor';
-      const updatedDescription = `Factura - ${clientName}`;
+      // Mantener el título editado y crear descripción solo si no hay título personalizado
+      let updatedDescription = editedData.description;
+      
+      // Si no hay título personalizado, usar el formato estándar para la descripción
+      if (!editedData.title) {
+        const clientName = editedData.client || 'Proveedor';
+        updatedDescription = `Factura - ${clientName}`;
+      }
       
       // Crear el objeto de actualización
       const updatedTransaction = {
         // Asegurarnos de incluir todos los campos requeridos
         userId: transaction.userId,
         amount: editedData.amount.toString(), // Enviamos como string ya que el decimal en Postgres es tipo string
-        title: editedData.title, // Añadimos el campo título
+        title: editedData.title, // Mantener el título personalizado
         description: updatedDescription,
         date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date), 
         type: transaction.type || 'expense',
