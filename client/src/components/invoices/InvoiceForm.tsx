@@ -89,9 +89,11 @@ function toNumber(value: any, defaultValue = 0): number {
   
   // Si es string, intentar convertirlo
   if (typeof value === "string") {
+    // Primero limpiar el string de caracteres no numéricos
+    const cleaned = value.replace(/[^\d,.]/g, '');
     // Reemplazar comas por puntos para manejar formato europeo
-    value = value.replace(",", ".");
-    const parsed = parseFloat(value);
+    const normalized = cleaned.replace(",", ".");
+    const parsed = parseFloat(normalized);
     if (!isNaN(parsed)) return parsed;
   }
   
@@ -1198,23 +1200,36 @@ ${notesValue || ""}`;
                           </td>
                           <td className="px-3 py-2">
                             <Input
-                              {...form.register(`items.${index}.quantity` as const, {
-                                valueAsNumber: true,
-                                onBlur: (e) => handleNumericBlur(form.getValues(`items.${index}`).quantity)(e),
-                              })}
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              value={form.getValues(`items.${index}.quantity`)}
+                              type="text"
+                              inputMode="decimal"
                               placeholder="1"
                               className="border-neutral-200 text-center"
+                              onBlur={(e) => {
+                                // Convertir a número en el evento onBlur
+                                const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+                                const numValue = parseFloat(value) || 0;
+                                form.setValue(`items.${index}.quantity` as const, numValue);
+                                calculateInvoiceTotals(form);
+                              }}
                               onChange={(e) => {
-                                // Actualizamos el valor y recalculamos los totales inmediatamente
-                                form.setValue(
-                                  `items.${index}.quantity` as const,
-                                  e.target.value === '' ? 0 : parseFloat(e.target.value)
-                                );
-                                // Recalcular inmediatamente para actualización en tiempo real
-                                setTimeout(() => calculateInvoiceTotals(form), 0);
+                                // Almacenar el valor como es en una variable temporal
+                                const tempField = `temp_quantity_${index}`;
+                                (form as any).setValue(tempField, e.target.value);
+                                
+                                // Intentar convertir a número para el cálculo
+                                try {
+                                  const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+                                  if (value) {
+                                    const numValue = parseFloat(value);
+                                    if (!isNaN(numValue)) {
+                                      form.setValue(`items.${index}.quantity` as const, numValue);
+                                      setTimeout(() => calculateInvoiceTotals(form), 0);
+                                    }
+                                  }
+                                } catch (err) {
+                                  // Si hay algún error, no hacer nada
+                                }
                               }}
                             />
                             {form.formState.errors.items?.[index]?.quantity && (
@@ -1225,23 +1240,36 @@ ${notesValue || ""}`;
                           </td>
                           <td className="px-3 py-2">
                             <Input
-                              {...form.register(`items.${index}.unitPrice` as const, {
-                                valueAsNumber: true,
-                                onBlur: (e) => handleNumericBlur(form.getValues(`items.${index}`).unitPrice)(e),
-                              })}
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              value={form.getValues(`items.${index}.unitPrice`)}
+                              type="text"
+                              inputMode="decimal"
                               placeholder="0.00"
                               className="border-neutral-200 text-center"
+                              onBlur={(e) => {
+                                // Convertir a número en el evento onBlur
+                                const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+                                const numValue = parseFloat(value) || 0;
+                                form.setValue(`items.${index}.unitPrice` as const, numValue);
+                                calculateInvoiceTotals(form);
+                              }}
                               onChange={(e) => {
-                                // Actualizamos el valor y recalculamos los totales inmediatamente
-                                form.setValue(
-                                  `items.${index}.unitPrice` as const,
-                                  e.target.value === '' ? 0 : parseFloat(e.target.value)
-                                );
-                                // Recalcular inmediatamente para actualización en tiempo real
-                                setTimeout(() => calculateInvoiceTotals(form), 0);
+                                // Almacenar el valor como es en una variable temporal
+                                const tempField = `temp_unitPrice_${index}`;
+                                (form as any).setValue(tempField, e.target.value);
+                                
+                                // Intentar convertir a número para el cálculo
+                                try {
+                                  const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+                                  if (value) {
+                                    const numValue = parseFloat(value);
+                                    if (!isNaN(numValue)) {
+                                      form.setValue(`items.${index}.unitPrice` as const, numValue);
+                                      setTimeout(() => calculateInvoiceTotals(form), 0);
+                                    }
+                                  }
+                                } catch (err) {
+                                  // Si hay algún error, no hacer nada
+                                }
                               }}
                             />
                             {form.formState.errors.items?.[index]?.unitPrice && (
@@ -1252,22 +1280,36 @@ ${notesValue || ""}`;
                           </td>
                           <td className="px-3 py-2">
                             <Input
-                              {...form.register(`items.${index}.taxRate` as const, {
-                                valueAsNumber: true,
-                                onBlur: (e) => handleNumericBlur(form.getValues(`items.${index}`).taxRate, 21)(e),
-                              })}
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              value={form.getValues(`items.${index}.taxRate`)}
+                              type="text"
+                              inputMode="decimal"
                               placeholder="21"
                               className="border-neutral-200 text-center"
+                              onBlur={(e) => {
+                                // Convertir a número en el evento onBlur
+                                const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+                                const numValue = parseFloat(value) || 21;
+                                form.setValue(`items.${index}.taxRate` as const, numValue);
+                                calculateInvoiceTotals(form);
+                              }}
                               onChange={(e) => {
-                                form.setValue(
-                                  `items.${index}.taxRate` as const,
-                                  e.target.value === '' ? 21 : parseFloat(e.target.value)
-                                );
-                                // Recalcular inmediatamente para actualización en tiempo real
-                                setTimeout(() => calculateInvoiceTotals(form), 0);
+                                // Almacenar el valor como es en una variable temporal
+                                const tempField = `temp_taxRate_${index}`;
+                                (form as any).setValue(tempField, e.target.value);
+                                
+                                // Intentar convertir a número para el cálculo
+                                try {
+                                  const value = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
+                                  if (value) {
+                                    const numValue = parseFloat(value);
+                                    if (!isNaN(numValue)) {
+                                      form.setValue(`items.${index}.taxRate` as const, numValue);
+                                      setTimeout(() => calculateInvoiceTotals(form), 0);
+                                    }
+                                  }
+                                } catch (err) {
+                                  // Si hay algún error, no hacer nada
+                                }
                               }}
                             />
                             {form.formState.errors.items?.[index]?.taxRate && (
