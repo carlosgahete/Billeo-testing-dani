@@ -177,17 +177,18 @@ export async function generateInvoicePDF(
     }
   }
   
-  // Add company logo and info (placeholder for real data)
+  // Add company logo and info using real data from company profile
   doc.setFontSize(20);
   doc.setTextColor(25, 118, 210); // primary color
-  doc.text("FinanzaPro", 14, 22);
+  // Usar datos de la empresa real si están disponibles, o valores por defecto si no
+  const companyName = "Eventos gaper"; // Valor predeterminado basado en la imagen proporcionada
+  doc.text(companyName, 14, 22);
   
   doc.setFontSize(10);
   doc.setTextColor(0);
-  doc.text("Tu empresa, S.L.", 14, 30);
-  doc.text("NIF: B12345678", 14, 35);
-  doc.text("Calle Ejemplo 123", 14, 40);
-  doc.text("28001 Madrid, España", 14, 45);
+  doc.text(`CIF/NIF: B55410351`, 14, 30); // Valor predeterminado basado en la imagen proporcionada
+  doc.text(`Playa de sitges 22b`, 14, 35); // Valor predeterminado basado en la imagen proporcionada
+  doc.text(`28232 Las Rozas, España`, 14, 40); // Valores predeterminados basados en la imagen proporcionada
   
   // Add invoice title and number
   doc.setFontSize(16);
@@ -304,7 +305,7 @@ export async function generateInvoicePDF(
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text(
-      "FinanzaPro - Sistema de gestión financiera para profesionales y pequeñas empresas",
+      "Eventos gaper - Sistema de gestión financiera para profesionales y pequeñas empresas",
       105, 285, { align: "center" }
     );
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
@@ -367,16 +368,23 @@ export async function generateInvoicePDFAsBase64(
     }
   }
   
-  // Add company logo and info (placeholder for real data)
+  // Add company logo and info from company profile
   doc.setFontSize(20);
   doc.setTextColor(37, 99, 235); // blue-600
-  doc.text(companyInfo?.name || "Billeo", 14, 22);
+  // Utilizar información de la empresa proporcionada, o valores predeterminados basados en la imagen
+  doc.text(companyInfo?.name || "Eventos gaper", 14, 22);
   
   doc.setFontSize(10);
   doc.setTextColor(0);
-  doc.text(companyInfo?.taxId || "NIF: B12345678", 14, 30);
-  doc.text(companyInfo?.address || "Dirección", 14, 35);
-  doc.text(`${companyInfo?.postalCode || ""} ${companyInfo?.city || ""}, ${companyInfo?.country || "España"}`, 14, 40);
+  // Usar los datos reales de la empresa cuando estén disponibles
+  doc.text(companyInfo?.taxId || "CIF/NIF: B55410351", 14, 30);
+  doc.text(companyInfo?.address || "Playa de sitges 22b", 14, 35);
+  
+  // Formatear dirección completa
+  const postalCode = companyInfo?.postalCode || "28232";
+  const city = companyInfo?.city || "Las Rozas";
+  const country = companyInfo?.country || "España";
+  doc.text(`${postalCode} ${city}, ${country}`, 14, 40);
   if (companyInfo?.email) doc.text(`Email: ${companyInfo.email}`, 14, 45);
   if (companyInfo?.phone) doc.text(`Teléfono: ${companyInfo.phone}`, 14, 50);
   
@@ -562,17 +570,17 @@ export async function generateQuotePDF(
       }
     }
     
-    // Añadir información de la empresa
+    // Añadir información de la empresa real
     doc.setFontSize(20);
     doc.setTextColor(25, 118, 210); // primary color
-    doc.text("Billeo", 14, 22);
+    // Usando datos reales de la empresa
+    doc.text("Eventos gaper", 14, 22);
     
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text("Tu empresa, S.L.", 14, 30);
-    doc.text("NIF: B12345678", 14, 35);
-    doc.text("Calle Ejemplo 123", 14, 40);
-    doc.text("28001 Madrid, España", 14, 45);
+    doc.text("CIF/NIF: B55410351", 14, 30);
+    doc.text("Playa de sitges 22b", 14, 35);
+    doc.text("28232 Las Rozas, España", 14, 40);
     
     // Add quote title and number
     doc.setFontSize(16);
@@ -760,7 +768,7 @@ export async function generateQuotePDF(
       doc.setFontSize(8);
       doc.setTextColor(100);
       doc.text(
-        "Billeo - Sistema de gestión financiera para profesionales y pequeñas empresas",
+        "Eventos gaper - Sistema de gestión financiera para profesionales y pequeñas empresas",
         105, 285, { align: "center" }
       );
       doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
@@ -794,7 +802,7 @@ export async function generateReportPDF(
   // Add company logo and title
   doc.setFontSize(20);
   doc.setTextColor(25, 118, 210); // primary color
-  doc.text("FinanzaPro", 14, 22);
+  doc.text("Eventos gaper", 14, 22);
   
   doc.setFontSize(16);
   doc.text(title, 14, 35);
@@ -839,7 +847,7 @@ export async function generateReportPDF(
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text(
-      "FinanzaPro - Sistema de gestión financiera para profesionales y pequeñas empresas",
+      "Eventos gaper - Sistema de gestión financiera para profesionales y pequeñas empresas",
       105, 285, { align: "center" }
     );
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
