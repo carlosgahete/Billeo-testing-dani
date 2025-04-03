@@ -96,6 +96,12 @@ const DocumentScanPage = () => {
           `Datos extraídos del documento escaneado\n📄 Imagen: ${documentUrl}`;
         
         try {
+          // Verificar que tenemos todos los datos necesarios
+          if (!data.transaction.description) {
+            console.warn("La transacción no tiene descripción, usando una predeterminada");
+            data.transaction.description = "Factura escaneada";
+          }
+
           // Actualizar la transacción para incluir la URL de la imagen
           const updatedTransaction = {
             ...data.transaction,

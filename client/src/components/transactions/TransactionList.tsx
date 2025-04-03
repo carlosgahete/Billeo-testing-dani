@@ -12,8 +12,15 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, Image } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, Image, FileImage } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,13 +32,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -258,7 +258,7 @@ const TransactionList = () => {
         // Si no es un gasto o no tiene proveedor, mostrar la descripción normal
         return (
           <div className="max-w-[200px] truncate">
-            {description}
+            {description || "Sin descripción"}
           </div>
         );
       },
@@ -291,6 +291,9 @@ const TransactionList = () => {
       cell: ({ row }) => {
         const transaction = row.original;
         
+        // Asegurarnos de que transaction.description existe
+        const safeDescription = transaction.description || "Sin descripción";
+        
         return (
           <div className="flex justify-end space-x-1">
             {/* Botón para ver la imagen si es un gasto con imagen */}
@@ -307,7 +310,7 @@ const TransactionList = () => {
             </Button>
             <DeleteTransactionDialog
               transactionId={transaction.id}
-              description={transaction.description}
+              description={safeDescription}
               onConfirm={() => {
                 // Already invalidating in the dialog component
               }}
