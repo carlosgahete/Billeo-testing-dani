@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -192,16 +192,23 @@ const PriceInput = ({
   placeholder?: string;
   className?: string;
 }) => {
-  const [inputValue, setInputValue] = useState<string>(initialValue.toString());
+  // Referencia para mantener el valor interno sin necesidad de re-renderizar
+  const inputRef = React.useRef<HTMLInputElement>(null);
   
-  // Cuando cambia el valor externo, actualizar la visualización
+  // Usamos una ref para almacenar el valor interno
+  const valueRef = React.useRef<number>(initialValue);
+  
+  // Cuando cambia el valor externo, actualizar la visualización sin cambiar el foco
   useEffect(() => {
-    setInputValue(initialValue.toString());
+    valueRef.current = initialValue;
+    // Solo actualizamos el valor visible si el input no tiene foco
+    if (inputRef.current && document.activeElement !== inputRef.current) {
+      inputRef.current.value = initialValue.toString();
+    }
   }, [initialValue]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setInputValue(newValue); // Actualizar la visualización inmediatamente
     
     // Intentar convertir a número y llamar al callback si es válido
     try {
@@ -209,7 +216,10 @@ const PriceInput = ({
       if (cleanedValue) {
         const numValue = parseFloat(cleanedValue);
         if (!isNaN(numValue)) {
-          onValueChange(numValue);
+          // Almacenamos el valor en la ref pero no actualizamos el estado
+          valueRef.current = numValue;
+          // Usamos setTimeout para evitar que el efecto ocurra durante la entrada
+          setTimeout(() => onValueChange(numValue), 0);
         }
       }
     } catch (error) {
@@ -220,21 +230,30 @@ const PriceInput = ({
   const handleBlur = () => {
     // Al perder foco, asegurarse de que el valor es válido
     try {
-      const cleanedValue = inputValue.replace(/[^\d,.]/g, '').replace(',', '.');
+      if (!inputRef.current) return;
+      
+      const cleanedValue = inputRef.current.value.replace(/[^\d,.]/g, '').replace(',', '.');
       const numValue = parseFloat(cleanedValue) || 0;
+      
+      // Actualizar el valor y la visualización
+      valueRef.current = numValue;
+      inputRef.current.value = numValue.toString();
       onValueChange(numValue);
-      setInputValue(numValue.toString());
     } catch (error) {
-      setInputValue('0');
+      if (inputRef.current) {
+        inputRef.current.value = '0';
+      }
+      valueRef.current = 0;
       onValueChange(0);
     }
   };
   
   return (
     <input
+      ref={inputRef}
       type="text"
       inputMode="decimal"
-      value={inputValue}
+      defaultValue={initialValue}
       onChange={handleChange}
       onBlur={handleBlur}
       placeholder={placeholder}
