@@ -166,7 +166,51 @@ const AnalyticsPage = () => {
     ];
   };
 
-  // Función para obtener datos de distribución de gastos por categoría
+  // Función para obtener datos de comparación de ingresos y gastos por mes
+  const getIncomeExpenseComparisonData = () => {
+    const monthlyData: Record<string, { month: string, ingresos: number, gastos: number }> = {};
+    const currentYear = new Date().getFullYear();
+    
+    // Inicializar con todos los meses en 0 para el año actual
+    const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    for (let i = 0; i < 12; i++) {
+      const monthKey = `${currentYear}-${(i + 1).toString().padStart(2, "0")}`;
+      monthlyData[monthKey] = {
+        month: monthNames[i],
+        ingresos: 0,
+        gastos: 0
+      };
+    }
+    
+    // Sumar los importes de facturas por mes (ingresos)
+    invoices.forEach((invoice: any) => {
+      if (invoice.status === "paid") {
+        const date = new Date(invoice.issueDate);
+        if (date.getFullYear() === currentYear) {
+          const month = date.getMonth() + 1;
+          const monthKey = `${currentYear}-${month.toString().padStart(2, "0")}`;
+          monthlyData[monthKey].ingresos += Number(invoice.total);
+        }
+      }
+    });
+    
+    // Sumar las transacciones de gastos por mes
+    transactions
+      .filter((tx: any) => tx.type === "expense")
+      .forEach((transaction: any) => {
+        const date = new Date(transaction.date);
+        if (date.getFullYear() === currentYear) {
+          const month = date.getMonth() + 1;
+          const monthKey = `${currentYear}-${month.toString().padStart(2, "0")}`;
+          monthlyData[monthKey].gastos += Number(transaction.amount);
+        }
+      });
+    
+    // Convertir a formato para gráficos
+    return Object.values(monthlyData);
+  };
+  
+  // Función para obtener datos de distribución de gastos por categoría (mantenida por compatibilidad)
   const getExpensesByCategory = () => {
     const categoryMap: Record<string, number> = {};
     
@@ -400,35 +444,37 @@ const AnalyticsPage = () => {
               </CardContent>
             </Card>
 
-            {/* Gráfico de distribución de gastos por categoría */}
+            {/* Gráfico de comparación de ingresos vs gastos por mes */}
             <Card>
               <CardHeader>
-                <CardTitle>Distribución de Gastos</CardTitle>
-                <CardDescription>Por categoría</CardDescription>
+                <CardTitle>Comparativa Ingresos vs Gastos</CardTitle>
+                <CardDescription>Evolución mensual</CardDescription>
               </CardHeader>
               <CardContent className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={getExpensesByCategory()}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                    >
-                      {getExpensesByCategory().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <RechartsBarChart
+                    data={getIncomeExpenseComparisonData()}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis tickFormatter={(value) => `${value / 1000}k€`} />
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                  </RechartsPieChart>
+                    <Bar dataKey="ingresos" name="Ingresos" fill="#16A34A" />
+                    <Bar dataKey="gastos" name="Gastos" fill="#DC2626" />
+                  </RechartsBarChart>
                 </ResponsiveContainer>
               </CardContent>
+              <div className="px-6 pb-4">
+                <div className="bg-blue-50 p-3 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-medium">Análisis: </span>
+                    Esta comparativa te ayuda a visualizar la relación entre ingresos y gastos a lo largo del año, 
+                    identificando puntos críticos donde puedes necesitar ajustar tu estrategia financiera.
+                  </p>
+                </div>
+              </div>
             </Card>
           </div>
         </TabsContent>
