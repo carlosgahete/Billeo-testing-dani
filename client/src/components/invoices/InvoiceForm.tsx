@@ -769,16 +769,35 @@ ${notesValue || ""}`;
           id: invoiceId,
         };
         
-        return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
+        console.log("📤 Datos completos a enviar:", {
           invoice: completeInvoiceData,
           items: formattedItems,
         });
+        
+        try {
+          const result = await apiRequest("PUT", `/api/invoices/${invoiceId}`, {
+            invoice: completeInvoiceData,
+            items: formattedItems,
+          });
+          console.log("📥 Respuesta de actualización recibida:", result);
+          return result;
+        } catch (error) {
+          console.error("🚨 Error en la actualización:", error);
+          throw error;
+        }
       } else {
         console.log("🔄 Creando nueva factura");
-        return apiRequest("POST", "/api/invoices", {
-          invoice: formattedData,
-          items: formattedItems,
-        });
+        try {
+          const result = await apiRequest("POST", "/api/invoices", {
+            invoice: formattedData,
+            items: formattedItems,
+          });
+          console.log("📥 Respuesta de creación recibida:", result);
+          return result;
+        } catch (error) {
+          console.error("🚨 Error en la creación:", error);
+          throw error;
+        }
       }
     },
     onSuccess: (data) => {
@@ -800,17 +819,38 @@ ${notesValue || ""}`;
       });
       
       // Aseguramos que se completan todas las operaciones antes de navegar
-      // usando un pequeño retraso
+      // usando un delay más largo para dar tiempo a que se completen todas las operaciones
       setTimeout(() => {
         console.log("✅ Navegando a la lista de facturas después de guardar");
+        if (isEditMode) {
+          console.log("✓ Redirección después de actualizar factura");
+        }
         navigate("/invoices");
-      }, 500);
+      }, 1000);
     },
     onError: (error: any) => {
       console.error("❌ Error al guardar factura:", error);
+      
+      // Capturar detalles del error para mostrar mejor información al usuario
+      let errorMessage = "Error desconocido";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error.response) {
+        // Error de API con respuesta
+        try {
+          errorMessage = `Error ${error.response.status}: ${error.response.statusText || "Error desconocido"}`;
+        } catch (e) {
+          errorMessage = "Error en la respuesta del servidor";
+        }
+      }
+      
+      // Mostrar toast con mensaje detallado
       toast({
-        title: "Error",
-        description: `Ha ocurrido un error: ${error.message}`,
+        title: isEditMode ? "Error al actualizar factura" : "Error al crear factura",
+        description: `Ha ocurrido un error: ${errorMessage}`,
         variant: "destructive",
       });
     },
