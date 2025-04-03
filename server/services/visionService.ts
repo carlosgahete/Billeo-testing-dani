@@ -220,14 +220,20 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   
   // Buscar IVA - Patrones mejorados para capturar todos los formatos comunes
   const taxPatterns = [
+    // Patrón para formatos de tabla en facturas (IVA en paréntesis)
+    /iva\s*\((\d+)[.,]?(\d*)\s*%\)[^\d]*(\d+[.,]\d+)/i,
     // Patrón específico para "IVA 21% de 1.090,00 €228,90 €" 
     /iva\s+(\d+)%\s+de\s+[\d.,]+\s*[\€\$]?\s*([\d.,]+)/i,
     // Patrón para "IVA 21%: 228,90 €"
     /iva\s+(\d+)%:?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Patrón para "IVA (21 %): 522,06 €"
+    /iva\s*\(\s*(\d+)\s*%\s*\):?\s*[\€\$]?\s*([\d.,]+)/i,
     // Patrón general para "IVA" seguido de un número
     /iva(?:\s+(\d+)%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
     // Formato I.V.A.
     /i\.v\.a\.?(?:\s+(\d+)%)?:?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Buscar línea que contenga "IVA" y un número con símbolo de euro
+    /iva.*?(\d+[.,]\d+)\s*€/i,
     // Palabra "impuesto" genérica
     /impuesto:?\s*[\€\$]?\s*([\d.,]+)/i
   ];
@@ -235,10 +241,15 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   let taxAmount = 0;
   let ivaRate = 21; // Valor por defecto
   
+  console.log("=== BUSCANDO IVA EN LA FACTURA ===");
   for (const pattern of taxPatterns) {
     const match = normalizedText.match(pattern);
     console.log(`Probando patrón de IVA: ${pattern.toString()}`);
     if (match) {
+      console.log(`✅ Coincidencia encontrada con patrón: ${pattern.toString()}`);
+      console.log(`Texto coincidente: "${match[0]}"`);
+      console.log(`Grupos capturados: ${JSON.stringify(match.slice(1))}`);
+      
       // Si el patrón captura el porcentaje del IVA (primer grupo)
       if (match[1]) {
         ivaRate = parseInt(match[1]);
@@ -266,8 +277,16 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   // Buscar IRPF - Mejorado para facturas de gastos según requisitos
   // En facturas de gastos, el IRPF es una deducción (valor negativo)
   const irpfPatterns = [
+    // Patrón específico para formato "IRPF (15 %): -372,90 €"
+    /irpf\s*\(\s*(\d+)\s*%\s*\):?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Patrón para formatos como "IRPF (15%) -372,90 €"
+    /irpf\s*\(\s*(\d+)[.,]?(\d*)\s*%\)[^\d]*-?(\d+[.,]\d+)/i,
+    // Patrón para línea con IRPF y valor negativo con signo menos
+    /irpf.*?-\s*(\d+[.,]\d+)\s*€/i,
+    // Patrones genéricos
     /irpf\s+\(?-?(\d+)%\)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
     /irpf(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
+    // Patrones para retención
     /retencion(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
     /retención(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i,
     /ret\.?(?:\s+\(?-?(\d+)%\)?)?:?\s*-?\s*[\€\$]?\s*([\d.,]+)/i
@@ -276,9 +295,17 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   let irpfAmount = 0;
   let irpfRate = 15; // Valor por defecto
   
+  console.log("=== BUSCANDO IRPF EN LA FACTURA ===");
+  console.log(`Texto a analizar: "${normalizedText.substring(0, 200)}..."`);
+
   for (const pattern of irpfPatterns) {
     const match = normalizedText.match(pattern);
+    console.log(`Probando patrón de IRPF: ${pattern.toString()}`);
     if (match) {
+      console.log(`✅ Coincidencia encontrada con patrón: ${pattern.toString()}`);
+      console.log(`Texto coincidente: "${match[0]}"`);
+      console.log(`Grupos capturados: ${JSON.stringify(match.slice(1))}`);
+      
       // Capturar porcentaje si está disponible
       if (match[1]) {
         irpfRate = parseInt(match[1]);
