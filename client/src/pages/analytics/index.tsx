@@ -520,39 +520,62 @@ const AnalyticsPage = () => {
               </div>
             </Card>
 
-            {/* Estado de facturas pendientes */}
+            {/* Calendario fiscal con próximos vencimientos */}
             <Card>
               <CardHeader>
-                <CardTitle>Estado de Cobros</CardTitle>
-                <CardDescription>Situación de facturas pendientes</CardDescription>
+                <CardTitle>Calendario Fiscal</CardTitle>
+                <CardDescription>Próximos vencimientos y obligaciones</CardDescription>
               </CardHeader>
               <CardContent className="h-80">
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center space-y-4">
-                    <div className="inline-flex items-center justify-center w-40 h-40 rounded-full border-8 border-blue-100">
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-blue-600">
-                          {dashboardStats?.pendingCount || 0}
-                        </div>
-                        <div className="text-sm text-gray-500">facturas pendientes</div>
-                      </div>
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(dashboardStats?.pendingInvoices || 0)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Total pendiente de cobro
-                    </div>
-                    {dashboardStats?.pendingCount > 0 && (
-                      <div className="bg-yellow-50 p-3 rounded-md mt-2">
-                        <div className="flex items-center">
-                          <AlertCircle className="h-4 w-4 text-yellow-500 mr-2" />
-                          <p className="text-sm text-yellow-700">
-                            Hay facturas pendientes de cobro. Considera revisar su estado.
+                <div className="space-y-5">
+                  <div className="relative">
+                    <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+                    <div className="ml-6 space-y-6">
+                      <div className="relative">
+                        <div className="absolute -left-6 mt-1 w-4 h-4 rounded-full bg-blue-500 border-2 border-white"></div>
+                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="font-semibold text-blue-700">IVA Trimestral</p>
+                            <span className="text-xs font-medium text-white bg-blue-600 px-2 py-1 rounded-full">
+                              20 abr
+                            </span>
+                          </div>
+                          <p className="text-sm text-blue-800">
+                            Modelo 303 - Autoliquidación del IVA correspondiente al 1er trimestre del 2025
                           </p>
                         </div>
                       </div>
-                    )}
+                      
+                      <div className="relative">
+                        <div className="absolute -left-6 mt-1 w-4 h-4 rounded-full bg-indigo-500 border-2 border-white"></div>
+                        <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="font-semibold text-indigo-700">Pago IRPF</p>
+                            <span className="text-xs font-medium text-white bg-indigo-600 px-2 py-1 rounded-full">
+                              20 abr
+                            </span>
+                          </div>
+                          <p className="text-sm text-indigo-800">
+                            Modelo 130 - Pago fraccionado IRPF por actividades económicas
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="relative">
+                        <div className="absolute -left-6 mt-1 w-4 h-4 rounded-full bg-purple-500 border-2 border-white"></div>
+                        <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="font-semibold text-purple-700">Declaración anual</p>
+                            <span className="text-xs font-medium text-white bg-purple-600 px-2 py-1 rounded-full">
+                              30 jun
+                            </span>
+                          </div>
+                          <p className="text-sm text-purple-800">
+                            Declaración de la Renta 2024 - Periodo voluntario hasta 30 de junio
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
