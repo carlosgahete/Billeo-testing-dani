@@ -1266,6 +1266,21 @@ ${notesValue || ""}`;
                         <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-1/12">
                           IVA %
                         </th>
+                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
+                          <div className="flex justify-center items-center space-x-1">
+                            <span>Impuestos</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowTaxDialog(true)}
+                              className="h-6 px-2 text-xs bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Añadir
+                            </Button>
+                          </div>
+                        </th>
                         <th scope="col" className="px-3 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
                           Subtotal
                         </th>
@@ -1335,6 +1350,21 @@ ${notesValue || ""}`;
                                 {form.formState.errors.items[index]?.taxRate?.message}
                               </p>
                             )}
+                          </td>
+                          <td className="px-3 py-2 text-center align-middle">
+                            {/* Celda de impuestos - Vacía a nivel de línea */}
+                            <div className="text-xs text-blue-500 hover:text-blue-700 cursor-pointer" 
+                                 onClick={() => setShowTaxDialog(true)}>
+                              <Button
+                                type="button"
+                                variant="ghost" 
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                              >
+                                <Plus className="h-3 w-3" />
+                                <span className="sr-only">Añadir impuesto</span>
+                              </Button>
+                            </div>
                           </td>
                           <td className="px-3 py-2 text-right align-middle">
                             <div className="font-medium">
