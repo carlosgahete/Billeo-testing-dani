@@ -11,7 +11,7 @@ import { InsertTransaction } from '@shared/schema';
 let visionClient: ImageAnnotatorClient | undefined;
 
 // Función para obtener o inicializar el cliente Vision
-function getVisionClient(): ImageAnnotatorClient {
+export function getVisionClient(): ImageAnnotatorClient {
   if (!visionClient) {
     try {
       console.log("Inicializando Vision API client bajo demanda...");

@@ -2951,5 +2951,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para procesar facturas usando Vision API
+  app.post("/api/invoices/process-document", upload.single("file"), async (req: Request, res: Response) => {
+  try {
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    
+    const filePath = req.file.path;
+    const fileExtension = path.extname(req.file.originalname).toLowerCase();
+    
+    console.log(`Procesando factura: ${filePath}, extensión: ${fileExtension}`);
+    
+    // Cargar el servicio de procesamiento de facturas
+    const invoiceVisionService = await import("./services/invoiceVisionService");
+    
+    // Extraer información de la factura según el tipo de archivo
+    let extractedInvoice;
+    
+    if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
+      extractedInvoice = await invoiceVisionService.processInvoiceImage(filePath);
+    } else if (fileExtension === '.pdf') {
+      extractedInvoice = await invoiceVisionService.processInvoicePDF(filePath);
+    } else {
+      return res.status(400).json({ 
+        message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG) o un PDF" 
+      });
+    }
+    
+    // Obtener las facturas del usuario para validar la secuencia del número de factura
+    const userInvoices = await storage.getInvoicesByUserId(req.session.userId);
+    let isValidSequence = true;
+    
+    if (userInvoices.length > 0) {
+      // Obtener la última factura (ordenadas por fecha descendente)
+      const lastInvoice = userInvoices.sort((a, b) => 
+        new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
+      )[0];
+      
+      // Validar la secuencia del número de factura
+      isValidSequence = invoiceVisionService.validarSecuenciaFactura(
+        extractedInvoice.numero_factura, 
+        lastInvoice.invoiceNumber
+      );
+    }
+    
+    // Buscar el cliente por NIF o crear uno nuevo si no existe
+    let clientId;
+    const clients = await storage.getClientsByUserId(req.session.userId);
+    const matchingClient = clients.find(client => 
+      client.taxId.replace(/\s+/g, '').toLowerCase() === 
+      extractedInvoice.cliente.nif.replace(/\s+/g, '').toLowerCase()
+    );
+    
+    if (matchingClient) {
+      clientId = matchingClient.id;
+    } else {
+      // Crear un nuevo cliente
+      const newClient = await storage.createClient({
+        name: extractedInvoice.cliente.nombre,
+        taxId: extractedInvoice.cliente.nif,
+        address: extractedInvoice.cliente.direccion,
+        city: "", // No tenemos este dato específico
+        postalCode: "", // No tenemos este dato específico
+        country: "España", // Valor por defecto
+        userId: req.session.userId
+      });
+      clientId = newClient.id;
+    }
+    
+    // Preparar datos de la factura
+    const invoiceDate = extractedInvoice.fecha.split('/').reverse().join('-');
+    
+    // Preparar impuestos adicionales
+    const additionalTaxes = [];
+    
+    if (extractedInvoice.iva_rate) {
+      additionalTaxes.push({
+        name: "IVA",
+        amount: extractedInvoice.iva_rate,
+        isPercentage: true
+      });
+    }
+    
+    if (extractedInvoice.irpf_rate) {
+      additionalTaxes.push({
+        name: "IRPF",
+        amount: -extractedInvoice.irpf_rate, // Negativo para retenciones
+        isPercentage: true
+      });
+    }
+    
+    // Crear invoice y su ítem
+    const invoiceData = {
+      invoiceNumber: extractedInvoice.numero_factura,
+      clientId,
+      issueDate: new Date(invoiceDate),
+      dueDate: new Date(invoiceDate), // Mismo día por defecto
+      status: "pending", // Por defecto pendiente de pago
+      subtotal: extractedInvoice.base_imponible.toString(),
+      tax: extractedInvoice.iva.toString(),
+      total: extractedInvoice.total.toString(),
+      userId: req.session.userId,
+      additionalTaxes: JSON.stringify(additionalTaxes),
+      notes: `Método de pago: ${extractedInvoice.metodo_pago}`,
+      attachments: [filePath]
+    };
+    
+    // Si hay un número de cuenta, añadirlo a las notas
+    if (extractedInvoice.numero_cuenta) {
+      invoiceData.notes += `\nNúmero de cuenta: ${extractedInvoice.numero_cuenta}`;
+    }
+    
+    let invoice;
+    try {
+      // Guardar la factura en la base de datos
+      invoice = await storage.createInvoice(invoiceData);
+      
+      // Crear un item asociado a la factura
+      await storage.createInvoiceItem({
+        invoiceId: invoice.id,
+        description: extractedInvoice.concepto,
+        quantity: "1",
+        unitPrice: extractedInvoice.base_imponible.toString(),
+        taxRate: extractedInvoice.iva_rate ? extractedInvoice.iva_rate.toString() : "21",
+        userId: req.session.userId
+      });
+    } catch (dbError) {
+      console.error("Error al guardar la factura en la base de datos:", dbError);
+      return res.status(500).json({
+        message: "Error al guardar la factura en la base de datos",
+        error: dbError.message
+      });
+    }
+    
+    return res.status(200).json({
+      message: "Factura procesada correctamente",
+      extractedInvoice,
+      invoice,
+      warnings: extractedInvoice.errors || [],
+      isValidSequence
+    });
+  } catch (error: any) {
+    console.error("Error procesando factura:", error);
+    return res.status(500).json({
+      message: "Error procesando la factura",
+      error: error.message
+    });
+  }
+});
+
   return httpServer;
 }
