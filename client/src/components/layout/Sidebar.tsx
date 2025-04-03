@@ -10,7 +10,10 @@ import {
   X,
   LogOut,
   FileText,
-  Users
+  Users,
+  LineChart,
+  PieChart,
+  TrendingUp
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -136,12 +139,11 @@ const Sidebar = ({
       icon: <FileText size={20} />, 
       label: "Presupuestos" 
     },
-    // Ocultando temporalmente el apartado de informes
-    // { 
-    //   href: "/reports", 
-    //   icon: <BarChart3 size={20} />, 
-    //   label: "Informes" 
-    // },
+    { 
+      href: "/analytics", 
+      icon: <LineChart size={20} />, 
+      label: "Analítica" 
+    },
     { 
       href: "/company", 
       icon: <Building2 size={20} />, 
