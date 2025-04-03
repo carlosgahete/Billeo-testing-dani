@@ -282,7 +282,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Gestión de impuestos adicionales
   const [showTaxDialog, setShowTaxDialog] = useState(false);
-  const [newTaxData, setNewTaxData] = useState<any>({ name: "", amount: 0, isPercentage: false });
+  const [newTaxData, setNewTaxData] = useState<any>({ name: "", amount: "", isPercentage: false });
   
   // Archivos adjuntos
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -874,7 +874,7 @@ ${notesValue || ""}`;
         });
       }
     } else {
-      setNewTaxData({ name: "", amount: 0, isPercentage: false });
+      setNewTaxData({ name: "", amount: "", isPercentage: false });
       setShowTaxDialog(true);
     }
     
@@ -884,7 +884,16 @@ ${notesValue || ""}`;
   
   // Agregar impuesto desde diálogo
   const handleAddTaxFromDialog = () => {
-    appendTax(newTaxData);
+    console.log("Añadiendo impuesto personalizado:", newTaxData);
+    // Asegurar que los valores negativos se manejan correctamente
+    const tax = {
+      ...newTaxData,
+      // Si el usuario escribió un signo menos, asegurarse de que se respeta
+      amount: typeof newTaxData.amount === 'string' && newTaxData.amount.includes('-') 
+        ? parseFloat(newTaxData.amount) 
+        : newTaxData.amount
+    };
+    appendTax(tax);
     setShowTaxDialog(false);
     setTimeout(() => calculateInvoiceTotals(form), 0);
   };
@@ -1611,7 +1620,7 @@ ${notesValue || ""}`;
                   // Permitir números negativos y validar que sea un número
                   const value = e.target.value;
                   if (value === '' || value === '-' || /^-?\d*\.?\d*$/.test(value)) {
-                    setNewTaxData({...newTaxData, amount: value === '' ? 0 : parseFloat(value) || 0});
+                    setNewTaxData({...newTaxData, amount: value});
                   }
                 }}
                 placeholder="Introduce el valor (ej: -15 para retenciones)"
