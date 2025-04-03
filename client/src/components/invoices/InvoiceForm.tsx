@@ -388,6 +388,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       .toISOString()
       .split("T")[0],
     status: "pending",
+    logo: null, // Añadimos logo como parte de los valores por defecto
     items: [
       {
         description: "",
@@ -401,7 +402,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     subtotal: 0,
     tax: 0,
     total: 0,
-    logo: null,
     additionalTaxes: [],
   };
 
@@ -592,6 +592,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       dueDate: formatDate(invoice.dueDate),
       status: invoice.status || "pending",
       notes: invoice.notes || "",
+      logo: invoice.logo || null, // Incluir el logo en los datos del formulario
       subtotal: typeof invoice.subtotal === 'number' ? invoice.subtotal : 
                 parseFloat(invoice.subtotal || "0"),
       tax: typeof invoice.tax === 'number' ? invoice.tax : 
@@ -606,6 +607,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         isPercentage: Boolean(tax.isPercentage),
       })),
     };
+    
+    console.log("🏞️ Logo en datos procesados:", result.logo);
     
     console.log("✅ Formulario procesado correctamente:", result);
     return result;
@@ -657,7 +660,14 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         
       // Actualizar el logo si existe
       if (dataSource.invoice?.logo) {
+        console.log("📸 LOGO ENCONTRADO EN DATOS:", dataSource.invoice.logo);
         setLogo(dataSource.invoice.logo);
+        
+        // También actualizamos el valor en el formulario
+        form.setValue("logo", dataSource.invoice.logo);
+        console.log("📸 LOGO ESTABLECIDO EN FORMULARIO");
+      } else {
+        console.log("❌ NO SE ENCONTRÓ LOGO EN LOS DATOS");
       }
       
       // Recalcular totales
@@ -919,6 +929,7 @@ ${notesValue || ""}`;
     
     // Incluir el logo en los datos del formulario
     data.logo = logo;
+    console.log("🏞️ Logo incluido en la petición:", logo);
     
     // Incluir los archivos adjuntos
     if (attachments.length > 0) {

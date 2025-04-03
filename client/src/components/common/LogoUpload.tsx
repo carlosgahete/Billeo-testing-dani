@@ -23,6 +23,7 @@ const LogoUpload = ({
 
   // Actualizar el logo si cambia desde props
   useEffect(() => {
+    console.log("📸 LogoUpload - initialLogo actualizado:", initialLogo);
     setLogoUrl(initialLogo || null);
   }, [initialLogo]);
 
