@@ -1417,7 +1417,7 @@ ${notesValue || ""}`;
                 )}
 
                 <div className="mt-6 space-y-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-4">
+                  <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 border-t pt-4">
                     <div className="hidden">
                       {/* Sección de botones de impuestos eliminada */}
                     </div>
