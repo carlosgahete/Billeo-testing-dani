@@ -479,6 +479,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     // Verificar si hay additionalTaxes o si se llaman taxes
     const taxesData = invoice.additionalTaxes || invoice.taxes || [];
     
+    console.log("🔍 Datos de impuestos recibidos:", taxesData);
+    
     if (taxesData) {
       if (typeof taxesData === 'string') {
         try {
@@ -488,8 +490,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           console.error("❌ Error al parsear additionalTaxes:", e);
         }
       } else if (Array.isArray(taxesData)) {
-        additionalTaxes = taxesData;
-        console.log("🔄 Impuestos como array:", additionalTaxes);
+        // Asegurarse de que cada impuesto tenga los campos correctos
+        additionalTaxes = taxesData.map(tax => ({
+          name: tax.name || '',
+          amount: typeof tax.amount === 'number' ? tax.amount : parseFloat(tax.amount || '0'),
+          isPercentage: tax.isPercentage === undefined ? true : tax.isPercentage
+        }));
+        console.log("🔄 Impuestos procesados:", additionalTaxes);
       } else {
         console.warn("⚠️ Formato de impuestos desconocido:", taxesData);
       }
@@ -681,14 +688,6 @@ ${notesValue || ""}`;
     }
   }, [companyData, companyLoading, form, isEditMode]);
   
-  // Debug: Imprimir estado del formulario cuando cambia
-  useEffect(() => {
-    if (isEditMode) {
-      const values = form.getValues();
-      console.log("📊 Estado actual del formulario:", values);
-    }
-  }, [form, isEditMode]);
-
   // Configuración del Field Array para items
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -699,11 +698,47 @@ ${notesValue || ""}`;
   const {
     fields: taxFields,
     append: appendTax,
-    remove: removeTax
+    remove: removeTax,
+    replace: replaceTaxes
   } = useFieldArray({
     control: form.control,
     name: "additionalTaxes",
   });
+  
+  // Solo debug cuando el formulario se actualiza, sin dependencia a taxFields
+  useEffect(() => {
+    if (isEditMode) {
+      const values = form.getValues();
+      console.log("📊 Estado actual del formulario:", values);
+      
+      // Verificar específicamente el estado de los impuestos adicionales
+      const taxes = form.getValues("additionalTaxes");
+      console.log("🧾 Impuestos en el formulario:", taxes);
+    }
+  }, [form, isEditMode]);
+  
+  // Efecto para garantizar que los impuestos se muestran correctamente en modo edición
+  // Este efecto se ejecuta cuando se carga el formulario en modo edición
+  useEffect(() => {
+    if (isEditMode) {
+      console.log("⚡ Verificando impuestos adicionales en modo edición");
+      
+      // Usamos setTimeout para asegurar que este efecto se ejecute después de que el formulario esté completamente cargado
+      const timer = setTimeout(() => {
+        const currentTaxes = form.getValues("additionalTaxes") || [];
+        
+        if (currentTaxes.length > 0) {
+          console.log("🔄 Actualizando taxFields con:", currentTaxes);
+          // Reemplazar los taxes con los que hay en el formulario
+          // Esto fuerza a que se actualice el componente visual de taxFields
+          replaceTaxes(currentTaxes);
+        }
+      }, 100);
+      
+      // Limpiar el timer si el componente se desmonta
+      return () => clearTimeout(timer);
+    }
+  }, [isEditMode, form, replaceTaxes]);
 
   // Mutación para crear o actualizar factura
   const mutation = useMutation({
@@ -870,6 +905,24 @@ ${notesValue || ""}`;
     data.tax = tax;
     data.total = total;
     
+    // Eliminar impuestos duplicados si existen
+    if (data.additionalTaxes && data.additionalTaxes.length > 0) {
+      // Objeto para rastrear impuestos por nombre
+      const taxesByName: Record<string, any> = {};
+      
+      // Recorrer todos los impuestos y mantener solo el último de cada nombre
+      data.additionalTaxes.forEach((tax: any) => {
+        // Convertir los nombres a minúsculas para comparación sin distinción de mayúsculas
+        const normalizedName = tax.name.toLowerCase();
+        taxesByName[normalizedName] = tax;
+      });
+      
+      // Convertir de nuevo a array
+      data.additionalTaxes = Object.values(taxesByName);
+      
+      console.log("🔧 Impuestos después de eliminar duplicados:", data.additionalTaxes);
+    }
+    
     // Iniciar la mutación
     console.log("🚀 Iniciando creación/actualización de factura...");
     mutation.mutate(data);
@@ -893,24 +946,41 @@ ${notesValue || ""}`;
     // Obtener los impuestos actuales
     const currentTaxes = form.getValues("additionalTaxes") || [];
     
+    // Función para verificar si ya existe un impuesto por nombre (sin distinguir mayúsculas/minúsculas)
+    const hasTaxByName = (name: string) => {
+      return currentTaxes.some((tax: any) => 
+        tax.name.toLowerCase() === name.toLowerCase()
+      );
+    };
+    
     if (taxType === 'irpf') {
-      // Verificar si ya existe un impuesto IRPF
-      const hasIRPF = currentTaxes.some((tax: any) => tax.name === "IRPF");
-      if (!hasIRPF) {
+      // Verificar si ya existe un impuesto IRPF (no sensible a mayúsculas/minúsculas)
+      if (!hasTaxByName("irpf")) {
         appendTax({ 
           name: "IRPF", 
           amount: -15, 
           isPercentage: true 
         });
+      } else {
+        // Mostrar toast si ya existe
+        toast({
+          title: "IRPF ya existe",
+          description: "Ya existe un impuesto IRPF en esta factura",
+        });
       }
     } else if (taxType === 'iva') {
-      // Verificar si ya existe un IVA adicional
-      const hasAdditionalIVA = currentTaxes.some((tax: any) => tax.name === "IVA adicional");
-      if (!hasAdditionalIVA) {
+      // Verificar si ya existe un IVA adicional (no sensible a mayúsculas/minúsculas)
+      if (!hasTaxByName("iva adicional")) {
         appendTax({ 
           name: "IVA adicional", 
           amount: 21, 
           isPercentage: true 
+        });
+      } else {
+        // Mostrar toast si ya existe
+        toast({
+          title: "IVA adicional ya existe",
+          description: "Ya existe un impuesto IVA adicional en esta factura",
         });
       }
     } else {
