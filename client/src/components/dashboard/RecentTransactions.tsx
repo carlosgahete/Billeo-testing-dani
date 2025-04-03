@@ -107,9 +107,41 @@ const TransactionItem = ({
           {isIncome ? <TrendingUp size={18} /> : getCategoryIcon(categoryName)}
         </div>
         <div>
-          <p className="text-sm font-medium truncate max-w-[180px]">
-            {transaction.description}
-          </p>
+          {/* Detectar proveedor en gastos escaneados */}
+          {transaction.type === 'expense' && transaction.notes && transaction.notes.includes('🏢 Proveedor:') ? (
+            <>
+              {/* Extraer el proveedor de las notas */}
+              {(() => {
+                const providerMatch = transaction.notes.match(/🏢 Proveedor:\s*([^\n]+)/);
+                if (providerMatch && providerMatch[1] && providerMatch[1] !== 'No detectado') {
+                  const providerName = providerMatch[1].trim();
+                  return (
+                    <>
+                      <p className="text-sm font-medium truncate max-w-[180px]">
+                        {providerName}
+                      </p>
+                      <p className="text-xs text-gray-600 truncate max-w-[180px]">
+                        {transaction.description}
+                      </p>
+                    </>
+                  );
+                } else {
+                  // Si no se detectó proveedor, mostrar descripción normal
+                  return (
+                    <p className="text-sm font-medium truncate max-w-[180px]">
+                      {transaction.description}
+                    </p>
+                  );
+                }
+              })()}
+            </>
+          ) : (
+            // Para ingresos o gastos sin notas, mostrar descripción normal
+            <p className="text-sm font-medium truncate max-w-[180px]">
+              {transaction.description}
+            </p>
+          )}
+          
           <div className="flex items-center text-xs text-gray-500 mt-0.5">
             <span>{formatDate(transaction.date)}</span>
             {category && (

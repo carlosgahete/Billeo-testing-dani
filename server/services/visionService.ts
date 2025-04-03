@@ -392,50 +392,107 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
-  // Buscar empresa/vendedor con mayor precisión
+  // Buscar empresa/vendedor/proveedor con mayor precisión
+  console.log("=== BUSCANDO PROVEEDOR DE LA FACTURA ===");
   const lines = text.split('\n');
   let vendor = '';
   
-  // Buscar patrones de NIF/CIF en el texto para identificar al emisor
-  const cifPattern = /(?:cif|nif|c\.i\.f|n\.i\.f)(?:\s*:)?\s*([a-z0-9]{8,9})/i;
-  const cifMatch = normalizedText.match(cifPattern);
+  // 1. Buscar por títulos explícitos
+  const providerTitlePatterns = [
+    /proveedor\s*:?\s*([^\n:]{3,50})/i,
+    /emisor\s*:?\s*([^\n:]{3,50})/i,
+    /datos\s*del\s*emisor\s*:?\s*([^\n:]{3,50})/i,
+    /razón\s*social\s*:?\s*([^\n:]{3,50})/i,
+    /razon\s*social\s*:?\s*([^\n:]{3,50})/i,
+    /empresa\s*:?\s*([^\n:]{3,50})/i,
+    /nombre\s*fiscal\s*:?\s*([^\n:]{3,50})/i,
+    /autónomo\s*:?\s*([^\n:]{3,50})/i,
+    /autonomo\s*:?\s*([^\n:]{3,50})/i
+  ];
   
-  if (cifMatch && cifMatch[1]) {
-    const emisorCIF = cifMatch[1];
-    console.log(`CIF/NIF de emisor detectado: ${emisorCIF}`);
+  for (const pattern of providerTitlePatterns) {
+    const match = normalizedText.match(pattern);
+    if (match && match[1]) {
+      vendor = match[1].trim();
+      console.log(`Proveedor encontrado por título explícito: "${vendor}"`);
+      break;
+    }
+  }
+  
+  // 2. Buscar patrones de NIF/CIF en el texto para identificar al emisor
+  if (!vendor) {
+    const cifPattern = /(?:cif|nif|c\.i\.f|n\.i\.f)(?:\s*:)?\s*([a-z0-9]{8,9})/i;
+    const cifMatch = normalizedText.match(cifPattern);
     
-    // Buscar el nombre asociado a este CIF, suele estar en la línea anterior o posterior
-    const cifPosition = normalizedText.indexOf(emisorCIF.toLowerCase());
-    if (cifPosition > 0) {
-      // Obtener contexto alrededor del CIF (3 líneas antes y después)
-      const contextLines = normalizedText.substring(
-        Math.max(0, normalizedText.lastIndexOf('\n', cifPosition) - 150),
-        normalizedText.indexOf('\n', cifPosition + 50) + 1
-      ).split('\n');
+    if (cifMatch && cifMatch[1]) {
+      const emisorCIF = cifMatch[1];
+      console.log(`CIF/NIF de emisor detectado: ${emisorCIF}`);
       
-      // Buscar línea que parezca nombre de empresa (evitando líneas que sean direcciones)
-      for (const line of contextLines) {
-        if (line.length > 4 && 
-            !/calle|avda|plaza|c\/|av\.|cp|codigo postal|:/.test(line) &&
-            !/\d{5}/.test(line)) { // Evitar códigos postales
-          vendor = line.trim();
-          console.log(`Posible nombre de emisor encontrado cerca del CIF: ${vendor}`);
-          break;
+      // Buscar el nombre asociado a este CIF, suele estar en la línea anterior o posterior
+      const cifPosition = normalizedText.indexOf(emisorCIF.toLowerCase());
+      if (cifPosition > 0) {
+        // Obtener contexto alrededor del CIF (150 caracteres antes y 50 después)
+        const contextLines = normalizedText.substring(
+          Math.max(0, normalizedText.lastIndexOf('\n', cifPosition) - 150),
+          normalizedText.indexOf('\n', cifPosition + 50) + 1
+        ).split('\n');
+        
+        // Buscar línea que parezca nombre de empresa (evitando líneas que sean direcciones)
+        for (const line of contextLines) {
+          if (line.length > 4 && 
+              !/calle|avda|plaza|c\/|av\.|cp|codigo postal|:/.test(line.toLowerCase()) &&
+              !/\d{5}/.test(line) && // Evitar códigos postales
+              !/^(cif|nif|c\.i\.f|n\.i\.f)/.test(line.toLowerCase())) { // Evitar líneas que empiezan con CIF/NIF
+            
+            // Buscar nombres de empresas con partículas legales (SL, SA, etc.)
+            const companyPattern = /(.+?)\s*,?\s*(sl|sa|scp|cb|srl|sas|slne|sl unipersonal)/i;
+            const companyMatch = line.match(companyPattern);
+            
+            if (companyMatch) {
+              vendor = companyMatch[0].trim();
+              console.log(`Nombre de empresa con formato legal encontrado cerca del CIF: "${vendor}"`);
+              break;
+            } else {
+              vendor = line.trim();
+              console.log(`Posible nombre de emisor encontrado cerca del CIF: "${vendor}"`);
+              break;
+            }
+          }
         }
       }
     }
   }
   
-  // Si no se encontró vendedor por CIF, intentar por posición en el documento
+  // 3. Si no se encontró vendedor por CIF, buscar nombres de empresas con formato legal
+  if (!vendor) {
+    const fullText = text.replace(/\n/g, ' ');
+    // Buscar nombres de empresas con partículas legales (SL, SA, etc.)
+    const companyPatterns = [
+      /([A-Za-zÀ-ÖØ-öø-ÿ\s\.&,]+?)\s*,?\s*(S\.L\.|SL|S\.A\.|SA|S\.L\.U\.|SLU|S\.C\.P\.|SCP|S\.C\.|SC)/,
+      /([A-Za-zÀ-ÖØ-öø-ÿ\s\.&,]+?)\s*,?\s*(S\.R\.L\.|SRL|S\.A\.S\.|SAS|S\.L\.N\.E\.|SLNE)/
+    ];
+    
+    for (const pattern of companyPatterns) {
+      const match = fullText.match(pattern);
+      if (match && match[1]) {
+        vendor = `${match[1].trim()} ${match[2]}`;
+        console.log(`Empresa encontrada por formato legal: "${vendor}"`);
+        break;
+      }
+    }
+  }
+  
+  // 4. Si no se encontró vendedor, intentar por posición en el documento
   if (!vendor) {
     // Buscar líneas que parezcan nombres de empresas al principio del documento
     for (let i = 0; i < Math.min(lines.length, 10); i++) {
       const line = lines[i].trim();
       if (line.length > 3 && 
-          !/calle|avda|plaza|c\/|av\.|cp|codigo postal|fecha|factura|numero|importe|total/.test(line.toLowerCase()) &&
-          !/^\d+/.test(line)) { // Evitar líneas que empiecen con números
+          !/calle|avda|plaza|c\/|av\.|cp|codigo postal|fecha|factura|numero|importe|total|telefono|tlf|telf|web|email|correo/.test(line.toLowerCase()) &&
+          !/^\d+/.test(line) && // Evitar líneas que empiecen con números
+          line.length < 50) { // Evitar líneas demasiado largas
         vendor = line;
-        console.log(`Vendedor detectado por posición: ${vendor}`);
+        console.log(`Vendedor detectado por posición en cabecera: "${vendor}"`);
         break;
       }
     }

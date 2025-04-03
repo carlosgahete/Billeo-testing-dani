@@ -44,6 +44,8 @@ interface Transaction {
   type: "income" | "expense";
   categoryId: number | null;
   paymentMethod: string;
+  notes?: string;
+  additionalTaxes?: string;
 }
 
 interface Category {
@@ -202,11 +204,36 @@ const TransactionList = () => {
     {
       accessorKey: "description",
       header: "Descripción",
-      cell: ({ row }) => (
-        <div className="max-w-[200px] truncate">
-          {row.getValue("description")}
-        </div>
-      ),
+      cell: ({ row }) => {
+        // Obtener la descripción y las notas para detectar el proveedor
+        const description = row.getValue("description") as string;
+        const notes = row.original.notes as string || '';
+        const type = row.original.type as string;
+        
+        // Solo procesamos gastos, no ingresos
+        if (type === 'expense') {
+          // Buscar el proveedor en las notas (generadas por el escaneo de documentos)
+          const providerMatch = notes.match(/🏢 Proveedor:\s*([^\n]+)/);
+          
+          if (providerMatch && providerMatch[1] && providerMatch[1] !== 'No detectado') {
+            // Si encontramos un proveedor, mostramos el nombre como título y la descripción como subtítulo
+            const providerName = providerMatch[1].trim();
+            return (
+              <div className="max-w-[250px]">
+                <div className="font-medium text-gray-800">{providerName}</div>
+                <div className="text-xs text-gray-500 truncate">{description}</div>
+              </div>
+            );
+          }
+        }
+        
+        // Si no es un gasto o no tiene proveedor, mostrar la descripción normal
+        return (
+          <div className="max-w-[200px] truncate">
+            {description}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "categoryId",

@@ -1,0 +1,91 @@
+📌 Instrucciones para la IA: Cómo detectar el nombre del proveedor en una factura de gastos
+
+Cuando el usuario sube una factura de gastos, una de las primeras tareas es identificar el nombre del proveedor. Este nombre suele ser una empresa o autónomo que ha emitido la factura.
+
+📌 ¿Dónde buscar el nombre del proveedor en la factura?
+
+🔹 Encabezado de la factura → Generalmente, el nombre del proveedor aparece en la parte superior de la factura, junto con su NIF/CIF y dirección.
+
+🔹 Cerca del NIF/CIF del proveedor → Si detectas un NIF/CIF, el texto cercano suele ser el nombre del proveedor.
+
+🔹 Títulos comunes que pueden indicar al proveedor:
+	•	“Proveedor”
+	•	“Emisor de la factura”
+	•	“Datos del emisor”
+	•	“Razón social”
+	•	“Empresa”
+
+🔹 Si no encuentras un título claro, busca nombres de empresas o personas
+	•	Los nombres de empresas suelen contener palabras como: SL, SA, SCP, CB, SRL, SAS.
+	•	Si es un autónomo, puede ser un nombre completo como: “Juan Pérez López”.
+
+📌 Ejemplo 1: Factura de una empresa
+
+📜 Factura original
+
+💼 EMPRESA: Tecnología Avanzada SL  
+📜 NIF: B12345678  
+🏢 Dirección: Calle Futura 45, Madrid  
+📅 Fecha: 05/04/2024  
+💰 Base Imponible: 1.500€  
+➕ IVA (21%): +315€  
+➖ IRPF: No aplica  
+💵 Total a pagar: 1.815€  
+
+📜 Datos extraídos correctamente:
+
+{
+  "proveedor": "Tecnología Avanzada SL",
+  "nif": "B12345678",
+  "direccion": "Calle Futura 45, Madrid",
+  "base_imponible": 1500,
+  "iva": 315,
+  "irpf": 0,
+  "total": 1815
+}
+
+📜 Cómo debe mostrarse en la app:
+
+🏢 **Proveedor:** Tecnología Avanzada SL  
+📜 **NIF:** B12345678  
+📍 **Dirección:** Calle Futura 45, Madrid  
+
+📌 Ejemplo 2: Factura de un autónomo
+
+📜 Factura original
+
+👨‍💼 AUTÓNOMO: Miguel Rodríguez García  
+📜 NIF: 12345678X  
+🏢 Dirección: Avenida Principal 10, Barcelona  
+📅 Fecha: 06/04/2024  
+💰 Base Imponible: 2.000€  
+➕ IVA (21%): +420€  
+➖ IRPF (-15%): -300€  
+💵 Total a pagar: 2.120€  
+
+📜 Datos extraídos correctamente:
+
+{
+  "proveedor": "Miguel Rodríguez García",
+  "nif": "12345678X",
+  "direccion": "Avenida Principal 10, Barcelona",
+  "base_imponible": 2000,
+  "iva": 420,
+  "irpf": -300,
+  "total": 2120
+}
+
+📜 Cómo debe mostrarse en la app:
+
+👨‍💼 **Proveedor:** Miguel Rodríguez García  
+📜 **NIF:** 12345678X  
+📍 **Dirección:** Avenida Principal 10, Barcelona  
+
+📌 RESUMEN: TU MISIÓN COMO IA
+
+✅ Identificar correctamente el nombre del proveedor en la factura de gastos.
+✅ Buscarlo en las secciones adecuadas, como el encabezado o cerca del NIF/CIF.
+✅ Extraer el nombre de la empresa o autónomo correctamente y mostrarlo en la app.
+✅ Si el nombre no se encuentra, avisar al usuario para revisión manual.
+
+🚀 Tu objetivo es que el usuario pueda registrar sus gastos sin errores.
