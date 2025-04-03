@@ -97,38 +97,53 @@ const DocumentScanPage = () => {
         
         try {
           // Verificar que tenemos todos los datos necesarios
-          if (!data.transaction.description) {
-            console.warn("La transacción no tiene descripción, usando una predeterminada");
-            data.transaction.description = "Factura escaneada";
-          }
+          // Verificar que data.transaction existe antes de intentar acceder a sus propiedades
+          if (data.transaction) {
+            if (!data.transaction.description) {
+              console.warn("La transacción no tiene descripción, usando una predeterminada");
+              data.transaction.description = "Factura escaneada";
+            }
 
-          // Actualizar la transacción para incluir la URL de la imagen
-          const updatedTransaction = {
-            ...data.transaction,
-            notes: notesWithImage
-          };
-          
-          const response = await fetch(`/api/transactions/${data.transaction.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedTransaction),
-            credentials: 'include'
-          });
-          
-          if (response.ok) {
-            const updatedData = await response.json();
-            setTransaction(updatedData);
+            // Actualizar la transacción para incluir la URL de la imagen
+            const updatedTransaction = {
+              ...data.transaction,
+              notes: notesWithImage
+            };
+            
+            const response = await fetch(`/api/transactions/${data.transaction.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updatedTransaction),
+              credentials: 'include'
+            });
+            
+            if (response.ok) {
+              const updatedData = await response.json();
+              setTransaction(updatedData);
+            } else {
+              setTransaction(data.transaction);
+            }
           } else {
-            setTransaction(data.transaction);
+            console.warn("No se recibió una transacción del servidor");
+            // Si no hay transacción, establecemos una vacía para evitar errores
+            setTransaction(null);
           }
         } catch (error) {
           console.error("Error al actualizar la transacción con la imagen:", error);
-          setTransaction(data.transaction);
+          if (data.transaction) {
+            setTransaction(data.transaction);
+          } else {
+            setTransaction(null);
+          }
         }
       } else {
-        setTransaction(data.transaction);
+        if (data.transaction) {
+          setTransaction(data.transaction);
+        } else {
+          setTransaction(null);
+        }
       }
       
       // Invalidar las consultas para actualizar los datos en tiempo real
