@@ -105,6 +105,8 @@ const DocumentScanPage = () => {
     if (extractedData) {
       setEditedData({
         ...extractedData,
+        // Añadir el campo título inicialmente como la descripción
+        title: extractedData.description || "",
         // Valores específicos para el caso de prueba
         client: extractedData.client === "Leda Villareal" ? "Rojo Paella Polo Inc" : extractedData.client,
         amount: extractedData.amount === 186 ? 199.65 : extractedData.amount,
@@ -154,6 +156,7 @@ const DocumentScanPage = () => {
         // Asegurarnos de incluir todos los campos requeridos
         userId: transaction.userId,
         amount: editedData.amount.toString(), // Enviamos como string ya que el decimal en Postgres es tipo string
+        title: editedData.title, // Añadimos el campo título
         description: updatedDescription,
         date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date), 
         type: transaction.type || 'expense',
@@ -348,6 +351,26 @@ const DocumentScanPage = () => {
                       <span className="text-muted-foreground">Fecha:</span>
                       <span>{new Date(extractedData.date).toLocaleDateString('es-ES')}</span>
                     </div>
+                    
+                    {/* Título - EDITABLE */}
+                    {editedData ? (
+                      <div className="flex justify-between border-b pb-2">
+                        <label htmlFor="title" className="text-muted-foreground">Título:</label>
+                        <Input 
+                          id="title"
+                          type="text"
+                          value={editedData.title}
+                          onChange={(e) => handleFieldChange('title', e.target.value)}
+                          className="w-1/2 h-7 text-right font-semibold"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">Título:</span>
+                        <span className="font-semibold">{extractedData.title || extractedData.description}</span>
+                      </div>
+                    )}
+                    
                     {/* Descripción - EDITABLE */}
                     {editedData ? (
                       <div className="flex justify-between border-b pb-2">
