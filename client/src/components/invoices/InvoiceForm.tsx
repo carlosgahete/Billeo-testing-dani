@@ -1393,20 +1393,18 @@ ${notesValue || ""}`;
                       </div>
                       
                       <div>
-                        <Label>Logo de factura</Label>
+                        <Label>Archivos adjuntos</Label>
                         <div className="mt-2">
                           <div className="w-full border-dashed border-2 border-blue-200 hover:border-blue-400 p-4 flex flex-col items-center justify-center">
                             <div className="h-8 w-8 text-blue-500 mb-2 flex items-center justify-center">
                               <FileText className="h-6 w-6" />
                             </div>
-                            <span className="text-sm font-medium">Logo de factura</span>
+                            <span className="text-sm font-medium">Subir documento adjunto</span>
                             <span className="text-xs text-muted-foreground mt-1 mb-2">
-                              Logo para mostrar en la factura
+                              Adjuntar archivos a la factura (PDF, JPG, PNG)
                             </span>
-                            <LogoUpload 
-                              initialLogo={logo}
-                              onUpload={(path) => setLogo(path)}
-                              onRemove={() => setLogo(null)}
+                            <FileUpload 
+                              onUpload={(path) => setAttachments([...attachments, path])}
                             />
                           </div>
                         </div>
