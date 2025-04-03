@@ -312,11 +312,14 @@ const IncomeExpenseReport = () => {
     return sum + amount;
   }, 0);
   
-  // Forzar los valores correctos para coincidir con los valores esperados
-  const totalIncome = 110000; // Valor fijo de 110000 según requerido
+  // Usar los valores dinámicos calculados en base a las transacciones reales
+  const totalIncome = totalInvoiceIncome + totalAdditionalIncome;
   
-  // Forzar valor exacto de gastos según requerimiento
-  const totalExpenses = 1000;
+  // Calcular los gastos en base a las transacciones de tipo expense
+  const totalExpenses = expenseTransactions.reduce((sum, tx) => {
+    const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount as any) || 0;
+    return sum + amount;
+  }, 0);
 
   // Formateador de fechas
   const formatDate = (dateString: string) => {
