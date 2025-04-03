@@ -2573,34 +2573,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate total income - solo consideramos ingresos de facturas, más seguro para estadísticas
       const income = invoiceIncome;
       
-      // Primero, buscar específicamente el gasto reportado de 2.829,14€
-      const MONTO_ESPECIFICO = 2829.14;
-      const gastoEspecifico = allTransactions.find(t => 
-          t.type === 'expense' && 
-          Math.abs(Number(t.amount) - MONTO_ESPECIFICO) < 0.01
-      );
-      
-      if (gastoEspecifico) {
-          console.log(`¡ENCONTRADO! El gasto específico de ${MONTO_ESPECIFICO}€:`, {
-              id: gastoEspecifico.id,
-              descripcion: gastoEspecifico.description,
-              monto: gastoEspecifico.amount,
-              fecha: gastoEspecifico.date,
-              notas: gastoEspecifico.notes
-          });
-      } else {
-          console.log(`⚠️ NO SE ENCONTRÓ el gasto específico de ${MONTO_ESPECIFICO}€. Esto es un problema.`);
-      }
-      
       // Calcular el total de gastos incluyendo todas las transacciones
       let expenses = transactionExpenses;
       
-      // Si no encontramos el gasto específico, incluirlo manualmente para corregir el problema
-      if (!gastoEspecifico) {
-          console.log(`⚠️ Ajuste manual: Agregando el gasto de ${MONTO_ESPECIFICO}€ que no se encontró en transacciones`);
-          expenses += MONTO_ESPECIFICO;
-          console.log(`Total de gastos ajustado: ${expenses}€ (incluye el gasto de 2.829,14€)`);
-      }
+      // Log transacciones de gastos
+      console.log(`Total de gastos: ${expenses}€ (basado únicamente en transacciones)`);
+      
+      // Ya no añadimos un gasto fijo codificado, usamos solo las transacciones reales
+      // Esto permite que al borrar gastos se refleje correctamente en el dashboard
       
       // Depurar gastos para verificar
       console.log("DESGLOSE DE GASTOS:");
@@ -2724,31 +2704,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Como simplificación, asumimos que el 21% de los gastos es IVA
       const vatRate = 0.21;
       
-      // Verificar si existe el gasto de 2.829,14€ reportado por el usuario
-      // Buscar el gasto específico mencionado por el usuario en las transacciones
-      let gastoReportado = false;
-      const MONTO_REPORTE_USUARIO = 2829.14;
-      const transaccionesFiltradas = allTransactions.filter(t => 
-          t.type === 'expense' && 
-          Math.abs(Number(t.amount) - MONTO_REPORTE_USUARIO) < 0.01
-      );
-      
-      if (transaccionesFiltradas.length > 0) {
-          console.log(`¡ENCONTRADO! Gasto reportado de ${MONTO_REPORTE_USUARIO}€ en las transacciones:`, 
-              transaccionesFiltradas.map(t => ({ id: t.id, amount: t.amount, desc: t.description }))
-          );
-          gastoReportado = true;
-      } else {
-          console.log(`AVISO: No se encontró el gasto específico de ${MONTO_REPORTE_USUARIO}€ reportado por el usuario.`);
-      }
-      
-      // Calcular el IVA soportado basado en todos los gastos
+      // Calcular el IVA soportado basado en todos los gastos reales
       const ivaSoportado = Math.round(expenses * vatRate * 100) / 100;
-      
-      // Si no encontramos el gasto reportado en las transacciones, añadir un aviso en los logs
-      if (!gastoReportado) {
-          console.log(`ALERTA: Posible problema con gasto de ${MONTO_REPORTE_USUARIO}€. Verificar que esté incluido en el total de gastos (${expenses}€).`);
-      }
       
       // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
       const vatBalance = Math.round((ivaRepercutido - ivaSoportado) * 100) / 100;
