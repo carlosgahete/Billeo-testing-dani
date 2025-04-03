@@ -103,10 +103,15 @@ const DocumentScanPage = () => {
   // Inicializar datos editables cuando se obtienen datos extraídos
   useEffect(() => {
     if (extractedData) {
+      // Determinar el título adecuado basado en el proveedor o cliente
+      const suggestedTitle = extractedData.vendor || extractedData.client || "Factura";
+      
       setEditedData({
         ...extractedData,
-        // Añadir el campo título inicialmente como la descripción
-        title: extractedData.description || "",
+        // Asignar un título sugerido basado en el proveedor o cliente
+        title: suggestedTitle,
+        // Mantener la descripción para detalles adicionales
+        description: extractedData.description || "",
         // Valores específicos para el caso de prueba
         client: extractedData.client === "Leda Villareal" ? "Rojo Paella Polo Inc" : extractedData.client,
         amount: extractedData.amount === 186 ? 199.65 : extractedData.amount,

@@ -964,9 +964,26 @@ Extraído automáticamente mediante reconocimiento de texto.`;
     console.log(`Sin datos suficientes, usando descripción predeterminada: "${description}"`);
   }
   
+  // Generar un título para la transacción - más específico y conciso que la descripción
+  let title = '';
+  
+  // Preferimos usar el nombre del proveedor como título si está disponible
+  if (extractedData.vendor && extractedData.vendor !== 'No detectado') {
+    title = extractedData.vendor;
+  } 
+  // Si no hay proveedor, usar el cliente
+  else if (extractedData.client) {
+    title = extractedData.client;
+  }
+  // Si aún no hay título, usar la descripción
+  else if (description) {
+    title = description;
+  }
+  
   // Aseguramos que todos los campos requeridos estén presentes
   return {
     userId: userId, // userId es integer en el esquema
+    title: title, // Añadimos el campo título
     description: description,
     amount: extractedData.amount.toString(), // Convertir a string para el esquema decimal
     date: new Date(extractedData.date), // date es timestamp en el esquema

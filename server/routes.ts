@@ -2431,6 +2431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Asegurarnos de que todos los campos requeridos estén presentes
       const transactionToCreate = {
         userId: transactionData.userId,
+        title: transactionData.title, // Añadimos el título
         description: transactionData.description,
         amount: transactionData.amount,
         date: transactionData.date,
