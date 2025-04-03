@@ -64,6 +64,7 @@ export interface ExtractedExpense {
   amount: number;
   categoryHint?: string;
   vendor?: string;
+  client?: string;  // Cliente (quien recibe la factura)
   taxAmount?: number;
   subtotal?: number;
   irpfAmount?: number;
@@ -498,6 +499,110 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
+  // Buscar cliente (quien recibe la factura)
+  console.log("=== BUSCANDO CLIENTE DE LA FACTURA ===");
+  let client = '';
+  
+  // 1. Buscar por títulos explícitos para el cliente
+  const clientTitlePatterns = [
+    /cliente\s*:?\s*([^\n:]{3,50})/i,
+    /receptor\s*:?\s*([^\n:]{3,50})/i,
+    /datos\s*del\s*cliente\s*:?\s*([^\n:]{3,50})/i,
+    /facturado\s*a\s*:?\s*([^\n:]{3,50})/i,
+    /destinatario\s*:?\s*([^\n:]{3,50})/i
+  ];
+  
+  for (const pattern of clientTitlePatterns) {
+    const match = normalizedText.match(pattern);
+    if (match && match[1]) {
+      client = match[1].trim();
+      console.log(`Cliente encontrado por título explícito: "${client}"`);
+      break;
+    }
+  }
+  
+  // 2. Buscar secciones de "Datos del cliente" o similares
+  if (!client) {
+    const clientSectionPatterns = [
+      /datos\s+del\s+cliente([\s\S]*?)(?=datos|factura|\d{1,2}\/\d{1,2}\/\d{2,4}|total|$)/i,
+      /cliente([\s\S]*?)(?=datos|factura|\d{1,2}\/\d{1,2}\/\d{2,4}|total|$)/i
+    ];
+    
+    for (const pattern of clientSectionPatterns) {
+      const match = normalizedText.match(pattern);
+      if (match && match[1] && match[1].length > 5) {
+        // Extraer el primer texto que parece nombre de cliente
+        const clientSection = match[1];
+        const clientLines = clientSection.split('\n').filter(line => line.trim().length > 0);
+        
+        // Buscar la primera línea que no sea parte de una dirección ni un CIF/NIF
+        for (const line of clientLines) {
+          if (line.length > 4 && 
+              !/calle|avda|plaza|c\/|av\.|cp|codigo postal|telefono|email|cif|nif|c\.i\.f|n\.i\.f/i.test(line) &&
+              !/^\d+/.test(line) && 
+              !/\d{5}/.test(line)) {
+            client = line.trim();
+            console.log(`Cliente encontrado en sección de datos de cliente: "${client}"`);
+            break;
+          }
+        }
+        
+        if (client) break;
+      }
+    }
+  }
+  
+  // 3. Buscar un segundo CIF/NIF que podría ser del cliente
+  if (!client && vendor) {
+    // Buscar todos los CIF/NIF en el documento
+    const cifRegex = /(?:cif|nif|c\.i\.f|n\.i\.f)(?:\s*:)?\s*([a-z0-9]{8,9})/gi;
+    let allCIFs = [];
+    let match;
+    
+    while ((match = cifRegex.exec(normalizedText)) !== null) {
+      allCIFs.push(match);
+    }
+    
+    // Si hay más de uno, el segundo podría ser del cliente
+    if (allCIFs.length > 1) {
+      const secondCIF = allCIFs[1][1];
+      
+      // Buscar el texto cercano a este CIF
+      const cifPosition = normalizedText.indexOf(secondCIF.toLowerCase());
+      if (cifPosition > 0) {
+        // Obtener contexto alrededor del CIF
+        const contextLines = normalizedText.substring(
+          Math.max(0, normalizedText.lastIndexOf('\n', cifPosition) - 150),
+          normalizedText.indexOf('\n', cifPosition + 50) + 1
+        ).split('\n');
+        
+        // Buscar línea que parezca nombre de empresa cerca del segundo CIF
+        for (const line of contextLines) {
+          if (line.length > 4 && 
+              !/calle|avda|plaza|c\/|av\.|cp|codigo postal|:/.test(line.toLowerCase()) &&
+              !/\d{5}/.test(line) && 
+              !/^(cif|nif|c\.i\.f|n\.i\.f)/.test(line.toLowerCase()) &&
+              line.trim() !== vendor) {
+            
+            // Comprobar si es un nombre de empresa
+            const companyPattern = /(.+?)\s*,?\s*(sl|sa|scp|cb|srl|sas|slne|sl unipersonal)/i;
+            const companyMatch = line.match(companyPattern);
+            
+            if (companyMatch) {
+              client = companyMatch[0].trim();
+              console.log(`Nombre de cliente con formato legal encontrado cerca del segundo CIF: "${client}"`);
+              break;
+            } else {
+              client = line.trim();
+              console.log(`Posible nombre de cliente encontrado cerca del segundo CIF: "${client}"`);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  
   // Buscar concepto o descripción en la factura
   let description = '';
   
@@ -558,6 +663,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     amount,
     categoryHint,
     vendor,
+    client,
     taxAmount,
     subtotal,
     irpfAmount,
@@ -750,13 +856,27 @@ function mapToTransaction(
   const notesText = `📌 Factura de Gasto
 📅 Fecha: ${new Date(extractedData.date).toLocaleDateString('es-ES')}
 🏢 Proveedor: ${extractedData.vendor || 'No detectado'}
+${extractedData.client ? `👤 Cliente: ${extractedData.client}` : ''}
 
 ${taxDetails.join('\n')}
 
 Extraído automáticamente mediante reconocimiento de texto.`;
   
+  // Usar el cliente como título/descripción de la transacción si está disponible
+  // Si no, usar la descripción original
+  let description = '';
+  
+  if (extractedData.client && extractedData.client.trim() !== '') {
+    // Si hay un cliente detectado, usarlo como título principal
+    description = extractedData.client;
+    console.log(`Usando el cliente detectado como título de la transacción: "${description}"`);
+  } else {
+    // Si no hay cliente, usar la descripción original
+    description = extractedData.description;
+    console.log(`No se detectó cliente, usando descripción original: "${description}"`);
+  }
+  
   // Si detectamos IRPF, la descripción debería incluir esta información
-  let description = extractedData.description;
   if (irpfAmount > 0 && !description.toLowerCase().includes('irpf')) {
     description += ` (con retención IRPF ${irpfRate}%)`;
   }

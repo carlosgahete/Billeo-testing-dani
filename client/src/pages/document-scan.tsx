@@ -239,6 +239,12 @@ const DocumentScanPage = () => {
                         <span>{extractedData.vendor}</span>
                       </div>
                     )}
+                    {extractedData.client && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">Cliente:</span>
+                        <span className="font-semibold text-blue-700">{extractedData.client}</span>
+                      </div>
+                    )}
                     {extractedData.categoryHint && (
                       <div className="flex justify-between pb-2">
                         <span className="text-muted-foreground">Categoría sugerida:</span>
