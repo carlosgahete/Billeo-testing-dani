@@ -2152,9 +2152,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to update this transaction" });
       }
       
+      console.log("Actualizando transacción - Datos recibidos:", JSON.stringify(req.body, null, 2));
+      
+      // Si hay attachments en formato string, aseguramos que sea un array
+      if (req.body.attachments && typeof req.body.attachments === 'string') {
+        try {
+          req.body.attachments = JSON.parse(req.body.attachments);
+        } catch (e) {
+          req.body.attachments = req.body.attachments.split(',').map(item => item.trim());
+        }
+      }
+      
+      // Aseguramos que la fecha sea un objeto Date válido
+      if (req.body.date && typeof req.body.date === 'string') {
+        req.body.date = new Date(req.body.date);
+      }
+      
+      // Convertir amount a número si viene como string
+      if (req.body.amount && typeof req.body.amount === 'string') {
+        req.body.amount = parseFloat(req.body.amount);
+      }
+      
+      // Si categoryId es una cadena vacía o null, lo establecemos como null
+      if (req.body.categoryId === '' || req.body.categoryId === 'null') {
+        req.body.categoryId = null;
+      }
+      
+      console.log("Datos preprocesados para validación:", JSON.stringify(req.body, null, 2));
+      
       const transactionResult = insertTransactionSchema.partial().safeParse(req.body);
       
       if (!transactionResult.success) {
+        console.log("Error de validación al actualizar transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
         return res.status(400).json({ 
           message: "Invalid transaction data", 
           errors: transactionResult.error.errors 

@@ -203,9 +203,29 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
       navigate("/transactions");
     },
     onError: (error: any) => {
+      console.error("Error al guardar transacción:", error);
+      
+      // Intentar analizar la respuesta JSON si existe
+      let errorMessage = "Ha ocurrido un error al guardar el gasto";
+      let errorDetails = "";
+      
+      try {
+        if (error.response) {
+          const data = error.response.data;
+          if (data && data.message) {
+            errorMessage = data.message;
+          }
+          if (data && data.errors && Array.isArray(data.errors)) {
+            errorDetails = data.errors.map((err: any) => err.message || JSON.stringify(err)).join(", ");
+          }
+        }
+      } catch (parseError) {
+        console.error("Error al analizar la respuesta de error:", parseError);
+      }
+      
       toast({
-        title: "Error",
-        description: `Ha ocurrido un error: ${error.message}`,
+        title: "Error al guardar",
+        description: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
         variant: "destructive",
       });
     },
@@ -293,7 +313,32 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   
   // Función que realmente envía los datos a la API
   const submitTransaction = (data: TransactionFormValues) => {
-    mutation.mutate(data);
+    // Asegurarse de que los datos estén en el formato correcto
+    const formattedData: TransactionFormValues = {
+      ...data,
+      // Asegurarse de que amount sea un número
+      amount: typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount,
+      // Garantizar que categoryId sea null si no está definido o si es una cadena vacía
+      categoryId: 
+        data.categoryId === null || 
+        data.categoryId === undefined || 
+        data.categoryId === 0 ||
+        String(data.categoryId) === ''
+          ? null 
+          : typeof data.categoryId === 'string' 
+            ? parseInt(data.categoryId) 
+            : data.categoryId,
+    };
+    
+    // Añadir los archivos adjuntos al payload pero no al objeto formattedData
+    // ya que no es parte del esquema TransactionFormValues
+    const payloadToSend = {
+      ...formattedData,
+      attachments: attachments || []
+    };
+    
+    console.log("Enviando datos al servidor:", JSON.stringify(payloadToSend, null, 2));
+    mutation.mutate(payloadToSend as any);
   };
 
   const handleFileUpload = (path: string) => {
