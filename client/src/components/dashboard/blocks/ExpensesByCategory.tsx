@@ -1,7 +1,6 @@
 import React from "react";
 import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Banknote, LightbulbIcon, Laptop, MegaphoneIcon } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 interface CategoryExpense {
@@ -56,7 +55,7 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
       percent: 84.52,
       transactions: 47,
       color: "#000000",
-      icon: <Banknote className="h-5 w-5 text-white" />
+      icon: <span className="text-xl">💰</span>
     },
     {
       name: "Suministros",
@@ -64,7 +63,7 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
       percent: 5.26,
       transactions: 7,
       color: "#4355b9",
-      icon: <LightbulbIcon className="h-5 w-5 text-white" />
+      icon: <span className="text-xl">💡</span>
     },
     {
       name: "Software y suscripciones",
@@ -72,7 +71,7 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
       percent: 3.21,
       transactions: 16,
       color: "#6f42c1",
-      icon: <Laptop className="h-5 w-5 text-white" />
+      icon: <span className="text-xl">🔒</span>
     },
     {
       name: "Marketing",
@@ -80,7 +79,7 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
       percent: 2.95,
       transactions: 9,
       color: "#3355b9",
-      icon: <MegaphoneIcon className="h-5 w-5 text-white" />
+      icon: <span className="text-xl">📣</span>
     }
   ];
 
