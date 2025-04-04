@@ -135,7 +135,8 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     
     if (!activeBlocks.includes(blockType)) {
       console.log("El bloque no está en la lista, se agregará");
-      const newBlocks = [...activeBlocks, blockType];
+      // Añadimos el nuevo bloque al principio del array para que aparezca primero
+      const newBlocks = [blockType, ...activeBlocks];
       console.log("Nueva lista de bloques:", newBlocks);
       
       setActiveBlocks(newBlocks);
