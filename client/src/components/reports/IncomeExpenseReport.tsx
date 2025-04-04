@@ -38,6 +38,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -383,6 +390,7 @@ const IncomeExpenseReport = () => {
   // Estado local para formulario de registro rápido
   const [expenseDescription, setExpenseDescription] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAttachment, setShowAttachment] = useState(false);
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
@@ -397,6 +405,7 @@ const IncomeExpenseReport = () => {
       // Limpiar formulario
       setExpenseDescription("");
       setExpenseAmount("");
+      setCategoryId(null);
       setAttachmentPath(null);
       setShowAttachment(false);
       
@@ -451,6 +460,7 @@ const IncomeExpenseReport = () => {
       amount: amount.toString(), // Convertir a string como espera el schema
       date: new Date(), // Enviar como Date en lugar de string
       type: "expense",
+      categoryId: categoryId, // Agregar la categoría (etiqueta) seleccionada
       paymentMethod: "efectivo", // Valor por defecto
       notes: "Registro rápido",
       attachments: attachmentPath ? [attachmentPath] : []
@@ -913,62 +923,89 @@ const IncomeExpenseReport = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleQuickExpense} className="flex flex-col md:flex-row items-center gap-2">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Descripción del gasto"
-                      value={expenseDescription}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="md:w-[120px] w-full">
-                    <Input
-                      placeholder="Importe (€)"
-                      value={expenseAmount}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div className="md:w-auto w-full flex items-center gap-1">
-                    {!attachmentPath ? (
-                      <FileUpload onUpload={handleFileUpload} compact={true} />
-                    ) : (
-                      <>
-                        <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
-                          <FileText className="h-3 w-3" />
-                          <span className="text-xs">Adjunto</span>
-                        </Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 rounded-full p-0" 
-                          onClick={() => setAttachmentPath(null)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </>
-                    )}
+                <form onSubmit={handleQuickExpense} className="space-y-3">
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Descripción del gasto"
+                        value={expenseDescription}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="md:w-[120px] w-full">
+                      <Input
+                        placeholder="Importe (€)"
+                        value={expenseAmount}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        className="w-full"
+                      />
+                    </div>
                   </div>
                   
-                  <div>
-                    <Button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
-                      size="sm"
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                      ) : (
-                        <PlusCircle className="h-4 w-4 mr-1" />
-                      )}
-                      Registrar
-                    </Button>
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <div className="flex-1">
+                      <Select 
+                        onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
+                        defaultValue={categoryId ? categoryId.toString() : "null"}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleccionar etiqueta" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="null">Sin etiqueta</SelectItem>
+                          {categories && categories
+                            .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
+                            .map((category) => (
+                              <SelectItem 
+                                key={category.id} 
+                                value={category.id.toString()}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="md:w-auto w-full flex items-center gap-2">
+                      <div className="flex-grow md:flex-grow-0">
+                        {!attachmentPath ? (
+                          <FileUpload onUpload={handleFileUpload} compact={true} />
+                        ) : (
+                          <>
+                            <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
+                              <FileText className="h-3 w-3" />
+                              <span className="text-xs">Adjunto</span>
+                            </Badge>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 rounded-full p-0" 
+                              onClick={() => setAttachmentPath(null)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
+                        size="sm"
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : (
+                          <PlusCircle className="h-4 w-4 mr-1" />
+                        )}
+                        Registrar
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </CardContent>
