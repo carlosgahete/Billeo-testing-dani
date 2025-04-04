@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { DateRange } from "react-day-picker";
+import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
+import { format, subMonths } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CategoryExpense {
   name: string;
@@ -13,6 +32,15 @@ interface CategoryExpense {
 }
 
 const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
+  // Estado para el rango de fechas
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subMonths(new Date(), 3),
+    to: new Date(),
+  });
+  
+  // Estado para el período predefinido seleccionado
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("trimestre");
+
   // Formato para moneda
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -21,6 +49,41 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
       maximumFractionDigits: 2,
       minimumFractionDigits: 2
     }).format(value / 100);
+  };
+  
+  // Manejador para el cambio de período predefinido
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    
+    const today = new Date();
+    let from: Date;
+    
+    switch (value) {
+      case "mes":
+        from = new Date(today.getFullYear(), today.getMonth(), 1);
+        break;
+      case "trimestre":
+        from = subMonths(today, 3);
+        break;
+      case "semestre":
+        from = subMonths(today, 6);
+        break;
+      case "año":
+        from = new Date(today.getFullYear(), 0, 1);
+        break;
+      default:
+        from = subMonths(today, 3);
+    }
+    
+    setDateRange({ from, to: today });
+  };
+  
+  // Formatear fechas para mostrar
+  const formatDateDisplay = () => {
+    if (dateRange?.from && dateRange?.to) {
+      return `${format(dateRange.from, "d MMM yyyy", { locale: es })} - ${format(dateRange.to, "d MMM yyyy", { locale: es })}`;
+    }
+    return "";
   };
   
   // Si está cargando, mostrar skeleton
@@ -47,7 +110,7 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
   }
 
   // Datos de ejemplo para gastos por categoría
-  // En un entorno real, estos datos vendrían del backend
+  // En un entorno real, estos datos vendrían del backend y se filtrarían por fecha
   const categories: CategoryExpense[] = [
     {
       name: "Sin etiquetas",
@@ -93,16 +156,51 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading }) 
   // Calcular el total de gastos
   const totalExpenses = categories.reduce((sum, cat) => sum + cat.value, 0);
 
-  // Año actual para el título
-  const currentYear = new Date().getFullYear();
-
   return (
     <div className="border rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between p-3 bg-gray-50">
-        <div className="flex items-center">
+      <div className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-gray-50">
+        <div className="flex items-center mb-2 md:mb-0">
           <h3 className="text-lg font-medium">Pagos</h3>
         </div>
-        <div className="text-sm text-gray-500">1 ene {currentYear} - 31 dic {currentYear}</div>
+        
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+          {/* Selector de período predefinido */}
+          <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+            <SelectTrigger className="h-8 w-[130px]">
+              <SelectValue placeholder="Seleccionar período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mes">Este mes</SelectItem>
+              <SelectItem value="trimestre">Último trimestre</SelectItem>
+              <SelectItem value="semestre">Último semestre</SelectItem>
+              <SelectItem value="año">Este año</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Selector de rango de fechas personalizado */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-8 justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                <span>{formatDateDisplay()}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                locale={es}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       
       <div className="p-4">
