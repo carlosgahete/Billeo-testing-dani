@@ -335,7 +335,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
           <h2 className="text-lg font-bold">Bloques Personalizables</h2>
           <div className="flex space-x-2">
             <Button
-              variant="primary"
+              variant="default"
               size="sm"
               onClick={() => setIsAddDialogOpen(true)}
               className="flex items-center bg-blue-600 text-white hover:bg-blue-700"
