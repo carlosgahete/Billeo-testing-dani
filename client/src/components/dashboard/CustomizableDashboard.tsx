@@ -117,8 +117,13 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   useEffect(() => {
     if (preferences && preferences.layout && preferences.layout.blocks) {
       setActiveBlocks(preferences.layout.blocks);
+    } else if (!preferencesLoading) {
+      // Si no hay preferencias guardadas, utilizamos el layout por defecto
+      updatePreferences({
+        blocks: DEFAULT_LAYOUT
+      });
     }
-  }, [preferences]);
+  }, [preferences, preferencesLoading]);
 
   // Manejar el reordenamiento de bloques (simple reordenamiento sin drag & drop)
   const moveBlock = (blockId: string, direction: "up" | "down") => {
@@ -402,7 +407,15 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                 
                 {/* Componente del bloque */}
                 <BlockComponent
-                  data={statsData || {}}
+                  data={statsData || {
+                    income: 0,
+                    expenses: 0,
+                    pendingInvoices: 0,
+                    pendingCount: 0,
+                    pendingQuotes: 0,
+                    pendingQuotesCount: 0,
+                    taxes: { vat: 0, incomeTax: 0, ivaALiquidar: 0 }
+                  }}
                   isLoading={statsLoading}
                 />
               </div>
