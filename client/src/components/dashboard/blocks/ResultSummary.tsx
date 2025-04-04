@@ -45,8 +45,8 @@ const ResultSummary: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
   const result = income - expenses;
   
   // Datos de impuestos
-  const ivaALiquidar = data.taxes?.ivaALiquidar || 0;
-  const irpfTotal = data.taxes?.incomeTax || 0;
+  const ivaALiquidar = data.taxes?.ivaALiquidar || data.taxStats?.ivaLiquidar || 0;
+  const irpfTotal = data.taxes?.incomeTax || data.taxStats?.irpfPagar || 0;
   
   // Resultado después de impuestos
   const netResult = result - ivaALiquidar - irpfTotal;

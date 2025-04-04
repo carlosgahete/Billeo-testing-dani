@@ -398,7 +398,25 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                     pendingCount: 0,
                     pendingQuotes: 0,
                     pendingQuotesCount: 0,
-                    taxes: { vat: 0, incomeTax: 0, ivaALiquidar: 0 }
+                    // Propiedades para los presupuestos
+                    totalQuotes: 0,
+                    acceptedQuotes: 0, 
+                    rejectedQuotes: 0,
+                    // Propiedades para los impuestos
+                    taxes: { 
+                      vat: 0, 
+                      incomeTax: 0, 
+                      ivaALiquidar: 0 
+                    },
+                    // Propiedades para datos fiscales
+                    taxStats: {
+                      ivaRepercutido: 0,
+                      ivaSoportado: 0,
+                      ivaLiquidar: 0,
+                      irpfRetenido: 0,
+                      irpfTotal: 0,
+                      irpfPagar: 0
+                    }
                   }}
                   isLoading={statsLoading}
                 />

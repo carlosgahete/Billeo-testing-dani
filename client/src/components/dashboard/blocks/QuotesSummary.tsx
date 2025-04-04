@@ -32,10 +32,10 @@ const QuotesSummary: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
   }
 
   // Obtener los datos de presupuestos
-  const totalQuotes = data.totalQuotes || 5;
-  const acceptedQuotes = data.acceptedQuotes || 3;
-  const rejectedQuotes = data.rejectedQuotes || 1;
-  const pendingQuotes = data.pendingQuotes || 0;
+  const totalQuotes = data.quotes?.total || data.allQuotes || 0;
+  const acceptedQuotes = data.quotes?.accepted || data.acceptedQuotes || 0;
+  const rejectedQuotes = data.quotes?.rejected || data.rejectedQuotes || 0;
+  const pendingQuotesCount = data.quotes?.pending || data.pendingQuotesCount || 0;
   
   // Calcular tasa de aceptación
   const acceptanceRate = totalQuotes > 0 
@@ -86,7 +86,7 @@ const QuotesSummary: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
               <Clock className="h-4 w-4 text-amber-500 mr-1" />
               <p className="text-sm font-medium">Pendientes</p>
             </div>
-            <p className="text-xl font-medium text-amber-500">{pendingQuotes}</p>
+            <p className="text-xl font-medium text-amber-500">{pendingQuotesCount}</p>
           </div>
         </div>
         
