@@ -924,28 +924,6 @@ const IncomeExpenseReport = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleQuickExpense} className="space-y-3">
-                  <div className="flex flex-col md:flex-row gap-2">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Descripción del gasto"
-                        value={expenseDescription}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="md:w-[120px] w-full">
-                      <Input
-                        placeholder="Importe (€)"
-                        value={expenseAmount}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                  
                   <div className="grid md:grid-cols-2 gap-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
