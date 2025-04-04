@@ -15,7 +15,8 @@ import {
   CreditCard,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Filter
 } from "lucide-react";
 import ResultSummary from "@/components/dashboard/blocks/ResultSummary";
 import QuotesSummary from "@/components/dashboard/blocks/QuotesSummary";
@@ -23,6 +24,7 @@ import InvoicesSummary from "@/components/dashboard/blocks/InvoicesSummary";
 import ComparativeChart from "@/components/dashboard/blocks/ComparativeChart";
 import ExpensesSummary from "@/components/dashboard/blocks/ExpensesSummary";
 import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
+import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 
 // Definición de los bloques disponibles para el dashboard
 // Esto centraliza la configuración para que sea usada tanto por el diálogo
@@ -68,6 +70,14 @@ export const DASHBOARD_BLOCKS = {
     icon: <PieChart className="h-8 w-8 text-yellow-500" />,
     type: "charts"
   },
+  "expenses-by-category-chart": {
+    id: "expenses-by-category-chart",
+    title: "Pagos por Categoría",
+    description: "Análisis detallado de pagos con gráfico de sectores.",
+    component: ExpensesByCategory,
+    icon: <Filter className="h-8 w-8 text-gray-800" />,
+    type: "charts"
+  },
   "tax-summary": {
     id: "tax-summary",
     title: "Resumen Fiscal",
@@ -80,6 +90,26 @@ export const DASHBOARD_BLOCKS = {
 
 // Versión para el catálogo que incluye previsualizaciones
 export const DASHBOARD_BLOCK_CATALOG = [
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-chart"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-gray-50 py-1 px-2 flex items-center border-b">
+          <Filter className="h-3 w-3 text-gray-600 mr-1" />
+          <span className="text-[10px] font-medium text-gray-800">Pagos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <svg width="35" height="35" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="25" fill="white" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000000" strokeWidth="20" strokeDasharray="180 252" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#4355b9" strokeWidth="20" strokeDasharray="30 252" strokeDashoffset="-180" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#6f42c1" strokeWidth="20" strokeDasharray="15 252" strokeDashoffset="-210" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#3355b9" strokeWidth="20" strokeDasharray="10 252" strokeDashoffset="-225" />
+          </svg>
+        </div>
+      </div>
+    )
+  },
   {
     ...DASHBOARD_BLOCKS["result-summary"],
     preview: (
