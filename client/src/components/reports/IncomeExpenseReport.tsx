@@ -946,29 +946,63 @@ const IncomeExpenseReport = () => {
                     </div>
                   </div>
                   
+                  <div className="grid md:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Descripción
+                      </label>
+                      <Input
+                        placeholder="Descripción del gasto"
+                        value={expenseDescription}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Importe (€)
+                      </label>
+                      <Input
+                        placeholder="Importe"
+                        value={expenseAmount}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="flex flex-col md:flex-row gap-2">
                     <div className="flex-1">
-                      <Select 
-                        onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
-                        defaultValue={categoryId ? categoryId.toString() : "null"}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Seleccionar etiqueta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="null">Sin etiqueta</SelectItem>
-                          {categories && categories
-                            .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
-                            .map((category) => (
-                              <SelectItem 
-                                key={category.id} 
-                                value={category.id.toString()}
-                              >
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Categoría/Etiqueta
+                        </label>
+                        <Select 
+                          onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
+                          defaultValue={categoryId ? categoryId.toString() : "null"}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Seleccionar categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">Sin categoría</SelectItem>
+                            {categories && categories
+                              .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
+                              .map((category) => (
+                                <SelectItem 
+                                  key={category.id} 
+                                  value={category.id.toString()}
+                                >
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     
                     <div className="md:w-auto w-full flex items-center gap-2">
