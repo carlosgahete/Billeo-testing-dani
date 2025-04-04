@@ -271,10 +271,52 @@ const AnalyticsPage = () => {
     if (!dashboardStats) return null;
     
     return [
-      { name: "IVA repercutido", value: dashboardStats.taxStats?.ivaRepercutido || 0 },
-      { name: "IVA soportado", value: dashboardStats.taxStats?.ivaSoportado || 0 },
-      { name: "IVA a liquidar", value: dashboardStats.taxStats?.ivaLiquidar || 0 },
-      { name: "IRPF retenido", value: dashboardStats.taxStats?.irpfRetenido || 0 },
+      { name: "IVA repercutido", value: dashboardStats.taxes?.vat || dashboardStats.taxes?.ivaALiquidar || 0 },
+      { name: "IVA soportado", value: dashboardStats.taxes?.ivaSoportado || 0 },
+      { name: "IVA a liquidar", value: dashboardStats.taxes?.ivaALiquidar || dashboardStats.taxes?.vat || 0 },
+      { name: "IRPF retenido", value: dashboardStats.irpfRetenidoIngresos || 0 },
+      { name: "IRPF a pagar", value: dashboardStats.taxes?.incomeTax || 0 },
+    ];
+  };
+  
+  // Función para obtener desglose detallado de impuestos IRPF
+  const getIRPFBreakdownData = () => {
+    if (!dashboardStats) return [];
+    
+    return [
+      { 
+        name: "IRPF Retenido", 
+        value: dashboardStats.irpfRetenidoIngresos || 0,
+        fill: "#4F46E5"  // Azul índigo
+      },
+      { 
+        name: "IRPF a Pagar", 
+        value: dashboardStats.taxes?.incomeTax || 0,
+        fill: "#7C3AED"  // Púrpura
+      }
+    ];
+  };
+  
+  // Función para obtener desglose de IVA
+  const getIVABreakdownData = () => {
+    if (!dashboardStats) return [];
+    
+    return [
+      { 
+        name: "IVA Repercutido", 
+        value: dashboardStats.ivaRepercutido || 0,
+        fill: "#2563EB"  // Azul primario
+      },
+      { 
+        name: "IVA Soportado", 
+        value: dashboardStats.ivaSoportado || 0,
+        fill: "#16A34A"  // Verde
+      },
+      { 
+        name: "IVA a Liquidar", 
+        value: dashboardStats.taxes?.ivaALiquidar || dashboardStats.taxes?.vat || 0,
+        fill: "#CA8A04"  // Amarillo
+      }
     ];
   };
 
@@ -626,169 +668,231 @@ const AnalyticsPage = () => {
 
         {/* Contenido de pestaña: Análisis de Impuestos */}
         <TabsContent value="taxes" className="space-y-6">
-          <Card className="overflow-hidden shadow-md">
-            <div className="h-2 bg-blue-600"></div>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center">
-                <FileBarChart2 className="h-5 w-5 mr-2 text-blue-600" />
-                Situación Fiscal
-              </CardTitle>
-              <CardDescription>Resumen de obligaciones tributarias</CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              {/* Sección de IVA */}
-              <div className="p-5 border-b">
-                <div className="font-medium text-base text-blue-800 mb-4 flex items-center">
-                  <Receipt className="h-5 w-5 mr-2 text-blue-600" />
-                  <span>IVA (Liquidación Trimestral)</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">IVA Repercutido</p>
-                      <div className="bg-blue-100 p-1 rounded-full">
-                        <TrendingUp className="h-4 w-4 text-blue-600" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Panel de resumen de impuestos */}
+            <Card className="lg:col-span-2 overflow-hidden border-0 shadow-md">
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileBarChart2 className="h-5 w-5 mr-2 text-blue-600" />
+                  Panel Fiscal
+                </CardTitle>
+                <CardDescription>
+                  Resumen de impuestos y obligaciones fiscales
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* IVA a Liquidar */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="bg-blue-200 rounded-full p-2">
+                        <Calculator className="h-5 w-5 text-blue-700" />
                       </div>
+                      <h3 className="font-medium text-blue-700">IVA a Liquidar</h3>
                     </div>
-                    <p className="text-xl font-bold mt-1">
-                      {formatCurrency(dashboardStats?.taxStats?.ivaRepercutido || 0)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Impuesto cobrado en facturas emitidas
-                    </p>
+                    <div className="text-2xl font-bold text-blue-800">
+                      {formatCurrency(dashboardStats?.taxes?.ivaALiquidar || dashboardStats?.taxes?.vat || dashboardStats?.taxStats?.ivaLiquidar || 0)}
+                    </div>
+                    <div className="mt-1 text-xs text-blue-600">
+                      Próximo vencimiento: 20 de abril
+                    </div>
                   </div>
                   
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">IVA Soportado</p>
-                      <div className="bg-green-100 p-1 rounded-full">
-                        <TrendingDown className="h-4 w-4 text-green-600" />
+                  {/* IRPF Estimado */}
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="bg-purple-200 rounded-full p-2">
+                        <Percent className="h-5 w-5 text-purple-700" />
                       </div>
+                      <h3 className="font-medium text-purple-700">IRPF Estimado</h3>
                     </div>
-                    <p className="text-xl font-bold mt-1">
-                      {formatCurrency(dashboardStats?.taxStats?.ivaSoportado || 0)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Impuesto pagado en gastos deducibles
-                    </p>
+                    <div className="text-2xl font-bold text-purple-800">
+                      {formatCurrency(dashboardStats?.taxes?.incomeTax || dashboardStats?.taxStats?.irpfPagar || 0)}
+                    </div>
+                    <div className="mt-1 text-xs text-purple-600">
+                      Retenciones acumuladas: {formatCurrency(dashboardStats?.irpfRetenidoIngresos || dashboardStats?.taxStats?.irpfRetenido || 0)}
+                    </div>
+                  </div>
+                  
+                  {/* Bases Imponibles */}
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="bg-green-200 rounded-full p-2">
+                        <FileCheck className="h-5 w-5 text-green-700" />
+                      </div>
+                      <h3 className="font-medium text-green-700">Base Imponible</h3>
+                    </div>
+                    <div className="text-2xl font-bold text-green-800">
+                      {formatCurrency(dashboardStats?.baseImponible || (dashboardStats?.income || 0) - (dashboardStats?.expenses || 0))}
+                    </div>
+                    <div className="mt-1 text-xs text-green-600">
+                      Margen: {((dashboardStats?.income ? (dashboardStats.income - (dashboardStats.expenses || 0)) / dashboardStats.income * 100 : 0)).toFixed(1)}%
+                    </div>
                   </div>
                 </div>
-
+              </CardContent>
+            </Card>
+            
+            {/* Gráfico de desglose de IVA */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Desglose de IVA</CardTitle>
+                <CardDescription>Análisis del IVA repercutido, soportado y a liquidar</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart
+                    data={getIVABreakdownData()}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+                    barSize={60}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis tickFormatter={(value) => `${value / 1000}k€`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar dataKey="value" name="Importe" fill="#2563EB">
+                      {getIVABreakdownData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              </CardContent>
+              <div className="px-6 pb-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-blue-900">IVA a Liquidar</p>
-                      <p className="text-xs text-blue-700 mt-1">Próxima liquidación: 20 abril 2025</p>
+                      <h4 className="font-medium text-blue-700 mb-1">Información sobre el IVA</h4>
+                      <p className="text-sm text-blue-600">
+                        El IVA a liquidar es la diferencia entre el IVA repercutido (cobrado en facturas) 
+                        y el IVA soportado (pagado en gastos). Este es el importe a ingresar en Hacienda trimestralmente.
+                      </p>
                     </div>
-                    <p className={`text-2xl font-bold ${(dashboardStats?.taxStats?.ivaLiquidar || 0) > 0 ? "text-red-600" : "text-green-600"}`}>
-                      {formatCurrency(dashboardStats?.taxStats?.ivaLiquidar || 0)}
-                    </p>
                   </div>
                 </div>
               </div>
-
-              {/* Sección de IRPF */}
-              <div className="p-5">
-                <div className="font-medium text-base text-purple-800 mb-4 flex items-center">
-                  <Receipt className="h-5 w-5 mr-2 text-purple-600" />
-                  <span>IRPF (Retenciones)</span>
+            </Card>
+            
+            {/* Gráfico de IRPF */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Análisis IRPF</CardTitle>
+                <CardDescription>Estimación de retenciones y pagos</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={getIRPFBreakdownData()}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {getIRPFBreakdownData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </CardContent>
+              <div className="px-6 pb-4">
+                <div className="bg-indigo-50 p-4 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <LightbulbIcon className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-indigo-700 mb-1">Información sobre el IRPF</h4>
+                      <p className="text-sm text-indigo-600">
+                        Como autónomo, debes realizar pagos trimestrales a cuenta del IRPF (mod. 130/131). 
+                        Las retenciones que te han practicado en facturas se restan de la cuota anual.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">IRPF Retenido</p>
-                      <div className="bg-green-100 p-1 rounded-full">
-                        <ArrowDownRight className="h-4 w-4 text-green-600" />
+              </div>
+            </Card>
+            
+            {/* Panel de calendario fiscal */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Calendario Tributario 2025</CardTitle>
+                <CardDescription>Fechas clave para obligaciones fiscales</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* 1er Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-blue-600 text-white p-2 text-center font-medium">
+                      1er Trimestre
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">20 Abril</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">20 Abril</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">20 Abril</span>
                       </div>
                     </div>
-                    <p className="text-xl font-bold text-green-600 mt-1">
-                      {formatCurrency(dashboardStats?.taxStats?.irpfRetenido || 0)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Retenciones en facturas a tu favor
-                    </p>
                   </div>
                   
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">IRPF Estimado</p>
-                      <div className="bg-purple-100 p-1 rounded-full">
-                        <Calculator className="h-4 w-4 text-purple-600" />
+                  {/* 2º Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-green-600 text-white p-2 text-center font-medium">
+                      2º Trimestre
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">20 Julio</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">20 Julio</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">20 Julio</span>
                       </div>
                     </div>
-                    <p className="text-xl font-bold mt-1">
-                      {formatCurrency(dashboardStats?.taxStats?.irpfTotal || 0)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Impuesto estimado sobre beneficios
-                    </p>
                   </div>
-                </div>
-
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-purple-900">IRPF a Pagar</p>
-                      <p className="text-xs text-purple-700 mt-1">Próximo pago: 20 abril 2025</p>
+                  
+                  {/* 3er Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-amber-600 text-white p-2 text-center font-medium">
+                      3er Trimestre
                     </div>
-                    <p className={`text-2xl font-bold ${(dashboardStats?.taxStats?.irpfPagar || 0) > 0 ? "text-red-600" : "text-green-600"}`}>
-                      {formatCurrency(dashboardStats?.taxStats?.irpfPagar || 0)}
-                    </p>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">20 Octubre</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">20 Octubre</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">20 Octubre</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden shadow-md">
-            <div className="h-2 bg-gradient-to-r from-amber-500 to-yellow-400"></div>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <LightbulbIcon className="h-5 w-5 mr-2 text-amber-500" />
-                Recomendaciones Fiscales
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="bg-blue-100 p-2 rounded-full mr-3">
-                    <Calendar className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Fechas clave</p>
-                    <p className="text-sm text-gray-600">
-                      Próxima liquidación trimestral de IVA: <span className="font-semibold">20 de abril de 2025</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-yellow-100 p-2 rounded-full mr-3">
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Recomendación</p>
-                    <p className="text-sm text-gray-600">
-                      Considera registrar más gastos deducibles para optimizar tu carga fiscal.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-green-100 p-2 rounded-full mr-3">
-                    <Percent className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Previsión fiscal</p>
-                    <p className="text-sm text-gray-600">
-                      Con las facturas actuales, estás en el tramo del 20% del IRPF. Consulta a tu asesor fiscal para más información.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
       
