@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Settings } from "lucide-react";
+import CustomizableDashboard from "./CustomizableDashboard";
 
 interface DashboardMetricsProps {
   userId: number;
@@ -43,8 +46,9 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
   };
 
   return (
-    <div className="mb-1">
-      {/* Espacio vacío - ya no se muestra contenido aquí */}
+    <div>
+      {/* Dashboard personalizable */}
+      <CustomizableDashboard userId={userId} />
     </div>
   );
 };
