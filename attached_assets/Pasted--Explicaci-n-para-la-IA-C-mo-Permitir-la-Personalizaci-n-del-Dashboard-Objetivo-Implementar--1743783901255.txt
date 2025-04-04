@@ -1,0 +1,44 @@
+📌 Explicación para la IA: Cómo Permitir la Personalización del Dashboard
+
+📢 Objetivo: Implementar un sistema en el dashboard que permita al usuario añadir, eliminar y reorganizar bloques de información sin modificar la forma en que se obtienen y calculan los datos.
+
+📌 1. Cómo debe funcionar la personalización del dashboard
+
+El dashboard debe seguir mostrando la información financiera de la misma manera en que lo ha estado haciendo hasta ahora. Lo único que cambia es que el usuario podrá personalizar su vista añadiendo, eliminando y reorganizando bloques de información según sus necesidades.
+
+Para esto, es necesario implementar tres funciones principales:
+
+1️⃣ Añadir bloques al dashboard
+	•	Debe haber un botón “➕ Añadir Bloque” en la parte superior del dashboard.
+	•	Al hacer clic en este botón, se abrirá un menú con una lista de bloques disponibles (por ejemplo, “Ingresos y Gastos”, “Pagos por Categoría”, “Transacciones”, etc.).
+	•	El usuario podrá seleccionar los bloques que desea agregar.
+
+2️⃣ Eliminar bloques del dashboard
+	•	Cada bloque en el dashboard debe incluir un botón “❌ Eliminar”.
+	•	Si el usuario hace clic en este botón, el bloque desaparecerá de su vista.
+	•	Importante: Al eliminar un bloque, solo se oculta en la interfaz del usuario, pero los datos siguen siendo accesibles y no se eliminan del sistema.
+
+3️⃣ Reorganizar los bloques
+	•	Los bloques deben poder arrastrarse y soltarse (drag & drop) para que el usuario pueda ordenarlos como quiera.
+	•	La posición de los bloques debe guardarse, para que cuando el usuario vuelva a abrir la app, su dashboard siga teniendo la misma distribución.
+
+📌 2. Reglas importantes para la IA
+
+✅ No modificar la lógica de los datos.
+Los cálculos y la forma en la que se obtienen los ingresos, gastos, impuestos, etc., deben seguir funcionando exactamente igual.
+
+✅ Cada usuario debe tener su configuración personalizada.
+Si un usuario cambia su dashboard (añade, elimina o reordena bloques), estos cambios deben guardarse para que la próxima vez que inicie sesión su configuración se mantenga.
+
+✅ El dashboard debe seguir mostrando información en tiempo real.
+Aunque el usuario personalice su vista, los datos deben seguir actualizándose automáticamente como hasta ahora.
+
+📌 3. Ejemplo de flujo de usuario
+	1.	El usuario accede al dashboard y ve sus datos financieros.
+	2.	Quiere añadir más información, así que pulsa en “➕ Añadir Bloque” y selecciona “Cuentas y Saldos”.
+	3.	Quiere eliminar un bloque que no le interesa, así que pulsa “❌ Eliminar” en el bloque de “Pagos por Categoría”.
+	4.	Quiere reorganizar la vista, así que arrastra y mueve los bloques en el orden que le resulte más útil.
+	5.	Cierra la app y cuando vuelve a abrirla, su configuración sigue igual.
+
+✅ Resumen:
+Se deben añadir los botones necesarios para que el usuario pueda personalizar su dashboard sin afectar los cálculos ni la forma en que se obtienen los datos. 🚀
