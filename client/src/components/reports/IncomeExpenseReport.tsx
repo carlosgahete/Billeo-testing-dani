@@ -16,7 +16,9 @@ import {
   FileDown,
   Download,
   Trash2,
-  Receipt
+  Receipt,
+  Smile,
+  Plus
 } from "lucide-react";
 import {
   AlertDialog,
@@ -37,6 +39,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -68,6 +78,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import FileUpload from "@/components/common/FileUpload";
 import { generateInvoicePDF } from "@/lib/pdf";
 import { jsPDF } from "jspdf";
@@ -131,7 +152,28 @@ interface Transaction {
 interface Category {
   id: number;
   name: string;
+  type?: "income" | "expense";
+  color?: string;
+  icon?: string;
 }
+
+// Esquema para validar la categoría
+const categorySchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  type: z.enum(["income", "expense"]),
+  color: z.string().default("#6E56CF"),
+  icon: z.string().default("💼"), // Icono predeterminado
+});
+
+type CategoryFormValues = z.infer<typeof categorySchema>;
+
+// Emojis comunes para categorías
+const CATEGORY_EMOJIS = [
+  "💼", "💰", "💸", "💳", "💹", "📈", "🏢", "🏠", "🚗", "✈️", 
+  "🍔", "🛒", "🛍️", "📱", "💻", "📊", "📚", "🎓", "🏥", "💊", 
+  "🔧", "🛠️", "📷", "🎬", "🎵", "🎨", "🏆", "⚽", "🎮", "👕",
+  "💡", "📣", "🔒", "📎", "🧾", "📝", "📑", "🗓️", "🏦", "🧰"
+];
 
 // Componente para eliminar transacciones
 const DeleteTransactionButton = ({ 
@@ -394,6 +436,10 @@ const IncomeExpenseReport = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAttachment, setShowAttachment] = useState(false);
   const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+  
+  // Estado para el modal de creación de categoría
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedEmoji, setSelectedEmoji] = useState("💼"); // Emoji predeterminado
   
   // Mutación para crear transacción (gasto rápido)
   const createTransactionMutation = useMutation({
@@ -959,27 +1005,39 @@ const IncomeExpenseReport = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Categoría/Etiqueta
                         </label>
-                        <Select 
-                          onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
-                          defaultValue={categoryId ? categoryId.toString() : "null"}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Seleccionar categoría" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="null">Sin categoría</SelectItem>
-                            {categories && categories
-                              .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
-                              .map((category) => (
-                                <SelectItem 
-                                  key={category.id} 
-                                  value={category.id.toString()}
-                                >
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                          <Select 
+                            onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
+                            defaultValue={categoryId ? categoryId.toString() : "null"}
+                            className="flex-1"
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Seleccionar categoría" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="null">Sin categoría</SelectItem>
+                              {categories && categories
+                                .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
+                                .map((category) => (
+                                  <SelectItem 
+                                    key={category.id} 
+                                    value={category.id.toString()}
+                                  >
+                                    {category.icon || "💼"} {category.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            type="button" 
+                            size="icon" 
+                            variant="outline" 
+                            className="flex-shrink-0" 
+                            onClick={() => setShowCategoryModal(true)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     
@@ -1103,6 +1161,681 @@ const IncomeExpenseReport = () => {
         </Tabs>
       </div>
     </div>
+  );
+};
+
+  // Mutación para crear categorías
+  const createCategoryMutation = useMutation({
+    mutationFn: async (categoryData: any) => {
+      const res = await apiRequest("POST", "/api/categories", categoryData);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      // Actualizar lista de categorías
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      
+      // Seleccionar la nueva categoría en el formulario
+      setCategoryId(data.id);
+      
+      // Cerrar el modal
+      setShowCategoryModal(false);
+      
+      // Mostrar mensaje
+      toast({
+        title: "Categoría creada",
+        description: "La categoría se ha creado correctamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al crear categoría",
+        description: error.message || "No se pudo crear la categoría. Intente nuevamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Componente para seleccionar emoji
+  const EmojiPicker = () => {
+    return (
+      <div className="grid grid-cols-10 gap-2 mt-2">
+        {CATEGORY_EMOJIS.map((emoji, index) => (
+          <Button
+            key={index}
+            type="button"
+            variant={emoji === selectedEmoji ? "default" : "outline"}
+            className="h-10 w-10 p-0"
+            onClick={() => setSelectedEmoji(emoji)}
+          >
+            <span className="text-lg">{emoji}</span>
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md mb-4">
+          <h1 className="text-2xl font-bold text-white">Ingresos y Gastos</h1>
+        </div>
+
+        <div className="grid gap-6">
+          {/* Panel de estadísticas - Diseño mejorado con tarjetas más atractivas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <div className="bg-green-100 p-2 rounded-full mr-3">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  </div>
+                  <span className="text-green-700 text-lg">Total Ingresos</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-10 w-32" />
+                ) : (
+                  <div className="text-3xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
+                )}
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="bg-green-50 p-2 rounded-md">
+                    <span className="text-green-600 font-medium">Facturas: {formatCurrency(totalInvoiceIncome)}</span>
+                  </div>
+                  <div className="bg-green-50 p-2 rounded-md">
+                    <span className="text-green-600 font-medium">Otros: {formatCurrency(totalAdditionalIncome)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <div className="bg-red-100 p-2 rounded-full mr-3">
+                    <TrendingDown className="h-5 w-5 text-red-600" />
+                  </div>
+                  <span className="text-red-700 text-lg">Total Gastos</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-10 w-32" />
+                ) : (
+                  <div className="text-3xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
+                )}
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="bg-red-50 p-2 rounded-md">
+                    <span className="text-red-600 font-medium">Registros: {expenseTransactions.length} transacciones</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-300"></div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <div className="bg-blue-100 p-2 rounded-full mr-3">
+                    <FilePlus className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <span className="text-blue-700 text-lg">Resultado</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-10 w-32" />
+                ) : (
+                  <div className="text-3xl font-bold text-blue-700">
+                    {formatCurrency(totalIncome - totalExpenses)}
+                  </div>
+                )}
+                <div className="mt-3 bg-blue-50 p-2 rounded-md">
+                  <Badge className={`text-sm ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
+                    {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
+                  </Badge>
+                  <span className="ml-2 text-sm text-blue-600">
+                    {totalIncome > totalExpenses 
+                      ? "¡Buen trabajo! Estás en positivo" 
+                      : "Revisa tus gastos para mejorar el resultado"}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Tabs para ingresos y gastos con diseño mejorado */}
+          <Tabs 
+            defaultValue="income" 
+            value={activeTab}
+            onValueChange={(value) => {
+              setActiveTab(value as "income" | "expense");
+              // Actualizar la URL para reflejar la pestaña activa sin recargar la página
+              const url = new URL(window.location.href);
+              url.searchParams.set('tab', value);
+              window.history.replaceState({}, '', url.toString());
+            }}
+            className="space-y-5"
+          >
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-blue-50 rounded-xl">
+              <TabsTrigger value="income" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <TrendingUp className="w-5 h-5 mr-2" />
+                Ingresos
+              </TabsTrigger>
+              <TabsTrigger value="expense" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <TrendingDown className="w-5 h-5 mr-2" />
+                Gastos
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* TAB DE INGRESOS */}
+            <TabsContent value="income" className="space-y-4">
+              {/* Se eliminó el botón de "Nueva factura" que estaba aquí */}
+              
+              <Card className="shadow-md border-0 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium flex items-center">
+                      <FilePlus className="mr-2 h-5 w-5" />
+                      Facturas emitidas
+                      <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-1">
+                        {allInvoices.length} facturas
+                      </span>
+                    </h3>
+                    <div 
+                      onClick={() => navigate("/invoices/create")}
+                      className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md text-white px-2 py-1.5 flex items-center cursor-pointer"
+                    >
+                      <span className="font-semibold text-white text-sm">Nueva factura</span>
+                      <PlusCircle className="ml-1.5 h-3.5 w-3.5 text-white/80" />
+                    </div>
+                  </div>
+                </div>
+                
+                {isLoading ? (
+                  <div className="p-6 space-y-4">
+                    <Skeleton className="h-16 w-full rounded-md" />
+                    <Skeleton className="h-16 w-full rounded-md" />
+                    <Skeleton className="h-16 w-full rounded-md" />
+                  </div>
+                ) : sortedInvoices.length > 0 ? (
+                  <div className="divide-y">
+                    {sortedInvoices.map((invoice) => (
+                      <div key={invoice.id} className="p-5 flex justify-between items-center hover:bg-blue-50 transition-colors group">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div className="bg-blue-100 p-2 rounded-full mr-3 group-hover:bg-blue-200 transition-colors">
+                              <FileText className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-800 group-hover:text-gray-900">
+                                Factura #{invoice.invoiceNumber} - {getClientName(invoice.clientId)}
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center mt-1">
+                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                                  {invoice.status === "paid" ? "Pagada" : "Pendiente"}
+                                </span>
+                                <span>{formatDate(invoice.issueDate)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="text-right">
+                            <div className="font-bold text-green-600 text-lg">
+                              {formatCurrency(invoice.total)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Base: {formatCurrency(invoice.subtotal)} · IVA: {formatCurrency(invoice.tax)}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                    onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Ver factura</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                    onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Editar factura</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                    onClick={() => handleExportInvoicePDF(invoice)}
+                                  >
+                                    <FileDown className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Descargar PDF</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                      <FileText className="h-8 w-8 text-blue-300" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">No hay facturas registradas</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Comienza emitiendo tu primera factura con nuestro asistente de creación
+                    </p>
+                    <Button 
+                      onClick={() => navigate("/invoices/create")} 
+                      className="gap-2"
+                    >
+                      <FilePlus className="h-4 w-4" />
+                      Crear factura
+                    </Button>
+                  </div>
+                )}
+              </Card>
+              
+              <Card className="shadow-md border-0 overflow-hidden">
+                <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium flex items-center">
+                      <TrendingUp className="mr-2 h-5 w-5" />
+                      Otros ingresos
+                      <span className="ml-2 bg-white text-green-600 text-xs font-semibold rounded-full px-2 py-1">
+                        {incomeTransactions.length} registros
+                      </span>
+                    </h3>
+                    <div 
+                      onClick={() => navigate("/transactions/create?type=income")}
+                      className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md text-white px-2 py-1.5 flex items-center cursor-pointer"
+                    >
+                      <span className="font-semibold text-white text-sm">Nuevo ingreso</span>
+                      <PlusCircle className="ml-1.5 h-3.5 w-3.5 text-white/80" />
+                    </div>
+                  </div>
+                </div>
+                
+                {isLoading ? (
+                  <div className="p-6 space-y-4">
+                    <Skeleton className="h-16 w-full rounded-md" />
+                    <Skeleton className="h-16 w-full rounded-md" />
+                  </div>
+                ) : sortedIncomeTransactions.length > 0 ? (
+                  <div className="divide-y">
+                    {sortedIncomeTransactions.map((transaction) => (
+                      <div key={transaction.id} className="p-5 flex justify-between items-center hover:bg-green-50 transition-colors group">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div className="bg-green-100 p-2 rounded-full mr-3 group-hover:bg-green-200 transition-colors">
+                              <TrendingUp className="h-5 w-5 text-green-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
+                              <div className="text-sm text-muted-foreground flex items-center mt-1">
+                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                                  {getCategoryName(transaction.categoryId)}
+                                </span>
+                                <span>{formatDate(transaction.date)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-green-100">
+                            <div className="font-bold text-green-600 text-lg">
+                              {formatCurrency(transaction.amount)}
+                            </div>
+                          </div>
+                          <div className="flex items-center opacity-80 group-hover:opacity-100">
+                            <DeleteTransactionButton 
+                              transactionId={transaction.id}
+                              description={transaction.description}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="mx-auto w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                      <TrendingUp className="h-8 w-8 text-green-300" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">No hay otros ingresos registrados</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Registra ingresos adicionales que no correspondan a facturas emitidas
+                    </p>
+                    <Button 
+                      onClick={() => navigate("/transactions/create?type=income")} 
+                      variant="outline" 
+                      className="bg-green-600 text-white hover:bg-green-700 gap-2"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Registrar ingreso
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+            
+            {/* TAB DE GASTOS */}
+            <TabsContent value="expense" className="space-y-4">
+              <div className="flex justify-end mb-2">
+                <Button 
+                  onClick={downloadExpensesPDF} 
+                  variant="outline" 
+                  className="gap-2 text-sm"
+                  disabled={expenseTransactions.length === 0}
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar lista de gastos
+                </Button>
+              </div>
+              
+              <Card className="shadow-md border-0 overflow-hidden">
+                <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
+                  <h3 className="text-lg font-medium flex items-center">
+                    <Receipt className="mr-2 h-5 w-5" />
+                    Registro rápido de gastos
+                  </h3>
+                </div>
+                <CardHeader className="pt-6 pb-0">
+                  <CardTitle className="text-xl font-semibold text-red-700">
+                    Registro rápido de gastos
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-1">
+                    Registra rápidamente un gasto. Opcionalmente puedes adjuntar un comprobante (factura, ticket o recibo).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleQuickExpense} className="space-y-3">
+                    <div className="grid md:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Descripción
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="Ej: Material de oficina"
+                          value={expenseDescription}
+                          onChange={(e) => setExpenseDescription(e.target.value)}
+                          required
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Importe (€)
+                        </label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={expenseAmount}
+                          onChange={(e) => setExpenseAmount(e.target.value)}
+                          required
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Categoría/Etiqueta
+                        </label>
+                        <div className="flex gap-2">
+                          <Select 
+                            onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
+                            defaultValue={categoryId ? categoryId.toString() : "null"}
+                            className="flex-1"
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Seleccionar categoría" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="null">Sin categoría</SelectItem>
+                              {categories && categories
+                                .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
+                                .map((category) => (
+                                  <SelectItem 
+                                    key={category.id} 
+                                    value={category.id.toString()}
+                                  >
+                                    {category.icon || "💼"} {category.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            type="button" 
+                            size="icon" 
+                            variant="outline" 
+                            className="flex-shrink-0" 
+                            onClick={() => setShowCategoryModal(true)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="md:w-auto w-full flex items-center gap-2">
+                      <div className="flex-grow md:flex-grow-0">
+                        {!attachmentPath ? (
+                          <FileUpload onUpload={handleFileUpload} compact={true} />
+                        ) : (
+                          <>
+                            <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
+                              <FileText className="h-3 w-3" />
+                              <span className="text-xs">Adjunto</span>
+                            </Badge>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 rounded-full p-0" 
+                              onClick={() => setAttachmentPath(null)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
+                        size="sm"
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : (
+                          <PlusCircle className="h-4 w-4 mr-1" />
+                        )}
+                        Registrar
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+              
+              <Card className="shadow-md border-0 overflow-hidden">
+                <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
+                  <h3 className="text-lg font-medium flex items-center">
+                    <TrendingDown className="mr-2 h-5 w-5" />
+                    Lista de Gastos
+                    <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
+                      {expenseTransactions.length} registros
+                    </span>
+                  </h3>
+                </div>
+                
+                {isLoading ? (
+                  <div className="p-6 space-y-4">
+                    <Skeleton className="h-16 w-full rounded-md" />
+                    <Skeleton className="h-16 w-full rounded-md" />
+                    <Skeleton className="h-16 w-full rounded-md" />
+                  </div>
+                ) : sortedExpenseTransactions.length > 0 ? (
+                  <div className="divide-y">
+                    {sortedExpenseTransactions.map((transaction) => (
+                      <div key={transaction.id} className="p-5 flex justify-between items-center hover:bg-red-50 transition-colors group">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div className="bg-red-100 p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors">
+                              <Receipt className="h-5 w-5 text-red-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
+                              <div className="text-sm text-muted-foreground flex items-center mt-1">
+                                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                                  {getCategoryName(transaction.categoryId) || 'Sin categoría'}
+                                </span>
+                                <span>{formatDate(transaction.date)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-red-100">
+                            <div className="font-bold text-red-600 text-lg">
+                              {formatCurrency(transaction.amount)}
+                            </div>
+                          </div>
+                          <div className="flex items-center opacity-80 group-hover:opacity-100 transition-opacity">
+                            <DownloadTransactionButton 
+                              transactionId={transaction.id}
+                            />
+                            <DeleteTransactionButton 
+                              transactionId={transaction.id}
+                              description={transaction.description}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                      <Receipt className="h-8 w-8 text-red-300" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">No hay gastos registrados</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Comienza registrando gastos usando el formulario de arriba o escaneando documentos
+                    </p>
+                    <Button 
+                      onClick={() => navigate("/documents/scan")} 
+                      variant="outline" 
+                      className="gap-2"
+                    >
+                      <ScanText className="h-4 w-4" />
+                      Escanear documento
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* Modal para crear nueva categoría */}
+      <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Crear nueva categoría</DialogTitle>
+            <DialogDescription>
+              Añade una nueva categoría para organizar tus gastos.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form
+            onSubmit={(e) => {
+              e.preventDefault();
+              createCategoryMutation.mutate({
+                name: (e.target as HTMLFormElement).categoryName.value,
+                type: "expense", // Por defecto para el formulario de gastos
+                icon: selectedEmoji,
+                color: "#6E56CF" // Color por defecto
+              });
+            }}
+          >
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="categoryName" className="text-sm font-medium">
+                  Nombre de la categoría
+                </label>
+                <Input
+                  id="categoryName"
+                  name="categoryName"
+                  placeholder="Ej: Material de oficina"
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">
+                  Icono/Emoji
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="bg-gray-100 h-10 w-10 rounded-md flex items-center justify-center text-xl">
+                    {selectedEmoji}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Selecciona un emoji para tu categoría
+                  </div>
+                </div>
+                
+                <EmojiPicker />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowCategoryModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Crear categoría
+              </Button>
+            </DialogFooter>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
