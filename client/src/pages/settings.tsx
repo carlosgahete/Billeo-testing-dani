@@ -537,6 +537,25 @@ const SettingsPage = () => {
                   />
                 </div>
               </div>
+              
+              <Separator className="my-4" />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="categories" className="font-medium">Categorías y Etiquetas</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Personaliza las categorías para tus ingresos y gastos
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = "/settings/categories"}
+                >
+                  Gestionar Categorías
+                </Button>
+              </div>
             </CardContent>
             <CardFooter>
               <Button 

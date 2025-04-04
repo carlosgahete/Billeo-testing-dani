@@ -28,6 +28,7 @@ import DocumentScanPage from "@/pages/document-scan";
 import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
+import CategoriesPage from "@/pages/settings/categories";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
@@ -138,6 +139,11 @@ function Router() {
       <Route path="/settings">
         <Layout>
           <ProtectedRoute path="/settings" component={SettingsPage} />
+        </Layout>
+      </Route>
+      <Route path="/settings/categories">
+        <Layout>
+          <ProtectedRoute path="/settings/categories" component={CategoriesPage} />
         </Layout>
       </Route>
       <Route path="/income-expense">
