@@ -112,6 +112,8 @@ const DocumentScanPage = () => {
         title: suggestedTitle,
         // Mantener la descripción para detalles adicionales
         description: extractedData.description || "",
+        // Agregar categoría sugerida basada en la descripción o el proveedor
+        categoryHint: extractedData.categoryHint || "Servicios",
         // Valores específicos para el caso de prueba
         client: extractedData.client === "Leda Villareal" ? "Rojo Paella Polo Inc" : extractedData.client,
         amount: extractedData.amount === 186 ? 199.65 : extractedData.amount,

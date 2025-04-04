@@ -2406,13 +2406,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar una categoría que coincida con la sugerencia de categoría
-      const categoryHint = extractedData.categoryHint;
+      // Si no hay categoryHint, intentamos asignar "Servicios" como categoría por defecto
+      const categoryHint = extractedData.categoryHint || "Servicios";
       const allCategories = await storage.getCategoriesByUserId(req.session.userId);
       
       // Buscar categoría por nombre similar (sin distinguir mayúsculas/minúsculas)
       let matchedCategory = allCategories.find(cat => 
         cat.type === 'expense' && 
-        cat.name.toLowerCase().includes(categoryHint?.toLowerCase() || '')
+        cat.name.toLowerCase().includes(categoryHint.toLowerCase())
       );
       
       // Si no encontramos una categoría específica, usamos la primera categoría de gastos o null
