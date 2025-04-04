@@ -1,35 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ArrowUp, ArrowDown, X, Save, Settings, Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { DashboardStats } from "@/types/dashboard";
-import { DashboardBlock } from "@/types/dashboard";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { DashboardStats, DashboardBlock } from "@/types/dashboard";
+
+// Componentes personalizados para el dashboard
+import DashboardBlockMenu from "./DashboardBlockMenu";
+import AddBlockDialog from "./AddBlockDialog";
 
 // Componentes de bloques
 import IncomeSummary from "./blocks/IncomeSummary";
@@ -81,7 +60,6 @@ const CustomizableDashboard = ({ userId, dashboardStats, isLoading }: Customizab
   const [isEditMode, setIsEditMode] = useState(false);
   const [blocks, setBlocks] = useState<DashboardBlock[]>([]);
   const [isAddBlockOpen, setIsAddBlockOpen] = useState(false);
-  const [selectedBlockType, setSelectedBlockType] = useState<string | null>(null);
 
   // Consulta para obtener las preferencias del dashboard
   const { data: preferences, isLoading: prefsLoading } = useQuery({
@@ -215,19 +193,22 @@ const CustomizableDashboard = ({ userId, dashboardStats, isLoading }: Customizab
   // Eliminar un bloque
   const removeBlock = (blockId: string) => {
     setBlocks(blocks.filter((block) => block.id !== blockId));
+    
+    toast({
+      title: "Bloque eliminado",
+      description: "Se ha eliminado el bloque del dashboard",
+    });
   };
 
   // Añadir un nuevo bloque
-  const addBlock = () => {
-    if (!selectedBlockType) return;
-
-    const blockToAdd = availableBlocks.find(block => block.type === selectedBlockType);
+  const addBlock = (blockType: string) => {
+    const blockToAdd = availableBlocks.find(block => block.type === blockType);
     if (!blockToAdd) return;
 
     // Generar un ID único si ya existe un bloque de este tipo
-    const existingCount = blocks.filter(b => b.type === selectedBlockType).length;
+    const existingCount = blocks.filter(b => b.type === blockType).length;
     const newId = existingCount > 0 
-      ? `${selectedBlockType}-${existingCount + 1}` 
+      ? `${blockType}-${existingCount + 1}` 
       : blockToAdd.id;
 
     // Calcular posición para el nuevo bloque (al final del dashboard)
@@ -235,14 +216,12 @@ const CustomizableDashboard = ({ userId, dashboardStats, isLoading }: Customizab
 
     const newBlock: DashboardBlock = {
       id: newId,
-      type: selectedBlockType,
+      type: blockType,
       position: newPosition,
       visible: true,
     };
 
     setBlocks([...blocks, newBlock]);
-    setIsAddBlockOpen(false);
-    setSelectedBlockType(null);
 
     toast({
       title: "Bloque añadido",
@@ -308,14 +287,13 @@ const CustomizableDashboard = ({ userId, dashboardStats, isLoading }: Customizab
           {blocks.map((block, index) => (
             <div
               key={block.id}
-              className={`transition-all duration-200 ${
+              className={`transition-all duration-200 group ${
                 !block.visible ? "opacity-50" : ""
               }`}
             >
-              <Card className="relative border-dashed border-2">
-                <div
-                  className="absolute top-2 right-2 flex space-x-1 z-10"
-                >
+              <Card className="relative border-dashed border-2 border-blue-300 hover:border-blue-500">
+                {/* Menú de control del bloque */}
+                <div className="absolute top-2 right-2 flex space-x-1 z-10">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -370,14 +348,28 @@ const CustomizableDashboard = ({ userId, dashboardStats, isLoading }: Customizab
               </Card>
             </div>
           ))}
+          
+          {/* Botón para añadir bloque */}
+          <button 
+            onClick={() => setIsAddBlockOpen(true)}
+            className="w-full py-4 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            <span>Añadir bloque</span>
+          </button>
         </div>
       ) : (
-        // Vista normal (no editable)
         <div className="space-y-4">
           {blocks
             .filter((block) => block.visible)
             .map((block) => (
-              <div key={block.id}>
+              <div key={block.id} className="group relative">
+                {isEditMode && (
+                  <DashboardBlockMenu
+                    onDelete={() => removeBlock(block.id)}
+                  />
+                )}
+                
                 {blockComponentMap[block.type] && (
                   blockComponentMap[block.type]({
                     data: dashboardStats,
@@ -389,44 +381,12 @@ const CustomizableDashboard = ({ userId, dashboardStats, isLoading }: Customizab
         </div>
       )}
 
-      {/* Diálogo para añadir bloque */}
-      <Dialog open={isAddBlockOpen} onOpenChange={setIsAddBlockOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Añadir nuevo bloque</DialogTitle>
-            <DialogDescription>
-              Selecciona el tipo de bloque que deseas añadir a tu dashboard.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <Select
-              value={selectedBlockType || ""}
-              onValueChange={(value) => setSelectedBlockType(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un tipo de bloque" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableBlocks.map((block) => (
-                  <SelectItem key={block.type} value={block.type}>
-                    {block.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddBlockOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={addBlock} disabled={!selectedBlockType}>
-              Añadir bloque
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Diálogo mejorado para añadir bloque */}
+      <AddBlockDialog 
+        open={isAddBlockOpen} 
+        onOpenChange={setIsAddBlockOpen}
+        onSelectBlock={addBlock}
+      />
     </div>
   );
 };
