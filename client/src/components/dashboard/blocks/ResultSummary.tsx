@@ -1,16 +1,15 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, ExternalLink } from "lucide-react";
+import { CircleDollarSign, ExternalLink } from "lucide-react";
 import { DashboardStats } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
-interface IncomeSummaryProps {
+interface ResultSummaryProps {
   data: DashboardStats;
   isLoading: boolean;
 }
 
-const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
+const ResultSummary: React.FC<ResultSummaryProps> = ({ data, isLoading }) => {
   if (isLoading) {
     return (
       <Card className="overflow-hidden">
@@ -27,7 +26,9 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
   }
 
   const income = data?.income || 0;
-  const pendingAmount = data?.pendingInvoices || 0;
+  const expenses = data?.expenses || 0;
+  const result = income - expenses;
+  const taxAmount = Math.round(result * 0.21);
 
   // Formatear valores monetarios con el formato español
   const formatCurrency = (amount: number) => {
@@ -38,30 +39,28 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
   };
 
   return (
-    <Card className="overflow-hidden border-t-4 border-t-green-500">
+    <Card className="overflow-hidden border-t-4 border-t-blue-500">
       <CardContent className="pt-6 pb-4 px-6">
         <div className="flex items-center text-gray-600 mb-2">
-          <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
-          <span className="text-sm">Ingresos</span>
+          <CircleDollarSign className="mr-2 h-5 w-5 text-blue-600" />
+          <span className="text-sm">Resultado Final</span>
         </div>
         
         <div className="space-y-3">
           <div>
-            <h3 className="text-2xl font-bold text-green-600">{formatCurrency(income)} €</h3>
-            <p className="text-sm text-gray-500">IVA repercutido: {formatCurrency(income * 0.21)} €</p>
+            <h3 className="text-2xl font-bold text-blue-600">{formatCurrency(result)} €</h3>
+            <p className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(taxAmount)} €</p>
           </div>
           
-          {pendingAmount > 0 && (
-            <div className="text-sm">
-              <span className="text-gray-600">IRPF a liquidar por gastos:</span>
-              <span className="text-red-500 ml-1">-0 €</span>
-            </div>
-          )}
+          <div className="text-sm">
+            <span className="text-gray-600">IRPF adelantado:</span>
+            <span className="text-green-500 ml-1">4500 €</span>
+          </div>
         </div>
         
         <div className="mt-4">
           <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
-            Ver facturas
+            Ver informes
             <ExternalLink className="ml-1 h-3 w-3" />
           </button>
         </div>
@@ -70,4 +69,4 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
   );
 };
 
-export default IncomeSummary;
+export default ResultSummary;

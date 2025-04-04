@@ -1,48 +1,24 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDownToLine, Info } from "lucide-react";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingDown, ExternalLink } from "lucide-react";
 import { DashboardStats } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface ExpensesSummaryProps {
   data: DashboardStats;
   isLoading: boolean;
 }
 
-const ExpensesSummary = ({ data, isLoading }: ExpensesSummaryProps) => {
-  const [, navigate] = useLocation();
-
+const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({ data, isLoading }) => {
   if (isLoading) {
     return (
       <Card className="overflow-hidden">
-        <CardHeader className="bg-red-50 p-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg text-red-700 flex items-center">
-              <ArrowDownToLine className="mr-2 h-5 w-5" />
-              Gastos
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3">
-          <Skeleton className="h-8 w-32 my-1" />
-          <div className="mt-2 space-y-1 text-sm">
-            <div className="flex justify-between">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-          </div>
-          <div className="mt-8 mb-2">
-            <Skeleton className="h-8 w-full" />
-          </div>
-          <div className="mt-auto pt-2 mb-2">
+        <CardContent className="p-6">
+          <Skeleton className="h-8 w-40 mb-4" />
+          <Skeleton className="h-12 w-56 mb-2" />
+          <Skeleton className="h-4 w-32" />
+          <div className="mt-4">
             <Skeleton className="h-8 w-full" />
           </div>
         </CardContent>
@@ -50,67 +26,41 @@ const ExpensesSummary = ({ data, isLoading }: ExpensesSummaryProps) => {
     );
   }
 
-  // Usar datos reales o valores por defecto
   const expenses = data?.expenses || 0;
-  const ivaSoportado = data?.ivaSoportado || 0;
+
+  // Formatear valores monetarios con el formato español
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="bg-red-50 p-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg text-red-700 flex items-center">
-            <ArrowDownToLine className="mr-2 h-5 w-5" />
-            Gastos
-          </CardTitle>
-          <TooltipProvider delayDuration={100}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="cursor-pointer">
-                  <Info className="h-4 w-4 text-neutral-500" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
-                <p className="w-[250px] text-xs">Total de gastos relacionados con tu actividad económica, incluyendo el IVA soportado que podrás deducir.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+    <Card className="overflow-hidden border-t-4 border-t-red-500">
+      <CardContent className="pt-6 pb-4 px-6">
+        <div className="flex items-center text-gray-600 mb-2">
+          <TrendingDown className="mr-2 h-5 w-5 text-red-600" />
+          <span className="text-sm">Gastos</span>
         </div>
-      </CardHeader>
-      <CardContent className="p-3">
-        <p className="text-2xl font-bold text-red-600">
-          {new Intl.NumberFormat('es-ES', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-          }).format(expenses)} €
-        </p>
         
-        <div className="mt-2 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-neutral-500">IVA soportado:</span>
-            <span className="font-medium">{ivaSoportado.toLocaleString('es-ES')} €</span>
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-2xl font-bold text-red-600">{formatCurrency(expenses)} €</h3>
+            <p className="text-sm text-gray-500">IVA incluido en los gastos: {formatCurrency(expenses > 0 ? Math.round(expenses * 0.21) : 0)} €</p>
+          </div>
+          
+          <div className="text-sm">
+            <span className="text-gray-600">IRPF a liquidar por gastos:</span>
+            <span className="text-red-500 ml-1">-0 €</span>
           </div>
         </div>
         
-        <div className="mt-8 mb-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
-            onClick={() => navigate("/transactions?type=expense")}
-          >
-            Ver transacciones
-          </Button>
-        </div>
-        
-        <div className="mt-auto pt-2 mb-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full text-red-600 border-red-300 hover:bg-red-50"
-            onClick={() => navigate("/income-expense?tab=expense")}
-          >
+        <div className="mt-4">
+          <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
             Ver gastos
-          </Button>
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </button>
         </div>
       </CardContent>
     </Card>
