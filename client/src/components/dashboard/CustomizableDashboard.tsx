@@ -18,11 +18,8 @@ import RecentTransactions from "./RecentTransactions";
 import TasksList from "./TasksList";
 import TaxSummary from "./TaxSummary";
 
-// Importamos bloques especializados para el dashboard personalizable
-import ResultSummary from "./blocks/ResultSummary";
-import QuotesSummaryBlock from "./blocks/QuotesSummary";
-import InvoicesSummaryBlock from "./blocks/InvoicesSummary";
-import ComparativeChart from "./blocks/ComparativeChart";
+// Importamos la configuración centralizada de bloques
+import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
 
 // Layout por defecto
 const DEFAULT_LAYOUT = [
@@ -32,29 +29,7 @@ const DEFAULT_LAYOUT = [
   "comparative-chart"
 ];
 
-// Definimos los componentes disponibles
-const AVAILABLE_BLOCKS = {
-  "result-summary": {
-    id: "result-summary",
-    title: "Resumen de Resultados",
-    component: ResultSummary,
-  },
-  "quotes-summary": {
-    id: "quotes-summary",
-    title: "Presupuestos",
-    component: QuotesSummaryBlock,
-  },
-  "invoices-summary": {
-    id: "invoices-summary",
-    title: "Facturas",
-    component: InvoicesSummaryBlock,
-  },
-  "comparative-chart": {
-    id: "comparative-chart",
-    title: "Comparativa Financiera",
-    component: ComparativeChart,
-  }
-};
+// Ya no definimos los componentes disponibles aquí, sino que los importamos desde config/dashboardBlocks.tsx
 
 interface CustomizableDashboardProps {
   userId: number;
@@ -178,7 +153,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   };
 
   // Bloques disponibles para agregar (los que no están ya en el dashboard)
-  const availableToAdd = Object.keys(AVAILABLE_BLOCKS).filter(
+  const availableToAdd = Object.keys(DASHBOARD_BLOCKS).filter(
     (blockId) => !activeBlocks.includes(blockId)
   );
 
@@ -361,7 +336,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
         {/* Contenedor de bloques personalizables */}
         <div className="space-y-4">
           {activeBlocks.map((blockId, index) => {
-            const blockConfig = AVAILABLE_BLOCKS[blockId as keyof typeof AVAILABLE_BLOCKS];
+            const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
             if (!blockConfig) return null;
             
             const BlockComponent = blockConfig.component;
