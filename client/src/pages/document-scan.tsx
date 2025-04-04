@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { 
   Card, 
   CardContent, 
@@ -11,9 +11,53 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { apiRequest } from "@/lib/queryClient";
+
+// Esquema para validar la categoría
+const categorySchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  type: z.enum(["income", "expense"]),
+  color: z.string().default("#6E56CF"),
+});
+
+type CategoryFormValues = z.infer<typeof categorySchema>;
+
+// Tipo para categorías
+interface Category {
+  id: number;
+  name: string;
+  type: "income" | "expense";
+  color: string;
+}
 
 const DocumentScanPage = () => {
   const [, navigate] = useLocation();
@@ -28,6 +72,24 @@ const DocumentScanPage = () => {
   const [transaction, setTransaction] = useState<any>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [isResultZoomed, setIsResultZoomed] = useState(false);
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  
+  // Consulta para obtener categorías
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+  
+  // Hook para el formulario de nueva categoría
+  const categoryForm = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      type: "expense", // Por defecto para gastos
+      color: "#6E56CF",
+    },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -130,6 +192,94 @@ const DocumentScanPage = () => {
     }));
   };
   
+  // Mutación para crear una nueva categoría
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: CategoryFormValues) => {
+      const response = await apiRequest("POST", "/api/categories", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Categoría creada",
+        description: `La categoría ${data.name} se ha creado correctamente`,
+      });
+      
+      // Cerrar el modal
+      setNewCategoryDialogOpen(false);
+      
+      // Refrescar la lista de categorías
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      
+      // Resetear formulario
+      categoryForm.reset({
+        name: "",
+        type: "expense",
+        color: "#6E56CF",
+      });
+      
+      // Actualizar la categoría del documento
+      if (transaction && data.id) {
+        handleUpdateCategory(data.id);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error al crear la categoría",
+        description: "No se pudo crear la categoría. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Manejador para crear una nueva categoría
+  const handleCreateCategory = (data: CategoryFormValues) => {
+    createCategoryMutation.mutate(data);
+  };
+  
+  // Función para actualizar la categoría de la transacción
+  const handleUpdateCategory = async (categoryId: number | null) => {
+    if (!transaction) return;
+    
+    try {
+      const response = await fetch(`/api/transactions/${transaction.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...transaction,
+          categoryId
+        }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      // Actualizar la transacción en el estado
+      setTransaction({
+        ...transaction,
+        categoryId
+      });
+      
+      // Invalidar consultas
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      toast({
+        title: "Categoría actualizada",
+        description: "La categoría del gasto se ha actualizado correctamente",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al actualizar la categoría",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Función para guardar los cambios realizados
   const handleSaveChanges = async () => {
     if (!editedData || !transaction) return;
@@ -219,6 +369,104 @@ const DocumentScanPage = () => {
 
   return (
     <div className="container max-w-5xl py-8">
+      {/* Modal para crear una nueva categoría */}
+      <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Crear nueva categoría</DialogTitle>
+            <DialogDescription>
+              Crea una nueva categoría para clasificar tus movimientos
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...categoryForm}>
+            <form onSubmit={categoryForm.handleSubmit(handleCreateCategory)} className="space-y-4">
+              <FormField
+                control={categoryForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nombre de la categoría" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={categoryForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="income">Ingreso</SelectItem>
+                        <SelectItem value="expense">Gasto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={categoryForm.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Color</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-8 h-8 rounded-full border" 
+                        style={{ backgroundColor: field.value }}
+                      />
+                      <FormControl>
+                        <Input type="color" {...field} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setNewCategoryDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={createCategoryMutation.isPending}>
+                  {createCategoryMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creando...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Crear categoría
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
       <div className="mb-6 flex items-center">
         <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mr-4">
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -537,16 +785,46 @@ const DocumentScanPage = () => {
                     )}
                     
                     {/* Categoría - EDITABLE */}
-                    {editedData && extractedData.categoryHint && (
+                    {editedData && (
                       <div className="flex justify-between pb-2">
-                        <label htmlFor="categoryHint" className="text-muted-foreground">Categoría sugerida:</label>
-                        <Input 
-                          id="categoryHint"
-                          type="text"
-                          value={editedData.categoryHint}
-                          onChange={(e) => handleFieldChange('categoryHint', e.target.value)}
-                          className="w-1/2 h-7 text-right"
-                        />
+                        <label htmlFor="categorySelect" className="text-muted-foreground">Categoría:</label>
+                        <div className="flex items-center w-1/2">
+                          <Select
+                            value={transaction?.categoryId?.toString() || "null"}
+                            onValueChange={(value) => {
+                              if (value === "new_category") {
+                                // Abrir diálogo para crear nueva categoría
+                                categoryForm.setValue('type', 'expense');
+                                setNewCategoryDialogOpen(true);
+                              } else {
+                                // Actualizar la transacción con la categoría seleccionada
+                                const categoryId = value !== "null" ? parseInt(value) : null;
+                                // Actualizar categoría (puede ser null o un número)
+                                handleUpdateCategory(categoryId);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="h-7 w-full">
+                              <SelectValue placeholder={editedData.categoryHint || "Seleccionar categoría"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="null">Sin categoría</SelectItem>
+                              {categories && categories
+                                .filter((cat) => cat.type === "expense")
+                                .map((category) => (
+                                  <SelectItem 
+                                    key={category.id} 
+                                    value={category.id.toString()}
+                                  >
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              <SelectItem value="new_category" className="text-primary border-t mt-1 pt-1">
+                                + Añadir nueva categoría
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     )}
                     

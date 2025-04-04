@@ -28,13 +28,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
-import { CalendarIcon, Loader2, FileText, Receipt, Download } from "lucide-react";
+import { CalendarIcon, Loader2, FileText, Receipt, Download, Plus, Check } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const transactionSchema = z.object({
   title: z.string().optional(),
@@ -75,10 +76,32 @@ interface Transaction {
   attachments?: string[];
 }
 
+// Esquema para el formulario de categoría
+const categorySchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  type: z.enum(["income", "expense"]),
+  color: z.string().default("#6E56CF"),
+});
+
+type CategoryFormValues = z.infer<typeof categorySchema>;
+
 const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [location, navigate] = useLocation();
+  
+  // Estado para controlar el diálogo de nueva categoría
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
+  
+  // Formulario para la nueva categoría
+  const categoryForm = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      type: "expense",
+      color: "#6E56CF",
+    },
+  });
   
   const isEditMode = !!transactionId;
 
@@ -487,9 +510,153 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     </div>;
   }
 
+  // Mutación para crear una nueva categoría
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: CategoryFormValues) => {
+      const response = await apiRequest("POST", "/api/categories", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Categoría creada",
+        description: `La categoría ${data.name} se ha creado correctamente`,
+      });
+      
+      // Cerrar el modal
+      setNewCategoryDialogOpen(false);
+      
+      // Refrescar la lista de categorías
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      
+      // Resetear formulario
+      categoryForm.reset({
+        name: "",
+        type: "expense",
+        color: "#6E56CF",
+      });
+      
+      // Seleccionar la categoría recién creada
+      setTimeout(() => {
+        if (data.id) {
+          form.setValue('categoryId', data.id);
+        }
+      }, 100);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error al crear la categoría",
+        description: "No se pudo crear la categoría. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Manejador para crear una nueva categoría
+  const handleCreateCategory = (data: CategoryFormValues) => {
+    createCategoryMutation.mutate(data);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Modal para crear una nueva categoría */}
+        <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Crear nueva categoría</DialogTitle>
+              <DialogDescription>
+                Crea una nueva categoría para clasificar tus movimientos
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...categoryForm}>
+              <form onSubmit={categoryForm.handleSubmit(handleCreateCategory)} className="space-y-4">
+                <FormField
+                  control={categoryForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nombre de la categoría" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={categoryForm.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="income">Ingreso</SelectItem>
+                          <SelectItem value="expense">Gasto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={categoryForm.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Color</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-8 h-8 rounded-full border" 
+                          style={{ backgroundColor: field.value }}
+                        />
+                        <FormControl>
+                          <Input type="color" {...field} />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setNewCategoryDialogOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={createCategoryMutation.isPending}>
+                    {createCategoryMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Crear categoría
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -682,9 +849,16 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                   <FormItem>
                     <FormLabel>Categoría</FormLabel>
                     <Select
-                      onValueChange={(value) => 
-                        field.onChange(value !== "null" ? parseInt(value) : null)
-                      }
+                      onValueChange={(value) => {
+                        if (value === "new_category") {
+                          // Abrir diálogo para crear nueva categoría
+                          categoryForm.setValue('type', form.getValues("type"));
+                          setNewCategoryDialogOpen(true);
+                        } else {
+                          // Actualizar el valor normalmente
+                          field.onChange(value !== "null" ? parseInt(value) : null);
+                        }
+                      }}
                       defaultValue={
                         field.value ? field.value.toString() : "null"
                       }
@@ -706,6 +880,9 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                               {category.name}
                             </SelectItem>
                           ))}
+                        <SelectItem value="new_category" className="text-primary border-t mt-1 pt-1">
+                          + Añadir nueva categoría
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
