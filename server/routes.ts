@@ -3084,5 +3084,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 });
 
+  // Endpoints para preferencias del dashboard
+  
+  // Función para obtener el layout predeterminado del dashboard
+  function getDefaultDashboardLayout() {
+    return [
+      {
+        id: "income-summary",
+        type: "income-summary",
+        position: { x: 0, y: 0, w: 6, h: 2 },
+        visible: true
+      },
+      {
+        id: "expenses-summary",
+        type: "expenses-summary",
+        position: { x: 6, y: 0, w: 6, h: 2 },
+        visible: true
+      },
+      {
+        id: "tax-summary",
+        type: "tax-summary",
+        position: { x: 0, y: 2, w: 12, h: 3 },
+        visible: true
+      },
+      {
+        id: "recent-invoices",
+        type: "recent-invoices",
+        position: { x: 0, y: 5, w: 6, h: 4 },
+        visible: true
+      },
+      {
+        id: "recent-transactions",
+        type: "recent-transactions",
+        position: { x: 6, y: 5, w: 6, h: 4 },
+        visible: true
+      }
+    ];
+  }
+  
+  // Obtener preferencias de dashboard
+  app.get("/api/dashboard/preferences", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId;
+      const preferences = await storage.getDashboardPreferences(userId);
+      
+      if (!preferences) {
+        // Devolver una configuración por defecto si no existe
+        return res.status(200).json({
+          id: 0,
+          userId,
+          layout: getDefaultDashboardLayout(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+      
+      return res.status(200).json(preferences);
+    } catch (error) {
+      console.error("Error al obtener preferencias del dashboard:", error);
+      return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+  
+  // Guardar preferencias de dashboard
+  app.post("/api/dashboard/preferences", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId;
+      const { layout } = req.body;
+      
+      if (!layout || !Array.isArray(layout)) {
+        return res.status(400).json({ message: "Se requiere un layout válido" });
+      }
+      
+      const preferences = await storage.saveDashboardPreferences(userId, layout);
+      return res.status(200).json(preferences);
+    } catch (error) {
+      console.error("Error al guardar preferencias del dashboard:", error);
+      return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
   return httpServer;
 }

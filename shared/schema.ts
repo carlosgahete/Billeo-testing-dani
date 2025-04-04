@@ -294,3 +294,36 @@ export const quoteItemValidationSchema = insertQuoteItemSchema.extend({
 });
 export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
 export type QuoteItem = typeof quoteItems.$inferSelect;
+
+// Dashboard Preferences
+export const dashboardPreferences = pgTable("dashboard_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  layout: jsonb("layout").notNull(), // Array de bloques y su posición
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDashboardPreferencesSchema = createInsertSchema(dashboardPreferences).omit({ 
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Schema para un bloque del dashboard
+export const dashboardBlockSchema = z.object({
+  id: z.string(), // ID único del bloque
+  type: z.string(), // Tipo de bloque (income, expenses, taxes, etc.)
+  position: z.object({
+    x: z.number(), // Posición horizontal (columna)
+    y: z.number(), // Posición vertical (fila)
+    w: z.number(), // Ancho (en unidades de grid)
+    h: z.number(), // Alto (en unidades de grid)
+  }),
+  visible: z.boolean().default(true), // Si es visible o no
+  config: z.record(z.any()).optional(), // Configuración específica del bloque
+});
+
+export type DashboardBlock = z.infer<typeof dashboardBlockSchema>;
+export type InsertDashboardPreferences = z.infer<typeof insertDashboardPreferencesSchema>;
+export type DashboardPreferences = typeof dashboardPreferences.$inferSelect;

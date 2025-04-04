@@ -29,7 +29,11 @@ import {
   quoteItems,
   categories,
   transactions,
-  tasks
+  tasks,
+  dashboardPreferences,
+  DashboardPreferences,
+  InsertDashboardPreferences,
+  DashboardBlock
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { db, sql } from "./db";
@@ -56,6 +60,10 @@ export interface IStorage {
   createPasswordResetToken(email: string): Promise<{ token: string, user: User } | undefined>;
   verifyPasswordResetToken(token: string): Promise<User | undefined>;
   resetPassword(userId: number, newPassword: string): Promise<boolean>;
+  
+  // Dashboard preferences operations
+  getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
+  saveDashboardPreferences(userId: number, layout: DashboardBlock[]): Promise<DashboardPreferences>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -502,6 +510,53 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error al resetear contraseña:", error);
       return false;
+    }
+  }
+  
+  // Dashboard preferences methods
+  async getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined> {
+    try {
+      const result = await db.select()
+        .from(dashboardPreferences)
+        .where(eq(dashboardPreferences.userId, userId));
+      
+      return result[0];
+    } catch (error) {
+      console.error("Error al obtener preferencias de dashboard:", error);
+      return undefined;
+    }
+  }
+  
+  async saveDashboardPreferences(userId: number, layout: DashboardBlock[]): Promise<DashboardPreferences> {
+    try {
+      // Comprobar si ya existen preferencias para este usuario
+      const existingPrefs = await this.getDashboardPreferences(userId);
+      
+      if (existingPrefs) {
+        // Actualizar las preferencias existentes
+        const result = await db.update(dashboardPreferences)
+          .set({
+            layout: layout,
+            updatedAt: new Date()
+          })
+          .where(eq(dashboardPreferences.userId, userId))
+          .returning();
+        
+        return result[0];
+      } else {
+        // Crear nuevas preferencias
+        const result = await db.insert(dashboardPreferences)
+          .values({
+            userId: userId,
+            layout: layout
+          })
+          .returning();
+        
+        return result[0];
+      }
+    } catch (error) {
+      console.error("Error al guardar preferencias de dashboard:", error);
+      throw error;
     }
   }
   
