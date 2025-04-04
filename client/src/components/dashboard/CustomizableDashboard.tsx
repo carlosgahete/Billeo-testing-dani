@@ -130,14 +130,22 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
 
   // Agregar un bloque al dashboard
   const addBlock = (blockType: string) => {
+    console.log("Función addBlock llamada con:", blockType);
+    console.log("Estado actual de activeBlocks:", activeBlocks);
+    
     if (!activeBlocks.includes(blockType)) {
+      console.log("El bloque no está en la lista, se agregará");
       const newBlocks = [...activeBlocks, blockType];
+      console.log("Nueva lista de bloques:", newBlocks);
+      
       setActiveBlocks(newBlocks);
       
       // Guardamos automáticamente al añadir
       updatePreferences({
         blocks: newBlocks,
       });
+    } else {
+      console.log("El bloque ya está en la lista, no se agregará");
     }
   };
 

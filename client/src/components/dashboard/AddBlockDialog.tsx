@@ -123,6 +123,7 @@ const AddBlockDialog: React.FC<AddBlockDialogProps> = ({
                 key={block.id}
                 className="group relative border rounded-xl overflow-hidden hover:shadow-md hover:border-primary cursor-pointer transition-all"
                 onClick={() => {
+                  console.log("Añadiendo bloque:", block.id);
                   onSelectBlock(block.id);
                   onOpenChange(false);
                 }}
