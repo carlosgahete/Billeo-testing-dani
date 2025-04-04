@@ -1,99 +1,99 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt, ExternalLink } from "lucide-react";
-import { DashboardStats } from "@/types/dashboard";
+import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
+import { 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  Receipt 
+} from "lucide-react";
 
-interface InvoicesSummaryProps {
-  data: DashboardStats;
-  isLoading: boolean;
-}
-
-const InvoicesSummary: React.FC<InvoicesSummaryProps> = ({ data, isLoading }) => {
+const InvoicesSummary: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
+  // Formato para moneda
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2
+    }).format(value / 100);
+  };
+  
+  // Si está cargando, mostrar skeleton
   if (isLoading) {
     return (
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-blue-50 p-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg text-blue-700 flex items-center">
-              <Receipt className="mr-2 h-5 w-5" />
-              Facturas
-            </CardTitle>
-          </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Facturas</CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <Skeleton className="h-8 w-32 mb-4" />
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-32" />
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const totalInvoices = data?.invoicesTotal || 0;
-  const paidInvoices = data?.invoicesPaid || 0;
-  const pendingInvoices = data?.invoicesPending || 0;
-  const overdueInvoices = data?.invoicesOverdue || 0;
-  
-  // Tasa de cobro
-  const collectionRate = totalInvoices > 0 ? Math.round((paidInvoices / totalInvoices) * 100) : 0;
+  // Datos de facturación
+  const invoicesTotal = data.income || 0;
+  const pendingInvoices = data.pendingInvoices || 0;
+  const pendingCount = data.pendingCount || 0;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="bg-blue-50 p-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg text-blue-700 flex items-center">
-            <Receipt className="mr-2 h-5 w-5" />
-            Facturas
-          </CardTitle>
-        </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Facturas</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
-        <h3 className="text-lg font-semibold mb-3">Total de facturas: {totalInvoices}</h3>
-        
+      <CardContent>
         <div className="space-y-3">
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-sm">Pagadas</span>
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold text-blue-600">
+              {formatCurrency(invoicesTotal)}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Facturación total
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 pt-3">
+            <div className="flex flex-col p-2 border rounded-md">
+              <div className="flex items-center mb-1">
+                <Receipt className="h-5 w-5 text-blue-500 mr-2" />
+                <p className="text-sm font-medium">Pendientes de cobro</p>
               </div>
-              <span className="font-semibold">{paidInvoices}</span>
+              <p className="text-xl font-medium text-amber-500">{formatCurrency(pendingInvoices)}</p>
+              <p className="text-xs text-muted-foreground">{pendingCount} facturas</p>
             </div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
-                <span className="text-sm">Pendientes</span>
+            
+            <div className="flex flex-col p-2 border rounded-md">
+              <div className="flex items-center mb-1">
+                <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
+                <p className="text-sm font-medium">Cobrado</p>
               </div>
-              <span className="font-semibold">{pendingInvoices}</span>
-            </div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-sm">Vencidas</span>
-              </div>
-              <span className="font-semibold">{overdueInvoices}</span>
+              <p className="text-xl font-medium text-green-500">{formatCurrency(invoicesTotal - pendingInvoices)}</p>
+              <p className="text-xs text-muted-foreground">{4 - pendingCount} facturas</p>
             </div>
           </div>
           
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600">Tasa de cobro</span>
-              <span className="text-sm font-semibold">{collectionRate}%</span>
+          <div className="border-t pt-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium flex items-center">
+                <Clock className="h-4 w-4 mr-1 text-amber-500" />
+                Pendiente de cobro
+              </p>
+              <p className="font-semibold">
+                {invoicesTotal > 0 
+                  ? Math.round((pendingInvoices / invoicesTotal) * 100) 
+                  : 0}%
+              </p>
             </div>
-            <Progress value={collectionRate} className="h-2" />
           </div>
-        </div>
-        
-        <div className="mt-4">
-          <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
-            Ver facturas
-            <ExternalLink className="ml-1 h-3 w-3" />
-          </button>
         </div>
       </CardContent>
     </Card>

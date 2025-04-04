@@ -1,68 +1,80 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CircleDollarSign, ExternalLink } from "lucide-react";
-import { DashboardStats } from "@/types/dashboard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface ResultSummaryProps {
-  data: DashboardStats;
-  isLoading: boolean;
-}
-
-const ResultSummary: React.FC<ResultSummaryProps> = ({ data, isLoading }) => {
+const ResultSummary: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
+  // Formato para moneda
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2
+    }).format(value / 100);
+  };
+  
+  // Si está cargando, mostrar skeleton
   if (isLoading) {
     return (
-      <Card className="overflow-hidden">
-        <CardContent className="p-6">
-          <Skeleton className="h-8 w-40 mb-4" />
-          <Skeleton className="h-12 w-56 mb-2" />
-          <Skeleton className="h-4 w-32" />
-          <div className="mt-4">
-            <Skeleton className="h-8 w-full" />
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Resultado Final</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-32" />
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const income = data?.income || 0;
-  const expenses = data?.expenses || 0;
+  // Cálculos para el resultado
+  const income = data.income || 0;
+  const expenses = data.expenses || 0;
   const result = income - expenses;
-  const taxAmount = Math.round(result * 0.21);
-
-  // Formatear valores monetarios con el formato español
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
+  const ivaALiquidar = data.taxes?.ivaALiquidar || 0;
+  const irpfTotal = data.taxes?.incomeTax || 0;
+  const resultadoNeto = result - irpfTotal;  // Resultado después de IRPF
 
   return (
-    <Card className="overflow-hidden border-t-4 border-t-blue-500">
-      <CardContent className="pt-6 pb-4 px-6">
-        <div className="flex items-center text-gray-600 mb-2">
-          <CircleDollarSign className="mr-2 h-5 w-5 text-blue-600" />
-          <span className="text-sm">Resultado Final</span>
-        </div>
-        
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Resultado Final</CardTitle>
+      </CardHeader>
+      <CardContent>
         <div className="space-y-3">
-          <div>
-            <h3 className="text-2xl font-bold text-blue-600">{formatCurrency(result)} €</h3>
-            <p className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(taxAmount)} €</p>
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold text-green-600">
+              {formatCurrency(result)}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Base imponible
+            </span>
           </div>
           
-          <div className="text-sm">
-            <span className="text-gray-600">IRPF adelantado:</span>
-            <span className="text-green-500 ml-1">4500 €</span>
+          <div className="grid grid-cols-2 gap-4 border-t pt-3">
+            <div>
+              <p className="text-sm text-muted-foreground">IVA a liquidar</p>
+              <p className="font-medium">{formatCurrency(ivaALiquidar)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">IRPF estimado</p>
+              <p className="font-medium">{formatCurrency(irpfTotal)}</p>
+            </div>
           </div>
-        </div>
-        
-        <div className="mt-4">
-          <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
-            Ver informes
-            <ExternalLink className="ml-1 h-3 w-3" />
-          </button>
+          
+          <div className="border-t pt-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Resultado neto (después de IRPF)</p>
+              <p className="font-semibold">{formatCurrency(resultadoNeto)}</p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

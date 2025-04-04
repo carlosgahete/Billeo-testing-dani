@@ -3088,38 +3088,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Función para obtener el layout predeterminado del dashboard
   function getDefaultDashboardLayout() {
-    return [
-      {
-        id: "income-summary",
-        type: "income-summary",
-        position: { x: 0, y: 0, w: 6, h: 2 },
-        visible: true
-      },
-      {
-        id: "expenses-summary",
-        type: "expenses-summary",
-        position: { x: 6, y: 0, w: 6, h: 2 },
-        visible: true
-      },
-      {
-        id: "tax-summary",
-        type: "tax-summary",
-        position: { x: 0, y: 2, w: 12, h: 3 },
-        visible: true
-      },
-      {
-        id: "recent-invoices",
-        type: "recent-invoices",
-        position: { x: 0, y: 5, w: 6, h: 4 },
-        visible: true
-      },
-      {
-        id: "recent-transactions",
-        type: "recent-transactions",
-        position: { x: 6, y: 5, w: 6, h: 4 },
-        visible: true
-      }
-    ];
+    // Layout por defecto para mantener la estructura del dashboard actual
+    return {
+      blocks: [
+        "income-summary",
+        "expenses-summary",
+        "result-summary",
+        "quotes-summary",
+        "invoices-summary",
+        "comparative-chart"
+      ]
+    };
   }
   
   // Obtener preferencias de dashboard
@@ -3150,11 +3129,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/dashboard/preferences", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = req.session.userId;
-      const { layout } = req.body;
+      const { blocks } = req.body;
       
-      if (!layout || !Array.isArray(layout)) {
-        return res.status(400).json({ message: "Se requiere un layout válido" });
+      if (!blocks || !Array.isArray(blocks)) {
+        return res.status(400).json({ message: "Se requiere un array de bloques válido" });
       }
+      
+      // Creamos un nuevo objeto de layout con los bloques
+      const layout = {
+        blocks: blocks
+      };
       
       const preferences = await storage.saveDashboardPreferences(userId, layout);
       return res.status(200).json(preferences);

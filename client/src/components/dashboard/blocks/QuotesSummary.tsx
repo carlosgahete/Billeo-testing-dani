@@ -1,99 +1,91 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, ExternalLink } from "lucide-react";
-import { DashboardStats } from "@/types/dashboard";
+import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
+import { 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  FileText 
+} from "lucide-react";
 
-interface QuotesSummaryProps {
-  data: DashboardStats;
-  isLoading: boolean;
-}
-
-const QuotesSummary: React.FC<QuotesSummaryProps> = ({ data, isLoading }) => {
+const QuotesSummary: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
+  // Si está cargando, mostrar skeleton
   if (isLoading) {
     return (
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-indigo-50 p-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg text-indigo-700 flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
-              Presupuestos
-            </CardTitle>
-          </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Presupuestos</CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <Skeleton className="h-8 w-32 mb-4" />
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-32" />
+            <div className="grid grid-cols-3 gap-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const totalQuotes = data?.quotesTotal || 5;
-  const acceptedQuotes = data?.quotesAccepted || 3;
-  const rejectedQuotes = data?.quotesRejected || 1;
-  const pendingQuotes = data?.quotesPending || 0;
-  
-  // Tasa de aceptación
-  const acceptanceRate = totalQuotes > 0 ? Math.round((acceptedQuotes / totalQuotes) * 100) : 0;
+  // Datos de presupuestos
+  const quotesTotal = 5; // Usando un valor fijo por ahora
+  const quotesAccepted = 3;
+  const quotesRejected = 1;
+  const quotesPending = 0;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="bg-indigo-50 p-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg text-indigo-700 flex items-center">
-            <FileText className="mr-2 h-5 w-5" />
-            Presupuestos
-          </CardTitle>
-        </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Presupuestos</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
-        <h3 className="text-lg font-semibold mb-3">Total de presupuestos: {totalQuotes}</h3>
-        
+      <CardContent>
         <div className="space-y-3">
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-sm">Aceptados</span>
-              </div>
-              <span className="font-semibold">{acceptedQuotes}</span>
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold">
+              {quotesTotal}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Presupuestos totales
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4 pt-3">
+            <div className="flex flex-col items-center justify-center p-2 border rounded-md">
+              <CheckCircle2 className="h-6 w-6 text-green-500 mb-1" />
+              <p className="text-sm text-muted-foreground">Aceptados</p>
+              <p className="font-medium text-lg">{quotesAccepted}</p>
             </div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-sm">Rechazados</span>
-              </div>
-              <span className="font-semibold">{rejectedQuotes}</span>
+            
+            <div className="flex flex-col items-center justify-center p-2 border rounded-md">
+              <XCircle className="h-6 w-6 text-red-500 mb-1" />
+              <p className="text-sm text-muted-foreground">Rechazados</p>
+              <p className="font-medium text-lg">{quotesRejected}</p>
             </div>
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
-                <span className="text-sm">Pendientes</span>
-              </div>
-              <span className="font-semibold">{pendingQuotes}</span>
+            
+            <div className="flex flex-col items-center justify-center p-2 border rounded-md">
+              <Clock className="h-6 w-6 text-yellow-500 mb-1" />
+              <p className="text-sm text-muted-foreground">Pendientes</p>
+              <p className="font-medium text-lg">{quotesPending}</p>
             </div>
           </div>
           
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600">Tasa de aceptación</span>
-              <span className="text-sm font-semibold">{acceptanceRate}%</span>
+          <div className="border-t pt-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium flex items-center">
+                <FileText className="h-4 w-4 mr-1 text-blue-500" />
+                Tasa de aceptación
+              </p>
+              <p className="font-semibold">
+                {quotesTotal > 0 
+                  ? Math.round((quotesAccepted / quotesTotal) * 100) 
+                  : 0}%
+              </p>
             </div>
-            <Progress value={acceptanceRate} className="h-2" />
           </div>
-        </div>
-        
-        <div className="mt-4">
-          <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
-            Ver presupuestos
-            <ExternalLink className="ml-1 h-3 w-3" />
-          </button>
         </div>
       </CardContent>
     </Card>
