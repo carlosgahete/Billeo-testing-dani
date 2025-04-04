@@ -53,7 +53,20 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageHeader } from "@/components/ui/page-header";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Smile } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+// Emojis comunes para categorías
+const CATEGORY_EMOJIS = [
+  "💼", "💰", "💸", "💳", "💹", "📈", "🏢", "🏠", "🚗", "✈️", 
+  "🍔", "🛒", "🛍️", "📱", "💻", "📊", "📚", "🎓", "🏥", "💊", 
+  "🔧", "🛠️", "📷", "🎬", "🎵", "🎨", "🏆", "⚽", "🎮", "👕",
+  "💡", "📣", "🔒", "📎", "🧾", "📝", "📑", "🗓️", "🏦", "🧰"
+];
 
 // Schema for category
 const categorySchema = z.object({
@@ -62,6 +75,7 @@ const categorySchema = z.object({
     required_error: "Selecciona el tipo de categoría",
   }),
   color: z.string().optional(),
+  icon: z.string().default("💼"), // Icono predeterminado
 });
 
 // Type for our form values
@@ -73,6 +87,7 @@ interface Category {
   name: string;
   type: "income" | "expense";
   color?: string;
+  icon?: string;
   userId: number;
 }
 
@@ -91,6 +106,7 @@ const CategorySettingsPage: React.FC = () => {
       name: "",
       type: "expense",
       color: "#6E56CF", // Default color (primary color)
+      icon: "💼", // Icono predeterminado
     },
   });
 
@@ -198,6 +214,7 @@ const CategorySettingsPage: React.FC = () => {
       name: category.name,
       type: category.type,
       color: category.color || "#6E56CF",
+      icon: category.icon || "💼",
     });
   };
 
@@ -215,6 +232,7 @@ const CategorySettingsPage: React.FC = () => {
       name: "",
       type: "expense",
       color: "#6E56CF",
+      icon: "💼",
     });
   };
 
@@ -311,6 +329,48 @@ const CategorySettingsPage: React.FC = () => {
                       </div>
                       <FormDescription>
                         Elige un color para identificar la categoría
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="icon"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Icono</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between"
+                            >
+                              <span className="text-2xl mr-2">{field.value}</span>
+                              <span className="flex-grow text-left">Seleccionar icono</span>
+                              <Smile className="h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-2" align="start">
+                          <div className="grid grid-cols-8 gap-2">
+                            {CATEGORY_EMOJIS.map((emoji) => (
+                              <Button
+                                key={emoji}
+                                variant="outline"
+                                className="h-10 w-10 p-0 text-xl"
+                                onClick={() => field.onChange(emoji)}
+                              >
+                                {emoji}
+                              </Button>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Elige un icono para representar la categoría
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -469,6 +529,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({ categories, onEdit, o
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">Color</TableHead>
+            <TableHead className="w-[50px]">Icono</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead>Tipo</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
@@ -482,6 +543,9 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({ categories, onEdit, o
                   className="w-4 h-4 rounded-full" 
                   style={{ backgroundColor: category.color || "#6E56CF" }}
                 />
+              </TableCell>
+              <TableCell className="text-xl">
+                {category.icon || "💼"}
               </TableCell>
               <TableCell className="font-medium">{category.name}</TableCell>
               <TableCell>

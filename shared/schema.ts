@@ -132,6 +132,7 @@ export const categories = pgTable("categories", {
   name: text("name").notNull(),
   type: text("type").notNull(), // income, expense
   color: text("color"),
+  icon: text("icon"), // Icono/emoji para la categoría
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({ 

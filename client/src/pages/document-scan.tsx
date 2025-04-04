@@ -47,6 +47,7 @@ const categorySchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
   type: z.enum(["income", "expense"]),
   color: z.string().default("#6E56CF"),
+  icon: z.string().default("💼"), // Icono predeterminado
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -57,6 +58,7 @@ interface Category {
   name: string;
   type: "income" | "expense";
   color: string;
+  icon?: string; // Icono opcional
 }
 
 const DocumentScanPage = () => {
@@ -88,6 +90,7 @@ const DocumentScanPage = () => {
       name: "",
       type: "expense", // Por defecto para gastos
       color: "#6E56CF",
+      icon: "💼", // Icono predeterminado
     },
   });
 
@@ -215,6 +218,7 @@ const DocumentScanPage = () => {
         name: "",
         type: "expense",
         color: "#6E56CF",
+        icon: "💼", // Icono predeterminado
       });
       
       // Actualizar la categoría del documento
@@ -434,6 +438,33 @@ const DocumentScanPage = () => {
                       <FormControl>
                         <Input type="color" {...field} />
                       </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={categoryForm.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Icono</FormLabel>
+                    <div className="grid grid-cols-8 gap-2">
+                      {["💼", "🏢", "🏪", "🏭", "🏦", "📱", "💻", "🖥️", 
+                        "📊", "📈", "📉", "💰", "💵", "💸", "💳", "🧾",
+                        "🛒", "🛍️", "🚗", "✈️", "🏨", "🍽️", "📚", "🏥",
+                        "💊", "🧰", "🔧", "📝", "📄", "📋", "📌", "🔔"].map((emoji) => (
+                        <Button
+                          key={emoji}
+                          type="button"
+                          variant={field.value === emoji ? "default" : "outline"}
+                          className="h-10 w-10 p-0 text-xl"
+                          onClick={() => field.onChange(emoji)}
+                        >
+                          {emoji}
+                        </Button>
+                      ))}
                     </div>
                     <FormMessage />
                   </FormItem>
