@@ -10,8 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import AddBlockDialog from "./AddBlockDialog";
 
-// Importamos la configuración centralizada de bloques
+// Importamos la configuración centralizada de bloques y tamaños
 import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
+import { getBlockSize } from "../../config/dashboardSizes";
 
 // Layout por defecto totalmente vacío
 const EMPTY_LAYOUT: string[] = [];
@@ -294,15 +295,13 @@ const EmptyDashboard = ({ userId }: EmptyDashboardProps) => {
               
               const BlockComponent = blockConfig.component;
               
-              // Determinar si el bloque debe ocupar varias columnas
-              // La comparativa financiera debe ocupar todo el ancho
-              const isFullWidth = ["comparative-chart"].includes(blockId);
-              const columnClass = isFullWidth ? "lg:col-span-3" : "lg:col-span-1";
+              // Obtener el tamaño apropiado para este bloque usando la función centralizada
+              const { width, height } = getBlockSize(blockId);
               
               return (
                 <div 
                   key={blockId} 
-                  className={`relative group ${columnClass} ${isEditMode ? 'ring-2 ring-blue-200 rounded-lg' : ''}`}
+                  className={`relative group ${width} ${height} ${isEditMode ? 'ring-2 ring-blue-200 rounded-lg' : ''}`}
                 >
                   {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
                   <div 

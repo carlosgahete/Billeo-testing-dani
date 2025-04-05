@@ -578,4 +578,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({ categories, onEdit, o
   );
 };
 
+// Exportamos con ambos nombres para compatibilidad
+const CategoriesPage = CategorySettingsPage;
+export { CategoriesPage };
 export default CategorySettingsPage;
