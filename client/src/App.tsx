@@ -13,8 +13,6 @@ import { ThemeProvider } from "@/hooks/use-theme";
 // La optimización la haremos a nivel de API y de caché
 import NotFound from "@/pages/not-found";
 import FixedDashboard from "@/pages/fixed-dashboard";
-import EmptyDashboardPage from "@/pages/empty-dashboard";
-import AppleDashboardPage from "@/pages/apple-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
@@ -156,16 +154,6 @@ function Router() {
       <Route path="/analytics">
         <Layout>
           <ProtectedRoute path="/analytics" component={AnalyticsPage} />
-        </Layout>
-      </Route>
-      <Route path="/apple-dashboard">
-        <Layout>
-          <ProtectedRoute path="/apple-dashboard" component={AppleDashboardPage} />
-        </Layout>
-      </Route>
-      <Route path="/empty-dashboard">
-        <Layout>
-          <ProtectedRoute path="/empty-dashboard" component={EmptyDashboardPage} />
         </Layout>
       </Route>
       <Route path="/admin/users">
