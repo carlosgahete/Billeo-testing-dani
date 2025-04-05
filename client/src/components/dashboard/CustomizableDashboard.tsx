@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, X, ArrowUp, ArrowDown, Settings } from "lucide-react";
+import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check } from "lucide-react";
 import { DashboardPreferences, DashboardStats } from "@/types/dashboard";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import AddBlockDialog from "./AddBlockDialog";
 
 // Importamos los componentes del dashboard existente
@@ -41,6 +43,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   const [year, setYear] = useState<string>("2025");
   const [period, setPeriod] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // Obtener preferencias del usuario
   const { data: preferences, isLoading: preferencesLoading } = useQuery<DashboardPreferences>({
@@ -192,15 +195,41 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
         {/* Header con botones de acción */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Dashboard</h2>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-3">
+            {isEditMode && (
+              <div className="flex items-center bg-yellow-50 py-1 px-3 rounded-md border border-yellow-200">
+                <span className="text-sm text-yellow-700 mr-2">Modo edición</span>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAddDialogOpen(true)}
+                    className="flex items-center text-xs h-7"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Añadir
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             <Button
-              variant="default"
+              variant={isEditMode ? "outline" : "default"}
               size="sm"
-              onClick={() => setIsAddDialogOpen(true)}
-              className="flex items-center bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`flex items-center ${isEditMode ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100" : ""}`}
             >
-              <Plus className="mr-1 h-4 w-4" />
-              Añadir Bloque
+              {isEditMode ? (
+                <>
+                  <Check className="mr-1 h-4 w-4" />
+                  Guardar cambios
+                </>
+              ) : (
+                <>
+                  <Pencil className="mr-1 h-4 w-4" />
+                  Personalizar dashboard
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -226,16 +255,34 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
             const columnClass = isFullWidth ? "lg:col-span-3" : "lg:col-span-1";
             
             return (
-              <div key={blockId} className={`relative group ${columnClass}`}>
-                {/* Controles del bloque */}
-                <div className="absolute top-2 right-2 z-10 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div 
+                key={blockId} 
+                className={`relative group ${columnClass} ${isEditMode ? 'ring-2 ring-blue-200 rounded-lg' : ''}`}
+              >
+                {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
+                <div 
+                  className={`absolute top-2 right-2 z-10 flex space-x-1
+                    ${isEditMode 
+                      ? 'opacity-100 bg-white/90 p-1 rounded-md shadow-md border border-gray-200' 
+                      : 'opacity-0 group-hover:opacity-100 transition-opacity'}
+                  `}
+                >
+                  {isEditMode && (
+                    <div className="flex items-center mr-2">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {blockConfig.title}
+                      </span>
+                    </div>
+                  )}
+                  
                   {/* Botón para mover hacia arriba */}
                   {index > 0 && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 bg-white/80 hover:bg-white shadow"
+                      className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
                       onClick={() => moveBlock(blockId, "up")}
+                      title="Mover hacia arriba"
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -246,8 +293,9 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 bg-white/80 hover:bg-white shadow"
+                      className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
                       onClick={() => moveBlock(blockId, "down")}
+                      title="Mover hacia abajo"
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>
@@ -257,8 +305,9 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 bg-white/80 hover:bg-white shadow"
+                    className="h-7 w-7 bg-white/80 hover:bg-red-50 text-gray-600 hover:text-red-600 shadow-sm"
                     onClick={() => removeBlock(blockId)}
+                    title="Eliminar bloque"
                   >
                     <X className="h-4 w-4" />
                   </Button>
