@@ -3089,18 +3089,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Función para obtener el layout predeterminado del dashboard
   function getDefaultDashboardLayout() {
-    // Layout por defecto para mantener la estructura del dashboard actual
-    // Ahora incluye las nuevas tarjetas de Ingresos, Gastos y Resultado Final
+    // Dashboard vacío para personalización total desde cero
     return {
-      blocks: [
-        "income-card",           // Nueva tarjeta de Ingresos
-        "expenses-card",         // Nueva tarjeta de Gastos 
-        "result-card",           // Nueva tarjeta de Resultado Final
-        "quotes-summary",
-        "invoices-summary",
-        "comparative-chart",
-        "tax-summary"
-      ]
+      blocks: []
     };
   }
   

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check } from "lucide-react";
+import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check, PieChart } from "lucide-react";
 import { DashboardPreferences, DashboardStats } from "@/types/dashboard";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
@@ -23,15 +23,8 @@ import TaxSummary from "./TaxSummary";
 // Importamos la configuración centralizada de bloques
 import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
 
-// Layout por defecto que coincide con la imagen de muestra
-const DEFAULT_LAYOUT = [
-  "income-summary",     // Ingresos
-  "expenses-summary",   // Gastos
-  "result-summary",     // Resultado Final
-  "quotes-summary",     // Presupuestos
-  "invoices-summary",   // Facturas
-  "comparative-chart"   // Comparativa Financiera
-];
+// Layout por defecto vacío para personalización completa
+const DEFAULT_LAYOUT: string[] = [];
 
 // Ya no definimos los componentes disponibles aquí, sino que los importamos desde config/dashboardBlocks.tsx
 
@@ -160,16 +153,6 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     console.log("Intentando eliminar bloque:", blockId);
     console.log("Bloques actuales:", activeBlocks);
     
-    // Verificamos que no estemos intentando eliminar el último bloque
-    if (activeBlocks.length <= 1) {
-      toast({
-        title: "No se puede eliminar",
-        description: "Debes mantener al menos un bloque en el dashboard.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     try {
       // Filtramos el bloque a eliminar (asegurando comparación estricta por valor)
       const blockIndex = activeBlocks.indexOf(blockId);
@@ -288,113 +271,136 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
           onSelectBlock={addBlock}
         />
 
-        {/* Contenedor de bloques personalizables con grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {activeBlocks.map((blockId, index) => {
-            const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
-            if (!blockConfig) return null;
-            
-            const BlockComponent = blockConfig.component;
-            
-            // Determinar si el bloque debe ocupar varias columnas
-            // La comparativa financiera debe ocupar todo el ancho
-            const isFullWidth = ["comparative-chart"].includes(blockId);
-            const columnClass = isFullWidth ? "lg:col-span-3" : "lg:col-span-1";
-            
-            return (
-              <div 
-                key={blockId} 
-                className={`relative group ${columnClass} ${isEditMode ? 'ring-2 ring-blue-200 rounded-lg' : ''}`}
-              >
-                {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
-                <div 
-                  className={`absolute top-2 right-2 z-10 flex space-x-1
-                    ${isEditMode 
-                      ? 'opacity-100 bg-white/90 p-1 rounded-md shadow-md border border-gray-200' 
-                      : 'opacity-0 group-hover:opacity-100 transition-opacity'}
-                  `}
-                >
-                  {isEditMode && (
-                    <div className="flex items-center mr-2">
-                      <span className="text-xs text-gray-500 font-medium">
-                        {blockConfig.title}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Botón para mover hacia arriba */}
-                  {index > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
-                      onClick={() => moveBlock(blockId, "up")}
-                      title="Mover hacia arriba"
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
-                  {/* Botón para mover hacia abajo */}
-                  {index < activeBlocks.length - 1 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
-                      onClick={() => moveBlock(blockId, "down")}
-                      title="Mover hacia abajo"
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
-                  {/* Botón para eliminar */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 bg-white/80 hover:bg-red-50 text-gray-600 hover:text-red-600 shadow-sm"
-                    onClick={() => removeBlock(blockId)}
-                    title="Eliminar bloque"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                {/* Componente del bloque */}
-                <BlockComponent
-                  data={statsData || {
-                    income: 0,
-                    expenses: 0,
-                    pendingInvoices: 0,
-                    pendingCount: 0,
-                    pendingQuotes: 0,
-                    pendingQuotesCount: 0,
-                    // Propiedades para los presupuestos
-                    totalQuotes: 0,
-                    acceptedQuotes: 0, 
-                    rejectedQuotes: 0,
-                    // Propiedades para los impuestos
-                    taxes: { 
-                      vat: 0, 
-                      incomeTax: 0, 
-                      ivaALiquidar: 0 
-                    },
-                    // Propiedades para datos fiscales
-                    taxStats: {
-                      ivaRepercutido: 0,
-                      ivaSoportado: 0,
-                      ivaLiquidar: 0,
-                      irpfRetenido: 0,
-                      irpfTotal: 0,
-                      irpfPagar: 0
-                    }
-                  }}
-                  isLoading={statsLoading}
-                />
+        {/* Contenedor de bloques personalizables con grid o mensaje si está vacío */}
+        {activeBlocks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-12 border rounded-lg bg-gray-50">
+            <div className="text-center space-y-5">
+              <PieChart className="h-16 w-16 mx-auto text-gray-300" />
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Dashboard personalizable</h3>
+                <p className="text-gray-500 mt-1">El dashboard está vacío. Añade widgets para personalizar tu experiencia.</p>
               </div>
-            );
-          })}
-        </div>
+              <Button 
+                variant="default" 
+                onClick={() => {
+                  setIsEditMode(true);
+                  setIsAddDialogOpen(true);
+                }}
+                className="mt-4"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Añadir tu primer widget
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {activeBlocks.map((blockId, index) => {
+              const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
+              if (!blockConfig) return null;
+              
+              const BlockComponent = blockConfig.component;
+              
+              // Determinar si el bloque debe ocupar varias columnas
+              // La comparativa financiera debe ocupar todo el ancho
+              const isFullWidth = ["comparative-chart"].includes(blockId);
+              const columnClass = isFullWidth ? "lg:col-span-3" : "lg:col-span-1";
+              
+              return (
+                <div 
+                  key={blockId} 
+                  className={`relative group ${columnClass} ${isEditMode ? 'ring-2 ring-blue-200 rounded-lg' : ''}`}
+                >
+                  {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
+                  <div 
+                    className={`absolute top-2 right-2 z-10 flex space-x-1
+                      ${isEditMode 
+                        ? 'opacity-100 bg-white/90 p-1 rounded-md shadow-md border border-gray-200' 
+                        : 'opacity-0 group-hover:opacity-100 transition-opacity'}
+                    `}
+                  >
+                    {isEditMode && (
+                      <div className="flex items-center mr-2">
+                        <span className="text-xs text-gray-500 font-medium">
+                          {blockConfig.title}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Botón para mover hacia arriba */}
+                    {index > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
+                        onClick={() => moveBlock(blockId, "up")}
+                        title="Mover hacia arriba"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {/* Botón para mover hacia abajo */}
+                    {index < activeBlocks.length - 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
+                        onClick={() => moveBlock(blockId, "down")}
+                        title="Mover hacia abajo"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {/* Botón para eliminar */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 bg-white/80 hover:bg-red-50 text-gray-600 hover:text-red-600 shadow-sm"
+                      onClick={() => removeBlock(blockId)}
+                      title="Eliminar bloque"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Componente del bloque */}
+                  <BlockComponent
+                    data={statsData || {
+                      income: 0,
+                      expenses: 0,
+                      pendingInvoices: 0,
+                      pendingCount: 0,
+                      pendingQuotes: 0,
+                      pendingQuotesCount: 0,
+                      // Propiedades para los presupuestos
+                      totalQuotes: 0,
+                      acceptedQuotes: 0, 
+                      rejectedQuotes: 0,
+                      // Propiedades para los impuestos
+                      taxes: { 
+                        vat: 0, 
+                        incomeTax: 0, 
+                        ivaALiquidar: 0 
+                      },
+                      // Propiedades para datos fiscales
+                      taxStats: {
+                        ivaRepercutido: 0,
+                        ivaSoportado: 0,
+                        ivaLiquidar: 0,
+                        irpfRetenido: 0,
+                        irpfTotal: 0,
+                        irpfPagar: 0
+                      }
+                    }}
+                    isLoading={statsLoading}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
