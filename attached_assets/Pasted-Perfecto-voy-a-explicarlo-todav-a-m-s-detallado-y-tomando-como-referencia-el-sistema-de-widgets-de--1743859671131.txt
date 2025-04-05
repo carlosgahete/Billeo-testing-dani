@@ -1,0 +1,89 @@
+Perfecto, voy a explicarlo todavía más detallado y tomando como referencia el sistema de widgets de Apple (que es muy fluido, limpio, alineado y personalizable) para que tu IA o desarrollador entienda exactamente cómo lo quieres. Aquí va:
+
+⸻
+
+Instrucciones detalladas para construir el dashboard de widgets personalizables (estilo Apple)
+
+1. Experiencia de usuario que queremos replicar
+	•	El usuario puede añadir nuevos widgets desde un menú de selección, igual que en Apple cuando pulsas “+” en la pantalla de inicio.
+	•	Cada widget se coloca dentro de un área de trabajo ordenada, como una cuadrícula invisible (grid).
+	•	El usuario puede mover libremente los widgets arrastrándolos, viendo en tiempo real dónde quedarán colocados.
+	•	Redimensionar: el usuario puede hacer más grande o más pequeño un widget (arrastrando esquinas o laterales) de forma suave, sin romper el diseño.
+	•	El contenido se adapta automáticamente al nuevo tamaño del widget.
+	•	Todo el movimiento, redimensionamiento y adición debe ser suave y animado, como en Apple.
+	•	Los cambios que haga el usuario deben guardarse automáticamente, para que al volver, todo esté tal como lo dejó.
+
+⸻
+
+2. Comportamiento de los Widgets
+	•	Movilidad (Drag & Drop):
+	•	El usuario arrastra un widget con el ratón.
+	•	Mientras arrastra, se muestra una previsualización de la posición donde se soltará.
+	•	Cuando suelta el widget, este se encaja automáticamente a la cuadrícula.
+	•	Otros widgets se desplazan de manera fluida para hacer espacio si es necesario (como en los iPhones/iPads).
+	•	Redimensionado (Resize):
+	•	El usuario puede cambiar el tamaño del widget arrastrando desde las esquinas o bordes.
+	•	Los widgets crecen o se reducen en bloques de cuadrícula (por ejemplo, de 1x1 hasta 4x4 “celdas” de tamaño).
+	•	Hay un tamaño mínimo y máximo definido para cada tipo de widget (por ejemplo, un resumen financiero pequeño puede ser mínimo 2x2 celdas, máximo 4x4).
+	•	El contenido interno se ajusta al nuevo tamaño:
+	•	Si el widget se hace más pequeño, se puede ocultar información secundaria o hacer los gráficos más compactos.
+	•	Si se agranda, se muestra más detalle.
+	•	Autoajuste de contenido:
+	•	Textos, gráficos, botones dentro del widget se adaptan al tamaño sin romperse.
+	•	Por ejemplo: un gráfico que ocupa toda la tarjeta, si haces la tarjeta más pequeña, el gráfico se hace más pequeño automáticamente.
+
+⸻
+
+3. Organización del Espacio
+	•	El dashboard está basado en una cuadrícula invisible (grid).
+	•	Cada widget ocupa un número de celdas de esta cuadrícula.
+	•	No se permite superposición de widgets: si intentas poner un widget encima de otro, se reorganizan automáticamente.
+	•	No deben quedar huecos feos entre widgets: el sistema debe reacomodar los widgets de manera elegante (como reorganizan las apps en un iPhone cuando mueves una).
+
+⸻
+
+4. Interfaz para Añadir Widgets
+	•	Botón claramente visible: “Añadir Widget” (”+”).
+	•	Al pulsarlo se abre un menú o modal que muestra todos los tipos de widgets disponibles.
+	•	Cada widget en el menú debe mostrar una pequeña previsualización (como en Apple).
+	•	El usuario selecciona un widget, y este se inserta en el dashboard automáticamente en el primer espacio disponible.
+
+⸻
+
+5. Animaciones y Fluidez
+	•	Arrastrar: animación suave de arrastre, con un efecto de “levantar” el widget cuando lo estás moviendo.
+	•	Soltar: efecto de encaje automático en la cuadrícula.
+	•	Resize: que se vea en tiempo real el tamaño mientras lo cambias.
+	•	Añadir Widget: pequeña animación de aparición, no debe ser brusco.
+
+⸻
+
+6. Persistencia de Estado
+	•	Cada vez que un usuario mueve, redimensiona o añade widgets, la posición y tamaño de todos los widgets debe guardarse:
+	•	En base de datos si el usuario está logueado.
+	•	En localStorage si todavía no se ha guardado en base de datos.
+	•	Así, la próxima vez que el usuario entre a su dashboard, verá su distribución personalizada tal como la dejó.
+
+⸻
+
+7. Tecnología recomendada
+	•	Para React:
+	•	React-Grid-Layout (permite drag, resize, orden automático).
+	•	Framer Motion (para animaciones suaves de movimiento y cambios de tamaño).
+	•	Para Vanilla JavaScript:
+	•	GridStack.js (sistema perfecto para grids móviles y redimensionables).
+	•	Muuri.js (para reordenar con animaciones suaves).
+	•	CSS:
+	•	Sistema de display: grid para la cuadrícula.
+	•	Animaciones CSS para suavizar las transiciones.
+
+⸻
+
+Explicación Resumida Final para tu IA:
+
+“Necesito que construyas un dashboard de widgets completamente personalizable, basado en un grid invisible, con drag&drop libre, redimensionado dinámico, autoajuste de contenido, animaciones suaves, sin superposición de widgets y reorganización automática, siguiendo la experiencia de usuario que ofrece Apple en la personalización de la pantalla de inicio. Todos los cambios de usuario deben guardarse y cargarse después.”
+
+⸻
+
+¿Quieres que además te prepare un pequeño “mockup” visual (dibujo esquemático) para que todavía sea más fácil de entender?
+Te lo puedo hacer en 2 minutos si quieres. ¿Te lo preparo?

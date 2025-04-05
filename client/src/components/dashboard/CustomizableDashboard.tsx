@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check, PieChart, Move, Save } from "lucide-react";
+import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check, PieChart, Move, Save, Maximize, Minimize } from "lucide-react";
 import { DashboardPreferences, DashboardStats, DashboardBlock } from "@/types/dashboard";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
@@ -23,6 +23,7 @@ import TaxSummary from "./TaxSummary";
 // Importamos la configuración centralizada de bloques y tamaños
 import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
 import { getBlockSize, DASHBOARD_SIZES } from "../../config/dashboardSizes";
+import { WIDGET_SIZES, getNextSize } from "../../config/widgetSizes";
 
 // Grid predeterminado para el dashboard
 const DEFAULT_GRID_CONFIG = {
@@ -66,6 +67,10 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizingBlockId, setResizingBlockId] = useState<string | null>(null);
+  const [resizeDirection, setResizeDirection] = useState<string | null>(null);
+  const [initialSize, setInitialSize] = useState<{w: number, h: number} | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Referencia al contenedor del dashboard
@@ -261,21 +266,91 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     });
   };
 
-  // Manejar el cambio de tamaño de un bloque
+  // Manejar el cambio de tamaño de un bloque con reordenamiento automático
   const handleResizeBlock = (blockId: string, newSize: { w: number; h: number }) => {
     setDashboardBlocks(prevBlocks => {
+      // Crear una copia de los bloques
       const updatedBlocks = [...prevBlocks];
-      const blockIndex = updatedBlocks.findIndex(block => block.id === blockId);
       
-      if (blockIndex >= 0) {
-        updatedBlocks[blockIndex] = {
-          ...updatedBlocks[blockIndex],
-          position: {
-            ...updatedBlocks[blockIndex].position,
-            w: newSize.w,
-            h: newSize.h
+      // Encontrar el bloque que se está redimensionando
+      const blockIndex = updatedBlocks.findIndex(block => block.id === blockId);
+      if (blockIndex < 0) return prevBlocks;
+      
+      const resizingBlock = updatedBlocks[blockIndex];
+      const oldWidth = resizingBlock.position.w;
+      const oldHeight = resizingBlock.position.h;
+      
+      // Actualizar el tamaño del bloque
+      updatedBlocks[blockIndex] = {
+        ...resizingBlock,
+        position: {
+          ...resizingBlock.position,
+          w: newSize.w,
+          h: newSize.h
+        }
+      };
+      
+      // Si el tamaño no ha cambiado, no hacer nada más
+      if (oldWidth === newSize.w && oldHeight === newSize.h) {
+        return prevBlocks;
+      }
+      
+      // Crear una matriz para representar qué celdas están ocupadas
+      const grid = Array(gridConfig.cols).fill(0).map(() => Array(100).fill(null)); // 100 filas como máximo
+      
+      // Función para comprobar si un bloque colisiona en una posición dada
+      const checkCollision = (block: DashboardBlock, posX: number, posY: number) => {
+        for (let x = posX; x < posX + block.position.w; x++) {
+          for (let y = posY; y < posY + block.position.h; y++) {
+            if (x >= 0 && x < gridConfig.cols && y >= 0 && grid[x][y] !== null && grid[x][y] !== block.id) {
+              return true; // Hay colisión
+            }
           }
-        };
+        }
+        return false; // No hay colisión
+      };
+      
+      // Función para marcar un bloque en el grid
+      const markBlockInGrid = (block: DashboardBlock) => {
+        for (let x = block.position.x; x < block.position.x + block.position.w; x++) {
+          for (let y = block.position.y; y < block.position.y + block.position.h; y++) {
+            if (x >= 0 && x < gridConfig.cols && y >= 0) {
+              grid[x][y] = block.id;
+            }
+          }
+        }
+      };
+      
+      // Marcar las celdas ocupadas por el bloque redimensionado
+      markBlockInGrid(updatedBlocks[blockIndex]);
+      
+      // Reorganizar los bloques restantes si hay colisiones
+      for (let i = 0; i < updatedBlocks.length; i++) {
+        if (i === blockIndex) continue; // Saltar el bloque que estamos redimensionando
+        
+        const currentBlock = updatedBlocks[i];
+        
+        // Comprobar si hay colisión en la posición actual
+        if (checkCollision(currentBlock, currentBlock.position.x, currentBlock.position.y)) {
+          // Si hay colisión, mover hacia abajo hasta encontrar un espacio libre
+          let newY = currentBlock.position.y;
+          
+          while (checkCollision(currentBlock, currentBlock.position.x, newY)) {
+            newY++;
+          }
+          
+          // Actualizar la posición del bloque
+          updatedBlocks[i] = {
+            ...currentBlock,
+            position: {
+              ...currentBlock.position,
+              y: newY
+            }
+          };
+        }
+        
+        // Marcar este bloque en el grid para las siguientes comprobaciones
+        markBlockInGrid(updatedBlocks[i]);
       }
       
       setHasUnsavedChanges(true);
@@ -314,6 +389,32 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     
     // Guardar en la base de datos
     saveLayout(newBlocks);
+  };
+
+  // Cambiar el tamaño de un widget a la siguiente medida predefinida
+  const changeBlockSize = (blockId: string) => {
+    const blockIndex = dashboardBlocks.findIndex(block => block.id === blockId);
+    if (blockIndex === -1) return;
+    
+    const blockToResize = dashboardBlocks[blockIndex];
+    const blockType = blockToResize.type;
+    const currentSize = {
+      w: blockToResize.position.w,
+      h: blockToResize.position.h
+    };
+    
+    // Obtener el siguiente tamaño disponible
+    const nextSize = getNextSize(blockType, currentSize);
+    
+    // Aplicar el cambio de tamaño
+    handleResizeBlock(blockId, nextSize);
+    
+    // Notificar al usuario
+    toast({
+      title: "Tamaño cambiado",
+      description: "Se ha ajustado el tamaño del widget.",
+      variant: "default",
+    });
   };
 
   // Eliminar un bloque del dashboard
@@ -418,13 +519,111 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     document.removeEventListener('mouseup', handleMouseUp);
   };
   
+  // Iniciar redimensionamiento
+  const handleResizeStart = (e: React.MouseEvent, blockId: string, direction: string) => {
+    if (!isEditMode) return;
+    
+    // Prevenir eventos por defecto
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Encontrar el bloque
+    const block = dashboardBlocks.find(b => b.id === blockId);
+    if (!block) return;
+    
+    // Guardar tamaño inicial
+    setInitialSize({ w: block.position.w, h: block.position.h });
+    setInitialMousePosition({ x: e.clientX, y: e.clientY });
+    
+    // Activar estado de redimensionamiento
+    setResizingBlockId(blockId);
+    setResizeDirection(direction);
+    setIsResizing(true);
+    
+    // Añadir eventos globales
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+  };
+  
+  // Manejar el movimiento durante el redimensionamiento
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isResizing || !resizingBlockId || !initialMousePosition || !initialSize || !dashboardRef.current) return;
+    
+    // Obtener el bloque que se está redimensionando
+    const blockIndex = dashboardBlocks.findIndex(b => b.id === resizingBlockId);
+    if (blockIndex < 0) return;
+    
+    const block = dashboardBlocks[blockIndex];
+    
+    // Obtener dimensiones del dashboard
+    const rect = dashboardRef.current.getBoundingClientRect();
+    
+    // Calcular tamaño de celda
+    const cellWidth = (rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols;
+    const cellHeight = gridConfig.rowHeight + gridConfig.gap;
+    
+    // Calcular cambio en unidades de grid
+    const deltaX = Math.round((e.clientX - initialMousePosition.x) / cellWidth);
+    const deltaY = Math.round((e.clientY - initialMousePosition.y) / cellHeight);
+    
+    // Calcular nuevo tamaño según la dirección
+    let newWidth = initialSize.w;
+    let newHeight = initialSize.h;
+    
+    switch(resizeDirection) {
+      case 'bottomRight':
+        newWidth = Math.max(1, initialSize.w + deltaX);
+        newHeight = Math.max(1, initialSize.h + deltaY);
+        break;
+      case 'bottomLeft':
+        newWidth = Math.max(1, initialSize.w - deltaX);
+        newHeight = Math.max(1, initialSize.h + deltaY);
+        break;
+      case 'bottom':
+        newHeight = Math.max(1, initialSize.h + deltaY);
+        break;
+      case 'right':
+        newWidth = Math.max(1, initialSize.w + deltaX);
+        break;
+    }
+    
+    // Asegurarse de que el ancho no exceda el grid
+    newWidth = Math.min(gridConfig.cols, newWidth);
+    
+    // Aplicar los cambios de tamaño al bloque
+    if (newWidth !== block.position.w || newHeight !== block.position.h) {
+      handleResizeBlock(resizingBlockId, { w: newWidth, h: newHeight });
+    }
+  };
+  
+  // Finalizar redimensionamiento
+  const handleResizeEnd = () => {
+    if (!isResizing) return;
+    
+    // Limpiar estados
+    setIsResizing(false);
+    setResizingBlockId(null);
+    setResizeDirection(null);
+    setInitialSize(null);
+    setInitialMousePosition(null);
+    
+    // Guardar cambios en la base de datos
+    saveLayout(dashboardBlocks);
+    
+    // Eliminar eventos globales
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
+  };
+
   // Limpieza de eventos al desmontar el componente
   useEffect(() => {
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleResizeMove);
+      document.removeEventListener('mouseup', handleResizeEnd);
     };
-  }, [isDragging]);
+  }, []);
   
   // Eventos de drag and drop como fallback para dispositivos táctiles
   const handleDragStart = (e: React.DragEvent, blockId: string) => {
@@ -624,22 +823,37 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
               return (
                 <div 
                   key={block.id} 
-                  className={`relative transition-shadow ${
+                  className={`relative rounded-lg shadow-sm ${
                     isEditMode 
-                      ? 'cursor-move ring-2 rounded-lg ' + 
+                      ? 'ring-2 ' + 
                         (draggedBlockId === block.id 
                           ? 'ring-blue-400 shadow-lg scale-[1.02] z-10' 
-                          : 'ring-blue-200')
-                      : ''
+                          : isResizing && resizingBlockId === block.id 
+                            ? 'ring-green-400 shadow-lg z-10' 
+                            : 'ring-blue-200')
+                      : 'hover:shadow-md'
                   }`}
                   style={{
                     ...blockStyle,
-                    transitionProperty: isDragging && draggedBlockId === block.id ? 'none' : 'all',
+                    transition: (isDragging && draggedBlockId === block.id) || 
+                               (isResizing && resizingBlockId === block.id) 
+                               ? 'none' : 'transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease',
+                    cursor: isEditMode ? 'move' : 'default',
+                    transform: (isResizing && resizingBlockId === block.id) 
+                              ? 'scale(1.01)' 
+                              : (isDragging && draggedBlockId === block.id)
+                                ? 'scale(1.02)' 
+                                : 'scale(1)'
                   }}
-                  draggable={isEditMode}
+                  draggable={isEditMode && !isResizing}
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onDragEnd={handleDragEnd}
-                  onMouseDown={(e) => handleMouseDown(e, block.id)}
+                  onMouseDown={(e) => {
+                    // Solo iniciar arrastre si no estamos en un controlador de redimensionamiento
+                    if (!e.currentTarget.closest('.resize-handle')) {
+                      handleMouseDown(e, block.id);
+                    }
+                  }}
                 >
                   {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
                   <div 
@@ -657,18 +871,34 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                       </div>
                     )}
                     
-                    {/* Indicador de arrastre en modo edición */}
+                    {/* Controles en modo edición */}
                     {isEditMode && (
-                      <div 
-                        className="h-7 w-7 flex items-center justify-center text-gray-400 cursor-move"
-                        onMouseDown={(e) => {
-                          // Evitar que los clics en el handle afecten otros elementos
-                          e.stopPropagation();
-                          handleMouseDown(e, block.id);
-                        }}
+                      <>
+                        {/* Indicador de arrastre */}
+                        <div 
+                          className="h-7 w-7 flex items-center justify-center text-gray-400 cursor-move"
+                          onMouseDown={(e) => {
+                            // Evitar que los clics en el handle afecten otros elementos
+                            e.stopPropagation();
+                            handleMouseDown(e, block.id);
+                          }}
+                        >
+                          <Move className="h-4 w-4" />
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Botón para cambiar tamaño */}
+                    {isEditMode && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 bg-white/80 hover:bg-blue-50 text-gray-600 hover:text-blue-600 shadow-sm"
+                        onClick={() => changeBlockSize(block.id)}
+                        title="Cambiar tamaño"
                       >
-                        <Move className="h-4 w-4" />
-                      </div>
+                        <Maximize className="h-4 w-4" />
+                      </Button>
                     )}
                     
                     {/* Botón para eliminar */}
@@ -718,6 +948,71 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                       isLoading={statsLoading}
                     />
                   </div>
+                  
+                  {/* Controladores de redimensionamiento - solo en modo edición */}
+                  {isEditMode && (
+                    <>
+                      {/* Esquina inferior derecha */}
+                      <div 
+                        className="resize-handle absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize opacity-70 hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          if (typeof handleResizeStart === 'function') {
+                            handleResizeStart(e, block.id, 'bottomRight');
+                          }
+                        }}
+                      >
+                        <div className="absolute bottom-1 right-1 w-4 h-4 bg-white rounded-full shadow-md flex items-center justify-center border border-gray-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Esquina inferior izquierda */}
+                      <div 
+                        className="resize-handle absolute bottom-0 left-0 w-6 h-6 cursor-nesw-resize opacity-70 hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          if (typeof handleResizeStart === 'function') {
+                            handleResizeStart(e, block.id, 'bottomLeft');
+                          }
+                        }}
+                      >
+                        <div className="absolute bottom-1 left-1 w-4 h-4 bg-white rounded-full shadow-md flex items-center justify-center border border-gray-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Parte inferior */}
+                      <div 
+                        className="resize-handle absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-6 cursor-ns-resize opacity-70 hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          if (typeof handleResizeStart === 'function') {
+                            handleResizeStart(e, block.id, 'bottom');
+                          }
+                        }}
+                      >
+                        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-md flex items-center justify-center border border-gray-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Parte derecha */}
+                      <div 
+                        className="resize-handle absolute top-1/2 right-0 transform -translate-y-1/2 h-10 w-6 cursor-ew-resize opacity-70 hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          if (typeof handleResizeStart === 'function') {
+                            handleResizeStart(e, block.id, 'right');
+                          }
+                        }}
+                      >
+                        <div className="absolute right-1 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md flex items-center justify-center border border-gray-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             })}
