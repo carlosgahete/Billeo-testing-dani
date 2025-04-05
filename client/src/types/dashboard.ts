@@ -21,12 +21,31 @@ export interface DashboardStats {
   [key: string]: any;
 }
 
+// Tipo para representar un bloque de dashboard individual
+export interface DashboardBlock {
+  id: string; // ID único del bloque
+  type: string; // Tipo de bloque (income, expenses, taxes, etc.)
+  position: {
+    x: number; // Posición horizontal (columna)
+    y: number; // Posición vertical (fila)
+    w: number; // Ancho (en unidades de grid)
+    h: number; // Alto (en unidades de grid)
+  };
+  visible: boolean; // Si es visible o no
+  config?: Record<string, any>; // Configuración específica del bloque
+}
+
 // Tipo para las preferencias de bloques en el dashboard
 export interface DashboardPreferences {
   id: number;
   userId: number;
   layout: {
-    blocks: string[];
+    blocks: DashboardBlock[] | string[]; // Soporta el nuevo formato de bloque detallado o el antiguo de string
+    grid?: {
+      cols: number;
+      rowHeight: number;
+      gap: number;
+    };
   };
   createdAt: Date;
   updatedAt: Date;

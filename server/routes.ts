@@ -3125,11 +3125,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.userId;
       const { blocks } = req.body;
       
-      if (!blocks || !Array.isArray(blocks)) {
-        return res.status(400).json({ message: "Se requiere un array de bloques válido" });
+      if (!blocks) {
+        return res.status(400).json({ message: "Se requieren bloques válidos" });
       }
       
-      // Creamos un nuevo objeto de layout con los bloques
+      // Verificar si blocks es un array (formato antiguo) o un objeto más complejo (nuevo formato)
       const layout = {
         blocks: blocks
       };

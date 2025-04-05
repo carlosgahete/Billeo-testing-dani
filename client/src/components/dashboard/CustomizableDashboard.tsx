@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check, PieChart } from "lucide-react";
-import { DashboardPreferences, DashboardStats } from "@/types/dashboard";
+import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check, PieChart, Move, Save } from "lucide-react";
+import { DashboardPreferences, DashboardStats, DashboardBlock } from "@/types/dashboard";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,12 +22,38 @@ import TaxSummary from "./TaxSummary";
 
 // Importamos la configuración centralizada de bloques y tamaños
 import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
-import { getBlockSize } from "../../config/dashboardSizes";
+import { getBlockSize, DASHBOARD_SIZES } from "../../config/dashboardSizes";
+
+// Grid predeterminado para el dashboard
+const DEFAULT_GRID_CONFIG = {
+  cols: 12,      // 12 columnas
+  rowHeight: 60, // Altura de fila en píxeles
+  gap: 16        // Espacio entre widgets en píxeles
+};
 
 // Layout por defecto vacío para personalización completa
-const DEFAULT_LAYOUT: string[] = [];
+const DEFAULT_LAYOUT: DashboardBlock[] = [];
 
-// Ya no definimos los componentes disponibles aquí, sino que los importamos desde config/dashboardBlocks.tsx
+// Función para generar un ID único
+const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 9);
+};
+
+// Convierte los bloques del formato antiguo (string[]) al nuevo formato (DashboardBlock[])
+const convertOldBlocksFormat = (blocks: string[]): DashboardBlock[] => {
+  // Asignamos posiciones iniciales
+  return blocks.map((blockId, index) => ({
+    id: blockId,
+    type: blockId,
+    position: {
+      x: (index % 3) * 4, // Distribuir en 3 columnas (de 4 unidades cada una)
+      y: Math.floor(index / 3) * 4, // Cada 3 bloques, nueva fila
+      w: 4, // Ancho predeterminado (1/3 del total)
+      h: 4  // Alto predeterminado
+    },
+    visible: true
+  }));
+};
 
 interface CustomizableDashboardProps {
   userId: number;
@@ -38,6 +64,12 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   const [period, setPeriod] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Referencia al contenedor del dashboard
+  const dashboardRef = useRef<HTMLDivElement>(null);
   
   // Obtener preferencias del usuario
   const { data: preferences, isLoading: preferencesLoading } = useQuery<DashboardPreferences>({
@@ -45,12 +77,13 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     enabled: !!userId,
   });
   
-  // Estado local para los bloques en el dashboard
-  const [activeBlocks, setActiveBlocks] = useState<string[]>(DEFAULT_LAYOUT);
+  // Estado local para los bloques en el dashboard (nuevo formato)
+  const [dashboardBlocks, setDashboardBlocks] = useState<DashboardBlock[]>(DEFAULT_LAYOUT);
+  const [gridConfig, setGridConfig] = useState(DEFAULT_GRID_CONFIG);
 
   // Mutar las preferencias del usuario
   const { mutate: updatePreferences } = useMutation({
-    mutationFn: async (newPreferences: { blocks: string[] }) => {
+    mutationFn: async (newPreferences: { blocks: DashboardBlock[] }) => {
       const response = await fetch("/api/dashboard/preferences", {
         method: "POST",
         headers: {
@@ -67,6 +100,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/preferences"] });
+      setHasUnsavedChanges(false);
       toast({
         title: "Dashboard actualizado",
         description: "Tus preferencias han sido guardadas con éxito.",
@@ -87,99 +121,134 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     enabled: !!userId,
   });
 
-  // Actualizar activeBlocks cuando se carguen las preferencias
+  // Actualizar dashboardBlocks cuando se carguen las preferencias
   useEffect(() => {
-    if (preferences && preferences.layout && preferences.layout.blocks) {
-      setActiveBlocks(preferences.layout.blocks);
+    if (preferences && preferences.layout) {
+      // Configuración de la cuadrícula
+      if (preferences.layout.grid) {
+        setGridConfig(preferences.layout.grid);
+      }
+      
+      // Bloques del dashboard
+      if (preferences.layout.blocks) {
+        if (Array.isArray(preferences.layout.blocks)) {
+          // Verificar si es un arreglo de strings o de DashboardBlock
+          if (preferences.layout.blocks.length > 0) {
+            // Si no hay bloques, usar array vacío
+            if (typeof preferences.layout.blocks[0] === 'string') {
+              // Es un arreglo de strings, convertirlo al nuevo formato
+              const convertedBlocks = convertOldBlocksFormat(preferences.layout.blocks as string[]);
+              setDashboardBlocks(convertedBlocks);
+            } else {
+              // Ya es un arreglo de DashboardBlock
+              setDashboardBlocks(preferences.layout.blocks as DashboardBlock[]);
+            }
+          } else {
+            setDashboardBlocks([]); // Array vacío
+          }
+        }
+      }
     } else if (!preferencesLoading) {
       // Si no hay preferencias guardadas, utilizamos el layout por defecto
-      updatePreferences({
-        blocks: DEFAULT_LAYOUT
-      });
+      saveLayout(DEFAULT_LAYOUT);
     }
   }, [preferences, preferencesLoading]);
 
-  // Manejar el reordenamiento de bloques (simple reordenamiento sin drag & drop)
-  const moveBlock = (blockId: string, direction: "up" | "down") => {
-    const currentIndex = activeBlocks.indexOf(blockId);
-    if (currentIndex < 0) return;
-    
-    const newBlocks = [...activeBlocks];
-    
-    if (direction === "up" && currentIndex > 0) {
-      // Mover hacia arriba
-      [newBlocks[currentIndex], newBlocks[currentIndex - 1]] = 
-      [newBlocks[currentIndex - 1], newBlocks[currentIndex]];
-    } else if (direction === "down" && currentIndex < newBlocks.length - 1) {
-      // Mover hacia abajo
-      [newBlocks[currentIndex], newBlocks[currentIndex + 1]] = 
-      [newBlocks[currentIndex + 1], newBlocks[currentIndex]];
-    } else {
-      // No se puede mover más
-      return;
-    }
-    
-    setActiveBlocks(newBlocks);
-    
-    // Guardamos automáticamente al reordenar
+  // Guardar el layout en la base de datos
+  const saveLayout = (blocks: DashboardBlock[]) => {
     updatePreferences({
-      blocks: newBlocks,
+      blocks: blocks,
+    });
+  };
+
+  // Manejar el cambio de posición de un bloque
+  const handlePositionChange = (blockId: string, newPosition: { x: number; y: number }) => {
+    setDashboardBlocks(prevBlocks => {
+      const updatedBlocks = [...prevBlocks];
+      const blockIndex = updatedBlocks.findIndex(block => block.id === blockId);
+      
+      if (blockIndex >= 0) {
+        updatedBlocks[blockIndex] = {
+          ...updatedBlocks[blockIndex],
+          position: {
+            ...updatedBlocks[blockIndex].position,
+            x: newPosition.x,
+            y: newPosition.y
+          }
+        };
+      }
+      
+      setHasUnsavedChanges(true);
+      return updatedBlocks;
+    });
+  };
+
+  // Manejar el cambio de tamaño de un bloque
+  const handleResizeBlock = (blockId: string, newSize: { w: number; h: number }) => {
+    setDashboardBlocks(prevBlocks => {
+      const updatedBlocks = [...prevBlocks];
+      const blockIndex = updatedBlocks.findIndex(block => block.id === blockId);
+      
+      if (blockIndex >= 0) {
+        updatedBlocks[blockIndex] = {
+          ...updatedBlocks[blockIndex],
+          position: {
+            ...updatedBlocks[blockIndex].position,
+            w: newSize.w,
+            h: newSize.h
+          }
+        };
+      }
+      
+      setHasUnsavedChanges(true);
+      return updatedBlocks;
     });
   };
 
   // Agregar un bloque al dashboard
   const addBlock = (blockType: string) => {
-    console.log("Función addBlock llamada con:", blockType);
-    console.log("Estado actual de activeBlocks:", activeBlocks);
+    // Calcular posición para el nuevo bloque
+    // Por defecto, lo colocamos en la primera fila disponible
+    let maxY = 0;
+    dashboardBlocks.forEach(block => {
+      const bottomY = block.position.y + block.position.h;
+      if (bottomY > maxY) {
+        maxY = bottomY;
+      }
+    });
     
-    if (!activeBlocks.includes(blockType)) {
-      console.log("El bloque no está en la lista, se agregará");
-      // Añadimos el nuevo bloque al principio del array para que aparezca primero
-      const newBlocks = [blockType, ...activeBlocks];
-      console.log("Nueva lista de bloques:", newBlocks);
-      
-      setActiveBlocks(newBlocks);
-      
-      // Guardamos automáticamente al añadir
-      updatePreferences({
-        blocks: newBlocks,
-      });
-    } else {
-      console.log("El bloque ya está en la lista, no se agregará");
-    }
+    // Crear el nuevo bloque con un id único
+    const newBlock: DashboardBlock = {
+      id: `${blockType}-${generateId()}`,
+      type: blockType,
+      position: {
+        x: 0,  // Empezamos en la columna 0
+        y: maxY > 0 ? maxY + 1 : 0, // Si hay bloques, lo ponemos después del último
+        w: 4,  // Ancho predeterminado (1/3 del ancho total)
+        h: 4   // Alto predeterminado
+      },
+      visible: true
+    };
+    
+    // Añadir el nuevo bloque al dashboard
+    const newBlocks = [...dashboardBlocks, newBlock];
+    setDashboardBlocks(newBlocks);
+    
+    // Guardar en la base de datos
+    saveLayout(newBlocks);
   };
 
   // Eliminar un bloque del dashboard
   const removeBlock = (blockId: string) => {
-    console.log("Intentando eliminar bloque:", blockId);
-    console.log("Bloques actuales:", activeBlocks);
-    
     try {
-      // Filtramos el bloque a eliminar (asegurando comparación estricta por valor)
-      const blockIndex = activeBlocks.indexOf(blockId);
-      console.log("Índice del bloque a eliminar:", blockIndex);
-      
-      if (blockIndex === -1) {
-        console.error("Error: No se encontró el bloque en la lista de bloques activos");
-        toast({
-          title: "Error al eliminar",
-          description: "No se encontró el bloque en el dashboard.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const newBlocksArray = [...activeBlocks];
-      newBlocksArray.splice(blockIndex, 1);
-      console.log("Nuevos bloques tras eliminar:", newBlocksArray);
+      // Filtramos el bloque a eliminar
+      const newBlocks = dashboardBlocks.filter(block => block.id !== blockId);
       
       // Actualizamos el estado local
-      setActiveBlocks(newBlocksArray);
+      setDashboardBlocks(newBlocks);
       
       // Guardamos en la base de datos
-      updatePreferences({
-        blocks: newBlocksArray,
-      });
+      saveLayout(newBlocks);
       
       // Notificamos al usuario
       toast({
@@ -197,9 +266,55 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     }
   };
 
+  // Eventos de arrastrar y soltar
+  const handleDragStart = (e: React.DragEvent, blockId: string) => {
+    if (!isEditMode) return;
+    
+    setIsDragging(true);
+    setDraggedBlockId(blockId);
+    
+    // Configurar la imagen de arrastre
+    if (e.dataTransfer) {
+      // Si quieres que sea invisible
+      const img = new Image();
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+      e.dataTransfer.setDragImage(img, 0, 0);
+      
+      // Configurar efectos de arrastre
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isEditMode || !isDragging || !draggedBlockId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Calcular la posición en el grid
+    if (dashboardRef.current) {
+      const rect = dashboardRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Calcular la posición en unidades de grid
+      const gridX = Math.floor(x / ((rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols));
+      const gridY = Math.floor(y / (gridConfig.rowHeight + gridConfig.gap));
+      
+      // Actualizar la posición del bloque arrastrado
+      handlePositionChange(draggedBlockId, { x: gridX, y: gridY });
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (!isEditMode) return;
+    
+    setIsDragging(false);
+    setDraggedBlockId(null);
+  };
+
   // Bloques disponibles para agregar (los que no están ya en el dashboard)
   const availableToAdd = Object.keys(DASHBOARD_BLOCKS).filter(
-    (blockId) => !activeBlocks.includes(blockId)
+    (blockId) => !dashboardBlocks.some(block => block.type === blockId)
   );
 
   // Si todo está cargando, mostrar skeleton
@@ -240,6 +355,18 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                     <Plus className="mr-1 h-3 w-3" />
                     Añadir
                   </Button>
+                  
+                  {hasUnsavedChanges && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => saveLayout(dashboardBlocks)}
+                      className="flex items-center text-xs h-7 ml-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                    >
+                      <Save className="mr-1 h-3 w-3" />
+                      Guardar
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -247,13 +374,19 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
             <Button
               variant={isEditMode ? "outline" : "default"}
               size="sm"
-              onClick={() => setIsEditMode(!isEditMode)}
+              onClick={() => {
+                if (isEditMode && hasUnsavedChanges) {
+                  // Guardar los cambios al salir del modo edición
+                  saveLayout(dashboardBlocks);
+                }
+                setIsEditMode(!isEditMode);
+              }}
               className={`flex items-center ${isEditMode ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100" : ""}`}
             >
               {isEditMode ? (
                 <>
                   <Check className="mr-1 h-4 w-4" />
-                  Guardar cambios
+                  Finalizar edición
                 </>
               ) : (
                 <>
@@ -273,7 +406,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
         />
 
         {/* Contenedor de bloques personalizables con grid o mensaje si está vacío */}
-        {activeBlocks.length === 0 ? (
+        {dashboardBlocks.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 border rounded-lg bg-gray-50">
             <div className="text-center space-y-5">
               <PieChart className="h-16 w-16 mx-auto text-gray-300" />
@@ -295,20 +428,37 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {activeBlocks.map((blockId, index) => {
-              const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
+          <div 
+            ref={dashboardRef}
+            className="relative min-h-[600px]"
+            onDragOver={handleDragOver}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${gridConfig.cols}, 1fr)`,
+              gap: `${gridConfig.gap}px`,
+              gridAutoRows: `${gridConfig.rowHeight}px`,
+            }}
+          >
+            {dashboardBlocks.map((block) => {
+              const blockConfig = DASHBOARD_BLOCKS[block.type as keyof typeof DASHBOARD_BLOCKS];
               if (!blockConfig) return null;
               
               const BlockComponent = blockConfig.component;
               
-              // Obtener el tamaño apropiado para este bloque usando la función centralizada
-              const { width } = getBlockSize(blockId);
+              // Calcular el estilo de posicionamiento basado en las coordenadas del grid
+              const blockStyle = {
+                gridColumn: `${block.position.x + 1} / span ${block.position.w}`,
+                gridRow: `${block.position.y + 1} / span ${block.position.h}`,
+              };
               
               return (
                 <div 
-                  key={blockId} 
-                  className={`relative group ${width} ${isEditMode ? 'ring-2 ring-blue-200' : ''}`}
+                  key={block.id} 
+                  className={`relative ${isEditMode ? 'cursor-move ring-2 ring-blue-200 rounded-lg' : ''}`}
+                  style={blockStyle}
+                  draggable={isEditMode}
+                  onDragStart={(e) => handleDragStart(e, block.id)}
+                  onDragEnd={handleDragEnd}
                 >
                   {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
                   <div 
@@ -326,75 +476,60 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                       </div>
                     )}
                     
-                    {/* Botón para mover hacia arriba */}
-                    {index > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
-                        onClick={() => moveBlock(blockId, "up")}
-                        title="Mover hacia arriba"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                    )}
-                    
-                    {/* Botón para mover hacia abajo */}
-                    {index < activeBlocks.length - 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 bg-white/80 hover:bg-white shadow-sm"
-                        onClick={() => moveBlock(blockId, "down")}
-                        title="Mover hacia abajo"
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                      </Button>
+                    {/* Indicador de arrastre en modo edición */}
+                    {isEditMode && (
+                      <div className="h-7 w-7 flex items-center justify-center text-gray-400">
+                        <Move className="h-4 w-4" />
+                      </div>
                     )}
                     
                     {/* Botón para eliminar */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 bg-white/80 hover:bg-red-50 text-gray-600 hover:text-red-600 shadow-sm"
-                      onClick={() => removeBlock(blockId)}
-                      title="Eliminar bloque"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    {isEditMode && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 bg-white/80 hover:bg-red-50 text-gray-600 hover:text-red-600 shadow-sm"
+                        onClick={() => removeBlock(block.id)}
+                        title="Eliminar bloque"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   
                   {/* Componente del bloque */}
-                  <BlockComponent
-                    data={statsData || {
-                      income: 0,
-                      expenses: 0,
-                      pendingInvoices: 0,
-                      pendingCount: 0,
-                      pendingQuotes: 0,
-                      pendingQuotesCount: 0,
-                      // Propiedades para los presupuestos
-                      totalQuotes: 0,
-                      acceptedQuotes: 0, 
-                      rejectedQuotes: 0,
-                      // Propiedades para los impuestos
-                      taxes: { 
-                        vat: 0, 
-                        incomeTax: 0, 
-                        ivaALiquidar: 0 
-                      },
-                      // Propiedades para datos fiscales
-                      taxStats: {
-                        ivaRepercutido: 0,
-                        ivaSoportado: 0,
-                        ivaLiquidar: 0,
-                        irpfRetenido: 0,
-                        irpfTotal: 0,
-                        irpfPagar: 0
-                      }
-                    }}
-                    isLoading={statsLoading}
-                  />
+                  <div className="h-full">
+                    <BlockComponent
+                      data={statsData || {
+                        income: 0,
+                        expenses: 0,
+                        pendingInvoices: 0,
+                        pendingCount: 0,
+                        pendingQuotes: 0,
+                        pendingQuotesCount: 0,
+                        // Propiedades para los presupuestos
+                        totalQuotes: 0,
+                        acceptedQuotes: 0, 
+                        rejectedQuotes: 0,
+                        // Propiedades para los impuestos
+                        taxes: { 
+                          vat: 0, 
+                          incomeTax: 0, 
+                          ivaALiquidar: 0 
+                        },
+                        // Propiedades para datos fiscales
+                        taxStats: {
+                          ivaRepercutido: 0,
+                          ivaSoportado: 0,
+                          ivaLiquidar: 0,
+                          irpfRetenido: 0,
+                          irpfTotal: 0,
+                          irpfPagar: 0
+                        }
+                      }}
+                      isLoading={statsLoading}
+                    />
+                  </div>
                 </div>
               );
             })}

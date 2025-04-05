@@ -300,7 +300,7 @@ export type QuoteItem = typeof quoteItems.$inferSelect;
 export const dashboardPreferences = pgTable("dashboard_preferences", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().unique(),
-  layout: jsonb("layout").notNull(), // Array de bloques y su posición
+  layout: jsonb("layout").notNull(), // Layout completo con configuración detallada
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

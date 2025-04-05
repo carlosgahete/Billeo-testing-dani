@@ -63,7 +63,7 @@ export interface IStorage {
   
   // Dashboard preferences operations
   getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
-  saveDashboardPreferences(userId: number, layout: { blocks: string[] }): Promise<DashboardPreferencess>;
+  saveDashboardPreferences(userId: number, layout: { blocks: any[] }): Promise<DashboardPreferences>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -527,7 +527,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async saveDashboardPreferences(userId: number, layout: { blocks: string[] }): Promise<DashboardPreferences> {
+  async saveDashboardPreferences(userId: number, layout: { blocks: any[] }): Promise<DashboardPreferences> {
     try {
       // Comprobar si ya existen preferencias para este usuario
       const existingPrefs = await this.getDashboardPreferences(userId);
