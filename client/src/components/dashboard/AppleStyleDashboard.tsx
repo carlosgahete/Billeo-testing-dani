@@ -44,14 +44,14 @@ const AppleStyleDashboard: React.FC<AppleStyleDashboardProps> = ({ className }) 
   const getDefaultLayout = (): WidgetLayout => {
     return {
       blocks: [
-        { id: 'invoices', type: 'InvoicesWidget', size: 'medium', position: { row: 1, col: 1 } },
-        { id: 'expenses', type: 'ExpensesWidget', size: 'medium', position: { row: 1, col: 2 } },
-        { id: 'result', type: 'ResultWidget', size: 'medium', position: { row: 2, col: 1 } },
-        { id: 'taxSummary', type: 'TaxSummaryWidget', size: 'large', position: { row: 2, col: 2 } },
-        { id: 'financialComparison', type: 'FinancialComparisonWidget', size: 'large', position: { row: 3, col: 1 } },
-        { id: 'quotes', type: 'QuotesWidget', size: 'small', position: { row: 4, col: 1 } },
-        { id: 'clients', type: 'ClientsWidget', size: 'small', position: { row: 4, col: 2 } },
-        { id: 'tasks', type: 'TasksWidget', size: 'medium', position: { row: 5, col: 1 } }
+        { id: 'invoices', type: 'InvoicesWidget' as const, size: 'medium', position: { row: 1, col: 1 } },
+        { id: 'expenses', type: 'ExpensesWidget' as const, size: 'medium', position: { row: 1, col: 2 } },
+        { id: 'result', type: 'ResultWidget' as const, size: 'medium', position: { row: 2, col: 1 } },
+        { id: 'taxSummary', type: 'TaxSummaryWidget' as const, size: 'large', position: { row: 2, col: 2 } },
+        { id: 'financialComparison', type: 'FinancialComparisonWidget' as const, size: 'large', position: { row: 3, col: 1 } },
+        { id: 'quotes', type: 'QuotesWidget' as const, size: 'small', position: { row: 4, col: 1 } },
+        { id: 'clients', type: 'ClientsWidget' as const, size: 'small', position: { row: 4, col: 2 } },
+        { id: 'tasks', type: 'TasksWidget' as const, size: 'medium', position: { row: 5, col: 1 } }
       ]
     };
   };
@@ -94,7 +94,19 @@ const AppleStyleDashboard: React.FC<AppleStyleDashboardProps> = ({ className }) 
 
   // Renderiza un widget específico según su tipo
   const renderWidget = (type: WidgetType, size: WidgetSize) => {
-    const WidgetComponent = Widgets[type] as React.ComponentType<{ data?: any; size: WidgetSize }>;
+    // Mapeo explícito de tipos de widget a componentes
+    const widgetComponents: Record<WidgetType, React.ComponentType<{ data?: any; size: WidgetSize }>> = {
+      'InvoicesWidget': Widgets.InvoicesWidget,
+      'ExpensesWidget': Widgets.ExpensesWidget,
+      'ResultWidget': Widgets.ResultWidget,
+      'TaxSummaryWidget': Widgets.TaxSummaryWidget,
+      'FinancialComparisonWidget': Widgets.FinancialComparisonWidget,
+      'QuotesWidget': Widgets.QuotesWidget,
+      'ClientsWidget': Widgets.ClientsWidget,
+      'TasksWidget': Widgets.TasksWidget
+    };
+    
+    const WidgetComponent = widgetComponents[type];
     
     if (!WidgetComponent) {
       console.error(`Widget type not found: ${type}`);
