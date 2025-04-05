@@ -10,6 +10,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import AddBlockDialog from "./AddBlockDialog";
 
+// Importamos las utilidades para grid snapping
+import { 
+  GridSnapConfig, 
+  DEFAULT_SNAP_CONFIG, 
+  snapPositionToGrid, 
+  snapSizeToGrid,
+  createSnapVisualEffect 
+} from "../../utils/gridSnapping";
+
 // Importamos los componentes del dashboard existente
 import ComparisonCharts from "./ComparisonCharts";
 import InvoicesSummary from "./InvoicesSummary";
@@ -485,6 +494,15 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     // Obtener las dimensiones del dashboard
     const rect = dashboardRef.current.getBoundingClientRect();
     
+    // Configurar el grid snapping
+    const snapConfig: GridSnapConfig = {
+      ...DEFAULT_SNAP_CONFIG,
+      cols: gridConfig.cols,
+      gap: gridConfig.gap,
+      gridRef: dashboardRef,
+      threshold: 20 // Umbral de snap ligeramente mayor para mejor UX
+    };
+    
     // Calcular el tamaño de una celda de la cuadrícula
     const cellWidth = (rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols;
     const cellHeight = gridConfig.rowHeight + gridConfig.gap;
@@ -492,8 +510,13 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     // Calcular la posición absoluta del ratón en términos de grid
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    const gridX = Math.floor(mouseX / cellWidth);
-    const gridY = Math.floor(mouseY / cellHeight);
+    
+    // Aplicar snapping a la posición del ratón
+    const snappedPosition = snapPositionToGrid(mouseX, mouseY, snapConfig);
+    
+    // Convertir la posición snapped a coordenadas de grid
+    const gridX = Math.round(snappedPosition.x / (cellWidth + gridConfig.gap));
+    const gridY = Math.round(snappedPosition.y / (cellHeight));
     
     // Determinar el bloque que estamos moviendo
     const currentBlock = dashboardBlocks.find(b => b.id === draggedBlockId);
@@ -501,6 +524,11 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     
     // Solo actualizar si la posición es diferente
     if (currentBlock.position.x !== gridX || currentBlock.position.y !== gridY) {
+      // Mostrar efecto visual de la cuadrícula durante el arrastre (solo ocasionalmente)
+      if (Math.random() < 0.1) { // Limitamos para no crear demasiados elementos
+        createSnapVisualEffect(dashboardRef.current, snapConfig, 300);
+      }
+      
       // Actualizar la posición del bloque
       handlePositionChange(draggedBlockId, { 
         x: Math.max(0, Math.min(gridConfig.cols - currentBlock.position.w, gridX)), 
@@ -565,13 +593,31 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     // Obtener dimensiones del dashboard
     const rect = dashboardRef.current.getBoundingClientRect();
     
+    // Configurar el grid snapping
+    const snapConfig: GridSnapConfig = {
+      ...DEFAULT_SNAP_CONFIG,
+      cols: gridConfig.cols,
+      gap: gridConfig.gap,
+      gridRef: dashboardRef,
+      threshold: 15 // Umbral de snap para redimensionamiento
+    };
+    
     // Calcular tamaño de celda
     const cellWidth = (rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols;
     const cellHeight = gridConfig.rowHeight + gridConfig.gap;
     
+    // Calcular la posición del mouse con snapping
+    const mousePosition = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+    
+    // Aplicar snapping a la posición del ratón
+    const snappedPosition = snapPositionToGrid(mousePosition.x, mousePosition.y, snapConfig);
+    
     // Calcular cambio en unidades de grid
-    const deltaX = Math.round((e.clientX - initialMousePosition.x) / cellWidth);
-    const deltaY = Math.round((e.clientY - initialMousePosition.y) / cellHeight);
+    const deltaX = Math.round((snappedPosition.x - (initialMousePosition.x - rect.left)) / cellWidth);
+    const deltaY = Math.round((snappedPosition.y - (initialMousePosition.y - rect.top)) / cellHeight);
     
     // Calcular nuevo tamaño según la dirección
     let newWidth = initialSize.w;
@@ -596,6 +642,11 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     
     // Asegurarse de que el ancho no exceda el grid
     newWidth = Math.min(gridConfig.cols, newWidth);
+    
+    // Mostrar efecto visual de la cuadrícula durante el redimensionamiento (ocasionalmente)
+    if (Math.random() < 0.05) { // Probabilidad baja para no crear demasiados elementos
+      createSnapVisualEffect(dashboardRef.current, snapConfig, 300);
+    }
     
     // Aplicar los cambios de tamaño al bloque
     if (newWidth !== block.position.w || newHeight !== block.position.h) {
@@ -665,12 +716,34 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     // Calcular la posición en el grid
     if (dashboardRef.current) {
       const rect = dashboardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
       
-      // Calcular la posición en unidades de grid
-      const gridX = Math.floor(x / ((rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols));
-      const gridY = Math.floor(y / (gridConfig.rowHeight + gridConfig.gap));
+      // Configurar el grid snapping
+      const snapConfig: GridSnapConfig = {
+        ...DEFAULT_SNAP_CONFIG,
+        cols: gridConfig.cols,
+        gap: gridConfig.gap,
+        gridRef: dashboardRef,
+        threshold: 20 // Umbral de snap para arrastre
+      };
+      
+      // Posición del mouse en el dashboard
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Aplicar snapping a la posición
+      const snappedPosition = snapPositionToGrid(mouseX, mouseY, snapConfig);
+      
+      // Calcular la posición en unidades de grid con snapping
+      const cellWidth = (rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols;
+      const cellHeight = gridConfig.rowHeight + gridConfig.gap;
+      
+      const gridX = Math.round(snappedPosition.x / (cellWidth + gridConfig.gap));
+      const gridY = Math.round(snappedPosition.y / cellHeight);
+      
+      // Mostrar efecto visual de la cuadrícula ocasionalmente durante el arrastre
+      if (Math.random() < 0.05) {
+        createSnapVisualEffect(dashboardRef.current, snapConfig, 300);
+      }
       
       // Actualizar la posición del bloque arrastrado
       handlePositionChange(draggedBlockId, { x: gridX, y: gridY });

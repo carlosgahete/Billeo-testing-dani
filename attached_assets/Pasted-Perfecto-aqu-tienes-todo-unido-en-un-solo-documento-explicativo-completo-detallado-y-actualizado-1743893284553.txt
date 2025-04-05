@@ -1,0 +1,179 @@
+Perfecto, aquí tienes todo unido en un solo documento explicativo, completo, detallado y actualizado (incluyendo la parte nueva que me pediste):
+
+⸻
+
+Guía completa para construir el Dashboard de Widgets Personalizables (Estilo Apple)
+
+⸻
+
+Objetivo
+
+Crear un Dashboard donde el cliente pueda:
+	•	Añadir widgets personalizados.
+	•	Moverlos libremente dentro del Dashboard.
+	•	Redimensionarlos libremente (hacerlos más grandes o pequeños) de manera fluida.
+	•	Que al cambiar el tamaño, el contenido del widget se ajuste automáticamente (sin explotar ni deformarse).
+	•	Que los widgets saquen siempre la información de su fuente correcta, dependiendo del tipo de widget.
+	•	Que todo el Dashboard se reordene correctamente sin desordenarse.
+	•	Que el comportamiento sea lo más fluido y elegante posible, como el sistema de widgets de Apple en iOS/iPadOS/macOS.
+
+⸻
+
+Funcionamiento de los Widgets
+
+Cada widget debe:
+	•	Ser modular (componente independiente).
+	•	Detectar su tamaño dinámicamente usando herramientas como ResizeObserver.
+	•	Mostrar diferente cantidad de información según su tamaño:
+	•	Small (pequeño): solo datos esenciales.
+	•	Medium (mediano): datos + pequeño gráfico o detalle.
+	•	Large (grande): datos completos + gráficos + detalles secundarios.
+	•	Ajustar su contenido automáticamente al tamaño disponible, sin que se rompa el diseño.
+
+Ejemplo de comportamiento:
+	•	Si hago un widget más pequeño, oculta detalles y muestra solo lo esencial.
+	•	Si agrando el widget, muestra gráficos, tablas o más información.
+
+⸻
+
+Origen de la Información de Cada Widget
+
+Es obligatorio que cada widget obtenga sus datos de su módulo correspondiente de forma correcta:
+
+Tipo de Widget	Fuente de Datos Requerida
+Widget de Ingresos	useIngresosData() (apartado ingresos)
+Widget de Gastos	useGastosData() (apartado gastos)
+Widget de Facturas	useFacturasData() (apartado facturas)
+Widget de Presupuestos	usePresupuestosData() (apartado presupuestos)
+Widget de Resultado Final	Debe calcularlo: Ingresos - Gastos
+
+Importante:
+No puede haber mezclas de datos entre widgets.
+Cada uno debe leer solo lo que le corresponde.
+
+Además:
+	•	Si un widget no encuentra datos o falla su fuente, debe mostrar un pequeño estado de error limpio, como “No hay datos disponibles aún”, sin romper el Dashboard.
+
+⸻
+
+Aspectos técnicos y librerías recomendadas
+
+Tecnologías sugeridas:
+	•	React (también sirve Vue o Angular).
+	•	Framer Motion para animaciones suaves.
+	•	ResizeObserver API para detectar cambios de tamaño.
+	•	DnD Kit o similar para arrastrar y soltar (Drag & Drop).
+	•	CSS Grid Layout o Flexbox para que el Dashboard sea fluido.
+
+Optimización:
+	•	Actualizar solo el widget afectado al cambiar de tamaño, no todo el Dashboard.
+	•	Animaciones al mover, crecer o reducir un widget.
+
+⸻
+
+Código Ejemplo de Widget Adaptativo
+
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+
+const WidgetIngresos = () => {
+  const [size, setSize] = useState('small'); // small | medium | large
+  const containerRef = useRef();
+
+  useEffect(() => {
+    const observer = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        const { width } = entry.contentRect;
+
+        if (width < 300) {
+          setSize('small');
+        } else if (width < 600) {
+          setSize('medium');
+        } else {
+          setSize('large');
+        }
+      }
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="widget-ingresos"
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      {size === 'small' && (
+        <div className="small-view">
+          <h2>Ingresos este mes</h2>
+          <p>10.000€</p>
+        </div>
+      )}
+      
+      {size === 'medium' && (
+        <div className="medium-view">
+          <h2>Ingresos</h2>
+          <p>10.000€</p>
+          <small>Gráfico semanal</small>
+        </div>
+      )}
+      
+      {size === 'large' && (
+        <div className="large-view">
+          <h2>Ingresos Detallados</h2>
+          <p>10.000€</p>
+          <div>Gráfico completo</div>
+          <ul>
+            <li>Factura 001 - 5.000€</li>
+            <li>Factura 002 - 3.000€</li>
+            <li>Factura 003 - 2.000€</li>
+          </ul>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+export default WidgetIngresos;
+
+
+
+⸻
+
+Detalles para hacerlo aún mejor (nivel Apple)
+	•	Usar easing natural en las animaciones (easeInOut).
+	•	Permitir que los widgets “encajen” en una cuadrícula invisible (grid snapping).
+	•	Prohibir tamaños ridículos: cada widget debe tener un mínimo y un máximo de tamaño.
+	•	Adaptar el contenido a las nuevas dimensiones de forma fluida y sin saltos.
+	•	Optimizar los redibujados para que sean casi instantáneos.
+
+⸻
+
+En Resumen:
+	1.	Dashboard totalmente modular, fluido y editable.
+	2.	Cada widget detecta su tamaño y adapta su contenido.
+	3.	Cada widget obtiene los datos reales de su módulo correspondiente.
+	4.	Fluidez, orden, control y visual estilo Apple Widgets.
+
+⸻
+
+¿Quieres que además te prepare ahora un pequeño esquema visual de cómo debería comportarse cuando el usuario:
+	•	Añade un widget,
+	•	Lo agranda,
+	•	Lo reduce,
+	•	Lo mueve por el dashboard?
+
+Así se lo explicas a tu IA o equipo aún mejor.
+¿Te hago eso también? ¡Te lo puedo montar ahora!
