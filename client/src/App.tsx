@@ -12,7 +12,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 // Por problemas de compatibilidad con tipos, volvemos a los import normales
 // La optimización la haremos a nivel de API y de caché
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
+import FixedDashboard from "@/pages/fixed-dashboard";
 import EmptyDashboardPage from "@/pages/empty-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
@@ -53,7 +53,7 @@ function Router() {
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
         <Layout>
-          <ProtectedRoute path="/" component={Dashboard} />
+          <ProtectedRoute path="/" component={FixedDashboard} />
         </Layout>
       </Route>
       <Route path="/invoices">
