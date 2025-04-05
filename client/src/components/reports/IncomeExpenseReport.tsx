@@ -1232,11 +1232,26 @@ const IncomeExpenseReport = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <Form
+          <form
             onSubmit={(e) => {
               e.preventDefault();
+              console.log("Formulario enviado");
+              console.log("Target:", e.target);
+              const formData = new FormData(e.target as HTMLFormElement);
+              const categoryName = formData.get("categoryName") as string;
+              console.log("Nombre categoría:", categoryName);
+              
+              if (!categoryName) {
+                toast({
+                  title: "Error",
+                  description: "El nombre de la categoría es obligatorio",
+                  variant: "destructive",
+                });
+                return;
+              }
+              
               createCategoryMutation.mutate({
-                name: (e.target as HTMLFormElement).categoryName.value,
+                name: categoryName,
                 type: "expense", // Por defecto para el formulario de gastos
                 icon: selectedEmoji,
                 color: "#6E56CF" // Color por defecto
@@ -1281,7 +1296,7 @@ const IncomeExpenseReport = () => {
                 Crear categoría
               </Button>
             </DialogFooter>
-          </Form>
+          </form>
         </DialogContent>
       </Dialog>
     </>
