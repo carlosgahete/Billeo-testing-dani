@@ -157,13 +157,60 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
 
   // Eliminar un bloque del dashboard
   const removeBlock = (blockId: string) => {
-    const newBlocks = activeBlocks.filter((id) => id !== blockId);
-    setActiveBlocks(newBlocks);
+    console.log("Intentando eliminar bloque:", blockId);
+    console.log("Bloques actuales:", activeBlocks);
     
-    // Guardamos automáticamente al eliminar
-    updatePreferences({
-      blocks: newBlocks,
-    });
+    // Verificamos que no estemos intentando eliminar el último bloque
+    if (activeBlocks.length <= 1) {
+      toast({
+        title: "No se puede eliminar",
+        description: "Debes mantener al menos un bloque en el dashboard.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Filtramos el bloque a eliminar (asegurando comparación estricta por valor)
+      const blockIndex = activeBlocks.indexOf(blockId);
+      console.log("Índice del bloque a eliminar:", blockIndex);
+      
+      if (blockIndex === -1) {
+        console.error("Error: No se encontró el bloque en la lista de bloques activos");
+        toast({
+          title: "Error al eliminar",
+          description: "No se encontró el bloque en el dashboard.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const newBlocksArray = [...activeBlocks];
+      newBlocksArray.splice(blockIndex, 1);
+      console.log("Nuevos bloques tras eliminar:", newBlocksArray);
+      
+      // Actualizamos el estado local
+      setActiveBlocks(newBlocksArray);
+      
+      // Guardamos en la base de datos
+      updatePreferences({
+        blocks: newBlocksArray,
+      });
+      
+      // Notificamos al usuario
+      toast({
+        title: "Bloque eliminado",
+        description: "El bloque ha sido eliminado correctamente.",
+        variant: "default",
+      });
+    } catch (err) {
+      console.error("Error al eliminar bloque:", err);
+      toast({
+        title: "Error al eliminar",
+        description: "Ocurrió un error al eliminar el bloque.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Bloques disponibles para agregar (los que no están ya en el dashboard)
