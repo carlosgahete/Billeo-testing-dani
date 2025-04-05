@@ -1,0 +1,122 @@
+Perfecto, te lo preparo claro y sencillo para que tu IA lo entienda sí o sí.
+
+⸻
+
+Esquema de Flujo: Sistema de Widgets con Tres Tamaños
+
+⸻
+
+1. Usuario pulsa “Añadir Widget”
+	•	Acción: Aparece un menú donde se ven los 3 tamaños:
+	•	Pequeño (Small)
+	•	Mediano (Medium)
+	•	Grande (Large)
+
+⸻
+
+2. Usuario elige el tipo de widget y el tamaño
+	•	Ejemplo:
+	•	Tipo: Ingresos
+	•	Tamaño: Mediano (Medium)
+
+⸻
+
+3. Sistema monta el componente correcto
+	•	Si eligió Ingresos y Medium, entonces:
+	•	Renderizar <WidgetIngresosMedium />
+Y ese componente:
+	•	Saca la información de la base de datos de ingresos.
+
+Pseudocódigo:
+
+if (widgetType === "Ingresos") {
+   if (size === "Small") render(<WidgetIngresosSmall />);
+   if (size === "Medium") render(<WidgetIngresosMedium />);
+   if (size === "Large") render(<WidgetIngresosLarge />);
+}
+
+if (widgetType === "Gastos") {
+   if (size === "Small") render(<WidgetGastosSmall />);
+   if (size === "Medium") render(<WidgetGastosMedium />);
+   if (size === "Large") render(<WidgetGastosLarge />);
+}
+// Y así con el resto de tipos
+
+
+
+⸻
+
+4. Cuando el usuario cambia el tamaño
+	•	NO debes hacer “resize”.
+	•	Debes desmontar el componente actual y montar el nuevo.
+
+Pseudocódigo del cambio:
+
+function cambiarTamaño(newSize) {
+   guardarNuevoTamaño(newSize); // Estado: setSize(newSize);
+   desmontarComponenteActual();
+   montarComponenteCorrespondiente();
+}
+
+
+
+⸻
+
+Reglas Claras:
+
+Situación	Qué hacer
+Elijo tamaño al añadir widget	Renderizar el componente específico
+Cambio de tamaño de un widget	Desmontar y montar el nuevo componente
+Cada componente	Saca datos solo de su origen correspondiente
+No hacer resize forzado	Solo cambiar de componente
+
+
+
+⸻
+
+Estructura de Componentes Recomendados
+
+Para cada tipo de widget:
+	•	Ingresos
+	•	WidgetIngresosSmall
+	•	WidgetIngresosMedium
+	•	WidgetIngresosLarge
+	•	Gastos
+	•	WidgetGastosSmall
+	•	WidgetGastosMedium
+	•	WidgetGastosLarge
+	•	Facturas
+	•	WidgetFacturasSmall
+	•	WidgetFacturasMedium
+	•	WidgetFacturasLarge
+	•	Resultados
+	•	WidgetResultadosSmall
+	•	WidgetResultadosMedium
+	•	WidgetResultadosLarge
+	•	Otros widgets
+	•	Igual, siempre con sus 3 componentes
+
+⸻
+
+Cómo mostrar los tamaños en el menú “Añadir Widget”
+
+Cuando estoy eligiendo el widget, tiene que enseñarme en miniatura cómo se vería en Small, Medium y Large, como si fueran 3 opciones.
+
+Y cuando cliqueo uno, debe colocar directamente el tamaño y diseño de esa opción.
+
+⸻
+
+¿Por qué Apple lo hace así?
+
+Porque cada tamaño tiene un diseño especial:
+	•	En Small, se muestran menos datos resumidos.
+	•	En Medium, más detalles.
+	•	En Large, gráficos o datos extendidos.
+
+Tú igual: cada tamaño debe tener su propio diseño adaptado.
+¡Así no se deforman, no se cortan y se ve todo elegante y fluido!
+
+⸻
+
+¿Te hago también ahora una mini estructura de carpetas de ejemplo para que lo tengas todavía más organizado?
+Así sería aún más fácil para tu IA no equivocarse. ¿Te preparo eso también?

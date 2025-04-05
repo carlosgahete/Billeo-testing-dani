@@ -127,7 +127,9 @@ export const DASHBOARD_BLOCKS = {
     id: "result-summary",
     title: "Resumen de Resultados",
     description: "Beneficio, IVA a liquidar e IRPF con métricas clave.",
-    component: ResultSummary,
+    component: ({ data, isLoading, sizeType }: { data: any, isLoading: boolean, sizeType: string }) => (
+      <ResultSummary size={sizeType || "medium"} />
+    ),
     icon: <BarChart3 className="h-8 w-8 text-green-500" />,
     type: "charts"
   },
