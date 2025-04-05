@@ -266,7 +266,85 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     }
   };
 
-  // Eventos de arrastrar y soltar
+  // Eventos de movimiento con mouse
+  const [initialMousePosition, setInitialMousePosition] = useState<{ x: number, y: number } | null>(null);
+  const [initialBlockPosition, setInitialBlockPosition] = useState<{ x: number, y: number } | null>(null);
+  
+  // Eventos para manejo de arrastrar con ratón
+  const handleMouseDown = (e: React.MouseEvent, blockId: string) => {
+    if (!isEditMode) return;
+    
+    // Prevenir comportamiento por defecto
+    e.preventDefault();
+    
+    // Guardar la posición inicial del ratón
+    setInitialMousePosition({ x: e.clientX, y: e.clientY });
+    
+    // Buscar la posición inicial del bloque
+    const block = dashboardBlocks.find(b => b.id === blockId);
+    if (block) {
+      setInitialBlockPosition({ x: block.position.x, y: block.position.y });
+      setDraggedBlockId(blockId);
+      setIsDragging(true);
+      
+      // Añadir eventos globales para capturar el movimiento y soltar
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+  };
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isEditMode || !isDragging || !draggedBlockId || !initialMousePosition || !initialBlockPosition || !dashboardRef.current) return;
+    
+    // Calcular el desplazamiento del ratón
+    const deltaX = e.clientX - initialMousePosition.x;
+    const deltaY = e.clientY - initialMousePosition.y;
+    
+    // Obtener las dimensiones del dashboard
+    const rect = dashboardRef.current.getBoundingClientRect();
+    
+    // Calcular el tamaño de una celda de la cuadrícula
+    const cellWidth = (rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols;
+    const cellHeight = gridConfig.rowHeight + gridConfig.gap;
+    
+    // Calcular el número de celdas que se ha movido
+    const gridDeltaX = Math.round(deltaX / cellWidth);
+    const gridDeltaY = Math.round(deltaY / cellHeight);
+    
+    // Calcular la nueva posición del bloque
+    const newX = Math.max(0, Math.min(gridConfig.cols - 1, initialBlockPosition.x + gridDeltaX));
+    const newY = Math.max(0, initialBlockPosition.y + gridDeltaY);
+    
+    // Actualizar la posición del bloque
+    handlePositionChange(draggedBlockId, { x: newX, y: newY });
+  };
+  
+  const handleMouseUp = () => {
+    if (!isEditMode || !isDragging) return;
+    
+    // Limpiar estado
+    setIsDragging(false);
+    setDraggedBlockId(null);
+    setInitialMousePosition(null);
+    setInitialBlockPosition(null);
+    
+    // Guardar cambios en la base de datos
+    saveLayout(dashboardBlocks);
+    
+    // Eliminar eventos globales
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+  
+  // Limpieza de eventos al desmontar el componente
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+  
+  // Eventos de drag and drop como fallback para dispositivos táctiles
   const handleDragStart = (e: React.DragEvent, blockId: string) => {
     if (!isEditMode) return;
     
@@ -282,6 +360,12 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
       
       // Configurar efectos de arrastre
       e.dataTransfer.effectAllowed = 'move';
+    }
+    
+    // Buscar la posición inicial del bloque
+    const block = dashboardBlocks.find(b => b.id === blockId);
+    if (block) {
+      setInitialBlockPosition({ x: block.position.x, y: block.position.y });
     }
   };
 
@@ -310,6 +394,10 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     
     setIsDragging(false);
     setDraggedBlockId(null);
+    setInitialBlockPosition(null);
+    
+    // Guardar cambios en la base de datos
+    saveLayout(dashboardBlocks);
   };
 
   // Bloques disponibles para agregar (los que no están ya en el dashboard)
@@ -459,6 +547,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                   draggable={isEditMode}
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onDragEnd={handleDragEnd}
+                  onMouseDown={(e) => handleMouseDown(e, block.id)}
                 >
                   {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
                   <div 
@@ -478,7 +567,14 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                     
                     {/* Indicador de arrastre en modo edición */}
                     {isEditMode && (
-                      <div className="h-7 w-7 flex items-center justify-center text-gray-400">
+                      <div 
+                        className="h-7 w-7 flex items-center justify-center text-gray-400 cursor-move"
+                        onMouseDown={(e) => {
+                          // Evitar que los clics en el handle afecten otros elementos
+                          e.stopPropagation();
+                          handleMouseDown(e, block.id);
+                        }}
+                      >
                         <Move className="h-4 w-4" />
                       </div>
                     )}
