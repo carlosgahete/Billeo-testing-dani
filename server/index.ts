@@ -54,9 +54,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Inicializar el servicio de correo electrónico
-  const { initEmailService } = await import('./services/emailService');
-  await initEmailService();
+  // Intentar inicializar el servicio de correo electrónico, pero no bloquear si falla
+  try {
+    const { initEmailService } = await import('./services/emailService');
+    await initEmailService();
+    console.log('Servicio de email inicializado correctamente');
+  } catch (error) {
+    console.error('Error al inicializar el servicio de email, continuando sin él:', error);
+  }
   
   const server = await registerRoutes(app);
 

@@ -23,7 +23,6 @@ import TaxSummary from "./TaxSummary";
 // Importamos la configuración centralizada de bloques y tamaños
 import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
 import { getBlockSize, DASHBOARD_SIZES } from "../../config/dashboardSizes";
-import { WIDGET_SIZES, getNextSize } from "../../config/widgetSizes";
 
 // Grid predeterminado para el dashboard
 const DEFAULT_GRID_CONFIG = {
@@ -397,14 +396,22 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     if (blockIndex === -1) return;
     
     const blockToResize = dashboardBlocks[blockIndex];
-    const blockType = blockToResize.type;
     const currentSize = {
       w: blockToResize.position.w,
       h: blockToResize.position.h
     };
     
-    // Obtener el siguiente tamaño disponible
-    const nextSize = getNextSize(blockType, currentSize);
+    // Definir tamaños predefinidos simples
+    let nextSize = { w: currentSize.w, h: currentSize.h };
+    
+    // Ciclar entre tamaños: pequeño (4x4) -> mediano (6x4) -> grande (12x6) -> pequeño
+    if (currentSize.w <= 4 && currentSize.h <= 4) {
+      nextSize = { w: 6, h: 4 }; // mediano
+    } else if (currentSize.w <= 6 && currentSize.h <= 4) {
+      nextSize = { w: 12, h: 6 }; // grande
+    } else {
+      nextSize = { w: 4, h: 4 }; // pequeño
+    }
     
     // Aplicar el cambio de tamaño
     handleResizeBlock(blockId, nextSize);
