@@ -125,6 +125,11 @@ const Sidebar = ({
       label: "Dashboard" 
     },
     { 
+      href: "/apple-dashboard", 
+      icon: <LayoutDashboard size={20} />, 
+      label: "Dashboard Apple" 
+    },
+    { 
       href: "/empty-dashboard", 
       icon: <PieChart size={20} />, 
       label: "Dashboard Vacío" 

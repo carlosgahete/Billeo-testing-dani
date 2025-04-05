@@ -1,61 +1,74 @@
-// Tipos de datos para el dashboard
-import { WidgetSizeType } from "../config/widgetSizes";
+// Tipos básicos para los widgets
+export type WidgetSize = 'small' | 'medium' | 'large';
 
-// Tipo para las estadísticas generales del dashboard
+export type WidgetType = 
+  | 'InvoicesWidget'
+  | 'ExpensesWidget'
+  | 'ResultWidget'
+  | 'TaxSummaryWidget'
+  | 'FinancialComparisonWidget'
+  | 'QuotesWidget'
+  | 'ClientsWidget'
+  | 'TasksWidget';
+
+// Estructura de datos para las estadísticas del dashboard
 export interface DashboardStats {
   income: number;
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
-  pendingQuotes: number;
-  pendingQuotesCount: number;
-  baseImponible?: number;
-  ivaRepercutido?: number;
-  ivaSoportado?: number;
-  irpfRetenidoIngresos?: number;
-  totalWithholdings?: number;
-  taxes: {
-    vat: number;
-    incomeTax: number;
-    ivaALiquidar: number;
+  taxStats?: {
+    ivaRepercutido: number;
+    ivaSoportado: number;
+    ivaLiquidar: number;
+    irpfRetenido: number;
+    irpfTotal: number;
+    irpfPagar: number;
+  };
+  quotes?: {
+    total: number;
+    pending: number;
+    accepted: number;
+    rejected: number;
+    acceptanceRate: number;
+  };
+  clients?: {
+    total: number;
+    active: number;
+    new: number;
+  };
+  tasks?: {
+    total: number;
+    completed: number;
+    pending: number;
   };
   [key: string]: any;
 }
 
-// Tipo para representar un bloque de dashboard individual
-export interface DashboardBlock {
-  id: string; // ID único del bloque
-  type: string; // Tipo de bloque (income, expenses, taxes, etc.)
-  position: {
-    x: number; // Posición horizontal (columna)
-    y: number; // Posición vertical (fila)
-    w: number; // Ancho (en unidades de grid)
-    h: number; // Alto (en unidades de grid)
-  };
-  visible: boolean; // Si es visible o no
-  config?: Record<string, any>; // Configuración específica del bloque
-  sizeType?: WidgetSizeType; // Tipo de tamaño del widget (small, medium, large)
+// Estructura para la posición de un widget
+export interface WidgetPosition {
+  row: number;
+  col: number;
 }
 
-// Tipo para las preferencias de bloques en el dashboard
+// Estructura para un bloque de widget en el layout
+export interface WidgetBlock {
+  id: string;
+  type: WidgetType;
+  size: WidgetSize;
+  position: WidgetPosition;
+}
+
+// Estructura para el layout del dashboard
+export interface WidgetLayout {
+  blocks: WidgetBlock[];
+}
+
+// Estructura para las preferencias del dashboard
 export interface DashboardPreferences {
-  id: number;
-  userId: number;
-  layout: {
-    blocks: DashboardBlock[] | string[]; // Soporta el nuevo formato de bloque detallado o el antiguo de string
-    grid?: {
-      cols: number;
-      rowHeight: number;
-      gap: number;
-    };
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Propiedades comunes para los bloques del dashboard
-export interface DashboardBlockProps {
-  data: DashboardStats;
-  isLoading: boolean;
-  sizeType?: WidgetSizeType; // Tipo de tamaño (small, medium, large)
+  id?: number;
+  userId?: number;
+  layout: WidgetLayout;
+  createdAt?: string;
+  updatedAt?: string;
 }
