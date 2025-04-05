@@ -125,6 +125,11 @@ const Sidebar = ({
       label: "Dashboard" 
     },
     { 
+      href: "/empty-dashboard", 
+      icon: <PieChart size={20} />, 
+      label: "Dashboard Vacío" 
+    },
+    { 
       href: "/invoices", 
       icon: <Receipt size={20} />, 
       label: "Facturas" 
