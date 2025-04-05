@@ -161,21 +161,99 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     });
   };
 
-  // Manejar el cambio de posición de un bloque
+  // Manejar el cambio de posición de un bloque con reordenamiento automático
   const handlePositionChange = (blockId: string, newPosition: { x: number; y: number }) => {
     setDashboardBlocks(prevBlocks => {
-      const updatedBlocks = [...prevBlocks];
-      const blockIndex = updatedBlocks.findIndex(block => block.id === blockId);
+      // Encontrar el bloque que se está moviendo
+      const blockIndex = prevBlocks.findIndex(block => block.id === blockId);
+      if (blockIndex < 0) return prevBlocks;
       
-      if (blockIndex >= 0) {
-        updatedBlocks[blockIndex] = {
-          ...updatedBlocks[blockIndex],
-          position: {
-            ...updatedBlocks[blockIndex].position,
-            x: newPosition.x,
-            y: newPosition.y
+      const movingBlock = prevBlocks[blockIndex];
+      const blockWidth = movingBlock.position.w;
+      const blockHeight = movingBlock.position.h;
+      
+      // Crear una copia de los bloques
+      const updatedBlocks = [...prevBlocks];
+      
+      // Asegurarse de que la nueva posición está dentro de los límites
+      const safeX = Math.max(0, Math.min(gridConfig.cols - blockWidth, newPosition.x));
+      const safeY = Math.max(0, newPosition.y);
+      
+      // Actualizar la posición del bloque en movimiento
+      const updatedMovingBlock = {
+        ...movingBlock,
+        position: {
+          ...movingBlock.position,
+          x: safeX,
+          y: safeY
+        }
+      };
+      updatedBlocks[blockIndex] = updatedMovingBlock;
+      
+      // Crear una matriz para representar qué celdas están ocupadas
+      const grid = Array(gridConfig.cols).fill(0).map(() => Array(100).fill(null)); // 100 filas como máximo
+      
+      // Marcar las celdas ocupadas por el bloque en movimiento
+      for (let x = safeX; x < safeX + blockWidth; x++) {
+        for (let y = safeY; y < safeY + blockHeight; y++) {
+          if (x >= 0 && x < gridConfig.cols && y >= 0) {
+            grid[x][y] = blockId;
           }
-        };
+        }
+      }
+      
+      // Función para comprobar si un bloque colisiona en una posición dada
+      const checkCollision = (block: DashboardBlock, posX: number, posY: number) => {
+        for (let x = posX; x < posX + block.position.w; x++) {
+          for (let y = posY; y < posY + block.position.h; y++) {
+            if (x >= 0 && x < gridConfig.cols && y >= 0 && grid[x][y] !== null && grid[x][y] !== block.id) {
+              return true; // Hay colisión
+            }
+          }
+        }
+        return false; // No hay colisión
+      };
+      
+      // Función para marcar un bloque en el grid
+      const markBlockInGrid = (block: DashboardBlock) => {
+        for (let x = block.position.x; x < block.position.x + block.position.w; x++) {
+          for (let y = block.position.y; y < block.position.y + block.position.h; y++) {
+            if (x >= 0 && x < gridConfig.cols && y >= 0) {
+              grid[x][y] = block.id;
+            }
+          }
+        }
+      };
+      
+      // Reorganizar los bloques restantes si hay colisiones
+      for (let i = 0; i < updatedBlocks.length; i++) {
+        if (i === blockIndex) continue; // Saltar el bloque que estamos moviendo
+        
+        const currentBlock = updatedBlocks[i];
+        const originalPosition = { ...currentBlock.position };
+        
+        // Comprobar si hay colisión en la posición actual
+        if (checkCollision(currentBlock, currentBlock.position.x, currentBlock.position.y)) {
+          // Si hay colisión, mover hacia abajo hasta encontrar un espacio libre
+          let newY = currentBlock.position.y;
+          
+          // Intentar mover hacia abajo hasta encontrar un espacio libre
+          while (checkCollision(currentBlock, currentBlock.position.x, newY)) {
+            newY++;
+          }
+          
+          // Actualizar la posición del bloque
+          updatedBlocks[i] = {
+            ...currentBlock,
+            position: {
+              ...currentBlock.position,
+              y: newY
+            }
+          };
+        }
+        
+        // Marcar este bloque en el grid para las siguientes comprobaciones
+        markBlockInGrid(updatedBlocks[i]);
       }
       
       setHasUnsavedChanges(true);
@@ -296,10 +374,6 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   const handleMouseMove = (e: MouseEvent) => {
     if (!isEditMode || !isDragging || !draggedBlockId || !initialMousePosition || !initialBlockPosition || !dashboardRef.current) return;
     
-    // Calcular el desplazamiento del ratón
-    const deltaX = e.clientX - initialMousePosition.x;
-    const deltaY = e.clientY - initialMousePosition.y;
-    
     // Obtener las dimensiones del dashboard
     const rect = dashboardRef.current.getBoundingClientRect();
     
@@ -307,16 +381,24 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     const cellWidth = (rect.width - (gridConfig.cols - 1) * gridConfig.gap) / gridConfig.cols;
     const cellHeight = gridConfig.rowHeight + gridConfig.gap;
     
-    // Calcular el número de celdas que se ha movido
-    const gridDeltaX = Math.round(deltaX / cellWidth);
-    const gridDeltaY = Math.round(deltaY / cellHeight);
+    // Calcular la posición absoluta del ratón en términos de grid
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const gridX = Math.floor(mouseX / cellWidth);
+    const gridY = Math.floor(mouseY / cellHeight);
     
-    // Calcular la nueva posición del bloque
-    const newX = Math.max(0, Math.min(gridConfig.cols - 1, initialBlockPosition.x + gridDeltaX));
-    const newY = Math.max(0, initialBlockPosition.y + gridDeltaY);
+    // Determinar el bloque que estamos moviendo
+    const currentBlock = dashboardBlocks.find(b => b.id === draggedBlockId);
+    if (!currentBlock) return;
     
-    // Actualizar la posición del bloque
-    handlePositionChange(draggedBlockId, { x: newX, y: newY });
+    // Solo actualizar si la posición es diferente
+    if (currentBlock.position.x !== gridX || currentBlock.position.y !== gridY) {
+      // Actualizar la posición del bloque
+      handlePositionChange(draggedBlockId, { 
+        x: Math.max(0, Math.min(gridConfig.cols - currentBlock.position.w, gridX)), 
+        y: Math.max(0, gridY) 
+      });
+    }
   };
   
   const handleMouseUp = () => {
@@ -542,8 +624,18 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
               return (
                 <div 
                   key={block.id} 
-                  className={`relative ${isEditMode ? 'cursor-move ring-2 ring-blue-200 rounded-lg' : ''}`}
-                  style={blockStyle}
+                  className={`relative transition-shadow ${
+                    isEditMode 
+                      ? 'cursor-move ring-2 rounded-lg ' + 
+                        (draggedBlockId === block.id 
+                          ? 'ring-blue-400 shadow-lg scale-[1.02] z-10' 
+                          : 'ring-blue-200')
+                      : ''
+                  }`}
+                  style={{
+                    ...blockStyle,
+                    transitionProperty: isDragging && draggedBlockId === block.id ? 'none' : 'all',
+                  }}
                   draggable={isEditMode}
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onDragEnd={handleDragEnd}
