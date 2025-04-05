@@ -94,26 +94,37 @@ const AppleStyleDashboard: React.FC<AppleStyleDashboardProps> = ({ className }) 
 
   // Renderiza un widget específico según su tipo
   const renderWidget = (type: WidgetType, size: WidgetSize) => {
-    // Mapeo explícito de tipos de widget a componentes
-    const widgetComponents: Record<WidgetType, React.ComponentType<{ data?: any; size: WidgetSize }>> = {
-      'InvoicesWidget': Widgets.InvoicesWidget,
-      'ExpensesWidget': Widgets.ExpensesWidget,
-      'ResultWidget': Widgets.ResultWidget,
-      'TaxSummaryWidget': Widgets.TaxSummaryWidget,
-      'FinancialComparisonWidget': Widgets.FinancialComparisonWidget,
-      'QuotesWidget': Widgets.QuotesWidget,
-      'ClientsWidget': Widgets.ClientsWidget,
-      'TasksWidget': Widgets.TasksWidget
-    };
-    
-    const WidgetComponent = widgetComponents[type];
-    
-    if (!WidgetComponent) {
-      console.error(`Widget type not found: ${type}`);
-      return <div className="p-4 border rounded-lg">Widget no encontrado: {type}</div>;
+    try {
+      // Verificar si el tipo es válido
+      if (!type || typeof type !== 'string') {
+        console.error(`Invalid widget type:`, type);
+        return <div className="p-4 border rounded-lg">Widget inválido</div>;
+      }
+      
+      // Mapeo explícito de tipos de widget a componentes
+      const widgetComponents: Record<WidgetType, React.ComponentType<{ data?: any; size: WidgetSize }>> = {
+        'InvoicesWidget': Widgets.InvoicesWidget,
+        'ExpensesWidget': Widgets.ExpensesWidget,
+        'ResultWidget': Widgets.ResultWidget,
+        'TaxSummaryWidget': Widgets.TaxSummaryWidget,
+        'FinancialComparisonWidget': Widgets.FinancialComparisonWidget,
+        'QuotesWidget': Widgets.QuotesWidget,
+        'ClientsWidget': Widgets.ClientsWidget,
+        'TasksWidget': Widgets.TasksWidget
+      };
+      
+      const WidgetComponent = widgetComponents[type];
+      
+      if (!WidgetComponent) {
+        console.error(`Widget type not found: ${type}`);
+        return <div className="p-4 border rounded-lg">Widget no encontrado: {type}</div>;
+      }
+      
+      return <WidgetComponent data={data} size={size} />;
+    } catch (error) {
+      console.error('Error rendering widget:', error);
+      return <div className="p-4 border rounded-lg text-red-500">Error al cargar widget</div>;
     }
-    
-    return <WidgetComponent data={data} size={size} />;
   };
 
   // Obtiene el tamaño de la clase para un widget según su tamaño
@@ -176,22 +187,30 @@ const AppleStyleDashboard: React.FC<AppleStyleDashboardProps> = ({ className }) 
 
           <TabsContent value="dashboard" className="mt-6">
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-              {currentLayout.blocks.map((block) => (
-                <div
-                  key={block.id}
-                  className={cn(
-                    "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 overflow-hidden",
-                    getWidgetSizeClass(block.size),
-                    isEditing && "border-dashed border-2 border-blue-300 cursor-move"
-                  )}
-                  style={{
-                    gridRow: `span ${block.size === 'large' || block.size === 'medium' ? 2 : 1}`,
-                    gridColumn: `span ${block.size === 'large' ? 2 : 1}`
-                  }}
-                >
-                  {renderWidget(block.type, block.size)}
-                </div>
-              ))}
+              {currentLayout.blocks.map((block) => {
+                // Verificación de seguridad para asegurarnos de que block es un objeto válido
+                if (!block || typeof block !== 'object' || !block.id || !block.type || !block.size) {
+                  console.error('Bloque inválido en currentLayout:', block);
+                  return null; // No renderizamos nada si el bloque no es válido
+                }
+                
+                return (
+                  <div
+                    key={block.id}
+                    className={cn(
+                      "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 overflow-hidden",
+                      getWidgetSizeClass(block.size),
+                      isEditing && "border-dashed border-2 border-blue-300 cursor-move"
+                    )}
+                    style={{
+                      gridRow: `span ${block.size === 'large' || block.size === 'medium' ? 2 : 1}`,
+                      gridColumn: `span ${block.size === 'large' ? 2 : 1}`
+                    }}
+                  >
+                    {renderWidget(block.type, block.size)}
+                  </div>
+                );
+              })}
 
               {isEditing && (
                 <div className="col-span-1 row-span-1 h-40 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center">
