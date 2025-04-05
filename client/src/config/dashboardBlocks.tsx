@@ -17,7 +17,10 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-  ReceiptText
+  ReceiptText,
+  ArrowUpFromLine,
+  ArrowDownToLine,
+  PiggyBank
 } from "lucide-react";
 import ResultSummary from "@/components/dashboard/blocks/ResultSummary";
 import QuotesSummary from "@/components/dashboard/blocks/QuotesSummary";
@@ -27,6 +30,9 @@ import ExpensesSummary from "@/components/dashboard/blocks/ExpensesSummary";
 import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
 import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
+import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
+import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
+import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
 
 // Definición de los bloques disponibles para el dashboard
 // Esto centraliza la configuración para que sea usada tanto por el diálogo
@@ -180,6 +186,30 @@ export const DASHBOARD_BLOCKS = {
     component: TaxSummary,
     icon: <DollarSign className="h-8 w-8 text-emerald-500" />,
     type: "charts"
+  },
+  "income-card": {
+    id: "income-card",
+    title: "Tarjeta de Ingresos",
+    description: "Tarjeta con resumen detallado de ingresos y enlaces",
+    component: IncomeSummaryCard,
+    icon: <ArrowUpFromLine className="h-8 w-8 text-emerald-500" />,
+    type: "cards"
+  },
+  "expenses-card": {
+    id: "expenses-card",
+    title: "Tarjeta de Gastos",
+    description: "Tarjeta con detalle de gastos y sus impuestos asociados",
+    component: ExpensesSummaryCard,
+    icon: <ArrowDownToLine className="h-8 w-8 text-red-500" />,
+    type: "cards"
+  },
+  "result-card": {
+    id: "result-card",
+    title: "Resultado Final",
+    description: "Tarjeta con el balance final e impuestos a liquidar",
+    component: FinalResultCard,
+    icon: <PiggyBank className="h-8 w-8 text-blue-500" />,
+    type: "cards"
   }
 };
 
@@ -373,6 +403,75 @@ export const DASHBOARD_BLOCK_CATALOG = [
           <div className="flex items-center justify-between">
             <span className="text-[7px]">IRPF a Pagar</span>
             <span className="text-[7px] font-semibold">30.000 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["income-card"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-emerald-50 py-1 px-2 flex items-center border-b">
+          <ArrowUpFromLine className="h-3 w-3 text-emerald-600 mr-1" />
+          <span className="text-[10px] font-medium text-emerald-800">Ingresos</span>
+        </div>
+        <div className="flex-1 p-2 flex flex-col justify-center items-center">
+          <div className="flex flex-col items-center mb-1">
+            <span className="text-[10px] font-bold text-emerald-600">230.000,00 €</span>
+            <span className="text-[7px] text-gray-500">Total ingresos</span>
+          </div>
+          <div className="w-full flex items-center justify-between">
+            <div className="text-[7px] flex items-center">
+              <span>IVA rep:</span>
+            </div>
+            <span className="text-[7px] font-bold">48.300 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-card"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-red-50 py-1 px-2 flex items-center border-b">
+          <ArrowDownToLine className="h-3 w-3 text-red-600 mr-1" />
+          <span className="text-[10px] font-medium text-red-800">Gastos</span>
+        </div>
+        <div className="flex-1 p-2 flex flex-col justify-center items-center">
+          <div className="flex flex-col items-center mb-1">
+            <span className="text-[10px] font-bold text-red-600">0,00 €</span>
+            <span className="text-[7px] text-gray-500">Total gastos</span>
+          </div>
+          <div className="w-full flex items-center justify-between">
+            <div className="text-[7px] flex items-center">
+              <span>IVA sop:</span>
+            </div>
+            <span className="text-[7px] font-bold">0 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["result-card"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-blue-50 py-1 px-2 flex items-center border-b">
+          <PiggyBank className="h-3 w-3 text-blue-600 mr-1" />
+          <span className="text-[10px] font-medium text-blue-800">Resultado Final</span>
+        </div>
+        <div className="flex-1 p-2 flex flex-col justify-center items-center">
+          <div className="flex flex-col items-center mb-1">
+            <span className="text-[10px] font-bold text-blue-600">230.000,00 €</span>
+            <span className="text-[7px] text-gray-500">Balance final</span>
+          </div>
+          <div className="w-full flex items-center justify-between">
+            <div className="text-[7px] flex items-center">
+              <span>IVA liq:</span>
+            </div>
+            <span className="text-[7px] font-bold">48.300 €</span>
           </div>
         </div>
       </div>
