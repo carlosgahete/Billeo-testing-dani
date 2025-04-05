@@ -1,22 +1,22 @@
 // Tamaños estandarizados para los widgets del dashboard
-// Esto asegura que todos los widgets tengan alturas consistentes
+// Definimos solo el ancho ya que la altura está controlada por BaseBlock
 
 export const DASHBOARD_SIZES = {
   // Widget pequeño (1 columna)
   small: {
-    height: 'min-h-[280px]', // Altura mínima fija para todos los widgets pequeños
+    height: '', // La altura está controlada por BaseBlock
     width: 'lg:col-span-1', // 1/3 del ancho en pantallas grandes
   },
   
   // Widget mediano (2 columnas)
   medium: {
-    height: 'min-h-[280px]', // Misma altura mínima que los pequeños para alineación
+    height: '', // La altura está controlada por BaseBlock
     width: 'lg:col-span-2', // 2/3 del ancho en pantallas grandes
   },
   
   // Widget grande (ancho completo)
   large: {
-    height: 'min-h-[320px]', // Un poco más alto para widgets complejos
+    height: '', // La altura está controlada por BaseBlock
     width: 'lg:col-span-3', // Ancho completo en pantallas grandes
   }
 };

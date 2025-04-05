@@ -295,7 +295,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-min">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {activeBlocks.map((blockId, index) => {
               const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
               if (!blockConfig) return null;
@@ -303,12 +303,12 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
               const BlockComponent = blockConfig.component;
               
               // Obtener el tamaño apropiado para este bloque usando la función centralizada
-              const { width, height } = getBlockSize(blockId);
+              const { width } = getBlockSize(blockId);
               
               return (
                 <div 
                   key={blockId} 
-                  className={`relative group ${width} ${height} bg-white rounded-lg overflow-hidden shadow-sm ${isEditMode ? 'ring-2 ring-blue-200' : ''}`}
+                  className={`relative group ${width} ${isEditMode ? 'ring-2 ring-blue-200' : ''}`}
                 >
                   {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
                   <div 
