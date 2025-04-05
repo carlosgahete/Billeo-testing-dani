@@ -72,24 +72,24 @@ const EmptyDashboard = ({ userId }: EmptyDashboardProps) => {
     enabled: !!userId,
   });
 
-  // En este caso, siempre mantenemos el dashboard vacío inicialmente
+  // Usar las preferencias del usuario para los bloques si existen
   useEffect(() => {
-    if (!preferencesLoading) {
-      // Aseguramos que siempre empieza vacío, sin importar lo que venga de la base de datos
-      setActiveBlocks(EMPTY_LAYOUT);
-      
-      // Si no hay preferencias guardadas o las preferencias no coinciden con el layout vacío,
-      // actualizamos la base de datos para asegurar que está vacío
-      if (!preferences || 
-          !preferences.layout || 
-          !preferences.layout.blocks || 
-          preferences.layout.blocks.length > 0) {
+    if (!preferencesLoading && preferences) {
+      // Si hay preferencias guardadas, las utilizamos
+      if (preferences.layout && preferences.layout.blocks) {
+        console.log("Cargando bloques guardados:", preferences.layout.blocks);
+        setActiveBlocks(preferences.layout.blocks);
+      } else {
+        // Si no hay bloques definidos, inicializamos con el layout vacío
+        console.log("No hay bloques guardados, usando layout vacío");
+        setActiveBlocks(EMPTY_LAYOUT);
+        // Y actualizamos la base de datos
         updatePreferences({
           blocks: EMPTY_LAYOUT
         });
       }
     }
-  }, [preferences, preferencesLoading]);
+  }, [preferences, preferencesLoading, updatePreferences]);
 
   // Manejar el reordenamiento de bloques (simple reordenamiento sin drag & drop)
   const moveBlock = (blockId: string, direction: "up" | "down") => {
