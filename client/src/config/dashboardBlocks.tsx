@@ -16,7 +16,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Filter
+  Filter,
+  ReceiptText
 } from "lucide-react";
 import ResultSummary from "@/components/dashboard/blocks/ResultSummary";
 import QuotesSummary from "@/components/dashboard/blocks/QuotesSummary";
@@ -25,11 +26,97 @@ import ComparativeChart from "@/components/dashboard/blocks/ComparativeChart";
 import ExpensesSummary from "@/components/dashboard/blocks/ExpensesSummary";
 import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
 import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
+import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
 
 // Definición de los bloques disponibles para el dashboard
 // Esto centraliza la configuración para que sea usada tanto por el diálogo
 // de adición de bloques como por el dashboard personalizable
 export const DASHBOARD_BLOCKS = {
+  "income-summary": {
+    id: "income-summary",
+    title: "Ingresos",
+    description: "Resumen de los ingresos y facturación.",
+    component: ({ data, isLoading }: { data: any, isLoading: boolean }) => (
+      <div className="border rounded-lg overflow-hidden">
+        <div className="flex items-center p-3 bg-green-50">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+          <h3 className="text-lg font-medium">Ingresos</h3>
+        </div>
+        <div className="p-4">
+          <p className="text-2xl font-semibold mb-2">
+            {data?.income ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(data.income / 100) : "0,00 €"}
+          </p>
+          
+          <div className="text-sm text-gray-600 flex justify-between border-t pt-2">
+            <span>IVA repercutido:</span>
+            <span className="font-medium">
+              {data?.taxes?.vat ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(data.taxes.vat / 100) : "0,00 €"}
+            </span>
+          </div>
+          
+          <div className="mt-4">
+            <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
+              Ver facturas
+            </button>
+          </div>
+          
+          <div className="mt-2">
+            <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
+              Ver ingresos
+            </button>
+          </div>
+        </div>
+      </div>
+    ),
+    icon: <TrendingUp className="h-8 w-8 text-green-500" />,
+    type: "charts"
+  },
+  "expenses-summary": {
+    id: "expenses-summary",
+    title: "Gastos",
+    description: "Resumen de los gastos y deducciones.",
+    component: ({ data, isLoading }: { data: any, isLoading: boolean }) => (
+      <div className="border rounded-lg overflow-hidden">
+        <div className="flex items-center p-3 bg-red-50">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
+            <polyline points="16 17 22 17 22 11"></polyline>
+          </svg>
+          <h3 className="text-lg font-medium">Gastos</h3>
+        </div>
+        <div className="p-4">
+          <p className="text-2xl font-semibold mb-2">
+            {data?.expenses ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(data.expenses / 100) : "0,00 €"}
+          </p>
+          
+          <div className="text-sm text-gray-600 flex justify-between border-t pt-2">
+            <span>IVA soportado en los gastos:</span>
+            <span className="font-medium">
+              {data?.taxes?.ivaSoportado ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(data.taxes.ivaSoportado / 100) : "0,00 €"}
+            </span>
+          </div>
+          
+          <div className="text-sm text-gray-600 flex justify-between pt-1">
+            <span>IRPF a liquidar por gastos:</span>
+            <span className="font-medium">
+              -{data?.taxes?.irpfGastos ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(data.taxes.irpfGastos / 100) : "0,00 €"}
+            </span>
+          </div>
+          
+          <div className="mt-4">
+            <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
+              Ver gastos
+            </button>
+          </div>
+        </div>
+      </div>
+    ),
+    icon: <TrendingUp className="h-8 w-8 text-red-500 transform rotate-180" />,
+    type: "charts"
+  },
   "result-summary": {
     id: "result-summary",
     title: "Resumen de Resultados",
@@ -78,6 +165,14 @@ export const DASHBOARD_BLOCKS = {
     icon: <Filter className="h-8 w-8 text-gray-800" />,
     type: "charts"
   },
+  "recent-expenses": {
+    id: "recent-expenses",
+    title: "Gastos Recientes",
+    description: "Listado de últimos gastos clasificados por categoría.",
+    component: RecentExpensesByCategory,
+    icon: <ReceiptText className="h-8 w-8 text-pink-500" />,
+    type: "lists"
+  },
   "tax-summary": {
     id: "tax-summary",
     title: "Resumen Fiscal",
@@ -90,6 +185,37 @@ export const DASHBOARD_BLOCKS = {
 
 // Versión para el catálogo que incluye previsualizaciones
 export const DASHBOARD_BLOCK_CATALOG = [
+  {
+    ...DASHBOARD_BLOCKS["recent-expenses"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-pink-50 py-1 px-2 flex items-center border-b">
+          <ReceiptText className="h-3 w-3 text-pink-600 mr-1" />
+          <span className="text-[10px] font-medium text-pink-800">Gastos Recientes</span>
+        </div>
+        <div className="flex-1 p-1 flex flex-col justify-center gap-1">
+          <div className="flex items-center justify-between bg-gray-50 rounded-sm p-1">
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-indigo-100 flex items-center justify-center mr-1">
+                <span className="text-[6px]">💼</span>
+              </div>
+              <span className="text-[6px]">Material oficina</span>
+            </div>
+            <span className="text-[6px] font-medium text-red-600">-35,00 €</span>
+          </div>
+          <div className="flex items-center justify-between bg-gray-50 rounded-sm p-1">
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-green-100 flex items-center justify-center mr-1">
+                <span className="text-[6px]">💡</span>
+              </div>
+              <span className="text-[6px]">Suministros</span>
+            </div>
+            <span className="text-[6px] font-medium text-red-600">-42,10 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
   {
     ...DASHBOARD_BLOCKS["expenses-by-category-chart"],
     preview: (

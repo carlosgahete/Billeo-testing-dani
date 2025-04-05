@@ -21,12 +21,14 @@ import TaxSummary from "./TaxSummary";
 // Importamos la configuración centralizada de bloques
 import { DASHBOARD_BLOCKS } from "../../config/dashboardBlocks";
 
-// Layout por defecto
+// Layout por defecto que coincide con la imagen de muestra
 const DEFAULT_LAYOUT = [
-  "result-summary",
-  "quotes-summary",
-  "invoices-summary",
-  "comparative-chart"
+  "income-summary",     // Ingresos
+  "expenses-summary",   // Gastos
+  "result-summary",     // Resultado Final
+  "quotes-summary",     // Presupuestos
+  "invoices-summary",   // Facturas
+  "comparative-chart"   // Comparativa Financiera
 ];
 
 // Ya no definimos los componentes disponibles aquí, sino que los importamos desde config/dashboardBlocks.tsx
@@ -185,143 +187,11 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
 
   return (
     <div className="space-y-8">
-      {/* Sección 1: El dashboard original con 3 cards en fila (Ingresos, Gastos, Resultado Final) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Bloque de Ingresos */}
-        <div className="border rounded-lg overflow-hidden">
-          <div className="flex items-center p-3 bg-green-50">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-              <polyline points="16 7 22 7 22 13"></polyline>
-            </svg>
-            <h3 className="text-lg font-medium">Ingresos</h3>
-            <div className="ml-auto">
-              <button className="text-gray-400 hover:text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="1"></circle>
-                  <circle cx="12" cy="5" r="1"></circle>
-                  <circle cx="12" cy="19" r="1"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div className="p-4">
-            <p className="text-2xl font-semibold mb-2">
-              {statsData?.income ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(statsData.income / 100) : "0,00 €"}
-            </p>
-            
-            <div className="text-sm text-gray-600 flex justify-between border-t pt-2">
-              <span>IVA repercutido:</span>
-              <span className="font-medium">
-                {statsData?.taxes?.vat ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(statsData.taxes.vat / 100) : "0,00 €"}
-              </span>
-            </div>
-            
-            <div className="mt-4">
-              <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
-                Ver facturas
-              </button>
-            </div>
-            
-            <div className="mt-2">
-              <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
-                Ver ingresos
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Bloque de Gastos */}
-        <div className="border rounded-lg overflow-hidden">
-          <div className="flex items-center p-3 bg-red-50">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
-              <polyline points="16 17 22 17 22 11"></polyline>
-            </svg>
-            <h3 className="text-lg font-medium">Gastos</h3>
-            <div className="ml-auto">
-              <button className="text-gray-400 hover:text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="1"></circle>
-                  <circle cx="12" cy="5" r="1"></circle>
-                  <circle cx="12" cy="19" r="1"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div className="p-4">
-            <p className="text-2xl font-semibold mb-2">
-              {statsData?.expenses ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(statsData.expenses / 100) : "0,00 €"}
-            </p>
-            
-            <div className="text-sm text-gray-600 flex justify-between border-t pt-2">
-              <span>IVA soportado en los gastos:</span>
-              <span className="font-medium">0 €</span>
-            </div>
-            
-            <div className="text-sm text-gray-600 flex justify-between pt-1">
-              <span>IRPF a liquidar por gastos:</span>
-              <span className="font-medium">-0 €</span>
-            </div>
-            
-            <div className="mt-4">
-              <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
-                Ver gastos
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Bloque de Resultado Final */}
-        <div className="border rounded-lg overflow-hidden">
-          <div className="flex items-center p-3 bg-blue-50">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20v-6M6 20V10M18 20V4"></path>
-            </svg>
-            <h3 className="text-lg font-medium">Resultado Final</h3>
-            <div className="ml-auto">
-              <button className="text-gray-400 hover:text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="1"></circle>
-                  <circle cx="12" cy="5" r="1"></circle>
-                  <circle cx="12" cy="19" r="1"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div className="p-4">
-            <p className="text-2xl font-semibold mb-2">
-              {statsData?.income && statsData?.expenses ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format((statsData.income - statsData.expenses) / 100) : "0,00 €"}
-            </p>
-            
-            <div className="text-sm text-gray-600 flex justify-between border-t pt-2">
-              <span>IVA a liquidar:</span>
-              <span className="font-medium">
-                {statsData?.taxes?.ivaALiquidar ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(statsData.taxes.ivaALiquidar / 100) : "0,00 €"}
-              </span>
-            </div>
-            
-            <div className="text-sm text-gray-600 flex justify-between pt-1">
-              <span>IRPF adelantado:</span>
-              <span className="font-medium">
-                {statsData?.taxes?.incomeTax ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(statsData.taxes.incomeTax / 100) : "0,00 €"}
-              </span>
-            </div>
-            
-            <div className="mt-4">
-              <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
-                Ver informes
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Sección 2: Dashboard personalizable */}
-      <div className="border rounded-lg p-4 space-y-4">
+      {/* Dashboard personalizable */}
+      <div className="space-y-4">
         {/* Header con botones de acción */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold">Bloques Personalizables</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Dashboard</h2>
           <div className="flex space-x-2">
             <Button
               variant="default"
@@ -342,16 +212,21 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
           onSelectBlock={addBlock}
         />
 
-        {/* Contenedor de bloques personalizables */}
-        <div className="space-y-4">
+        {/* Contenedor de bloques personalizables con grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {activeBlocks.map((blockId, index) => {
             const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
             if (!blockConfig) return null;
             
             const BlockComponent = blockConfig.component;
             
+            // Determinar si el bloque debe ocupar varias columnas
+            // La comparativa financiera debe ocupar todo el ancho
+            const isFullWidth = ["comparative-chart"].includes(blockId);
+            const columnClass = isFullWidth ? "lg:col-span-3" : "lg:col-span-1";
+            
             return (
-              <div key={blockId} className="relative group">
+              <div key={blockId} className={`relative group ${columnClass}`}>
                 {/* Controles del bloque */}
                 <div className="absolute top-2 right-2 z-10 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {/* Botón para mover hacia arriba */}
