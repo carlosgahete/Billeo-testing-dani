@@ -4,19 +4,19 @@
 export const DASHBOARD_SIZES = {
   // Widget pequeño (1 columna)
   small: {
-    height: 'h-[280px]', // Altura fija para todos los widgets pequeños
+    height: 'min-h-[280px]', // Altura mínima fija para todos los widgets pequeños
     width: 'lg:col-span-1', // 1/3 del ancho en pantallas grandes
   },
   
   // Widget mediano (2 columnas)
   medium: {
-    height: 'h-[280px]', // Misma altura que los pequeños para alineación
+    height: 'min-h-[280px]', // Misma altura mínima que los pequeños para alineación
     width: 'lg:col-span-2', // 2/3 del ancho en pantallas grandes
   },
   
   // Widget grande (ancho completo)
   large: {
-    height: 'h-[320px]', // Un poco más alto para widgets complejos
+    height: 'min-h-[320px]', // Un poco más alto para widgets complejos
     width: 'lg:col-span-3', // Ancho completo en pantallas grandes
   }
 };

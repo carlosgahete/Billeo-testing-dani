@@ -295,7 +295,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-min">
             {activeBlocks.map((blockId, index) => {
               const blockConfig = DASHBOARD_BLOCKS[blockId as keyof typeof DASHBOARD_BLOCKS];
               if (!blockConfig) return null;
@@ -308,7 +308,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
               return (
                 <div 
                   key={blockId} 
-                  className={`relative group ${width} ${height} ${isEditMode ? 'ring-2 ring-blue-200 rounded-lg' : ''}`}
+                  className={`relative group ${width} ${height} bg-white rounded-lg overflow-hidden shadow-sm ${isEditMode ? 'ring-2 ring-blue-200' : ''}`}
                 >
                   {/* Controles del bloque - Visibles siempre en modo edición o al pasar el cursor */}
                   <div 
