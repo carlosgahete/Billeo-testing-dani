@@ -19,6 +19,12 @@ import {
   createSnapVisualEffect 
 } from "../../utils/gridSnapping";
 
+// Importamos la configuración para tamaños de widgets
+import {
+  WidgetSizeType,
+  getWidgetSizeConfig
+} from "../../config/widgetSizes";
+
 // Importamos los componentes del dashboard existente
 import ComparisonCharts from "./ComparisonCharts";
 import InvoicesSummary from "./InvoicesSummary";
@@ -367,7 +373,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   };
 
   // Agregar un bloque al dashboard
-  const addBlock = (blockType: string) => {
+  const addBlock = (blockType: string, sizeType?: WidgetSizeType) => {
     // Calcular posición para el nuevo bloque
     // Por defecto, lo colocamos en la primera fila disponible
     let maxY = 0;
@@ -378,6 +384,17 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
       }
     });
     
+    // Determinar dimensiones según el tipo de tamaño
+    let width = 4;  // Tamaño predeterminado (small)
+    let height = 4;
+    
+    if (sizeType) {
+      // Obtener configuración de tamaño desde la configuración centralizada
+      const sizeConfig = getWidgetSizeConfig(sizeType);
+      width = sizeConfig.width;
+      height = sizeConfig.height;
+    }
+    
     // Crear el nuevo bloque con un id único
     const newBlock: DashboardBlock = {
       id: `${blockType}-${generateId()}`,
@@ -385,10 +402,11 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
       position: {
         x: 0,  // Empezamos en la columna 0
         y: maxY > 0 ? maxY + 1 : 0, // Si hay bloques, lo ponemos después del último
-        w: 4,  // Ancho predeterminado (1/3 del ancho total)
-        h: 4   // Alto predeterminado
+        w: width,
+        h: height
       },
-      visible: true
+      visible: true,
+      sizeType: sizeType || 'small' // Guardar el tipo de tamaño
     };
     
     // Añadir el nuevo bloque al dashboard
@@ -405,30 +423,44 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     if (blockIndex === -1) return;
     
     const blockToResize = dashboardBlocks[blockIndex];
-    const currentSize = {
-      w: blockToResize.position.w,
-      h: blockToResize.position.h
-    };
+    let nextSizeType: WidgetSizeType;
     
-    // Definir tamaños predefinidos simples
-    let nextSize = { w: currentSize.w, h: currentSize.h };
-    
-    // Ciclar entre tamaños: pequeño (4x4) -> mediano (6x4) -> grande (12x6) -> pequeño
-    if (currentSize.w <= 4 && currentSize.h <= 4) {
-      nextSize = { w: 6, h: 4 }; // mediano
-    } else if (currentSize.w <= 6 && currentSize.h <= 4) {
-      nextSize = { w: 12, h: 6 }; // grande
+    // Determinar el siguiente tipo de tamaño
+    if (blockToResize.sizeType === 'small') {
+      nextSizeType = 'medium';
+    } else if (blockToResize.sizeType === 'medium') {
+      nextSizeType = 'large';
     } else {
-      nextSize = { w: 4, h: 4 }; // pequeño
+      nextSizeType = 'small';
     }
     
-    // Aplicar el cambio de tamaño
+    // Obtener las dimensiones para el nuevo tamaño
+    const sizeConfig = getWidgetSizeConfig(nextSizeType);
+    const nextSize = {
+      w: sizeConfig.width,
+      h: sizeConfig.height
+    };
+    
+    // Aplicar el cambio de tamaño y actualizar el tipo de tamaño
     handleResizeBlock(blockId, nextSize);
+    
+    // Actualizar el tipo de tamaño en el bloque
+    setDashboardBlocks(prevBlocks => {
+      return prevBlocks.map(block => {
+        if (block.id === blockId) {
+          return {
+            ...block,
+            sizeType: nextSizeType
+          };
+        }
+        return block;
+      });
+    });
     
     // Notificar al usuario
     toast({
-      title: "Tamaño cambiado",
-      description: "Se ha ajustado el tamaño del widget.",
+      title: `Tamaño cambiado (${sizeConfig.label})`,
+      description: sizeConfig.description,
       variant: "default",
     });
   };
@@ -851,7 +883,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
         <AddBlockDialog
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
-          onSelectBlock={addBlock}
+          onSelectBlock={(blockId, sizeType) => addBlock(blockId, sizeType)}
         />
 
         {/* Contenedor de bloques personalizables con grid o mensaje si está vacío */}
@@ -1026,6 +1058,7 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
                         }
                       }}
                       isLoading={statsLoading}
+                      sizeType={block.sizeType || 'small'}
                     />
                   </div>
                   

@@ -1,4 +1,5 @@
 // Tipos de datos para el dashboard
+import { WidgetSizeType } from "../config/widgetSizes";
 
 // Tipo para las estadísticas generales del dashboard
 export interface DashboardStats {
@@ -33,6 +34,7 @@ export interface DashboardBlock {
   };
   visible: boolean; // Si es visible o no
   config?: Record<string, any>; // Configuración específica del bloque
+  sizeType?: WidgetSizeType; // Tipo de tamaño del widget (small, medium, large)
 }
 
 // Tipo para las preferencias de bloques en el dashboard
@@ -55,4 +57,5 @@ export interface DashboardPreferences {
 export interface DashboardBlockProps {
   data: DashboardStats;
   isLoading: boolean;
+  sizeType?: WidgetSizeType; // Tipo de tamaño (small, medium, large)
 }

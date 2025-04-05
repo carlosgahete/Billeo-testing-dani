@@ -1,71 +1,60 @@
-// Definición de tamaños predefinidos para los widgets (estilo Apple)
+/**
+ * Configuración de tamaños de widget estilo Apple
+ * Cada widget puede tener uno de estos tres tamaños predefinidos
+ */
 
-// Tamaños predefinidos para bloques del dashboard en formato grid
-export const WIDGET_SIZES = {
-  // Tamaño pequeño (1x1)
-  small: {
-    w: 3,
-    h: 3
+export type WidgetSizeType = 'small' | 'medium' | 'large';
+
+export interface WidgetSize {
+  type: WidgetSizeType;
+  width: number; // Ancho en unidades de grid
+  height: number; // Alto en unidades de grid
+  label: string; // Etiqueta para mostrar al usuario
+  description: string; // Descripción de lo que muestra este tamaño
+}
+
+// Definición de tamaños estándar para widgets
+export const WIDGET_SIZES: WidgetSize[] = [
+  {
+    type: 'small',
+    width: 4,  // 1/3 del ancho total en un grid de 12 columnas
+    height: 4,
+    label: 'Pequeño',
+    description: 'Muestra solo la información esencial'
   },
-  
-  // Tamaño mediano (2x2)
-  medium: {
-    w: 6,
-    h: 4
+  {
+    type: 'medium',
+    width: 6, // Mitad del ancho total
+    height: 4,
+    label: 'Mediano',
+    description: 'Incluye datos adicionales y gráficos simples'
   },
-  
-  // Tamaño grande (anchura completa)
-  large: {
-    w: 12,
-    h: 6
+  {
+    type: 'large',
+    width: 12, // Ancho completo
+    height: 6,
+    label: 'Grande',
+    description: 'Visualización completa con todos los detalles'
   }
-};
+];
 
-// Tamaños ideales por tipo de widget (para determinar cuáles son los mejores)
-export const IDEAL_WIDGET_SIZES: Record<string, Array<keyof typeof WIDGET_SIZES>> = {
-  // Widgets que funcionan mejor en formato pequeño, mediano o grande
-  "income-summary": ["small", "medium"],
-  "expenses-summary": ["small", "medium"],
-  "result-card": ["small", "medium"],
-  "quotes-summary": ["small", "medium"],
-  "invoices-summary": ["small", "medium"],
-  "tax-summary": ["medium", "large"],
-  "recent-expenses": ["medium", "large"],
-  "expenses-by-category": ["medium", "large"],
-  
-  // Widgets que funcionan mejor en formato mediano o grande
-  "expenses-by-category-chart": ["medium", "large"],
-  "comparative-chart": ["medium", "large"],
-  
-  // Widgets que solo se ven bien en formato grande
-  "recent-transactions": ["large"],
-  "tasks-list": ["large"]
-};
+// Obtener configuración de tamaño por tipo
+export function getWidgetSizeConfig(sizeType: WidgetSizeType): WidgetSize {
+  const size = WIDGET_SIZES.find(size => size.type === sizeType);
+  if (!size) {
+    // Si no se encuentra, devolver tamaño pequeño por defecto
+    return WIDGET_SIZES[0];
+  }
+  return size;
+}
 
-// Función para obtener el siguiente tamaño disponible para un tipo de widget
-export function getNextSize(blockType: string, currentSize: { w: number, h: number }): { w: number, h: number } {
-  // Obtener la lista de tamaños ideales para este tipo de widget
-  const idealSizes = IDEAL_WIDGET_SIZES[blockType] || ["small", "medium", "large"];
-  
-  // Identificar el tamaño actual
-  let currentSizeKey: keyof typeof WIDGET_SIZES | null = null;
-  
-  if (currentSize.w <= WIDGET_SIZES.small.w && currentSize.h <= WIDGET_SIZES.small.h) {
-    currentSizeKey = "small";
-  } else if (currentSize.w <= WIDGET_SIZES.medium.w && currentSize.h <= WIDGET_SIZES.medium.h) {
-    currentSizeKey = "medium";
+// Determinar el tipo de tamaño en función de las dimensiones
+export function getWidgetSizeType(width: number, height: number): WidgetSizeType {
+  if (width >= 12) {
+    return 'large';
+  } else if (width >= 6) {
+    return 'medium';
   } else {
-    currentSizeKey = "large";
+    return 'small';
   }
-  
-  // Encontrar el índice del tamaño actual en la lista de tamaños ideales
-  const currentIndex = idealSizes.indexOf(currentSizeKey);
-  
-  // Si no se encuentra o es el último, volvemos al primero
-  if (currentIndex === -1 || currentIndex === idealSizes.length - 1) {
-    return WIDGET_SIZES[idealSizes[0]];
-  }
-  
-  // De lo contrario, avanzamos al siguiente tamaño ideal
-  return WIDGET_SIZES[idealSizes[currentIndex + 1]];
 }
