@@ -142,11 +142,6 @@ const Sidebar = ({
       label: "Presupuestos" 
     },
     { 
-      href: "/analytics", 
-      icon: <LineChart size={20} />, 
-      label: "Analítica" 
-    },
-    { 
       href: "/company", 
       icon: <Building2 size={20} />, 
       label: "Empresa" 

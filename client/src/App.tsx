@@ -128,11 +128,7 @@ function Router() {
           <ProtectedRoute path="/documents/scan" component={DocumentScanPage} />
         </Layout>
       </Route>
-      <Route path="/reports">
-        <Layout>
-          <ProtectedRoute path="/reports" component={ReportsPage} />
-        </Layout>
-      </Route>
+      {/* Eliminado la ruta de reportes, ya que está integrada en income-expense */}
       <Route path="/company">
         <Layout>
           <ProtectedRoute path="/company" component={CompanyPage} />
@@ -153,11 +149,7 @@ function Router() {
           <ProtectedRoute path="/income-expense" component={IncomeExpensePage} />
         </Layout>
       </Route>
-      <Route path="/analytics">
-        <Layout>
-          <ProtectedRoute path="/analytics" component={AnalyticsPage} />
-        </Layout>
-      </Route>
+      {/* Eliminada la ruta a analytics ya que está duplicada con income-expense */}
       <Route path="/document-scan">
         <Layout>
           <ProtectedRoute path="/document-scan" component={DocumentScanPage} />
