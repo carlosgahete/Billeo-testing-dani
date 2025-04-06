@@ -464,207 +464,254 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
     <div className="container max-w-5xl py-8">
       {/* Diálogo de confirmación y edición */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Revisar transacción</DialogTitle>
             <DialogDescription>
-              Revisa y edita la información antes de guardar definitivamente:
+              Revisa y edita la información antes de guardar:
             </DialogDescription>
           </DialogHeader>
           
           {transaction && editedData && (
-            <div className="py-4">
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
-                    <Input
-                      id="transaction-description"
-                      value={editedData.description || transaction.description || ""}
-                      onChange={(e) => handleFieldChange('description', e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
+            <div className="py-2">
+              <div className="space-y-4">
+                {/* Contenedor principal con dos columnas */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Columna izquierda: Formulario principal */}
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
+                      <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
                       <Input
-                        id="transaction-amount"
-                        type="number"
-                        step="0.01"
-                        value={editedData.amount || transaction.amount || 0}
-                        onChange={(e) => handleFieldChange('amount', parseFloat(e.target.value))}
+                        id="transaction-description"
+                        value={editedData.description || transaction.description || ""}
+                        onChange={(e) => handleFieldChange('description', e.target.value)}
                         className="w-full"
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
-                      <Input
-                        id="transaction-base"
-                        type="number"
-                        step="0.01"
-                        value={editedData.baseAmount || extractedData?.baseAmount || 0}
-                        onChange={(e) => handleFieldChange('baseAmount', parseFloat(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="transaction-iva" className="text-sm">IVA (%):</Label>
-                      <div className="flex items-center space-x-2">
+                    {/* Fila 1: Importe total y Base imponible */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
                         <Input
-                          id="transaction-iva"
+                          id="transaction-amount"
                           type="number"
-                          step="1"
-                          value={editedData.tax || extractedData?.tax || 21}
-                          onChange={(e) => handleFieldChange('tax', parseInt(e.target.value))}
+                          step="0.01"
+                          value={editedData.amount || transaction.amount || 0}
+                          onChange={(e) => handleFieldChange('amount', parseFloat(e.target.value))}
                           className="w-full"
                         />
-                        <div className="w-1/2 text-sm text-muted-foreground">
-                          {editedData.taxAmount || extractedData?.taxAmount ? 
-                            `${editedData.taxAmount || extractedData?.taxAmount}€` : ""}
-                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%):</Label>
-                      <div className="flex items-center space-x-2">
+                      
+                      <div className="space-y-1">
+                        <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
                         <Input
-                          id="transaction-irpf"
+                          id="transaction-base"
                           type="number"
-                          step="1"
-                          value={editedData.irpf || extractedData?.irpf || 0}
-                          onChange={(e) => handleFieldChange('irpf', parseInt(e.target.value))}
+                          step="0.01"
+                          value={editedData.baseAmount || extractedData?.baseAmount || 0}
+                          onChange={(e) => handleFieldChange('baseAmount', parseFloat(e.target.value))}
                           className="w-full"
                         />
-                        <div className="w-1/2 text-sm text-muted-foreground">
-                          {editedData.irpfAmount || extractedData?.irpfAmount ? 
-                            `${editedData.irpfAmount || extractedData?.irpfAmount}€` : ""}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="transaction-date" className="text-sm">Fecha:</Label>
-                    <Input
-                      id="transaction-date"
-                      type="date"
-                      value={format(new Date(transaction.date), "yyyy-MM-dd")}
-                      onChange={(e) => {
-                        const newDate = new Date(e.target.value);
-                        handleFieldChange('date', newDate);
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
-                    <Select
-                      value={String(transaction.categoryId || "null")}
-                      onValueChange={(value) => handleUpdateCategory(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleccionar categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="null">Sin categoría</SelectItem>
-                        {categories
-                          .filter(cat => cat.type === 'expense')
-                          .map(category => (
-                            <SelectItem key={category.id} value={String(category.id)}>
-                              <div className="flex items-center">
-                                <span 
-                                  className="w-3 h-3 rounded-full mr-2" 
-                                  style={{ backgroundColor: category.color }}
-                                ></span>
-                                {category.icon && <span className="mr-1">{category.icon}</span>}
-                                {category.name}
-                              </div>
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
-                    
-                    <div className="flex justify-end mt-1">
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setNewCategoryDialogOpen(true)}
-                        className="h-7 text-xs"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Nueva categoría
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="transaction-provider" className="text-sm">Proveedor:</Label>
-                    <Input
-                      id="transaction-provider"
-                      value={editedData.provider || extractedData?.provider || ""}
-                      onChange={(e) => handleFieldChange('provider', e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-                
-                {documentImage && (
-                  <div className="pt-3 border-t">
-                    <p className="text-sm font-medium mb-2">Documento escaneado:</p>
-                    <div className="border rounded-md p-2 bg-gray-50">
-                      <div className="flex justify-end mb-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setIsResultZoomed(!isResultZoomed)}
-                          className="h-7 px-2 text-xs"
-                        >
-                          {isResultZoomed ? <ZoomOut className="h-3 w-3 mr-1" /> : <ZoomIn className="h-3 w-3 mr-1" />}
-                          {isResultZoomed ? "Reducir" : "Ampliar"}
-                        </Button>
-                      </div>
-                      <div className="relative w-full h-40 bg-neutral-100 rounded">
-                        <img 
-                          src={documentImage} 
-                          alt="Documento escaneado" 
-                          className="w-full h-full object-contain cursor-pointer" 
-                          onClick={() => setIsResultZoomed(true)}
-                        />
                       </div>
                     </div>
                     
-                    {/* Modal para imagen ampliada */}
-                    {isResultZoomed && (
-                      <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-4xl mx-auto">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => setIsResultZoomed(false)}
-                            className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                          <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                            <img 
-                              src={documentImage} 
-                              alt="Vista ampliada del documento" 
-                              className="w-full h-auto max-h-[80vh] object-contain" 
-                            />
+                    {/* Fila 2: IVA e IRPF */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="transaction-iva" className="text-sm">IVA (%):</Label>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            id="transaction-iva"
+                            type="number"
+                            step="1"
+                            value={editedData.tax || extractedData?.tax || 21}
+                            onChange={(e) => handleFieldChange('tax', parseInt(e.target.value))}
+                            className="w-full"
+                          />
+                          <div className="text-sm text-muted-foreground whitespace-nowrap">
+                            {editedData.taxAmount || extractedData?.taxAmount ? 
+                              `${editedData.taxAmount || extractedData?.taxAmount}€` : ""}
                           </div>
                         </div>
                       </div>
+                      
+                      <div className="space-y-1">
+                        <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%):</Label>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            id="transaction-irpf"
+                            type="number"
+                            step="1"
+                            value={editedData.irpf || extractedData?.irpf || 0}
+                            onChange={(e) => handleFieldChange('irpf', parseInt(e.target.value))}
+                            className="w-full"
+                          />
+                          <div className="text-sm text-muted-foreground whitespace-nowrap">
+                            {editedData.irpfAmount || extractedData?.irpfAmount ? 
+                              `${editedData.irpfAmount || extractedData?.irpfAmount}€` : ""}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Fila 3: Fecha y Proveedor */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="transaction-date" className="text-sm">Fecha:</Label>
+                        <Input
+                          id="transaction-date"
+                          type="date"
+                          value={format(new Date(transaction.date), "yyyy-MM-dd")}
+                          onChange={(e) => {
+                            const newDate = new Date(e.target.value);
+                            handleFieldChange('date', newDate);
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Label htmlFor="transaction-provider" className="text-sm">Proveedor:</Label>
+                        <Input
+                          id="transaction-provider"
+                          value={editedData.provider || extractedData?.provider || ""}
+                          onChange={(e) => handleFieldChange('provider', e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Categoría */}
+                    <div className="space-y-1">
+                      <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
+                      <div className="flex space-x-2">
+                        <Select
+                          value={String(transaction.categoryId || "null")}
+                          onValueChange={(value) => handleUpdateCategory(value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Seleccionar categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">Sin categoría</SelectItem>
+                            {categories
+                              .filter(cat => cat.type === 'expense')
+                              .map(category => (
+                                <SelectItem key={category.id} value={String(category.id)}>
+                                  <div className="flex items-center">
+                                    <span 
+                                      className="w-3 h-3 rounded-full mr-2" 
+                                      style={{ backgroundColor: category.color }}
+                                    ></span>
+                                    {category.icon && <span className="mr-1">{category.icon}</span>}
+                                    {category.name}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            }
+                          </SelectContent>
+                        </Select>
+                        
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setNewCategoryDialogOpen(true)}
+                          className="whitespace-nowrap"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Nueva
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Columna derecha: Documento escaneado */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Documento escaneado:</Label>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setIsResultZoomed(!isResultZoomed)}
+                        className="h-7 px-2 text-xs"
+                      >
+                        {isResultZoomed ? <ZoomOut className="h-3 w-3 mr-1" /> : <ZoomIn className="h-3 w-3 mr-1" />}
+                        {isResultZoomed ? "Reducir" : "Ampliar"}
+                      </Button>
+                    </div>
+                    
+                    {documentImage ? (
+                      <div className="border rounded-md bg-gray-50 h-[280px] overflow-hidden">
+                        <div className="relative w-full h-full rounded">
+                          <img 
+                            src={documentImage} 
+                            alt="Documento escaneado" 
+                            className="w-full h-full object-contain cursor-pointer" 
+                            onClick={() => setIsResultZoomed(true)}
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMagnifierPosition({
+                                x: ((e.clientX - rect.left) / rect.width) * 100,
+                                y: ((e.clientY - rect.top) / rect.height) * 100
+                              });
+                              setShowMagnifier(true);
+                            }}
+                            onMouseLeave={() => setShowMagnifier(false)}
+                          />
+                          
+                          {/* Lupa/Magnifier */}
+                          {showMagnifier && (
+                            <div 
+                              className="absolute w-20 h-20 border-2 border-primary rounded-full overflow-hidden pointer-events-none z-10"
+                              style={{ 
+                                left: `calc(${magnifierPosition.x}% - 40px)`, 
+                                top: `calc(${magnifierPosition.y}% - 40px)`,
+                                backgroundImage: `url(${documentImage})`,
+                                backgroundPosition: `calc(${magnifierPosition.x}% + 40px - ${magnifierPosition.x}% * 2) calc(${magnifierPosition.y}% + 40px - ${magnifierPosition.y}% * 2)`,
+                                backgroundSize: '400%',
+                                backgroundRepeat: 'no-repeat'
+                              }}
+                            >
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <MousePointer className="h-3 w-3 text-primary opacity-80" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border rounded-md bg-gray-50 h-[280px] flex items-center justify-center">
+                        <div className="text-gray-400 flex flex-col items-center">
+                          <FileText className="h-10 w-10 mb-2 opacity-40" />
+                          <span>No hay documento escaneado</span>
+                        </div>
+                      </div>
                     )}
+                  </div>
+                </div>
+                
+                {/* Modal para imagen ampliada */}
+                {isResultZoomed && documentImage && (
+                  <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                    <div className="relative w-full max-w-4xl mx-auto">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setIsResultZoomed(false)}
+                        className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <div className="bg-white p-2 rounded-md w-full overflow-auto">
+                        <img 
+                          src={documentImage} 
+                          alt="Vista ampliada del documento" 
+                          className="w-full h-auto max-h-[80vh] object-contain" 
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1043,553 +1090,64 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
 
         <Card>
           <CardHeader>
-            <CardTitle>Resultados</CardTitle>
+            <CardTitle>Información</CardTitle>
             <CardDescription>
-              Datos extraídos del documento
+              Instrucciones sobre el escaneo de documentos
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!extractedData && !transaction ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Receipt className="h-12 w-12 mx-auto mb-3 text-neutral-300" />
-                <p>Los datos extraídos aparecerán aquí al procesar un documento</p>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium text-sm">¿Qué documentos puedo procesar?</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Puedes escanear facturas de gastos, recibos, tickets y cualquier comprobante de pago.
+                </p>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {documentImage && (
-                  <div className="mb-5">
-                    <h3 className="font-medium text-lg mb-3">Documento escaneado</h3>
-                    <div className="border rounded-md p-2 bg-gray-50">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm text-muted-foreground">Documento original:</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setIsResultZoomed(!isResultZoomed)}
-                          className="h-8 px-2"
-                        >
-                          {isResultZoomed ? (
-                            <>
-                              <ZoomOut className="h-4 w-4 mr-1" />
-                              Reducir
-                            </>
-                          ) : (
-                            <>
-                              <ZoomIn className="h-4 w-4 mr-1" />
-                              Ampliar
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      <div className="relative">
-                        <img 
-                          src={documentImage} 
-                          alt="Documento escaneado" 
-                          className="w-full h-auto max-h-[300px] object-contain bg-white rounded-md cursor-crosshair" 
-                          onMouseMove={(e) => {
-                            // Calculamos la posición relativa del cursor dentro de la imagen
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setMagnifierPosition({
-                              x: e.clientX - rect.left,
-                              y: e.clientY - rect.top
-                            });
-                            setShowMagnifier(true);
-                          }}
-                          onMouseLeave={() => setShowMagnifier(false)}
-                          onClick={() => setIsResultZoomed(true)}
-                        />
-                        
-                        {/* Lupa flotante */}
-                        {showMagnifier && (
-                          <div 
-                            className="absolute pointer-events-none bg-white shadow-lg border-2 border-[#04C4D9] rounded-full overflow-hidden z-10 flex items-center justify-center"
-                            style={{
-                              width: '150px',
-                              height: '150px',
-                              top: Math.max(0, magnifierPosition.y - 75),
-                              left: Math.max(0, magnifierPosition.x - 75),
-                            }}
-                          >
-                            {/* Imagen ampliada dentro de la lupa */}
-                            <div
-                              className="absolute inset-0 rounded-full overflow-hidden"
-                              style={{
-                                backgroundImage: `url(${documentImage})`,
-                                backgroundPosition: `${-magnifierPosition.x * 3 + 75}px ${-magnifierPosition.y * 3 + 75}px`,
-                                backgroundSize: '400%',
-                                backgroundRepeat: 'no-repeat'
-                              }}
-                            />
-                            
-                            {/* Ícono de lupa semitransparente */}
-                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                              <Search className="h-8 w-8 text-[#04C4D9]" />
-                            </div>
-                            
-                            {/* Cruceta para ayudar a posicionar */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="w-[1px] h-6 bg-gray-400/30" />
-                              <div className="h-[1px] w-6 bg-gray-400/30" />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {isResultZoomed && (
-                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                          <div className="relative w-full max-w-4xl mx-auto">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => setIsResultZoomed(false)}
-                              className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                              <div className="relative">
-                                <img 
-                                  src={documentImage} 
-                                  alt="Vista ampliada del documento" 
-                                  className="w-full h-auto object-contain max-h-[80vh] cursor-crosshair" 
-                                  onMouseMove={(e) => {
-                                    // Calculamos la posición relativa del cursor dentro de la imagen
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    setMagnifierPosition({
-                                      x: e.clientX - rect.left,
-                                      y: e.clientY - rect.top
-                                    });
-                                    setShowMagnifier(true);
-                                  }}
-                                  onMouseLeave={() => setShowMagnifier(false)}
-                                />
-                                
-                                {/* Lupa flotante modo ampliado */}
-                                {showMagnifier && (
-                                  <div 
-                                    className="absolute pointer-events-none bg-white shadow-lg border-2 border-[#04C4D9] rounded-full overflow-hidden z-10 flex items-center justify-center"
-                                    style={{
-                                      width: '200px',
-                                      height: '200px',
-                                      top: Math.max(0, magnifierPosition.y - 100),
-                                      left: Math.max(0, magnifierPosition.x - 100),
-                                    }}
-                                  >
-                                    {/* Imagen ampliada dentro de la lupa */}
-                                    <div
-                                      className="absolute inset-0 rounded-full overflow-hidden"
-                                      style={{
-                                        backgroundImage: `url(${documentImage})`,
-                                        backgroundPosition: `${-magnifierPosition.x * 2 + 100}px ${-magnifierPosition.y * 2 + 100}px`,
-                                        backgroundSize: '300%',
-                                        backgroundRepeat: 'no-repeat'
-                                      }}
-                                    />
-                                    
-                                    {/* Ícono de lupa semitransparente */}
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                                      <Search className="h-10 w-10 text-[#04C4D9]" />
-                                    </div>
-                                    
-                                    {/* Cruceta para ayudar a posicionar */}
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                      <div className="w-[1px] h-10 bg-gray-400/30" />
-                                      <div className="h-[1px] w-10 bg-gray-400/30" />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+              
+              <div>
+                <h3 className="font-medium text-sm">¿Qué datos se extraen?</h3>
+                <div className="mt-1 space-y-1.5">
+                  <div className="flex items-start">
+                    <Badge className="mr-2 bg-[#04C4D9] text-white">CIF/NIF</Badge>
+                    <p className="text-xs text-muted-foreground">Identificador fiscal del proveedor</p>
                   </div>
-                )}
-                
-                <div>
-                  <h3 className="font-medium text-lg mb-3">Datos extraídos</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">Fecha:</span>
-                      <span>{new Date(extractedData.date).toLocaleDateString('es-ES')}</span>
-                    </div>
-                    
-                    {/* Título - EDITABLE */}
-                    {editedData ? (
-                      <div className="flex justify-between border-b pb-2">
-                        <label htmlFor="title" className="text-muted-foreground">Título:</label>
-                        <Input 
-                          id="title"
-                          type="text"
-                          value={editedData.title}
-                          onChange={(e) => handleFieldChange('title', e.target.value)}
-                          className="w-1/2 h-7 text-right font-semibold"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-muted-foreground">Título:</span>
-                        <span className="font-semibold">{extractedData.title || extractedData.description}</span>
-                      </div>
-                    )}
-                    
-                    {/* Descripción - EDITABLE */}
-                    {editedData ? (
-                      <div className="flex justify-between border-b pb-2">
-                        <label htmlFor="description" className="text-muted-foreground">Descripción:</label>
-                        <Input 
-                          id="description"
-                          type="text"
-                          value={editedData.description}
-                          onChange={(e) => handleFieldChange('description', e.target.value)}
-                          className="w-1/2 h-7 text-right"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-muted-foreground">Descripción:</span>
-                        <span>{extractedData.description}</span>
-                      </div>
-                    )}
-                    
-                    {/* Información fiscal destacada - EDITABLE */}
-                    {editedData ? (
-                      <div className="bg-blue-50 rounded-md p-3 my-3 border border-blue-200">
-                        <h4 className="font-medium text-blue-800 mb-2">Información Fiscal (Editable)</h4>
-                        
-                        {/* Base Imponible */}
-                        <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
-                          <label htmlFor="subtotal" className="font-medium text-blue-700">💰 Base Imponible:</label>
-                          <div className="flex items-center">
-                            <Input 
-                              id="subtotal"
-                              type="number"
-                              step="0.01"
-                              value={editedData.subtotal}
-                              onChange={(e) => handleFieldChange('subtotal', parseFloat(e.target.value))}
-                              className="w-24 h-7 text-right mr-1"
-                            />
-                            <span>€</span>
-                          </div>
-                        </div>
-                        
-                        {/* IVA */}
-                        <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
-                          <label htmlFor="taxAmount" className="font-medium text-blue-700">
-                            ➕ IVA (<Input 
-                              type="number"
-                              value={editedData.ivaRate || 21}
-                              onChange={(e) => handleFieldChange('ivaRate', parseInt(e.target.value))}
-                              className="w-12 h-6 inline-block text-center p-0 mx-1"
-                            />%):
-                          </label>
-                          <div className="flex items-center">
-                            <Input 
-                              id="taxAmount"
-                              type="number"
-                              step="0.01"
-                              value={editedData.taxAmount}
-                              onChange={(e) => handleFieldChange('taxAmount', parseFloat(e.target.value))}
-                              className="w-24 h-7 text-right mr-1"
-                            />
-                            <span>€</span>
-                          </div>
-                        </div>
-                        
-                        {/* IRPF */}
-                        <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
-                          <label htmlFor="irpfAmount" className="font-medium text-blue-700">
-                            ➖ IRPF (<Input 
-                              type="number"
-                              value={editedData.irpfRate || 15}
-                              onChange={(e) => handleFieldChange('irpfRate', parseInt(e.target.value))}
-                              className="w-12 h-6 inline-block text-center p-0 mx-1"
-                            />%):
-                          </label>
-                          <div className="flex items-center">
-                            <span className="text-red-600 mr-1">-</span>
-                            <Input 
-                              id="irpfAmount"
-                              type="number"
-                              step="0.01"
-                              value={editedData.irpfAmount || 0}
-                              onChange={(e) => handleFieldChange('irpfAmount', parseFloat(e.target.value))}
-                              className="w-24 h-7 text-right text-red-600 mr-1"
-                            />
-                            <span>€</span>
-                          </div>
-                        </div>
-                        
-                        {/* Total */}
-                        <div className="flex justify-between font-bold">
-                          <label htmlFor="amount" className="text-blue-800">💵 Total:</label>
-                          <div className="flex items-center">
-                            <Input 
-                              id="amount"
-                              type="number"
-                              step="0.01"
-                              value={editedData.amount}
-                              onChange={(e) => handleFieldChange('amount', parseFloat(e.target.value))}
-                              className="w-24 h-7 text-right font-bold text-blue-800 mr-1"
-                            />
-                            <span className="text-blue-800">€</span>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-blue-50 rounded-md p-3 my-3 border border-blue-200">
-                        <h4 className="font-medium text-blue-800 mb-2">Información Fiscal</h4>
-                        <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
-                          <span className="font-medium text-blue-700">💰 Base Imponible:</span>
-                          <span className="font-medium">{extractedData.subtotal ? extractedData.subtotal.toFixed(2) : '0.00'} €</span>
-                        </div>
-                        <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
-                          <span className="font-medium text-blue-700">➕ IVA ({extractedData.ivaRate || 21}%):</span>
-                          <span>{extractedData.taxAmount ? extractedData.taxAmount.toFixed(2) : '0.00'} €</span>
-                        </div>
-                        <div className="flex justify-between border-b border-blue-100 pb-2 mb-2">
-                          <span className="font-medium text-blue-700">➖ IRPF ({extractedData.irpfRate || 15}%):</span>
-                          <span className="text-red-600">-{extractedData.irpfAmount ? extractedData.irpfAmount.toFixed(2) : '0.00'} €</span>
-                        </div>
-                        <div className="flex justify-between font-bold">
-                          <span className="text-blue-800">💵 Total:</span>
-                          <span className="text-blue-800">{extractedData.amount.toFixed(2)} €</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Proveedor - EDITABLE */}
-                    {editedData && extractedData.vendor && (
-                      <div className="flex justify-between border-b pb-2">
-                        <label htmlFor="vendor" className="text-muted-foreground">Proveedor:</label>
-                        <Input 
-                          id="vendor"
-                          type="text"
-                          value={editedData.vendor}
-                          onChange={(e) => handleFieldChange('vendor', e.target.value)}
-                          className="w-1/2 h-7 text-right"
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Cliente - EDITABLE */}
-                    {editedData && extractedData.client && (
-                      <div className="flex justify-between border-b pb-2">
-                        <label htmlFor="client" className="text-muted-foreground">Cliente:</label>
-                        <Input 
-                          id="client"
-                          type="text"
-                          value={editedData.client}
-                          onChange={(e) => handleFieldChange('client', e.target.value)}
-                          className="w-1/2 h-7 text-right font-semibold text-blue-700"
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Categoría - EDITABLE */}
-                    {editedData && (
-                      <div className="flex justify-between pb-2">
-                        <label htmlFor="categorySelect" className="text-muted-foreground">Categoría:</label>
-                        <div className="flex items-center w-1/2">
-                          <Select
-                            value={transaction?.categoryId?.toString() || "null"}
-                            onValueChange={(value) => {
-                              if (value === "new_category") {
-                                // Abrir diálogo para crear nueva categoría
-                                categoryForm.setValue('type', 'expense');
-                                setNewCategoryDialogOpen(true);
-                              } else {
-                                // Actualizar la transacción con la categoría seleccionada
-                                const categoryId = value !== "null" ? parseInt(value) : null;
-                                // Actualizar categoría (puede ser null o un número)
-                                handleUpdateCategory(categoryId);
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="h-7 w-full">
-                              <SelectValue placeholder={editedData.categoryHint || "Seleccionar categoría"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="null">Sin categoría</SelectItem>
-                              {categories && categories
-                                .filter((cat) => cat.type === "expense")
-                                .map((category) => (
-                                  <SelectItem 
-                                    key={category.id} 
-                                    value={category.id.toString()}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                              <SelectItem value="new_category" className="text-primary border-t mt-1 pt-1">
-                                + Añadir nueva categoría
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Mostrar versión no editable si no hay datos editables */}
-                    {!editedData && (
-                      <>
-                        {extractedData.vendor && (
-                          <div className="flex justify-between border-b pb-2">
-                            <span className="text-muted-foreground">Proveedor:</span>
-                            <span>{extractedData.vendor}</span>
-                          </div>
-                        )}
-                        {extractedData.client && (
-                          <div className="flex justify-between border-b pb-2">
-                            <span className="text-muted-foreground">Cliente:</span>
-                            <span className="font-semibold text-blue-700">{extractedData.client}</span>
-                          </div>
-                        )}
-                        {extractedData.categoryHint && (
-                          <div className="flex justify-between pb-2">
-                            <span className="text-muted-foreground">Categoría sugerida:</span>
-                            <span>{extractedData.categoryHint}</span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Botón para guardar cambios */}
-                    {editedData && (
-                      <Button 
-                        onClick={handleSaveChanges}
-                        className="w-full mt-3 bg-green-600 hover:bg-green-700"
-                      >
-                        Guardar cambios
-                      </Button>
-                    )}
+                  <div className="flex items-start">
+                    <Badge className="mr-2 bg-[#04C4D9] text-white">Fecha</Badge>
+                    <p className="text-xs text-muted-foreground">Fecha de emisión del documento</p>
+                  </div>
+                  <div className="flex items-start">
+                    <Badge className="mr-2 bg-[#04C4D9] text-white">Importe</Badge>
+                    <p className="text-xs text-muted-foreground">Total y base imponible</p>
+                  </div>
+                  <div className="flex items-start">
+                    <Badge className="mr-2 bg-[#04C4D9] text-white">IVA</Badge>
+                    <p className="text-xs text-muted-foreground">Porcentaje de IVA aplicado</p>
+                  </div>
+                  <div className="flex items-start">
+                    <Badge className="mr-2 bg-[#04C4D9] text-white">IRPF</Badge>
+                    <p className="text-xs text-muted-foreground">Retención de IRPF si aplica</p>
                   </div>
                 </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-medium text-lg mb-3">Transacción creada</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Se ha creado automáticamente la siguiente transacción:
-                  </p>
-                  
-                  {/* Mostrar la imagen de la factura procesada */}
-                  {previewUrl && (
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm font-medium">Documento procesado:</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setIsResultZoomed(!isResultZoomed)}
-                          className="h-8 px-2"
-                        >
-                          {isResultZoomed ? (
-                            <>
-                              <ZoomOut className="h-4 w-4 mr-1" />
-                              Reducir
-                            </>
-                          ) : (
-                            <>
-                              <ZoomIn className="h-4 w-4 mr-1" />
-                              Ampliar
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {isResultZoomed ? (
-                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                          <div className="relative w-full max-w-4xl mx-auto">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => setIsResultZoomed(false)}
-                              className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                              <img 
-                                src={previewUrl} 
-                                alt="Vista ampliada" 
-                                className="w-full h-auto object-contain max-h-[80vh]" 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="border rounded-md overflow-hidden w-full max-h-[200px] flex items-center justify-center mb-4">
-                          <img 
-                            src={previewUrl} 
-                            alt="Documento procesado" 
-                            className="max-w-full max-h-[200px] object-contain cursor-pointer" 
-                            onClick={() => setIsResultZoomed(true)}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="bg-neutral-50 rounded-md p-3 text-sm">
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Descripción:</span>
-                      <span>{transaction.description}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Importe:</span>
-                      <span className="font-semibold">{Number(transaction.amount).toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Tipo:</span>
-                      <span>Gasto</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Fecha:</span>
-                      <span>{new Date(transaction.date).toLocaleDateString('es-ES')}</span>
-                    </div>
-                    
-                    {/* Mostrar impuestos si están presentes en la transacción */}
-                    {transaction.additionalTaxes && (
-                      <>
-                        <div className="border-t border-neutral-200 my-2 pt-2">
-                          <h4 className="font-medium text-neutral-700 mb-2">Impuestos incluidos:</h4>
-                          {JSON.parse(transaction.additionalTaxes).map((tax: any, index: number) => (
-                            <div key={index} className="flex justify-between mb-1 pl-2">
-                              <span className="text-neutral-600">{tax.name} ({Math.abs(tax.amount)}%):</span>
-                              <span className={tax.amount < 0 ? "text-red-600" : "text-blue-600"}>
-                                {tax.amount < 0 ? "Retención" : "Aplicado"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    
-                    {/* Mostrar extracto de las notas si existen */}
-                    {transaction.notes && (
-                      <div className="border-t border-neutral-200 mt-2 pt-2">
-                        <h4 className="font-medium text-neutral-700 mb-1">Detalles fiscales:</h4>
-                        <div className="text-neutral-600 text-xs bg-neutral-100 p-2 rounded max-h-20 overflow-y-auto whitespace-pre-line">
-                          {transaction.notes.substring(0, 200)}
-                          {transaction.notes.length > 200 ? '...' : ''}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Button 
-                    onClick={handleGoToTransactions}
-                    className="w-full mt-4"
-                    variant="outline"
-                  >
-                    Ver en Ingresos y Gastos
-                  </Button>
-                </div>
               </div>
-            )}
+              
+              <div>
+                <h3 className="font-medium text-sm">Recomendaciones</h3>
+                <ul className="mt-1 space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                  <li>Asegúrate de que el documento sea legible</li>
+                  <li>Utiliza imágenes con buena resolución</li>
+                  <li>Encuadra bien el documento dentro de la imagen</li>
+                  <li>Verifica que los datos extraídos sean correctos</li>
+                </ul>
+              </div>
+              
+              <Separator />
+              
+              <div className="pt-2">
+                <p className="text-sm text-muted-foreground">
+                  Todos los documentos escaneados se guardarán en tu cuenta y podrás acceder a ellos en cualquier momento desde la sección de "Transacciones".
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
