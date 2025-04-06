@@ -1,3 +1,4 @@
+@import "./styles/calendar-fix.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
