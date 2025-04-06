@@ -2,7 +2,26 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink } from "lucide-react";
+import { 
+  Loader2, 
+  ArrowUp, 
+  ArrowDown, 
+  PiggyBank, 
+  FileText, 
+  BarChart3, 
+  InfoIcon, 
+  ExternalLink,
+  TrendingUp,
+  TrendingDown,
+  HelpCircle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  CalendarRange,
+  RefreshCw
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -128,182 +147,189 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("p-6 bg-white", className)}>
+    <div className={cn("p-6 bg-gray-50", className)}>
       {/* Cabecera del dashboard con título y controles */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md mb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div className="flex items-center mb-3 md:mb-0">
-          <BarChart3 className="h-6 w-6 text-white mr-2" />
-          <h2 className="text-2xl font-bold text-white">Dashboard</h2>
+          <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
+            <BarChart3 className="h-5 w-5 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Dashboard Financiero</h2>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+          <div className="flex items-center">
+            <Calendar className="text-gray-400 h-4 w-4 mr-2" />
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="w-[100px] border-gray-200 h-9">
+                <SelectValue placeholder="Año" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[100px] bg-white/90 border-none h-9">
-              <SelectValue placeholder="Año" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2023">2023</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[150px] bg-white/90 border-none h-9">
-              <SelectValue placeholder="Periodo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todo el año</SelectItem>
-              <SelectItem value="q1">Trimestre 1</SelectItem>
-              <SelectItem value="q2">Trimestre 2</SelectItem>
-              <SelectItem value="q3">Trimestre 3</SelectItem>
-              <SelectItem value="q4">Trimestre 4</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center">
+            <CalendarRange className="text-gray-400 h-4 w-4 mr-2" />
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-[150px] border-gray-200 h-9">
+                <SelectValue placeholder="Periodo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todo el año</SelectItem>
+                <SelectItem value="q1">Trimestre 1</SelectItem>
+                <SelectItem value="q2">Trimestre 2</SelectItem>
+                <SelectItem value="q3">Trimestre 3</SelectItem>
+                <SelectItem value="q4">Trimestre 4</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
           <Button 
             size="sm"
             onClick={() => refreshDashboard()}
-            className="h-9 bg-white text-blue-600 hover:bg-blue-50"
+            className="h-9 bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
           >
-            Actualizar
+            <RefreshCw className="h-4 w-4 mr-1" /> Actualizar
           </Button>
         </div>
       </div>
 
       {/* Primera fila: Widgets principales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         {/* Widget de Ingresos */}
-        <Card className="overflow-hidden rounded-lg shadow-md border-0">
-          <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="bg-green-100 p-3 rounded-full mr-4">
-                  <ArrowUp className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-green-700">Ingresos</h3>
-                  <p className="text-sm text-gray-500">Entradas totales</p>
-                </div>
+        <Card className="overflow-hidden rounded-xl shadow-md border-0 hover:shadow-lg transition-shadow">
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">Ingresos</h3>
+              <div className="p-2 rounded-full bg-green-100">
+                <TrendingUp className="h-5 w-5 text-green-600" />
               </div>
             </div>
-            <div className="mb-4">
-              <div className="text-3xl font-bold text-green-700">
+            
+            <div className="mt-6 flex items-end space-x-1">
+              <div className="text-3xl font-bold text-gray-900">
                 {formatCurrency(baseImponibleIngresos)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
-                Base imponible (sin IVA)
+              <div className="text-sm text-gray-500 mb-1 ml-1">
+                sin IVA
               </div>
             </div>
-            <div className="space-y-2 mb-4 p-3 bg-green-50 rounded-md border border-green-100">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible:</span>
-                <span className="font-medium text-green-700">{formatCurrency(baseImponibleIngresos)}</span>
+          </div>
+          
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-gray-500">Base imponible</span>
+                <HelpCircle className="h-3 w-3 text-gray-400 ml-1" />
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">IVA repercutido (21%):</span>
-                <span className="font-medium text-green-700">{formatCurrency(ivaRepercutido)}</span>
+              <span className="font-medium text-gray-900">{formatCurrency(baseImponibleIngresos)}</span>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-gray-500">IVA repercutido</span>
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">21%</Badge>
               </div>
+              <span className="font-medium text-gray-900">{formatCurrency(ivaRepercutido)}</span>
             </div>
-            <div>
-              <Link href="/invoices">
-                <Button variant="outline" className="w-full border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700">
-                  Ver facturas
-                </Button>
-              </Link>
-            </div>
+            <Separator className="my-3 bg-gray-200" />
+            <Link href="/invoices" className="inline-block w-full">
+              <Button variant="ghost" className="w-full border border-gray-200 hover:bg-green-50 text-gray-700 hover:text-gray-900 font-medium">
+                <ArrowUpRight className="h-4 w-4 mr-2 text-green-600" />
+                Ver facturas
+              </Button>
+            </Link>
           </div>
         </Card>
 
         {/* Widget de Gastos */}
-        <Card className="overflow-hidden rounded-lg shadow-md border-0">
-          <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="bg-red-100 p-3 rounded-full mr-4">
-                  <ArrowDown className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-red-700">Gastos</h3>
-                  <p className="text-sm text-gray-500">Salidas totales</p>
-                </div>
+        <Card className="overflow-hidden rounded-xl shadow-md border-0 hover:shadow-lg transition-shadow">
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">Gastos</h3>
+              <div className="p-2 rounded-full bg-red-100">
+                <TrendingDown className="h-5 w-5 text-red-600" />
               </div>
             </div>
-            <div className="mb-4">
-              <div className="text-3xl font-bold text-red-700">
+            
+            <div className="mt-6 flex items-end space-x-1">
+              <div className="text-3xl font-bold text-gray-900">
                 {formatCurrency(baseImponibleGastos)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
-                Base imponible (sin IVA)
+              <div className="text-sm text-gray-500 mb-1 ml-1">
+                sin IVA
               </div>
             </div>
-            <div className="space-y-2 mb-4 p-3 bg-red-50 rounded-md border border-red-100">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible:</span>
-                <span className="font-medium text-red-700">{formatCurrency(baseImponibleGastos)}</span>
+          </div>
+          
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-gray-500">Base imponible</span>
+                <HelpCircle className="h-3 w-3 text-gray-400 ml-1" />
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">IVA soportado (21%):</span>
-                <span className="font-medium text-red-700">{formatCurrency(ivaSoportado)}</span>
+              <span className="font-medium text-gray-900">{formatCurrency(baseImponibleGastos)}</span>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-gray-500">IVA soportado</span>
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">21%</Badge>
               </div>
+              <span className="font-medium text-gray-900">{formatCurrency(ivaSoportado)}</span>
             </div>
-            <div>
-              <Link href="/income-expense">
-                <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
-                  Ver gastos
-                </Button>
-              </Link>
-            </div>
+            <Separator className="my-3 bg-gray-200" />
+            <Link href="/income-expense" className="inline-block w-full">
+              <Button variant="ghost" className="w-full border border-gray-200 hover:bg-red-50 text-gray-700 hover:text-gray-900 font-medium">
+                <ArrowDownRight className="h-4 w-4 mr-2 text-red-600" />
+                Ver gastos
+              </Button>
+            </Link>
           </div>
         </Card>
 
         {/* Widget de Resultado Final */}
-        <Card className="overflow-hidden rounded-lg shadow-md border-0">
-          <div className="h-2 bg-gradient-to-r from-[#04C4D9] to-[#04b8cc]"></div>
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="bg-[#e6f9fb] p-3 rounded-full mr-4">
-                  <PiggyBank className="h-5 w-5 text-[#04C4D9]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-[#04a6b8]">Resultado Final</h3>
-                  <p className="text-sm text-gray-500">Ingresos - Gastos</p>
-                </div>
+        <Card className="overflow-hidden rounded-xl shadow-md border-0 hover:shadow-lg transition-shadow">
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">Resultado Final</h3>
+              <div className="p-2 rounded-full bg-[#e6f9fb]">
+                <PiggyBank className="h-5 w-5 text-[#04C4D9]" />
               </div>
             </div>
-            <div className="mb-4">
-              <div className="text-3xl font-bold text-[#04a6b8]">
+            
+            <div className="mt-6 flex items-end space-x-1">
+              <div className="text-3xl font-bold text-[#04C4D9]">
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
-                {isPositiveResult ? 'Beneficio neto (base imponible)' : 'Pérdida neta (base imponible)'}
+              <div className="text-sm text-gray-500 mb-1 ml-1">
+                beneficio neto
               </div>
             </div>
-            <div className="space-y-2 mb-4 p-3 bg-[#f0fdfe] rounded-md border border-[#04C4D9]/20">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible ingresos:</span>
-                <span className="font-medium text-green-700">{formatCurrency(baseImponibleIngresos)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible gastos:</span>
-                <span className="font-medium text-red-700">-{formatCurrency(baseImponibleGastos)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-1 border-t border-slate-200 mt-1">
-                <span className="text-gray-700 font-medium">Resultado (base imponible):</span>
-                <span className="font-bold text-[#04a6b8]">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
-              </div>
+          </div>
+          
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-500">Ingresos</span>
+              <span className="font-medium text-green-600">+{formatCurrency(baseImponibleIngresos)}</span>
             </div>
-            <div>
-              <Link href="/reports">
-                <Button variant="outline" className="w-full border-[#04C4D9]/30 text-[#04a6b8] hover:bg-[#f0fdfe] hover:text-[#04a6b8]">
-                  Ver informes
-                </Button>
-              </Link>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-500">Gastos</span>
+              <span className="font-medium text-red-600">-{formatCurrency(baseImponibleGastos)}</span>
             </div>
+            <div className="flex justify-between items-center pt-2 pb-1 border-t border-gray-200 mt-2">
+              <span className="text-sm font-medium text-gray-700">Resultado Final</span>
+              <span className="font-bold text-[#04C4D9]">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
+            </div>
+            <Separator className="my-3 bg-gray-200" />
+            <Link href="/reports" className="inline-block w-full">
+              <Button variant="ghost" className="w-full border border-gray-200 hover:bg-[#f0fdfe] text-gray-700 hover:text-gray-900 font-medium">
+                <BarChart3 className="h-4 w-4 mr-2 text-[#04C4D9]" />
+                Ver informes
+              </Button>
+            </Link>
           </div>
         </Card>
       </div>
