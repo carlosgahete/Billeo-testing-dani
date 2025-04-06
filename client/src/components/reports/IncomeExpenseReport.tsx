@@ -1218,7 +1218,7 @@ const IncomeExpenseReport = () => {
                                 <SelectValue placeholder="Todas las categorías" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">Todas las categorías</SelectItem>
+                                <SelectItem value="all">Todas las categorías</SelectItem>
                                 {categories
                                   .filter(cat => cat.type === "expense")
                                   .map(category => (
@@ -1330,7 +1330,7 @@ const IncomeExpenseReport = () => {
                                 <SelectValue placeholder="Todos los métodos" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">Todos los métodos</SelectItem>
+                                <SelectItem value="all">Todos los métodos</SelectItem>
                                 <SelectItem value="efectivo">Efectivo</SelectItem>
                                 <SelectItem value="tarjeta">Tarjeta</SelectItem>
                                 <SelectItem value="transferencia">Transferencia</SelectItem>
