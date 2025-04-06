@@ -179,10 +179,15 @@ const RecentTransactions = () => {
   // Obtener las transacciones más recientes con un límite específico
   const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions/recent"],
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
   
   const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
   
   const isLoading = transactionsLoading || categoriesLoading;

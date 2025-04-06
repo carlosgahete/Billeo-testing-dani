@@ -167,6 +167,25 @@ const DocumentScanPage = () => {
     navigate("/transactions");
   };
   
+  // Efecto para reiniciar los estados cuando se carga la página
+  useEffect(() => {
+    // Limpiar estados al montar el componente
+    setFile(null);
+    setFileName("");
+    setPreviewUrl(null);
+    setExtractedData(null);
+    setEditedData(null);
+    setTransaction(null);
+    setDocumentImage(null);
+    
+    // Función de limpieza cuando se desmonta el componente
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, []);
+  
   // Inicializar datos editables cuando se obtienen datos extraídos
   useEffect(() => {
     if (extractedData) {

@@ -13,7 +13,9 @@ import {
   Users,
   LineChart,
   PieChart,
-  TrendingUp
+  TrendingUp,
+  ScanLine,
+  Plus
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -196,6 +198,16 @@ const Sidebar = ({
           </button>
         </div>
         
+        {/* Botón de escanear documentos */}
+        <div className="px-4 pt-4 pb-2">
+          <Link href="/document-scan" onClick={handleNavClick}>
+            <Button className="w-full font-medium" size="default">
+              <ScanLine className="mr-2 h-4 w-4" />
+              Escanear gasto
+            </Button>
+          </Link>
+        </div>
+        
         {/* Nav Items */}
         <nav className="p-4 space-y-1">
           {navigationItems.map((item, index) => (
@@ -279,6 +291,16 @@ const Sidebar = ({
           >
             <X size={24} />
           </button>
+        </div>
+        
+        {/* Botón de escanear documentos */}
+        <div className="px-4 pt-4 pb-2">
+          <Link href="/document-scan" onClick={handleNavClick}>
+            <Button className="w-full font-medium" size="default">
+              <ScanLine className="mr-2 h-4 w-4" />
+              Escanear gasto
+            </Button>
+          </Link>
         </div>
         
         {/* Nav Items */}
