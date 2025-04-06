@@ -1203,13 +1203,11 @@ const IncomeExpenseReport = () => {
                   </div>
                 </div>
                 
-                {/* Panel de filtros */}
+                {/* Panel de filtros flotante */}
                 {showFilters && (
-                  <div className="flex justify-end border-b border-red-100">
-                    {/* Área principal - eliminada para evitar el espacio blanco */}
-                    
-                    {/* Panel de filtros estrecho a la derecha */}
-                    <div className="w-64 p-3 bg-red-50 border-l border-red-100">
+                  <div className="relative z-10">
+                    {/* Panel de filtros flotante que se superpone */}
+                    <div className="absolute right-0 w-64 p-3 bg-red-50 rounded-md shadow-lg border border-red-100">
                       <div className="text-sm font-medium mb-3 text-red-700">Filtrar gastos por:</div>
                       
                       <div className="space-y-3">
