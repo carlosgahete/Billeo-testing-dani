@@ -337,6 +337,7 @@ const TransactionList = () => {
 
   return (
     <div className="w-full p-6 bg-gray-50">
+      {/* Cabecera del dashboard con título y controles */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div className="flex items-center mb-3 md:mb-0">
           <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
@@ -345,7 +346,7 @@ const TransactionList = () => {
           <h2 className="text-2xl font-bold text-gray-900">Ingresos y Gastos</h2>
         </div>
         
-        <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
+        <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
           <Button
             variant="outline"
             size="sm"

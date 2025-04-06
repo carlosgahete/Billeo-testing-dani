@@ -39,7 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail } from "lucide-react";
+import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 interface Quote {
@@ -500,36 +500,42 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
 
   return (
     <>
-      <Card className="w-full border-none shadow-sm">
-        <CardHeader className="pb-3 border-b px-2 sm:px-6">
+      <Card className="w-full border-none shadow-md">
+        <CardHeader className="pb-3 border-b px-2 sm:px-6 bg-white">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-primary-700">Tus presupuestos</CardTitle>
-              <CardDescription>
-                Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades.
+              <CardTitle className="text-xl text-gray-800 flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-[#04C4D9]" />
+                Listado de presupuestos
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-500 mt-1">
+                Gestiona tus presupuestos, envíalos por email o conviértelos en facturas cuando sean aceptados.
               </CardDescription>
             </div>
-            <div className="hidden md:block">
-              <Link href="/quotes/create">
-                <Button className="gap-1">
-                  <span>+</span> Nuevo presupuesto
-                </Button>
-              </Link>
-            </div>
+            {!limit && (
+              <div className="hidden md:block">
+                <Link href="/quotes/create">
+                  <Button className="h-9 bg-[#04C4D9] hover:bg-[#03b3c7] text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo presupuesto
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="px-1 sm:px-6">
+        <CardContent className="px-2 sm:px-6 pt-4 pb-6 bg-white">
           <div className="overflow-x-auto -mx-1 sm:mx-0">
             <Table className="w-full min-w-full">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px] md:w-[100px]">Núm.</TableHead>
-                  <TableHead className="w-[120px] md:w-[180px]">Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell w-[120px]">Fecha</TableHead>
-                  <TableHead className="hidden md:table-cell w-[120px]">Válido hasta</TableHead>
-                  <TableHead className="w-[100px] md:w-[120px]">Total</TableHead>
-                  <TableHead className="w-[80px] md:w-[120px]">Estado</TableHead>
-                  {showActions && <TableHead className="text-right w-[120px] md:w-[200px]">Acciones</TableHead>}
+                <TableRow className="bg-gray-50 hover:bg-gray-50/90">
+                  <TableHead className="w-[60px] md:w-[100px] text-gray-700 font-semibold">Núm.</TableHead>
+                  <TableHead className="w-[120px] md:w-[180px] text-gray-700 font-semibold">Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px] text-gray-700 font-semibold">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px] text-gray-700 font-semibold">Válido hasta</TableHead>
+                  <TableHead className="w-[100px] md:w-[120px] text-gray-700 font-semibold">Total</TableHead>
+                  <TableHead className="w-[80px] md:w-[120px] text-gray-700 font-semibold">Estado</TableHead>
+                  {showActions && <TableHead className="text-right w-[120px] md:w-[200px] text-gray-700 font-semibold">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -538,16 +544,19 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                   return (
                     <TableRow 
                       key={quote.id}
-                      className={quote.status === "accepted" ? "bg-green-50" : 
-                                quote.status === "rejected" ? "bg-red-50" : 
-                                quote.status === "expired" ? "bg-gray-50" : ""}
+                      className={
+                        quote.status === "accepted" ? "bg-green-50/70 hover:bg-green-50" : 
+                        quote.status === "rejected" ? "bg-red-50/70 hover:bg-red-50" : 
+                        quote.status === "expired" ? "bg-gray-100/70 hover:bg-gray-100" : 
+                        "hover:bg-gray-50"
+                      }
                     >
-                      <TableCell className="font-medium py-2 px-1 sm:px-4">{quote.quoteNumber}</TableCell>
-                      <TableCell className="truncate max-w-[100px] md:max-w-[180px] py-2 px-1 sm:px-4">{client?.name || "Cliente no encontrado"}</TableCell>
-                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.issueDate)}</TableCell>
-                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.validUntil)}</TableCell>
-                      <TableCell className="font-medium py-2 px-1 sm:px-4">{formatCurrency(quote.total)}</TableCell>
-                      <TableCell className="py-2 px-1 sm:px-4">{getStatusBadge(quote.status)}</TableCell>
+                      <TableCell className="font-medium py-3 px-1 sm:px-4 text-gray-900">{quote.quoteNumber}</TableCell>
+                      <TableCell className="truncate max-w-[100px] md:max-w-[180px] py-3 px-1 sm:px-4 text-gray-700">{client?.name || "Cliente no encontrado"}</TableCell>
+                      <TableCell className="hidden md:table-cell py-3 px-4 text-gray-700">{formatDate(quote.issueDate)}</TableCell>
+                      <TableCell className="hidden md:table-cell py-3 px-4 text-gray-700">{formatDate(quote.validUntil)}</TableCell>
+                      <TableCell className="font-medium py-3 px-1 sm:px-4 text-gray-900">{formatCurrency(quote.total)}</TableCell>
+                      <TableCell className="py-3 px-1 sm:px-4">{getStatusBadge(quote.status)}</TableCell>
                       {showActions && (
                         <TableCell className="py-2 px-1 sm:px-4">
                           <div className="flex justify-end items-center gap-0.5 sm:gap-1">
@@ -558,9 +567,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleDownloadPDF(quote)}
-                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary-50"
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-[#04C4D9]/10"
                                   >
-                                    <Download className="h-4 w-4 text-primary-600" />
+                                    <Download className="h-4 w-4 text-[#04C4D9]" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -577,9 +586,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleSend(quote.id)}
-                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
+                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-[#04C4D9]/10"
                                     >
-                                      <Send className="h-4 w-4 text-blue-600" />
+                                      <Send className="h-4 w-4 text-[#04C4D9]" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -659,9 +668,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEmailQuote(quote)}
-                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-[#04C4D9]/10"
                                   >
-                                    <Mail className="h-4 w-4 text-blue-600" />
+                                    <Mail className="h-4 w-4 text-[#04C4D9]" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -703,15 +712,16 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
           <div className="md:hidden">
             {showActions && (
               <Link href="/quotes/create">
-                <Button>
-                  <span className="mr-1">+</span> Nuevo
+                <Button className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Nuevo
                 </Button>
               </Link>
             )}
           </div>
           {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
             <Link href="/quotes" className="ml-auto">
-              <Button variant="outline">Ver todos</Button>
+              <Button variant="outline" className="text-[#04C4D9] border-[#04C4D9] hover:bg-[#04C4D9]/10">Ver todos</Button>
             </Link>
           )}
           {quotes.length > 0 && (
