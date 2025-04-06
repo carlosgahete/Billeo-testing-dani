@@ -351,16 +351,6 @@ const TransactionList = () => {
               </div>
             </DialogContent>
           </Dialog>
-
-          <Button
-            variant="outline"
-            className="flex items-center h-9"
-            onClick={() => navigate("/documents/scan")}
-          >
-            <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Escanear documento</span>
-            <span className="sm:hidden">Escanear</span>
-          </Button>
           
 
         </div>
