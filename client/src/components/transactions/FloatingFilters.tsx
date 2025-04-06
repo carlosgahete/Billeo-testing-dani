@@ -67,10 +67,30 @@ const FloatingFilters = ({
     // Calcular la posición del panel basada en el botón de referencia
     if (buttonRef?.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      
+      // Usamos posición fixed así que solo necesitamos la posición relativa a la ventana
+      // Calculamos la posición para que aparezca a la izquierda del botón
       setPosition({
-        top: rect.bottom + window.scrollY + 10, // 10px de espacio
-        right: window.innerWidth - rect.right - window.scrollX
+        top: rect.bottom + 10, // 10px de espacio
+        right: window.innerWidth - rect.left
       });
+      
+      // Asegurar que el panel no se salga de la ventana por abajo
+      setTimeout(() => {
+        if (filterPanelRef.current) {
+          const panelRect = filterPanelRef.current.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          
+          // Si el panel se sale de la ventana, ajustamos su posición
+          if (panelRect.bottom > viewportHeight) {
+            // Colocamos el panel alineado con el botón, pero hacia arriba
+            setPosition({
+              top: rect.top - panelRect.height - 10,
+              right: window.innerWidth - rect.left
+            });
+          }
+        }
+      }, 0);
     }
     
     return () => setMounted(false);
@@ -150,7 +170,7 @@ const FloatingFilters = ({
   const filterPanel = (
     <div 
       ref={filterPanelRef}
-      className="fixed z-[1000] w-80 p-4 bg-white rounded-md shadow-xl border border-red-100 max-h-[90vh] overflow-y-auto"
+      className="fixed z-[1000] w-80 p-4 bg-white rounded-md shadow-xl border border-red-100 max-h-[70vh] overflow-y-auto"
       style={{ 
         top: `${position.top}px`, 
         right: `${position.right}px`,
