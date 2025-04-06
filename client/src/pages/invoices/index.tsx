@@ -26,22 +26,15 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Cabecera con estilo minimalista */}
-      <div className="relative overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 py-5 px-6 mb-4 mx-4 md:ml-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
-              <Receipt className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-xl font-bold text-gray-800">Gestión de Facturas</h1>
-          </div>
-          <Button 
-            onClick={() => navigate("/invoices/new")}
-            className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
-          >
-            Nueva Factura
-          </Button>
-        </div>
+      {/* Solo botón de nueva factura */}
+      <div className="flex justify-end mb-4 mx-4 md:ml-0">
+        <Button 
+          onClick={() => navigate("/invoices/new")}
+          className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
+        >
+          <Receipt className="h-4 w-4 mr-2" />
+          Nueva Factura
+        </Button>
       </div>
       
       {/* Tarjetas de resumen */}
