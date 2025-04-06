@@ -672,36 +672,31 @@ const InvoiceList = () => {
   return (
     <div className="w-full">
       {/* Encabezado de Facturas Emitidas con ambos botones a la derecha */}
-      <div className="flex justify-between items-center p-4 border-b mb-3">
+      <div className="overflow-hidden rounded-xl bg-blue-600 text-white p-3 flex justify-between items-center mx-4 md:ml-0 mb-1">
         <div className="flex items-center">
-          <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
-            <FileCheck className="h-5 w-5 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Facturas emitidas</h2>
-          <span className="ml-3 bg-gray-100 text-gray-600 text-sm font-medium rounded-md px-2.5 py-1">
+          <FileCheck className="h-5 w-5 mr-2" />
+          <h2 className="font-medium">Facturas emitidas</h2>
+          <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-0.5">
             {invoicesData?.length || 0} facturas
           </span>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 border-[#04C4D9] text-[#04C4D9] hover:bg-[#04C4D9]/10"
+          <button
+            className="apple-style-secondary flex items-center mr-2"
             onClick={exportAllInvoices}
           >
             <Download className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Exportar todo</span>
             <span className="sm:hidden">Exportar</span>
-          </Button>
-          <Button
-            size="sm"
-            className="h-9 bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
+          </button>
+          <button
+            className="apple-style flex items-center"
             onClick={() => navigate("/invoices/create")}
           >
             <Plus className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Nueva factura</span>
             <span className="sm:hidden">Nueva</span>
-          </Button>
+          </button>
         </div>
       </div>
 

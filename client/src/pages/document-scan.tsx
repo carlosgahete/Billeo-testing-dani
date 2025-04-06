@@ -309,9 +309,6 @@ const DocumentScanPage = () => {
     const numericCategoryId = categoryId === "null" ? null : 
                               categoryId ? parseInt(categoryId) : null;
     
-    // Actualizar selectedCategoryId para uso interno (arreglar error tipado)
-    setSelectedCategoryId(numericCategoryId === null ? null : numericCategoryId);
-    
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: 'PUT',
@@ -467,7 +464,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
     <div className="container max-w-5xl py-8">
       {/* Diálogo de confirmación y edición */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Revisar transacción</DialogTitle>
             <DialogDescription>
@@ -622,21 +619,21 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                 </div>
                 
                 {documentImage && (
-                  <div className="mt-6 border-t pt-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <p className="text-sm font-medium">Documento escaneado:</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setIsResultZoomed(!isResultZoomed)}
-                        className="h-7 px-2 text-xs"
-                      >
-                        {isResultZoomed ? <ZoomOut className="h-3 w-3 mr-1" /> : <ZoomIn className="h-3 w-3 mr-1" />}
-                        {isResultZoomed ? "Reducir" : "Ampliar"}
-                      </Button>
-                    </div>
-                    <div className="border rounded-md p-4 bg-gray-50">
-                      <div className="relative w-full h-[300px] bg-white rounded shadow-inner">
+                  <div className="pt-3 border-t">
+                    <p className="text-sm font-medium mb-2">Documento escaneado:</p>
+                    <div className="border rounded-md p-2 bg-gray-50">
+                      <div className="flex justify-end mb-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setIsResultZoomed(!isResultZoomed)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          {isResultZoomed ? <ZoomOut className="h-3 w-3 mr-1" /> : <ZoomIn className="h-3 w-3 mr-1" />}
+                          {isResultZoomed ? "Reducir" : "Ampliar"}
+                        </Button>
+                      </div>
+                      <div className="relative w-full h-40 bg-neutral-100 rounded">
                         <img 
                           src={documentImage} 
                           alt="Documento escaneado" 
@@ -649,7 +646,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                     {/* Modal para imagen ampliada */}
                     {isResultZoomed && (
                       <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-5xl mx-auto">
+                        <div className="relative w-full max-w-4xl mx-auto">
                           <Button 
                             variant="ghost" 
                             size="icon"
@@ -658,7 +655,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           >
                             <X className="h-4 w-4" />
                           </Button>
-                          <div className="bg-white p-4 rounded-md w-full overflow-auto">
+                          <div className="bg-white p-2 rounded-md w-full overflow-auto">
                             <img 
                               src={documentImage} 
                               alt="Vista ampliada del documento" 
