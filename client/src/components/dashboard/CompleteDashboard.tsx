@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PlusCircle, FileText, BarChart3, InfoIcon } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, TrendingUp, FileText, BarChart3, InfoIcon, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -117,73 +117,62 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("space-y-6", className)}>
-      {/* Filtros para el dashboard */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-semibold">Dashboard Financiero</h2>
-        <div className="flex items-center space-x-2">
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="Año" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2023">2023</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Periodo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todo el año</SelectItem>
-              <SelectItem value="q1">Trimestre 1</SelectItem>
-              <SelectItem value="q2">Trimestre 2</SelectItem>
-              <SelectItem value="q3">Trimestre 3</SelectItem>
-              <SelectItem value="q4">Trimestre 4</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <div className={cn("p-6 bg-slate-50/80", className)}>
+      {/* Filtros para el dashboard - flotando a la derecha */}
+      <div className="flex items-center justify-end gap-2 mb-4">
+        <Select value={year} onValueChange={setYear}>
+          <SelectTrigger className="w-[100px] bg-white shadow-sm">
+            <SelectValue placeholder="Año" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2025">2025</SelectItem>
+            <SelectItem value="2024">2024</SelectItem>
+            <SelectItem value="2023">2023</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-[150px] bg-white shadow-sm">
+            <SelectValue placeholder="Periodo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todo el año</SelectItem>
+            <SelectItem value="q1">Trimestre 1</SelectItem>
+            <SelectItem value="q2">Trimestre 2</SelectItem>
+            <SelectItem value="q3">Trimestre 3</SelectItem>
+            <SelectItem value="q4">Trimestre 4</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Primera fila: Widgets principales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
         {/* Widget de Ingresos */}
-        <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-gradient-to-r from-green-50 to-green-100 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <ArrowUp className="h-5 w-5 text-green-600" />
-                <h3 className="text-lg font-medium text-green-700">Ingresos</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-green-700/50 hover:text-green-700 hover:bg-green-200/20"
-              >
-                <InfoIcon className="h-4 w-4" />
-              </Button>
+        <Card className="overflow-hidden rounded-md shadow-sm">
+          <div className="bg-green-50 p-5">
+            <div className="flex items-center text-green-700 mb-2">
+              <ArrowUp className="mr-2 h-5 w-5" />
+              <h3 className="text-base font-medium">Ingresos</h3>
+              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-2xl font-bold text-green-700">
+              <div className="text-3xl font-bold text-green-700">
                 {formatCurrency(dashboardStats.income)}
               </div>
             </div>
-            <div className="text-xs space-y-0.5">
+            <div className="text-xs space-y-1 text-green-800">
               <div className="flex justify-between">
-                <span className="text-green-600/80">Base imponible:</span>
+                <span>Base imponible:</span>
                 <span className="font-medium">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-green-600/80">IVA repercutido:</span>
+                <span>IVA repercutido:</span>
                 <span className="font-medium">{formatCurrency(ivaRepercutido)}</span>
               </div>
             </div>
             <div className="mt-3">
               <Link href="/invoices">
-                <Button variant="outline" className="w-full text-xs h-8 text-green-700 border-green-300 bg-green-100/50 hover:bg-green-200/50">
+                <Button variant="outline" className="w-full text-xs h-8 text-green-700 border-green-300 hover:bg-green-100">
                   Ver facturas
                 </Button>
               </Link>
@@ -192,39 +181,31 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Gastos */}
-        <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-gradient-to-r from-red-50 to-red-100 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <ArrowDown className="h-5 w-5 text-red-600" />
-                <h3 className="text-lg font-medium text-red-700">Gastos</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-red-700/50 hover:text-red-700 hover:bg-red-200/20"
-              >
-                <InfoIcon className="h-4 w-4" />
-              </Button>
+        <Card className="overflow-hidden rounded-md shadow-sm">
+          <div className="bg-red-50 p-5">
+            <div className="flex items-center text-red-700 mb-2">
+              <ArrowDown className="mr-2 h-5 w-5" />
+              <h3 className="text-base font-medium">Gastos</h3>
+              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-2xl font-bold text-red-700">
+              <div className="text-3xl font-bold text-red-700">
                 {formatCurrency(dashboardStats.expenses)}
               </div>
             </div>
-            <div className="text-xs space-y-0.5">
+            <div className="text-xs space-y-1 text-red-800">
               <div className="flex justify-between">
-                <span className="text-red-600/80">Base imponible:</span>
+                <span>Base imponible:</span>
                 <span className="font-medium">{formatCurrency(baseImponibleGastos)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-red-600/80">IVA soportado:</span>
+                <span>IVA soportado:</span>
                 <span className="font-medium">{formatCurrency(ivaSoportado)}</span>
               </div>
             </div>
             <div className="mt-3">
               <Link href="/income-expense">
-                <Button variant="outline" className="w-full text-xs h-8 text-red-700 border-red-300 bg-red-100/50 hover:bg-red-200/50">
+                <Button variant="outline" className="w-full text-xs h-8 text-red-700 border-red-300 hover:bg-red-100">
                   Ver gastos
                 </Button>
               </Link>
@@ -233,42 +214,34 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Ingresos Brutos */}
-        <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <ArrowUp className="h-5 w-5 text-blue-600" />
-                <h3 className="text-lg font-medium text-blue-700">Ingresos Brutos</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-blue-700/50 hover:text-blue-700 hover:bg-blue-200/20"
-              >
-                <InfoIcon className="h-4 w-4" />
-              </Button>
+        <Card className="overflow-hidden rounded-md shadow-sm">
+          <div className="bg-blue-50 p-5">
+            <div className="flex items-center text-blue-700 mb-2">
+              <ArrowUp className="mr-2 h-5 w-5" />
+              <h3 className="text-base font-medium">Ingresos Brutos</h3>
+              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-2xl font-bold text-blue-700">
+              <div className="text-3xl font-bold text-blue-700">
                 {formatCurrency(dashboardStats.income)}
               </div>
             </div>
-            <div className="text-xs space-y-0.5">
+            <div className="text-xs space-y-1 text-blue-800">
               <div className="flex justify-between">
-                <span className="text-blue-600/80">Base imponible:</span>
+                <span>Base imponible:</span>
                 <span className="font-medium">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-600/80">IVA (21%):</span>
+                <span>IVA (21%):</span>
                 <span className="font-medium">{formatCurrency(ivaRepercutido)}</span>
               </div>
             </div>
             
             {/* Facturas pendientes */}
-            <div className="mt-2 bg-white/60 rounded-lg p-2 border border-blue-200">
+            <div className="mt-3 bg-white rounded-md p-3 border border-blue-200 shadow-sm">
               <div className="flex justify-between items-center text-xs text-blue-700 font-medium mb-1">
                 <span>Facturas pendientes</span>
-                <span className="bg-blue-100 px-1.5 py-0.5 rounded">↓ {dashboardStats.pendingCount || 0} facturas por cobrar</span>
+                <span className="bg-blue-100 px-1.5 py-0.5 rounded">↓ {dashboardStats.pendingCount || 0} facturas</span>
               </div>
               <div className="text-lg font-bold text-blue-800">
                 {formatCurrency(dashboardStats.pendingInvoices)}
@@ -278,41 +251,33 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Resultado Final */}
-        <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <PlusCircle className="h-5 w-5 text-emerald-600" />
-                <h3 className="text-lg font-medium text-emerald-700">Resultado Final</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-emerald-700/50 hover:text-emerald-700 hover:bg-emerald-200/20"
-              >
-                <InfoIcon className="h-4 w-4" />
-              </Button>
+        <Card className="overflow-hidden rounded-md shadow-sm">
+          <div className="bg-emerald-50 p-5">
+            <div className="flex items-center text-emerald-700 mb-2">
+              <TrendingUp className="mr-2 h-5 w-5" />
+              <h3 className="text-base font-medium">Resultado Final</h3>
+              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-2xl font-bold text-emerald-700">
+              <div className="text-3xl font-bold text-emerald-700">
                 {formatCurrency(finalResult)}
               </div>
             </div>
-            <div className="text-xs space-y-0.5">
+            <div className="text-xs space-y-1 text-emerald-800">
               <div className="flex justify-between">
-                <span className="text-emerald-600/80">Base + IVA (bruto):</span>
+                <span>Base + IVA (bruto):</span>
                 <span className="font-medium">{formatCurrency(dashboardStats.income)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-emerald-600/80">Retenciones IRPF:</span>
+                <span>Retenciones IRPF:</span>
                 <span className="font-medium text-red-600">-{formatCurrency(retencionesIrpf)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-emerald-600/80">IVA a liquidar:</span>
+                <span>IVA a liquidar:</span>
                 <span className="font-medium text-blue-600">{formatCurrency(ivaALiquidar)}</span>
               </div>
               <div className="flex justify-between pt-1 border-t border-emerald-200 mt-1">
-                <span className="text-emerald-700 font-medium">Total neto (cobrado):</span>
+                <span className="text-emerald-700 font-medium">Total neto:</span>
                 <span className="font-bold">{formatCurrency(finalResult)}</span>
               </div>
             </div>
@@ -321,18 +286,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Segunda fila: Widgets de Resumen Fiscal y Comparativa */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         {/* Widget de Resumen Fiscal */}
-        <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-white p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
-                <h3 className="text-lg font-medium">Resumen Fiscal</h3>
-              </div>
-              <div className="flex items-center space-x-2 text-sm">
+        <Card className="overflow-hidden rounded-md shadow-sm">
+          <div className="bg-white p-5">
+            <div className="flex items-center mb-4 border-b pb-2">
+              <FileText className="mr-2 h-5 w-5 text-blue-600" />
+              <h3 className="text-base font-medium text-slate-800">Resumen Fiscal</h3>
+              <div className="flex items-center space-x-2 text-sm ml-auto">
                 <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger className="w-[80px] h-8 text-xs">
+                  <SelectTrigger className="w-[80px] h-8 text-xs bg-slate-50">
                     <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
@@ -342,7 +305,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </Select>
                 
                 <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="w-[120px] h-8 text-xs">
+                  <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-50">
                     <SelectValue placeholder="Periodo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -357,7 +320,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* IVA a liquidar */}
-            <div className="bg-blue-50 rounded-lg p-3 mb-3">
+            <div className="bg-blue-50 rounded-md p-4 mb-3">
               <div className="text-sm text-blue-800 mb-1 flex justify-between items-center">
                 <span>IVA a liquidar (Todo el año, 2025)</span>
                 <span className="bg-blue-100 text-xs py-0.5 px-1.5 rounded text-blue-700">21% IVA</span>
@@ -371,7 +334,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* IRPF */}
-            <div className="bg-amber-50 rounded-lg p-3">
+            <div className="bg-amber-50 rounded-md p-4">
               <div className="text-sm text-amber-800 mb-1 flex justify-between items-center">
                 <span>Retenciones IRPF (Todo el año, 2025)</span>
                 <span className="bg-amber-100 text-xs py-0.5 px-1.5 rounded text-amber-700">15% IRPF</span>
@@ -385,8 +348,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Botón de Informes */}
-            <div className="mt-3">
-              <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
+            <div className="mt-4">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                 Ver informes fiscales
               </Button>
             </div>
@@ -394,16 +357,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Comparativa Financiera */}
-        <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="bg-white p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-purple-600" />
-                <h3 className="text-lg font-medium">Comparativa Financiera</h3>
-              </div>
-              <div className="flex items-center space-x-2 text-sm">
+        <Card className="overflow-hidden rounded-md shadow-sm">
+          <div className="bg-white p-5">
+            <div className="flex items-center mb-4 border-b pb-2">
+              <BarChart3 className="mr-2 h-5 w-5 text-purple-600" />
+              <h3 className="text-base font-medium text-slate-800">Comparativa Financiera</h3>
+              <div className="flex items-center space-x-2 text-sm ml-auto">
                 <Select value="trimestral">
-                  <SelectTrigger className="w-[100px] h-8 text-xs">
+                  <SelectTrigger className="w-[100px] h-8 text-xs bg-slate-50">
                     <SelectValue placeholder="Trimestral" />
                   </SelectTrigger>
                   <SelectContent>
@@ -413,7 +374,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </Select>
                 
                 <Select value="2025">
-                  <SelectTrigger className="w-[80px] h-8 text-xs">
+                  <SelectTrigger className="w-[80px] h-8 text-xs bg-slate-50">
                     <SelectValue placeholder="2025" />
                   </SelectTrigger>
                   <SelectContent>
@@ -425,7 +386,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Selector de vista de gráfico */}
-            <div className="flex justify-center space-x-2 mb-3">
+            <div className="flex justify-center space-x-2 mb-4">
               <Button
                 variant={graphView === "barras" ? "default" : "outline"}
                 size="sm"
@@ -445,7 +406,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Gráfico */}
-            <div className="h-[250px]">
+            <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={financialComparisonData}
