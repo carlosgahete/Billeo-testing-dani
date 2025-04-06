@@ -38,7 +38,7 @@ import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover-auto-close";
 import { es } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -481,16 +481,16 @@ const TransactionList = () => {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <div className="z-50">
+                            <PopoverContent className="w-auto p-0" autoClose={true}>
                                 <CalendarComponent
                                   mode="single"
                                   selected={dateRange.from}
-                                  onSelect={(date) => setDateRange({ ...dateRange, from: date })}
+                                  onSelect={(date) => {
+                                    setDateRange({ ...dateRange, from: date });
+                                  }}
                                   initialFocus
                                   locale={es}
                                 />
-                              </div>
                             </PopoverContent>
                           </Popover>
                         </div>
@@ -511,16 +511,16 @@ const TransactionList = () => {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <div className="z-50">
+                            <PopoverContent className="w-auto p-0" autoClose={true}>
                                 <CalendarComponent
                                   mode="single"
                                   selected={dateRange.to}
-                                  onSelect={(date) => setDateRange({ ...dateRange, to: date })}
+                                  onSelect={(date) => {
+                                    setDateRange({ ...dateRange, to: date });
+                                  }}
                                   initialFocus
                                   locale={es}
                                 />
-                              </div>
                             </PopoverContent>
                           </Popover>
                         </div>
