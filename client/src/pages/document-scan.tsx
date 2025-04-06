@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check, Calendar, User, Building, Search, MousePointer } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check, Calendar, User, Building, Search, FilePlus2, FileCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -80,8 +80,7 @@ const DocumentScanPage = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
-  const [showMagnifier, setShowMagnifier] = useState(false);
+  const [transactionRegistered, setTransactionRegistered] = useState(false);
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({
@@ -127,6 +126,8 @@ const DocumentScanPage = () => {
     }
 
     setUploading(true);
+    // Reiniciar el estado de registro al procesar un nuevo documento
+    setTransactionRegistered(false);
 
     try {
       const formData = new FormData();
@@ -650,40 +651,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                             alt="Documento escaneado" 
                             className="w-full h-full object-contain cursor-pointer" 
                             onClick={() => setIsResultZoomed(true)}
-                            onMouseMove={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setMagnifierPosition({
-                                x: ((e.clientX - rect.left) / rect.width) * 100,
-                                y: ((e.clientY - rect.top) / rect.height) * 100
-                              });
-                              setShowMagnifier(true);
-                            }}
-                            onMouseLeave={() => setShowMagnifier(false)}
                           />
-                          
-                          {/* Lupa/Magnifier - Versión mejorada */}
-                          {showMagnifier && (
-                            <div 
-                              className="absolute w-24 h-24 border-2 border-[#04C4D9] rounded-full overflow-hidden pointer-events-none z-10 shadow-lg"
-                              style={{ 
-                                left: `calc(${magnifierPosition.x}% - 48px)`, 
-                                top: `calc(${magnifierPosition.y}% - 48px)`,
-                                backgroundImage: `url(${documentImage})`,
-                                backgroundPosition: `${-magnifierPosition.x * 3 + 150}% ${-magnifierPosition.y * 3 + 150}%`,
-                                backgroundSize: '600%',
-                                backgroundRepeat: 'no-repeat'
-                              }}
-                            >
-                              <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                                <MousePointer className="h-3 w-3 text-primary" />
-                              </div>
-                              {/* Líneas de guía para ayudar a posicionar */}
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-[1px] h-6 bg-gray-400/30" />
-                                <div className="h-[1px] w-6 bg-gray-400/30" />
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     ) : (
@@ -740,13 +708,33 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                 <Check className="h-4 w-4 mr-2" />
                 Guardar y editar
               </Button>
-              <Button
-                type="button"
-                onClick={handleGoToTransactions}
-                className="bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
-              >
-                Guardar y volver
-              </Button>
+              
+              {!transactionRegistered ? (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    handleSaveChanges();
+                    setTransactionRegistered(true);
+                    toast({
+                      title: "Gasto preparado",
+                      description: "El gasto ha sido procesado y preparado. Ahora puedes registrarlo.",
+                    });
+                  }}
+                  className="bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
+                >
+                  <FilePlus2 className="h-4 w-4 mr-2" />
+                  Preparar gasto
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleGoToTransactions}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <FileCheck className="h-4 w-4 mr-2" />
+                  Registrar gasto
+                </Button>
+              )}
             </div>
           </DialogFooter>
         </DialogContent>
