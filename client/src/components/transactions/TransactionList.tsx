@@ -333,7 +333,12 @@ const TransactionList = () => {
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
     
+  // Calcular el balance y otros valores derivados
   const balance = incomeTotal - expenseTotal;
+  
+  // Calcular neto e IVA para gastos (asumiendo IVA general del 21%)
+  const expenseNetAmount = expenseTotal / 1.21;
+  const expenseVAT = expenseTotal - expenseNetAmount;
 
   return (
     <div className="space-y-6">
@@ -397,12 +402,22 @@ const TransactionList = () => {
         <Card className="overflow-hidden shadow-md border-t-4 border-red-500 hover:shadow-lg transition-shadow">
           <CardContent className="p-0">
             <div className="bg-gradient-to-br from-red-50 to-white p-5">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-start">
                 <div>
                   <p className="text-red-700 font-medium mb-1">Gastos totales</p>
                   <p className="text-3xl font-bold text-red-600">
                     {formatCurrency(expenseTotal, "expense")}
                   </p>
+                  <div className="mt-2 pt-2 border-t border-red-100">
+                    <div className="flex items-center text-sm text-red-800">
+                      <span className="font-medium mr-1">Neto (sin IVA):</span>
+                      {formatCurrency(expenseNetAmount, "expense")}
+                    </div>
+                    <div className="flex items-center text-sm text-red-800">
+                      <span className="font-medium mr-1">IVA soportado:</span>
+                      {formatCurrency(expenseVAT, "expense")}
+                    </div>
+                  </div>
                 </div>
                 <div className="p-3 rounded-full bg-red-100 text-red-600">
                   <Upload className="h-6 w-6" />
