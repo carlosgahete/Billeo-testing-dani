@@ -336,21 +336,35 @@ const TransactionList = () => {
   const balance = incomeTotal - expenseTotal;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-800">
-            Ingresos y Gastos
-          </h1>
-          <p className="text-neutral-500">
-            Gestiona todos tus movimientos económicos
-          </p>
+    <div className="w-full p-6 bg-gray-50">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="flex items-center mb-3 md:mb-0">
+          <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
+            <Receipt className="h-5 w-5 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Ingresos y Gastos</h2>
         </div>
-        <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
+        
+        <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 border-gray-200 text-gray-700 hover:bg-gray-50"
+            onClick={() => navigate("/transactions/scan")}
+          >
+            <ScanText className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Escanear gasto</span>
+            <span className="sm:hidden">Escanear</span>
+          </Button>
+          
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center h-9">
-                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+              <Button 
+                variant="outline"
+                size="sm"
+                className="h-9 border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                <Upload className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Importar CSV</span>
                 <span className="sm:hidden">Importar</span>
               </Button>
@@ -372,66 +386,103 @@ const TransactionList = () => {
             </DialogContent>
           </Dialog>
           
-
+          <Button
+            size="sm"
+            className="h-9 bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
+            onClick={() => navigate("/transactions/new")}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Nuevo movimiento</span>
+            <span className="sm:hidden">Nuevo</span>
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-neutral-500 text-sm">Ingresos totales</p>
-                <p className="text-2xl font-bold text-neutral-800">
-                  {formatCurrency(incomeTotal, "income")}
-                </p>
-              </div>
-              <div className="p-2 rounded-full bg-secondary-50 text-secondary-600">
-                <Download className="h-5 w-5" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Ingresos */}
+        <Card className="overflow-hidden rounded-xl shadow-md border-0 hover:shadow-lg transition-shadow">
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Ingresos totales</h3>
+              <div className="p-2 rounded-full bg-green-100">
+                <Download className="h-4 w-4 text-green-600" />
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-neutral-500 text-sm">Gastos totales</p>
-                <p className="text-2xl font-bold text-neutral-800">
-                  {formatCurrency(expenseTotal, "expense")}
-                </p>
-              </div>
-              <div className="p-2 rounded-full bg-danger-50 text-danger-500">
-                <Upload className="h-5 w-5" />
+            
+            <div className="mt-4 mb-1">
+              <div className="text-2xl font-bold text-gray-900">
+                {formatCurrency(incomeTotal, "income")}
               </div>
             </div>
-          </CardContent>
+          </div>
+          
+          <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Base imponible</span>
+              <span className="font-medium text-green-600">{formatCurrency(incomeTotal, "income")}</span>
+            </div>
+          </div>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-neutral-500 text-sm">Balance neto</p>
-                <p className={`text-2xl font-bold ${balance >= 0 ? "text-secondary-600" : "text-danger-500"}`}>
-                  {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
-                </p>
+        {/* Gastos */}
+        <Card className="overflow-hidden rounded-xl shadow-md border-0 hover:shadow-lg transition-shadow">
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Gastos totales</h3>
+              <div className="p-2 rounded-full bg-red-100">
+                <Upload className="h-4 w-4 text-red-600" />
               </div>
-              <div className={`p-2 rounded-full ${balance >= 0 ? "bg-secondary-50 text-secondary-600" : "bg-danger-50 text-danger-500"}`}>
+            </div>
+            
+            <div className="mt-4 mb-1">
+              <div className="text-2xl font-bold text-gray-900">
+                {formatCurrency(expenseTotal, "expense")}
+              </div>
+            </div>
+          </div>
+          
+          <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Base imponible</span>
+              <span className="font-medium text-red-600">{formatCurrency(expenseTotal, "expense")}</span>
+            </div>
+          </div>
+        </Card>
+        
+        {/* Balance neto */}
+        <Card className="overflow-hidden rounded-xl shadow-md border-0 hover:shadow-lg transition-shadow">
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Balance neto</h3>
+              <div className={`p-2 rounded-full ${balance >= 0 ? "bg-[#04C4D9]/20" : "bg-red-100"}`}>
                 {balance >= 0 ? (
-                  <Plus className="h-5 w-5" />
+                  <Plus className={`h-4 w-4 text-[#04C4D9]`} />
                 ) : (
-                  <TrendingDown className="h-5 w-5" />
+                  <TrendingDown className="h-4 w-4 text-red-600" />
                 )}
               </div>
             </div>
-          </CardContent>
+            
+            <div className="mt-4 mb-1">
+              <div className={`text-2xl font-bold ${balance >= 0 ? "text-[#04C4D9]" : "text-red-600"}`}>
+                {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
+              </div>
+            </div>
+          </div>
+          
+          <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Resultado</span>
+              <span className={`font-medium ${balance >= 0 ? "text-[#04C4D9]" : "text-red-600"}`}>
+                {balance >= 0 ? "Positivo" : "Negativo"}
+              </span>
+            </div>
+          </div>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-4 border-b border-gray-100">
           <Tabs 
             defaultValue="all" 
             value={currentTab}
@@ -447,15 +498,15 @@ const TransactionList = () => {
               <TabsTrigger value="expense">Gastos</TabsTrigger>
             </TabsList>
           </Tabs>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-0">
           <DataTable
             columns={columns}
             data={filteredTransactions || []}
-            searchPlaceholder="Buscar movimientos..."
+            searchPlaceholder="Buscar movimientos por descripción, categoría o importe..."
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
