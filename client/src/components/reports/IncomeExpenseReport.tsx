@@ -1208,7 +1208,7 @@ const IncomeExpenseReport = () => {
                   <div className="p-4 bg-red-50 border-t border-red-100">
                     <div className="text-sm font-medium mb-3 text-red-700">Filtrar gastos por:</div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex flex-col gap-4">
                       {/* Filtro de categorías */}
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -1245,83 +1245,75 @@ const IncomeExpenseReport = () => {
                       </div>
                       
                       {/* Filtro de fechas */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Desde
-                          </label>
-                          <Input
-                            type="date"
-                            className="h-9 text-sm"
-                            value={dateRange.start ? format(dateRange.start, 'yyyy-MM-dd') : ''}
-                            onChange={(e) => {
-                              setDateRange({
-                                ...dateRange,
-                                start: e.target.value ? new Date(e.target.value) : null
-                              });
-                            }}
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Fecha desde
+                        </label>
+                        <Input
+                          type="date"
+                          className="h-9 text-sm w-full mb-2"
+                          value={dateRange.start ? format(dateRange.start, 'yyyy-MM-dd') : ''}
+                          onChange={(e) => {
+                            setDateRange({
+                              ...dateRange,
+                              start: e.target.value ? new Date(e.target.value) : null
+                            });
+                          }}
+                        />
                         
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Hasta
-                          </label>
-                          <Input
-                            type="date"
-                            className="h-9 text-sm"
-                            value={dateRange.end ? format(dateRange.end, 'yyyy-MM-dd') : ''}
-                            onChange={(e) => {
-                              setDateRange({
-                                ...dateRange,
-                                end: e.target.value ? new Date(e.target.value) : null
-                              });
-                            }}
-                          />
-                        </div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Fecha hasta
+                        </label>
+                        <Input
+                          type="date"
+                          className="h-9 text-sm w-full"
+                          value={dateRange.end ? format(dateRange.end, 'yyyy-MM-dd') : ''}
+                          onChange={(e) => {
+                            setDateRange({
+                              ...dateRange,
+                              end: e.target.value ? new Date(e.target.value) : null
+                            });
+                          }}
+                        />
                       </div>
                       
                       {/* Filtro de precios */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Importe mínimo
-                          </label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            className="h-9 text-sm"
-                            value={priceRange.min}
-                            onChange={(e) => {
-                              setPriceRange({
-                                ...priceRange,
-                                min: e.target.value
-                              });
-                            }}
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Importe mínimo (€)
+                        </label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="h-9 text-sm w-full mb-2"
+                          value={priceRange.min}
+                          onChange={(e) => {
+                            setPriceRange({
+                              ...priceRange,
+                              min: e.target.value
+                            });
+                          }}
+                        />
                         
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Importe máximo
-                          </label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="Sin límite"
-                            className="h-9 text-sm"
-                            value={priceRange.max}
-                            onChange={(e) => {
-                              setPriceRange({
-                                ...priceRange,
-                                max: e.target.value
-                              });
-                            }}
-                          />
-                        </div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Importe máximo (€)
+                        </label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="Sin límite"
+                          className="h-9 text-sm w-full"
+                          value={priceRange.max}
+                          onChange={(e) => {
+                            setPriceRange({
+                              ...priceRange,
+                              max: e.target.value
+                            });
+                          }}
+                        />
                       </div>
                     </div>
                     
