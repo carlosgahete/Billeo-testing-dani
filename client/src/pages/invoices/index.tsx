@@ -16,13 +16,27 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 
+// Definimos la interfaz para los datos de estadísticas
+interface DashboardStats {
+  income: number;
+  expenses: number;
+  pendingInvoices: number;
+  pendingCount: number;
+  issuedCount: number;
+  yearCount: number;
+  yearIncome: number;
+  quarterCount: number;
+  quarterIncome: number;
+  [key: string]: any;
+}
+
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
   const { isLoading: authLoading } = useQuery({
     queryKey: ["/api/auth/session"],
   });
   
-  const { data: stats } = useQuery({
+  const { data: stats = {} as DashboardStats } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
   });
 
