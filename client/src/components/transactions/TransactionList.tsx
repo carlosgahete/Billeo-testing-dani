@@ -54,6 +54,7 @@ interface Category {
   name: string;
   type: "income" | "expense";
   color: string;
+  icon?: string;
 }
 
 const PaymentMethodBadge = ({ method }: { method: string }) => {
@@ -161,10 +162,14 @@ const TransactionList = () => {
 
   const isLoading = transactionsLoading || categoriesLoading;
 
-  const getCategoryName = (categoryId: number | null) => {
-    if (!categoryId || !categories || !Array.isArray(categories)) return "Sin categoría";
+  const getCategory = (categoryId: number | null) => {
+    if (!categoryId || !categories || !Array.isArray(categories)) {
+      return { name: "Sin categoría", icon: "📂", color: "#999999" };
+    }
     const category = categories.find((c: Category) => c.id === categoryId);
-    return category ? category.name : "Sin categoría";
+    return category 
+      ? { name: category.name, icon: category.icon || "📂", color: category.color }
+      : { name: "Sin categoría", icon: "📂", color: "#999999" };
   };
 
   const formatDate = (dateString: string) => {
@@ -253,7 +258,15 @@ const TransactionList = () => {
     {
       accessorKey: "categoryId",
       header: "Categoría",
-      cell: ({ row }) => getCategoryName(row.getValue("categoryId")),
+      cell: ({ row }) => {
+        const category = getCategory(row.getValue("categoryId"));
+        return (
+          <div className="flex items-center">
+            <span className="mr-2 text-xl" style={{ color: category.color }}>{category.icon}</span>
+            <span>{category.name}</span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "paymentMethod",
@@ -262,13 +275,20 @@ const TransactionList = () => {
     },
     {
       accessorKey: "amount",
-      header: "Importe",
+      header: "Base Imponible",
       cell: ({ row }) => {
         const type = row.original.type;
         const amount = row.getValue<number>("amount");
+        
+        // Usar el ícono de categoría en lugar del signo + o -
+        const category = getCategory(row.original.categoryId);
+        
         return (
-          <div className={`font-medium ${type === "income" ? "text-secondary-600" : "text-danger-500"}`}>
-            {type === "income" ? "+" : "-"}{formatCurrency(amount, type)}
+          <div className="flex items-center">
+            <span className="mr-2 text-lg" style={{ color: category.color }}>{category.icon}</span>
+            <span className={`font-medium ${type === "income" ? "text-secondary-600" : "text-danger-500"}`}>
+              {formatCurrency(amount, type)}
+            </span>
           </div>
         );
       },
