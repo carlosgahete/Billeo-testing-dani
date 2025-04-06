@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   BarChart,
   Bar,
@@ -27,6 +27,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
   const [graphView, setGraphView] = useState<"barras" | "area">("barras");
+  const [_, navigate] = useLocation();
+  
+  // Función para refrescar los datos del dashboard
+  const { refetch } = useQuery<DashboardStats>({
+    queryKey: ["/api/stats/dashboard"],
+  });
+  
+  const refreshDashboard = () => {
+    refetch();
+  };
 
   // Obtener los datos de las estadísticas
   const { data: stats, isLoading } = useQuery<DashboardStats>({
@@ -118,49 +128,75 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
   return (
     <div className={cn("p-6 bg-slate-50/80", className)}>
-      {/* Filtros para el dashboard - flotando a la derecha */}
-      <div className="flex items-center justify-end gap-2 mb-4">
-        <Select value={year} onValueChange={setYear}>
-          <SelectTrigger className="w-[100px] bg-white shadow-sm">
-            <SelectValue placeholder="Año" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2025">2025</SelectItem>
-            <SelectItem value="2024">2024</SelectItem>
-            <SelectItem value="2023">2023</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Cabecera del dashboard con título y controles */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-slate-200 mb-4">
+        <div className="flex items-center mb-3 md:mb-0">
+          <BarChart3 className="h-6 w-6 text-indigo-600 mr-2" />
+          <h2 className="text-2xl font-bold text-slate-800">Dashboard Completo</h2>
+        </div>
         
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[150px] bg-white shadow-sm">
-            <SelectValue placeholder="Periodo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todo el año</SelectItem>
-            <SelectItem value="q1">Trimestre 1</SelectItem>
-            <SelectItem value="q2">Trimestre 2</SelectItem>
-            <SelectItem value="q3">Trimestre 3</SelectItem>
-            <SelectItem value="q4">Trimestre 4</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/dashboard/simple")}
+            className="h-9 border-slate-200"
+          >
+            Ver Dashboard Simple
+          </Button>
+          
+          <div className="h-6 border-r border-slate-200 mx-1"></div>
+          
+          <Select value={year} onValueChange={setYear}>
+            <SelectTrigger className="w-[100px] bg-slate-50 border-slate-200 h-9">
+              <SelectValue placeholder="Año" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2023">2023</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[150px] bg-slate-50 border-slate-200 h-9">
+              <SelectValue placeholder="Periodo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo el año</SelectItem>
+              <SelectItem value="q1">Trimestre 1</SelectItem>
+              <SelectItem value="q2">Trimestre 2</SelectItem>
+              <SelectItem value="q3">Trimestre 3</SelectItem>
+              <SelectItem value="q4">Trimestre 4</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            size="sm"
+            onClick={() => refreshDashboard()}
+            className="h-9 bg-indigo-600 hover:bg-indigo-700"
+          >
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       {/* Primera fila: Widgets principales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
         {/* Widget de Ingresos */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-green-50 p-5">
-            <div className="flex items-center text-green-700 mb-2">
-              <ArrowUp className="mr-2 h-5 w-5" />
-              <h3 className="text-base font-medium">Ingresos</h3>
+          <div className="bg-white p-5 border-t-4 border-green-500">
+            <div className="flex items-center text-slate-700 mb-2">
+              <ArrowUp className="mr-2 h-5 w-5 text-green-500" />
+              <h3 className="text-base font-semibold">Ingresos</h3>
               <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-3xl font-bold text-green-700">
+              <div className="text-3xl font-bold text-slate-800">
                 {formatCurrency(dashboardStats.income)}
               </div>
             </div>
-            <div className="text-xs space-y-1 text-green-800">
+            <div className="text-xs space-y-1 text-slate-600">
               <div className="flex justify-between">
                 <span>Base imponible:</span>
                 <span className="font-medium">{formatCurrency(baseImponibleIngresos)}</span>
@@ -172,7 +208,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             <div className="mt-3">
               <Link href="/invoices">
-                <Button variant="outline" className="w-full text-xs h-8 text-green-700 border-green-300 hover:bg-green-100">
+                <Button variant="outline" className="w-full text-xs h-8 border-slate-200 hover:bg-slate-50">
                   Ver facturas
                 </Button>
               </Link>
@@ -182,18 +218,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Gastos */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-red-50 p-5">
-            <div className="flex items-center text-red-700 mb-2">
-              <ArrowDown className="mr-2 h-5 w-5" />
-              <h3 className="text-base font-medium">Gastos</h3>
+          <div className="bg-white p-5 border-t-4 border-red-500">
+            <div className="flex items-center text-slate-700 mb-2">
+              <ArrowDown className="mr-2 h-5 w-5 text-red-500" />
+              <h3 className="text-base font-semibold">Gastos</h3>
               <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-3xl font-bold text-red-700">
+              <div className="text-3xl font-bold text-slate-800">
                 {formatCurrency(dashboardStats.expenses)}
               </div>
             </div>
-            <div className="text-xs space-y-1 text-red-800">
+            <div className="text-xs space-y-1 text-slate-600">
               <div className="flex justify-between">
                 <span>Base imponible:</span>
                 <span className="font-medium">{formatCurrency(baseImponibleGastos)}</span>
@@ -205,7 +241,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             <div className="mt-3">
               <Link href="/income-expense">
-                <Button variant="outline" className="w-full text-xs h-8 text-red-700 border-red-300 hover:bg-red-100">
+                <Button variant="outline" className="w-full text-xs h-8 border-slate-200 hover:bg-slate-50">
                   Ver gastos
                 </Button>
               </Link>
@@ -215,18 +251,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Ingresos Brutos */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-blue-50 p-5">
-            <div className="flex items-center text-blue-700 mb-2">
-              <ArrowUp className="mr-2 h-5 w-5" />
-              <h3 className="text-base font-medium">Ingresos Brutos</h3>
+          <div className="bg-white p-5 border-t-4 border-blue-500">
+            <div className="flex items-center text-slate-700 mb-2">
+              <ArrowUp className="mr-2 h-5 w-5 text-blue-500" />
+              <h3 className="text-base font-semibold">Ingresos Brutos</h3>
               <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-3xl font-bold text-blue-700">
+              <div className="text-3xl font-bold text-slate-800">
                 {formatCurrency(dashboardStats.income)}
               </div>
             </div>
-            <div className="text-xs space-y-1 text-blue-800">
+            <div className="text-xs space-y-1 text-slate-600">
               <div className="flex justify-between">
                 <span>Base imponible:</span>
                 <span className="font-medium">{formatCurrency(baseImponibleIngresos)}</span>
@@ -238,12 +274,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             {/* Facturas pendientes */}
-            <div className="mt-3 bg-white rounded-md p-3 border border-blue-200 shadow-sm">
-              <div className="flex justify-between items-center text-xs text-blue-700 font-medium mb-1">
+            <div className="mt-3 bg-slate-50 rounded-md p-3 border border-slate-200">
+              <div className="flex justify-between items-center text-xs text-slate-700 font-medium mb-1">
                 <span>Facturas pendientes</span>
-                <span className="bg-blue-100 px-1.5 py-0.5 rounded">↓ {dashboardStats.pendingCount || 0} facturas</span>
+                <span className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-700">↓ {dashboardStats.pendingCount || 0} facturas</span>
               </div>
-              <div className="text-lg font-bold text-blue-800">
+              <div className="text-lg font-bold text-slate-800">
                 {formatCurrency(dashboardStats.pendingInvoices)}
               </div>
             </div>
@@ -252,18 +288,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-emerald-50 p-5">
-            <div className="flex items-center text-emerald-700 mb-2">
-              <TrendingUp className="mr-2 h-5 w-5" />
-              <h3 className="text-base font-medium">Resultado Final</h3>
+          <div className="bg-white p-5 border-t-4 border-emerald-500">
+            <div className="flex items-center text-slate-700 mb-2">
+              <TrendingUp className="mr-2 h-5 w-5 text-emerald-500" />
+              <h3 className="text-base font-semibold">Resultado Final</h3>
               <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
             <div className="mb-2">
-              <div className="text-3xl font-bold text-emerald-700">
+              <div className="text-3xl font-bold text-slate-800">
                 {formatCurrency(finalResult)}
               </div>
             </div>
-            <div className="text-xs space-y-1 text-emerald-800">
+            <div className="text-xs space-y-1 text-slate-600">
               <div className="flex justify-between">
                 <span>Base + IVA (bruto):</span>
                 <span className="font-medium">{formatCurrency(dashboardStats.income)}</span>
@@ -276,8 +312,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <span>IVA a liquidar:</span>
                 <span className="font-medium text-blue-600">{formatCurrency(ivaALiquidar)}</span>
               </div>
-              <div className="flex justify-between pt-1 border-t border-emerald-200 mt-1">
-                <span className="text-emerald-700 font-medium">Total neto:</span>
+              <div className="flex justify-between pt-1 border-t border-slate-200 mt-1">
+                <span className="text-slate-700 font-medium">Total neto:</span>
                 <span className="font-bold">{formatCurrency(finalResult)}</span>
               </div>
             </div>
@@ -289,10 +325,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         {/* Widget de Resumen Fiscal */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5">
+          <div className="bg-white p-5 border-t-4 border-indigo-500">
             <div className="flex items-center mb-4 border-b pb-2">
-              <FileText className="mr-2 h-5 w-5 text-blue-600" />
-              <h3 className="text-base font-medium text-slate-800">Resumen Fiscal</h3>
+              <FileText className="mr-2 h-5 w-5 text-indigo-500" />
+              <h3 className="text-base font-semibold text-slate-800">Resumen Fiscal</h3>
               <div className="flex items-center space-x-2 text-sm ml-auto">
                 <Select value={year} onValueChange={setYear}>
                   <SelectTrigger className="w-[80px] h-8 text-xs bg-slate-50">
@@ -320,36 +356,36 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* IVA a liquidar */}
-            <div className="bg-blue-50 rounded-md p-4 mb-3">
-              <div className="text-sm text-blue-800 mb-1 flex justify-between items-center">
+            <div className="bg-slate-50 rounded-md p-4 mb-3 border border-slate-200">
+              <div className="text-sm text-slate-800 mb-1 flex justify-between items-center">
                 <span>IVA a liquidar (Todo el año, 2025)</span>
                 <span className="bg-blue-100 text-xs py-0.5 px-1.5 rounded text-blue-700">21% IVA</span>
               </div>
-              <div className="text-2xl font-bold text-blue-700">
+              <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(ivaALiquidar)}
               </div>
-              <div className="text-xs text-blue-600 mt-1">
+              <div className="text-xs text-slate-600 mt-1">
                 Resumen anual de IVA (modelo 390)
               </div>
             </div>
 
             {/* IRPF */}
-            <div className="bg-amber-50 rounded-md p-4">
-              <div className="text-sm text-amber-800 mb-1 flex justify-between items-center">
+            <div className="bg-slate-50 rounded-md p-4 border border-slate-200">
+              <div className="text-sm text-slate-800 mb-1 flex justify-between items-center">
                 <span>Retenciones IRPF (Todo el año, 2025)</span>
                 <span className="bg-amber-100 text-xs py-0.5 px-1.5 rounded text-amber-700">15% IRPF</span>
               </div>
-              <div className="text-2xl font-bold text-amber-700">
+              <div className="text-2xl font-bold text-amber-600">
                 {formatCurrency(dashboardStats.taxes?.incomeTax || 0)}
               </div>
-              <div className="text-xs text-amber-600 mt-1">
+              <div className="text-xs text-slate-600 mt-1">
                 Retenciones acumuladas en el año (modelo 190)
               </div>
             </div>
 
             {/* Botón de Informes */}
             <div className="mt-4">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
                 Ver informes fiscales
               </Button>
             </div>
@@ -358,10 +394,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Comparativa Financiera */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5">
+          <div className="bg-white p-5 border-t-4 border-purple-500">
             <div className="flex items-center mb-4 border-b pb-2">
-              <BarChart3 className="mr-2 h-5 w-5 text-purple-600" />
-              <h3 className="text-base font-medium text-slate-800">Comparativa Financiera</h3>
+              <BarChart3 className="mr-2 h-5 w-5 text-purple-500" />
+              <h3 className="text-base font-semibold text-slate-800">Comparativa Financiera</h3>
               <div className="flex items-center space-x-2 text-sm ml-auto">
                 <Select value="trimestral">
                   <SelectTrigger className="w-[100px] h-8 text-xs bg-slate-50">
@@ -390,7 +426,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <Button
                 variant={graphView === "barras" ? "default" : "outline"}
                 size="sm"
-                className="text-xs"
+                className={graphView === "barras" ? "text-xs bg-purple-600 hover:bg-purple-700" : "text-xs"}
                 onClick={() => setGraphView("barras")}
               >
                 Barras
@@ -398,7 +434,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <Button
                 variant={graphView === "area" ? "default" : "outline"}
                 size="sm"
-                className="text-xs"
+                className={graphView === "area" ? "text-xs bg-purple-600 hover:bg-purple-700" : "text-xs"}
                 onClick={() => setGraphView("area")}
               >
                 Área
@@ -406,7 +442,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Gráfico */}
-            <div className="h-[280px]">
+            <div className="h-[280px] p-2 bg-slate-50 rounded-md border border-slate-200">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={financialComparisonData}
