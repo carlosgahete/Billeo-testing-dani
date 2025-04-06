@@ -1195,8 +1195,8 @@ const IncomeExpenseReport = () => {
                   </div>
                 </div>
                 
-                {/* Panel de filtros flotante */}
-                <div className="relative">
+                {/* Panel de filtros flotante - posición mejorada */}
+                <div className="relative" style={{ zIndex: 50 }}>
                   {showFilters && (
                     <FloatingFilters
                       transactions={sortedExpenseTransactions}

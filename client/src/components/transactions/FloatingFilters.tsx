@@ -128,9 +128,19 @@ const FloatingFilters = ({
   return (
     <div 
       ref={filterPanelRef}
-      className="absolute right-0 top-0 z-[1000] w-64 p-3 bg-red-50 rounded-md shadow-lg border border-red-100 max-h-[90vh] overflow-y-auto"
+      className="absolute right-0 top-[40px] z-[1000] w-72 p-4 bg-white rounded-md shadow-xl border border-red-100 max-h-[90vh] overflow-y-auto"
     >
-      <div className="text-sm font-medium mb-3 text-red-700">Filtrar gastos por:</div>
+      <div className="text-base font-semibold mb-3 text-gray-700 flex justify-between items-center">
+        <span>Filtrar gastos por:</span>
+        <Button 
+          onClick={onClose} 
+          variant="ghost" 
+          size="sm" 
+          className="h-7 w-7 p-0 rounded-full"
+        >
+          ✕
+        </Button>
+      </div>
       
       <div className="space-y-3">
         {/* Filtro de categorías */}
