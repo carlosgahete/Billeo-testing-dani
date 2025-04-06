@@ -134,11 +134,15 @@ export interface ExtractedExpense {
   categoryHint?: string;
   vendor?: string;
   client?: string;  // Cliente (quien recibe la factura)
+  provider?: string; // Proveedor (quien emite la factura)
   taxAmount?: number;
-  subtotal?: number;
+  tax?: number;      // Porcentaje de IVA (21, 10, 4, etc.)
+  baseAmount?: number; // Base imponible (antes de impuestos)
+  subtotal?: number;   // Alias de baseAmount para compatibilidad
   irpfAmount?: number;
-  irpfRate?: number;
-  ivaRate?: number;
+  irpf?: number;      // Porcentaje de IRPF (15, 7, etc.)
+  irpfRate?: number;  // Alias de irpf para compatibilidad
+  ivaRate?: number;   // Alias de tax para compatibilidad
 }
 
 /**
@@ -741,11 +745,15 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     categoryHint,
     vendor,
     client,
+    provider: vendor, // Añadir proveedor (mismo que vendor para compatibilidad)
     taxAmount,
-    subtotal,
+    tax: ivaRate,     // Porcentaje de IVA
+    baseAmount: subtotal, // Base imponible
+    subtotal,         // Mantener subtotal para compatibilidad
     irpfAmount,
-    irpfRate,
-    ivaRate
+    irpf: irpfRate,   // Porcentaje de IRPF
+    irpfRate,         // Mantener irpfRate para compatibilidad
+    ivaRate           // Mantener ivaRate para compatibilidad
   };
 }
 
