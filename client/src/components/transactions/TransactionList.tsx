@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, Filter, Calendar, CheckCircle2 } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -31,17 +31,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
-import { FilterDialog } from "@/components/transactions/filters/FilterDialog";
-import { es } from "date-fns/locale";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Transaction {
   id: number;
@@ -148,19 +141,6 @@ const TransactionList = () => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  
-  // Estados para filtros
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date())
-  });
-  const [isDateFilterActive, setIsDateFilterActive] = useState(false);
-  const [isCategoryFilterActive, setIsCategoryFilterActive] = useState(false);
   
   // Obtener tab de los parámetros de URL
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -217,29 +197,10 @@ const TransactionList = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
   };
 
-  // Helper para verificar si la fecha está en el rango seleccionado
-  const isDateInRange = (dateString: string) => {
-    if (!isDateFilterActive || !dateRange.from || !dateRange.to) return true;
-    const txDate = new Date(dateString);
-    return isWithinInterval(txDate, {
-      start: dateRange.from,
-      end: dateRange.to
-    });
-  };
-
-  // Función para aplicar todos los filtros
   const filteredTransactions = Array.isArray(transactions) 
     ? transactions.filter((transaction: Transaction) => {
-        // Filtrar por tipo (tab)
-        if (currentTab !== "all" && transaction.type !== currentTab) return false;
-        
-        // Filtrar por categoría (solo si está activo el filtro)
-        if (isCategoryFilterActive && selectedCategoryId && transaction.categoryId !== selectedCategoryId) return false;
-        
-        // Filtrar por fecha (solo si está activo el filtro)
-        if (isDateFilterActive && !isDateInRange(transaction.date)) return false;
-        
-        return true;
+        if (currentTab === "all") return true;
+        return transaction.type === currentTab;
       })
     : [];
 
@@ -392,38 +353,6 @@ const TransactionList = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
-            <div>
-              <Button 
-                variant="secondary" 
-                className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none"
-                onClick={() => setIsFilterDialogOpen(true)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                <span>Filtrar</span>
-                {(isDateFilterActive || isCategoryFilterActive) && (
-                  <Badge className="ml-2 bg-blue-600">
-                    {(isDateFilterActive && isCategoryFilterActive) ? '2' : '1'}
-                  </Badge>
-                )}
-              </Button>
-            </div>
-            
-            {/* Nuevo componente de filtro como diálogo separado */}
-            <FilterDialog
-              isOpen={isFilterDialogOpen}
-              onOpenChange={setIsFilterDialogOpen}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-              isDateFilterActive={isDateFilterActive}
-              setIsDateFilterActive={setIsDateFilterActive}
-              selectedCategoryId={selectedCategoryId}
-              setSelectedCategoryId={setSelectedCategoryId}
-              isCategoryFilterActive={isCategoryFilterActive}
-              setIsCategoryFilterActive={setIsCategoryFilterActive}
-              categories={categories}
-              currentTab={currentTab}
-            />
-
             <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none">
@@ -549,89 +478,12 @@ const TransactionList = () => {
           </Tabs>
         </CardHeader>
         <CardContent className="p-0">
-          {(isDateFilterActive || isCategoryFilterActive) && (
-            <div className="p-4 pt-6 bg-blue-50 border-b border-blue-100 relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
-                  <Filter className="h-3 w-3 mr-1" />
-                  Filtros activos
-                </Badge>
-                
-                {isCategoryFilterActive && selectedCategoryId && (
-                  <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
-                    <span className="flex items-center">
-                      {(() => {
-                        if (!Array.isArray(categories)) return (
-                          <>
-                            <span className="mr-1">📂</span>
-                            Categoría: Desconocida
-                          </>
-                        );
-
-                        const category = categories.find(c => c.id === selectedCategoryId);
-                        if (!category) return (
-                          <>
-                            <span className="mr-1">📂</span>
-                            Categoría: Desconocida
-                          </>
-                        );
-
-                        return (
-                          <>
-                            <span className="mr-1">{category.icon || "📂"}</span>
-                            Categoría: {category.name}
-                          </>
-                        );
-                      })()}
-                    </span>
-                  </Badge>
-                )}
-                
-                {isDateFilterActive && dateRange.from && dateRange.to && (
-                  <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Período: {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
-                  </Badge>
-                )}
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="ml-auto text-blue-600 hover:text-blue-800"
-                  onClick={() => {
-                    setDateRange({
-                      from: startOfMonth(new Date()),
-                      to: endOfMonth(new Date())
-                    });
-                    setSelectedCategoryId(null);
-                    setIsDateFilterActive(false);
-                    setIsCategoryFilterActive(false);
-                  }}
-                >
-                  Limpiar filtros
-                </Button>
-              </div>
-            </div>
-          )}
           <div className="p-4 bg-white rounded-b-lg">
-            {filteredTransactions.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                  <Filter className="h-6 w-6 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No hay resultados</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  No se encontraron transacciones con los filtros actuales. Prueba a cambiar los criterios de búsqueda.
-                </p>
-              </div>
-            ) : (
-              <DataTable
-                columns={columns}
-                data={filteredTransactions || []}
-                searchPlaceholder="Buscar movimientos..."
-              />
-            )}
+            <DataTable
+              columns={columns}
+              data={filteredTransactions || []}
+              searchPlaceholder="Buscar movimientos..."
+            />
           </div>
         </CardContent>
       </Card>
