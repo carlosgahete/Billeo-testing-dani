@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
   Eye, 
   Edit, 
@@ -18,8 +17,7 @@ import {
   Check, 
   MoreVertical,
   Mail,
-  FileCheck,
-  FileText
+  FileCheck
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -668,114 +666,47 @@ const InvoiceList = () => {
   ];
 
   if (invoicesLoading || clientsLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full border-4 border-t-[#04C4D9] border-r-[#04C4D9] border-b-transparent border-l-transparent animate-spin"></div>
-          <span className="mt-4 text-gray-600 font-medium">Cargando facturas...</span>
-        </div>
-      </div>
-    );
+    return <div className="flex justify-center p-8">Cargando...</div>;
   }
 
   return (
-    <div className="w-full p-6 bg-gray-50">
-      {/* Cabecera con título y botones de acción */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <div className="flex items-center mb-3 md:mb-0">
-          <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
-            <FileCheck className="h-5 w-5 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Facturas</h2>
+    <div className="w-full">
+      {/* Encabezado de Facturas Emitidas con ambos botones a la derecha */}
+      <div className="overflow-hidden rounded-xl bg-blue-600 text-white p-3 flex justify-between items-center mx-4 md:ml-0 mb-1">
+        <div className="flex items-center">
+          <FileCheck className="h-5 w-5 mr-2" />
+          <h2 className="font-medium">Facturas emitidas</h2>
+          <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-0.5">
+            {invoicesData?.length || 0} facturas
+          </span>
         </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
+        <div className="flex gap-2">
+          <button
+            className="apple-style-secondary flex items-center mr-2"
             onClick={exportAllInvoices}
-            className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 h-10"
           >
-            <Download className="h-4 w-4 mr-2 text-gray-500" />
-            <span className="hidden sm:inline">Exportar facturas</span>
+            <Download className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Exportar todo</span>
             <span className="sm:hidden">Exportar</span>
-          </Button>
-          
-          <Button
+          </button>
+          <button
+            className="apple-style flex items-center"
             onClick={() => navigate("/invoices/create")}
-            className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white h-10"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Nueva factura</span>
             <span className="sm:hidden">Nueva</span>
-          </Button>
+          </button>
         </div>
       </div>
-      
-      {/* Resumen y estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-blue-100 p-2 rounded-full mr-3">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total facturas</p>
-              <p className="text-2xl font-bold text-gray-900">{invoicesData?.length || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-green-100 p-2 rounded-full mr-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Facturas pagadas</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {invoicesData?.filter(i => i.status === 'paid').length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-amber-100 p-2 rounded-full mr-3">
-              <DollarSign className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Pendientes de pago</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {invoicesData?.filter(i => i.status === 'pending').length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-red-100 p-2 rounded-full mr-3">
-              <Mail className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Pendientes de envío</p>
-              <p className="text-2xl font-bold text-gray-900">0</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Tabla de facturas */}
-      <Card className="overflow-hidden rounded-xl shadow-sm border-0">
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={invoicesData || []}
-            searchPlaceholder="Buscar facturas por número, cliente o fecha..."
-          />
-        </CardContent>
-      </Card>
+      <div className="overflow-hidden rounded-xl border border-blue-100 shadow-sm mx-4 md:ml-0">
+        <DataTable
+          columns={columns}
+          data={invoicesData || []}
+          searchPlaceholder="Buscar facturas por número, cliente o fecha..."
+        />
+      </div>
     </div>
   );
 };

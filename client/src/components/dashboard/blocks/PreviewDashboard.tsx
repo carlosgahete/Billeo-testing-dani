@@ -9,7 +9,6 @@ import InvoicesSummary from "./InvoicesSummary";
 import ComparativeChart from "./ComparativeChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BarChart3 } from "lucide-react";
 
 interface PreviewDashboardProps {
   userId: number;
@@ -44,40 +43,33 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({ userId }) => {
 
   return (
     <div className="space-y-4">
-      {/* Year and period selectors - Estilo minimalista */}
-      <div className="relative overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 p-4 mb-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <div className="text-lg font-semibold text-gray-800">Resumen Contable</div>
-          </div>
-          <div className="flex space-x-2 bg-gray-50 p-2 rounded-lg">
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="w-24 border-gray-200 h-9">
-                <SelectValue placeholder="Año" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-32 border-gray-200 h-9">
-                <SelectValue placeholder="Periodo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todo el año</SelectItem>
-                <SelectItem value="Q1">1er trimestre</SelectItem>
-                <SelectItem value="Q2">2º trimestre</SelectItem>
-                <SelectItem value="Q3">3er trimestre</SelectItem>
-                <SelectItem value="Q4">4º trimestre</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Year and period selectors */}
+      <div className="flex justify-between items-center bg-blue-600 p-4 rounded-lg text-white">
+        <div className="text-lg font-semibold">Resumen Contable</div>
+        <div className="flex space-x-2">
+          <Select value={year} onValueChange={setYear}>
+            <SelectTrigger className="w-24 bg-white/20 border-white/40 text-white">
+              <SelectValue placeholder="Año" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-32 bg-white/20 border-white/40 text-white">
+              <SelectValue placeholder="Periodo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo el año</SelectItem>
+              <SelectItem value="Q1">1er trimestre</SelectItem>
+              <SelectItem value="Q2">2º trimestre</SelectItem>
+              <SelectItem value="Q3">3er trimestre</SelectItem>
+              <SelectItem value="Q4">4º trimestre</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
