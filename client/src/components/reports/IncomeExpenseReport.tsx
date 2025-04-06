@@ -1007,7 +1007,15 @@ const IncomeExpenseReport = () => {
             
             {/* TAB DE GASTOS */}
             <TabsContent value="expense" className="space-y-4">
-              <div className="flex justify-end mb-2">
+              <div className="flex justify-end mb-2 gap-2">
+                <Button 
+                  onClick={() => navigate("/documents/scan")}
+                  variant="default" 
+                  className="gap-2 text-sm bg-blue-600 hover:bg-blue-700"
+                >
+                  <ScanText className="h-4 w-4" />
+                  Escanear documento
+                </Button>
                 <Button 
                   onClick={downloadExpensesPDF} 
                   variant="outline" 
