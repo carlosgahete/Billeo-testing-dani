@@ -1205,12 +1205,14 @@ const IncomeExpenseReport = () => {
                 
                 {/* Panel de filtros */}
                 {showFilters && (
-                  <div className="flex border-b border-red-100">
-                    {/* Panel de filtros estrecho */}
-                    <div className="w-72 p-4 bg-red-50 border-r border-red-100">
+                  <div className="flex justify-end border-b border-red-100">
+                    {/* Área principal - eliminada para evitar el espacio blanco */}
+                    
+                    {/* Panel de filtros estrecho a la derecha */}
+                    <div className="w-64 p-3 bg-red-50 border-l border-red-100">
                       <div className="text-sm font-medium mb-3 text-red-700">Filtrar gastos por:</div>
                       
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {/* Filtro de categorías */}
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -1389,13 +1391,6 @@ const IncomeExpenseReport = () => {
                             Aplicar
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                    
-                    {/* Área para mostrar contenido al lado del panel de filtros */}
-                    <div className="flex-1 px-4 py-2">
-                      <div className="text-gray-500 text-sm italic">
-                        Usa los filtros de la izquierda para encontrar gastos específicos.
                       </div>
                     </div>
                   </div>
