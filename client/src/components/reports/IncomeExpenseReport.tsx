@@ -1028,122 +1028,113 @@ const IncomeExpenseReport = () => {
               </div>
               
               <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
-                  <h3 className="text-lg font-medium flex items-center">
-                    <Receipt className="mr-2 h-5 w-5" />
+                <div className="bg-gradient-to-r from-red-600 to-red-400 p-3 text-white">
+                  <h3 className="text-sm font-medium flex items-center">
+                    <Receipt className="mr-2 h-4 w-4" />
                     Registro rápido de gastos
                   </h3>
                 </div>
-                <CardHeader className="pt-6 pb-0">
-                  <CardTitle className="text-xl font-semibold text-red-700">
-                    Registro rápido de gastos
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-1">
-                    Registra rápidamente un gasto. Opcionalmente puedes adjuntar un comprobante (factura, ticket o recibo).
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleQuickExpense} className="space-y-3">
-                    <div className="grid md:grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Descripción
-                        </label>
-                        <Input
-                          type="text"
-                          placeholder="Ej: Material de oficina"
-                          value={expenseDescription}
-                          onChange={(e) => setExpenseDescription(e.target.value)}
-                          required
-                          className="w-full"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Importe (€)
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={expenseAmount}
-                          onChange={(e) => setExpenseAmount(e.target.value)}
-                          required
-                          className="w-full"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Categoría/Etiqueta
-                        </label>
-                        <div className="flex gap-2">
-                          <Select 
-                            onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
-                            defaultValue={categoryId ? categoryId.toString() : "null"}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Seleccionar categoría" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="null">Sin categoría</SelectItem>
-                              {categories && categories
-                                .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
-                                .map((category) => (
-                                  <SelectItem 
-                                    key={category.id} 
-                                    value={category.id.toString()}
-                                  >
-                                    {category.icon || "💼"} {category.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            type="button" 
-                            size="icon" 
-                            variant="outline" 
-                            className="flex-shrink-0" 
-                            onClick={() => setShowCategoryModal(true)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                <CardContent className="p-3">
+                  <form onSubmit={handleQuickExpense} className="flex flex-wrap items-end gap-2 mb-0">
+                    <div className="flex-1 min-w-[180px]">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Descripción
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Ej: Material de oficina"
+                        value={expenseDescription}
+                        onChange={(e) => setExpenseDescription(e.target.value)}
+                        required
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div className="w-[120px]">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Importe (€)
+                      </label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={expenseAmount}
+                        onChange={(e) => setExpenseAmount(e.target.value)}
+                        required
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-[180px]">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Categoría
+                      </label>
+                      <div className="flex gap-1">
+                        <Select 
+                          onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
+                          defaultValue={categoryId ? categoryId.toString() : "null"}
+                        >
+                          <SelectTrigger className="h-8 text-sm">
+                            <SelectValue placeholder="Categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">Sin categoría</SelectItem>
+                            {categories && categories
+                              .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
+                              .map((category) => (
+                                <SelectItem 
+                                  key={category.id} 
+                                  value={category.id.toString()}
+                                >
+                                  {category.icon || "💼"} {category.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          type="button" 
+                          size="icon"
+                          variant="outline" 
+                          className="h-8 w-8"
+                          onClick={() => setShowCategoryModal(true)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                     
-                    <div className="md:w-auto w-full flex items-center gap-2">
-                      <div className="flex-grow md:flex-grow-0">
+                    <div className="flex items-center gap-1">
+                      <div className="flex-shrink-0">
                         {!attachmentPath ? (
                           <FileUpload onUpload={handleFileUpload} compact={true} />
                         ) : (
-                          <>
-                            <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
-                              <FileText className="h-3 w-3" />
-                              <span className="text-xs">Adjunto</span>
-                            </Badge>
+                          <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
+                            <FileText className="h-3 w-3" />
+                            <span className="text-xs">Adjunto</span>
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-6 w-6 rounded-full p-0" 
+                              className="h-4 w-4 p-0 ml-1" 
                               onClick={() => setAttachmentPath(null)}
                             >
                               <X className="h-3 w-3" />
                             </Button>
-                          </>
+                          </Badge>
                         )}
                       </div>
+                      
                       <Button 
                         type="submit" 
                         disabled={isSubmitting}
-                        className="bg-red-600 hover:bg-red-700 whitespace-nowrap"
+                        className="bg-red-600 hover:bg-red-700 whitespace-nowrap h-8"
                         size="sm"
                       >
                         {isSubmitting ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <PlusCircle className="h-4 w-4 mr-1" />
                         )}
-                        Registrar
+                        <span>Registrar</span>
                       </Button>
                     </div>
                   </form>
