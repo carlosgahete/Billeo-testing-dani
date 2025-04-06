@@ -661,21 +661,26 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                             onMouseLeave={() => setShowMagnifier(false)}
                           />
                           
-                          {/* Lupa/Magnifier */}
+                          {/* Lupa/Magnifier - Versión mejorada */}
                           {showMagnifier && (
                             <div 
-                              className="absolute w-20 h-20 border-2 border-primary rounded-full overflow-hidden pointer-events-none z-10"
+                              className="absolute w-24 h-24 border-2 border-[#04C4D9] rounded-full overflow-hidden pointer-events-none z-10 shadow-lg"
                               style={{ 
-                                left: `calc(${magnifierPosition.x}% - 40px)`, 
-                                top: `calc(${magnifierPosition.y}% - 40px)`,
+                                left: `calc(${magnifierPosition.x}% - 48px)`, 
+                                top: `calc(${magnifierPosition.y}% - 48px)`,
                                 backgroundImage: `url(${documentImage})`,
-                                backgroundPosition: `calc(${magnifierPosition.x}% + 40px - ${magnifierPosition.x}% * 2) calc(${magnifierPosition.y}% + 40px - ${magnifierPosition.y}% * 2)`,
-                                backgroundSize: '400%',
+                                backgroundPosition: `${-magnifierPosition.x * 3 + 150}% ${-magnifierPosition.y * 3 + 150}%`,
+                                backgroundSize: '600%',
                                 backgroundRepeat: 'no-repeat'
                               }}
                             >
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <MousePointer className="h-3 w-3 text-primary opacity-80" />
+                              <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                                <MousePointer className="h-3 w-3 text-primary" />
+                              </div>
+                              {/* Líneas de guía para ayudar a posicionar */}
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-[1px] h-6 bg-gray-400/30" />
+                                <div className="h-[1px] w-6 bg-gray-400/30" />
                               </div>
                             </div>
                           )}
