@@ -380,6 +380,20 @@ const IncomeExpenseReport = () => {
     const category = categories.find(c => c.id === categoryId);
     return category ? category.name : "Categoría desconocida";
   };
+  
+  // Obtener icono de categoría por ID
+  const getCategoryIcon = (categoryId: number | null) => {
+    if (!categoryId) return "📂"; // Icono por defecto para "Sin categoría"
+    const category = categories.find(c => c.id === categoryId);
+    return category?.icon || "📂"; // Usar el icono de la categoría o un icono por defecto
+  };
+  
+  // Obtener color de categoría por ID
+  const getCategoryColor = (categoryId: number | null) => {
+    if (!categoryId) return "#999999"; // Color por defecto para "Sin categoría"
+    const category = categories.find(c => c.id === categoryId);
+    return category?.color || "#999999"; // Usar el color de la categoría o un color por defecto
+  };
 
   // Ordenar facturas y transacciones por fecha (más reciente primero)
   const sortedInvoices = [...allInvoices].sort((a, b) => 
@@ -1174,8 +1188,20 @@ const IncomeExpenseReport = () => {
                       <div key={transaction.id} className="p-4 flex justify-between items-center hover:bg-red-50 transition-colors group">
                         <div className="flex-1">
                           <div className="flex items-start">
-                            <div className="bg-red-100 p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors">
-                              <Receipt className="h-5 w-5 text-red-600" />
+                            <div 
+                              className="p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors"
+                              style={{ 
+                                backgroundColor: `${getCategoryColor(transaction.categoryId)}20`, // Añadir transparencia al color
+                                border: `1px solid ${getCategoryColor(transaction.categoryId)}40` 
+                              }}
+                            >
+                              {/* Mostrar el emoji/icono de la categoría en lugar del icono genérico */}
+                              <span 
+                                className="text-lg" 
+                                style={{ color: getCategoryColor(transaction.categoryId) }}
+                              >
+                                {getCategoryIcon(transaction.categoryId)}
+                              </span>
                             </div>
                             <div>
                               <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
