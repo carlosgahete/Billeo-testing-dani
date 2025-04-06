@@ -189,10 +189,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             <div className="mb-4 space-y-2">
               <div className="text-3xl font-bold text-green-700">
-                {formatCurrency(dashboardStats.income)}
+                {formatCurrency(baseImponibleIngresos)}
               </div>
               <div className="text-sm text-green-600/70">
-                Base imponible + IVA
+                Base imponible (sin IVA)
               </div>
             </div>
             <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-green-100">
@@ -231,10 +231,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             <div className="mb-4 space-y-2">
               <div className="text-3xl font-bold text-red-700">
-                {formatCurrency(dashboardStats.expenses)}
+                {formatCurrency(baseImponibleGastos)}
               </div>
               <div className="text-sm text-red-600/70">
-                Base imponible + IVA
+                Base imponible (sin IVA)
               </div>
             </div>
             <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-red-100">
@@ -273,28 +273,24 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             <div className="mb-4 space-y-2">
               <div className={`text-3xl font-bold ${isPositiveResult ? 'text-[#04a6b8]' : 'text-amber-700'}`}>
-                {formatCurrency(finalResult)}
+                {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
               <div className={`text-sm ${isPositiveResult ? 'text-[#04C4D9]/70' : 'text-amber-600/70'}`}>
-                {isPositiveResult ? 'Beneficio neto' : 'Pérdida neta'}
+                {isPositiveResult ? 'Beneficio neto (base imponible)' : 'Pérdida neta (base imponible)'}
               </div>
             </div>
             <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-[#04C4D9]/20">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-700">Base + IVA (bruto):</span>
-                <span className="font-medium text-slate-800">{formatCurrency(dashboardStats.income)}</span>
+                <span className="text-sm text-slate-700">Base imponible ingresos:</span>
+                <span className="font-medium text-green-700">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-700">Retenciones IRPF:</span>
-                <span className="font-medium text-red-600">-{formatCurrency(retencionesIrpf)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-700">IVA a liquidar:</span>
-                <span className="font-medium text-[#04C4D9]">{formatCurrency(ivaALiquidar)}</span>
+                <span className="text-sm text-slate-700">Base imponible gastos:</span>
+                <span className="font-medium text-red-700">-{formatCurrency(baseImponibleGastos)}</span>
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-200 mt-1">
-                <span className="text-slate-800 font-medium">Total neto:</span>
-                <span className="font-bold text-slate-800">{formatCurrency(finalResult)}</span>
+                <span className="text-slate-800 font-medium">Resultado (base imponible):</span>
+                <span className="font-bold text-slate-800">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
               </div>
             </div>
             <div>
