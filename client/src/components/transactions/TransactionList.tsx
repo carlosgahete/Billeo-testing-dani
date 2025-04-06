@@ -150,6 +150,9 @@ const TransactionList = () => {
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
+    refetchInterval: 5000, // Actualización automática cada 5 segundos
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({

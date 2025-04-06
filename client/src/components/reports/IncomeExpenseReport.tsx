@@ -290,6 +290,7 @@ const IncomeExpenseReport = () => {
     queryKey: ["/api/transactions"],
     refetchOnMount: true, // Forzar recarga al montar el componente
     refetchOnWindowFocus: true, // Recargar cuando la ventana obtiene el foco
+    refetchInterval: activeTab === "expense" ? 5000 : undefined, // Actualizar automáticamente cada 5 segundos solo en la pestaña de gastos
   });
 
   // Consulta de categorías para mostrar nombres
