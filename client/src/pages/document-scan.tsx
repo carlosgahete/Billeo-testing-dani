@@ -636,6 +636,29 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                         />
                       </div>
                     </div>
+                    
+                    {/* Modal para imagen ampliada */}
+                    {isResultZoomed && (
+                      <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                        <div className="relative w-full max-w-4xl mx-auto">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => setIsResultZoomed(false)}
+                            className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <div className="bg-white p-2 rounded-md w-full overflow-auto">
+                            <img 
+                              src={documentImage} 
+                              alt="Vista ampliada del documento" 
+                              className="w-full h-auto max-h-[80vh] object-contain" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
