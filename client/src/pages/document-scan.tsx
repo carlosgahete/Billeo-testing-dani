@@ -395,102 +395,193 @@ const DocumentScanPage = () => {
 
   return (
     <div className="container max-w-5xl py-8">
-      {/* Diálogo de confirmación */}
+      {/* Diálogo de confirmación y edición */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Transacción creada</DialogTitle>
+            <DialogTitle>Revisar transacción</DialogTitle>
             <DialogDescription>
-              Se ha creado automáticamente la siguiente transacción:
+              Revisa y edita la información antes de guardar definitivamente:
             </DialogDescription>
           </DialogHeader>
           
-          {transaction && (
+          {transaction && editedData && (
             <div className="py-4">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Descripción:</p>
-                    <p className="font-medium">{transaction.description || "Gasto escaneado"}</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
+                    <Input
+                      id="transaction-description"
+                      value={editedData.description || transaction.description || ""}
+                      onChange={(e) => handleFieldChange('description', e.target.value)}
+                      className="w-full"
+                    />
                   </div>
                   
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Importe:</p>
-                    <p className="font-bold text-red-600">{transaction.amount} €</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Tipo:</p>
-                    <p className="font-medium">Gasto</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Fecha:</p>
-                    <p className="font-medium">
-                      {format(new Date(transaction.date), "dd/MM/yyyy")}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Base Imponible:</p>
-                    <p className="font-medium">{extractedData?.baseAmount ? `${extractedData.baseAmount} €` : "No disponible"}</p>
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Impuestos incluidos:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {extractedData?.tax && (
-                      <Badge className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 flex items-center gap-1">
-                        <span>IVA ({extractedData.tax}%):</span>
-                        <span className="font-medium">Aplicado</span>
-                      </Badge>
-                    )}
-                    
-                    {extractedData?.irpf && (
-                      <Badge className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 flex items-center gap-1">
-                        <span>IRPF ({extractedData.irpf}%):</span>
-                        <span className="font-medium">Retención</span>
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-3 border-t">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Detalles fiscales:</p>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
-                      <Receipt className="h-4 w-4 text-gray-500 mt-0.5" />
-                      <span className="flex-1">Factura de Gasto</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
+                      <Input
+                        id="transaction-amount"
+                        type="number"
+                        step="0.01"
+                        value={editedData.amount || transaction.amount || 0}
+                        onChange={(e) => handleFieldChange('amount', parseFloat(e.target.value))}
+                        className="w-full"
+                      />
                     </div>
                     
-                    <div className="flex items-start gap-2">
-                      <Calendar className="h-4 w-4 text-gray-500 mt-0.5" />
-                      <span className="flex-1">Fecha: {format(new Date(transaction.date), "dd/MM/yyyy")}</span>
+                    <div className="space-y-2">
+                      <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
+                      <Input
+                        id="transaction-base"
+                        type="number"
+                        step="0.01"
+                        value={editedData.baseAmount || extractedData?.baseAmount || 0}
+                        onChange={(e) => handleFieldChange('baseAmount', parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="transaction-iva" className="text-sm">IVA (%):</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          id="transaction-iva"
+                          type="number"
+                          step="1"
+                          value={editedData.tax || extractedData?.tax || 21}
+                          onChange={(e) => handleFieldChange('tax', parseInt(e.target.value))}
+                          className="w-full"
+                        />
+                        <div className="w-1/2 text-sm text-muted-foreground">
+                          {editedData.taxAmount || extractedData?.taxAmount ? 
+                            `${editedData.taxAmount || extractedData?.taxAmount}€` : ""}
+                        </div>
+                      </div>
                     </div>
                     
-                    {extractedData?.provider && (
-                      <div className="flex items-start gap-2">
-                        <User className="h-4 w-4 text-gray-500 mt-0.5" />
-                        <span className="flex-1">Proveedor: {extractedData.provider}</span>
+                    <div className="space-y-2">
+                      <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%):</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          id="transaction-irpf"
+                          type="number"
+                          step="1"
+                          value={editedData.irpf || extractedData?.irpf || 0}
+                          onChange={(e) => handleFieldChange('irpf', parseInt(e.target.value))}
+                          className="w-full"
+                        />
+                        <div className="w-1/2 text-sm text-muted-foreground">
+                          {editedData.irpfAmount || extractedData?.irpfAmount ? 
+                            `${editedData.irpfAmount || extractedData?.irpfAmount}€` : ""}
+                        </div>
                       </div>
-                    )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-date" className="text-sm">Fecha:</Label>
+                    <Input
+                      id="transaction-date"
+                      type="date"
+                      value={format(new Date(transaction.date), "yyyy-MM-dd")}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value);
+                        handleFieldChange('date', newDate);
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
+                    <Select
+                      value={String(transaction.categoryId || "")}
+                      onValueChange={(value) => handleUpdateCategory(value ? parseInt(value) : null)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Sin categoría</SelectItem>
+                        {categories
+                          .filter(cat => cat.type === 'expense')
+                          .map(category => (
+                            <SelectItem key={category.id} value={String(category.id)}>
+                              <div className="flex items-center">
+                                <span 
+                                  className="w-3 h-3 rounded-full mr-2" 
+                                  style={{ backgroundColor: category.color }}
+                                ></span>
+                                {category.icon && <span className="mr-1">{category.icon}</span>}
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
                     
-                    {extractedData?.client && (
-                      <div className="flex items-start gap-2">
-                        <Building className="h-4 w-4 text-gray-500 mt-0.5" />
-                        <span className="flex-1">Cliente: {extractedData.client}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-end mt-1">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setNewCategoryDialogOpen(true)}
+                        className="h-7 text-xs"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Nueva categoría
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-provider" className="text-sm">Proveedor:</Label>
+                    <Input
+                      id="transaction-provider"
+                      value={editedData.provider || extractedData?.provider || ""}
+                      onChange={(e) => handleFieldChange('provider', e.target.value)}
+                      className="w-full"
+                    />
                   </div>
                 </div>
+                
+                {documentImage && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm font-medium mb-2">Documento escaneado:</p>
+                    <div className="border rounded-md p-2 bg-gray-50">
+                      <div className="flex justify-end mb-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setIsResultZoomed(!isResultZoomed)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          {isResultZoomed ? <ZoomOut className="h-3 w-3 mr-1" /> : <ZoomIn className="h-3 w-3 mr-1" />}
+                          {isResultZoomed ? "Reducir" : "Ampliar"}
+                        </Button>
+                      </div>
+                      <div className="relative w-full h-40 bg-neutral-100 rounded">
+                        <img 
+                          src={documentImage} 
+                          alt="Documento escaneado" 
+                          className="w-full h-full object-contain cursor-pointer" 
+                          onClick={() => setIsResultZoomed(true)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
           
-          <DialogFooter className="sm:justify-between">
+          <DialogFooter className="sm:justify-between border-t pt-4">
             <Button
               type="button"
               variant="outline"
@@ -498,14 +589,23 @@ const DocumentScanPage = () => {
             >
               Cancelar
             </Button>
-            <Button
-              type="button"
-              onClick={handleGoToTransactions}
-              className="bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Aceptar cambios
-            </Button>
+            <div className="space-x-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSaveChanges}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Guardar y editar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleGoToTransactions}
+                className="bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
+              >
+                Guardar y volver
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
