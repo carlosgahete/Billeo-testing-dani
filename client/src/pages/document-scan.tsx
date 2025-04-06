@@ -639,24 +639,25 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                     
                     {/* Modal para imagen ampliada */}
                     {isResultZoomed && (
-                      <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-4xl mx-auto">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => setIsResultZoomed(false)}
-                            className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                          <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                            <img 
-                              src={documentImage} 
-                              alt="Vista ampliada del documento" 
-                              className="w-full h-auto max-h-[80vh] object-contain" 
-                            />
-                          </div>
-                        </div>
+                      <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" 
+                           onClick={() => setIsResultZoomed(false)}>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsResultZoomed(false);
+                          }}
+                          className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full h-10 w-10 z-10"
+                        >
+                          <X className="h-5 w-5 text-white" />
+                        </Button>
+                        <img 
+                          src={documentImage} 
+                          alt="Vista ampliada del documento" 
+                          className="max-w-[95vw] max-h-[95vh] object-contain" 
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </div>
                     )}
                   </div>
@@ -881,24 +882,25 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                   </div>
                   
                   {isZoomed ? (
-                    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                      <div className="relative w-full max-w-4xl mx-auto">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => setIsZoomed(false)}
-                          className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                        <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                          <img 
-                            src={previewUrl} 
-                            alt="Vista ampliada" 
-                            className="w-full h-auto object-contain max-h-[80vh]" 
-                          />
-                        </div>
-                      </div>
+                    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" 
+                         onClick={() => setIsZoomed(false)}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsZoomed(false);
+                        }}
+                        className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full h-10 w-10 z-10"
+                      >
+                        <X className="h-5 w-5 text-white" />
+                      </Button>
+                      <img 
+                        src={previewUrl} 
+                        alt="Vista ampliada" 
+                        className="max-w-[95vw] max-h-[95vh] object-contain" 
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </div>
                   ) : (
                     <div className="border rounded-md overflow-hidden w-full max-h-[300px] flex items-center justify-center">
@@ -984,28 +986,30 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                       <img 
                         src={documentImage} 
                         alt="Documento escaneado" 
-                        className="w-full h-auto max-h-[300px] object-contain bg-white rounded-md" 
+                        className="w-full h-auto max-h-[300px] object-contain bg-white rounded-md cursor-pointer" 
+                        onClick={() => setIsResultZoomed(true)}
                       />
                       
                       {isResultZoomed && (
-                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                          <div className="relative w-full max-w-4xl mx-auto">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => setIsResultZoomed(false)}
-                              className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                              <img 
-                                src={documentImage} 
-                                alt="Vista ampliada del documento" 
-                                className="w-full h-auto object-contain max-h-[80vh]" 
-                              />
-                            </div>
-                          </div>
+                        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" 
+                             onClick={() => setIsResultZoomed(false)}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsResultZoomed(false);
+                            }}
+                            className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full h-10 w-10 z-10"
+                          >
+                            <X className="h-5 w-5 text-white" />
+                          </Button>
+                          <img 
+                            src={documentImage} 
+                            alt="Vista ampliada del documento" 
+                            className="max-w-[95vw] max-h-[95vh] object-contain" 
+                            onClick={(e) => e.stopPropagation()}
+                          />
                         </div>
                       )}
                     </div>
