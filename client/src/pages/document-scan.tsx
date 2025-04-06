@@ -164,8 +164,14 @@ const DocumentScanPage = () => {
     }
   };
 
-  const handleGoToTransactions = () => {
-    navigate("/transactions");
+  // Función para guardar cambios y navegar a la lista de transacciones
+  const handleGoToTransactions = async () => {
+    if (transaction && editedData) {
+      await handleSaveChanges();
+      navigate("/transactions");
+    } else {
+      navigate("/transactions");
+    }
   };
   
   // Efecto para reiniciar los estados cuando se carga la página
@@ -209,12 +215,43 @@ const DocumentScanPage = () => {
     }
   }, [extractedData]);
   
-  // Función para actualizar un campo editable
+  // Función para actualizar un campo editable y recalcular valores dependientes
   const handleFieldChange = (field: string, value: any) => {
-    setEditedData((prev: any) => ({
-      ...prev,
-      [field]: value
-    }));
+    setEditedData((prev: any) => {
+      const updatedData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Si es un cambio que afecta al cálculo del IVA, recalcular
+      if (field === 'baseAmount' || field === 'tax') {
+        const baseAmount = field === 'baseAmount' ? value : (prev?.baseAmount || 0);
+        const taxRate = field === 'tax' ? value : (prev?.tax || 0);
+        const taxAmount = (baseAmount * taxRate / 100).toFixed(2);
+        updatedData.taxAmount = taxAmount;
+      }
+      
+      // Si es un cambio que afecta al cálculo del IRPF, recalcular
+      if (field === 'baseAmount' || field === 'irpf') {
+        const baseAmount = field === 'baseAmount' ? value : (prev?.baseAmount || 0);
+        const irpfRate = field === 'irpf' ? value : (prev?.irpf || 0);
+        const irpfAmount = (baseAmount * irpfRate / 100).toFixed(2);
+        updatedData.irpfAmount = irpfAmount;
+      }
+      
+      // Actualizamos el monto total si cambia la base imponible, IVA o IRPF
+      if (['baseAmount', 'tax', 'irpf'].includes(field)) {
+        const baseAmount = parseFloat(updatedData.baseAmount || prev?.baseAmount || 0);
+        const taxAmount = parseFloat(updatedData.taxAmount || prev?.taxAmount || 0);
+        const irpfAmount = parseFloat(updatedData.irpfAmount || prev?.irpfAmount || 0);
+        
+        // El total es la base más IVA menos IRPF
+        const totalAmount = (baseAmount + taxAmount - irpfAmount).toFixed(2);
+        updatedData.amount = parseFloat(totalAmount);
+      }
+      
+      return updatedData;
+    });
   };
   
   // Mutación para crear una nueva categoría
@@ -318,44 +355,64 @@ const DocumentScanPage = () => {
       // Preparar los impuestos para la actualización
       const taxes = [];
       
-      if (editedData.ivaRate) {
+      // Usar tax (IVA) del formulario
+      if (editedData.tax) {
+        taxes.push({
+          name: "IVA",
+          amount: parseFloat(editedData.tax),
+          value: parseFloat(editedData.taxAmount || 0)
+        });
+      } else if (editedData.ivaRate) { // Compatibilidad con formato anterior
         taxes.push({
           name: "IVA",
           amount: parseFloat(editedData.ivaRate),
-          value: parseFloat(editedData.taxAmount)
+          value: parseFloat(editedData.taxAmount || 0)
         });
       }
       
-      if (editedData.irpfRate) {
+      // Usar irpf del formulario
+      if (editedData.irpf) {
+        taxes.push({
+          name: "IRPF",
+          amount: -parseFloat(editedData.irpf),
+          value: parseFloat(editedData.irpfAmount || 0)
+        });
+      } else if (editedData.irpfRate) { // Compatibilidad con formato anterior
         taxes.push({
           name: "IRPF",
           amount: -parseFloat(editedData.irpfRate),
-          value: parseFloat(editedData.irpfAmount)
+          value: parseFloat(editedData.irpfAmount || 0)
         });
       }
       
       // Mantener el título editado y crear descripción solo si no hay título personalizado
-      let updatedDescription = editedData.description;
+      let updatedDescription = editedData.description || transaction.description || "";
       
-      // Si no hay título personalizado, usar el formato estándar para la descripción
-      if (!editedData.title) {
-        const clientName = editedData.client || 'Proveedor';
-        updatedDescription = `Factura - ${clientName}`;
+      // Si no hay título, usar el formato estándar para el título
+      let updatedTitle = editedData.title || transaction.title || "";
+      if (!updatedTitle) {
+        const providerName = editedData.provider || extractedData?.provider || 'Proveedor';
+        updatedTitle = `Factura - ${providerName}`;
       }
       
-      // Crear el objeto de actualización
+      // Crear el objeto de actualización - asegurarnos de que todos los campos estén presentes y con valores correctos
       const updatedTransaction = {
         // Asegurarnos de incluir todos los campos requeridos
         userId: transaction.userId,
-        amount: editedData.amount.toString(), // Enviamos como string ya que el decimal en Postgres es tipo string
-        title: editedData.title, // Mantener el título personalizado
+        amount: editedData.amount ? editedData.amount.toString() : transaction.amount.toString(),
+        title: updatedTitle,
         description: updatedDescription,
         date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date), 
         type: transaction.type || 'expense',
         // Campos opcionales
         categoryId: transaction.categoryId,
         additionalTaxes: JSON.stringify(taxes),
-        notes: transaction.notes || `Datos fiscales actualizados manualmente:\nBase Imponible: ${editedData.subtotal} €\nIVA (${editedData.ivaRate}%): ${editedData.taxAmount} €\nIRPF (${editedData.irpfRate}%): ${editedData.irpfAmount} €\nTotal: ${editedData.amount} €`
+        notes: transaction.notes || `Datos fiscales actualizados manualmente:
+Base Imponible: ${editedData.baseAmount || extractedData?.baseAmount || 0} €
+IVA (${editedData.tax || extractedData?.tax || 0}%): ${editedData.taxAmount || extractedData?.taxAmount || 0} €
+IRPF (${editedData.irpf || extractedData?.irpf || 0}%): ${editedData.irpfAmount || extractedData?.irpfAmount || 0} €
+Total: ${editedData.amount || transaction.amount} €
+Proveedor: ${editedData.provider || extractedData?.provider || ""}`
       };
       
       // Enviar la actualización al servidor
