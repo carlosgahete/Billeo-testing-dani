@@ -1011,7 +1011,7 @@ const IncomeExpenseReport = () => {
                 <Button 
                   onClick={() => navigate("/documents/scan")}
                   variant="default" 
-                  className="gap-2 text-sm bg-blue-600 hover:bg-blue-700"
+                  className="gap-2 text-sm bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
                 >
                   <ScanText className="h-4 w-4" />
                   Escanear documento
@@ -1217,8 +1217,8 @@ const IncomeExpenseReport = () => {
                     </p>
                     <Button 
                       onClick={() => navigate("/documents/scan")} 
-                      variant="outline" 
-                      className="gap-2"
+                      variant="default" 
+                      className="gap-2 bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
                     >
                       <ScanText className="h-4 w-4" />
                       Escanear documento
