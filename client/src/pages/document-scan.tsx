@@ -882,7 +882,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                   </div>
                   
                   {isZoomed ? (
-                    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" 
+                    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center" 
                          onClick={() => setIsZoomed(false)}>
                       <Button 
                         variant="ghost" 
@@ -898,7 +898,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                       <img 
                         src={previewUrl} 
                         alt="Vista ampliada" 
-                        className="max-w-[95vw] max-h-[95vh] object-contain" 
+                        className="max-w-[100vw] max-h-[100vh] object-contain" 
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
@@ -991,7 +991,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                       />
                       
                       {isResultZoomed && (
-                        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" 
+                        <div className="fixed inset-0 bg-black z-50 flex items-center justify-center" 
                              onClick={() => setIsResultZoomed(false)}>
                           <Button 
                             variant="ghost" 
@@ -1007,7 +1007,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <img 
                             src={documentImage} 
                             alt="Vista ampliada del documento" 
-                            className="max-w-[95vw] max-h-[95vh] object-contain" 
+                            className="max-w-[100vw] max-h-[100vh] object-contain" 
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
