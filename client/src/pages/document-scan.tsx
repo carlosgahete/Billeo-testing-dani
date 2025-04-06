@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 import { 
   Card, 
   CardContent, 
@@ -11,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check, Calendar, User, Building } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -77,6 +79,7 @@ const DocumentScanPage = () => {
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({
@@ -143,14 +146,12 @@ const DocumentScanPage = () => {
       setTransaction(data.transaction);
       setDocumentImage(data.documentUrl || null);
       
-      // Invalidar las consultas para actualizar los datos en tiempo real
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+      // Mostrar el diálogo de confirmación en lugar de procesar automáticamente
+      setShowConfirmDialog(true);
       
       toast({
         title: "Documento procesado",
-        description: "El documento se ha procesado correctamente y se ha creado un gasto",
+        description: "El documento se ha procesado correctamente. Revisa y confirma los datos.",
       });
     } catch (error: any) {
       toast({
@@ -394,6 +395,121 @@ const DocumentScanPage = () => {
 
   return (
     <div className="container max-w-5xl py-8">
+      {/* Diálogo de confirmación */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transacción creada</DialogTitle>
+            <DialogDescription>
+              Se ha creado automáticamente la siguiente transacción:
+            </DialogDescription>
+          </DialogHeader>
+          
+          {transaction && (
+            <div className="py-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Descripción:</p>
+                    <p className="font-medium">{transaction.description || "Gasto escaneado"}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Importe:</p>
+                    <p className="font-bold text-red-600">{transaction.amount} €</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Tipo:</p>
+                    <p className="font-medium">Gasto</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Fecha:</p>
+                    <p className="font-medium">
+                      {format(new Date(transaction.date), "dd/MM/yyyy")}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Base Imponible:</p>
+                    <p className="font-medium">{extractedData?.baseAmount ? `${extractedData.baseAmount} €` : "No disponible"}</p>
+                  </div>
+                </div>
+                
+                <div className="pt-2">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Impuestos incluidos:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {extractedData?.tax && (
+                      <Badge className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 flex items-center gap-1">
+                        <span>IVA ({extractedData.tax}%):</span>
+                        <span className="font-medium">Aplicado</span>
+                      </Badge>
+                    )}
+                    
+                    {extractedData?.irpf && (
+                      <Badge className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 flex items-center gap-1">
+                        <span>IRPF ({extractedData.irpf}%):</span>
+                        <span className="font-medium">Retención</span>
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-3 border-t">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Detalles fiscales:</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <Receipt className="h-4 w-4 text-gray-500 mt-0.5" />
+                      <span className="flex-1">Factura de Gasto</span>
+                    </div>
+                    
+                    <div className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500 mt-0.5" />
+                      <span className="flex-1">Fecha: {format(new Date(transaction.date), "dd/MM/yyyy")}</span>
+                    </div>
+                    
+                    {extractedData?.provider && (
+                      <div className="flex items-start gap-2">
+                        <User className="h-4 w-4 text-gray-500 mt-0.5" />
+                        <span className="flex-1">Proveedor: {extractedData.provider}</span>
+                      </div>
+                    )}
+                    
+                    {extractedData?.client && (
+                      <div className="flex items-start gap-2">
+                        <Building className="h-4 w-4 text-gray-500 mt-0.5" />
+                        <span className="flex-1">Cliente: {extractedData.client}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleGoToTransactions}
+              className="bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Aceptar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal para crear una nueva categoría */}
       <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
