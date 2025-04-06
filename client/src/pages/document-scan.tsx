@@ -263,8 +263,12 @@ const DocumentScanPage = () => {
   };
   
   // Función para actualizar la categoría de la transacción
-  const handleUpdateCategory = async (categoryId: number | null) => {
+  const handleUpdateCategory = async (categoryId: string | null) => {
     if (!transaction) return;
+    
+    // Convertir string a number o null
+    const numericCategoryId = categoryId === "null" ? null : 
+                              categoryId ? parseInt(categoryId) : null;
     
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
@@ -274,7 +278,7 @@ const DocumentScanPage = () => {
         },
         body: JSON.stringify({
           ...transaction,
-          categoryId
+          categoryId: numericCategoryId
         }),
         credentials: 'include'
       });
@@ -286,7 +290,7 @@ const DocumentScanPage = () => {
       // Actualizar la transacción en el estado
       setTransaction({
         ...transaction,
-        categoryId
+        categoryId: numericCategoryId
       });
       
       // Invalidar consultas
@@ -500,14 +504,14 @@ const DocumentScanPage = () => {
                   <div className="space-y-2">
                     <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
                     <Select
-                      value={String(transaction.categoryId || "")}
-                      onValueChange={(value) => handleUpdateCategory(value ? parseInt(value) : null)}
+                      value={String(transaction.categoryId || "null")}
+                      onValueChange={(value) => handleUpdateCategory(value)}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Seleccionar categoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sin categoría</SelectItem>
+                        <SelectItem value="null">Sin categoría</SelectItem>
                         {categories
                           .filter(cat => cat.type === 'expense')
                           .map(category => (
