@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, Filter, Calendar, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -31,10 +31,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { es } from "date-fns/locale";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Transaction {
   id: number;
@@ -141,6 +149,19 @@ const TransactionList = () => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  
+  // Estados para filtros
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  });
+  const [isDateFilterActive, setIsDateFilterActive] = useState(false);
+  const [isCategoryFilterActive, setIsCategoryFilterActive] = useState(false);
   
   // Obtener tab de los parámetros de URL
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -197,10 +218,29 @@ const TransactionList = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
   };
 
+  // Helper para verificar si la fecha está en el rango seleccionado
+  const isDateInRange = (dateString: string) => {
+    if (!isDateFilterActive || !dateRange.from || !dateRange.to) return true;
+    const txDate = new Date(dateString);
+    return isWithinInterval(txDate, {
+      start: dateRange.from,
+      end: dateRange.to
+    });
+  };
+
+  // Función para aplicar todos los filtros
   const filteredTransactions = Array.isArray(transactions) 
     ? transactions.filter((transaction: Transaction) => {
-        if (currentTab === "all") return true;
-        return transaction.type === currentTab;
+        // Filtrar por tipo (tab)
+        if (currentTab !== "all" && transaction.type !== currentTab) return false;
+        
+        // Filtrar por categoría
+        if (isCategoryFilterActive && selectedCategoryId && transaction.categoryId !== selectedCategoryId) return false;
+        
+        // Filtrar por fecha
+        if (!isDateInRange(transaction.date)) return false;
+        
+        return true;
       })
     : [];
 
@@ -353,6 +393,205 @@ const TransactionList = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
+            <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <span>Filtrar</span>
+                  {(isDateFilterActive || isCategoryFilterActive) && (
+                    <Badge className="ml-2 bg-blue-600">
+                      {(isDateFilterActive && isCategoryFilterActive) ? '2' : '1'}
+                    </Badge>
+                  )}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Filtrar transacciones</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  {/* Filtro de categoría */}
+                  <div>
+                    <Label htmlFor="category" className="font-medium block mb-2">Categoría</Label>
+                    <div className="flex flex-col space-y-3">
+                      <Select
+                        value={selectedCategoryId?.toString() || ""}
+                        onValueChange={(value) => {
+                          if (value) {
+                            setSelectedCategoryId(parseInt(value));
+                            setIsCategoryFilterActive(true);
+                          } else {
+                            setSelectedCategoryId(null);
+                            setIsCategoryFilterActive(false);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Todas las categorías" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Todas las categorías</SelectItem>
+                          {Array.isArray(categories) && categories
+                            .filter(c => c.type === (currentTab === 'income' ? 'income' : 'expense'))
+                            .map((category) => (
+                              <SelectItem key={category.id} value={category.id.toString()}>
+                                <div className="flex items-center">
+                                  <span className="mr-2">{category.icon || '📂'}</span>
+                                  <span>{category.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="enableCategoryFilter"
+                          checked={isCategoryFilterActive}
+                          onChange={(e) => setIsCategoryFilterActive(e.target.checked)}
+                          className="h-4 w-4 mr-2"
+                        />
+                        <Label htmlFor="enableCategoryFilter" className="cursor-pointer text-sm">
+                          Activar filtro por categoría
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Filtro de fechas */}
+                  <div className="border-t pt-4">
+                    <Label htmlFor="date-range" className="font-medium block mb-2">Rango de fechas</Label>
+                    <div className="grid gap-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label htmlFor="from" className="text-xs mb-1 block">Desde</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left"
+                                disabled={!isDateFilterActive}
+                              >
+                                <Calendar className="h-4 w-4 mr-2" />
+                                {dateRange.from ? (
+                                  format(dateRange.from, "dd/MM/yyyy")
+                                ) : (
+                                  <span>Seleccionar fecha</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <CalendarComponent
+                                mode="single"
+                                selected={dateRange.from}
+                                onSelect={(date) => setDateRange({ ...dateRange, from: date })}
+                                initialFocus
+                                locale={es}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div>
+                          <Label htmlFor="to" className="text-xs mb-1 block">Hasta</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left"
+                                disabled={!isDateFilterActive}
+                              >
+                                <Calendar className="h-4 w-4 mr-2" />
+                                {dateRange.to ? (
+                                  format(dateRange.to, "dd/MM/yyyy")
+                                ) : (
+                                  <span>Seleccionar fecha</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <CalendarComponent
+                                mode="single"
+                                selected={dateRange.to}
+                                onSelect={(date) => setDateRange({ ...dateRange, to: date })}
+                                initialFocus
+                                locale={es}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="enableDateFilter"
+                          checked={isDateFilterActive}
+                          onChange={(e) => setIsDateFilterActive(e.target.checked)}
+                          className="h-4 w-4 mr-2"
+                        />
+                        <Label htmlFor="enableDateFilter" className="cursor-pointer text-sm">
+                          Activar filtro por fecha
+                        </Label>
+                      </div>
+
+                      <div className="flex flex-wrap justify-start gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const now = new Date();
+                            setDateRange({
+                              from: startOfMonth(now),
+                              to: endOfMonth(now)
+                            });
+                          }}
+                        >
+                          Este mes
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const prevMonth = subMonths(new Date(), 1);
+                            setDateRange({
+                              from: startOfMonth(prevMonth),
+                              to: endOfMonth(prevMonth)
+                            });
+                          }}
+                        >
+                          Mes anterior
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDateRange({
+                        from: startOfMonth(new Date()),
+                        to: endOfMonth(new Date())
+                      });
+                      setSelectedCategoryId(null);
+                      setIsDateFilterActive(false);
+                      setIsCategoryFilterActive(false);
+                      setIsFilterDialogOpen(false);
+                    }}
+                  >
+                    Restablecer
+                  </Button>
+                  <Button 
+                    onClick={() => setIsFilterDialogOpen(false)}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Aplicar filtros
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none">
@@ -478,12 +717,73 @@ const TransactionList = () => {
           </Tabs>
         </CardHeader>
         <CardContent className="p-0">
+          {(isDateFilterActive || isCategoryFilterActive) && (
+            <div className="p-4 pt-6 bg-blue-50 border-b border-blue-100 relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
+                  <Filter className="h-3 w-3 mr-1" />
+                  Filtros activos
+                </Badge>
+                
+                {isCategoryFilterActive && selectedCategoryId && (
+                  <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
+                    {(() => {
+                      const category = Array.isArray(categories) && categories.find(c => c.id === selectedCategoryId);
+                      return (
+                        <span className="flex items-center">
+                          <span className="mr-1">{category?.icon || "📂"}</span>
+                          Categoría: {category?.name || "Desconocida"}
+                        </span>
+                      );
+                    })()}
+                  </Badge>
+                )}
+                
+                {isDateFilterActive && dateRange.from && dateRange.to && (
+                  <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Período: {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
+                  </Badge>
+                )}
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-auto text-blue-600 hover:text-blue-800"
+                  onClick={() => {
+                    setDateRange({
+                      from: startOfMonth(new Date()),
+                      to: endOfMonth(new Date())
+                    });
+                    setSelectedCategoryId(null);
+                    setIsDateFilterActive(false);
+                    setIsCategoryFilterActive(false);
+                  }}
+                >
+                  Limpiar filtros
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="p-4 bg-white rounded-b-lg">
-            <DataTable
-              columns={columns}
-              data={filteredTransactions || []}
-              searchPlaceholder="Buscar movimientos..."
-            />
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                  <Filter className="h-6 w-6 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-1">No hay resultados</h3>
+                <p className="text-gray-500 max-w-md mx-auto">
+                  No se encontraron transacciones con los filtros actuales. Prueba a cambiar los criterios de búsqueda.
+                </p>
+              </div>
+            ) : (
+              <DataTable
+                columns={columns}
+                data={filteredTransactions || []}
+                searchPlaceholder="Buscar movimientos..."
+              />
+            )}
           </div>
         </CardContent>
       </Card>
