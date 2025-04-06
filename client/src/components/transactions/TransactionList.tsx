@@ -337,101 +337,106 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-800">
-            Ingresos y Gastos
-          </h1>
-          <p className="text-neutral-500">
-            Gestiona todos tus movimientos económicos
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
-          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center h-9">
-                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Importar CSV</span>
-                <span className="sm:hidden">Importar</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Importar movimientos desde CSV</DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                <p className="text-sm text-neutral-600 mb-4">
-                  Sube un archivo CSV con tus movimientos bancarios para importarlos al sistema.
-                  El archivo debe tener columnas para fecha, descripción, importe y tipo de movimiento.
-                </p>
-                <FileUpload
-                  onUpload={handleImportCSV}
-                  accept=".csv"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-          
-
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg shadow-lg p-6 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">
+              Ingresos y Gastos
+            </h1>
+            <p className="text-blue-100 mt-1">
+              Gestiona todos tus movimientos económicos
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none">
+                  <Upload className="h-4 w-4 mr-2" />
+                  <span>Importar CSV</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Importar movimientos desde CSV</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <p className="text-sm text-neutral-600 mb-4">
+                    Sube un archivo CSV con tus movimientos bancarios para importarlos al sistema.
+                    El archivo debe tener columnas para fecha, descripción, importe y tipo de movimiento.
+                  </p>
+                  <FileUpload
+                    onUpload={handleImportCSV}
+                    accept=".csv"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-neutral-500 text-sm">Ingresos totales</p>
-                <p className="text-2xl font-bold text-neutral-800">
-                  {formatCurrency(incomeTotal, "income")}
-                </p>
-              </div>
-              <div className="p-2 rounded-full bg-secondary-50 text-secondary-600">
-                <Download className="h-5 w-5" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="overflow-hidden shadow-md border-t-4 border-green-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-br from-green-50 to-white p-5">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-green-700 font-medium mb-1">Ingresos totales</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {formatCurrency(incomeTotal, "income")}
+                  </p>
+                </div>
+                <div className="p-3 rounded-full bg-green-100 text-green-600">
+                  <Download className="h-6 w-6" />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-neutral-500 text-sm">Gastos totales</p>
-                <p className="text-2xl font-bold text-neutral-800">
-                  {formatCurrency(expenseTotal, "expense")}
-                </p>
-              </div>
-              <div className="p-2 rounded-full bg-danger-50 text-danger-500">
-                <Upload className="h-5 w-5" />
+        <Card className="overflow-hidden shadow-md border-t-4 border-red-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-br from-red-50 to-white p-5">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-red-700 font-medium mb-1">Gastos totales</p>
+                  <p className="text-3xl font-bold text-red-600">
+                    {formatCurrency(expenseTotal, "expense")}
+                  </p>
+                </div>
+                <div className="p-3 rounded-full bg-red-100 text-red-600">
+                  <Upload className="h-6 w-6" />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-neutral-500 text-sm">Balance neto</p>
-                <p className={`text-2xl font-bold ${balance >= 0 ? "text-secondary-600" : "text-danger-500"}`}>
-                  {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
-                </p>
-              </div>
-              <div className={`p-2 rounded-full ${balance >= 0 ? "bg-secondary-50 text-secondary-600" : "bg-danger-50 text-danger-500"}`}>
-                {balance >= 0 ? (
-                  <Plus className="h-5 w-5" />
-                ) : (
-                  <TrendingDown className="h-5 w-5" />
-                )}
+        <Card className="overflow-hidden shadow-md border-t-4 border-blue-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-br from-blue-50 to-white p-5">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-blue-700 font-medium mb-1">Balance neto</p>
+                  <p className={`text-3xl font-bold ${balance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-full ${balance >= 0 ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                  {balance >= 0 ? (
+                    <Plus className="h-6 w-6" />
+                  ) : (
+                    <TrendingDown className="h-6 w-6" />
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
+      <Card className="shadow-lg border-0 overflow-hidden">
+        <CardHeader className="pb-0 bg-gradient-to-r from-gray-50 to-white border-b">
           <Tabs 
             defaultValue="all" 
             value={currentTab}
@@ -441,19 +446,30 @@ const TransactionList = () => {
             }}
             className="w-full"
           >
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="income">Ingresos</TabsTrigger>
-              <TabsTrigger value="expense">Gastos</TabsTrigger>
+            <TabsList className="bg-gray-100">
+              <TabsTrigger value="all" className="data-[state=active]:bg-white">
+                <Receipt className="h-4 w-4 mr-2" />
+                Todos
+              </TabsTrigger>
+              <TabsTrigger value="income" className="data-[state=active]:bg-white data-[state=active]:text-green-600">
+                <Download className="h-4 w-4 mr-2" />
+                Ingresos
+              </TabsTrigger>
+              <TabsTrigger value="expense" className="data-[state=active]:bg-white data-[state=active]:text-red-600">
+                <Upload className="h-4 w-4 mr-2" />
+                Gastos
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={filteredTransactions || []}
-            searchPlaceholder="Buscar movimientos..."
-          />
+        <CardContent className="p-0">
+          <div className="p-4 bg-white rounded-b-lg">
+            <DataTable
+              columns={columns}
+              data={filteredTransactions || []}
+              searchPlaceholder="Buscar movimientos..."
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
