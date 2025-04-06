@@ -38,7 +38,7 @@ import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover-auto-close-fixed";
+import { DateRangePickerSeparate } from "@/components/ui/date-range-picker-single";
 import { es } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -463,68 +463,12 @@ const TransactionList = () => {
                   <div className="border-t pt-4">
                     <Label htmlFor="date-range" className="font-medium block mb-2">Rango de fechas</Label>
                     <div className="grid gap-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label htmlFor="from" className="text-xs mb-1 block">Desde</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left"
-                                disabled={!isDateFilterActive}
-                              >
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {dateRange.from ? (
-                                  format(dateRange.from, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Seleccionar fecha</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" autoClose={true}>
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={dateRange.from}
-                                  onSelect={(date) => {
-                                    setDateRange({ ...dateRange, from: date });
-                                  }}
-                                  initialFocus
-                                  locale={es}
-                                />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        <div>
-                          <Label htmlFor="to" className="text-xs mb-1 block">Hasta</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left"
-                                disabled={!isDateFilterActive}
-                              >
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {dateRange.to ? (
-                                  format(dateRange.to, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Seleccionar fecha</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" autoClose={true}>
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={dateRange.to}
-                                  onSelect={(date) => {
-                                    setDateRange({ ...dateRange, to: date });
-                                  }}
-                                  initialFocus
-                                  locale={es}
-                                />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </div>
+                      {/* Nuevo componente de selección de rango de fechas */}
+                      <DateRangePickerSeparate
+                        dateRange={dateRange}
+                        setDateRange={setDateRange}
+                        disabled={!isDateFilterActive}
+                      />
 
                       <div className="flex items-center">
                         <input
