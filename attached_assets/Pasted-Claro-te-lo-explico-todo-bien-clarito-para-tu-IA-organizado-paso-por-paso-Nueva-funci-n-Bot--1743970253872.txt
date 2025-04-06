@@ -1,0 +1,88 @@
+Claro, te lo explico todo bien clarito para tu IA, organizado paso por paso:
+
+⸻
+
+Nueva función: Botón para filtrar los gastos
+
+1. ¿Qué quiero hacer?
+
+Añadir un botón que permita filtrar los gastos ya registrados en el sistema, de forma flexible, sin errores.
+
+⸻
+
+2. ¿Qué filtros quiero que haya?
+
+a) Por categoría de gasto
+Cada gasto pertenece a una categoría.
+Ejemplos de categorías (pueden variar):
+	•	Alquiler
+	•	Nóminas
+	•	Compras de producto
+	•	Publicidad y marketing
+	•	Servicios externos
+	•	Otros
+
+El usuario podrá seleccionar una o varias categorías para ver solo los gastos correspondientes.
+
+⸻
+
+b) Por fechas
+Permitir seleccionar un rango de fechas:
+	•	Desde (fecha inicio)
+	•	Hasta (fecha final)
+
+Así podrá ver solo los gastos dentro del periodo que quiera analizar (por ejemplo, gastos de marzo 2025).
+
+⸻
+
+c) Por precio
+Filtrar los gastos por importe:
+	•	Establecer un mínimo de precio (por ejemplo, ver solo gastos superiores a 500€).
+	•	Establecer un máximo de precio (por ejemplo, ver solo gastos inferiores a 1000€).
+
+Esto permite buscar gastos más grandes, pequeños, etc.
+
+⸻
+
+3. ¿Cómo debería funcionar el botón?
+	•	Al pulsar el botón “Filtrar”, se debe aplicar todos los filtros seleccionados a la vez.
+(Es decir, que los filtros se combinen, no que solo funcione uno a la vez.)
+	•	El sistema debe asegurarse de que los datos filtrados estén actualizados y sin errores:
+	•	Comprobar que las fechas son válidas (fecha inicio < fecha final).
+	•	Comprobar que los precios mínimos y máximos tienen sentido (mínimo ≤ máximo).
+	•	Comprobar que las categorías existen.
+	•	Si el usuario no selecciona nada en algún filtro (por ejemplo, no pone fecha o precio), ese filtro no se aplica y no debe dar error.
+
+⸻
+
+4. ¿Qué problemas quiero evitar?
+	•	Anteriormente, el filtrado daba errores cuando faltaban datos o cuando se combinaban mal los filtros.
+	•	Ahora quiero que:
+	•	Si un filtro no está seleccionado, simplemente se ignore, no debe romper el filtrado.
+	•	El filtrado sea rápido y estable aunque haya muchos gastos registrados.
+	•	Se pueda cambiar de filtro las veces que se quiera sin necesidad de recargar la página o aplicación.
+	•	Se puedan resetear los filtros fácilmente (botón “Limpiar filtros”).
+
+⸻
+
+5. Opciones finales a incluir
+	•	Botón “Filtrar gastos” → Aplica los filtros elegidos.
+	•	Botón “Limpiar filtros” → Borra todas las selecciones y muestra todos los gastos de nuevo.
+	•	Posible mensaje de “No se han encontrado resultados” si el filtro no encuentra gastos.
+
+⸻
+
+Mini resumen para la IA:
+
+Crear un botón que aplique filtros combinados a los gastos según:
+	•	Categorías
+	•	Rango de fechas
+	•	Rango de precios
+
+El filtrado debe ser seguro, flexible, rápido, y debe ignorar los filtros vacíos para evitar errores.
+
+⸻
+
+¿Quieres que también te prepare un ejemplo visual de cómo podría ser la estructura (tipo formulario con desplegables y campos de fecha/precio)?
+Así tu IA tendría también una referencia para montarlo de forma aún más clara.
+¿Te lo hago?
