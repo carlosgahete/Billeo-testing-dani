@@ -1175,7 +1175,15 @@ const IncomeExpenseReport = () => {
                         <div className="flex-1">
                           <div className="flex items-start">
                             <div className="bg-red-100 p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors">
-                              <Receipt className="h-5 w-5 text-red-600" />
+                              {getCategoryName(transaction.categoryId) && categories?.find(c => c.id === transaction.categoryId)?.icon ? (
+                                <span className="text-lg" style={{ 
+                                  color: categories.find(c => c.id === transaction.categoryId)?.color || "#DC2626" 
+                                }}>
+                                  {categories.find(c => c.id === transaction.categoryId)?.icon}
+                                </span>
+                              ) : (
+                                <Receipt className="h-5 w-5 text-red-600" />
+                              )}
                             </div>
                             <div>
                               <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>

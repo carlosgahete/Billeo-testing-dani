@@ -34,6 +34,7 @@ interface Category {
   name: string;
   type: "income" | "expense";
   color: string;
+  icon?: string;
 }
 
 // Mapa de íconos según la categoría
@@ -105,7 +106,11 @@ const TransactionItem = ({
     <div className="py-3 flex justify-between items-center hover:bg-gray-50 rounded-md px-2 transition-colors">
       <div className="flex items-center">
         <div className={`p-2 rounded-full ${bgColorClass} mr-3`}>
-          {isIncome ? <TrendingUp size={18} /> : getCategoryIcon(categoryName)}
+          {isIncome ? <TrendingUp size={18} /> : 
+           (category?.icon ? 
+            <span className="text-lg">{category.icon}</span> :
+            getCategoryIcon(categoryName)
+           )}
         </div>
         <div>
           {/* Detectar proveedor en gastos escaneados */}
