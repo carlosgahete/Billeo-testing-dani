@@ -1198,17 +1198,139 @@ const IncomeExpenseReport = () => {
                 </div>
                 
                 {/* Panel de filtros flotante - posición mejorada */}
-                <div className="relative" style={{ zIndex: 50 }}>
-                  {showFilters && (
-                    <FloatingFilters
-                      transactions={sortedExpenseTransactions}
-                      categories={categories}
-                      onFilterChange={setFilteredExpenseTransactions}
-                      onClose={() => setShowFilters(false)}
-                      buttonRef={filterButtonRef}
-                    />
-                  )}
-                </div>
+                {showFilters && (
+                  <div className="p-4 bg-white rounded-md border border-red-100 shadow-md mb-4">
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {/* Filtro de categorías */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Categorías
+                        </label>
+                        <Select 
+                          value="all" 
+                          onValueChange={(value) => {
+                            if (value === "all") {
+                              setFilteredExpenseTransactions([]);
+                            } else {
+                              const categoryId = parseInt(value);
+                              const filtered = sortedExpenseTransactions.filter(t => 
+                                t.categoryId === categoryId
+                              );
+                              setFilteredExpenseTransactions(filtered);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Todas las categorías" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas las categorías</SelectItem>
+                            {categories
+                              .filter(cat => cat.type === 'expense')
+                              .map(category => (
+                                <SelectItem key={category.id} value={category.id.toString()}>
+                                  <div className="flex items-center">
+                                    <span className="mr-2" style={{color: category.color}}>{category.icon}</span>
+                                    {category.name}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            }
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Filtro de fecha */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Rango de fechas
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            type="date"
+                            className="w-full"
+                            placeholder="Fecha inicio"
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                const startDate = new Date(e.target.value);
+                                const filtered = sortedExpenseTransactions.filter(t => {
+                                  const transDate = new Date(t.date);
+                                  return transDate >= startDate;
+                                });
+                                setFilteredExpenseTransactions(filtered);
+                              }
+                            }}
+                          />
+                          <Input
+                            type="date"
+                            className="w-full"
+                            placeholder="Fecha fin"
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                const endDate = new Date(e.target.value);
+                                endDate.setHours(23, 59, 59);
+                                const filtered = sortedExpenseTransactions.filter(t => {
+                                  const transDate = new Date(t.date);
+                                  return transDate <= endDate;
+                                });
+                                setFilteredExpenseTransactions(filtered);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Filtro de importe */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Importe mínimo (€)
+                        </label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="w-full"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const minAmount = parseFloat(e.target.value);
+                              if (!isNaN(minAmount)) {
+                                const filtered = sortedExpenseTransactions.filter(t => 
+                                  t.amount >= minAmount
+                                );
+                                setFilteredExpenseTransactions(filtered);
+                              }
+                            } else {
+                              setFilteredExpenseTransactions([]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="mr-2"
+                        onClick={() => {
+                          setFilteredExpenseTransactions([]);
+                        }}
+                      >
+                        Limpiar filtros
+                      </Button>
+                      
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                        onClick={() => setShowFilters(false)}
+                      >
+                        Cerrar
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 {isLoading ? (
                   <div className="p-6 space-y-4">
