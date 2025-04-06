@@ -2476,6 +2476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.isAuthenticated() ? (req.user as any).id : req.session.userId;
       
       // Obtenemos parámetros de año y trimestre si fueron enviados
+      // Restauramos a configuración normal
       const year = req.query.year ? String(req.query.year) : new Date().getFullYear().toString();
       const period = req.query.period ? String(req.query.period) : 'all';
       
@@ -2490,9 +2491,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Función para filtrar por año y trimestre
       const isInPeriod = (dateString: string) => {
         try {
+          // Si dateString es null o undefined, excluir
+          if (!dateString) {
+            console.error("Fecha vacía en isInPeriod");
+            return false;
+          }
+          
+          // Forzar conversión a fecha si es necesario
           const date = new Date(dateString);
+          
+          // Verificar que la fecha es válida
+          if (isNaN(date.getTime())) {
+            console.error("Fecha inválida en isInPeriod:", dateString);
+            return false;
+          }
+          
           const dateYear = date.getFullYear().toString();
           const month = date.getMonth() + 1; // getMonth() devuelve 0-11
+          
+          console.log(`Comprobando fecha ${dateString} - Año ${dateYear} frente a ${year}, Mes ${month}`);
           
           // Si el año no coincide, excluir
           if (dateYear !== year) return false;
@@ -2522,8 +2539,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all quotes
       let allQuotes = await storage.getQuotesByUserId(userId);
       
+      // Log de depuración para los años de transacciones
+      console.log("Años de transacciones:", 
+        allTransactions.map(t => {
+          try {
+            return new Date(t.date).getFullYear();
+          } catch (e) {
+            return "error parsing date";
+          }
+        })
+      );
+      
       // Filtrar por período si es necesario
-      allTransactions = allTransactions.filter(t => isInPeriod(t.date));
+      allTransactions = allTransactions.filter(t => {
+        try {
+          return isInPeriod(t.date);
+        } catch (e) {
+          console.error("Error filtrando transacción por fecha:", t.id, t.date, e);
+          return false;
+        }
+      });
       allInvoices = allInvoices.filter(inv => isInPeriod(inv.issueDate));
       allQuotes = allQuotes.filter(q => isInPeriod(q.issueDate));
       
@@ -2558,6 +2593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Detalle de transacciones para depuración
+      // Registro detallado de transacciones para depuración
       console.log("Total de transacciones:", allTransactions.length);
       console.log("Transacciones de ingresos:", allTransactions.filter(t => t.type === "income").length);
       console.log("Transacciones de gastos:", allTransactions.filter(t => t.type === "expense").length);
@@ -2565,9 +2601,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allTransactions
           .filter(t => t.type === "expense")
           .map(t => ({ 
+            id: t.id,
             description: t.description, 
             amount: t.amount,
-            date: t.date
+            date: t.date,
+            year: new Date(t.date).getFullYear()
           }))
       );
       
