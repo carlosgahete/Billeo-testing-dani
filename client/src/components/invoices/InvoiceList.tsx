@@ -672,13 +672,13 @@ const InvoiceList = () => {
   return (
     <div className="w-full">
       {/* Encabezado de Facturas Emitidas con ambos botones a la derecha */}
-      <div className="flex justify-between items-center p-3 border-b mb-3">
+      <div className="flex justify-between items-center p-4 border-b mb-3">
         <div className="flex items-center">
-          <div className="bg-[#04C4D9] p-1.5 rounded-full mr-2">
-            <FileCheck className="h-4 w-4 text-white" />
+          <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
+            <FileCheck className="h-5 w-5 text-white" />
           </div>
-          <h2 className="font-medium text-gray-900">Facturas emitidas</h2>
-          <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium rounded-full px-2 py-0.5">
+          <h2 className="text-2xl font-bold text-gray-900">Facturas emitidas</h2>
+          <span className="ml-3 bg-gray-100 text-gray-600 text-sm font-medium rounded-md px-2.5 py-1">
             {invoicesData?.length || 0} facturas
           </span>
         </div>
@@ -686,7 +686,7 @@ const InvoiceList = () => {
           <Button
             variant="outline"
             size="sm"
-            className="h-9 border-gray-200 text-gray-700 hover:bg-gray-50"
+            className="h-9 border-[#04C4D9] text-[#04C4D9] hover:bg-[#04C4D9]/10"
             onClick={exportAllInvoices}
           >
             <Download className="h-4 w-4 mr-1" />

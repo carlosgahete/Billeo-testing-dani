@@ -350,7 +350,7 @@ const TransactionList = () => {
           <Button
             variant="outline"
             size="sm"
-            className="h-9 border-gray-200 text-gray-700 hover:bg-gray-50"
+            className="h-9 border-[#04C4D9] text-[#04C4D9] hover:bg-[#04C4D9]/10"
             onClick={() => navigate("/transactions/scan")}
           >
             <ScanText className="h-4 w-4 mr-1" />
@@ -363,7 +363,7 @@ const TransactionList = () => {
               <Button 
                 variant="outline"
                 size="sm"
-                className="h-9 border-gray-200 text-gray-700 hover:bg-gray-50"
+                className="h-9 border-[#04C4D9] text-[#04C4D9] hover:bg-[#04C4D9]/10"
               >
                 <Upload className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Importar CSV</span>
@@ -390,7 +390,7 @@ const TransactionList = () => {
           <Button
             size="sm"
             className="h-9 bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
-            onClick={() => navigate("/transactions/new")}
+            onClick={() => navigate("/transactions/create")}
           >
             <Plus className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Nuevo movimiento</span>
@@ -493,10 +493,10 @@ const TransactionList = () => {
             }}
             className="w-full"
           >
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="income">Ingresos</TabsTrigger>
-              <TabsTrigger value="expense">Gastos</TabsTrigger>
+            <TabsList className="bg-gray-100">
+              <TabsTrigger value="all" className="data-[state=active]:bg-[#04C4D9] data-[state=active]:text-white">Todos</TabsTrigger>
+              <TabsTrigger value="income" className="data-[state=active]:bg-[#04C4D9] data-[state=active]:text-white">Ingresos</TabsTrigger>
+              <TabsTrigger value="expense" className="data-[state=active]:bg-[#04C4D9] data-[state=active]:text-white">Gastos</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
