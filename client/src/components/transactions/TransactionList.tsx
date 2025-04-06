@@ -35,6 +35,7 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ExpenseFilters from "@/components/transactions/ExpenseFilters";
 
 interface Transaction {
   id: number;
@@ -148,6 +149,7 @@ const TransactionList = () => {
   const initialTab = tabParam === 'income' || tabParam === 'expense' ? tabParam : 'all';
   
   const [currentTab, setCurrentTab] = useState<string>(initialTab);
+  const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -197,12 +199,23 @@ const TransactionList = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
   };
 
-  const filteredTransactions = Array.isArray(transactions) 
-    ? transactions.filter((transaction: Transaction) => {
-        if (currentTab === "all") return true;
-        return transaction.type === currentTab;
-      })
-    : [];
+  // Manejo de transacciones filtradas
+  const getFilteredTransactions = () => {
+    if (!Array.isArray(transactions)) return [];
+    
+    // Si estamos en la pestaña de gastos y hay filtros aplicados, usar las transacciones filtradas
+    if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
+      return filteredExpenseTransactions;
+    }
+    
+    // En caso contrario, aplicar el filtro por tipo según la pestaña seleccionada
+    return transactions.filter((transaction: Transaction) => {
+      if (currentTab === "all") return true;
+      return transaction.type === currentTab;
+    });
+  };
+  
+  const filteredTransactions = getFilteredTransactions();
 
   const columns: ColumnDef<Transaction>[] = [
     {
@@ -437,6 +450,10 @@ const TransactionList = () => {
             value={currentTab}
             onValueChange={(value) => {
               setCurrentTab(value);
+              // Limpiar los filtros de gastos al cambiar de pestaña
+              if (value !== "expense") {
+                setFilteredExpenseTransactions([]);
+              }
               navigate(`/transactions?tab=${value}`, { replace: true });
             }}
             className="w-full"
@@ -449,6 +466,17 @@ const TransactionList = () => {
           </Tabs>
         </CardHeader>
         <CardContent>
+          {/* Mostrar filtros solo cuando estamos en la pestaña de gastos */}
+          {currentTab === "expense" && transactions && categories && (
+            <div className="mb-6">
+              <ExpenseFilters 
+                transactions={transactions}
+                categories={categories}
+                onFilterChange={setFilteredExpenseTransactions}
+              />
+            </div>
+          )}
+          
           <DataTable
             columns={columns}
             data={filteredTransactions || []}
