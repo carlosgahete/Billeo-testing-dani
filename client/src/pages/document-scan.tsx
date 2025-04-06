@@ -81,7 +81,12 @@ const DocumentScanPage = () => {
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
-  const [showMagnifier, setShowMagnifier] = useState(false);
+  const [showMagnifier, setShowMagnifier] = useState(true);
+  
+  // Debug para la lupa
+  useEffect(() => {
+    console.log("Estado magnifier:", { showMagnifier, position: magnifierPosition });
+  }, [showMagnifier, magnifierPosition]);
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({
@@ -902,10 +907,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                               onMouseMove={(e) => {
                                 // Calculamos la posición relativa del cursor dentro de la imagen
                                 const rect = e.currentTarget.getBoundingClientRect();
-                                setMagnifierPosition({
-                                  x: e.clientX - rect.left,
-                                  y: e.clientY - rect.top
-                                });
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                
+                                console.log("Mouse moving at", {x, y, clientX: e.clientX, clientY: e.clientY});
+                                
+                                setMagnifierPosition({x, y});
                                 setShowMagnifier(true);
                               }}
                               onMouseLeave={() => setShowMagnifier(false)}
@@ -1085,10 +1092,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           onMouseMove={(e) => {
                             // Calculamos la posición relativa del cursor dentro de la imagen
                             const rect = e.currentTarget.getBoundingClientRect();
-                            setMagnifierPosition({
-                              x: e.clientX - rect.left,
-                              y: e.clientY - rect.top
-                            });
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+                            
+                            console.log("Mouse document moving at", {x, y, clientX: e.clientX, clientY: e.clientY});
+                            
+                            setMagnifierPosition({x, y});
                             setShowMagnifier(true);
                           }}
                           onMouseLeave={() => setShowMagnifier(false)}
