@@ -415,9 +415,9 @@ const TransactionList = () => {
                     <Label htmlFor="category" className="font-medium block mb-2">Categoría</Label>
                     <div className="flex flex-col space-y-3">
                       <Select
-                        value={selectedCategoryId?.toString() || ""}
+                        value={selectedCategoryId?.toString() || "all"}
                         onValueChange={(value) => {
-                          if (value) {
+                          if (value && value !== "all") {
                             setSelectedCategoryId(parseInt(value));
                             setIsCategoryFilterActive(true);
                           } else {
@@ -430,9 +430,9 @@ const TransactionList = () => {
                           <SelectValue placeholder="Todas las categorías" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Todas las categorías</SelectItem>
+                          <SelectItem value="all">Todas las categorías</SelectItem>
                           {Array.isArray(categories) && categories
-                            .filter(c => c.type === (currentTab === 'income' ? 'income' : 'expense'))
+                            .filter(c => currentTab === 'all' || c.type === (currentTab === 'income' ? 'income' : 'expense'))
                             .map((category) => (
                               <SelectItem key={category.id} value={category.id.toString()}>
                                 <div className="flex items-center">
@@ -728,15 +728,31 @@ const TransactionList = () => {
                 
                 {isCategoryFilterActive && selectedCategoryId && (
                   <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1">
-                    {(() => {
-                      const category = Array.isArray(categories) && categories.find(c => c.id === selectedCategoryId);
-                      return (
-                        <span className="flex items-center">
-                          <span className="mr-1">{category?.icon || "📂"}</span>
-                          Categoría: {category?.name || "Desconocida"}
-                        </span>
-                      );
-                    })()}
+                    <span className="flex items-center">
+                      {(() => {
+                        if (!Array.isArray(categories)) return (
+                          <>
+                            <span className="mr-1">📂</span>
+                            Categoría: Desconocida
+                          </>
+                        );
+
+                        const category = categories.find(c => c.id === selectedCategoryId);
+                        if (!category) return (
+                          <>
+                            <span className="mr-1">📂</span>
+                            Categoría: Desconocida
+                          </>
+                        );
+
+                        return (
+                          <>
+                            <span className="mr-1">{category.icon || "📂"}</span>
+                            Categoría: {category.name}
+                          </>
+                        );
+                      })()}
+                    </span>
                   </Badge>
                 )}
                 
