@@ -132,20 +132,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-slate-200 mb-4">
         <div className="flex items-center mb-3 md:mb-0">
           <BarChart3 className="h-6 w-6 text-indigo-600 mr-2" />
-          <h2 className="text-2xl font-bold text-slate-800">Dashboard Completo</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Dashboard</h2>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/dashboard/simple")}
-            className="h-9 border-slate-200"
-          >
-            Ver Dashboard Simple
-          </Button>
-          
-          <div className="h-6 border-r border-slate-200 mx-1"></div>
           
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="w-[100px] bg-slate-50 border-slate-200 h-9">
@@ -185,30 +175,39 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         {/* Widget de Ingresos */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-green-500">
-            <div className="flex items-center text-slate-700 mb-2">
-              <ArrowUp className="mr-2 h-5 w-5 text-green-500" />
-              <h3 className="text-base font-semibold">Ingresos</h3>
-              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
+          <div className="bg-gradient-to-r from-green-50 to-green-100 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className="bg-green-500/10 p-3 rounded-full mr-4">
+                  <ArrowUp className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-green-700">Ingresos</h3>
+                  <p className="text-sm text-green-600/70">Entradas totales</p>
+                </div>
+              </div>
             </div>
-            <div className="mb-2">
-              <div className="text-3xl font-bold text-slate-800">
+            <div className="mb-4 space-y-2">
+              <div className="text-3xl font-bold text-green-700">
                 {formatCurrency(dashboardStats.income)}
               </div>
-            </div>
-            <div className="text-xs space-y-1 text-slate-600">
-              <div className="flex justify-between">
-                <span>Base imponible:</span>
-                <span className="font-medium">{formatCurrency(baseImponibleIngresos)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>IVA repercutido:</span>
-                <span className="font-medium">{formatCurrency(ivaRepercutido)}</span>
+              <div className="text-sm text-green-600/70">
+                Base imponible + IVA
               </div>
             </div>
-            <div className="mt-3">
+            <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-green-100">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-green-800">Base imponible:</span>
+                <span className="font-medium text-green-800">{formatCurrency(baseImponibleIngresos)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-green-800">IVA repercutido (21%):</span>
+                <span className="font-medium text-green-800">{formatCurrency(ivaRepercutido)}</span>
+              </div>
+            </div>
+            <div>
               <Link href="/invoices">
-                <Button variant="outline" className="w-full text-xs h-8 border-slate-200 hover:bg-slate-50">
+                <Button variant="outline" className="w-full bg-white border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800">
                   Ver facturas
                 </Button>
               </Link>
@@ -218,30 +217,39 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Gastos */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-red-500">
-            <div className="flex items-center text-slate-700 mb-2">
-              <ArrowDown className="mr-2 h-5 w-5 text-red-500" />
-              <h3 className="text-base font-semibold">Gastos</h3>
-              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
+          <div className="bg-gradient-to-r from-red-50 to-red-100 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className="bg-red-500/10 p-3 rounded-full mr-4">
+                  <ArrowDown className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-red-700">Gastos</h3>
+                  <p className="text-sm text-red-600/70">Salidas totales</p>
+                </div>
+              </div>
             </div>
-            <div className="mb-2">
-              <div className="text-3xl font-bold text-slate-800">
+            <div className="mb-4 space-y-2">
+              <div className="text-3xl font-bold text-red-700">
                 {formatCurrency(dashboardStats.expenses)}
               </div>
-            </div>
-            <div className="text-xs space-y-1 text-slate-600">
-              <div className="flex justify-between">
-                <span>Base imponible:</span>
-                <span className="font-medium">{formatCurrency(baseImponibleGastos)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>IVA soportado:</span>
-                <span className="font-medium">{formatCurrency(ivaSoportado)}</span>
+              <div className="text-sm text-red-600/70">
+                Base imponible + IVA
               </div>
             </div>
-            <div className="mt-3">
+            <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-red-100">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-red-800">Base imponible:</span>
+                <span className="font-medium text-red-800">{formatCurrency(baseImponibleGastos)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-red-800">IVA soportado (21%):</span>
+                <span className="font-medium text-red-800">{formatCurrency(ivaSoportado)}</span>
+              </div>
+            </div>
+            <div>
               <Link href="/income-expense">
-                <Button variant="outline" className="w-full text-xs h-8 border-slate-200 hover:bg-slate-50">
+                <Button variant="outline" className="w-full bg-white border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800">
                   Ver gastos
                 </Button>
               </Link>
@@ -251,34 +259,50 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-[#04C4D9]">
-            <div className="flex items-center text-slate-700 mb-2">
-              <PiggyBank className="mr-2 h-5 w-5 text-[#04C4D9]" />
-              <h3 className="text-base font-semibold">Resultado Final</h3>
-              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
+          <div className={`bg-gradient-to-r ${isPositiveResult ? 'from-[#e6f9fb] to-[#daf7fa]' : 'from-amber-50 to-amber-100'} p-6`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className={`${isPositiveResult ? 'bg-[#04C4D9]/10' : 'bg-amber-500/10'} p-3 rounded-full mr-4`}>
+                  <PiggyBank className={`h-6 w-6 ${isPositiveResult ? 'text-[#04C4D9]' : 'text-amber-600'}`} />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-semibold ${isPositiveResult ? 'text-[#04a6b8]' : 'text-amber-700'}`}>Resultado Final</h3>
+                  <p className={`text-sm ${isPositiveResult ? 'text-[#04C4D9]/70' : 'text-amber-600/70'}`}>Ingresos - Gastos</p>
+                </div>
+              </div>
             </div>
-            <div className="mb-2">
-              <div className="text-3xl font-bold text-slate-800">
+            <div className="mb-4 space-y-2">
+              <div className={`text-3xl font-bold ${isPositiveResult ? 'text-[#04a6b8]' : 'text-amber-700'}`}>
                 {formatCurrency(finalResult)}
               </div>
-            </div>
-            <div className="text-xs space-y-1 text-slate-600">
-              <div className="flex justify-between">
-                <span>Base + IVA (bruto):</span>
-                <span className="font-medium">{formatCurrency(dashboardStats.income)}</span>
+              <div className={`text-sm ${isPositiveResult ? 'text-[#04C4D9]/70' : 'text-amber-600/70'}`}>
+                {isPositiveResult ? 'Beneficio neto' : 'Pérdida neta'}
               </div>
-              <div className="flex justify-between">
-                <span>Retenciones IRPF:</span>
+            </div>
+            <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-[#04C4D9]/20">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-700">Base + IVA (bruto):</span>
+                <span className="font-medium text-slate-800">{formatCurrency(dashboardStats.income)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-700">Retenciones IRPF:</span>
                 <span className="font-medium text-red-600">-{formatCurrency(retencionesIrpf)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>IVA a liquidar:</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-700">IVA a liquidar:</span>
                 <span className="font-medium text-[#04C4D9]">{formatCurrency(ivaALiquidar)}</span>
               </div>
-              <div className="flex justify-between pt-1 border-t border-slate-200 mt-1">
-                <span className="text-slate-700 font-medium">Total neto:</span>
-                <span className="font-bold">{formatCurrency(finalResult)}</span>
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200 mt-1">
+                <span className="text-slate-800 font-medium">Total neto:</span>
+                <span className="font-bold text-slate-800">{formatCurrency(finalResult)}</span>
               </div>
+            </div>
+            <div>
+              <Link href="/reports">
+                <Button variant="outline" className={`w-full bg-white ${isPositiveResult ? 'border-[#04C4D9]/30 text-[#04a6b8] hover:bg-[#f0fdfe] hover:text-[#04a6b8]' : 'border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800'}`}>
+                  Ver informes
+                </Button>
+              </Link>
             </div>
           </div>
         </Card>
