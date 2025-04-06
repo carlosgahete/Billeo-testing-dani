@@ -122,12 +122,7 @@ const Sidebar = ({
     { 
       href: "/", 
       icon: <LayoutDashboard size={20} />, 
-      label: "Dashboard Simple" 
-    },
-    {
-      href: "/complete-dashboard",
-      icon: <LayoutDashboard size={20} />,
-      label: "Dashboard Completo"
+      label: "Dashboard" 
     },
     { 
       href: "/invoices", 

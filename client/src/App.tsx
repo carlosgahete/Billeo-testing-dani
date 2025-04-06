@@ -13,7 +13,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 // La optimización la haremos a nivel de API y de caché
 import NotFound from "@/pages/not-found";
 import FixedDashboard from "@/pages/fixed-dashboard";
-import AppleSimpleDashboardPage from "@/pages/apple-simple-dashboard";
+// import AppleSimpleDashboardPage from "@/pages/apple-simple-dashboard"; // Eliminado
 import CompleteDashboardPage from "@/pages/complete-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
@@ -54,7 +54,7 @@ function Router() {
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
         <Layout>
-          <ProtectedRoute path="/" component={AppleSimpleDashboardPage} />
+          <ProtectedRoute path="/" component={CompleteDashboardPage} />
         </Layout>
       </Route>
       <Route path="/invoices">
@@ -158,11 +158,7 @@ function Router() {
           <ProtectedRoute path="/analytics" component={AnalyticsPage} />
         </Layout>
       </Route>
-      <Route path="/apple-simple-dashboard">
-        <Layout>
-          <ProtectedRoute path="/apple-simple-dashboard" component={AppleSimpleDashboardPage} />
-        </Layout>
-      </Route>
+      {/* Ruta de dashboard completo */}
       <Route path="/complete-dashboard">
         <Layout>
           <ProtectedRoute path="/complete-dashboard" component={CompleteDashboardPage} />

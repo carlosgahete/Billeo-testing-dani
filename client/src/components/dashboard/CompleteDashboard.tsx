@@ -251,9 +251,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final */}
         <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-indigo-500">
+          <div className="bg-white p-5 border-t-4 border-[#04C4D9]">
             <div className="flex items-center text-slate-700 mb-2">
-              <PiggyBank className="mr-2 h-5 w-5 text-indigo-500" />
+              <PiggyBank className="mr-2 h-5 w-5 text-[#04C4D9]" />
               <h3 className="text-base font-semibold">Resultado Final</h3>
               <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>
@@ -273,7 +273,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
               <div className="flex justify-between">
                 <span>IVA a liquidar:</span>
-                <span className="font-medium text-indigo-600">{formatCurrency(ivaALiquidar)}</span>
+                <span className="font-medium text-[#04C4D9]">{formatCurrency(ivaALiquidar)}</span>
               </div>
               <div className="flex justify-between pt-1 border-t border-slate-200 mt-1">
                 <span className="text-slate-700 font-medium">Total neto:</span>
