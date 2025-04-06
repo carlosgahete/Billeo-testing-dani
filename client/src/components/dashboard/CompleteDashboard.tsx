@@ -56,9 +56,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     refetchOnWindowFocus: true,
     refetchOnMount: "always",
     refetchOnReconnect: true,
-    refetchInterval: 5000, // Refrescar cada 5 segundos automáticamente
-    staleTime: 0,
-    gcTime: 0,
+    refetchInterval: 3000, // Refrescar cada 3 segundos automáticamente
+    staleTime: 0, // Sin tiempo de caducidad - siempre considerar los datos obsoletos
+    gcTime: 0, // Sin tiempo de recolección de basura - limpiar inmediatamente
   });
 
   // Definir datos predeterminados si no hay datos

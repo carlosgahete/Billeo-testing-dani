@@ -432,9 +432,13 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
       }
       
       // Invalidar las consultas para actualizar los datos en tiempo real
+      // Forzar una actualización inmediata de todas las consultas relevantes
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+      
+      // Forzar la actualización inmediata del dashboard independientemente de lo indicado en queryKey
+      queryClient.invalidateQueries();
       
       toast({
         title: "Cambios guardados",

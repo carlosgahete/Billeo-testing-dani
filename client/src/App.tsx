@@ -158,6 +158,11 @@ function Router() {
           <ProtectedRoute path="/analytics" component={AnalyticsPage} />
         </Layout>
       </Route>
+      <Route path="/document-scan">
+        <Layout>
+          <ProtectedRoute path="/document-scan" component={DocumentScanPage} />
+        </Layout>
+      </Route>
       {/* Ruta de dashboard completo */}
       <Route path="/complete-dashboard">
         <Layout>
