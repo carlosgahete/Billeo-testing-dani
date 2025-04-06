@@ -51,27 +51,20 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
         </div>
       </CardHeader>
       <CardContent className="p-3">
-        <div className="flex flex-col">
-          <p className="text-2xl font-bold text-red-600">
-            {new Intl.NumberFormat('es-ES', { 
-              minimumFractionDigits: 2, 
-              maximumFractionDigits: 2 
-            }).format(expenses / 100)} €
-          </p>
-          <p className="text-xs text-neutral-500 -mt-1">Total</p>
-        </div>
+        <p className="text-2xl font-bold text-red-600">
+          {new Intl.NumberFormat('es-ES', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          }).format(expenses / 100)} €
+        </p>
         
-        <div className="mt-3 pt-3 border-t border-red-100 space-y-2 text-sm">
+        <div className="mt-2 space-y-1 text-sm">
           <div className="flex justify-between">
-            <span className="text-neutral-500 font-semibold">Neto (sin IVA):</span>
-            <span className="font-medium">{((expenses - ivaSoportado) / 100).toLocaleString('es-ES')} €</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-neutral-500">IVA soportado:</span>
+            <span className="text-neutral-500">IVA incluido en los gastos:</span>
             <span className="font-medium">{(ivaSoportado / 100).toLocaleString('es-ES')} €</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-neutral-500">IRPF a liquidar:</span>
+            <span className="text-neutral-500">IRPF a liquidar por gastos:</span>
             <span className="font-medium">-{(irpfLiquidar / 100).toLocaleString('es-ES')} €</span>
           </div>
         </div>

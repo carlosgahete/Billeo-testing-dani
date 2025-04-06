@@ -19,13 +19,12 @@ import {
   Receipt,
   Smile,
   Plus,
+  Calendar,
   FolderOpen,
   Paperclip,
   Percent,
   Info,
-  CreditCard,
-  Filter as FilterIcon,
-  CalendarIcon
+  CreditCard
 } from "lucide-react";
 import {
   AlertDialog,
@@ -79,19 +78,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -418,13 +410,6 @@ const IncomeExpenseReport = () => {
   
   // Estado para el modal de creación de categoría
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  
-  // Estado para controlar los filtros de gastos
-  const [showExpenseFilters, setShowExpenseFilters] = useState<boolean>(false);
-  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
-  const [dateRangeFilter, setDateRangeFilter] = useState<[Date | undefined, Date | undefined]>([undefined, undefined]);
-  const [amountFilter, setAmountFilter] = useState<{min?: number, max?: number}>({});
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string | null>(null);
   const [selectedEmoji, setSelectedEmoji] = useState("💼"); // Emoji predeterminado
   
   // Mutación para crear transacción (gasto rápido)
@@ -700,92 +685,80 @@ const IncomeExpenseReport = () => {
         <div className="grid gap-6">
           {/* Panel de estadísticas - Diseño mejorado con tarjetas más atractivas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="h-1 bg-gradient-to-r from-green-500 to-green-300"></div>
-              <CardHeader className="pb-1 pt-3">
+            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-green-100 p-1.5 rounded-full mr-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  <div className="bg-green-100 p-2 rounded-full mr-3">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
                   </div>
-                  <span className="text-green-700 text-base">Total Ingresos</span>
+                  <span className="text-green-700 text-lg">Total Ingresos</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 pb-3">
+              <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-10 w-32" />
                 ) : (
-                  <div className="flex flex-col">
-                    <div className="text-2xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
-                    <div className="text-xs text-neutral-500 -mt-0.5">Total</div>
-                  </div>
+                  <div className="text-3xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
                 )}
-                <div className="mt-2 pt-2 border-t border-green-100 space-y-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500 font-medium">Facturas:</span>
-                    <span className="font-medium text-green-700">{formatCurrency(totalInvoiceIncome)}</span>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="bg-green-50 p-2 rounded-md">
+                    <span className="text-green-600 font-medium">Facturas: {formatCurrency(totalInvoiceIncome)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500 font-medium">Otros:</span>
-                    <span className="font-medium text-green-700">{formatCurrency(totalAdditionalIncome)}</span>
+                  <div className="bg-green-50 p-2 rounded-md">
+                    <span className="text-green-600 font-medium">Otros: {formatCurrency(totalAdditionalIncome)}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="h-1 bg-gradient-to-r from-red-500 to-red-300"></div>
-              <CardHeader className="pb-1 pt-3">
+            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-red-100 p-1.5 rounded-full mr-2">
-                    <TrendingDown className="h-4 w-4 text-red-600" />
+                  <div className="bg-red-100 p-2 rounded-full mr-3">
+                    <TrendingDown className="h-5 w-5 text-red-600" />
                   </div>
-                  <span className="text-red-700 text-base">Total Gastos</span>
+                  <span className="text-red-700 text-lg">Total Gastos</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 pb-3">
+              <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-10 w-32" />
                 ) : (
-                  <div className="flex flex-col">
-                    <div className="text-2xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
-                    <div className="text-xs text-neutral-500 -mt-0.5">Total</div>
-                  </div>
+                  <div className="text-3xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
                 )}
-                <div className="mt-2 pt-2 border-t border-red-100 space-y-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500 font-medium">Registros:</span>
-                    <span className="font-medium text-red-700">{expenseTransactions.length} transacciones</span>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="bg-red-50 p-2 rounded-md">
+                    <span className="text-red-600 font-medium">Registros: {expenseTransactions.length} transacciones</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-300"></div>
-              <CardHeader className="pb-1 pt-3">
+            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-300"></div>
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-blue-100 p-1.5 rounded-full mr-2">
-                    <FilePlus className="h-4 w-4 text-blue-600" />
+                  <div className="bg-blue-100 p-2 rounded-full mr-3">
+                    <FilePlus className="h-5 w-5 text-blue-600" />
                   </div>
-                  <span className="text-blue-700 text-base">Resultado</span>
+                  <span className="text-blue-700 text-lg">Resultado</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 pb-3">
+              <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-10 w-32" />
                 ) : (
-                  <div className="flex flex-col">
-                    <div className="text-2xl font-bold text-blue-700">
-                      {formatCurrency(totalIncome - totalExpenses)}
-                    </div>
-                    <div className="text-xs text-neutral-500 -mt-0.5">Total</div>
+                  <div className="text-3xl font-bold text-blue-700">
+                    {formatCurrency(totalIncome - totalExpenses)}
                   </div>
                 )}
-                <div className="flex items-center mt-2 pt-2 border-t border-blue-100">
-                  <Badge className={`text-xs px-1.5 py-0.5 ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
+                <div className="mt-3 bg-blue-50 p-2 rounded-md">
+                  <Badge className={`text-sm ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
                     {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
                   </Badge>
-                  <span className="ml-2 text-xs text-blue-600">
+                  <span className="ml-2 text-sm text-blue-600">
                     {totalIncome > totalExpenses 
                       ? "¡Buen trabajo! Estás en positivo" 
                       : "Revisa tus gastos para mejorar el resultado"}
@@ -1180,192 +1153,13 @@ const IncomeExpenseReport = () => {
               
               <Card className="shadow-md border-0 overflow-hidden">
                 <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <TrendingDown className="mr-2 h-5 w-5" />
-                      Lista de Gastos
-                      <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
-                        {expenseTransactions.length} registros
-                      </span>
-                    </h3>
-                    <Popover open={showExpenseFilters} onOpenChange={setShowExpenseFilters}>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="gap-1.5 bg-white text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 font-medium shadow-sm"
-                        >
-                          <FilterIcon className="h-4 w-4" />
-                          <span>Filtrar gastos</span>
-                          {(categoryFilter || dateRangeFilter[0] || amountFilter.min || amountFilter.max || paymentMethodFilter) && (
-                            <Badge variant="secondary" className="ml-1 bg-red-100 text-red-700 border-none">
-                              Activo
-                            </Badge>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80 p-4">
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-sm">Filtros de gastos</h4>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="categoryFilter">Categoría</Label>
-                            <Select 
-                              value={categoryFilter?.toString() || ""} 
-                              onValueChange={(value) => setCategoryFilter(value ? parseInt(value) : null)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Todas las categorías" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Todas las categorías</SelectItem>
-                                {categories
-                                  .filter(cat => cat.type === "expense")
-                                  .map(category => (
-                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                      {category.name}
-                                    </SelectItem>
-                                  ))
-                                }
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label>Rango de fechas</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="justify-start text-left font-normal w-full"
-                                    size="sm"
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {dateRangeFilter[0] ? (
-                                      format(dateRangeFilter[0], "dd/MM/yyyy")
-                                    ) : (
-                                      <span>Fecha inicial</span>
-                                    )}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={dateRangeFilter[0]}
-                                    onSelect={(date) => setDateRangeFilter([date, dateRangeFilter[1]])}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="justify-start text-left font-normal w-full"
-                                    size="sm"
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {dateRangeFilter[1] ? (
-                                      format(dateRangeFilter[1], "dd/MM/yyyy")
-                                    ) : (
-                                      <span>Fecha final</span>
-                                    )}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={dateRangeFilter[1]}
-                                    onSelect={(date) => setDateRangeFilter([dateRangeFilter[0], date])}
-                                    initialFocus
-                                    disabled={(date) => dateRangeFilter[0] ? date < dateRangeFilter[0] : false}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="amountRange">Rango de importe</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <Label htmlFor="minAmount" className="text-xs">Mínimo</Label>
-                                <Input 
-                                  id="minAmount"
-                                  type="number"
-                                  placeholder="0"
-                                  value={amountFilter.min || ""}
-                                  onChange={(e) => setAmountFilter({
-                                    ...amountFilter,
-                                    min: e.target.value ? parseFloat(e.target.value) : undefined
-                                  })}
-                                  className="h-8"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor="maxAmount" className="text-xs">Máximo</Label>
-                                <Input 
-                                  id="maxAmount"
-                                  type="number"
-                                  placeholder="Sin límite"
-                                  value={amountFilter.max || ""}
-                                  onChange={(e) => setAmountFilter({
-                                    ...amountFilter,
-                                    max: e.target.value ? parseFloat(e.target.value) : undefined
-                                  })}
-                                  className="h-8"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="paymentMethod">Método de pago</Label>
-                            <Select 
-                              value={paymentMethodFilter || ""} 
-                              onValueChange={(value) => setPaymentMethodFilter(value || null)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Todos los métodos" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Todos los métodos</SelectItem>
-                                <SelectItem value="efectivo">Efectivo</SelectItem>
-                                <SelectItem value="tarjeta">Tarjeta</SelectItem>
-                                <SelectItem value="transferencia">Transferencia</SelectItem>
-                                <SelectItem value="bizum">Bizum</SelectItem>
-                                <SelectItem value="otro">Otro</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="flex justify-between pt-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setCategoryFilter(null);
-                                setDateRangeFilter([undefined, undefined]);
-                                setAmountFilter({});
-                                setPaymentMethodFilter(null);
-                              }}
-                              className="text-xs h-8"
-                            >
-                              Resetear filtros
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => setShowExpenseFilters(false)}
-                              className="text-xs h-8"
-                            >
-                              Aplicar
-                            </Button>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  <h3 className="text-lg font-medium flex items-center">
+                    <TrendingDown className="mr-2 h-5 w-5" />
+                    Lista de Gastos
+                    <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
+                      {expenseTransactions.length} registros
+                    </span>
+                  </h3>
                 </div>
                 
                 {isLoading ? (
@@ -1381,15 +1175,7 @@ const IncomeExpenseReport = () => {
                         <div className="flex-1">
                           <div className="flex items-start">
                             <div className="bg-red-100 p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors">
-                              {getCategoryName(transaction.categoryId) && categories?.find(c => c.id === transaction.categoryId)?.icon ? (
-                                <span className="text-lg" style={{ 
-                                  color: categories.find(c => c.id === transaction.categoryId)?.color || "#DC2626" 
-                                }}>
-                                  {categories.find(c => c.id === transaction.categoryId)?.icon}
-                                </span>
-                              ) : (
-                                <Receipt className="h-5 w-5 text-red-600" />
-                              )}
+                              <Receipt className="h-5 w-5 text-red-600" />
                             </div>
                             <div>
                               <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
