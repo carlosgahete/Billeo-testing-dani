@@ -679,103 +679,128 @@ const InvoiceList = () => {
   }
 
   return (
-    <div className="w-full p-6 bg-gray-50">
-      {/* Cabecera con título y botones de acción */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <div className="flex items-center mb-3 md:mb-0">
-          <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
-            <FileCheck className="h-5 w-5 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Facturas</h2>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={exportAllInvoices}
-            className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 h-10"
-          >
-            <Download className="h-4 w-4 mr-2 text-gray-500" />
-            <span className="hidden sm:inline">Exportar facturas</span>
-            <span className="sm:hidden">Exportar</span>
-          </Button>
-          
-          <Button
-            onClick={() => navigate("/invoices/create")}
-            className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white h-10"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nueva factura</span>
-            <span className="sm:hidden">Nueva</span>
-          </Button>
+    <div className="w-full p-6 pb-0 bg-white">
+      {/* Título y botones */}
+      <div className="rounded-lg bg-blue-600 text-white p-4 mb-4">
+        <div className="flex items-center">
+          <FileCheck className="h-5 w-5 mr-2" />
+          <h2 className="text-lg font-medium">Gestión de Facturas</h2>
         </div>
       </div>
       
-      {/* Resumen y estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-blue-100 p-2 rounded-full mr-3">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total facturas</p>
-              <p className="text-2xl font-bold text-gray-900">{invoicesData?.length || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Widgets de estadísticas - Igual que la imagen proporcionada */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-lg p-4 border border-gray-200 flex items-start">
+          <div className="mr-3 mt-1 text-blue-500">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Facturas Emitidas</p>
+            <p className="text-2xl font-bold text-gray-900">{invoicesData?.length || 0}</p>
+            <p className="text-xs text-gray-500">Valor: {new Intl.NumberFormat('es-ES', {
+              style: 'currency',
+              currency: 'EUR',
+              minimumFractionDigits: 2
+            }).format(invoicesData?.reduce((sum, inv) => sum + Number(inv.total), 0) || 0)}</p>
+          </div>
+        </div>
         
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-green-100 p-2 rounded-full mr-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Facturas pagadas</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {invoicesData?.filter(i => i.status === 'paid').length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg p-4 border border-gray-200 flex items-start">
+          <div className="mr-3 mt-1 text-green-500">
+            <FileCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Este Año ({new Date().getFullYear()})</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {invoicesData?.filter(i => new Date(i.issueDate).getFullYear() === new Date().getFullYear()).length || 0}
+            </p>
+            <p className="text-xs text-gray-500">Valor: {new Intl.NumberFormat('es-ES', {
+              style: 'currency',
+              currency: 'EUR',
+              minimumFractionDigits: 2
+            }).format(invoicesData?.filter(i => new Date(i.issueDate).getFullYear() === new Date().getFullYear())
+              .reduce((sum, inv) => sum + Number(inv.total), 0) || 0)}</p>
+          </div>
+        </div>
         
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-amber-100 p-2 rounded-full mr-3">
-              <DollarSign className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Pendientes de pago</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {invoicesData?.filter(i => i.status === 'pending').length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg p-4 border border-gray-200 flex items-start">
+          <div className="mr-3 mt-1 text-amber-500">
+            <CheckCircle className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Este Trimestre</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {invoicesData?.filter(i => {
+                const date = new Date(i.issueDate);
+                const now = new Date();
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                const invoiceQuarter = Math.floor(date.getMonth() / 3);
+                return date.getFullYear() === now.getFullYear() && invoiceQuarter === currentQuarter;
+              }).length || 0}
+            </p>
+            <p className="text-xs text-gray-500">Valor: {new Intl.NumberFormat('es-ES', {
+              style: 'currency',
+              currency: 'EUR',
+              minimumFractionDigits: 2
+            }).format(invoicesData?.filter(i => {
+                const date = new Date(i.issueDate);
+                const now = new Date();
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                const invoiceQuarter = Math.floor(date.getMonth() / 3);
+                return date.getFullYear() === now.getFullYear() && invoiceQuarter === currentQuarter;
+              }).reduce((sum, inv) => sum + Number(inv.total), 0) || 0)}</p>
+          </div>
+        </div>
         
-        <Card className="bg-white shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-red-100 p-2 rounded-full mr-3">
-              <Mail className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Pendientes de envío</p>
-              <p className="text-2xl font-bold text-gray-900">0</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg p-4 border border-gray-200 flex items-start">
+          <div className="mr-3 mt-1 text-red-500">
+            <DollarSign className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Pendientes de Cobro</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {invoicesData?.filter(i => i.status === 'pending').length || 0}
+            </p>
+            <p className="text-xs text-gray-500">Valor: {new Intl.NumberFormat('es-ES', {
+              style: 'currency',
+              currency: 'EUR',
+              minimumFractionDigits: 2
+            }).format(invoicesData?.filter(i => i.status === 'pending')
+              .reduce((sum, inv) => sum + Number(inv.total), 0) || 0)}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Botones de acción */}
+      <div className="flex justify-end mb-4 gap-2">
+        <Button
+          variant="outline"
+          onClick={exportAllInvoices}
+          className="border-gray-200 text-gray-700 hover:text-gray-900"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Exportar facturas</span>
+          <span className="sm:hidden">Exportar</span>
+        </Button>
+        
+        <Button
+          onClick={() => navigate("/invoices/create")}
+          className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Nueva factura</span>
+          <span className="sm:hidden">Nueva</span>
+        </Button>
       </div>
 
       {/* Tabla de facturas */}
-      <Card className="overflow-hidden rounded-xl shadow-sm border-0">
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={invoicesData || []}
-            searchPlaceholder="Buscar facturas por número, cliente o fecha..."
-          />
-        </CardContent>
-      </Card>
+      <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+        <DataTable
+          columns={columns}
+          data={invoicesData || []}
+          searchPlaceholder="Buscar facturas por número, cliente o fecha..."
+        />
+      </div>
     </div>
   );
 };
