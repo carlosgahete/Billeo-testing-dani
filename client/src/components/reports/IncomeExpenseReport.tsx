@@ -414,6 +414,7 @@ const IncomeExpenseReport = () => {
   // Estados para los filtros de gastos
   const [showFilters, setShowFilters] = useState(false);
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
+  const [filterApplied, setFilterApplied] = useState(false);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   
   const isLoading = 
