@@ -1,127 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { 
-  FilePlus, 
-  TrendingDown, 
-  TrendingUp, 
-  ScanText, 
-  PlusCircle,
-  Loader2,
-  FileText,
-  X,
-  Eye,
-  Edit,
-  FileDown,
-  Download,
-  Trash2,
-  Receipt,
-  Smile,
-  Plus,
-  Calendar,
-  FolderOpen,
-  Paperclip,
-  Percent,
-  Info,
-  CreditCard
-} from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { 
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import FileUpload from "@/components/common/FileUpload";
-import { generateInvoicePDF } from "@/lib/pdf";
+import { ExpenseFilters } from "./ExpenseFilters";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import DownloadTransactionButton from "@/components/transactions/DownloadTransactionButton";
+import "jspdf-autotable";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Search as MagnifyingGlassIcon, Eye as LucideEye, Download as LucideDownload, Trash as LucideTrash, Printer as LucidePrinter, Edit as LucideEdit, CreditCard as LucideCreditCard, Receipt as LucideReceipt, FileText as LucideFileText, Clipboard as LucideClipboard } from "lucide-react";
+import { Popover as PopoverTooltip } from "@/components/ui/popover";
+import { PopoverTrigger as PopoverTooltipTrigger } from "@/components/ui/popover";
+import { PopoverContent as PopoverTooltipContent } from "@/components/ui/popover";
 
-// Función para formatear moneda con protección contra valores no numéricos
-const formatCurrency = (amount: any) => {
-  // Asegurarse de que amount es un número
-  const numericAmount = typeof amount === 'number' 
-    ? amount 
-    : parseFloat(amount) || 0;
-  
-  // Evitar NaN en el formato
-  if (isNaN(numericAmount)) {
-    return '0,00 €';
-  }
-  
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    useGrouping: true
-  }).format(numericAmount);
-};
-
+// Definición de interfaces
 interface Invoice {
   id: number;
   invoiceNumber: string;
@@ -167,1429 +65,1203 @@ interface Category {
   icon?: string;
 }
 
-// Esquema para validar la categoría
+// Esquema de validación
 const categorySchema = z.object({
-  name: z.string().min(1, "El nombre es obligatorio"),
+  name: z.string().min(1, { message: "El nombre es obligatorio" }),
   type: z.enum(["income", "expense"]),
-  color: z.string().default("#6E56CF"),
-  icon: z.string().default("💼"), // Icono predeterminado
+  color: z.string().optional(),
+  icon: z.string().optional(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
 
-// Emojis comunes para categorías
-const CATEGORY_EMOJIS = [
-  "💼", "💰", "💸", "💳", "💹", "📈", "🏢", "🏠", "🚗", "✈️", 
-  "🍔", "🛒", "🛍️", "📱", "💻", "📊", "📚", "🎓", "🏥", "💊", 
-  "🔧", "🛠️", "📷", "🎬", "🎵", "🎨", "🏆", "⚽", "🎮", "👕",
-  "💡", "📣", "🔒", "📎", "🧾", "📝", "📑", "🗓️", "🏦", "🧰"
-];
-
-// Componente para eliminar transacciones
-const DeleteTransactionButton = ({ 
-  transactionId, 
-  description 
-}: { 
-  transactionId: number; 
-  description: string; 
-}) => {
-  const { toast } = useToast();
-  const [isPending, setIsPending] = useState(false);
-
-  const handleDelete = async () => {
-    setIsPending(true);
-    try {
-      await apiRequest("DELETE", `/api/transactions/${transactionId}`);
-      toast({
-        title: "Gasto eliminado",
-        description: `El gasto ha sido eliminado con éxito`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `No se pudo eliminar el gasto: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar este gasto?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta acción eliminará permanentemente el gasto "{description}" y no se puede deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelete();
-            }}
-            disabled={isPending}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isPending ? "Eliminando..." : "Eliminar"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-};
-
 const IncomeExpenseReport = () => {
-  const [location, navigate] = useLocation();
-  const { toast } = useToast();
-  
-  // Detectamos si venimos del dashboard directamente por URL o si hay parámetro tab
-  useEffect(() => {
-    // Usar URLSearchParams para leer el parámetro tab de la URL actual
-    const urlParams = new URLSearchParams(window.location.search);
-    const tabParam = urlParams.get('tab');
-    
-    // Si hay un parámetro tab y es válido, usarlo
-    if (tabParam === 'income' || tabParam === 'expense') {
-      setActiveTab(tabParam);
-    } 
-    // Si no hay parámetro pero venimos del dashboard, mostrar gastos
-    else if (document.referrer.includes('/dashboard')) {
-      setActiveTab('expense');
-    }
-    // En cualquier otro caso, mostrar ingresos (valor por defecto)
-  }, []);
-  
-  const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
-
-  // Consulta de invoices (ingresos) con refetchOnMount para asegurar datos actualizados
-  const {
-    data: invoices = [],
-    isLoading: isLoadingInvoices,
-    error: invoicesError,
-  } = useQuery<Invoice[]>({
-    queryKey: ["/api/invoices"],
-    refetchOnMount: true, // Forzar recarga al montar el componente
-    refetchOnWindowFocus: true, // Recargar cuando la ventana obtiene el foco
+  // Estados para filtros
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [dateRange, setDateRange] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({
+    start: null,
+    end: null,
   });
-
-  // Consulta de clientes para mostrar nombres
-  const {
-    data: clients = [],
-    isLoading: isLoadingClients,
-  } = useQuery<Client[]>({
+  const [priceRange, setPriceRange] = useState<{
+    min: string;
+    max: string;
+  }>({
+    min: "",
+    max: "",
+  });
+  const [isFilterApplied, setIsFilterApplied] = useState(false);
+  
+  // Estado para mostrar detalles de transacción
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isViewingTransaction, setIsViewingTransaction] = useState(false);
+  
+  // Estado para la vista ampliada de imágenes
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isViewingImage, setIsViewingImage] = useState(false);
+  const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
+  const [isMagnifierActive, setIsMagnifierActive] = useState(false);
+  
+  // Consulta de datos
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery<Transaction[]>({
+    queryKey: ["/api/transactions"],
+    refetchInterval: 3000, // Actualización automática cada 3 segundos
+  });
+  
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    refetchInterval: 3000,
+  });
+  
+  const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery<Invoice[]>({
+    queryKey: ["/api/invoices"],
+    refetchInterval: 3000,
+  });
+  
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
   });
-
-  // Consulta de transacciones (gastos e ingresos adicionales)
-  const {
-    data: transactions = [],
-    isLoading: isLoadingTransactions,
-    error: transactionsError,
-  } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
-    refetchOnMount: true, // Forzar recarga al montar el componente
-    refetchOnWindowFocus: true, // Recargar cuando la ventana obtiene el foco
-    refetchInterval: activeTab === "expense" ? 5000 : undefined, // Actualizar automáticamente cada 5 segundos solo en la pestaña de gastos
-  });
-
-  // Consulta de categorías para mostrar nombres
-  const {
-    data: categories = [],
-    isLoading: isLoadingCategories,
-  } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-
-  // Usar todas las facturas para mostrar en la vista
-  const allInvoices = invoices;
-  // Filtrar solo facturas pagadas para cálculo de ingresos
-  const paidInvoices = invoices.filter(invoice => invoice.status === "paid");
-
-  // Filtrar transacciones por tipo
-  const incomeTransactions = transactions.filter(tx => tx.type === "income");
-  const expenseTransactions = transactions.filter(tx => tx.type === "expense");
-
-  // Calcular totales con protección para valores no numéricos
-  const totalInvoiceIncome = paidInvoices.reduce((sum, inv) => {
-    // Usar subtotal en lugar de total para coincidir con los valores esperados (110000)
-    const subtotal = typeof inv.subtotal === 'number' ? inv.subtotal : parseFloat(inv.subtotal as any) || 0;
-    return sum + subtotal;
-  }, 0);
   
-  const totalAdditionalIncome = incomeTransactions.reduce((sum, tx) => {
-    const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount as any) || 0;
-    return sum + amount;
-  }, 0);
-  
-  // Usar los valores dinámicos calculados en base a las transacciones reales
-  const totalIncome = totalInvoiceIncome + totalAdditionalIncome;
-  
-  // Calcular los gastos en base a las transacciones de tipo expense
-  const totalExpenses = expenseTransactions.reduce((sum, tx) => {
-    const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount as any) || 0;
-    return sum + amount;
-  }, 0);
-
-  // Formateador de fechas
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "d MMM yyyy", { locale: es });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Manejar errores
-  useEffect(() => {
-    if (invoicesError) {
-      toast({
-        title: "Error al cargar facturas",
-        description: "No se pudieron cargar las facturas. Intente nuevamente.",
-        variant: "destructive",
+  // Mutación para eliminar transacción
+  const deleteTransactionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: "DELETE",
       });
-    }
-    if (transactionsError) {
-      toast({
-        title: "Error al cargar transacciones",
-        description: "No se pudieron cargar las transacciones. Intente nuevamente.",
-        variant: "destructive",
-      });
-    }
-  }, [invoicesError, transactionsError, toast]);
-
-  // Obtener nombre de cliente por ID
-  const getClientName = (clientId: number) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? client.name : "Cliente desconocido";
-  };
-
-  // Obtener nombre de categoría por ID
-  const getCategoryName = (categoryId: number | null) => {
-    if (!categoryId) return "Sin categoría";
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : "Categoría desconocida";
-  };
-  
-  // Obtener icono de categoría por ID
-  const getCategoryIcon = (categoryId: number | null) => {
-    if (!categoryId) return "📂"; // Icono por defecto para "Sin categoría"
-    const category = categories.find(c => c.id === categoryId);
-    return category?.icon || "📂"; // Usar el icono de la categoría o un icono por defecto
-  };
-  
-  // Obtener color de categoría por ID
-  const getCategoryColor = (categoryId: number | null) => {
-    if (!categoryId) return "#999999"; // Color por defecto para "Sin categoría"
-    const category = categories.find(c => c.id === categoryId);
-    return category?.color || "#999999"; // Usar el color de la categoría o un color por defecto
-  };
-
-  // Ordenar facturas y transacciones por fecha (más reciente primero)
-  const sortedInvoices = [...allInvoices].sort((a, b) => 
-    new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
-  );
-
-  const sortedIncomeTransactions = [...incomeTransactions].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  const sortedExpenseTransactions = [...expenseTransactions].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  
-
-
-  // Estados para los filtros de gastos
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [dateRange, setDateRange] = useState<{start: Date | null, end: Date | null}>({
-    start: null, 
-    end: null
-  });
-  const [priceRange, setPriceRange] = useState<{min: string, max: string}>({
-    min: '', 
-    max: ''
-  });
-  const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
-  
-  const isLoading = 
-    isLoadingInvoices || 
-    isLoadingClients || 
-    isLoadingTransactions || 
-    isLoadingCategories;
-
-  // Estado local para formulario de registro rápido
-  const [expenseDescription, setExpenseDescription] = useState("");
-  const [expenseAmount, setExpenseAmount] = useState("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAttachment, setShowAttachment] = useState(false);
-  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
-  
-  // Estado para el modal de creación de categoría
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [selectedEmoji, setSelectedEmoji] = useState("💼"); // Emoji predeterminado
-  
-  // Mutación para crear transacción (gasto rápido)
-  const createTransactionMutation = useMutation({
-    mutationFn: async (transactionData: any) => {
-      const res = await apiRequest("POST", "/api/transactions", transactionData);
-      return await res.json();
+      
+      if (!response.ok) throw new Error("Error al eliminar la transacción");
+      return id;
     },
     onSuccess: () => {
-      // Limpiar formulario
-      setExpenseDescription("");
-      setExpenseAmount("");
-      setCategoryId(null);
-      setAttachmentPath(null);
-      setShowAttachment(false);
-      
-      // Actualizar datos
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
-      toast({
-        title: "Gasto registrado",
-        description: "El gasto se ha registrado correctamente.",
-      });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error al registrar gasto",
-        description: error.message || "No se pudo registrar el gasto. Intente nuevamente.",
-        variant: "destructive",
-      });
+      console.error("Error al eliminar la transacción:", error);
+      alert("No se pudo eliminar la transacción. " + error.message);
     },
   });
   
-  // Mutación para crear categorías
-  const createCategoryMutation = useMutation({
-    mutationFn: async (categoryData: any) => {
-      const res = await apiRequest("POST", "/api/categories", categoryData);
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      // Actualizar lista de categorías
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      
-      // Seleccionar la nueva categoría en el formulario
-      setCategoryId(data.id);
-      
-      // Cerrar el modal
-      setShowCategoryModal(false);
-      
-      // Mostrar mensaje
-      toast({
-        title: "Categoría creada",
-        description: "La categoría se ha creado correctamente.",
+  // Mutación para eliminar factura
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/invoices/${id}`, {
+        method: "DELETE",
       });
+      
+      if (!response.ok) throw new Error("Error al eliminar la factura");
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error al crear categoría",
-        description: error.message || "No se pudo crear la categoría. Intente nuevamente.",
-        variant: "destructive",
-      });
+      console.error("Error al eliminar la factura:", error);
+      alert("No se pudo eliminar la factura. " + error.message);
     },
   });
   
-  // Manejar registro rápido de gasto
-  const handleQuickExpense = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Función para filtrar transacciones
+  const getFilteredTransactions = () => {
+    if (!isFilterApplied) return transactions;
     
-    if (!expenseDescription || !expenseAmount) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor ingrese descripción e importe del gasto.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Ya no obligamos a tener un comprobante adjunto
-    // El gasto puede registrarse sin comprobante
-    
-    const amount = parseFloat(expenseAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Importe inválido",
-        description: "Por favor ingrese un importe válido mayor que cero.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Crear nueva transacción de tipo gasto
-    createTransactionMutation.mutate({
-      description: expenseDescription,
-      amount: amount.toString(), // Convertir a string como espera el schema
-      date: new Date(), // Enviar como Date en lugar de string
-      type: "expense",
-      categoryId: categoryId, // Agregar la categoría (etiqueta) seleccionada
-      paymentMethod: "efectivo", // Valor por defecto
-      notes: "Registro rápido",
-      attachments: attachmentPath ? [attachmentPath] : []
-    });
-    
-    setIsSubmitting(false);
-  };
-  
-  // Manejar carga de archivo
-  const handleFileUpload = (filePath: string) => {
-    setAttachmentPath(filePath);
-    toast({
-      title: "Archivo adjuntado",
-      description: "El archivo se ha adjuntado correctamente",
+    return transactions.filter((transaction: Transaction) => {
+      // Filtro por categoría
+      if (
+        selectedCategories.length > 0 &&
+        (!transaction.categoryId ||
+          !selectedCategories.includes(transaction.categoryId))
+      ) {
+        return false;
+      }
+      
+      // Filtro por fecha
+      if (dateRange.start && new Date(transaction.date) < dateRange.start) {
+        return false;
+      }
+      
+      if (dateRange.end) {
+        const endDate = new Date(dateRange.end);
+        endDate.setHours(23, 59, 59, 999);
+        if (new Date(transaction.date) > endDate) {
+          return false;
+        }
+      }
+      
+      // Filtro por precio
+      if (
+        priceRange.min &&
+        parseFloat(priceRange.min) > parseFloat(transaction.amount.toString())
+      ) {
+        return false;
+      }
+      
+      if (
+        priceRange.max &&
+        parseFloat(priceRange.max) < parseFloat(transaction.amount.toString())
+      ) {
+        return false;
+      }
+      
+      return true;
     });
   };
   
-  // Función para exportar facturas a PDF
+  // Función para aplicar filtros
+  const handleApplyFilters = () => {
+    setIsFilterApplied(true);
+  };
+  
+  // Función para limpiar filtros
+  const handleClearFilters = () => {
+    setSelectedCategories([]);
+    setDateRange({ start: null, end: null });
+    setPriceRange({ min: "", max: "" });
+    setIsFilterApplied(false);
+  };
+  
+  // Función para confirmar eliminación
+  const confirmDeleteTransaction = (id: number) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar esta transacción?")) {
+      deleteTransactionMutation.mutate(id);
+    }
+  };
+  
+  const confirmDeleteInvoice = (id: number) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar esta factura?")) {
+      deleteInvoiceMutation.mutate(id);
+    }
+  };
+  
+  // Función para manejar el movimiento del magnificador
+  const handleImageMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isMagnifierActive) return;
+    
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    
+    setMagnifierPosition({ x, y });
+  };
+  
+  // Exportación a PDF para transacciones
+  const handleExportTransactionsPDF = () => {
+    try {
+      const doc = new jsPDF();
+      
+      const filteredTransactions = getFilteredTransactions();
+      
+      // Título
+      doc.setFontSize(18);
+      doc.text("Informe de Transacciones", 14, 22);
+      
+      // Fecha de generación
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(
+        `Generado el ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+        14,
+        30
+      );
+      
+      // Info de filtros
+      if (isFilterApplied) {
+        let filterText = "Filtros aplicados: ";
+        const filterParts = [];
+        
+        if (selectedCategories.length > 0) {
+          const categoryNames = selectedCategories
+            .map(
+              (id) =>
+                categories.find((cat: Category) => cat.id === id)?.name || ""
+            )
+            .join(", ");
+          filterParts.push(`Categorías: ${categoryNames}`);
+        }
+        
+        if (dateRange.start) {
+          filterParts.push(
+            `Desde: ${format(dateRange.start, "dd/MM/yyyy")}`
+          );
+        }
+        
+        if (dateRange.end) {
+          filterParts.push(`Hasta: ${format(dateRange.end, "dd/MM/yyyy")}`);
+        }
+        
+        if (priceRange.min) {
+          filterParts.push(`Importe mínimo: ${priceRange.min}€`);
+        }
+        
+        if (priceRange.max) {
+          filterParts.push(`Importe máximo: ${priceRange.max}€`);
+        }
+        
+        if (filterParts.length > 0) {
+          filterText += filterParts.join(", ");
+          doc.setFontSize(10);
+          doc.text(filterText, 14, 38);
+        }
+      }
+      
+      // Tabla de transacciones
+      const tableColumn = [
+        "Fecha",
+        "Descripción",
+        "Categoría",
+        "Importe",
+        "Tipo",
+      ];
+      const tableRows: any[] = [];
+      
+      filteredTransactions.forEach((transaction: Transaction) => {
+        const category =
+          categories.find(
+            (cat: Category) => cat.id === transaction.categoryId
+          )?.name || "Sin categoría";
+        
+        const transactionData = [
+          format(new Date(transaction.date), "dd/MM/yyyy"),
+          transaction.description,
+          category,
+          `${transaction.amount.toFixed(2)} €`,
+          transaction.type === "income" ? "Ingreso" : "Gasto",
+        ];
+        tableRows.push(transactionData);
+      });
+      
+      (doc as any).autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 45,
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [220, 53, 69] },
+        alternateRowStyles: { fillColor: [240, 240, 240] },
+      });
+      
+      // Cálculos de totales
+      let totalIncome = 0;
+      let totalExpense = 0;
+      
+      filteredTransactions.forEach((transaction: Transaction) => {
+        if (transaction.type === "income") {
+          totalIncome += transaction.amount;
+        } else {
+          totalExpense += transaction.amount;
+        }
+      });
+      
+      // Resumen financiero
+      const finalY = (doc as any).lastAutoTable.finalY || 150;
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text("Resumen Financiero:", 14, finalY + 15);
+      
+      doc.setFontSize(11);
+      doc.text(`Total Ingresos: ${totalIncome.toFixed(2)} €`, 14, finalY + 25);
+      doc.text(`Total Gastos: ${totalExpense.toFixed(2)} €`, 14, finalY + 35);
+      doc.text(
+        `Balance: ${(totalIncome - totalExpense).toFixed(2)} €`,
+        14,
+        finalY + 45
+      );
+      
+      // Guardar el PDF
+      doc.save("informe-transacciones.pdf");
+    } catch (error) {
+      console.error("Error al generar el PDF:", error);
+      alert("Error al generar el PDF: " + (error as Error).message);
+    }
+  };
+  
+  // Exportación a PDF para facturas
   const handleExportInvoicePDF = async (invoice: Invoice) => {
     try {
-      const client = clients.find(c => c.id === invoice.clientId);
-      if (!client) {
-        toast({
-          title: "Error al exportar",
-          description: "No se pudo encontrar información del cliente",
-          variant: "destructive",
-        });
-        return;
+      const doc = new jsPDF();
+      
+      // Buscar el cliente de la factura
+      const client = clients.find((c: Client) => c.id === invoice.clientId);
+      
+      // Título
+      doc.setFontSize(20);
+      doc.text("FACTURA", 105, 20, { align: "center" });
+      
+      // Número de factura
+      doc.setFontSize(16);
+      doc.text(`Nº: ${invoice.invoiceNumber}`, 105, 30, { align: "center" });
+      
+      // Información de la empresa
+      doc.setFontSize(10);
+      doc.text("DATOS DEL EMISOR:", 14, 45);
+      doc.text("Tu Empresa, S.L.", 14, 52);
+      doc.text("NIF: B12345678", 14, 58);
+      doc.text("Calle Ejemplo, 123", 14, 64);
+      doc.text("28001 Madrid, España", 14, 70);
+      
+      // Información del cliente
+      doc.text("DATOS DEL CLIENTE:", 120, 45);
+      if (client) {
+        doc.text(client.name, 120, 52);
+        doc.text(`NIF/CIF: ${client.taxId}`, 120, 58);
+        doc.text(client.address, 120, 64);
+        doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 120, 70);
+      } else {
+        doc.text("Cliente no encontrado", 120, 52);
       }
       
-      // Obtener items de la factura usando el nuevo endpoint específico
-      console.log(`Obteniendo items para factura ID: ${invoice.id}`);
-      const response = await apiRequest("GET", `/api/invoices/${invoice.id}/items`);
+      // Fechas
+      doc.text(`Fecha de emisión: ${format(new Date(invoice.issueDate), "dd/MM/yyyy")}`, 14, 85);
+      doc.text(`Fecha de vencimiento: ${format(new Date(invoice.dueDate), "dd/MM/yyyy")}`, 120, 85);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al obtener items de factura");
-      }
+      // Tabla de detalles
+      const tableColumn = ["Concepto", "Base Imponible", "IVA (21%)", "Total"];
+      const tableRows = [
+        [
+          "Servicios prestados según contrato",
+          `${invoice.subtotal.toFixed(2)} €`,
+          `${invoice.tax.toFixed(2)} €`,
+          `${invoice.total.toFixed(2)} €`,
+        ],
+      ];
       
-      const invoiceItems = await response.json();
-      console.log("Items de factura obtenidos:", invoiceItems);
-      
-      await generateInvoicePDF(invoice, client, invoiceItems);
-      
-      toast({
-        title: "PDF generado",
-        description: "La factura se ha exportado correctamente",
+      (doc as any).autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 95,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 6 },
+        headStyles: { fillColor: [220, 53, 69] },
       });
+      
+      // Totales
+      const finalY = (doc as any).lastAutoTable.finalY || 150;
+      
+      doc.setFontSize(11);
+      doc.text("Resumen:", 130, finalY + 15);
+      doc.text(`Base Imponible: ${invoice.subtotal.toFixed(2)} €`, 130, finalY + 25);
+      doc.text(`IVA (21%): ${invoice.tax.toFixed(2)} €`, 130, finalY + 35);
+      doc.text(`Total Factura: ${invoice.total.toFixed(2)} €`, 130, finalY + 45);
+      
+      // Información bancaria
+      doc.setFontSize(10);
+      doc.text("DATOS BANCARIOS:", 14, finalY + 65);
+      doc.text("IBAN: ES00 0000 0000 0000 0000 0000", 14, finalY + 75);
+      doc.text("Entidad: Banco Ejemplo", 14, finalY + 85);
+      
+      // Forma de pago
+      doc.text(`Método de pago: Transferencia bancaria`, 14, finalY + 100);
+      
+      // Notas legales
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        "Esta factura se ha emitido conforme a lo dispuesto en el Real Decreto 1619/2012, de 30 de noviembre, por el que se aprueba el Reglamento por el que se regulan las obligaciones de facturación.",
+        105,
+        finalY + 120,
+        { align: "center", maxWidth: 170 }
+      );
+      
+      // Guardar el PDF
+      doc.save(`factura-${invoice.invoiceNumber}.pdf`);
     } catch (error) {
-      console.error("Error exportando PDF:", error);
-      toast({
-        title: "Error al exportar",
-        description: error instanceof Error ? error.message : "No se pudo generar el PDF de la factura",
-        variant: "destructive",
-      });
+      console.error("Error al generar el PDF de la factura:", error);
+      alert("Error al generar el PDF: " + (error as Error).message);
     }
   };
   
-  // Función para generar y descargar el PDF de los gastos
-  const downloadExpensesPDF = () => {
-    if (expenseTransactions.length === 0) {
-      toast({
-        title: "No hay datos",
-        description: "No hay gastos registrados para descargar",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Crear un nuevo documento PDF en formato A4
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-    
-    // Configurar la información del documento
-    const currentDate = format(new Date(), "dd/MM/yyyy");
-    const title = "Registro de Gastos";
-    const fileName = `gastos_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-    
-    // Añadir título
-    doc.setFontSize(20);
-    doc.setTextColor(40, 99, 235); // Azul principal
-    doc.text(title, 105, 20, { align: "center" });
-    
-    // Añadir fecha de generación
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generado el: ${currentDate}`, 20, 30);
-    doc.text(`Total registros: ${expenseTransactions.length}`, 20, 35);
-    doc.text(`Importe total: ${formatCurrency(totalExpenses)}`, 20, 40);
-    
-    // Preparar datos para la tabla
-    const tableRows = sortedExpenseTransactions.map(transaction => [
-      transaction.id.toString(),
-      transaction.description,
-      formatDate(transaction.date),
-      getCategoryName(transaction.categoryId),
-      formatCurrency(transaction.amount)
-    ]);
-    
-    // Añadir tabla con los gastos
-    autoTable(doc, {
-      startY: 50,
-      head: [["ID", "Descripción", "Fecha", "Categoría", "Importe"]],
-      body: tableRows,
-      theme: "grid",
-      headStyles: { fillColor: [40, 99, 235], textColor: [255, 255, 255] },
-      columnStyles: {
-        0: { cellWidth: 15 },
-        1: { cellWidth: 60 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 30, halign: 'right' }
-      },
-    });
-    
-    // Pie de página
-    const pageCount = doc.getNumberOfPages();
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.text(
-        `Generado por Billeo - ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
-        105,
-        doc.internal.pageSize.height - 10,
-        { align: "center" }
-      );
-      doc.text(
-        `Página ${i} de ${pageCount}`,
-        doc.internal.pageSize.width - 20,
-        doc.internal.pageSize.height - 10
-      );
-    }
-    
-    // Descargar el PDF
-    doc.save(fileName);
-    
-    toast({
-      title: "PDF generado correctamente",
-      description: `El archivo ${fileName} se ha descargado`,
-    });
+  // Funciones auxiliares para renderizar información
+  const getCategoryName = (categoryId: number | null) => {
+    if (!categoryId) return "Sin categoría";
+    const category = categories.find((cat: Category) => cat.id === categoryId);
+    return category ? category.name : "Sin categoría";
   };
-
-  // Componente para seleccionar emoji
-  const EmojiPicker = () => {
-    return (
-      <div className="grid grid-cols-10 gap-2 mt-2">
-        {CATEGORY_EMOJIS.map((emoji, index) => (
-          <Button
-            key={index}
-            type="button"
-            variant={emoji === selectedEmoji ? "default" : "outline"}
-            className="h-10 w-10 p-0"
-            onClick={() => setSelectedEmoji(emoji)}
-          >
-            <span className="text-lg">{emoji}</span>
-          </Button>
-        ))}
-      </div>
-    );
+  
+  const getCategoryIcon = (categoryId: number | null) => {
+    if (!categoryId) return "📁";
+    const category = categories.find((cat: Category) => cat.id === categoryId);
+    return category?.icon || "📁";
   };
-
+  
+  const getCategoryColor = (categoryId: number | null) => {
+    if (!categoryId) return "#999";
+    const category = categories.find((cat: Category) => cat.id === categoryId);
+    return category?.color || "#999";
+  };
+  
+  const getClientName = (clientId: number) => {
+    const client = clients.find((c: Client) => c.id === clientId);
+    return client ? client.name : "Cliente desconocido";
+  };
+  
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pendiente":
+        return "bg-yellow-100 text-yellow-800";
+      case "pagada":
+        return "bg-green-100 text-green-800";
+      case "vencida":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+  
+  // Filtros específicos para ingresos y gastos
+  const getIncomeTransactions = () => {
+    return transactions.filter((t: Transaction) => t.type === "income");
+  };
+  
+  const getExpenseTransactions = () => {
+    return getFilteredTransactions().filter((t: Transaction) => t.type === "expense");
+  };
+  
+  // Renderizado principal
   return (
-    <>
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md mb-4">
-          <h1 className="text-2xl font-bold text-white">Ingresos y Gastos</h1>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex">
+        {/* Panel lateral para filtros */}
+        <div className="hidden md:block">
+          <ExpenseFilters
+            categories={categories}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            onApplyFilters={handleApplyFilters}
+            onClearFilters={handleClearFilters}
+          />
         </div>
-
-        <div className="grid gap-6">
-          {/* Panel de estadísticas - Diseño mejorado con tarjetas más atractivas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-green-100 p-2 rounded-full mr-3">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                  </div>
-                  <span className="text-green-700 text-lg">Total Ingresos</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-10 w-32" />
-                ) : (
-                  <div className="text-3xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
-                )}
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="bg-green-50 p-2 rounded-md">
-                    <span className="text-green-600 font-medium">Facturas: {formatCurrency(totalInvoiceIncome)}</span>
-                  </div>
-                  <div className="bg-green-50 p-2 rounded-md">
-                    <span className="text-green-600 font-medium">Otros: {formatCurrency(totalAdditionalIncome)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-red-100 p-2 rounded-full mr-3">
-                    <TrendingDown className="h-5 w-5 text-red-600" />
-                  </div>
-                  <span className="text-red-700 text-lg">Total Gastos</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-10 w-32" />
-                ) : (
-                  <div className="text-3xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
-                )}
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="bg-red-50 p-2 rounded-md">
-                    <span className="text-red-600 font-medium">Registros: {expenseTransactions.length} transacciones</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-300"></div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-blue-100 p-2 rounded-full mr-3">
-                    <FilePlus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <span className="text-blue-700 text-lg">Resultado</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-10 w-32" />
-                ) : (
-                  <div className="text-3xl font-bold text-blue-700">
-                    {formatCurrency(totalIncome - totalExpenses)}
-                  </div>
-                )}
-                <div className="mt-3 bg-blue-50 p-2 rounded-md">
-                  <Badge className={`text-sm ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
-                    {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
-                  </Badge>
-                  <span className="ml-2 text-sm text-blue-600">
-                    {totalIncome > totalExpenses 
-                      ? "¡Buen trabajo! Estás en positivo" 
-                      : "Revisa tus gastos para mejorar el resultado"}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Tabs para ingresos y gastos con diseño mejorado */}
-          <Tabs 
-            defaultValue="income" 
-            value={activeTab}
-            onValueChange={(value) => {
-              setActiveTab(value as "income" | "expense");
-              // Actualizar la URL para reflejar la pestaña activa sin recargar la página
-              const url = new URL(window.location.href);
-              url.searchParams.set('tab', value);
-              window.history.replaceState({}, '', url.toString());
-            }}
-            className="space-y-5"
-          >
-            <TabsList className="grid w-full grid-cols-2 p-1 bg-blue-50 rounded-xl">
-              <TabsTrigger value="income" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">
-                <TrendingUp className="w-5 h-5 mr-2" />
-                Ingresos
-              </TabsTrigger>
-              <TabsTrigger value="expense" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">
-                <TrendingDown className="w-5 h-5 mr-2" />
-                Gastos
-              </TabsTrigger>
+        
+        {/* Contenido principal */}
+        <div className="flex-1 ml-0 md:ml-4">
+          <Tabs defaultValue="expenses">
+            <TabsList className="mb-4">
+              <TabsTrigger value="expenses">Gastos</TabsTrigger>
+              <TabsTrigger value="incomes">Ingresos</TabsTrigger>
+              <TabsTrigger value="invoices">Facturas</TabsTrigger>
             </TabsList>
             
-            {/* TAB DE INGRESOS */}
-            <TabsContent value="income" className="space-y-4">
-              {/* Se eliminó el botón de "Nueva factura" que estaba aquí */}
-              
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <FilePlus className="mr-2 h-5 w-5" />
-                      Facturas emitidas
-                      <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-1">
-                        {allInvoices.length} facturas
-                      </span>
-                    </h3>
-                    <div 
-                      onClick={() => navigate("/invoices/create")}
-                      className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md text-white px-2 py-1.5 flex items-center cursor-pointer"
+            <TabsContent value="expenses">
+              <Card>
+                <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 border-b border-gray-200">
+                  <CardTitle className="text-lg font-semibold text-gray-800">
+                    <span className="text-red-600 mr-1">💸</span> Gastos
+                  </CardTitle>
+                  
+                  <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={handleExportTransactionsPDF}
                     >
-                      <span className="font-semibold text-white text-sm">Nueva factura</span>
-                      <PlusCircle className="ml-1.5 h-3.5 w-3.5 text-white/80" />
-                    </div>
-                  </div>
-                </div>
-                
-                {isLoading ? (
-                  <div className="p-6 space-y-4">
-                    <Skeleton className="h-16 w-full rounded-md" />
-                    <Skeleton className="h-16 w-full rounded-md" />
-                    <Skeleton className="h-16 w-full rounded-md" />
-                  </div>
-                ) : sortedInvoices.length > 0 ? (
-                  <div className="divide-y">
-                    {sortedInvoices.map((invoice) => (
-                      <div key={invoice.id} className="p-5 flex justify-between items-center hover:bg-blue-50 transition-colors group">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div className="bg-blue-100 p-2 rounded-full mr-3 group-hover:bg-blue-200 transition-colors">
-                              <FileText className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <div className="font-semibold text-gray-800 group-hover:text-gray-900">
-                                Factura #{invoice.invoiceNumber} - {getClientName(invoice.clientId)}
-                              </div>
-                              <div className="text-sm text-muted-foreground flex items-center mt-1">
-                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-2">
-                                  {invoice.status === "paid" ? "Pagada" : "Pendiente"}
-                                </span>
-                                <span>{formatDate(invoice.issueDate)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 flex-shrink-0">
-                          <div className="text-right">
-                            <div className="font-bold text-green-600 text-lg">
-                              {formatCurrency(invoice.total)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Base: {formatCurrency(invoice.subtotal)} · IVA: {formatCurrency(invoice.tax)}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
-                                    onClick={() => navigate(`/invoices/${invoice.id}`)}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Ver factura</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
-                                    onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Editar factura</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="rounded-full h-8 w-8 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
-                                    onClick={() => handleExportInvoicePDF(invoice)}
-                                  >
-                                    <FileDown className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Descargar PDF</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-12 text-center">
-                    <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                      <FileText className="h-8 w-8 text-blue-300" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">No hay facturas registradas</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Comienza emitiendo tu primera factura con nuestro asistente de creación
-                    </p>
-                    <Button 
-                      onClick={() => navigate("/invoices/create")} 
-                      className="gap-2"
+                      <LucideDownload className="h-3.5 w-3.5 mr-1" />
+                      Exportar PDF
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs md:hidden"
+                      onClick={() => {
+                        const filtersContainer = document.getElementById('mobile-filters');
+                        if (filtersContainer) {
+                          filtersContainer.classList.toggle('hidden');
+                        }
+                      }}
                     >
-                      <FilePlus className="h-4 w-4" />
-                      Crear factura
+                      Filtros
                     </Button>
                   </div>
-                )}
-              </Card>
-              
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <TrendingUp className="mr-2 h-5 w-5" />
-                      Otros ingresos
-                      <span className="ml-2 bg-white text-green-600 text-xs font-semibold rounded-full px-2 py-1">
-                        {incomeTransactions.length} registros
-                      </span>
-                    </h3>
-                    <div 
-                      onClick={() => navigate("/transactions/create?type=income")}
-                      className="bg-white/15 hover:bg-white/25 transition-colors duration-150 rounded-md text-white px-2 py-1.5 flex items-center cursor-pointer"
-                    >
-                      <span className="font-semibold text-white text-sm">Nuevo ingreso</span>
-                      <PlusCircle className="ml-1.5 h-3.5 w-3.5 text-white/80" />
-                    </div>
-                  </div>
+                </CardHeader>
+                
+                {/* Filtros móviles (ocultos por defecto) */}
+                <div id="mobile-filters" className="md:hidden hidden p-4 bg-gray-50 border-b border-gray-200">
+                  <ExpenseFilters
+                    categories={categories}
+                    selectedCategories={selectedCategories}
+                    setSelectedCategories={setSelectedCategories}
+                    dateRange={dateRange}
+                    setDateRange={setDateRange}
+                    priceRange={priceRange}
+                    setPriceRange={setPriceRange}
+                    onApplyFilters={handleApplyFilters}
+                    onClearFilters={handleClearFilters}
+                  />
                 </div>
                 
-                {isLoading ? (
-                  <div className="p-6 space-y-4">
-                    <Skeleton className="h-16 w-full rounded-md" />
-                    <Skeleton className="h-16 w-full rounded-md" />
-                  </div>
-                ) : sortedIncomeTransactions.length > 0 ? (
-                  <div className="divide-y">
-                    {sortedIncomeTransactions.map((transaction) => (
-                      <div key={transaction.id} className="p-5 flex justify-between items-center hover:bg-green-50 transition-colors group">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div className="bg-green-100 p-2 rounded-full mr-3 group-hover:bg-green-200 transition-colors">
-                              <TrendingUp className="h-5 w-5 text-green-600" />
-                            </div>
-                            <div>
-                              <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
-                              <div className="text-sm text-muted-foreground flex items-center mt-1">
-                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                <CardContent className="p-0">
+                  {isLoadingTransactions ? (
+                    <div className="p-8 text-center">Cargando gastos...</div>
+                  ) : getExpenseTransactions().length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      {isFilterApplied
+                        ? "No se encontraron gastos con los filtros aplicados"
+                        : "No hay gastos registrados"}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Categoría</TableHead>
+                            <TableHead>Descripción</TableHead>
+                            <TableHead className="text-right">Importe (€)</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getExpenseTransactions().map((transaction: Transaction) => (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="font-medium">
+                                {format(new Date(transaction.date), "dd/MM/yyyy")}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <span
+                                    className="mr-2"
+                                    style={{ color: getCategoryColor(transaction.categoryId) }}
+                                  >
+                                    {getCategoryIcon(transaction.categoryId)}
+                                  </span>
                                   {getCategoryName(transaction.categoryId)}
-                                </span>
-                                <span>{formatDate(transaction.date)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 flex-shrink-0">
-                          <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-green-100">
-                            <div className="font-bold text-green-600 text-lg">
-                              {formatCurrency(transaction.amount)}
-                            </div>
-                          </div>
-                          <div className="flex items-center opacity-80 group-hover:opacity-100">
-                            <DeleteTransactionButton 
-                              transactionId={transaction.id}
-                              description={transaction.description}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-12 text-center">
-                    <div className="mx-auto w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                      <TrendingUp className="h-8 w-8 text-green-300" />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <span className="truncate max-w-[180px]">
+                                    {transaction.description}
+                                  </span>
+                                  
+                                  {/* Indicadores */}
+                                  <div className="flex ml-2 space-x-1">
+                                    {transaction.paymentMethod && (
+                                      <PopoverTooltip>
+                                        <PopoverTooltipTrigger>
+                                          <LucideCreditCard className="h-3.5 w-3.5 text-gray-400" />
+                                        </PopoverTooltipTrigger>
+                                        <PopoverTooltipContent>
+                                          <p className="text-xs">
+                                            Método de pago: {transaction.paymentMethod}
+                                          </p>
+                                        </PopoverTooltipContent>
+                                      </PopoverTooltip>
+                                    )}
+                                    
+                                    {transaction.tax && (
+                                      <PopoverTooltip>
+                                        <PopoverTooltipTrigger>
+                                          <LucideReceipt className="h-3.5 w-3.5 text-gray-400" />
+                                        </PopoverTooltipTrigger>
+                                        <PopoverTooltipContent>
+                                          <p className="text-xs">
+                                            IVA: {transaction.tax}%
+                                          </p>
+                                        </PopoverTooltipContent>
+                                      </PopoverTooltip>
+                                    )}
+                                    
+                                    {transaction.attachments &&
+                                      transaction.attachments.length > 0 && (
+                                        <PopoverTooltip>
+                                          <PopoverTooltipTrigger>
+                                            <LucideFileText className="h-3.5 w-3.5 text-gray-400" />
+                                          </PopoverTooltipTrigger>
+                                          <PopoverTooltipContent>
+                                            <p className="text-xs">
+                                              {transaction.attachments.length}{" "}
+                                              {transaction.attachments.length === 1
+                                                ? "adjunto"
+                                                : "adjuntos"}
+                                            </p>
+                                          </PopoverTooltipContent>
+                                        </PopoverTooltip>
+                                      )}
+                                    
+                                    {transaction.notes && (
+                                      <PopoverTooltip>
+                                        <PopoverTooltipTrigger>
+                                          <LucideClipboard className="h-3.5 w-3.5 text-gray-400" />
+                                        </PopoverTooltipTrigger>
+                                        <PopoverTooltipContent>
+                                          <p className="text-xs">
+                                            Notas: {transaction.notes}
+                                          </p>
+                                        </PopoverTooltipContent>
+                                      </PopoverTooltip>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {transaction.amount.toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      setSelectedTransaction(transaction);
+                                      setIsViewingTransaction(true);
+                                    }}
+                                  >
+                                    <LucideEye className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      window.location.href = `/transactions/edit/${transaction.id}`;
+                                    }}
+                                  >
+                                    <LucideEdit className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-red-600"
+                                    onClick={() => confirmDeleteTransaction(transaction.id)}
+                                  >
+                                    <LucideTrash className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">No hay otros ingresos registrados</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Registra ingresos adicionales que no correspondan a facturas emitidas
-                    </p>
-                    <Button 
-                      onClick={() => navigate("/transactions/create?type=income")} 
-                      variant="outline" 
-                      className="bg-green-600 text-white hover:bg-green-700 gap-2"
-                    >
-                      <PlusCircle className="h-4 w-4" />
-                      Registrar ingreso
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </CardContent>
               </Card>
             </TabsContent>
             
-            {/* TAB DE GASTOS */}
-            <TabsContent value="expense" className="space-y-4">
-              <div className="flex justify-end mb-2 gap-2">
-                <Button 
-                  onClick={() => navigate("/documents/scan")}
-                  variant="default" 
-                  className="gap-2 text-sm bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
-                >
-                  <ScanText className="h-4 w-4" />
-                  Escanear documento
-                </Button>
-                <Button 
-                  onClick={downloadExpensesPDF} 
-                  variant="outline" 
-                  className="gap-2 text-sm"
-                  disabled={expenseTransactions.length === 0}
-                >
-                  <Download className="h-4 w-4" />
-                  Descargar lista de gastos
-                </Button>
-              </div>
-              
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-red-600 to-red-400 p-3 text-white">
-                  <h3 className="text-sm font-medium flex items-center">
-                    <Receipt className="mr-2 h-4 w-4" />
-                    Registro rápido de gastos
-                  </h3>
-                </div>
-                <CardContent className="p-3">
-                  <form onSubmit={handleQuickExpense} className="flex flex-wrap items-end gap-2 mb-0">
-                    <div className="flex-1 min-w-[180px]">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Descripción
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Ej: Material de oficina"
-                        value={expenseDescription}
-                        onChange={(e) => setExpenseDescription(e.target.value)}
-                        required
-                        className="h-8 text-sm"
-                      />
+            <TabsContent value="incomes">
+              <Card>
+                <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 border-b border-gray-200">
+                  <CardTitle className="text-lg font-semibold text-gray-800">
+                    <span className="text-green-600 mr-1">💰</span> Ingresos
+                  </CardTitle>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs mt-2 md:mt-0"
+                    onClick={handleExportTransactionsPDF}
+                  >
+                    <LucideDownload className="h-3.5 w-3.5 mr-1" />
+                    Exportar PDF
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {isLoadingTransactions ? (
+                    <div className="p-8 text-center">Cargando ingresos...</div>
+                  ) : getIncomeTransactions().length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      No hay ingresos registrados
                     </div>
-                    
-                    <div className="w-[120px]">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Importe (€)
-                      </label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={expenseAmount}
-                        onChange={(e) => setExpenseAmount(e.target.value)}
-                        required
-                        className="h-8 text-sm"
-                      />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Categoría</TableHead>
+                            <TableHead>Descripción</TableHead>
+                            <TableHead className="text-right">Importe (€)</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getIncomeTransactions().map((transaction: Transaction) => (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="font-medium">
+                                {format(new Date(transaction.date), "dd/MM/yyyy")}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <span
+                                    className="mr-2"
+                                    style={{ color: getCategoryColor(transaction.categoryId) }}
+                                  >
+                                    {getCategoryIcon(transaction.categoryId)}
+                                  </span>
+                                  {getCategoryName(transaction.categoryId)}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <span className="truncate max-w-[180px]">
+                                    {transaction.description}
+                                  </span>
+                                  
+                                  {/* Indicadores */}
+                                  <div className="flex ml-2 space-x-1">
+                                    {transaction.paymentMethod && (
+                                      <PopoverTooltip>
+                                        <PopoverTooltipTrigger>
+                                          <LucideCreditCard className="h-3.5 w-3.5 text-gray-400" />
+                                        </PopoverTooltipTrigger>
+                                        <PopoverTooltipContent>
+                                          <p className="text-xs">
+                                            Método de pago: {transaction.paymentMethod}
+                                          </p>
+                                        </PopoverTooltipContent>
+                                      </PopoverTooltip>
+                                    )}
+                                    
+                                    {transaction.tax && (
+                                      <PopoverTooltip>
+                                        <PopoverTooltipTrigger>
+                                          <LucideReceipt className="h-3.5 w-3.5 text-gray-400" />
+                                        </PopoverTooltipTrigger>
+                                        <PopoverTooltipContent>
+                                          <p className="text-xs">
+                                            IVA: {transaction.tax}%
+                                          </p>
+                                        </PopoverTooltipContent>
+                                      </PopoverTooltip>
+                                    )}
+                                    
+                                    {transaction.attachments &&
+                                      transaction.attachments.length > 0 && (
+                                        <PopoverTooltip>
+                                          <PopoverTooltipTrigger>
+                                            <LucideFileText className="h-3.5 w-3.5 text-gray-400" />
+                                          </PopoverTooltipTrigger>
+                                          <PopoverTooltipContent>
+                                            <p className="text-xs">
+                                              {transaction.attachments.length}{" "}
+                                              {transaction.attachments.length === 1
+                                                ? "adjunto"
+                                                : "adjuntos"}
+                                            </p>
+                                          </PopoverTooltipContent>
+                                        </PopoverTooltip>
+                                      )}
+                                    
+                                    {transaction.notes && (
+                                      <PopoverTooltip>
+                                        <PopoverTooltipTrigger>
+                                          <LucideClipboard className="h-3.5 w-3.5 text-gray-400" />
+                                        </PopoverTooltipTrigger>
+                                        <PopoverTooltipContent>
+                                          <p className="text-xs">
+                                            Notas: {transaction.notes}
+                                          </p>
+                                        </PopoverTooltipContent>
+                                      </PopoverTooltip>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {transaction.amount.toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      setSelectedTransaction(transaction);
+                                      setIsViewingTransaction(true);
+                                    }}
+                                  >
+                                    <LucideEye className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      window.location.href = `/transactions/edit/${transaction.id}`;
+                                    }}
+                                  >
+                                    <LucideEdit className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-red-600"
+                                    onClick={() => confirmDeleteTransaction(transaction.id)}
+                                  >
+                                    <LucideTrash className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                    
-                    <div className="flex-1 min-w-[180px]">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Categoría
-                      </label>
-                      <div className="flex gap-1">
-                        <Select 
-                          onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
-                          defaultValue={categoryId ? categoryId.toString() : "null"}
-                        >
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue placeholder="Categoría" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="null">Sin categoría</SelectItem>
-                            {categories && categories
-                              .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
-                              .map((category) => (
-                                <SelectItem 
-                                  key={category.id} 
-                                  value={category.id.toString()}
-                                >
-                                  {category.icon || "💼"} {category.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Button 
-                          type="button" 
-                          size="icon"
-                          variant="outline" 
-                          className="h-8 w-8"
-                          onClick={() => setShowCategoryModal(true)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1">
-                      <div className="flex-shrink-0">
-                        {!attachmentPath ? (
-                          <FileUpload onUpload={handleFileUpload} compact={true} />
-                        ) : (
-                          <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
-                            <FileText className="h-3 w-3" />
-                            <span className="text-xs">Adjunto</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-4 w-4 p-0 ml-1" 
-                              onClick={() => setAttachmentPath(null)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="bg-red-600 hover:bg-red-700 whitespace-nowrap h-8"
-                        size="sm"
-                      >
-                        {isSubmitting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <PlusCircle className="h-4 w-4 mr-1" />
-                        )}
-                        <span>Registrar</span>
-                      </Button>
-                    </div>
-                  </form>
+                  )}
                 </CardContent>
               </Card>
-              
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <TrendingDown className="mr-2 h-5 w-5" />
-                      Lista de Gastos
-                      <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
-                        {showFilters && filteredExpenseTransactions 
-                          ? filteredExpenseTransactions.length 
-                          : expenseTransactions.length} registros
-                      </span>
-                    </h3>
-                    <Button 
-                      onClick={() => setShowFilters(!showFilters)}
-                      variant="outline" 
-                      size="sm"
-                      className="bg-white text-red-600 border-white hover:bg-red-50 hover:text-red-700"
-                    >
-                      {showFilters ? "Ocultar filtros" : "Filtrar gastos"}
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Panel de filtros */}
-                {showFilters && (
-                  <div className="p-4 bg-red-50 border-t border-red-100">
-                    <div className="text-sm font-medium mb-3 text-red-700">Filtrar gastos por:</div>
-                    
-                    <div className="flex flex-col gap-4">
-                      {/* Filtro de categorías */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Categorías
-                        </label>
-                        <Select 
-                          value={selectedCategories.length > 0 ? selectedCategories.join(',') : "all"} 
-                          onValueChange={(value) => {
-                            if (value === "all") {
-                              setSelectedCategories([]);
-                            } else {
-                              setSelectedCategories(value.split(',').map(id => parseInt(id)));
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="w-full h-9 text-sm">
-                            <SelectValue placeholder="Todas las categorías" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas las categorías</SelectItem>
-                            {categories
-                              .filter(cat => cat.type === 'expense')
-                              .map(category => (
-                                <SelectItem key={category.id} value={category.id.toString()}>
-                                  <div className="flex items-center">
-                                    <span className="mr-2" style={{color: category.color}}>{category.icon}</span>
-                                    {category.name}
-                                  </div>
-                                </SelectItem>
-                              ))
-                            }
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Filtro de fechas */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Fecha desde
-                        </label>
-                        <Input
-                          type="date"
-                          className="h-9 text-sm w-full mb-2"
-                          value={dateRange.start ? format(dateRange.start, 'yyyy-MM-dd') : ''}
-                          onChange={(e) => {
-                            setDateRange({
-                              ...dateRange,
-                              start: e.target.value ? new Date(e.target.value) : null
-                            });
-                          }}
-                        />
-                        
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Fecha hasta
-                        </label>
-                        <Input
-                          type="date"
-                          className="h-9 text-sm w-full"
-                          value={dateRange.end ? format(dateRange.end, 'yyyy-MM-dd') : ''}
-                          onChange={(e) => {
-                            setDateRange({
-                              ...dateRange,
-                              end: e.target.value ? new Date(e.target.value) : null
-                            });
-                          }}
-                        />
-                      </div>
-                      
-                      {/* Filtro de precios */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Importe mínimo (€)
-                        </label>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="h-9 text-sm w-full mb-2"
-                          value={priceRange.min}
-                          onChange={(e) => {
-                            setPriceRange({
-                              ...priceRange,
-                              min: e.target.value
-                            });
-                          }}
-                        />
-                        
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Importe máximo (€)
-                        </label>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="Sin límite"
-                          className="h-9 text-sm w-full"
-                          value={priceRange.max}
-                          onChange={(e) => {
-                            setPriceRange({
-                              ...priceRange,
-                              max: e.target.value
-                            });
-                          }}
-                        />
-                      </div>
+            </TabsContent>
+            
+            <TabsContent value="invoices">
+              <Card>
+                <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 border-b border-gray-200">
+                  <CardTitle className="text-lg font-semibold text-gray-800">
+                    <span className="text-blue-600 mr-1">📄</span> Facturas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {isLoadingInvoices || isLoadingClients ? (
+                    <div className="p-8 text-center">Cargando facturas...</div>
+                  ) : invoices.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      No hay facturas registradas
                     </div>
-                    
-                    {/* Botones de acción */}
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // Limpiar todos los filtros
-                          setSelectedCategories([]);
-                          setDateRange({ start: null, end: null });
-                          setPriceRange({ min: '', max: '' });
-                          // Mostrar todas las transacciones
-                          setFilteredExpenseTransactions([]);
-                        }}
-                      >
-                        Limpiar filtros
-                      </Button>
-                      
-                      <Button 
-                        size="sm"
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                        onClick={() => {
-                          // Aplicar filtros
-                          const filtered = sortedExpenseTransactions.filter(transaction => {
-                            // 1. Filtro por categoría
-                            if (selectedCategories.length > 0 && transaction.categoryId) {
-                              if (!selectedCategories.includes(transaction.categoryId)) {
-                                return false;
-                              }
-                            }
-                            
-                            // 2. Filtro por rango de fechas
-                            if (dateRange.start || dateRange.end) {
-                              const transactionDate = new Date(transaction.date);
-                              
-                              if (dateRange.start && transactionDate < dateRange.start) {
-                                return false;
-                              }
-                              
-                              if (dateRange.end) {
-                                // Añadir un día a la fecha final para incluir todo el día
-                                const endDate = new Date(dateRange.end);
-                                endDate.setDate(endDate.getDate() + 1);
-                                
-                                if (transactionDate > endDate) {
-                                  return false;
-                                }
-                              }
-                            }
-                            
-                            // 3. Filtro por rango de precios
-                            const minPrice = priceRange.min ? parseFloat(priceRange.min) : null;
-                            const maxPrice = priceRange.max ? parseFloat(priceRange.max) : null;
-                            
-                            if (minPrice !== null && transaction.amount < minPrice) {
-                              return false;
-                            }
-                            
-                            if (maxPrice !== null && transaction.amount > maxPrice) {
-                              return false;
-                            }
-                            
-                            // Si pasa todos los filtros, incluir en los resultados
-                            return true;
-                          });
-                          
-                          setFilteredExpenseTransactions(filtered);
-                        }}
-                      >
-                        Aplicar filtros
-                      </Button>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Número</TableHead>
+                            <TableHead>Cliente</TableHead>
+                            <TableHead>Fecha emisión</TableHead>
+                            <TableHead>Vencimiento</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead className="text-right">Total (€)</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invoices.map((invoice: Invoice) => (
+                            <TableRow key={invoice.id}>
+                              <TableCell className="font-medium">
+                                {invoice.invoiceNumber}
+                              </TableCell>
+                              <TableCell>
+                                {getClientName(invoice.clientId)}
+                              </TableCell>
+                              <TableCell>
+                                {format(new Date(invoice.issueDate), "dd/MM/yyyy")}
+                              </TableCell>
+                              <TableCell>
+                                {format(new Date(invoice.dueDate), "dd/MM/yyyy")}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={getStatusColor(invoice.status)}
+                                  variant="outline"
+                                >
+                                  {invoice.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {invoice.total.toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      window.location.href = `/invoices/${invoice.id}`;
+                                    }}
+                                  >
+                                    <LucideEye className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => handleExportInvoicePDF(invoice)}
+                                  >
+                                    <LucidePrinter className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      window.location.href = `/invoices/edit/${invoice.id}`;
+                                    }}
+                                  >
+                                    <LucideEdit className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-red-600"
+                                    onClick={() => confirmDeleteInvoice(invoice.id)}
+                                  >
+                                    <LucideTrash className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                  </div>
-                )}
-                
-                {isLoading ? (
-                  <div className="p-6 space-y-4">
-                    <Skeleton className="h-16 w-full rounded-md" />
-                    <Skeleton className="h-16 w-full rounded-md" />
-                    <Skeleton className="h-16 w-full rounded-md" />
-                  </div>
-                ) : (showFilters && filteredExpenseTransactions.length > 0) || (!showFilters && sortedExpenseTransactions.length > 0) ? (
-                  <div className="divide-y">
-                    {(showFilters && filteredExpenseTransactions.length > 0 
-                      ? filteredExpenseTransactions 
-                      : sortedExpenseTransactions).map((transaction) => (
-                      <div key={transaction.id} className="p-4 flex justify-between items-center hover:bg-red-50 transition-colors group">
-                        <div className="flex-1">
-                          <div className="flex items-start">
-                            <div 
-                              className="p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors"
-                              style={{ 
-                                backgroundColor: `${getCategoryColor(transaction.categoryId)}20`, // Añadir transparencia al color
-                                border: `1px solid ${getCategoryColor(transaction.categoryId)}40` 
-                              }}
-                            >
-                              {/* Mostrar el emoji/icono de la categoría en lugar del icono genérico */}
-                              <span 
-                                className="text-lg" 
-                                style={{ color: getCategoryColor(transaction.categoryId) }}
-                              >
-                                {getCategoryIcon(transaction.categoryId)}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs flex items-center">
-                                  <FolderOpen className="h-3 w-3 mr-1" /> 
-                                  {getCategoryName(transaction.categoryId) || 'Sin categoría'}
-                                </span>
-                                
-                                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs flex items-center">
-                                  <Calendar className="h-3 w-3 mr-1" /> 
-                                  {formatDate(transaction.date)}
-                                </span>
-                                
-                                {transaction.paymentMethod && (
-                                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs flex items-center">
-                                    <CreditCard className="h-3 w-3 mr-1" /> 
-                                    {transaction.paymentMethod === 'card' ? 'Tarjeta' : 
-                                     transaction.paymentMethod === 'cash' ? 'Efectivo' : 
-                                     transaction.paymentMethod === 'transfer' ? 'Transferencia' : 
-                                     transaction.paymentMethod === 'direct_debit' ? 'Domiciliación' : 
-                                     transaction.paymentMethod}
-                                  </span>
-                                )}
-                                
-                                {transaction.attachments && transaction.attachments.length > 0 && (
-                                  <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs flex items-center">
-                                    <Paperclip className="h-3 w-3 mr-1" /> 
-                                    Adjuntos ({transaction.attachments.length})
-                                  </span>
-                                )}
-                                
-                                {transaction.tax && (
-                                  <span className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full text-xs flex items-center">
-                                    <Percent className="h-3 w-3 mr-1" />
-                                    IVA: {typeof transaction.tax === 'number' ? `${transaction.tax}%` : transaction.tax}
-                                  </span>
-                                )}
-                                
-                                {transaction.notes && (
-                                  <span className="bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full text-xs flex items-center cursor-help" title={transaction.notes}>
-                                    <Info className="h-3 w-3 mr-1" />
-                                    Tiene notas
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-red-100">
-                            <div className="font-bold text-red-600 text-lg">
-                              {formatCurrency(transaction.amount)}
-                            </div>
-                          </div>
-                          <div className="flex items-center opacity-80 group-hover:opacity-100 transition-opacity">
-                            <DownloadTransactionButton 
-                              transactionId={transaction.id}
-                            />
-                            <DeleteTransactionButton 
-                              transactionId={transaction.id}
-                              description={transaction.description}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-12 text-center">
-                    <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                      <Receipt className="h-8 w-8 text-red-300" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">No hay gastos registrados</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Comienza registrando gastos usando el formulario de arriba o escaneando documentos
-                    </p>
-                    <Button 
-                      onClick={() => navigate("/documents/scan")} 
-                      variant="default" 
-                      className="gap-2 bg-[#04C4D9] hover:bg-[#03b0c3] text-white"
-                    >
-                      <ScanText className="h-4 w-4" />
-                      Escanear documento
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
       </div>
-
-      {/* Modal para crear nueva categoría */}
-      <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
+      
+      {/* Diálogo para ver detalles de transacción */}
+      <Dialog
+        open={isViewingTransaction}
+        onOpenChange={(open) => {
+          if (!open) setIsViewingTransaction(false);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Crear nueva categoría</DialogTitle>
-            <DialogDescription>
-              Añade una nueva categoría para organizar tus gastos.
-            </DialogDescription>
+            <DialogTitle>Detalles de la transacción</DialogTitle>
           </DialogHeader>
           
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              console.log("Formulario enviado");
-              console.log("Target:", e.target);
-              const formData = new FormData(e.target as HTMLFormElement);
-              const categoryName = formData.get("categoryName") as string;
-              console.log("Nombre categoría:", categoryName);
-              
-              if (!categoryName) {
-                toast({
-                  title: "Error",
-                  description: "El nombre de la categoría es obligatorio",
-                  variant: "destructive",
-                });
-                return;
-              }
-              
-              createCategoryMutation.mutate({
-                name: categoryName,
-                type: "expense", // Por defecto para el formulario de gastos
-                icon: selectedEmoji,
-                color: "#6E56CF" // Color por defecto
-              });
-            }}
-          >
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label htmlFor="categoryName" className="text-sm font-medium">
-                  Nombre de la categoría
-                </label>
-                <Input
-                  id="categoryName"
-                  name="categoryName"
-                  placeholder="Ej: Material de oficina"
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">
-                  Icono/Emoji
-                </label>
-                <div className="flex items-center gap-2">
-                  <div className="bg-gray-100 h-10 w-10 rounded-md flex items-center justify-center text-xl">
-                    {selectedEmoji}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Selecciona un emoji para tu categoría
+          {selectedTransaction && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-500">
+                    Tipo
+                  </label>
+                  <p className="text-sm font-medium">
+                    {selectedTransaction.type === "income"
+                      ? "Ingreso"
+                      : "Gasto"}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-medium text-gray-500">
+                    Fecha
+                  </label>
+                  <p className="text-sm font-medium">
+                    {format(
+                      new Date(selectedTransaction.date),
+                      "dd MMMM yyyy",
+                      { locale: es }
+                    )}
+                  </p>
+                </div>
+                
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-gray-500">
+                    Descripción
+                  </label>
+                  <p className="text-sm">
+                    {selectedTransaction.description}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-medium text-gray-500">
+                    Categoría
+                  </label>
+                  <div className="flex items-center">
+                    <span
+                      className="mr-1"
+                      style={{
+                        color: getCategoryColor(
+                          selectedTransaction.categoryId
+                        ),
+                      }}
+                    >
+                      {getCategoryIcon(selectedTransaction.categoryId)}
+                    </span>
+                    <p className="text-sm">
+                      {getCategoryName(selectedTransaction.categoryId)}
+                    </p>
                   </div>
                 </div>
                 
-                <EmojiPicker />
+                <div>
+                  <label className="text-xs font-medium text-gray-500">
+                    Importe
+                  </label>
+                  <p className="text-sm font-medium">
+                    {selectedTransaction.amount.toFixed(2)} €
+                  </p>
+                </div>
+                
+                {selectedTransaction.paymentMethod && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">
+                      Método de pago
+                    </label>
+                    <p className="text-sm">
+                      {selectedTransaction.paymentMethod}
+                    </p>
+                  </div>
+                )}
+                
+                {selectedTransaction.tax && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">
+                      IVA
+                    </label>
+                    <p className="text-sm">{selectedTransaction.tax}%</p>
+                  </div>
+                )}
+                
+                {selectedTransaction.notes && (
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-500">
+                      Notas
+                    </label>
+                    <p className="text-sm">{selectedTransaction.notes}</p>
+                  </div>
+                )}
               </div>
+              
+              {selectedTransaction.attachments &&
+                selectedTransaction.attachments.length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-2">
+                      Adjuntos ({selectedTransaction.attachments.length})
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedTransaction.attachments.map(
+                        (attachment, index) => (
+                          <div
+                            key={index}
+                            className="relative border rounded-md overflow-hidden h-24 cursor-pointer"
+                            onClick={() => {
+                              setSelectedImage(attachment);
+                              setIsViewingImage(true);
+                            }}
+                          >
+                            <img
+                              src={`/uploads/${attachment}`}
+                              alt={`Adjunto ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
             </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewingTransaction(false)}
+            >
+              Cerrar
+            </Button>
             
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowCategoryModal(false)}>
-                Cancelar
+            {selectedTransaction && (
+              <Button
+                onClick={() => {
+                  window.location.href = `/transactions/edit/${selectedTransaction.id}`;
+                }}
+              >
+                Editar
               </Button>
-              <Button type="submit">
-                Crear categoría
-              </Button>
-            </DialogFooter>
-          </form>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+      
+      {/* Diálogo para ver imagen ampliada */}
+      <Dialog
+        open={isViewingImage}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsViewingImage(false);
+            setIsMagnifierActive(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Documento adjunto</DialogTitle>
+            <DialogDescription>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => setIsMagnifierActive(!isMagnifierActive)}
+              >
+                <MagnifyingGlassIcon className="mr-2 h-4 w-4" />
+                {isMagnifierActive ? "Desactivar lupa" : "Activar lupa"}
+              </Button>
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedImage && (
+            <div className="relative overflow-hidden">
+              <img
+                src={`/uploads/${selectedImage}`}
+                alt="Documento ampliado"
+                className="w-full h-auto object-contain max-h-[60vh]"
+                onMouseMove={handleImageMouseMove}
+              />
+              
+              {isMagnifierActive && (
+                <div
+                  className="absolute pointer-events-none border-2 border-blue-500 w-36 h-36 rounded-full overflow-hidden shadow-lg"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    backgroundImage: `url(/uploads/${selectedImage})`,
+                    backgroundPosition: `${magnifierPosition.x}% ${magnifierPosition.y}%`,
+                    backgroundSize: "400%",
+                    backgroundRepeat: "no-repeat",
+                    zIndex: 10,
+                  }}
+                >
+                  {/* Crosshair */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: "50%",
+                      left: 0,
+                      width: "100%",
+                      height: "1px",
+                      backgroundColor: "rgba(255, 0, 0, 0.5)",
+                    }}
+                  ></div>
+                  <div
+                    className="absolute"
+                    style={{
+                      left: "50%",
+                      top: 0,
+                      height: "100%",
+                      width: "1px",
+                      backgroundColor: "rgba(255, 0, 0, 0.5)",
+                    }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewingImage(false)}
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
