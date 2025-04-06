@@ -128,18 +128,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("p-6 bg-slate-50/80", className)}>
+    <div className={cn("p-6 bg-white", className)}>
       {/* Cabecera del dashboard con título y controles */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-slate-200 mb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md mb-4">
         <div className="flex items-center mb-3 md:mb-0">
-          <BarChart3 className="h-6 w-6 text-indigo-600 mr-2" />
-          <h2 className="text-2xl font-bold text-slate-800">Dashboard</h2>
+          <BarChart3 className="h-6 w-6 text-white mr-2" />
+          <h2 className="text-2xl font-bold text-white">Dashboard</h2>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
           
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[100px] bg-slate-50 border-slate-200 h-9">
+            <SelectTrigger className="w-[100px] bg-white/90 border-none h-9">
               <SelectValue placeholder="Año" />
             </SelectTrigger>
             <SelectContent>
@@ -150,7 +150,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </Select>
           
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[150px] bg-slate-50 border-slate-200 h-9">
+            <SelectTrigger className="w-[150px] bg-white/90 border-none h-9">
               <SelectValue placeholder="Periodo" />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +165,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <Button 
             size="sm"
             onClick={() => refreshDashboard()}
-            className="h-9 bg-indigo-600 hover:bg-indigo-700"
+            className="h-9 bg-white text-blue-600 hover:bg-blue-50"
           >
             Actualizar
           </Button>
@@ -175,40 +175,41 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       {/* Primera fila: Widgets principales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         {/* Widget de Ingresos */}
-        <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-gradient-to-r from-green-50 to-green-100 p-6">
+        <Card className="overflow-hidden rounded-lg shadow-md border-0">
+          <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
+          <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <div className="bg-green-500/10 p-3 rounded-full mr-4">
-                  <ArrowUp className="h-6 w-6 text-green-600" />
+                <div className="bg-green-100 p-3 rounded-full mr-4">
+                  <ArrowUp className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-green-700">Ingresos</h3>
-                  <p className="text-sm text-green-600/70">Entradas totales</p>
+                  <p className="text-sm text-gray-500">Entradas totales</p>
                 </div>
               </div>
             </div>
-            <div className="mb-4 space-y-2">
+            <div className="mb-4">
               <div className="text-3xl font-bold text-green-700">
                 {formatCurrency(baseImponibleIngresos)}
               </div>
-              <div className="text-sm text-green-600/70">
+              <div className="text-sm text-gray-500 mt-1">
                 Base imponible (sin IVA)
               </div>
             </div>
-            <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-green-100">
+            <div className="space-y-2 mb-4 p-3 bg-green-50 rounded-md border border-green-100">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-green-800">Base imponible:</span>
-                <span className="font-medium text-green-800">{formatCurrency(baseImponibleIngresos)}</span>
+                <span className="text-sm text-gray-600">Base imponible:</span>
+                <span className="font-medium text-green-700">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-green-800">IVA repercutido (21%):</span>
-                <span className="font-medium text-green-800">{formatCurrency(ivaRepercutido)}</span>
+                <span className="text-sm text-gray-600">IVA repercutido (21%):</span>
+                <span className="font-medium text-green-700">{formatCurrency(ivaRepercutido)}</span>
               </div>
             </div>
             <div>
               <Link href="/invoices">
-                <Button variant="outline" className="w-full bg-white border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800">
+                <Button variant="outline" className="w-full border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700">
                   Ver facturas
                 </Button>
               </Link>
@@ -217,40 +218,41 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Gastos */}
-        <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-gradient-to-r from-red-50 to-red-100 p-6">
+        <Card className="overflow-hidden rounded-lg shadow-md border-0">
+          <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
+          <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <div className="bg-red-500/10 p-3 rounded-full mr-4">
-                  <ArrowDown className="h-6 w-6 text-red-600" />
+                <div className="bg-red-100 p-3 rounded-full mr-4">
+                  <ArrowDown className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-red-700">Gastos</h3>
-                  <p className="text-sm text-red-600/70">Salidas totales</p>
+                  <p className="text-sm text-gray-500">Salidas totales</p>
                 </div>
               </div>
             </div>
-            <div className="mb-4 space-y-2">
+            <div className="mb-4">
               <div className="text-3xl font-bold text-red-700">
                 {formatCurrency(baseImponibleGastos)}
               </div>
-              <div className="text-sm text-red-600/70">
+              <div className="text-sm text-gray-500 mt-1">
                 Base imponible (sin IVA)
               </div>
             </div>
-            <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-red-100">
+            <div className="space-y-2 mb-4 p-3 bg-red-50 rounded-md border border-red-100">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-red-800">Base imponible:</span>
-                <span className="font-medium text-red-800">{formatCurrency(baseImponibleGastos)}</span>
+                <span className="text-sm text-gray-600">Base imponible:</span>
+                <span className="font-medium text-red-700">{formatCurrency(baseImponibleGastos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-red-800">IVA soportado (21%):</span>
-                <span className="font-medium text-red-800">{formatCurrency(ivaSoportado)}</span>
+                <span className="text-sm text-gray-600">IVA soportado (21%):</span>
+                <span className="font-medium text-red-700">{formatCurrency(ivaSoportado)}</span>
               </div>
             </div>
             <div>
               <Link href="/income-expense">
-                <Button variant="outline" className="w-full bg-white border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800">
+                <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
                   Ver gastos
                 </Button>
               </Link>
@@ -259,44 +261,45 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Resultado Final */}
-        <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className={`bg-gradient-to-r ${isPositiveResult ? 'from-[#e6f9fb] to-[#daf7fa]' : 'from-amber-50 to-amber-100'} p-6`}>
+        <Card className="overflow-hidden rounded-lg shadow-md border-0">
+          <div className="h-2 bg-gradient-to-r from-[#04C4D9] to-[#04b8cc]"></div>
+          <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <div className={`${isPositiveResult ? 'bg-[#04C4D9]/10' : 'bg-amber-500/10'} p-3 rounded-full mr-4`}>
-                  <PiggyBank className={`h-6 w-6 ${isPositiveResult ? 'text-[#04C4D9]' : 'text-amber-600'}`} />
+                <div className="bg-[#e6f9fb] p-3 rounded-full mr-4">
+                  <PiggyBank className="h-5 w-5 text-[#04C4D9]" />
                 </div>
                 <div>
-                  <h3 className={`text-lg font-semibold ${isPositiveResult ? 'text-[#04a6b8]' : 'text-amber-700'}`}>Resultado Final</h3>
-                  <p className={`text-sm ${isPositiveResult ? 'text-[#04C4D9]/70' : 'text-amber-600/70'}`}>Ingresos - Gastos</p>
+                  <h3 className="text-lg font-semibold text-[#04a6b8]">Resultado Final</h3>
+                  <p className="text-sm text-gray-500">Ingresos - Gastos</p>
                 </div>
               </div>
             </div>
-            <div className="mb-4 space-y-2">
-              <div className={`text-3xl font-bold ${isPositiveResult ? 'text-[#04a6b8]' : 'text-amber-700'}`}>
+            <div className="mb-4">
+              <div className="text-3xl font-bold text-[#04a6b8]">
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
-              <div className={`text-sm ${isPositiveResult ? 'text-[#04C4D9]/70' : 'text-amber-600/70'}`}>
+              <div className="text-sm text-gray-500 mt-1">
                 {isPositiveResult ? 'Beneficio neto (base imponible)' : 'Pérdida neta (base imponible)'}
               </div>
             </div>
-            <div className="space-y-2 mb-4 p-3 bg-white/60 rounded-md border border-[#04C4D9]/20">
+            <div className="space-y-2 mb-4 p-3 bg-[#f0fdfe] rounded-md border border-[#04C4D9]/20">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-700">Base imponible ingresos:</span>
+                <span className="text-sm text-gray-600">Base imponible ingresos:</span>
                 <span className="font-medium text-green-700">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-700">Base imponible gastos:</span>
+                <span className="text-sm text-gray-600">Base imponible gastos:</span>
                 <span className="font-medium text-red-700">-{formatCurrency(baseImponibleGastos)}</span>
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-200 mt-1">
-                <span className="text-slate-800 font-medium">Resultado (base imponible):</span>
-                <span className="font-bold text-slate-800">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
+                <span className="text-gray-700 font-medium">Resultado (base imponible):</span>
+                <span className="font-bold text-[#04a6b8]">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
               </div>
             </div>
             <div>
               <Link href="/reports">
-                <Button variant="outline" className={`w-full bg-white ${isPositiveResult ? 'border-[#04C4D9]/30 text-[#04a6b8] hover:bg-[#f0fdfe] hover:text-[#04a6b8]' : 'border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800'}`}>
+                <Button variant="outline" className="w-full border-[#04C4D9]/30 text-[#04a6b8] hover:bg-[#f0fdfe] hover:text-[#04a6b8]">
                   Ver informes
                 </Button>
               </Link>
@@ -308,14 +311,17 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       {/* Segunda fila: Widgets de Resumen Fiscal y Comparativa */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         {/* Widget de Resumen Fiscal */}
-        <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-indigo-500">
-            <div className="flex items-center mb-4 border-b pb-2">
-              <FileText className="mr-2 h-5 w-5 text-indigo-500" />
-              <h3 className="text-base font-semibold text-slate-800">Resumen Fiscal</h3>
+        <Card className="overflow-hidden rounded-lg shadow-md border-0">
+          <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-blue-100 p-2 rounded-full mr-3">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Resumen Fiscal</h3>
               <div className="flex items-center space-x-2 text-sm ml-auto">
                 <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger className="w-[80px] h-8 text-xs bg-slate-50">
+                  <SelectTrigger className="w-[80px] h-8 text-xs bg-gray-100 border-gray-200">
                     <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
@@ -325,7 +331,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </Select>
                 
                 <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-50">
+                  <SelectTrigger className="w-[120px] h-8 text-xs bg-gray-100 border-gray-200">
                     <SelectValue placeholder="Periodo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -340,36 +346,36 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* IVA a liquidar */}
-            <div className="bg-slate-50 rounded-md p-4 mb-3 border border-slate-200">
-              <div className="text-sm text-slate-800 mb-1 flex justify-between items-center">
+            <div className="bg-blue-50 rounded-md p-4 mb-3 border border-blue-100">
+              <div className="text-sm text-gray-700 mb-1 flex justify-between items-center">
                 <span>IVA a liquidar (Todo el año, 2025)</span>
                 <span className="bg-blue-100 text-xs py-0.5 px-1.5 rounded text-blue-700">21% IVA</span>
               </div>
               <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(ivaALiquidar)}
               </div>
-              <div className="text-xs text-slate-600 mt-1">
+              <div className="text-xs text-gray-500 mt-1">
                 Resumen anual de IVA (modelo 390)
               </div>
             </div>
 
             {/* IRPF */}
-            <div className="bg-slate-50 rounded-md p-4 border border-slate-200">
-              <div className="text-sm text-slate-800 mb-1 flex justify-between items-center">
+            <div className="bg-amber-50 rounded-md p-4 border border-amber-100">
+              <div className="text-sm text-gray-700 mb-1 flex justify-between items-center">
                 <span>Retenciones IRPF (Todo el año, 2025)</span>
                 <span className="bg-amber-100 text-xs py-0.5 px-1.5 rounded text-amber-700">15% IRPF</span>
               </div>
               <div className="text-2xl font-bold text-amber-600">
                 {formatCurrency(dashboardStats.taxes?.incomeTax || 0)}
               </div>
-              <div className="text-xs text-slate-600 mt-1">
+              <div className="text-xs text-gray-500 mt-1">
                 Retenciones acumuladas en el año (modelo 190)
               </div>
             </div>
 
             {/* Botón de Informes */}
             <div className="mt-4">
-              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
                 Ver informes fiscales
               </Button>
             </div>
@@ -377,14 +383,17 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </Card>
 
         {/* Widget de Comparativa Financiera */}
-        <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-purple-500">
-            <div className="flex items-center mb-4 border-b pb-2">
-              <BarChart3 className="mr-2 h-5 w-5 text-purple-500" />
-              <h3 className="text-base font-semibold text-slate-800">Comparativa Financiera</h3>
+        <Card className="overflow-hidden rounded-lg shadow-md border-0">
+          <div className="h-2 bg-gradient-to-r from-purple-500 to-violet-500"></div>
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-purple-100 p-2 rounded-full mr-3">
+                <BarChart3 className="h-5 w-5 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Comparativa Financiera</h3>
               <div className="flex items-center space-x-2 text-sm ml-auto">
                 <Select value="trimestral">
-                  <SelectTrigger className="w-[100px] h-8 text-xs bg-slate-50">
+                  <SelectTrigger className="w-[100px] h-8 text-xs bg-gray-100 border-gray-200">
                     <SelectValue placeholder="Trimestral" />
                   </SelectTrigger>
                   <SelectContent>
@@ -394,7 +403,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </Select>
                 
                 <Select value="2025">
-                  <SelectTrigger className="w-[80px] h-8 text-xs bg-slate-50">
+                  <SelectTrigger className="w-[80px] h-8 text-xs bg-gray-100 border-gray-200">
                     <SelectValue placeholder="2025" />
                   </SelectTrigger>
                   <SelectContent>
@@ -426,7 +435,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Gráfico */}
-            <div className="h-[280px] p-2 bg-slate-50 rounded-md border border-slate-200">
+            <div className="h-[280px] p-3 bg-gray-50 rounded-md border border-gray-200">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={financialComparisonData}
@@ -454,7 +463,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                   <Legend />
                   <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Resultado" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Resultado" fill="#04C4D9" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
