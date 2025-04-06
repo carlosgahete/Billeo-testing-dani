@@ -37,8 +37,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { DateRangePickerSeparate } from "@/components/ui/date-range-picker-single";
+import { FilterDialog } from "@/components/transactions/filters/FilterDialog";
 import { es } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -393,152 +392,37 @@ const TransactionList = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
-            <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="secondary" className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <span>Filtrar</span>
-                  {(isDateFilterActive || isCategoryFilterActive) && (
-                    <Badge className="ml-2 bg-blue-600">
-                      {(isDateFilterActive && isCategoryFilterActive) ? '2' : '1'}
-                    </Badge>
-                  )}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Filtrar transacciones</DialogTitle>
-                </DialogHeader>
-                <div className="py-4 space-y-4">
-                  {/* Filtro de categoría */}
-                  <div>
-                    <Label htmlFor="category" className="font-medium block mb-2">Categoría</Label>
-                    <div className="flex flex-col space-y-3">
-                      <Select
-                        value={selectedCategoryId?.toString() || "all"}
-                        onValueChange={(value) => {
-                          if (value && value !== "all") {
-                            setSelectedCategoryId(parseInt(value));
-                            setIsCategoryFilterActive(true);
-                          } else {
-                            setSelectedCategoryId(null);
-                            setIsCategoryFilterActive(false);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Todas las categorías" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todas las categorías</SelectItem>
-                          {Array.isArray(categories) && categories
-                            .filter(c => currentTab === 'all' || c.type === (currentTab === 'income' ? 'income' : 'expense'))
-                            .map((category) => (
-                              <SelectItem key={category.id} value={category.id.toString()}>
-                                <div className="flex items-center">
-                                  <span className="mr-2">{category.icon || '📂'}</span>
-                                  <span>{category.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="enableCategoryFilter"
-                          checked={isCategoryFilterActive}
-                          onChange={(e) => setIsCategoryFilterActive(e.target.checked)}
-                          className="h-4 w-4 mr-2"
-                        />
-                        <Label htmlFor="enableCategoryFilter" className="cursor-pointer text-sm">
-                          Activar filtro por categoría
-                        </Label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Filtro de fechas */}
-                  <div className="border-t pt-4">
-                    <Label htmlFor="date-range" className="font-medium block mb-2">Rango de fechas</Label>
-                    <div className="grid gap-2">
-                      {/* Nuevo componente de selección de rango de fechas */}
-                      <DateRangePickerSeparate
-                        dateRange={dateRange}
-                        setDateRange={setDateRange}
-                        disabled={!isDateFilterActive}
-                      />
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="enableDateFilter"
-                          checked={isDateFilterActive}
-                          onChange={(e) => setIsDateFilterActive(e.target.checked)}
-                          className="h-4 w-4 mr-2"
-                        />
-                        <Label htmlFor="enableDateFilter" className="cursor-pointer text-sm">
-                          Activar filtro por fecha
-                        </Label>
-                      </div>
-
-                      <div className="flex flex-wrap justify-start gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            const now = new Date();
-                            setDateRange({
-                              from: startOfMonth(now),
-                              to: endOfMonth(now)
-                            });
-                          }}
-                        >
-                          Este mes
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            const prevMonth = subMonths(new Date(), 1);
-                            setDateRange({
-                              from: startOfMonth(prevMonth),
-                              to: endOfMonth(prevMonth)
-                            });
-                          }}
-                        >
-                          Mes anterior
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setDateRange({
-                        from: startOfMonth(new Date()),
-                        to: endOfMonth(new Date())
-                      });
-                      setSelectedCategoryId(null);
-                      setIsDateFilterActive(false);
-                      setIsCategoryFilterActive(false);
-                      setIsFilterDialogOpen(false);
-                    }}
-                  >
-                    Restablecer
-                  </Button>
-                  <Button 
-                    onClick={() => setIsFilterDialogOpen(false)}
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Aplicar filtros
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <div>
+              <Button 
+                variant="secondary" 
+                className="flex items-center h-10 bg-white text-blue-600 hover:bg-blue-50 border-none"
+                onClick={() => setIsFilterDialogOpen(true)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                <span>Filtrar</span>
+                {(isDateFilterActive || isCategoryFilterActive) && (
+                  <Badge className="ml-2 bg-blue-600">
+                    {(isDateFilterActive && isCategoryFilterActive) ? '2' : '1'}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+            
+            {/* Nuevo componente de filtro como diálogo separado */}
+            <FilterDialog
+              isOpen={isFilterDialogOpen}
+              onOpenChange={setIsFilterDialogOpen}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              isDateFilterActive={isDateFilterActive}
+              setIsDateFilterActive={setIsDateFilterActive}
+              selectedCategoryId={selectedCategoryId}
+              setSelectedCategoryId={setSelectedCategoryId}
+              isCategoryFilterActive={isCategoryFilterActive}
+              setIsCategoryFilterActive={setIsCategoryFilterActive}
+              categories={categories}
+              currentTab={currentTab}
+            />
 
             <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
               <DialogTrigger asChild>
