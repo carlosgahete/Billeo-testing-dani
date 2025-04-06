@@ -234,11 +234,11 @@ const TransactionList = () => {
         // Filtrar por tipo (tab)
         if (currentTab !== "all" && transaction.type !== currentTab) return false;
         
-        // Filtrar por categoría
+        // Filtrar por categoría (solo si está activo el filtro)
         if (isCategoryFilterActive && selectedCategoryId && transaction.categoryId !== selectedCategoryId) return false;
         
-        // Filtrar por fecha
-        if (!isDateInRange(transaction.date)) return false;
+        // Filtrar por fecha (solo si está activo el filtro)
+        if (isDateFilterActive && !isDateInRange(transaction.date)) return false;
         
         return true;
       })
@@ -482,13 +482,15 @@ const TransactionList = () => {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
-                              <CalendarComponent
-                                mode="single"
-                                selected={dateRange.from}
-                                onSelect={(date) => setDateRange({ ...dateRange, from: date })}
-                                initialFocus
-                                locale={es}
-                              />
+                              <div className="z-50">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={dateRange.from}
+                                  onSelect={(date) => setDateRange({ ...dateRange, from: date })}
+                                  initialFocus
+                                  locale={es}
+                                />
+                              </div>
                             </PopoverContent>
                           </Popover>
                         </div>
@@ -510,13 +512,15 @@ const TransactionList = () => {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
-                              <CalendarComponent
-                                mode="single"
-                                selected={dateRange.to}
-                                onSelect={(date) => setDateRange({ ...dateRange, to: date })}
-                                initialFocus
-                                locale={es}
-                              />
+                              <div className="z-50">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={dateRange.to}
+                                  onSelect={(date) => setDateRange({ ...dateRange, to: date })}
+                                  initialFocus
+                                  locale={es}
+                                />
+                              </div>
                             </PopoverContent>
                           </Popover>
                         </div>
