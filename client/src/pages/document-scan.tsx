@@ -81,6 +81,9 @@ const DocumentScanPage = () => {
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [transactionRegistered, setTransactionRegistered] = useState(false);
+  // Estados para la funcionalidad de lupa
+  const [showMagnifier, setShowMagnifier] = useState<boolean>(false);
+  const [magnifierPosition, setMagnifierPosition] = useState<{x: number, y: number}>({x: 0, y: 0});
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({

@@ -19,12 +19,13 @@ import {
   Receipt,
   Smile,
   Plus,
-  Calendar,
   FolderOpen,
   Paperclip,
   Percent,
   Info,
-  CreditCard
+  CreditCard,
+  Filter as FilterIcon,
+  CalendarIcon
 } from "lucide-react";
 import {
   AlertDialog,
@@ -78,12 +79,19 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -410,6 +418,13 @@ const IncomeExpenseReport = () => {
   
   // Estado para el modal de creación de categoría
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  
+  // Estado para controlar los filtros de gastos
+  const [showExpenseFilters, setShowExpenseFilters] = useState<boolean>(false);
+  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
+  const [dateRangeFilter, setDateRangeFilter] = useState<[Date | undefined, Date | undefined]>([undefined, undefined]);
+  const [amountFilter, setAmountFilter] = useState<{min?: number, max?: number}>({});
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string | null>(null);
   const [selectedEmoji, setSelectedEmoji] = useState("💼"); // Emoji predeterminado
   
   // Mutación para crear transacción (gasto rápido)
@@ -1165,13 +1180,192 @@ const IncomeExpenseReport = () => {
               
               <Card className="shadow-md border-0 overflow-hidden">
                 <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
-                  <h3 className="text-lg font-medium flex items-center">
-                    <TrendingDown className="mr-2 h-5 w-5" />
-                    Lista de Gastos
-                    <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
-                      {expenseTransactions.length} registros
-                    </span>
-                  </h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium flex items-center">
+                      <TrendingDown className="mr-2 h-5 w-5" />
+                      Lista de Gastos
+                      <span className="ml-2 bg-white text-red-600 text-xs font-semibold rounded-full px-2 py-1">
+                        {expenseTransactions.length} registros
+                      </span>
+                    </h3>
+                    <Popover open={showExpenseFilters} onOpenChange={setShowExpenseFilters}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1.5 bg-white text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 font-medium shadow-sm"
+                        >
+                          <FilterIcon className="h-4 w-4" />
+                          <span>Filtrar gastos</span>
+                          {(categoryFilter || dateRangeFilter[0] || amountFilter.min || amountFilter.max || paymentMethodFilter) && (
+                            <Badge variant="secondary" className="ml-1 bg-red-100 text-red-700 border-none">
+                              Activo
+                            </Badge>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4">
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-sm">Filtros de gastos</h4>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="categoryFilter">Categoría</Label>
+                            <Select 
+                              value={categoryFilter?.toString() || ""} 
+                              onValueChange={(value) => setCategoryFilter(value ? parseInt(value) : null)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Todas las categorías" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">Todas las categorías</SelectItem>
+                                {categories
+                                  .filter(cat => cat.type === "expense")
+                                  .map(category => (
+                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))
+                                }
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Rango de fechas</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className="justify-start text-left font-normal w-full"
+                                    size="sm"
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRangeFilter[0] ? (
+                                      format(dateRangeFilter[0], "dd/MM/yyyy")
+                                    ) : (
+                                      <span>Fecha inicial</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={dateRangeFilter[0]}
+                                    onSelect={(date) => setDateRangeFilter([date, dateRangeFilter[1]])}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className="justify-start text-left font-normal w-full"
+                                    size="sm"
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRangeFilter[1] ? (
+                                      format(dateRangeFilter[1], "dd/MM/yyyy")
+                                    ) : (
+                                      <span>Fecha final</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={dateRangeFilter[1]}
+                                    onSelect={(date) => setDateRangeFilter([dateRangeFilter[0], date])}
+                                    initialFocus
+                                    disabled={(date) => dateRangeFilter[0] ? date < dateRangeFilter[0] : false}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="amountRange">Rango de importe</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label htmlFor="minAmount" className="text-xs">Mínimo</Label>
+                                <Input 
+                                  id="minAmount"
+                                  type="number"
+                                  placeholder="0"
+                                  value={amountFilter.min || ""}
+                                  onChange={(e) => setAmountFilter({
+                                    ...amountFilter,
+                                    min: e.target.value ? parseFloat(e.target.value) : undefined
+                                  })}
+                                  className="h-8"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor="maxAmount" className="text-xs">Máximo</Label>
+                                <Input 
+                                  id="maxAmount"
+                                  type="number"
+                                  placeholder="Sin límite"
+                                  value={amountFilter.max || ""}
+                                  onChange={(e) => setAmountFilter({
+                                    ...amountFilter,
+                                    max: e.target.value ? parseFloat(e.target.value) : undefined
+                                  })}
+                                  className="h-8"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="paymentMethod">Método de pago</Label>
+                            <Select 
+                              value={paymentMethodFilter || ""} 
+                              onValueChange={(value) => setPaymentMethodFilter(value || null)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Todos los métodos" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">Todos los métodos</SelectItem>
+                                <SelectItem value="efectivo">Efectivo</SelectItem>
+                                <SelectItem value="tarjeta">Tarjeta</SelectItem>
+                                <SelectItem value="transferencia">Transferencia</SelectItem>
+                                <SelectItem value="bizum">Bizum</SelectItem>
+                                <SelectItem value="otro">Otro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="flex justify-between pt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setCategoryFilter(null);
+                                setDateRangeFilter([undefined, undefined]);
+                                setAmountFilter({});
+                                setPaymentMethodFilter(null);
+                              }}
+                              className="text-xs h-8"
+                            >
+                              Resetear filtros
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => setShowExpenseFilters(false)}
+                              className="text-xs h-8"
+                            >
+                              Aplicar
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 
                 {isLoading ? (
