@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check, Calendar, User, Building } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check, Calendar, User, Building, Search, MousePointer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -80,6 +80,8 @@ const DocumentScanPage = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
+  const [showMagnifier, setShowMagnifier] = useState(false);
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({
@@ -892,22 +894,116 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <X className="h-4 w-4" />
                         </Button>
                         <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                          <img 
-                            src={previewUrl} 
-                            alt="Vista ampliada" 
-                            className="w-full h-auto object-contain max-h-[80vh]" 
-                          />
+                          <div className="relative">
+                            <img 
+                              src={previewUrl} 
+                              alt="Vista ampliada" 
+                              className="w-full h-auto object-contain max-h-[80vh] cursor-crosshair" 
+                              onMouseMove={(e) => {
+                                // Calculamos la posición relativa del cursor dentro de la imagen
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setMagnifierPosition({
+                                  x: e.clientX - rect.left,
+                                  y: e.clientY - rect.top
+                                });
+                                setShowMagnifier(true);
+                              }}
+                              onMouseLeave={() => setShowMagnifier(false)}
+                            />
+                            
+                            {/* Lupa flotante modo ampliado */}
+                            {showMagnifier && previewUrl && (
+                              <div 
+                                className="absolute pointer-events-none bg-white shadow-lg border-2 border-[#04C4D9] rounded-full overflow-hidden z-10 flex items-center justify-center"
+                                style={{
+                                  width: '180px',
+                                  height: '180px',
+                                  top: Math.max(0, magnifierPosition.y - 90),
+                                  left: Math.max(0, magnifierPosition.x - 90),
+                                }}
+                              >
+                                {/* Imagen ampliada dentro de la lupa */}
+                                <div
+                                  className="absolute inset-0 rounded-full overflow-hidden"
+                                  style={{
+                                    backgroundImage: `url(${previewUrl})`,
+                                    backgroundPosition: `${-magnifierPosition.x * 2 + 90}px ${-magnifierPosition.y * 2 + 90}px`,
+                                    backgroundSize: '300%',
+                                    backgroundRepeat: 'no-repeat'
+                                  }}
+                                />
+                                
+                                {/* Ícono de lupa semitransparente */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                                  <Search className="h-8 w-8 text-[#04C4D9]" />
+                                </div>
+                                
+                                {/* Cruceta para ayudar a posicionar */}
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                  <div className="w-[1px] h-8 bg-gray-400/30" />
+                                  <div className="h-[1px] w-8 bg-gray-400/30" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="border rounded-md overflow-hidden w-full max-h-[300px] flex items-center justify-center">
-                      <img 
-                        src={previewUrl} 
-                        alt="Preview" 
-                        className="max-w-full max-h-[300px] object-contain cursor-pointer" 
-                        onClick={() => setIsZoomed(true)}
-                      />
+                      <div className="relative">
+                        <img 
+                          src={previewUrl} 
+                          alt="Preview" 
+                          className="max-w-full max-h-[300px] object-contain cursor-crosshair" 
+                          onMouseMove={(e) => {
+                            // Calculamos la posición relativa del cursor dentro de la imagen
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMagnifierPosition({
+                              x: e.clientX - rect.left,
+                              y: e.clientY - rect.top
+                            });
+                            setShowMagnifier(true);
+                          }}
+                          onMouseLeave={() => setShowMagnifier(false)}
+                          onClick={() => setIsZoomed(true)}
+                        />
+                        
+                        {/* Lupa flotante */}
+                        {showMagnifier && previewUrl && (
+                          <div 
+                            className="absolute pointer-events-none bg-white shadow-lg border-2 border-[#04C4D9] rounded-full overflow-hidden z-10 flex items-center justify-center"
+                            style={{
+                              width: '150px',
+                              height: '150px',
+                              top: Math.max(0, magnifierPosition.y - 75),
+                              left: Math.max(0, magnifierPosition.x - 75),
+                            }}
+                          >
+                            {/* Imagen ampliada dentro de la lupa */}
+                            <div
+                              className="absolute inset-0 rounded-full overflow-hidden"
+                              style={{
+                                backgroundImage: `url(${previewUrl})`,
+                                backgroundPosition: `${-magnifierPosition.x * 3 + 75}px ${-magnifierPosition.y * 3 + 75}px`,
+                                backgroundSize: '400%',
+                                backgroundRepeat: 'no-repeat'
+                              }}
+                            />
+                            
+                            {/* Ícono de lupa semitransparente */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                              <Search className="h-8 w-8 text-[#04C4D9]" />
+                            </div>
+                            
+                            {/* Cruceta para ayudar a posicionar */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="w-[1px] h-6 bg-gray-400/30" />
+                              <div className="h-[1px] w-6 bg-gray-400/30" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -981,11 +1077,59 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           )}
                         </Button>
                       </div>
-                      <img 
-                        src={documentImage} 
-                        alt="Documento escaneado" 
-                        className="w-full h-auto max-h-[300px] object-contain bg-white rounded-md" 
-                      />
+                      <div className="relative">
+                        <img 
+                          src={documentImage} 
+                          alt="Documento escaneado" 
+                          className="w-full h-auto max-h-[300px] object-contain bg-white rounded-md cursor-crosshair" 
+                          onMouseMove={(e) => {
+                            // Calculamos la posición relativa del cursor dentro de la imagen
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMagnifierPosition({
+                              x: e.clientX - rect.left,
+                              y: e.clientY - rect.top
+                            });
+                            setShowMagnifier(true);
+                          }}
+                          onMouseLeave={() => setShowMagnifier(false)}
+                          onClick={() => setIsResultZoomed(true)}
+                        />
+                        
+                        {/* Lupa flotante */}
+                        {showMagnifier && (
+                          <div 
+                            className="absolute pointer-events-none bg-white shadow-lg border-2 border-[#04C4D9] rounded-full overflow-hidden z-10 flex items-center justify-center"
+                            style={{
+                              width: '150px',
+                              height: '150px',
+                              top: Math.max(0, magnifierPosition.y - 75),
+                              left: Math.max(0, magnifierPosition.x - 75),
+                            }}
+                          >
+                            {/* Imagen ampliada dentro de la lupa */}
+                            <div
+                              className="absolute inset-0 rounded-full overflow-hidden"
+                              style={{
+                                backgroundImage: `url(${documentImage})`,
+                                backgroundPosition: `${-magnifierPosition.x * 3 + 75}px ${-magnifierPosition.y * 3 + 75}px`,
+                                backgroundSize: '400%',
+                                backgroundRepeat: 'no-repeat'
+                              }}
+                            />
+                            
+                            {/* Ícono de lupa semitransparente */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                              <Search className="h-8 w-8 text-[#04C4D9]" />
+                            </div>
+                            
+                            {/* Cruceta para ayudar a posicionar */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="w-[1px] h-6 bg-gray-400/30" />
+                              <div className="h-[1px] w-6 bg-gray-400/30" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       {isResultZoomed && (
                         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
@@ -999,11 +1143,58 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                               <X className="h-4 w-4" />
                             </Button>
                             <div className="bg-white p-2 rounded-md w-full overflow-auto">
-                              <img 
-                                src={documentImage} 
-                                alt="Vista ampliada del documento" 
-                                className="w-full h-auto object-contain max-h-[80vh]" 
-                              />
+                              <div className="relative">
+                                <img 
+                                  src={documentImage} 
+                                  alt="Vista ampliada del documento" 
+                                  className="w-full h-auto object-contain max-h-[80vh] cursor-crosshair" 
+                                  onMouseMove={(e) => {
+                                    // Calculamos la posición relativa del cursor dentro de la imagen
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setMagnifierPosition({
+                                      x: e.clientX - rect.left,
+                                      y: e.clientY - rect.top
+                                    });
+                                    setShowMagnifier(true);
+                                  }}
+                                  onMouseLeave={() => setShowMagnifier(false)}
+                                />
+                                
+                                {/* Lupa flotante modo ampliado */}
+                                {showMagnifier && (
+                                  <div 
+                                    className="absolute pointer-events-none bg-white shadow-lg border-2 border-[#04C4D9] rounded-full overflow-hidden z-10 flex items-center justify-center"
+                                    style={{
+                                      width: '200px',
+                                      height: '200px',
+                                      top: Math.max(0, magnifierPosition.y - 100),
+                                      left: Math.max(0, magnifierPosition.x - 100),
+                                    }}
+                                  >
+                                    {/* Imagen ampliada dentro de la lupa */}
+                                    <div
+                                      className="absolute inset-0 rounded-full overflow-hidden"
+                                      style={{
+                                        backgroundImage: `url(${documentImage})`,
+                                        backgroundPosition: `${-magnifierPosition.x * 2 + 100}px ${-magnifierPosition.y * 2 + 100}px`,
+                                        backgroundSize: '300%',
+                                        backgroundRepeat: 'no-repeat'
+                                      }}
+                                    />
+                                    
+                                    {/* Ícono de lupa semitransparente */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                                      <Search className="h-10 w-10 text-[#04C4D9]" />
+                                    </div>
+                                    
+                                    {/* Cruceta para ayudar a posicionar */}
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                      <div className="w-[1px] h-10 bg-gray-400/30" />
+                                      <div className="h-[1px] w-10 bg-gray-400/30" />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
