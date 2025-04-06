@@ -300,6 +300,6 @@ const FloatingFilters = ({
   
   // Usar createPortal para renderizar en un nodo fuera del DOM principal
   return mounted ? createPortal(filterPanel, document.body) : null;
-}
+};
 
 export default FloatingFilters;

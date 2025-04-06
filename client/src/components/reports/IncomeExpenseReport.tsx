@@ -100,7 +100,7 @@ import { generateInvoicePDF } from "@/lib/pdf";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import DownloadTransactionButton from "@/components/transactions/DownloadTransactionButton";
-import FloatingFilters from "../transactions/FloatingFilters";
+import FloatingFilters from "../transactions/FloatingFilters2";
 
 // Función para formatear moneda con protección contra valores no numéricos
 const formatCurrency = (amount: any) => {
@@ -414,6 +414,7 @@ const IncomeExpenseReport = () => {
   // Estados para los filtros de gastos
   const [showFilters, setShowFilters] = useState(false);
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
   
   const isLoading = 
     isLoadingInvoices || 
@@ -1185,6 +1186,7 @@ const IncomeExpenseReport = () => {
                       </span>
                     </h3>
                     <Button 
+                      ref={filterButtonRef}
                       onClick={() => setShowFilters(!showFilters)}
                       variant="outline" 
                       size="sm"
@@ -1203,6 +1205,7 @@ const IncomeExpenseReport = () => {
                       categories={categories}
                       onFilterChange={setFilteredExpenseTransactions}
                       onClose={() => setShowFilters(false)}
+                      buttonRef={filterButtonRef}
                     />
                   )}
                 </div>
