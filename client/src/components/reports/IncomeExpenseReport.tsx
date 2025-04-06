@@ -685,80 +685,92 @@ const IncomeExpenseReport = () => {
         <div className="grid gap-6">
           {/* Panel de estadísticas - Diseño mejorado con tarjetas más atractivas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
-              <CardHeader className="pb-2">
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="h-1 bg-gradient-to-r from-green-500 to-green-300"></div>
+              <CardHeader className="pb-1 pt-3">
                 <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-green-100 p-2 rounded-full mr-3">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  <div className="bg-green-100 p-1.5 rounded-full mr-2">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
                   </div>
-                  <span className="text-green-700 text-lg">Total Ingresos</span>
+                  <span className="text-green-700 text-base">Total Ingresos</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 pb-3">
                 {isLoading ? (
                   <Skeleton className="h-10 w-32" />
                 ) : (
-                  <div className="text-3xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
-                )}
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="bg-green-50 p-2 rounded-md">
-                    <span className="text-green-600 font-medium">Facturas: {formatCurrency(totalInvoiceIncome)}</span>
+                  <div className="flex flex-col">
+                    <div className="text-2xl font-bold text-green-700">{formatCurrency(totalIncome)}</div>
+                    <div className="text-xs text-neutral-500 -mt-0.5">Total</div>
                   </div>
-                  <div className="bg-green-50 p-2 rounded-md">
-                    <span className="text-green-600 font-medium">Otros: {formatCurrency(totalAdditionalIncome)}</span>
+                )}
+                <div className="mt-2 pt-2 border-t border-green-100 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500 font-medium">Facturas:</span>
+                    <span className="font-medium text-green-700">{formatCurrency(totalInvoiceIncome)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500 font-medium">Otros:</span>
+                    <span className="font-medium text-green-700">{formatCurrency(totalAdditionalIncome)}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
-              <CardHeader className="pb-2">
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="h-1 bg-gradient-to-r from-red-500 to-red-300"></div>
+              <CardHeader className="pb-1 pt-3">
                 <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-red-100 p-2 rounded-full mr-3">
-                    <TrendingDown className="h-5 w-5 text-red-600" />
+                  <div className="bg-red-100 p-1.5 rounded-full mr-2">
+                    <TrendingDown className="h-4 w-4 text-red-600" />
                   </div>
-                  <span className="text-red-700 text-lg">Total Gastos</span>
+                  <span className="text-red-700 text-base">Total Gastos</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 pb-3">
                 {isLoading ? (
                   <Skeleton className="h-10 w-32" />
                 ) : (
-                  <div className="text-3xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
+                  <div className="flex flex-col">
+                    <div className="text-2xl font-bold text-red-700">{formatCurrency(totalExpenses)}</div>
+                    <div className="text-xs text-neutral-500 -mt-0.5">Total</div>
+                  </div>
                 )}
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="bg-red-50 p-2 rounded-md">
-                    <span className="text-red-600 font-medium">Registros: {expenseTransactions.length} transacciones</span>
+                <div className="mt-2 pt-2 border-t border-red-100 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500 font-medium">Registros:</span>
+                    <span className="font-medium text-red-700">{expenseTransactions.length} transacciones</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-300"></div>
-              <CardHeader className="pb-2">
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-300"></div>
+              <CardHeader className="pb-1 pt-3">
                 <CardTitle className="text-sm font-medium flex items-center">
-                  <div className="bg-blue-100 p-2 rounded-full mr-3">
-                    <FilePlus className="h-5 w-5 text-blue-600" />
+                  <div className="bg-blue-100 p-1.5 rounded-full mr-2">
+                    <FilePlus className="h-4 w-4 text-blue-600" />
                   </div>
-                  <span className="text-blue-700 text-lg">Resultado</span>
+                  <span className="text-blue-700 text-base">Resultado</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 pb-3">
                 {isLoading ? (
                   <Skeleton className="h-10 w-32" />
                 ) : (
-                  <div className="text-3xl font-bold text-blue-700">
-                    {formatCurrency(totalIncome - totalExpenses)}
+                  <div className="flex flex-col">
+                    <div className="text-2xl font-bold text-blue-700">
+                      {formatCurrency(totalIncome - totalExpenses)}
+                    </div>
+                    <div className="text-xs text-neutral-500 -mt-0.5">Total</div>
                   </div>
                 )}
-                <div className="mt-3 bg-blue-50 p-2 rounded-md">
-                  <Badge className={`text-sm ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
+                <div className="flex items-center mt-2 pt-2 border-t border-blue-100">
+                  <Badge className={`text-xs px-1.5 py-0.5 ${totalIncome > totalExpenses ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>
                     {totalIncome > totalExpenses ? "Beneficio" : "Pérdida"}
                   </Badge>
-                  <span className="ml-2 text-sm text-blue-600">
+                  <span className="ml-2 text-xs text-blue-600">
                     {totalIncome > totalExpenses 
                       ? "¡Buen trabajo! Estás en positivo" 
                       : "Revisa tus gastos para mejorar el resultado"}
