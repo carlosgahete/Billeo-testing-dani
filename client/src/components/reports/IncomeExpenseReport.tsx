@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -412,6 +412,21 @@ const IncomeExpenseReport = () => {
 
   // Estados para los filtros de gastos
   const [showFilters, setShowFilters] = useState(false);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
+  
+  // Cerrar filtros al hacer clic fuera del panel
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterPanelRef.current && !filterPanelRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [dateRange, setDateRange] = useState<{start: Date | null, end: Date | null}>({
     start: null, 
@@ -1205,9 +1220,11 @@ const IncomeExpenseReport = () => {
                 
                 {/* Panel de filtros flotante */}
                 {showFilters && (
-                  <div className="relative z-10">
+                  <div className="relative z-50">
                     {/* Panel de filtros flotante que se superpone */}
-                    <div className="absolute right-0 w-64 p-3 bg-red-50 rounded-md shadow-lg border border-red-100">
+                    <div 
+                      ref={filterPanelRef}
+                      className="absolute right-0 w-64 p-3 bg-red-50 rounded-md shadow-lg border border-red-100 max-h-[90vh] overflow-y-auto z-[1000]">
                       <div className="text-sm font-medium mb-3 text-red-700">Filtrar gastos por:</div>
                       
                       <div className="space-y-3">
