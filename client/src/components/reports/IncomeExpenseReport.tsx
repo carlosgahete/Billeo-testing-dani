@@ -18,7 +18,13 @@ import {
   Trash2,
   Receipt,
   Smile,
-  Plus
+  Plus,
+  Calendar,
+  FolderOpen,
+  Paperclip,
+  Percent,
+  Info,
+  CreditCard
 } from "lucide-react";
 import {
   AlertDialog,
@@ -147,6 +153,10 @@ interface Transaction {
   date: string;
   type: "income" | "expense";
   categoryId: number | null;
+  paymentMethod?: string;
+  attachments?: string[];
+  tax?: number | string;
+  notes?: string;
 }
 
 interface Category {
@@ -1161,24 +1171,61 @@ const IncomeExpenseReport = () => {
                 ) : sortedExpenseTransactions.length > 0 ? (
                   <div className="divide-y">
                     {sortedExpenseTransactions.map((transaction) => (
-                      <div key={transaction.id} className="p-5 flex justify-between items-center hover:bg-red-50 transition-colors group">
+                      <div key={transaction.id} className="p-4 flex justify-between items-center hover:bg-red-50 transition-colors group">
                         <div className="flex-1">
-                          <div className="flex items-center">
+                          <div className="flex items-start">
                             <div className="bg-red-100 p-2 rounded-full mr-3 group-hover:bg-red-200 transition-colors">
                               <Receipt className="h-5 w-5 text-red-600" />
                             </div>
                             <div>
                               <div className="font-semibold text-gray-800 group-hover:text-gray-900">{transaction.description}</div>
-                              <div className="text-sm text-muted-foreground flex items-center mt-1">
-                                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs mr-2">
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs flex items-center">
+                                  <FolderOpen className="h-3 w-3 mr-1" /> 
                                   {getCategoryName(transaction.categoryId) || 'Sin categoría'}
                                 </span>
-                                <span>{formatDate(transaction.date)}</span>
+                                
+                                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs flex items-center">
+                                  <Calendar className="h-3 w-3 mr-1" /> 
+                                  {formatDate(transaction.date)}
+                                </span>
+                                
+                                {transaction.paymentMethod && (
+                                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs flex items-center">
+                                    <CreditCard className="h-3 w-3 mr-1" /> 
+                                    {transaction.paymentMethod === 'card' ? 'Tarjeta' : 
+                                     transaction.paymentMethod === 'cash' ? 'Efectivo' : 
+                                     transaction.paymentMethod === 'transfer' ? 'Transferencia' : 
+                                     transaction.paymentMethod === 'direct_debit' ? 'Domiciliación' : 
+                                     transaction.paymentMethod}
+                                  </span>
+                                )}
+                                
+                                {transaction.attachments && transaction.attachments.length > 0 && (
+                                  <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs flex items-center">
+                                    <Paperclip className="h-3 w-3 mr-1" /> 
+                                    Adjuntos ({transaction.attachments.length})
+                                  </span>
+                                )}
+                                
+                                {transaction.tax && (
+                                  <span className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full text-xs flex items-center">
+                                    <Percent className="h-3 w-3 mr-1" />
+                                    IVA: {typeof transaction.tax === 'number' ? `${transaction.tax}%` : transaction.tax}
+                                  </span>
+                                )}
+                                
+                                {transaction.notes && (
+                                  <span className="bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full text-xs flex items-center cursor-help" title={transaction.notes}>
+                                    <Info className="h-3 w-3 mr-1" />
+                                    Tiene notas
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="flex items-center gap-3 flex-shrink-0">
                           <div className="text-right bg-white px-3 py-2 rounded-lg shadow-sm border border-red-100">
                             <div className="font-bold text-red-600 text-lg">
                               {formatCurrency(transaction.amount)}
