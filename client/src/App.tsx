@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import NotFound from "@/pages/not-found";
 import FixedDashboard from "@/pages/fixed-dashboard";
 import AppleSimpleDashboardPage from "@/pages/apple-simple-dashboard";
+import CompleteDashboardPage from "@/pages/complete-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
@@ -160,6 +161,11 @@ function Router() {
       <Route path="/apple-simple-dashboard">
         <Layout>
           <ProtectedRoute path="/apple-simple-dashboard" component={AppleSimpleDashboardPage} />
+        </Layout>
+      </Route>
+      <Route path="/complete-dashboard">
+        <Layout>
+          <ProtectedRoute path="/complete-dashboard" component={CompleteDashboardPage} />
         </Layout>
       </Route>
       <Route path="/admin/users">
