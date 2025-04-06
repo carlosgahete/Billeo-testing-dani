@@ -1215,9 +1215,9 @@ const IncomeExpenseReport = () => {
                           Categorías
                         </label>
                         <Select 
-                          value={selectedCategories.length > 0 ? selectedCategories.join(',') : ""} 
+                          value={selectedCategories.length > 0 ? selectedCategories.join(',') : "all"} 
                           onValueChange={(value) => {
-                            if (value === "") {
+                            if (value === "all") {
                               setSelectedCategories([]);
                             } else {
                               setSelectedCategories(value.split(',').map(id => parseInt(id)));
@@ -1228,7 +1228,7 @@ const IncomeExpenseReport = () => {
                             <SelectValue placeholder="Todas las categorías" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Todas las categorías</SelectItem>
+                            <SelectItem value="all">Todas las categorías</SelectItem>
                             {categories
                               .filter(cat => cat.type === 'expense')
                               .map(category => (
