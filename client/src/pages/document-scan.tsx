@@ -76,6 +76,7 @@ const DocumentScanPage = () => {
   const [isResultZoomed, setIsResultZoomed] = useState(false);
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [documentImage, setDocumentImage] = useState<string | null>(null);
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({
@@ -140,6 +141,7 @@ const DocumentScanPage = () => {
       
       setExtractedData(data.extractedData);
       setTransaction(data.transaction);
+      setDocumentImage(data.documentUrl || null);
       
       // Invalidar las consultas para actualizar los datos en tiempo real
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
@@ -635,6 +637,62 @@ const DocumentScanPage = () => {
               </div>
             ) : (
               <div className="space-y-6">
+                {documentImage && (
+                  <div className="mb-5">
+                    <h3 className="font-medium text-lg mb-3">Documento escaneado</h3>
+                    <div className="border rounded-md p-2 bg-gray-50">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm text-muted-foreground">Documento original:</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setIsResultZoomed(!isResultZoomed)}
+                          className="h-8 px-2"
+                        >
+                          {isResultZoomed ? (
+                            <>
+                              <ZoomOut className="h-4 w-4 mr-1" />
+                              Reducir
+                            </>
+                          ) : (
+                            <>
+                              <ZoomIn className="h-4 w-4 mr-1" />
+                              Ampliar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <img 
+                        src={documentImage} 
+                        alt="Documento escaneado" 
+                        className="w-full h-auto max-h-[300px] object-contain bg-white rounded-md" 
+                      />
+                      
+                      {isResultZoomed && (
+                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                          <div className="relative w-full max-w-4xl mx-auto">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => setIsResultZoomed(false)}
+                              className="absolute top-0 right-0 bg-white rounded-full h-8 w-8 -mt-4 -mr-4 z-10"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <div className="bg-white p-2 rounded-md w-full overflow-auto">
+                              <img 
+                                src={documentImage} 
+                                alt="Vista ampliada del documento" 
+                                className="w-full h-auto object-contain max-h-[80vh]" 
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div>
                   <h3 className="font-medium text-lg mb-3">Datos extraídos</h3>
                   <div className="space-y-2 text-sm">

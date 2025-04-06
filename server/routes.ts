@@ -2445,10 +2445,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const transaction = await storage.createTransaction(transactionToCreate);
       
+      // Convertir la ruta del archivo a una URL relativa
+      const fileUrl = filePath.replace(/^.*\/uploads\//, '/uploads/');
+      
       return res.status(201).json({
         message: "Documento procesado con éxito",
         extractedData,
-        transaction
+        transaction,
+        documentUrl: fileUrl
       });
       
     } catch (error) {
