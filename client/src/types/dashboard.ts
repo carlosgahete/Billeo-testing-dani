@@ -17,6 +17,13 @@ export interface DashboardStats {
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
+  // Campos para la pantalla de facturas
+  issuedCount?: number;
+  yearCount?: number;
+  yearIncome?: number;
+  quarterCount?: number;
+  quarterIncome?: number;
+  // Impuestos
   taxStats?: {
     ivaRepercutido: number;
     ivaSoportado: number;
@@ -25,6 +32,17 @@ export interface DashboardStats {
     irpfTotal: number;
     irpfPagar: number;
   };
+  // Datos de IVA e IRPF para acceso directo
+  taxes?: {
+    vat: number;
+    incomeTax: number;
+    ivaALiquidar: number;
+  };
+  ivaRepercutido?: number;
+  ivaSoportado?: number;
+  baseImponible?: number;
+  irpfRetenidoIngresos?: number;
+  // Presupuestos 
   quotes?: {
     total: number;
     pending: number;
@@ -32,11 +50,23 @@ export interface DashboardStats {
     rejected: number;
     acceptanceRate: number;
   };
+  // Datos simples para presupuestos
+  quotesTotal?: number;
+  quotesAccepted?: number;
+  quotesRejected?: number;
+  quotesPending?: number;
+  // Facturas
+  invoicesTotal?: number;
+  invoicesPending?: number;
+  invoicesPaid?: number;
+  invoicesOverdue?: number;
+  // Clientes
   clients?: {
     total: number;
     active: number;
     new: number;
   };
+  // Tareas
   tasks?: {
     total: number;
     completed: number;

@@ -4,6 +4,7 @@ import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle, Cal
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { DashboardStats } from "@/types/dashboard";
 
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
@@ -11,7 +12,7 @@ const InvoicesPage = () => {
     queryKey: ["/api/auth/session"],
   });
   
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
   });
 
@@ -25,11 +26,21 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Cabecera con fondo azul */}
-      <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-4 px-5 mb-4 mx-4 md:ml-0">
-        <div className="flex items-center">
-          <Receipt className="h-5 w-5 mr-2 text-white" />
-          <h1 className="text-lg font-bold text-white">Gestión de Facturas</h1>
+      {/* Cabecera con estilo minimalista */}
+      <div className="relative overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 py-5 px-6 mb-4 mx-4 md:ml-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-[#04C4D9] p-2 rounded-full mr-3">
+              <Receipt className="h-5 w-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-800">Gestión de Facturas</h1>
+          </div>
+          <Button 
+            onClick={() => navigate("/invoices/new")}
+            className="bg-[#04C4D9] hover:bg-[#03b3c7] text-white"
+          >
+            Nueva Factura
+          </Button>
         </div>
       </div>
       
