@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, TrendingUp, FileText, BarChart3, InfoIcon, ExternalLink } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -182,7 +182,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Primera fila: Widgets principales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         {/* Widget de Ingresos */}
         <Card className="overflow-hidden rounded-md shadow-sm">
           <div className="bg-white p-5 border-t-4 border-green-500">
@@ -249,48 +249,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </Card>
 
-        {/* Widget de Ingresos Brutos */}
-        <Card className="overflow-hidden rounded-md shadow-sm">
-          <div className="bg-white p-5 border-t-4 border-blue-500">
-            <div className="flex items-center text-slate-700 mb-2">
-              <ArrowUp className="mr-2 h-5 w-5 text-blue-500" />
-              <h3 className="text-base font-semibold">Ingresos Brutos</h3>
-              <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
-            </div>
-            <div className="mb-2">
-              <div className="text-3xl font-bold text-slate-800">
-                {formatCurrency(dashboardStats.income)}
-              </div>
-            </div>
-            <div className="text-xs space-y-1 text-slate-600">
-              <div className="flex justify-between">
-                <span>Base imponible:</span>
-                <span className="font-medium">{formatCurrency(baseImponibleIngresos)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>IVA (21%):</span>
-                <span className="font-medium">{formatCurrency(ivaRepercutido)}</span>
-              </div>
-            </div>
-            
-            {/* Facturas pendientes */}
-            <div className="mt-3 bg-slate-50 rounded-md p-3 border border-slate-200">
-              <div className="flex justify-between items-center text-xs text-slate-700 font-medium mb-1">
-                <span>Facturas pendientes</span>
-                <span className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-700">↓ {dashboardStats.pendingCount || 0} facturas</span>
-              </div>
-              <div className="text-lg font-bold text-slate-800">
-                {formatCurrency(dashboardStats.pendingInvoices)}
-              </div>
-            </div>
-          </div>
-        </Card>
-
         {/* Widget de Resultado Final */}
         <Card className="overflow-hidden rounded-md shadow-sm">
           <div className="bg-white p-5 border-t-4 border-emerald-500">
             <div className="flex items-center text-slate-700 mb-2">
-              <TrendingUp className="mr-2 h-5 w-5 text-emerald-500" />
+              <PiggyBank className="mr-2 h-5 w-5 text-emerald-500" />
               <h3 className="text-base font-semibold">Resultado Final</h3>
               <InfoIcon className="h-4 w-4 ml-auto opacity-50" />
             </div>

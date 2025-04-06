@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PlusCircle } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, PlusCircle, BarChart3 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 interface SimpleAppleDashboardProps {
   className?: string;
@@ -14,6 +16,7 @@ interface SimpleAppleDashboardProps {
 const SimpleAppleDashboard: React.FC<SimpleAppleDashboardProps> = ({ className }) => {
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
+  const [_, navigate] = useLocation();
 
   // Obtener los datos de las estadísticas
   const { data: stats, isLoading } = useQuery<DashboardStats>({
@@ -71,7 +74,17 @@ const SimpleAppleDashboard: React.FC<SimpleAppleDashboardProps> = ({ className }
     <div className={cn("space-y-6", className)}>
       {/* Filtros para el dashboard */}
       <div className="flex items-center justify-between gap-4 mb-8">
-        <h2 className="text-3xl font-semibold">Resumen Financiero</h2>
+        <div className="flex items-center">
+          <h2 className="text-3xl font-semibold">Resumen Financiero</h2>
+          <Button 
+            variant="outline"
+            className="ml-4 border-slate-300 flex items-center"
+            onClick={() => navigate("/dashboard/complete")}
+          >
+            <BarChart3 className="mr-2 h-4 w-4" />
+            <span>Ver dashboard completo</span>
+          </Button>
+        </div>
         <div className="flex items-center space-x-2">
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="w-[120px]">
