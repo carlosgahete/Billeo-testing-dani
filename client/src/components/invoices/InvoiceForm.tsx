@@ -233,7 +233,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     total: 0,
     additionalTaxes: [],
     status: "pending",
-    notes: "",
+    notes: "Forma de pago: Transferencia bancaria a la cuenta ES12 1234 5678 9123 4567 8912",
     attachments: [],
     items: [
       {
@@ -298,7 +298,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
-        notes: invoice.notes || "",
+        notes: invoice.notes || "Forma de pago: Transferencia bancaria a la cuenta ES12 1234 5678 9123 4567 8912",
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
@@ -379,7 +379,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
-        notes: invoice.notes || "",
+        notes: invoice.notes || "Forma de pago: Transferencia bancaria a la cuenta ES12 1234 5678 9123 4567 8912",
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
@@ -913,7 +913,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Información adicional para la factura..."
+                            placeholder="Forma de pago: Transferencia bancaria a la cuenta ES12 1234 5678 9123 4567 8912"
                             {...field}
                             value={field.value || ""}
                             className="border-gray-200 focus-visible:ring-green-500 focus-visible:ring-opacity-30 min-h-[100px]"
