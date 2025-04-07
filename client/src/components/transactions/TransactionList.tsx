@@ -411,8 +411,8 @@ const TransactionList = () => {
             </DialogContent>
           </Dialog>
           
-          {/* Visible en pestaña 'all' o 'income': Nuevo ingreso */}
-          {(currentTab === 'all' || currentTab === 'income') && (
+          {/* Visible solo en la pestaña 'income': Nuevo ingreso */}
+          {currentTab === 'income' && (
             <button 
               className="button-apple-primary button-apple-sm flex items-center"
               onClick={() => navigate("/transactions/new?type=income")}
@@ -423,8 +423,8 @@ const TransactionList = () => {
             </button>
           )}
           
-          {/* Visible en pestaña 'all' o 'expense': Nuevo gasto */}
-          {(currentTab === 'all' || currentTab === 'expense') && (
+          {/* Visible solo en la pestaña 'expense': Nuevo gasto */}
+          {currentTab === 'expense' && (
             <button 
               className="button-apple-primary button-apple-sm flex items-center"
               onClick={() => navigate("/transactions/new?type=expense")}
@@ -435,8 +435,8 @@ const TransactionList = () => {
             </button>
           )}
           
-          {/* Visible en pestaña 'all' o 'expense': Escanear gasto */}
-          {(currentTab === 'all' || currentTab === 'expense') && (
+          {/* Visible solo en la pestaña 'expense': Escanear gasto */}
+          {currentTab === 'expense' && (
             <button 
               className="button-apple button-apple-sm flex items-center"
               onClick={() => navigate("/documents/scan")}
@@ -447,8 +447,8 @@ const TransactionList = () => {
             </button>
           )}
           
-          {/* Visible en pestaña 'all' o 'income': Crear factura */}
-          {(currentTab === 'all' || currentTab === 'income') && (
+          {/* Visible solo en la pestaña 'income': Crear factura */}
+          {currentTab === 'income' && (
             <button 
               className="button-apple button-apple-sm flex items-center"
               onClick={() => navigate("/invoices/new")}
