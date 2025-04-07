@@ -37,8 +37,6 @@ import SelectUserPage from "@/pages/admin/select-user";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
-import AnalyticsPage from "@/pages/analytics";
-
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -153,11 +151,7 @@ function Router() {
           <ProtectedRoute path="/income-expense" component={IncomeExpensePage} />
         </Layout>
       </Route>
-      <Route path="/analytics">
-        <Layout>
-          <ProtectedRoute path="/analytics" component={AnalyticsPage} />
-        </Layout>
-      </Route>
+
       <Route path="/document-scan">
         <Layout>
           <ProtectedRoute path="/document-scan" component={DocumentScanPage} />

@@ -11,7 +11,6 @@ import {
   LogOut,
   FileText,
   Users,
-  LineChart,
   PieChart,
   TrendingUp,
   ScanLine,
@@ -141,11 +140,7 @@ const Sidebar = ({
       icon: <FileText size={20} />, 
       label: "Presupuestos" 
     },
-    { 
-      href: "/analytics", 
-      icon: <LineChart size={20} />, 
-      label: "Analítica" 
-    },
+
     { 
       href: "/company", 
       icon: <Building2 size={20} />, 
