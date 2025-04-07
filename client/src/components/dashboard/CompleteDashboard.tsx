@@ -246,7 +246,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <Link href="/income-expense" className="block">
+            <Link href="/transactions" className="block">
               <button className="button-apple-secondary w-full">
                 Ver gastos
               </button>

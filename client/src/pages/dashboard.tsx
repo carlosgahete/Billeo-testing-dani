@@ -379,7 +379,7 @@ const Dashboard = () => {
                   variant="outline" 
                   size="sm" 
                   className="w-full text-green-600 border-green-300 hover:bg-green-50"
-                  onClick={() => navigate("/income-expense?tab=income")}
+                  onClick={() => navigate("/transactions?tab=income")}
                 >
                   Ver ingresos
                 </Button>
@@ -436,7 +436,7 @@ const Dashboard = () => {
                   variant="outline" 
                   size="sm" 
                   className="w-full text-red-600 border-red-300 hover:bg-red-50"
-                  onClick={() => navigate("/income-expense?tab=expense")}
+                  onClick={() => navigate("/transactions?tab=expense")}
                 >
                   Ver gastos
                 </Button>

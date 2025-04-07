@@ -80,7 +80,7 @@ const IncomeSummaryCard: React.FC<IncomeSummaryCardProps> = ({ data, isLoading }
             variant="outline" 
             size="sm" 
             className="w-full text-green-600 border-green-300 hover:bg-green-50"
-            onClick={() => navigate("/income-expense?tab=income")}
+            onClick={() => navigate("/transactions?tab=income")}
           >
             Ver ingresos
           </Button>
