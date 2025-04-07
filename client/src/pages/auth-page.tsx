@@ -86,242 +86,216 @@ export default function AuthPage() {
   const isPending = loginMutation.isPending || registerMutation.isPending;
 
   return (
-    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-gray-50">
-      {/* Left side - Hero Section */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary to-primary-800 text-white p-8 flex-col justify-center items-center">
-        <div className="max-w-lg mx-auto">
-          <div className="mb-8 text-center">
-            <img 
-              src={billeoLogo} 
-              alt="Billeo Logo" 
-              className="h-16 inline-block mb-4"
-            />
-            <h1 className="text-4xl font-bold mb-2 tracking-tight">Billeo</h1>
-            <p className="text-xl opacity-90 font-light">La solución financiera para autónomos</p>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="flex items-start">
-              <div className="bg-white bg-opacity-20 p-3 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-1">Gestión simplificada</h3>
-                <p className="opacity-80">Facturas y presupuestos con un solo clic</p>
-              </div>
+    <div className="h-screen flex overflow-hidden bg-gray-50">
+      {/* Contenedor principal centrado - Estilo Apple */}
+      <div className="w-full max-w-5xl mx-auto my-auto flex flex-col md:flex-row items-center md:items-stretch shadow-xl rounded-3xl overflow-hidden bg-white">
+        {/* Lado izquierdo - Logo y branding */}
+        <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-6 md:p-10 flex flex-col justify-center">
+          <div className="max-w-md mx-auto">
+            <div className="mb-8 text-center md:text-left">
+              <img 
+                src={billeoLogo} 
+                alt="Billeo Logo" 
+                className="h-10 md:h-12 mb-6 inline-block"
+              />
+              <h1 className="text-3xl font-medium text-gray-900 mb-3">Billeo</h1>
+              <p className="text-gray-600 text-lg font-light">La gestión financiera para autónomos, simplificada.</p>
             </div>
             
-            <div className="flex items-start">
-              <div className="bg-white bg-opacity-20 p-3 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                  <line x1="1" y1="10" x2="23" y2="10"></line>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-1">Control total</h3>
-                <p className="opacity-80">Visualiza tus impuestos y obligaciones fiscales</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start">
-              <div className="bg-white bg-opacity-20 p-3 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-1">Escaneo inteligente</h3>
-                <p className="opacity-80">Reconocimiento automático de facturas y gastos</p>
+            <div className="space-y-6 hidden md:block">
+              <div className="flex items-center bg-white/60 p-4 rounded-xl backdrop-blur-sm shadow-sm">
+                <div className="bg-blue-100 p-2 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                    <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-medium text-gray-900">Gestión simplificada</h3>
+                  <p className="text-sm text-gray-600">Facturas y presupuestos con un solo clic</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* Right side - Authentication form */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-4 md:p-8 overflow-auto">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="md:hidden flex justify-center mb-6">
-            <img 
-              src={billeoLogo} 
-              alt="Billeo Logo" 
-              className="h-14"
-            />
+        
+        {/* Lado derecho - Formulario de autenticación */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center p-6 md:p-10">
+          <div className="w-full max-w-md mx-auto">
+            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-6 p-1 bg-gray-100/80 backdrop-blur-sm rounded-xl flex space-x-1 w-fit">
+                <TabsTrigger 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2 text-sm font-medium" 
+                  value="login"
+                >
+                  Iniciar Sesión
+                </TabsTrigger>
+                <TabsTrigger 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2 text-sm font-medium" 
+                  value="register"
+                >
+                  Registrarse
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Login Form */}
+              <TabsContent value="login">
+                <form onSubmit={handleLoginSubmit} className="space-y-6">
+                  <div>
+                    <Label htmlFor="login-username" className="text-gray-700 font-medium text-sm block mb-2">
+                      Usuario
+                    </Label>
+                    <Input
+                      id="login-username"
+                      name="username"
+                      placeholder="demo"
+                      value={loginFormData.username}
+                      onChange={handleLoginChange}
+                      required
+                      className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="login-password" className="text-gray-700 font-medium text-sm">
+                        Contraseña
+                      </Label>
+                      <Link to="/forgot-password" className="text-xs text-blue-500 hover:text-blue-700">
+                        ¿Olvidaste tu contraseña?
+                      </Link>
+                    </div>
+                    <Input
+                      id="login-password"
+                      name="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginFormData.password}
+                      onChange={handleLoginChange}
+                      required
+                      className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
+                    />
+                  </div>
+                  
+                  <Button
+                    className="w-full shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 h-10 rounded-lg transition-all"
+                    type="submit"
+                    disabled={isPending}
+                  >
+                    {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
+                  </Button>
+                  
+                  <div className="text-center text-xs text-gray-500 mt-6 bg-gray-50 py-2 rounded-lg">
+                    Prueba con: <span className="font-medium">demo</span> / <span className="font-medium">demo</span>
+                  </div>
+                </form>
+              </TabsContent>
+              
+              {/* Register Form */}
+              <TabsContent value="register">
+                <form onSubmit={handleRegisterSubmit} className="space-y-5">
+                  <div>
+                    <Label htmlFor="register-name" className="text-gray-700 font-medium text-sm block mb-2">
+                      Nombre completo
+                    </Label>
+                    <Input
+                      id="register-name"
+                      name="name"
+                      placeholder="Ana García"
+                      value={registerFormData.name}
+                      onChange={handleRegisterChange}
+                      required
+                      className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="register-email" className="text-gray-700 font-medium text-sm block mb-2">
+                      Email
+                    </Label>
+                    <Input
+                      id="register-email"
+                      name="email"
+                      type="email"
+                      placeholder="usuario@ejemplo.com"
+                      value={registerFormData.email}
+                      onChange={handleRegisterChange}
+                      required
+                      className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="register-username" className="text-gray-700 font-medium text-sm block mb-2">
+                      Usuario
+                    </Label>
+                    <Input
+                      id="register-username"
+                      name="username"
+                      placeholder="minombre"
+                      value={registerFormData.username}
+                      onChange={handleRegisterChange}
+                      required
+                      className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="register-password" className="text-gray-700 font-medium text-sm block mb-2">
+                      Contraseña
+                    </Label>
+                    <Input
+                      id="register-password"
+                      name="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={registerFormData.password}
+                      onChange={handleRegisterChange}
+                      required
+                      className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label className="text-gray-700 font-medium text-sm block mb-2">
+                      Tipo de negocio
+                    </Label>
+                    <div className="p-1 bg-gray-100 rounded-lg grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => handleBusinessTypeChange("autonomo")}
+                        className={`rounded-lg h-auto py-2 ${
+                          registerFormData.businessType === "autonomo"
+                            ? "bg-white shadow-sm text-blue-600"
+                            : "bg-transparent text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        Autónomo
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleBusinessTypeChange("empresa")}
+                        className={`rounded-lg h-auto py-2 ${
+                          registerFormData.businessType === "empresa"
+                            ? "bg-white shadow-sm text-blue-600"
+                            : "bg-transparent text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        Empresa
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <Button
+                    className="w-full shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 h-10 rounded-lg transition-all mt-4"
+                    type="submit"
+                    disabled={isPending}
+                  >
+                    {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
           </div>
-          
-          <Card className="w-full border-0 shadow-lg">
-            <CardHeader className="pb-2">
-              <h2 className="text-2xl font-medium text-center text-gray-800">
-                {activeTab === "login" ? "Iniciar sesión" : "Crear cuenta"}
-              </h2>
-              <p className="text-gray-500 text-center mt-1 text-sm">
-                {activeTab === "login" 
-                  ? "Accede a tu cuenta para gestionar tus finanzas" 
-                  : "Regístrate y empieza a simplificar tu gestión"
-                }
-              </p>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-8 rounded-xl">
-                  <TabsTrigger value="login" className="rounded-xl">Iniciar Sesión</TabsTrigger>
-                  <TabsTrigger value="register" className="rounded-xl">Registrarse</TabsTrigger>
-                </TabsList>
-                
-                {/* Login Form */}
-                <TabsContent value="login">
-                  <form onSubmit={handleLoginSubmit}>
-                    <div className="space-y-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-username" className="text-gray-700">Usuario</Label>
-                        <Input
-                          id="login-username"
-                          name="username"
-                          placeholder="demo"
-                          value={loginFormData.username}
-                          onChange={handleLoginChange}
-                          required
-                          className="rounded-xl h-12 px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="login-password" className="text-gray-700">Contraseña</Label>
-                        <Input
-                          id="login-password"
-                          name="password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={loginFormData.password}
-                          onChange={handleLoginChange}
-                          required
-                          className="rounded-xl h-12 px-4"
-                        />
-                      </div>
-                      
-                      <div className="text-right">
-                        <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                          ¿Olvidaste tu contraseña?
-                        </Link>
-                      </div>
-                      
-                      <Button
-                        className="w-full rounded-xl h-12 bg-gradient-to-br from-primary to-primary-800 hover:shadow-md transition-all duration-200"
-                        type="submit"
-                        disabled={isPending}
-                      >
-                        {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
-                      </Button>
-                      
-                      <div className="text-center text-sm text-gray-500 mt-2">
-                        <p>
-                          Cuenta demo: usuario <span className="font-medium">demo</span> / contraseña <span className="font-medium">demo</span>
-                        </p>
-                      </div>
-                    </div>
-                  </form>
-                </TabsContent>
-                
-                {/* Register Form */}
-                <TabsContent value="register">
-                  <form onSubmit={handleRegisterSubmit}>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="register-name" className="text-gray-700">Nombre completo</Label>
-                        <Input
-                          id="register-name"
-                          name="name"
-                          placeholder="Ana García"
-                          value={registerFormData.name}
-                          onChange={handleRegisterChange}
-                          required
-                          className="rounded-xl h-12 px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-email" className="text-gray-700">Email</Label>
-                        <Input
-                          id="register-email"
-                          name="email"
-                          type="email"
-                          placeholder="usuario@ejemplo.com"
-                          value={registerFormData.email}
-                          onChange={handleRegisterChange}
-                          required
-                          className="rounded-xl h-12 px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-username" className="text-gray-700">Usuario</Label>
-                        <Input
-                          id="register-username"
-                          name="username"
-                          placeholder="minombre"
-                          value={registerFormData.username}
-                          onChange={handleRegisterChange}
-                          required
-                          className="rounded-xl h-12 px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-password" className="text-gray-700">Contraseña</Label>
-                        <Input
-                          id="register-password"
-                          name="password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={registerFormData.password}
-                          onChange={handleRegisterChange}
-                          required
-                          className="rounded-xl h-12 px-4"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-gray-700">Tipo de negocio</Label>
-                        <div className="p-1 bg-gray-100 rounded-xl grid grid-cols-2 gap-2">
-                          <Button
-                            type="button"
-                            onClick={() => handleBusinessTypeChange("autonomo")}
-                            className={`rounded-lg h-12 ${
-                              registerFormData.businessType === "autonomo"
-                                ? "bg-white shadow-sm text-primary"
-                                : "bg-transparent text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            Autónomo
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleBusinessTypeChange("empresa")}
-                            className={`rounded-lg h-12 ${
-                              registerFormData.businessType === "empresa"
-                                ? "bg-white shadow-sm text-primary"
-                                : "bg-transparent text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            Empresa
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <Button
-                        className="w-full rounded-xl h-12 bg-gradient-to-br from-primary to-primary-800 hover:shadow-md transition-all duration-200 mt-6"
-                        type="submit"
-                        disabled={isPending}
-                      >
-                        {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
-                      </Button>
-                    </div>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
