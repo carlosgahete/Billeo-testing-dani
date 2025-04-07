@@ -86,32 +86,43 @@ export default function AuthPage() {
   const isPending = loginMutation.isPending || registerMutation.isPending;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-white">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
+      {/* Elementos decorativos de fondo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-gradient-to-br from-blue-100/40 to-blue-200/30 blur-3xl"></div>
+        <div className="absolute top-1/4 -left-20 w-60 h-60 rounded-full bg-gradient-to-tr from-indigo-100/30 to-indigo-200/20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-screen h-1/3 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
+      </div>
+      
       {/* Logo y cabecera central */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-10 relative z-10 animate-fadeIn">
         <div className="flex justify-center mb-4">
           <img 
             src={billeoLogo} 
             alt="Billeo Logo" 
-            className="h-10"
+            className="h-12 animate-scaleIn"
           />
         </div>
-        <h1 className="text-2xl font-medium text-gray-900">Billeo</h1>
-        <p className="text-gray-500 mt-2 max-w-sm">Gestión financiera simplificada</p>
+        <h1 className="text-3xl font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+          Billeo
+        </h1>
+        <p className="text-gray-500 mt-2 max-w-sm">
+          Gestión financiera simplificada
+        </p>
       </div>
       
       {/* Panel de autenticación */}
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm relative z-10 animate-fadeSlideUp">
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-8 p-1 bg-gray-100/80 backdrop-blur-sm rounded-xl flex space-x-1 w-full">
+          <TabsList className="mb-8 p-1 bg-white/80 backdrop-blur-md rounded-xl flex space-x-1 w-full shadow-lg border border-blue-100/50">
             <TabsTrigger 
-              className="rounded-lg flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2 text-sm font-medium" 
+              className="rounded-lg flex-1 data-[state=active]:bg-gradient-to-b data-[state=active]:from-blue-50 data-[state=active]:to-blue-100/50 data-[state=active]:shadow-sm data-[state=active]:text-blue-700 px-4 py-2 text-sm font-medium transition-all" 
               value="login"
             >
               Iniciar Sesión
             </TabsTrigger>
             <TabsTrigger 
-              className="rounded-lg flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2 text-sm font-medium" 
+              className="rounded-lg flex-1 data-[state=active]:bg-gradient-to-b data-[state=active]:from-blue-50 data-[state=active]:to-blue-100/50 data-[state=active]:shadow-sm data-[state=active]:text-blue-700 px-4 py-2 text-sm font-medium transition-all" 
               value="register"
             >
               Registrarse
@@ -120,162 +131,191 @@ export default function AuthPage() {
           
           {/* Login Form */}
           <TabsContent value="login">
-            <form onSubmit={handleLoginSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="login-username" className="text-gray-700 font-medium text-sm block mb-2">
-                  Usuario
-                </Label>
-                <Input
-                  id="login-username"
-                  name="username"
-                  placeholder="demo"
-                  value={loginFormData.username}
-                  onChange={handleLoginChange}
-                  required
-                  className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
-                />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="login-password" className="text-gray-700 font-medium text-sm">
-                    Contraseña
+            <div className="p-6 bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-blue-100/50">
+              <form onSubmit={handleLoginSubmit} className="space-y-6">
+                <div>
+                  <Label htmlFor="login-username" className="text-gray-700 font-medium text-sm block mb-2">
+                    Usuario
                   </Label>
-                  <Link to="/forgot-password" className="text-xs text-blue-500 hover:text-blue-700">
-                    ¿Olvidaste tu contraseña?
-                  </Link>
+                  <Input
+                    id="login-username"
+                    name="username"
+                    placeholder="demo"
+                    value={loginFormData.username}
+                    onChange={handleLoginChange}
+                    required
+                    className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+                  />
                 </div>
-                <Input
-                  id="login-password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={loginFormData.password}
-                  onChange={handleLoginChange}
-                  required
-                  className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
-                />
-              </div>
-              
-              <Button
-                className="w-full shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 h-10 rounded-lg transition-all"
-                type="submit"
-                disabled={isPending}
-              >
-                {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
-              </Button>
-              
-              <div className="text-center text-xs text-gray-500 mt-6 bg-gray-50 py-2 rounded-lg">
-                Prueba con: <span className="font-medium">demo</span> / <span className="font-medium">demo</span>
-              </div>
-            </form>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="login-password" className="text-gray-700 font-medium text-sm">
+                      Contraseña
+                    </Label>
+                    <Link to="/forgot-password" className="text-xs text-blue-500 hover:text-blue-700">
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+                  <Input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={loginFormData.password}
+                    onChange={handleLoginChange}
+                    required
+                    className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+                  />
+                </div>
+                
+                <Button
+                  className="w-full shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium px-4 py-2 h-12 rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  type="submit"
+                  disabled={isPending}
+                >
+                  {loginMutation.isPending ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Iniciando sesión...
+                    </span>
+                  ) : (
+                    "Iniciar sesión"
+                  )}
+                </Button>
+                
+                <div className="text-center text-xs text-gray-500 mt-6 bg-blue-50/80 py-3 px-2 rounded-lg border border-blue-100/50 shadow-sm">
+                  Prueba con: <span className="font-medium">demo</span> / <span className="font-medium">demo</span>
+                </div>
+              </form>
+            </div>
           </TabsContent>
           
           {/* Register Form */}
           <TabsContent value="register">
-            <form onSubmit={handleRegisterSubmit} className="space-y-5">
-              <div>
-                <Label htmlFor="register-name" className="text-gray-700 font-medium text-sm block mb-2">
-                  Nombre completo
-                </Label>
-                <Input
-                  id="register-name"
-                  name="name"
-                  placeholder="Ana García"
-                  value={registerFormData.name}
-                  onChange={handleRegisterChange}
-                  required
-                  className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="register-email" className="text-gray-700 font-medium text-sm block mb-2">
-                  Email
-                </Label>
-                <Input
-                  id="register-email"
-                  name="email"
-                  type="email"
-                  placeholder="usuario@ejemplo.com"
-                  value={registerFormData.email}
-                  onChange={handleRegisterChange}
-                  required
-                  className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="register-username" className="text-gray-700 font-medium text-sm block mb-2">
-                  Usuario
-                </Label>
-                <Input
-                  id="register-username"
-                  name="username"
-                  placeholder="minombre"
-                  value={registerFormData.username}
-                  onChange={handleRegisterChange}
-                  required
-                  className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="register-password" className="text-gray-700 font-medium text-sm block mb-2">
-                  Contraseña
-                </Label>
-                <Input
-                  id="register-password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={registerFormData.password}
-                  onChange={handleRegisterChange}
-                  required
-                  className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm w-full"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-gray-700 font-medium text-sm block mb-2">
-                  Tipo de negocio
-                </Label>
-                <div className="p-1 bg-gray-100 rounded-lg grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => handleBusinessTypeChange("autonomo")}
-                    className={`rounded-lg h-auto py-2 ${
-                      registerFormData.businessType === "autonomo"
-                        ? "bg-white shadow-sm text-blue-600"
-                        : "bg-transparent text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    Autónomo
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => handleBusinessTypeChange("empresa")}
-                    className={`rounded-lg h-auto py-2 ${
-                      registerFormData.businessType === "empresa"
-                        ? "bg-white shadow-sm text-blue-600"
-                        : "bg-transparent text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    Empresa
-                  </Button>
+            <div className="p-6 bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-blue-100/50">
+              <form onSubmit={handleRegisterSubmit} className="space-y-5">
+                <div>
+                  <Label htmlFor="register-name" className="text-gray-700 font-medium text-sm block mb-2">
+                    Nombre completo
+                  </Label>
+                  <Input
+                    id="register-name"
+                    name="name"
+                    placeholder="Ana García"
+                    value={registerFormData.name}
+                    onChange={handleRegisterChange}
+                    required
+                    className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+                  />
                 </div>
-              </div>
-              
-              <Button
-                className="w-full shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 h-10 rounded-lg transition-all mt-4"
-                type="submit"
-                disabled={isPending}
-              >
-                {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
-              </Button>
-            </form>
+                
+                <div>
+                  <Label htmlFor="register-email" className="text-gray-700 font-medium text-sm block mb-2">
+                    Email
+                  </Label>
+                  <Input
+                    id="register-email"
+                    name="email"
+                    type="email"
+                    placeholder="usuario@ejemplo.com"
+                    value={registerFormData.email}
+                    onChange={handleRegisterChange}
+                    required
+                    className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="register-username" className="text-gray-700 font-medium text-sm block mb-2">
+                    Usuario
+                  </Label>
+                  <Input
+                    id="register-username"
+                    name="username"
+                    placeholder="minombre"
+                    value={registerFormData.username}
+                    onChange={handleRegisterChange}
+                    required
+                    className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="register-password" className="text-gray-700 font-medium text-sm block mb-2">
+                    Contraseña
+                  </Label>
+                  <Input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={registerFormData.password}
+                    onChange={handleRegisterChange}
+                    required
+                    className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-700 font-medium text-sm block mb-2">
+                    Tipo de negocio
+                  </Label>
+                  <div className="p-2 bg-blue-50/80 rounded-lg grid grid-cols-2 gap-3 border border-blue-100/50 shadow-sm">
+                    <Button
+                      type="button"
+                      onClick={() => handleBusinessTypeChange("autonomo")}
+                      className={`rounded-lg h-auto py-2.5 transition-all duration-200 ${
+                        registerFormData.businessType === "autonomo"
+                          ? "bg-white shadow-md text-blue-600 border border-blue-200/50"
+                          : "bg-transparent text-gray-600 hover:bg-white/50 hover:text-blue-500"
+                      }`}
+                    >
+                      Autónomo
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleBusinessTypeChange("empresa")}
+                      className={`rounded-lg h-auto py-2.5 transition-all duration-200 ${
+                        registerFormData.businessType === "empresa"
+                          ? "bg-white shadow-md text-blue-600 border border-blue-200/50"
+                          : "bg-transparent text-gray-600 hover:bg-white/50 hover:text-blue-500"
+                      }`}
+                    >
+                      Empresa
+                    </Button>
+                  </div>
+                </div>
+                
+                <Button
+                  className="w-full shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium px-4 py-2 h-12 rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mt-4"
+                  type="submit"
+                  disabled={isPending}
+                >
+                  {registerMutation.isPending ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creando cuenta...
+                    </span>
+                  ) : (
+                    "Crear cuenta"
+                  )}
+                </Button>
+              </form>
+            </div>
           </TabsContent>
         </Tabs>
+      </div>
+      
+      {/* Decoración adicional */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-blue-400/60">
+        © {new Date().getFullYear()} Billeo · Tu gestión financiera
       </div>
     </div>
   );
