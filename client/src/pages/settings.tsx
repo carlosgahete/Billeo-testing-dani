@@ -66,8 +66,7 @@ const SettingsPage = () => {
   const [profileForm, setProfileForm] = useState({
     name: "",
     email: "",
-    profileImage: "",
-    bankAccount: ""
+    profileImage: ""
   });
   
   // Profile image state
@@ -130,35 +129,16 @@ const SettingsPage = () => {
   // Initialize form with user data when loaded
   useEffect(() => {
     if (user && !userLoading) {
-      // Obtener la empresa del usuario para conseguir el número de cuenta bancaria
-      const fetchCompanyData = async () => {
-        try {
-          const companyResponse = await fetch('/api/company');
-          const companyData = await companyResponse.json();
-          
-          setProfileForm({
-            name: user.name || "",
-            email: user.email || "",
-            profileImage: user.profileImage || "",
-            bankAccount: companyData?.bankAccount || ""
-          });
-        } catch (error) {
-          console.error("Error al obtener los datos de la empresa:", error);
-          setProfileForm({
-            name: user.name || "",
-            email: user.email || "",
-            profileImage: user.profileImage || "",
-            bankAccount: ""
-          });
-        }
-      };
-      
-      fetchCompanyData();
+      setProfileForm({
+        name: user.name || "",
+        email: user.email || "",
+        profileImage: user.profileImage || ""
+      });
     }
   }, [user, userLoading]);
   
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: Omit<typeof profileForm, 'bankAccount'>) => {
+    mutationFn: async (data: typeof profileForm) => {
       if (!user) throw new Error("User not authenticated");
       return apiRequest("PUT", `/api/users/${user.id}`, data);
     },
@@ -208,56 +188,16 @@ const SettingsPage = () => {
     },
   });
   
-  // Mutación para actualizar el número de cuenta bancaria en la tabla companies
-  const updateBankAccountMutation = useMutation({
-    mutationFn: async (bankAccount: string) => {
-      if (!user) throw new Error("User not authenticated");
-      
-      // Obtenemos primero la información de la empresa
-      const companyResponse = await fetch('/api/company');
-      const companyData = await companyResponse.json();
-      
-      if (!companyData || !companyData.id) {
-        throw new Error("No se encontró información de la empresa");
-      }
-      
-      // Actualizamos la empresa con el nuevo número de cuenta bancaria
-      return apiRequest("PUT", `/api/company/${companyData.id}`, {
-        ...companyData,
-        bankAccount: bankAccount
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/company"] });
-      toast({
-        title: "Número de cuenta actualizado",
-        description: "Tu número de cuenta bancaria ha sido actualizado correctamente",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: `No se pudo actualizar el número de cuenta: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
+  // Ya no necesitamos la mutación para actualizar el número de cuenta bancaria
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Primero actualizamos los datos básicos del perfil
     updateProfileMutation.mutate({
       name: profileForm.name,
       email: profileForm.email,
       profileImage: profileForm.profileImage
-      // No incluimos bankAccount aquí porque se maneja por separado
     });
-    
-    // Si hay número de cuenta, actualizamos también la empresa
-    if (profileForm.bankAccount) {
-      updateBankAccountMutation.mutate(profileForm.bankAccount);
-    }
   };
   
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -403,20 +343,6 @@ const SettingsPage = () => {
                     placeholder="tu@email.com" 
                     className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="bankAccount" className="text-gray-700 font-medium">Número de cuenta bancaria (IBAN)</Label>
-                  <Input 
-                    id="bankAccount" 
-                    value={profileForm.bankAccount}
-                    onChange={(e) => setProfileForm({...profileForm, bankAccount: e.target.value})}
-                    placeholder="ES12 3456 7890 1234 5678 9012" 
-                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                  />
-                  <p className="text-xs text-gray-500 mt-1 ml-1">
-                    Este número de cuenta se incluirá automáticamente en las notas de tus facturas.
-                  </p>
                 </div>
                 
                 <div className="pt-4 flex justify-end">
