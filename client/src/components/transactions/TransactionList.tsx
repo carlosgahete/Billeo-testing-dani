@@ -349,31 +349,31 @@ const TransactionList = () => {
   const balance = incomeTotal - expenseTotal;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">
+          <h1 className="text-2xl font-medium text-gray-800 tracking-tight">
             Ingresos y Gastos
           </h1>
-          <p className="text-neutral-500">
+          <p className="text-gray-500 text-sm mt-1">
             Gestiona todos tus movimientos económicos
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full sm:w-auto">
+        <div className="flex flex-wrap gap-3 justify-start sm:justify-end w-full sm:w-auto">
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center h-9">
-                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+              <button className="button-apple-secondary button-apple-sm flex items-center">
+                <Upload className="h-4 w-4 mr-1.5 sm:mr-2" />
                 <span className="hidden sm:inline">Importar CSV</span>
                 <span className="sm:hidden">Importar</span>
-              </Button>
+              </button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="glass-modal">
               <DialogHeader>
-                <DialogTitle>Importar movimientos desde CSV</DialogTitle>
+                <DialogTitle className="text-xl font-medium tracking-tight">Importar movimientos desde CSV</DialogTitle>
               </DialogHeader>
               <div className="py-4">
-                <p className="text-sm text-neutral-600 mb-4">
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                   Sube un archivo CSV con tus movimientos bancarios para importarlos al sistema.
                   El archivo debe tener columnas para fecha, descripción, importe y tipo de movimiento.
                 </p>
@@ -385,53 +385,62 @@ const TransactionList = () => {
             </DialogContent>
           </Dialog>
           
+          <button 
+            className="button-apple-primary button-apple-sm flex items-center"
+            onClick={() => navigate("/transactions/new")}
+          >
+            <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Nuevo movimiento</span>
+            <span className="sm:hidden">Nuevo</span>
+          </button>
+          
 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-2">
+        <div className="dashboard-card scale-in">
+          <div className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-neutral-500 text-sm">Ingresos totales</p>
-                <p className="text-2xl font-bold text-neutral-800">
+                <p className="text-gray-500 text-sm mb-2">Ingresos totales</p>
+                <p className="text-2xl font-medium text-gray-800 flex items-center">
                   {formatCurrency(incomeTotal, "income")}
                 </p>
               </div>
-              <div className="p-2 rounded-full bg-secondary-50 text-secondary-600">
+              <div className="p-2.5 rounded-full bg-[#E3F4E9] text-[#34C759]">
                 <Download className="h-5 w-5" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Card>
-          <CardContent className="p-4">
+        <div className="dashboard-card scale-in">
+          <div className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-neutral-500 text-sm">Gastos totales</p>
-                <p className="text-2xl font-bold text-neutral-800">
+                <p className="text-gray-500 text-sm mb-2">Gastos totales</p>
+                <p className="text-2xl font-medium text-gray-800">
                   {formatCurrency(expenseTotal, "expense")}
                 </p>
               </div>
-              <div className="p-2 rounded-full bg-danger-50 text-danger-500">
+              <div className="p-2.5 rounded-full bg-[#FFE9EA] text-[#FF3B30]">
                 <Upload className="h-5 w-5" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Card>
-          <CardContent className="p-4">
+        <div className="dashboard-card scale-in">
+          <div className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-neutral-500 text-sm">Balance neto</p>
-                <p className={`text-2xl font-bold ${balance >= 0 ? "text-secondary-600" : "text-danger-500"}`}>
+                <p className="text-gray-500 text-sm mb-2">Balance neto</p>
+                <p className={`text-2xl font-medium ${balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}`}>
                   {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
                 </p>
               </div>
-              <div className={`p-2 rounded-full ${balance >= 0 ? "bg-secondary-50 text-secondary-600" : "bg-danger-50 text-danger-500"}`}>
+              <div className={`p-2.5 rounded-full ${balance >= 0 ? "bg-[#E3F4E9] text-[#34C759]" : "bg-[#FFE9EA] text-[#FF3B30]"}`}>
                 {balance >= 0 ? (
                   <Plus className="h-5 w-5" />
                 ) : (
@@ -439,12 +448,12 @@ const TransactionList = () => {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
+      <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in">
+        <div className="p-5 pb-0">
           <Tabs 
             defaultValue="all" 
             value={currentTab}
@@ -458,17 +467,17 @@ const TransactionList = () => {
             }}
             className="w-full"
           >
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="income">Ingresos</TabsTrigger>
-              <TabsTrigger value="expense">Gastos</TabsTrigger>
+            <TabsList className="bg-gray-100 p-1 rounded-full border border-gray-200/50">
+              <TabsTrigger className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm" value="all">Todos</TabsTrigger>
+              <TabsTrigger className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm" value="income">Ingresos</TabsTrigger>
+              <TabsTrigger className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm" value="expense">Gastos</TabsTrigger>
             </TabsList>
           </Tabs>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-5">
           {/* Mostrar filtros solo cuando estamos en la pestaña de gastos */}
           {currentTab === "expense" && transactions && categories && (
-            <div className="mb-6">
+            <div className="mb-6 bg-gray-50/80 p-4 rounded-xl border border-gray-100">
               <ExpenseFilters 
                 transactions={transactions}
                 categories={categories}
@@ -480,10 +489,10 @@ const TransactionList = () => {
           <DataTable
             columns={columns}
             data={filteredTransactions || []}
-            searchPlaceholder="Buscar movimientos..."
+            searchPlaceholder="Buscar movimientos por descripción, importe o fecha..."
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

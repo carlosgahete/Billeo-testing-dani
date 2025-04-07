@@ -622,3 +622,82 @@ a.link-apple:hover::after {
   backdrop-filter: blur(8px);
   max-width: 300px;
 }
+
+/* Estilos para modales con glassmorphism */
+.glass-modal {
+  @apply bg-white/90 backdrop-blur-xl border border-gray-200/50 rounded-3xl shadow-2xl;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+.dark .glass-modal {
+  @apply bg-gray-900/90 border-gray-800/50;
+}
+
+/* Botones principales al estilo Apple */
+.button-apple-primary {
+  @apply rounded-full bg-[#007AFF] font-medium text-white flex items-center justify-center;
+  letter-spacing: -0.01em;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+  border: none;
+  outline: none;
+}
+
+.button-apple-primary:hover {
+  @apply bg-[#0071E3];
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
+}
+
+.button-apple-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 122, 255, 0.2);
+  @apply bg-[#0062C9];
+}
+
+/* Botones secundarios en estilo Apple */
+.button-apple-secondary {
+  @apply rounded-full bg-gray-100 font-medium text-gray-800 flex items-center justify-center;
+  letter-spacing: -0.01em;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.button-apple-secondary:hover {
+  @apply bg-gray-200;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.button-apple-secondary:active {
+  @apply bg-gray-300;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Botones pequeños en estilo Apple */
+.button-apple-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Icono de búsqueda Apple */
+.search-field-apple {
+  @apply pl-10 pr-4 py-2 rounded-full border border-gray-200/80 bg-gray-50/80 text-gray-800 focus:ring-2 focus:ring-[#007AFF]/10 focus:border-[#007AFF] transition-all;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  background-size: 16px;
+}
+
+.search-field-apple:focus {
+  @apply bg-white;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
