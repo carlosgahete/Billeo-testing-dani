@@ -1,0 +1,1200 @@
+import { useQuery } from "@tanstack/react-query";
+import { 
+  LineChart, 
+  BarChart, 
+  PieChart, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Calendar, 
+  AlertCircle, 
+  Calculator, 
+  Receipt, 
+  ArrowDownRight, 
+  FileBarChart2, 
+  BarChart3, 
+  FileCheck, 
+  CalendarClock, 
+  Percent, 
+  LightbulbIcon, 
+  ChevronUp, 
+  ChevronDown, 
+  RefreshCw 
+} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup, 
+  SelectItem, 
+  SelectLabel, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+
+// Componentes para gráficos
+import {
+  ResponsiveContainer,
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart as RechartsBarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Sector,
+} from "recharts";
+
+// Tipos para los datos
+interface Invoice {
+  id: string;
+  status: string;
+  issueDate: string;
+  total: number;
+}
+
+interface Quote {
+  id: string;
+  status: string;
+}
+
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  date: string;
+  categoryId?: string;
+  categoryName?: string;
+}
+
+interface DashboardStats {
+  income?: number;
+  expenses?: number;
+  pendingInvoices?: number;
+  pendingCount?: number;
+  taxes?: {
+    vat?: number;
+    ivaALiquidar?: number;
+    ivaSoportado?: number;
+    incomeTax?: number;
+  };
+  irpfRetenidoIngresos?: number;
+  ivaRepercutido?: number;
+  ivaSoportado?: number;
+  taxStats?: {
+    vat?: number;
+    incomeTax?: number;
+  };
+  baseImponible?: number;
+}
+
+// Función auxiliar para formatear moneda
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Colores para los gráficos
+const COLORS = [
+  "#2563EB", // Azul (primario)
+  "#16A34A", // Verde
+  "#DC2626", // Rojo
+  "#CA8A04", // Amarillo
+  "#7C3AED", // Púrpura
+  "#0EA5E9", // Azul claro
+  "#D97706", // Naranja
+  "#4F46E5", // Índigo
+];
+
+// Componente principal
+const AnalyticsPage = () => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("financial");
+  const [timeFrame, setTimeFrame] = useState("yearly");
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  
+  // Obtener datos del dashboard para los análisis con actualización en tiempo real
+  const {
+    data: dashboardStats = {} as DashboardStats,
+    isLoading,
+    error,
+    refetch: refetchDashboard,
+  } = useQuery<DashboardStats>({
+    queryKey: ["/api/stats/dashboard"],
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
+  });
+
+  // Consultar facturas para análisis con actualización en tiempo real
+  const {
+    data: invoices = [] as Invoice[],
+    isLoading: isLoadingInvoices,
+    refetch: refetchInvoices,
+  } = useQuery<Invoice[]>({
+    queryKey: ["/api/invoices"],
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
+  });
+
+  // Consultar presupuestos para análisis con actualización en tiempo real
+  const {
+    data: quotes = [] as Quote[],
+    isLoading: isLoadingQuotes,
+    refetch: refetchQuotes, 
+  } = useQuery<Quote[]>({
+    queryKey: ["/api/quotes"],
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
+  });
+
+  // Consultar transacciones para análisis con actualización en tiempo real
+  const {
+    data: transactions = [] as Transaction[],
+    isLoading: isLoadingTransactions,
+    refetch: refetchTransactions,
+  } = useQuery<Transaction[]>({
+    queryKey: ["/api/transactions"],
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    staleTime: 1000, // Los datos se consideran obsoletos después de 1 segundo
+  });
+  
+  // Efecto para forzar actualización manual de todos los datos al cambiar de pestaña
+  useEffect(() => {
+    const refreshAllData = () => {
+      refetchDashboard();
+      refetchInvoices();
+      refetchQuotes();
+      refetchTransactions();
+      setLastUpdate(new Date()); // Actualizar la marca de tiempo
+    };
+    
+    // Refrescar datos cuando cambie la pestaña activa
+    refreshAllData();
+    
+    // También configuramos un intervalo para refrescar los datos regularmente
+    const refreshInterval = setInterval(refreshAllData, 10000); // Cada 10 segundos
+    
+    return () => {
+      clearInterval(refreshInterval); // Limpiar intervalo al desmontar
+    };
+  }, [activeTab, timeFrame, refetchDashboard, refetchInvoices, refetchQuotes, refetchTransactions]);
+
+  // Mostrar mensaje de error si hay algún problema
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error al cargar datos",
+        description: "No se pudieron cargar los datos para el análisis.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
+
+  // Función para obtener datos de ingresos mensuales (histórico)
+  const getMonthlyIncomeData = () => {
+    // Agrupar facturas por mes
+    const monthlyData: Record<string, number> = {};
+    const currentYear = new Date().getFullYear();
+    
+    // Inicializar con todos los meses en 0 para el año actual
+    for (let i = 0; i < 12; i++) {
+      const monthKey = `${currentYear}-${(i + 1).toString().padStart(2, "0")}`;
+      monthlyData[monthKey] = 0;
+    }
+    
+    // Sumar los importes de facturas por mes
+    invoices.forEach((invoice: Invoice) => {
+      if (invoice.status === "paid") {
+        const date = new Date(invoice.issueDate);
+        if (date.getFullYear() === currentYear) {
+          const month = date.getMonth() + 1;
+          const monthKey = `${currentYear}-${month.toString().padStart(2, "0")}`;
+          monthlyData[monthKey] = (monthlyData[monthKey] || 0) + Number(invoice.total);
+        }
+      }
+    });
+    
+    // Convertir a formato para gráficos
+    return Object.entries(monthlyData).map(([month, amount]) => {
+      const [year, monthNum] = month.split("-");
+      const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+      return {
+        month: monthNames[parseInt(monthNum) - 1],
+        ingresos: amount,
+      };
+    });
+  };
+
+  // Función para obtener datos de ratio conversión presupuestos/facturas
+  const getConversionRateData = () => {
+    const acceptedQuotes = quotes.filter((quote: Quote) => quote.status === "accepted").length;
+    const totalQuotes = quotes.length;
+    const conversionRate = totalQuotes > 0 ? (acceptedQuotes / totalQuotes) * 100 : 0;
+    
+    return [
+      { name: "Aceptados", value: acceptedQuotes },
+      { name: "No convertidos", value: totalQuotes - acceptedQuotes },
+    ];
+  };
+
+  // Función para obtener datos de comparación de ingresos y gastos por mes
+  const getIncomeExpenseComparisonData = () => {
+    const monthlyData: Record<string, { month: string, ingresos: number, gastos: number }> = {};
+    const currentYear = new Date().getFullYear();
+    
+    // Inicializar con todos los meses en 0 para el año actual
+    const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    for (let i = 0; i < 12; i++) {
+      const monthKey = `${currentYear}-${(i + 1).toString().padStart(2, "0")}`;
+      monthlyData[monthKey] = {
+        month: monthNames[i],
+        ingresos: 0,
+        gastos: 0
+      };
+    }
+    
+    // Sumar los importes de facturas por mes (ingresos)
+    invoices.forEach((invoice: Invoice) => {
+      if (invoice.status === "paid") {
+        const date = new Date(invoice.issueDate);
+        if (date.getFullYear() === currentYear) {
+          const month = date.getMonth() + 1;
+          const monthKey = `${currentYear}-${month.toString().padStart(2, "0")}`;
+          monthlyData[monthKey].ingresos += Number(invoice.total);
+        }
+      }
+    });
+    
+    // Sumar las transacciones de gastos por mes
+    transactions
+      .filter((tx: Transaction) => tx.type === "expense")
+      .forEach((transaction: Transaction) => {
+        const date = new Date(transaction.date);
+        if (date.getFullYear() === currentYear) {
+          const month = date.getMonth() + 1;
+          const monthKey = `${currentYear}-${month.toString().padStart(2, "0")}`;
+          monthlyData[monthKey].gastos += Number(transaction.amount);
+        }
+      });
+    
+    // Convertir a formato para gráficos
+    return Object.values(monthlyData);
+  };
+  
+  // Función para obtener datos de distribución de gastos por categoría (mantenida por compatibilidad)
+  const getExpensesByCategory = () => {
+    const categoryMap: Record<string, number> = {};
+    
+    // Agrupar transacciones de gastos por categoría
+    transactions
+      .filter((tx: Transaction) => tx.type === "expense")
+      .forEach((transaction: Transaction) => {
+        const categoryName = transaction.categoryId 
+          ? transaction.categoryName || "Sin categoría" 
+          : "Sin categoría";
+        categoryMap[categoryName] = (categoryMap[categoryName] || 0) + Number(transaction.amount);
+      });
+    
+    // Convertir a formato para gráficos
+    return Object.entries(categoryMap).map(([category, amount]) => ({
+      name: category,
+      value: amount,
+    }));
+  };
+
+  // Función para obtener datos de impuestos
+  const getTaxData = () => {
+    if (!dashboardStats) return null;
+    
+    return [
+      { name: "IVA repercutido", value: dashboardStats.taxes?.vat || dashboardStats.taxes?.ivaALiquidar || 0 },
+      { name: "IVA soportado", value: dashboardStats.taxes?.ivaSoportado || 0 },
+      { name: "IVA a liquidar", value: dashboardStats.taxes?.ivaALiquidar || dashboardStats.taxes?.vat || 0 },
+      { name: "IRPF retenido", value: dashboardStats.irpfRetenidoIngresos || 0 },
+      { name: "IRPF a pagar", value: dashboardStats.taxes?.incomeTax || 0 },
+    ];
+  };
+  
+  // Función para obtener desglose detallado de impuestos IRPF
+  const getIRPFBreakdownData = () => {
+    if (!dashboardStats) return [];
+    
+    return [
+      { 
+        name: "IRPF Retenido", 
+        value: dashboardStats.irpfRetenidoIngresos || 0,
+        fill: "#4F46E5"  // Azul índigo
+      },
+      { 
+        name: "IRPF a Pagar", 
+        value: dashboardStats.taxes?.incomeTax || 0,
+        fill: "#7C3AED"  // Púrpura
+      }
+    ];
+  };
+  
+  // Función para obtener desglose de IVA
+  const getIVABreakdownData = () => {
+    if (!dashboardStats) return [];
+    
+    return [
+      { 
+        name: "IVA Repercutido", 
+        value: dashboardStats.ivaRepercutido || 0,
+        fill: "#2563EB"  // Azul primario
+      },
+      { 
+        name: "IVA Soportado", 
+        value: dashboardStats.ivaSoportado || 0,
+        fill: "#16A34A"  // Verde
+      },
+      { 
+        name: "IVA a Liquidar", 
+        value: dashboardStats.taxes?.ivaALiquidar || dashboardStats.taxes?.vat || 0,
+        fill: "#CA8A04"  // Amarillo
+      }
+    ];
+  };
+
+  // Componente de renderizado de tooltip personalizado para gráficos
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded-md shadow-md">
+          <p className="font-semibold text-gray-800">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }} className="text-sm">
+              {entry.name}: {formatCurrency(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Renderizado condicional de carga
+  if (isLoading || isLoadingInvoices || isLoadingQuotes || isLoadingTransactions) {
+    return (
+      <div className="container mx-auto py-6 space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Analítica</h1>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Datos para KPIs y estadísticas
+  const statsData = {
+    ingresos: dashboardStats?.income || 0,
+    gastos: dashboardStats?.expenses || 0,
+    beneficio: (dashboardStats?.income || 0) - (dashboardStats?.expenses || 0),
+    facturasPendientes: dashboardStats?.pendingInvoices || 0,
+    conversionRate: quotes.length > 0 ? (getConversionRateData()[0].value / quotes.length * 100) : 0,
+    margenBeneficio: dashboardStats?.income ? 
+      ((dashboardStats.income - (dashboardStats.expenses || 0)) / dashboardStats.income * 100) : 0,
+  };
+
+  return (
+    <div className="container mx-auto py-6 space-y-8 fade-in">
+      {/* Cabecera estilo Apple */}
+      <div className="mb-6 fade-in">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-medium text-gray-800 tracking-tight">
+              Analítica Empresarial
+            </h1>
+            <p className="text-gray-500 text-sm mt-1 flex items-center">
+              <span className="flex items-center mr-3">
+                <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                Actualización en tiempo real
+              </span>
+              <span className="text-gray-400">Última actualización: {lastUpdate.toLocaleTimeString()}</span>
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Select
+              value={timeFrame}
+              onValueChange={setTimeFrame}
+            >
+              <SelectTrigger className="bg-[#F5F5F7] border-none text-gray-800 rounded-full hover:bg-[#EBEBED] transition-colors">
+                <Calendar className="h-4 w-4 mr-2 text-gray-600" />
+                <SelectValue placeholder="Periodo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Periodo</SelectLabel>
+                  <SelectItem value="yearly">Anual</SelectItem>
+                  <SelectItem value="quarterly">Trimestral</SelectItem>
+                  <SelectItem value="monthly">Mensual</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Tarjetas de KPIs - Estilo Apple */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* KPI 1: Ingresos */}
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#E8F5EE] p-3 rounded-full mr-3">
+                <TrendingUp className="h-5 w-5 text-[#34C759]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Ingresos</h3>
+                <p className="text-sm text-gray-500">Total período</p>
+              </div>
+            </div>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#34C759] pt-2">
+                {formatCurrency(statsData.ingresos)}
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#F7FFF9] p-3 rounded-xl border border-[#E3FFE9]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#34C759] p-1 rounded-full mr-1.5">
+                  <ChevronUp className="h-3 w-3 text-white" />
+                </span>
+                <span>Facturas emitidas en período actual</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 2: Gastos */}
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#FEF2F2] p-3 rounded-full mr-3">
+                <TrendingDown className="h-5 w-5 text-[#FF3B30]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Gastos</h3>
+                <p className="text-sm text-gray-500">Total período</p>
+              </div>
+            </div>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#FF3B30] pt-2">
+                {formatCurrency(statsData.gastos)}
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#FFF5F5] p-3 rounded-xl border border-[#FFECEC]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#FF3B30] p-1 rounded-full mr-1.5">
+                  <ChevronDown className="h-3 w-3 text-white" />
+                </span>
+                <span>Gastos registrados en período actual</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 3: Beneficio Neto */}
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#F0F1FF] p-3 rounded-full mr-3">
+                <DollarSign className="h-5 w-5 text-[#5E5CE6]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Beneficio Neto</h3>
+                <p className="text-sm text-gray-500">Total período</p>
+              </div>
+            </div>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#5E5CE6] pt-2">
+                {formatCurrency(statsData.beneficio)}
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#F8F8FF] p-3 rounded-xl border border-[#EEEEFF]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#5E5CE6] p-1 rounded-full mr-1.5">
+                  <Percent className="h-3 w-3 text-white" />
+                </span>
+                <span>Margen: {Math.round(statsData.margenBeneficio)}%</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 4: Conversión */}
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#FFF1E7] p-3 rounded-full mr-3">
+                <FileCheck className="h-5 w-5 text-[#FF9500]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Conversión</h3>
+                <p className="text-sm text-gray-500">Presupuestos aceptados</p>
+              </div>
+            </div>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#FF9500] pt-2">
+                {Math.round(statsData.conversionRate)}%
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#FFF9F2] p-3 rounded-xl border border-[#FFF0E3]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#FF9500] p-1 rounded-full mr-1.5">
+                  <FileText className="h-3 w-3 text-white" />
+                </span>
+                <span>Presupuestos enviados: {quotes.length}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs para diferentes vistas de análisis - Estilo Apple */}
+      <Tabs 
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="fade-in"
+      >
+        <TabsList className="bg-[#F5F5F7] p-1 rounded-xl flex w-auto mb-6 mx-auto">
+          <TabsTrigger 
+            value="financial" 
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium rounded-lg"
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Análisis Financiero
+          </TabsTrigger>
+          <TabsTrigger 
+            value="taxes" 
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium rounded-lg"
+          >
+            <Calculator className="h-4 w-4 mr-2" />
+            Impuestos
+          </TabsTrigger>
+          <TabsTrigger 
+            value="calendar" 
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium rounded-lg"
+          >
+            <CalendarClock className="h-4 w-4 mr-2" />
+            Calendario Fiscal
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="financial" className="space-y-6">
+          {/* Gráficos Financieros - Estilo Apple */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico 1: Ingresos Mensuales */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-[#34C759]" />
+                  Ingresos Mensuales
+                </CardTitle>
+                <CardDescription>
+                  Evolución de ingresos a lo largo del año actual
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart data={getMonthlyIncomeData()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        tickFormatter={(value) => `${value/1000}k`}
+                        domain={[0, 'dataMax + 1000']}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="ingresos"
+                        stroke="#34C759"
+                        activeDot={{ r: 8 }}
+                        strokeWidth={3}
+                        dot={{ fill: '#34C759', stroke: '#34C759', strokeWidth: 2, r: 4 }}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Gráfico 2: Comparación de Ingresos y Gastos */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <BarChart className="h-5 w-5 mr-2 text-blue-600" />
+                  Ingresos vs Gastos
+                </CardTitle>
+                <CardDescription>
+                  Comparativa mensual de ingresos y gastos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsBarChart
+                      data={getIncomeExpenseComparisonData()}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" />
+                      <YAxis 
+                        tickFormatter={(value) => `${value/1000}k`}
+                        domain={[0, 'dataMax + 1000']}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend verticalAlign="top" height={36} />
+                      <Bar dataKey="ingresos" name="Ingresos" fill="#34C759" radius={[5, 5, 0, 0]} />
+                      <Bar dataKey="gastos" name="Gastos" fill="#FF3B30" radius={[5, 5, 0, 0]} />
+                    </RechartsBarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Gráfico 3: Distribución de Gastos por Categoría */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <PieChart className="h-5 w-5 mr-2 text-amber-500" />
+                  Distribución de Gastos
+                </CardTitle>
+                <CardDescription>
+                  Desglose por categorías de gastos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={getExpensesByCategory()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {getExpensesByCategory().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Gráfico 4: Tasa de Conversión de Presupuestos */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <FileCheck className="h-5 w-5 mr-2 text-[#FF9500]" />
+                  Conversión de Presupuestos
+                </CardTitle>
+                <CardDescription>
+                  Ratio de presupuestos aceptados vs. rechazados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex flex-col items-center justify-center">
+                  <div className="text-center mb-4">
+                    <div className="text-6xl font-medium text-[#FF9500]">
+                      {quotes.length > 0 ? Math.round(statsData.conversionRate) : 0}%
+                    </div>
+                    <p className="text-gray-500 text-sm">Ratio de conversión</p>
+                  </div>
+                  
+                  <ResponsiveContainer width="60%" height="60%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={getConversionRateData()}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        <Cell fill="#FF9500" /> {/* Aceptados */}
+                        <Cell fill="#E4E4E7" /> {/* No convertidos */}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="taxes" className="space-y-6">
+          {/* Análisis de Impuestos - Estilo Apple */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Tarjeta 1: Resumen IVA */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <Receipt className="h-5 w-5 mr-2 text-blue-600" />
+                  Resumen IVA Trimestral
+                </CardTitle>
+                <CardDescription>
+                  Desglose del IVA para la liquidación trimestral
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="bg-blue-50 p-4 rounded-xl text-center">
+                      <p className="text-sm text-gray-600 mb-1">IVA Repercutido</p>
+                      <div className="text-xl font-medium text-blue-600">
+                        {formatCurrency(dashboardStats.taxes?.vat || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-xl text-center">
+                      <p className="text-sm text-gray-600 mb-1">IVA Soportado</p>
+                      <div className="text-xl font-medium text-green-600">
+                        {formatCurrency(dashboardStats.taxes?.ivaSoportado || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-amber-50 p-4 rounded-xl text-center">
+                      <p className="text-sm text-gray-600 mb-1">A Liquidar</p>
+                      <div className="text-xl font-medium text-amber-600">
+                        {formatCurrency(dashboardStats.taxes?.ivaALiquidar || dashboardStats.taxes?.vat || 0)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsBarChart
+                        data={getIVABreakdownData()}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        layout="vertical"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis type="number" tickFormatter={(value) => `${formatCurrency(value)}`} />
+                        <YAxis dataKey="name" type="category" />
+                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                        <Bar dataKey="value" fill="#82ca9d" radius={[0, 5, 5, 0]}>
+                          {getIVABreakdownData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tarjeta 2: Resumen IRPF */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <Calculator className="h-5 w-5 mr-2 text-indigo-600" />
+                  Resumen IRPF Trimestral
+                </CardTitle>
+                <CardDescription>
+                  Desglose del IRPF para la declaración
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="bg-indigo-50 p-4 rounded-xl text-center">
+                      <p className="text-sm text-gray-600 mb-1">IRPF Retenido</p>
+                      <div className="text-xl font-medium text-indigo-600">
+                        {formatCurrency(dashboardStats.irpfRetenidoIngresos || dashboardStats.taxStats?.incomeTax || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-xl text-center">
+                      <p className="text-sm text-gray-600 mb-1">IRPF a Pagar</p>
+                      <div className="text-xl font-medium text-purple-600">
+                        {formatCurrency(dashboardStats.taxes?.incomeTax || dashboardStats.taxStats?.incomeTax || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-xl text-center">
+                      <p className="text-sm text-gray-600 mb-1">Base Imponible</p>
+                      <div className="text-xl font-medium text-gray-600">
+                        {formatCurrency(dashboardStats.baseImponible || (dashboardStats.income || 0) - (dashboardStats.expenses || 0))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <h4 className="text-sm font-medium mb-2">Margen de Rentabilidad</h4>
+                    <div className="flex items-center">
+                      <div className="w-full h-2 bg-gray-200 rounded-full mr-4">
+                        <div 
+                          className="h-2 bg-indigo-600 rounded-full"
+                          style={{ 
+                            width: `${Math.min(Math.max(
+                              dashboardStats.income ? ((dashboardStats.income - (dashboardStats.expenses || 0)) / dashboardStats.income * 100) : 0, 
+                              0), 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {dashboardStats.income 
+                          ? Math.round(((dashboardStats.income - (dashboardStats.expenses || 0)) / dashboardStats.income * 100) * 10) / 10
+                          : 0}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Porcentaje de beneficio sobre los ingresos
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tarjeta 3: Próximo pago de impuestos */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <CalendarClock className="h-5 w-5 mr-2 text-amber-500" />
+                  Próximos Pagos de Impuestos
+                </CardTitle>
+                <CardDescription>
+                  Fechas límite para los próximos pagos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+                    <div className="bg-amber-500 p-2 rounded-full mr-3">
+                      <AlertCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 303 (IVA) - Trimestre actual</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 20 de abril, 20 de julio, 20 de octubre, 30 de enero</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div className="bg-indigo-500 p-2 rounded-full mr-3">
+                      <AlertCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 130 (IRPF) - Trimestre actual</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 20 de abril, 20 de julio, 20 de octubre, 30 de enero</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                    <div className="bg-purple-500 p-2 rounded-full mr-3">
+                      <AlertCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 111 (Retenciones) - Trimestre actual</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 20 de abril, 20 de julio, 20 de octubre, 30 de enero</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="bg-blue-500 p-2 rounded-full mr-3">
+                      <LightbulbIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Consejo fiscal</p>
+                      <p className="text-xs text-gray-500">Recuerda guardar todas tus facturas y justificantes de gastos para posibles inspecciones fiscales.</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Tarjeta 4: Histórico de pagos */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <FileBarChart2 className="h-5 w-5 mr-2 text-green-600" />
+                  Histórico de Declaraciones
+                </CardTitle>
+                <CardDescription>
+                  Registro de modelos presentados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium mb-3 flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-600" />
+                      Año 2022
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="text-green-600 font-medium">Completado</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="text-green-600 font-medium">Completado</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="text-green-600 font-medium">Completado</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 100 (IRPF Anual)</span>
+                        <span className="text-green-600 font-medium">Completado</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium mb-3 flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-600" />
+                      Año 2023
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="text-amber-600 font-medium">En progreso</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="text-amber-600 font-medium">En progreso</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="text-amber-600 font-medium">En progreso</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Mod. 100 (IRPF Anual)</span>
+                        <span className="text-gray-400 font-medium">Pendiente</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-6">
+          {/* Calendario Fiscal - Estilo Apple */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="dashboard-card">
+              <CardHeader>
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <CalendarClock className="h-5 w-5 mr-2 text-indigo-600" />
+                  Calendario Fiscal - 2023
+                </CardTitle>
+                <CardDescription>
+                  Fechas importantes para recordar
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 1er Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-blue-600 text-white p-2 text-center font-medium">
+                      1er Trimestre
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">20 Abril</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">20 Abril</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">20 Abril</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 2do Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-green-600 text-white p-2 text-center font-medium">
+                      2do Trimestre
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">20 Julio</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">20 Julio</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">20 Julio</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 3er Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-amber-600 text-white p-2 text-center font-medium">
+                      3er Trimestre
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">20 Octubre</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">20 Octubre</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">20 Octubre</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 4to Trimestre */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-red-600 text-white p-2 text-center font-medium">
+                      4to Trimestre
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 303 (IVA)</span>
+                        <span className="font-medium">30 Enero</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 130 (IRPF)</span>
+                        <span className="font-medium">30 Enero</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Mod. 111 (Retenciones)</span>
+                        <span className="font-medium">30 Enero</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="dashboard-card">
+              <CardHeader>
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                  Declaraciones Anuales
+                </CardTitle>
+                <CardDescription>
+                  Fechas para declaraciones anuales
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="bg-blue-500 p-2 rounded-full mr-3">
+                      <FileCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 390 (Resumen Anual IVA)</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 30 de enero</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div className="bg-indigo-500 p-2 rounded-full mr-3">
+                      <FileCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 100 (Declaración de la Renta)</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 30 de junio</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                    <div className="bg-purple-500 p-2 rounded-full mr-3">
+                      <FileCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 347 (Operaciones con terceros)</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 28 de febrero</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+                    <div className="bg-amber-500 p-2 rounded-full mr-3">
+                      <FileCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Modelo 190 (Resumen retenciones)</p>
+                      <p className="text-xs text-gray-500">Fecha límite: 30 de enero</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div className="bg-green-500 p-2 rounded-full mr-3">
+                      <LightbulbIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Consejo para declaraciones</p>
+                      <p className="text-xs text-gray-500">Prepara toda la documentación con al menos un mes de antelación para evitar prisas de última hora.</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Información de última actualización */}
+      <div className="text-xs text-gray-500 text-right mt-4 flex items-center justify-end">
+        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+        <span>Última actualización: {lastUpdate.toLocaleTimeString()}</span>
+      </div>
+    </div>
+  );
+};
+
+export default AnalyticsPage;

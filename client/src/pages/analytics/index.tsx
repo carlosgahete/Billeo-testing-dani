@@ -1,5 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
-import { LineChart, BarChart, PieChart, TrendingUp, TrendingDown, DollarSign, Calendar, AlertCircle, Calculator, Receipt, ArrowDownRight, FileBarChart2, BarChart3, FileCheck, CalendarClock, Percent, LightbulbIcon } from "lucide-react";
+import { 
+  LineChart, 
+  BarChart, 
+  PieChart, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Calendar, 
+  AlertCircle, 
+  Calculator, 
+  Receipt, 
+  ArrowDownRight, 
+  FileBarChart2, 
+  BarChart3, 
+  FileCheck, 
+  CalendarClock, 
+  Percent, 
+  LightbulbIcon, 
+  ChevronUp, 
+  ChevronDown, 
+  RefreshCw 
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   Card,
@@ -366,23 +387,29 @@ const AnalyticsPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      {/* Cabecera con título y filtros */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg p-4 shadow-md">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-white mb-3 md:mb-0">Analítica Empresarial</h1>
-            <div className="ml-3 px-2 py-1 bg-white/15 rounded-full flex items-center text-xs text-white">
-              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-              Actualización en tiempo real
-            </div>
+    <div className="container mx-auto py-6 space-y-8 fade-in">
+      {/* Cabecera estilo Apple */}
+      <div className="mb-6 fade-in">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-medium text-gray-800 tracking-tight">
+              Analítica Empresarial
+            </h1>
+            <p className="text-gray-500 text-sm mt-1 flex items-center">
+              <span className="flex items-center mr-3">
+                <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                Actualización en tiempo real
+              </span>
+              <span className="text-gray-400">Última actualización: {lastUpdate.toLocaleTimeString()}</span>
+            </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex gap-3">
             <Select
               value={timeFrame}
               onValueChange={setTimeFrame}
             >
-              <SelectTrigger className="w-32 bg-white/15 border-none text-white">
+              <SelectTrigger className="bg-[#F5F5F7] border-none text-gray-800 rounded-full hover:bg-[#EBEBED] transition-colors">
+                <Calendar className="h-4 w-4 mr-2 text-gray-600" />
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
@@ -398,101 +425,162 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Tarjetas de KPIs */}
+      {/* Tarjetas de KPIs - Estilo Apple */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* KPI 1: Ingresos */}
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="h-2 bg-gradient-to-r from-green-500 to-green-300"></div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <div className="bg-green-100 p-2 rounded-full mr-3">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#E8F5EE] p-3 rounded-full mr-3">
+                <TrendingUp className="h-5 w-5 text-[#34C759]" />
               </div>
-              <span className="text-green-700 text-lg">Ingresos</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-700">
-              {formatCurrency(statsData.ingresos)}
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Ingresos</h3>
+                <p className="text-sm text-gray-500">Total período</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#34C759] pt-2">
+                {formatCurrency(statsData.ingresos)}
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#F7FFF9] p-3 rounded-xl border border-[#E3FFE9]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#34C759] p-1 rounded-full mr-1.5">
+                  <ChevronUp className="h-3 w-3 text-white" />
+                </span>
+                <span>Facturas emitidas en período actual</span>
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* KPI 2: Gastos */}
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="h-2 bg-gradient-to-r from-red-500 to-red-300"></div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <div className="bg-red-100 p-2 rounded-full mr-3">
-                <TrendingDown className="h-5 w-5 text-red-600" />
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#FEF2F2] p-3 rounded-full mr-3">
+                <TrendingDown className="h-5 w-5 text-[#FF3B30]" />
               </div>
-              <span className="text-red-700 text-lg">Gastos</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-700">
-              {formatCurrency(statsData.gastos)}
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Gastos</h3>
+                <p className="text-sm text-gray-500">Total período</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#FF3B30] pt-2">
+                {formatCurrency(statsData.gastos)}
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#FFF5F5] p-3 rounded-xl border border-[#FFE5E5]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#FF3B30] p-1 rounded-full mr-1.5">
+                  <ChevronDown className="h-3 w-3 text-white" />
+                </span>
+                <span>Gastos registrados en período actual</span>
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* KPI 3: Beneficio Neto */}
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-300"></div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <div className="bg-blue-100 p-2 rounded-full mr-3">
-                <DollarSign className="h-5 w-5 text-blue-600" />
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#EEF6FF] p-3 rounded-full mr-3">
+                <DollarSign className="h-5 w-5 text-[#007AFF]" />
               </div>
-              <span className="text-blue-700 text-lg">Beneficio</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-700">
-              {formatCurrency(statsData.beneficio)}
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Beneficio</h3>
+                <p className="text-sm text-gray-500">Resultado neto</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#007AFF] pt-2">
+                {formatCurrency(statsData.beneficio)}
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#F5F9FF] p-3 rounded-xl border border-[#E0EDFF]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#007AFF] p-1 rounded-full mr-1.5">
+                  <RefreshCw className="h-3 w-3 text-white" />
+                </span>
+                <span>Resultado después de gastos</span>
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* KPI 4: Margen de Beneficio */}
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="h-2 bg-gradient-to-r from-purple-500 to-purple-300"></div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <div className="bg-purple-100 p-2 rounded-full mr-3">
-                <Calculator className="h-5 w-5 text-purple-600" />
+        <div className="dashboard-card fade-in scale-in">
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#F0F1FF] p-3 rounded-full mr-3">
+                <Calculator className="h-5 w-5 text-[#5856D6]" />
               </div>
-              <span className="text-purple-700 text-lg">Margen</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-700">
-              {statsData.margenBeneficio.toFixed(1)}%
+              <div>
+                <h3 className="text-lg font-medium text-gray-800">Margen</h3>
+                <p className="text-sm text-gray-500">Rentabilidad</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="mb-2">
+              <div className="text-3xl font-medium text-[#5856D6] pt-2">
+                {statsData.margenBeneficio.toFixed(1)}%
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-[#F8F8FC] p-3 rounded-xl border border-[#EEEEFF]">
+              <p className="text-sm text-gray-600 flex items-center">
+                <span className="inline-block bg-[#5856D6] p-1 rounded-full mr-1.5">
+                  <Percent className="h-3 w-3 text-white" />
+                </span>
+                <span>Beneficio respecto a ingresos</span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Pestañas para diferentes vistas analíticas */}
-      <Tabs 
-        value={activeTab} 
-        onValueChange={setActiveTab}
-        className="space-y-6"
-      >
-        <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
-          <TabsTrigger value="financial" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-            <LineChart className="h-4 w-4 mr-2" />
-            Financiera
-          </TabsTrigger>
-          <TabsTrigger value="business" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-            <BarChart className="h-4 w-4 mr-2" />
-            Negocio
-          </TabsTrigger>
-          <TabsTrigger value="taxes" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Calculator className="h-4 w-4 mr-2" />
-            Impuestos
-          </TabsTrigger>
-        </TabsList>
+      {/* Pestañas para diferentes vistas analíticas - Estilo Apple */}
+      <div className="mb-6 mt-10 fade-in">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-medium text-gray-800 tracking-tight">Análisis detallado</h2>
+            <TabsList className="bg-[#F5F5F7] p-1 rounded-full border-none">
+              <TabsTrigger 
+                value="financial" 
+                className="rounded-full px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm transition-all"
+              >
+                <LineChart className="h-4 w-4 mr-2" />
+                Financiera
+              </TabsTrigger>
+              <TabsTrigger 
+                value="calendar" 
+                className="rounded-full px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm transition-all"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Calendario
+              </TabsTrigger>
+              <TabsTrigger 
+                value="taxes" 
+                className="rounded-full px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm transition-all"
+              >
+                <Calculator className="h-4 w-4 mr-2" />
+                Impuestos
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
         {/* Contenido de pestaña: Análisis Financiero */}
         <TabsContent value="financial" className="space-y-6">
@@ -563,7 +651,7 @@ const AnalyticsPage = () => {
         </TabsContent>
 
         {/* Contenido de pestaña: Análisis de Negocio */}
-        <TabsContent value="business" className="space-y-6">
+        <TabsContent value="calendar" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Gráfico de tasa de conversión de presupuestos */}
             <Card>
