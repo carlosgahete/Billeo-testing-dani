@@ -103,7 +103,7 @@ export default function AuthPage() {
             className="h-12 animate-scaleIn"
           />
         </div>
-        <h1 className="text-3xl font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+        <h1 className="text-3xl font-medium text-blue-600">
           Billeo
         </h1>
         <p className="text-gray-500 mt-2 max-w-sm">
