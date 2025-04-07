@@ -592,30 +592,6 @@ const SettingsPage = () => {
                 </div>
               </div>
               
-              {/* Categorías */}
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="categories" className="text-gray-700 font-medium flex items-center space-x-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="text-purple-500">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                      </svg>
-                      <span>Categorías y Etiquetas</span>
-                    </Label>
-                    <p className="text-sm text-gray-500">
-                      Personaliza las categorías para tus ingresos y gastos
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={() => window.location.href = "/settings/categories"}
-                    className="shadow-sm bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium px-4 py-2 h-auto rounded-lg transition-all"
-                  >
-                    Gestionar Categorías
-                  </Button>
-                </div>
-              </div>
-              
               <div className="pt-4 flex justify-end">
                 <Button 
                   onClick={handleSavePreferences}
