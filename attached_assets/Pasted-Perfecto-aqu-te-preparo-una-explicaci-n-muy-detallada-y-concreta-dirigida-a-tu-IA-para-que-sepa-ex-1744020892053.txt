@@ -1,0 +1,108 @@
+Perfecto, aquí te preparo una explicación muy detallada y concreta dirigida a tu IA para que sepa exactamente cómo diseñar el dashboard estilo Apple:
+
+⸻
+
+Instrucciones para rediseñar el Dashboard estilo Apple
+
+Objetivo
+
+Quiero que el dashboard se vea limpio, minimalista, elegante y ordenado, siguiendo el estilo de diseño que utiliza Apple en sus aplicaciones.
+Debe transmitir sensación de simplicidad, profesionalidad y modernidad.
+
+Importante: Solo se cambia el diseño visual. La estructura de datos y la lógica interna no deben tocarse.
+
+⸻
+
+¿Cómo debe ser el diseño del dashboard?
+
+1. Estructura general
+	•	Fondo blanco puro (#FFFFFF) o gris clarísimo (#F9F9F9).
+	•	Tarjetas o bloques donde se muestra la información deben ser claros y separados por suficiente espacio.
+	•	Preferir un diseño modular: cada sección del dashboard (resumen de ingresos, gastos, gráficos, alertas…) debe estar dentro de su propia tarjeta visual, no todo junto.
+
+2. Tarjetas de información
+	•	Forma: Bordes redondeados (border-radius: 16px).
+	•	Color de fondo: Blanco (#FFFFFF).
+	•	Sombras suaves: Para dar un pequeño efecto de elevación:
+
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+	•	Espaciado interior: al menos 24px de padding dentro de cada tarjeta.
+	•	Separación entre tarjetas: dejar 24px de margen entre cada tarjeta.
+
+⸻
+
+3. Tipografías
+	•	Utilizar una fuente moderna y legible:
+	•	-apple-system, Helvetica Neue, Inter, o similar.
+	•	Tamaños:
+	•	Títulos de secciones: 24px - negrita.
+	•	Subtítulos o descripciones: 16px - normal o semi-bold.
+	•	Texto de datos o contenido: 14px.
+	•	Color de texto:
+	•	Principal: Negro suave (#1C1C1E).
+	•	Secundario: Gris medio (#8E8E93).
+
+⸻
+
+4. Gráficos y estadísticas
+	•	Los gráficos deben ser simples, sin muchos adornos:
+	•	Líneas finas y suaves en gráficos de líneas.
+	•	Colores de gráficos: tonos suaves de azul, verde, o gris.
+	•	No recargar el gráfico con demasiada información.
+	•	Los ejes y etiquetas deben tener un color gris claro para no resaltar más que los datos.
+
+⸻
+
+5. Botones
+	•	Bordes redondeados (border-radius: 12px).
+	•	Colores:
+	•	Acción principal: Azul Apple (#007AFF).
+	•	Acciones secundarias: gris claro o blanco con borde fino gris.
+	•	Tamaño de botones:
+	•	Alto: 40-48px.
+	•	Texto del botón: claro, de 16px.
+	•	Hover: color ligeramente más claro o pequeña sombra.
+
+⸻
+
+6. Inputs y filtros
+	•	Inputs para filtros (como fechas, categorías, etc.):
+	•	Bordes muy finos (1px) en gris claro (#D1D1D6).
+	•	Inputs redondeados (border-radius: 8px).
+	•	Espaciados amplios entre ellos.
+	•	Fondo blanco o gris muy clarito.
+	•	Transiciones suaves al enfocarse (transition: all 0.3s ease).
+
+⸻
+
+7. Animaciones y transiciones
+	•	Al cargar datos o moverse entre secciones, usar animaciones suaves:
+	•	Ejemplo: fade-in (opacity) o pequeño desplazamiento (transform: translateY(10px)).
+	•	Las animaciones deben durar 0.3 segundos como máximo, para que sean rápidas pero agradables.
+
+⸻
+
+8. Íconos
+	•	Íconos minimalistas, tipo outline (líneas delgadas).
+	•	No usar iconos rellenos ni muy decorativos.
+	•	Tamaño de íconos: 20px - 24px.
+
+⸻
+
+Resumen final para la IA
+
+Cambiar el diseño visual del dashboard para hacerlo minimalista, elegante y limpio como lo haría Apple:
+	•	Fondo blanco o gris claro.
+	•	Tarjetas con bordes redondeados y sombras suaves.
+	•	Tipografías modernas y bien jerarquizadas.
+	•	Botones redondeados y colores neutros o azul Apple.
+	•	Inputs simples y separados.
+	•	Gráficos sencillos con colores suaves.
+	•	Animaciones sutiles y rápidas.
+
+⸻
+
+¿Quieres que además te monte una estructura HTML+CSS básica lista para que tu IA simplemente la adapte?
+Así te ahorras que interprete mal las instrucciones.
+¿Te lo preparo? Te lo dejo limpio en 1-2 minutos si quieres.
