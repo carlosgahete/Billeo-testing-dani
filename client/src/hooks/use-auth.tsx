@@ -41,7 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch
   } = useQuery<SelectUser | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        return await apiRequest<SelectUser>("/api/user", "GET");
+      } catch (error: any) {
+        if (error.message && error.message.includes('401')) {
+          console.log('Usuario no autenticado');
+          return null;
+        }
+        throw error;
+      }
+    },
   });
   
   // Función para refrescar manualmente los datos del usuario
@@ -54,31 +64,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
       try {
-        const res = await apiRequest("POST", "/api/login", credentials);
-        
-        if (!res.ok) {
-          if (res.status === 401) {
-            throw new Error("Usuario o contraseña incorrectos");
-          } else {
-            const errorData = await res.text();
-            throw new Error(errorData || "Error al iniciar sesión");
-          }
-        }
-        
-        return await res.json();
+        console.log('Iniciando sesión con:', credentials);
+        return await apiRequest<Omit<SelectUser, "password">>("/api/login", "POST", credentials);
       } catch (error) {
         console.error("Login error:", error);
         throw error;
       }
     },
     onSuccess: (userData: Omit<SelectUser, "password">) => {
+      console.log('Login exitoso, datos de usuario:', userData);
       queryClient.setQueryData(["/api/user"], userData);
+      queryClient.invalidateQueries({queryKey: ["/api/user"]});
       toast({
         title: "Inicio de sesión exitoso",
         description: "Bienvenido al sistema de gestión financiera",
       });
+      
+      // Navegamos a la página principal después de iniciar sesión
+      window.location.href = "/";
     },
     onError: (error: Error) => {
+      console.error('Error en login mutation:', error);
       toast({
         title: "Error de inicio de sesión",
         description: error.message || "Usuario o contraseña incorrectos",
@@ -90,27 +96,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation<Omit<SelectUser, "password">, Error, RegisterData>({
     mutationFn: async (userData: RegisterData) => {
       try {
-        const res = await apiRequest("POST", "/api/register", userData);
-        
-        if (!res.ok) {
-          const errorData = await res.text();
-          throw new Error(errorData || "Error al crear cuenta");
-        }
-        
-        return await res.json();
+        console.log('Registrando usuario:', userData);
+        return await apiRequest<Omit<SelectUser, "password">>("/api/register", "POST", userData);
       } catch (error) {
         console.error("Register error:", error);
         throw error;
       }
     },
     onSuccess: (userData: Omit<SelectUser, "password">) => {
+      console.log('Registro exitoso:', userData);
       queryClient.setQueryData(["/api/user"], userData);
+      queryClient.invalidateQueries({queryKey: ["/api/user"]});
       toast({
         title: "Registro exitoso",
         description: "Tu cuenta ha sido creada correctamente",
       });
     },
     onError: (error: Error) => {
+      console.error('Error en registro:', error);
       toast({
         title: "Error de registro",
         description: error.message || "No se pudo crear la cuenta",
@@ -122,13 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
       try {
-        const res = await apiRequest("POST", "/api/logout");
-        
-        if (!res.ok) {
-          const errorData = await res.text();
-          throw new Error(errorData || "Error al cerrar sesión");
-        }
-        
+        console.log('Cerrando sesión...');
+        await apiRequest<void>("/api/logout", "POST");
         return;
       } catch (error) {
         console.error("Logout error:", error);
@@ -136,13 +134,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
+      console.log('Sesión cerrada correctamente');
       queryClient.setQueryData(["/api/user"], null);
+      queryClient.invalidateQueries({queryKey: ["/api/user"]});
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente",
       });
     },
     onError: (error: Error) => {
+      console.error('Error en cierre de sesión:', error);
       toast({
         title: "Error al cerrar sesión",
         description: error.message,

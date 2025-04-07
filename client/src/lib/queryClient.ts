@@ -8,24 +8,29 @@ export async function apiRequest<T>(
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
   data?: any
 ): Promise<T> {
-  const options: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-  };
-
-  if (data) {
-    options.body = JSON.stringify(data);
-  }
-
   try {
+    // Añadir logs para depuración
+    console.log(`Realizando petición ${method} a ${url}`, data);
+    
+    const options: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    };
+
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
+
     const response = await fetch(url, options);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+      console.error('Error de respuesta API:', errorMessage);
+      throw new Error(errorMessage);
     }
 
     // Si la respuesta es 204 No Content, devolvemos un objeto vacío
@@ -33,7 +38,9 @@ export async function apiRequest<T>(
       return {} as T;
     }
 
-    return await response.json() as T;
+    const result = await response.json() as T;
+    console.log(`Respuesta de ${url}:`, result);
+    return result;
   } catch (error) {
     console.error('API Request Error:', error);
     throw error;
