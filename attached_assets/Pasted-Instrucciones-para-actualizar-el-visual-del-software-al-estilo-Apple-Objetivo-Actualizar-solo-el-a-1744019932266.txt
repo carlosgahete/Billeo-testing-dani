@@ -1,0 +1,82 @@
+Instrucciones para actualizar el visual del software al estilo Apple
+
+Objetivo
+
+Actualizar solo el aspecto visual del software, manteniendo toda la lógica y el funcionamiento actual.
+El objetivo es que el diseño sea minimalista, limpio y elegante, inspirado en el estilo visual que utiliza Apple en sus aplicaciones.
+
+⸻
+
+Cambios específicos a realizar
+
+1. Colores
+	•	Fondo general: blanco puro (#FFFFFF) o un gris muy claro (#F9F9F9).
+	•	Texto principal: negro suave (#1C1C1E) o gris oscuro (#333333).
+	•	Texto secundario: gris medio (#8E8E93).
+	•	Botones activos: azul suave estilo Apple (#007AFF).
+	•	Botones secundarios: gris claro (#E5E5EA).
+
+2. Tipografías
+	•	Utilizar una fuente moderna, sans-serif y limpia. Opciones:
+	•	-apple-system (detecta automáticamente San Francisco en dispositivos Apple).
+	•	Helvetica Neue, Roboto o Inter como alternativas de respaldo.
+	•	Tamaños:
+	•	Títulos: 20-24px, peso semibold.
+	•	Subtítulos / Etiquetas: 16px, peso normal.
+	•	Texto normal: 14-16px.
+
+3. Botones
+	•	Forma: bordes redondeados (border-radius: 12px).
+	•	Colores: fondo azul suave para acciones principales, blanco o gris claro para secundarias.
+	•	Sombras suaves: una pequeña sombra tipo:
+
+box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+
+	•	Efecto hover: aclarar ligeramente el color o hacer un pequeño “resalte” de sombra.
+
+4. Inputs / Campos de texto / Selects
+	•	Estilo minimalista:
+	•	Fondo blanco.
+	•	Borde inferior o borde completo muy fino (1px, color #D1D1D6).
+	•	border-radius: 8px.
+	•	Pequeña sombra o sin sombra, pero con buena separación.
+	•	Placeholder en gris medio (#8E8E93).
+	•	Transición suave de color o sombra al hacer focus.
+
+5. Tarjetas o contenedores
+	•	Bordes redondeados (border-radius: 16px).
+	•	Fondo blanco o gris muy claro.
+	•	Pequeñas sombras suaves (sin bordes marcados).
+
+6. Espaciado
+	•	Separaciones generosas:
+	•	16px - 24px entre secciones.
+	•	12px - 16px entre elementos relacionados (por ejemplo, entre un título y un input).
+	•	No saturar la pantalla. Más espacio = más claridad.
+
+7. Animaciones y transiciones
+	•	Cuando se desplieguen filtros o listas de gastos, utilizar animaciones suaves:
+	•	transition: all 0.3s ease;
+	•	Animaciones tipo fade-in o pequeños desplazamientos (translateY(10px)).
+
+8. Íconos
+	•	Utilizar íconos de estilo línea (outline), minimalistas.
+	•	Nada recargado, iconografía simple y reconocible.
+	•	Tamaño entre 18px y 24px.
+
+⸻
+
+Notas finales
+	•	NO modificar ninguna funcionalidad ni flujo de usuario.
+	•	SÍ mejorar la estética para que visualmente se vea profesional, elegante y amigable como una app de Apple.
+	•	Inspiración visual: Aplicaciones nativas de iOS/macOS como Notas, Archivos, Calendario, Recordatorios.
+
+⸻
+
+Resumen rápido para aplicar
+	•	Fondos blancos y grises suaves.
+	•	Tipografías modernas y legibles.
+	•	Botones e inputs redondeados y sutiles.
+	•	Mucho espacio libre (nada de elementos amontonados).
+	•	Sombras ligeras, bordes muy suaves.
+	•	Animaciones delicadas.

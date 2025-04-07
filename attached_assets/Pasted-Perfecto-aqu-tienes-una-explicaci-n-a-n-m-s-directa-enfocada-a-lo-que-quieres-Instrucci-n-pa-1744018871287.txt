@@ -1,0 +1,43 @@
+Perfecto, aquí tienes una explicación aún más directa, enfocada a lo que quieres:
+
+⸻
+
+Instrucción para la IA:
+
+Cambiar solo el visual del software al estilo Apple.
+
+⸻
+
+¿Qué tiene que hacer exactamente?
+
+No hay que tocar la lógica ni la funcionalidad (el programa debe seguir funcionando igual).
+Solo hay que cambiar la parte visual: el aspecto de la interfaz, para que parezca una aplicación diseñada por Apple.
+
+⸻
+
+¿Cómo debe ser el nuevo estilo visual?
+	•	Colores: usar colores blancos y grises muy claros como fondo principal. Los textos en negro suave o gris oscuro.
+	•	Tipografías: usar fuentes limpias, elegantes y modernas, como Helvetica Neue, San Francisco o Inter. Nada de fuentes recargadas o con serifa.
+	•	Espaciado: dejar más espacio entre los elementos. No amontonar. Que todo respire.
+	•	Botones: botones con bordes ligeramente redondeados, colores neutros (gris claro, blanco con borde, o azul suave) y animaciones suaves al pasar el ratón.
+	•	Inputs (campos de texto, selección, etc.): bordes redondeados y finos. Sin bordes gruesos. Fondo blanco o gris muy clarito.
+	•	Sombras: pequeñas sombras sutiles detrás de tarjetas, cuadros o botones para dar una sensación de “profundidad”, sin ser exageradas.
+	•	Animaciones: transiciones suaves si se abren filtros o aparece contenido (por ejemplo, fundidos rápidos o desplazamientos suaves).
+	•	Íconos: si hay iconos, que sean minimalistas, finos, estilo línea (no rellenos pesados).
+
+⸻
+
+Importante:
+
+No se deben hacer cambios en cómo funcionan los botones o el filtrado, solo se cambia el diseño y el aspecto para que sea más limpio, minimalista y elegante, como Apple lo haría.
+
+⸻
+
+Resumen corto para tu IA
+
+Actualizar únicamente el estilo visual del software para hacerlo minimalista, elegante, limpio y suave, siguiendo las guías de diseño de Apple, sin cambiar nada del funcionamiento interno.
+
+⸻
+
+¿Quieres que también te prepare un pequeño “guión visual” o CSS básico que pueda aplicar tu IA directamente como referencia?
+Te lo puedo hacer rapidísimo si quieres. ¿Te preparo uno?
