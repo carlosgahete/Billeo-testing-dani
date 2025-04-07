@@ -411,7 +411,7 @@ const SettingsPage = () => {
                     id="bankAccount" 
                     value={profileForm.bankAccount}
                     onChange={(e) => setProfileForm({...profileForm, bankAccount: e.target.value})}
-                    placeholder="ES12 3456 7890 1234 5678 9012" 
+                    placeholder="ES04 0182 5322 2902 0848 5903" 
                     className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                   />
                   <p className="text-xs text-gray-500 mt-1 ml-1">

@@ -387,7 +387,7 @@ const CompanyForm = () => {
                     <FormLabel className="text-sm font-medium text-gray-700">Número de cuenta bancaria (IBAN)</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="ES12 3456 7890 1234 5678 9012" 
+                        placeholder="ES04 0182 5322 2902 0848 5903" 
                         {...field}
                         className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                       />
