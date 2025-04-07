@@ -174,34 +174,34 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-8">
-            <div className="flex items-center mb-6">
-              <div className="bg-[#E2F6ED] p-3 rounded-full mr-4">
-                <ArrowUp className="h-6 w-6 text-[#34C759]" />
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#E2F6ED] p-3 rounded-full mr-3">
+                <ArrowUp className="h-5 w-5 text-[#34C759]" />
               </div>
               <div>
-                <h3 className="text-xl font-medium text-gray-800">Ingresos</h3>
+                <h3 className="text-lg font-medium text-gray-800">Ingresos</h3>
                 <p className="text-sm text-gray-500">Entradas totales</p>
               </div>
             </div>
             
-            <div className="mb-6">
-              <div className="text-4xl font-bold text-[#34C759] pt-4">
+            <div className="mb-5">
+              <div className="text-3xl font-bold text-[#34C759] pt-3">
                 {formatCurrency(baseImponibleIngresos)}
               </div>
-              <div className="stat-label mt-2 text-base">
+              <div className="stat-label mt-1">
                 Base imponible (sin IVA)
               </div>
             </div>
             
-            <div className="space-y-4 mb-6 p-5 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
+            <div className="space-y-3 mb-5 p-4 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
               <div className="flex justify-between items-center">
-                <span className="text-base text-gray-600">Base imponible:</span>
-                <span className="font-medium text-lg text-gray-800">{formatCurrency(baseImponibleIngresos)}</span>
+                <span className="text-sm text-gray-600">Base imponible:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-base text-gray-600">IVA repercutido (21%):</span>
-                <span className="font-medium text-lg text-gray-800">{formatCurrency(ivaRepercutido)}</span>
+                <span className="text-sm text-gray-600">IVA repercutido (21%):</span>
+                <span className="font-medium text-gray-800">{formatCurrency(ivaRepercutido)}</span>
               </div>
             </div>
             
@@ -215,34 +215,34 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Gastos - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-8">
-            <div className="flex items-center mb-6">
-              <div className="bg-[#FEECEB] p-3 rounded-full mr-4">
-                <ArrowDown className="h-6 w-6 text-[#FF3B30]" />
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#FEECEB] p-3 rounded-full mr-3">
+                <ArrowDown className="h-5 w-5 text-[#FF3B30]" />
               </div>
               <div>
-                <h3 className="text-xl font-medium text-gray-800">Gastos</h3>
+                <h3 className="text-lg font-medium text-gray-800">Gastos</h3>
                 <p className="text-sm text-gray-500">Salidas totales</p>
               </div>
             </div>
             
-            <div className="mb-6">
-              <div className="text-4xl font-bold text-[#FF3B30] pt-4">
+            <div className="mb-5">
+              <div className="text-3xl font-bold text-[#FF3B30] pt-3">
                 {formatCurrency(baseImponibleGastos)}
               </div>
-              <div className="stat-label mt-2 text-base">
+              <div className="stat-label mt-1">
                 Base imponible (sin IVA)
               </div>
             </div>
             
-            <div className="space-y-4 mb-6 p-5 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
+            <div className="space-y-3 mb-5 p-4 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
               <div className="flex justify-between items-center">
-                <span className="text-base text-gray-600">Base imponible:</span>
-                <span className="font-medium text-lg text-gray-800">{formatCurrency(baseImponibleGastos)}</span>
+                <span className="text-sm text-gray-600">Base imponible:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(baseImponibleGastos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-base text-gray-600">IVA soportado (21%):</span>
-                <span className="font-medium text-lg text-gray-800">{formatCurrency(ivaSoportado)}</span>
+                <span className="text-sm text-gray-600">IVA soportado (21%):</span>
+                <span className="font-medium text-gray-800">{formatCurrency(ivaSoportado)}</span>
               </div>
             </div>
             
@@ -256,38 +256,38 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-8">
-            <div className="flex items-center mb-6">
-              <div className="bg-[#E9F8FB] p-3 rounded-full mr-4">
-                <PiggyBank className="h-6 w-6 text-[#007AFF]" />
+          <div className="p-6">
+            <div className="flex items-center mb-5">
+              <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
+                <PiggyBank className="h-5 w-5 text-[#007AFF]" />
               </div>
               <div>
-                <h3 className="text-xl font-medium text-gray-800">Resultado Final</h3>
+                <h3 className="text-lg font-medium text-gray-800">Resultado Final</h3>
                 <p className="text-sm text-gray-500">Ingresos - Gastos</p>
               </div>
             </div>
             
-            <div className="mb-6">
-              <div className="text-4xl font-bold text-[#007AFF] pt-4">
+            <div className="mb-5">
+              <div className="text-3xl font-bold text-[#007AFF] pt-3">
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
-              <div className="stat-label mt-2 text-base">
+              <div className="stat-label mt-1">
                 {isPositiveResult ? 'Beneficio neto (base imponible)' : 'Pérdida neta (base imponible)'}
               </div>
             </div>
             
-            <div className="space-y-4 mb-6 p-5 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
+            <div className="space-y-3 mb-5 p-4 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
-                <span className="text-base text-gray-600">Base imponible ingresos:</span>
-                <span className="font-medium text-lg text-gray-800">{formatCurrency(baseImponibleIngresos)}</span>
+                <span className="text-sm text-gray-600">Base imponible ingresos:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(baseImponibleIngresos)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-base text-gray-600">Base imponible gastos:</span>
-                <span className="font-medium text-lg text-gray-800">-{formatCurrency(baseImponibleGastos)}</span>
+                <span className="text-sm text-gray-600">Base imponible gastos:</span>
+                <span className="font-medium text-gray-800">-{formatCurrency(baseImponibleGastos)}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-100 mt-2">
-                <span className="text-gray-800 font-medium">Resultado (base imponible):</span>
-                <span className="font-bold text-lg text-gray-800">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
+              <div className="flex justify-between items-center pt-1 border-t border-gray-100 mt-1">
+                <span className="text-gray-800 font-medium">Resultado:</span>
+                <span className="font-bold text-gray-800">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
               </div>
             </div>
             
@@ -304,20 +304,20 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         {/* Widget de Resumen Fiscal - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-5">
               <div className="flex items-center">
-                <div className="bg-[#EEF2FF] p-3 rounded-full mr-4">
-                  <FileText className="h-6 w-6 text-[#5856D6]" />
+                <div className="bg-[#EEF2FF] p-3 rounded-full mr-3">
+                  <FileText className="h-5 w-5 text-[#5856D6]" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-medium text-gray-800">Resumen Fiscal</h3>
+                  <h3 className="text-lg font-medium text-gray-800">Resumen Fiscal</h3>
                   <p className="text-sm text-gray-500">Impuestos y retenciones</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger className="select-apple text-sm py-1.5 px-3">
+                  <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
                     <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
@@ -327,7 +327,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </Select>
                 
                 <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="select-apple text-sm py-1.5 px-3">
+                  <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
                     <SelectValue placeholder="Periodo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -342,29 +342,29 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* IVA a liquidar - Estilo Apple */}
-            <div className="bg-[#F8FBFF] rounded-xl p-6 mb-5 border border-[#E6F0FD]">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-base text-gray-600">IVA a liquidar (Todo el año, 2025)</span>
-                <span className="bg-blue-50 text-sm py-1 px-3 rounded-full text-blue-700 font-medium">21% IVA</span>
+            <div className="bg-[#F8FBFF] rounded-xl p-5 mb-4 border border-[#E6F0FD]">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-600">IVA a liquidar (Todo el año, 2025)</span>
+                <span className="bg-blue-50 text-xs py-1 px-2 rounded-full text-blue-700 font-medium">21% IVA</span>
               </div>
               <div className="text-3xl font-medium text-[#007AFF]">
                 {formatCurrency(ivaALiquidar)}
               </div>
-              <div className="text-sm text-gray-500 mt-2">
+              <div className="text-xs text-gray-500 mt-1">
                 Resumen anual de IVA (modelo 390)
               </div>
             </div>
 
             {/* IRPF - Estilo Apple */}
-            <div className="bg-[#FFF9F5] rounded-xl p-6 mb-5 border border-[#FEECD2]">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-base text-gray-600">Retenciones IRPF (Todo el año, 2025)</span>
-                <span className="bg-amber-50 text-sm py-1 px-3 rounded-full text-amber-600 font-medium">15% IRPF</span>
+            <div className="bg-[#FFF9F5] rounded-xl p-5 mb-4 border border-[#FEECD2]">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-600">Retenciones IRPF (Todo el año, 2025)</span>
+                <span className="bg-amber-50 text-xs py-1 px-2 rounded-full text-amber-600 font-medium">15% IRPF</span>
               </div>
               <div className="text-3xl font-medium text-[#FF9500]">
                 {formatCurrency(dashboardStats.taxes?.incomeTax || 0)}
               </div>
-              <div className="text-sm text-gray-500 mt-2">
+              <div className="text-xs text-gray-500 mt-1">
                 Retenciones acumuladas en el año (modelo 190)
               </div>
             </div>
@@ -380,18 +380,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-5">
               <div className="flex items-center">
-                <div className="bg-[#F0EDFF] p-3 rounded-full mr-4">
-                  <BarChart3 className="h-6 w-6 text-[#5856D6]" />
+                <div className="bg-[#F0EDFF] p-3 rounded-full mr-3">
+                  <BarChart3 className="h-5 w-5 text-[#5856D6]" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-medium text-gray-800">Comparativa Financiera</h3>
+                  <h3 className="text-lg font-medium text-gray-800">Comparativa Financiera</h3>
                   <p className="text-sm text-gray-500">Evolución por período</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Select value="trimestral">
                   <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
                     <SelectValue placeholder="Trimestral" />
@@ -415,9 +415,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Selector de vista de gráfico - Estilo Apple */}
-            <div className="flex justify-center bg-[#F9F9F9] p-1.5 rounded-full gap-1 mb-5 max-w-[200px] mx-auto border border-gray-100">
+            <div className="flex justify-center bg-[#F9F9F9] p-1.5 rounded-full gap-1 mb-4 max-w-[180px] mx-auto border border-gray-100">
               <button
-                className={`text-xs font-medium rounded-full px-4 py-1.5 transition-all ${
+                className={`text-xs font-medium rounded-full px-3 py-1 transition-all ${
                   graphView === "barras" 
                   ? "bg-white text-gray-800 shadow-sm" 
                   : "text-gray-500 hover:text-gray-700"
@@ -427,7 +427,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 Barras
               </button>
               <button
-                className={`text-xs font-medium rounded-full px-4 py-1.5 transition-all ${
+                className={`text-xs font-medium rounded-full px-3 py-1 transition-all ${
                   graphView === "area" 
                   ? "bg-white text-gray-800 shadow-sm" 
                   : "text-gray-500 hover:text-gray-700"
@@ -439,39 +439,39 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Comparativa financiera - Estilo Apple */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6 glass-panel">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 glass-panel">
               {/* Mostrar el resultado en grande */}
-              <div className="grid grid-cols-3 gap-5 mb-8">
-                <div className="bg-[#F5FFF7] p-4 rounded-lg border border-[#DCFFE5]">
-                  <div className="text-sm text-[#34C759] mb-2 font-medium">Ingresos</div>
-                  <div className="text-3xl font-semibold text-[#34C759] tracking-tight">
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="bg-[#F5FFF7] p-3 rounded-lg border border-[#DCFFE5]">
+                  <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
+                  <div className="text-xl font-semibold text-[#34C759] tracking-tight">
                     {formatCurrency(baseImponibleIngresos)}
                   </div>
                 </div>
-                <div className="bg-[#FFF5F5] p-4 rounded-lg border border-[#FFDFDF]">
-                  <div className="text-sm text-[#FF3B30] mb-2 font-medium">Gastos</div>
-                  <div className="text-3xl font-semibold text-[#FF3B30] tracking-tight">
+                <div className="bg-[#FFF5F5] p-3 rounded-lg border border-[#FFDFDF]">
+                  <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
+                  <div className="text-xl font-semibold text-[#FF3B30] tracking-tight">
                     {formatCurrency(baseImponibleGastos)}
                   </div>
                 </div>
-                <div className="bg-[#F0F7FF] p-4 rounded-lg border border-[#DAE8FF]">
-                  <div className="text-sm text-[#007AFF] mb-2 font-medium">Resultado</div>
-                  <div className="text-3xl font-semibold text-[#007AFF] tracking-tight">
+                <div className="bg-[#F0F7FF] p-3 rounded-lg border border-[#DAE8FF]">
+                  <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
+                  <div className="text-xl font-semibold text-[#007AFF] tracking-tight">
                     {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
                   </div>
                 </div>
               </div>
               
-              {/* Gráfico más grande */}
-              <div className="h-[300px]">
+              {/* Gráfico */}
+              <div className="h-[240px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={financialComparisonData}
                     margin={{
-                      top: 20,
-                      right: 20,
-                      left: 10,
-                      bottom: 10,
+                      top: 10,
+                      right: 10,
+                      left: 5,
+                      bottom: 5,
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
@@ -479,33 +479,33 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                       dataKey="quarter" 
                       axisLine={false} 
                       tickLine={false}
-                      tick={{ fontSize: 14 }}
+                      tick={{ fontSize: 12 }}
                     />
                     <YAxis 
                       tickFormatter={(value) => `${value}€`}
-                      width={60}
+                      width={45}
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 13 }}
+                      tick={{ fontSize: 11 }}
                     />
                     <Tooltip 
                       formatter={(value: number) => [`${value}€`, undefined]}
                       contentStyle={{ 
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                        borderRadius: '10px',
+                        boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
                         border: 'none',
-                        padding: '12px',
-                        fontSize: '14px'
+                        padding: '8px',
+                        fontSize: '12px'
                       }}
                     />
                     <Legend 
                       iconType="circle" 
-                      iconSize={8}
-                      wrapperStyle={{ fontSize: '14px', paddingTop: '15px' }}
+                      iconSize={6}
+                      wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
                     />
-                    <Bar dataKey="Ingresos" fill="#34C759" radius={[8, 8, 0, 0]} barSize={35} />
-                    <Bar dataKey="Gastos" fill="#FF3B30" radius={[8, 8, 0, 0]} barSize={35} />
-                    <Bar dataKey="Resultado" fill="#007AFF" radius={[8, 8, 0, 0]} barSize={35} />
+                    <Bar dataKey="Ingresos" fill="#34C759" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="Gastos" fill="#FF3B30" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="Resultado" fill="#007AFF" radius={[6, 6, 0, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
