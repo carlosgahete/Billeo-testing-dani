@@ -10,13 +10,12 @@ import { useQuery } from "@tanstack/react-query";
 import billeoLogo from '../assets/billeo-logo.png';
 
 interface SessionData {
-  authenticated: boolean;
-  user?: {
-    id: number;
-    username: string;
-    name: string;
-    role: string;
-  };
+  id: number;
+  username: string;
+  name: string;
+  role: string;
+  email: string;
+  businessType: string;
 }
 
 const LoginPage = () => {
@@ -28,14 +27,15 @@ const LoginPage = () => {
   
   // Check if the user is already authenticated
   const { data: sessionData, isLoading: isSessionLoading } = useQuery<SessionData>({
-    queryKey: ["/api/auth/session"],
+    queryKey: ["/api/user"],
+    queryFn: () => apiRequest<SessionData>("/api/user"),
     retry: false,
     refetchOnWindowFocus: false
   });
   
   // If user is already authenticated, redirect to dashboard
   useEffect(() => {
-    if (sessionData?.authenticated) {
+    if (sessionData?.id) {
       navigate("/");
     }
   }, [sessionData, navigate]);
@@ -49,7 +49,7 @@ const LoginPage = () => {
       if (username === "demo" && password === "demo") {
         try {
           // Try to register the demo user first (will fail if it already exists, which is fine)
-          await apiRequest("/api/users", "POST", {
+          await apiRequest<any>("/api/users", "POST", {
             name: "Ana García",
             username: "demo",
             password: "demo",
@@ -63,13 +63,13 @@ const LoginPage = () => {
       }
 
       // Attempt to login
-      await apiRequest("/api/auth/login", "POST", { 
+      await apiRequest<any>("/api/login", "POST", { 
         username, 
         password 
       });
       
       // Invalidate auth session cache immediately
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
       // Show success message
       toast({
