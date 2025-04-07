@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
@@ -47,6 +47,19 @@ interface Transaction {
   categoryId: number | null;
   paymentMethod: string;
   notes?: string;
+  additionalTaxes?: string;
+}
+
+interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  clientId: number;
+  issueDate: string;
+  dueDate: string;
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled" | "pending";
+  subtotal: string;
+  tax: string;
+  total: string;
   additionalTaxes?: string;
 }
 
@@ -161,8 +174,13 @@ const TransactionList = () => {
   const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+  
+  // Obtener facturas para calcular ingresos correctamente
+  const { data: invoices, isLoading: invoicesLoading } = useQuery<Invoice[]>({
+    queryKey: ["/api/invoices"],
+  });
 
-  const isLoading = transactionsLoading || categoriesLoading;
+  const isLoading = transactionsLoading || categoriesLoading || invoicesLoading;
 
   const getCategory = (categoryId: number | null) => {
     if (!categoryId || !categories || !Array.isArray(categories)) {
@@ -330,11 +348,22 @@ const TransactionList = () => {
   ];
 
   // Calculate totals for the summary cards
-  const incomeTotal = !isLoading && Array.isArray(transactions)
+  // Ingresos de transacciones
+  const transactionIncomeTotal = !isLoading && Array.isArray(transactions)
     ? transactions
         .filter((t: Transaction) => t.type === "income")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
+  
+  // Ingresos de facturas pagadas  
+  const invoiceIncomeTotal = !isLoading && Array.isArray(invoices)
+    ? invoices
+        .filter((inv: Invoice) => inv.status === "paid")
+        .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0)
+    : 0;
+  
+  // Total combinado de ingresos (transacciones + facturas)
+  const incomeTotal = transactionIncomeTotal + invoiceIncomeTotal;
     
   const expenseTotal = !isLoading && Array.isArray(transactions)
     ? transactions
@@ -411,6 +440,10 @@ const TransactionList = () => {
                 <p className="text-2xl font-medium text-gray-800 flex items-center">
                   {formatCurrency(incomeTotal, "income")}
                 </p>
+                <div className="text-xs text-gray-500 mt-1">
+                  <p>Facturas: {formatCurrency(invoiceIncomeTotal, "income")}</p>
+                  <p>Transacciones: {formatCurrency(transactionIncomeTotal, "income")}</p>
+                </div>
               </div>
               <div className="p-2.5 rounded-full bg-[#E3F4E9] text-[#34C759]">
                 <Download className="h-5 w-5" />
