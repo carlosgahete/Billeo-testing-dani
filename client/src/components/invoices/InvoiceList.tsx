@@ -126,16 +126,36 @@ interface Company {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const statusMap: Record<string, { label: string; variant: "default" | "destructive" | "outline" | "secondary" }> = {
-    pending: { label: "Pendiente", variant: "secondary" },
-    paid: { label: "Pagada", variant: "default" },
-    overdue: { label: "Vencida", variant: "destructive" },
-    canceled: { label: "Cancelada", variant: "outline" },
+  // Estilo Apple: colores más sofisticados y badges más redondeados
+  const statusMap: Record<string, { label: string; className: string }> = {
+    pending: { 
+      label: "Pendiente", 
+      className: "bg-amber-50 text-amber-600 border border-amber-200" 
+    },
+    paid: { 
+      label: "Pagada", 
+      className: "bg-green-50 text-green-600 border border-green-200" 
+    },
+    overdue: { 
+      label: "Vencida", 
+      className: "bg-red-50 text-red-600 border border-red-200" 
+    },
+    canceled: { 
+      label: "Cancelada", 
+      className: "bg-gray-50 text-gray-600 border border-gray-200" 
+    },
   };
 
-  const { label, variant } = statusMap[status] || { label: status, variant: "default" };
+  const { label, className } = statusMap[status] || { 
+    label: status, 
+    className: "bg-gray-50 text-gray-600 border border-gray-200" 
+  };
 
-  return <Badge variant={variant}>{label}</Badge>;
+  return (
+    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${className}`}>
+      {label}
+    </span>
+  );
 };
 
 const MarkAsPaidButton = ({ 
@@ -670,37 +690,41 @@ const InvoiceList = () => {
   }
 
   return (
-    <div className="w-full">
-      {/* Encabezado de Facturas Emitidas con ambos botones a la derecha */}
-      <div className="overflow-hidden rounded-xl bg-blue-600 text-white p-3 flex justify-between items-center mx-4 md:ml-0 mb-1">
+    <div className="w-full fade-in">
+      {/* Encabezado estilo Apple */}
+      <div className="glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 flex justify-between items-center mx-4 md:ml-0 mb-4 border border-[#007AFF]/20">
         <div className="flex items-center">
-          <FileCheck className="h-5 w-5 mr-2" />
-          <h2 className="font-medium">Facturas emitidas</h2>
-          <span className="ml-2 bg-white text-blue-600 text-xs font-semibold rounded-full px-2 py-0.5">
-            {invoicesData?.length || 0} facturas
-          </span>
+          <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
+            <FileCheck className="h-4 w-4 text-[#007AFF]" />
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-800 mb-0.5">Facturas emitidas</h3>
+            <p className="text-sm text-gray-500">
+              {invoicesData?.length || 0} facturas en total
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
-            className="apple-style-secondary flex items-center mr-2"
+            className="button-apple-secondary button-apple-sm flex items-center"
             onClick={exportAllInvoices}
           >
-            <Download className="h-4 w-4 mr-1" />
+            <Download className="h-4 w-4 mr-1.5" />
             <span className="hidden sm:inline">Exportar todo</span>
             <span className="sm:hidden">Exportar</span>
           </button>
           <button
-            className="apple-style flex items-center"
+            className="button-apple button-apple-sm flex items-center"
             onClick={() => navigate("/invoices/create")}
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="h-4 w-4 mr-1.5" />
             <span className="hidden sm:inline">Nueva factura</span>
             <span className="sm:hidden">Nueva</span>
           </button>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-blue-100 shadow-sm mx-4 md:ml-0">
+      <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-4 md:ml-0 scale-in">
         <DataTable
           columns={columns}
           data={invoicesData || []}

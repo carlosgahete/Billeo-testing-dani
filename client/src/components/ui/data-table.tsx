@@ -66,29 +66,29 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {/* Search input */}
+      {/* Search input con estilo Apple */}
       <div className="flex items-center py-4 px-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#8E8E93]" />
           <Input
             placeholder={searchPlaceholder}
             value={globalFilter}
             onChange={handleSearch}
-            className="pl-8"
+            className="pl-9 rounded-xl border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/20 text-sm placeholder:text-[#8E8E93]"
           />
         </div>
       </div>
 
-      <div className="rounded-md border border-blue-100 shadow-sm overflow-x-auto">
+      <div className="rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto bg-white">
         <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-b-0">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="whitespace-nowrap p-4 font-semibold text-sm text-blue-700 bg-blue-50 border-b"
+                      className="whitespace-nowrap px-5 py-3.5 font-medium text-xs text-gray-500 bg-gray-50/80 tracking-wide uppercase first:rounded-tl-2xl last:rounded-tr-2xl"
                     >
                       {header.isPlaceholder
                         ? null
@@ -110,15 +110,15 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                   className={`
                     transition-colors duration-200 
-                    border-b border-gray-100
-                    ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}
-                    hover:bg-blue-50/70
+                    ${index !== table.getRowModel().rows.length - 1 ? 'border-b border-gray-100/80' : ''}
+                    bg-white
+                    hover:bg-gray-50/80
                   `}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell 
                       key={cell.id} 
-                      className="py-3.5 px-4"
+                      className="py-3.5 px-5 text-sm text-gray-800"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -143,15 +143,15 @@ export function DataTable<TData, TValue>({
       </div>
 
       {pagination && (
-        <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2 py-4 px-4">
-          <div className="text-xs sm:text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0 sm:space-x-2 py-4 px-4 mt-2">
+          <div className="text-xs sm:text-sm text-gray-500">
             <span className="hidden sm:inline">Mostrando </span>
-            <span className="font-medium">
+            <span className="font-medium text-gray-700">
               {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
             </span>
             <span className="hidden sm:inline"> a </span>
             <span className="sm:hidden">-</span>
-            <span className="font-medium">
+            <span className="font-medium text-gray-700">
               {Math.min(
                 (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
                 table.getFilteredRowModel().rows.length
@@ -159,34 +159,29 @@ export function DataTable<TData, TValue>({
             </span>
             <span className="hidden sm:inline"> de </span>
             <span className="sm:hidden"> / </span>
-            <span className="font-medium">{table.getFilteredRowModel().rows.length}</span>
+            <span className="font-medium text-gray-700">{table.getFilteredRowModel().rows.length}</span>
             <span className="hidden sm:inline"> resultados</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
+          <div className="flex items-center space-x-1.5">
+            <button
+              className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:pointer-events-none disabled:hover:bg-gray-100"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
               <span className="sr-only">Página anterior</span>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs font-medium">
-              Página {table.getState().pagination.pageIndex + 1} de{" "}
-              {table.getPageCount()}
+              <ChevronLeft className="h-4 w-4 text-gray-700" />
+            </button>
+            <span className="text-xs font-medium text-gray-700 px-1">
+              {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
+            <button
+              className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:pointer-events-none disabled:hover:bg-gray-100"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
               <span className="sr-only">Página siguiente</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              <ChevronRight className="h-4 w-4 text-gray-700" />
+            </button>
           </div>
         </div>
       )}

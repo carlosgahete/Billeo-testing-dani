@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import InvoiceList from "@/components/invoices/InvoiceList";
-import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle, CalendarDays } from "lucide-react";
+import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle, CalendarDays, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -25,67 +25,116 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Cabecera con fondo azul */}
-      <div className="relative overflow-hidden rounded-xl bg-[#2563EB] py-4 px-5 mb-4 mx-4 md:ml-0">
+      {/* Cabecera estilo Apple */}
+      <div className="section-header mx-4 md:ml-0 fade-in">
         <div className="flex items-center">
-          <Receipt className="h-5 w-5 mr-2 text-white" />
-          <h1 className="text-lg font-bold text-white">Gestión de Facturas</h1>
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
+            <Receipt className="h-5 w-5 text-[#007AFF]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight">Gestión de Facturas</h2>
+            <p className="text-sm text-gray-500">Administra y controla tus documentos fiscales</p>
+          </div>
         </div>
+        
+        <Button 
+          className="button-apple"
+          onClick={() => navigate("/invoices/create")}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Nueva Factura
+        </Button>
       </div>
       
-      {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 mx-4 md:ml-0">
-        <Card className="border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardContent className="p-4 flex items-start">
-            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-              <FileCheck className="h-5 w-5 text-blue-600" />
+      {/* Tarjetas de resumen estilo Apple */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-4 md:ml-0">
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
+                <FileCheck className="h-4 w-4 text-[#007AFF]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Facturas Emitidas</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-neutral-500 mb-1">Facturas Emitidas</p>
-              <h3 className="text-2xl font-bold text-neutral-800">{stats?.issuedCount || 0}</h3>
-              <p className="text-xs text-neutral-500 mt-1">Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.income || 0)}</p>
+            
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#007AFF] pt-1">
+                {stats?.issuedCount || 0}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.income || 0)}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Card className="border-green-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardContent className="p-4 flex items-start">
-            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
-              <CalendarDays className="h-5 w-5 text-green-600" />
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#F5FFF7] p-2.5 rounded-full mr-3">
+                <CalendarDays className="h-4 w-4 text-[#34C759]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Este Año ({new Date().getFullYear()})</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-neutral-500 mb-1">Este Año ({new Date().getFullYear()})</p>
-              <h3 className="text-2xl font-bold text-neutral-800">{stats?.yearCount || 0}</h3>
-              <p className="text-xs text-neutral-500 mt-1">Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.yearIncome || 0)}</p>
+            
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#34C759] pt-1">
+                {stats?.yearCount || 0}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.yearIncome || 0)}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Card className="border-amber-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardContent className="p-4 flex items-start">
-            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center mr-4">
-              <Calendar className="h-5 w-5 text-amber-600" />
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#FFF9F5] p-2.5 rounded-full mr-3">
+                <Calendar className="h-4 w-4 text-[#FF9500]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Este Trimestre</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-neutral-500 mb-1">Este Trimestre</p>
-              <h3 className="text-2xl font-bold text-neutral-800">{stats?.quarterCount || 0}</h3>
-              <p className="text-xs text-neutral-500 mt-1">Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.quarterIncome || 0)}</p>
+            
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#FF9500] pt-1">
+                {stats?.quarterCount || 0}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.quarterIncome || 0)}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Card className="border-warning-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardContent className="p-4 flex items-start">
-            <div className="h-10 w-10 rounded-full bg-warning-100 flex items-center justify-center mr-4">
-              <AlertTriangle className="h-5 w-5 text-warning-600" />
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#FEECEB] p-2.5 rounded-full mr-3">
+                <AlertTriangle className="h-4 w-4 text-[#FF3B30]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Pendientes de Cobro</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-neutral-500 mb-1">Pendientes de Cobro</p>
-              <h3 className="text-2xl font-bold text-neutral-800">{stats?.pendingCount || 0}</h3>
-              <p className="text-xs text-neutral-500 mt-1">Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.pendingInvoices || 0)}</p>
+            
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#FF3B30] pt-1">
+                {stats?.pendingCount || 0}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.pendingInvoices || 0)}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
       
       {/* Lista de facturas */}
