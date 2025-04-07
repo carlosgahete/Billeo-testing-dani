@@ -1,10 +1,10 @@
 import React from 'react';
-import AppleCompleteDashboard from '@/components/dashboard/AppleCompleteDashboard';
+import CompleteDashboard from '@/components/dashboard/CompleteDashboard';
 
 const CompleteDashboardPage: React.FC = () => {
   return (
     <div className="w-full">
-      <AppleCompleteDashboard />
+      <CompleteDashboard />
     </div>
   );
 };

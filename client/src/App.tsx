@@ -15,7 +15,6 @@ import NotFound from "@/pages/not-found";
 import FixedDashboard from "@/pages/fixed-dashboard";
 // import AppleSimpleDashboardPage from "@/pages/apple-simple-dashboard"; // Eliminado
 import CompleteDashboardPage from "@/pages/complete-dashboard";
-import AppleDashboardPage from "@/pages/apple-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
@@ -55,7 +54,7 @@ function Router() {
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
         <Layout>
-          <ProtectedRoute path="/" component={AppleDashboardPage} />
+          <ProtectedRoute path="/" component={CompleteDashboardPage} />
         </Layout>
       </Route>
       <Route path="/invoices">
@@ -168,12 +167,6 @@ function Router() {
       <Route path="/complete-dashboard">
         <Layout>
           <ProtectedRoute path="/complete-dashboard" component={CompleteDashboardPage} />
-        </Layout>
-      </Route>
-      {/* Ruta de dashboard estilo Apple */}
-      <Route path="/apple-dashboard">
-        <Layout>
-          <ProtectedRoute path="/apple-dashboard" component={AppleDashboardPage} />
         </Layout>
       </Route>
       <Route path="/admin/users">
