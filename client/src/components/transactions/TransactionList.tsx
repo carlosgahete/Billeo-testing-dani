@@ -394,6 +394,14 @@ const TransactionList = () => {
             <span className="sm:hidden">Nuevo</span>
           </button>
           
+          <button 
+            className="button-apple button-apple-sm flex items-center"
+            onClick={() => navigate("/documents/scan")}
+          >
+            <ScanText className="h-4 w-4 mr-1.5 sm:mr-2" />
+            <span className="hidden sm:inline">Escanear gasto</span>
+            <span className="sm:hidden">Escanear</span>
+          </button>
 
         </div>
       </div>
