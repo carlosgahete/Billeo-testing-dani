@@ -58,6 +58,7 @@ interface Client {
 
 export default function QuotesPage() {
   const { user } = useAuth();
+  const [location, navigate] = useLocation();
 
   // Obtener estadísticas de presupuestos
   const { data: quotes = [], isLoading: quotesLoading } = useQuery<Quote[]>({
@@ -153,8 +154,6 @@ export default function QuotesPage() {
   const conversionRate = totalQuotes > 0 
     ? ((acceptedQuotes / totalQuotes) * 100).toFixed(1) 
     : "0.0";
-
-  const [location, navigate] = useLocation();
   
   // Función para formatear moneda
   const formatCurrency = (amount: number) => {
