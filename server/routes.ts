@@ -977,6 +977,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para sincronizar manualmente el IBAN en todas las facturas
+  app.post("/api/company/sync-iban", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Obtener los datos de la empresa
+      const company = await storage.getCompany(req.session.userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      // Verificar que la empresa tiene un IBAN configurado
+      if (!company.bankAccount) {
+        return res.status(400).json({ 
+          message: "No bank account configured for the company", 
+          success: false 
+        });
+      }
+      
+      // Obtener todas las facturas del usuario
+      const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      
+      if (invoices.length === 0) {
+        return res.status(200).json({ 
+          message: "No invoices found to update", 
+          success: true,
+          updatedCount: 0 
+        });
+      }
+      
+      let updatedCount = 0;
+      
+      // Actualizar cada factura con el IBAN actual
+      for (const invoice of invoices) {
+        try {
+          let needsUpdate = false;
+          let updatedNotes = invoice.notes || "";
+          
+          // Caso 1: No hay notas, creamos nuevas con el IBAN
+          if (!invoice.notes) {
+            updatedNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}`;
+            needsUpdate = true;
+          } 
+          // Caso 2: Hay notas con formato estándar pero sin IBAN
+          else if (invoice.notes.includes("Forma de pago: Transferencia bancaria") && 
+                  !invoice.notes.includes("Número de cuenta:")) {
+            updatedNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}`;
+            needsUpdate = true;
+          } 
+          // Caso 3: Hay notas con IBAN, pero podría ser desactualizado
+          else if (invoice.notes.includes("Número de cuenta:")) {
+            const oldIbanPattern = /Número de cuenta:\s*([A-Z0-9\s]+)/i;
+            const match = invoice.notes.match(oldIbanPattern);
+            
+            if (match && match[1].trim() !== company.bankAccount) {
+              // Reemplazar el IBAN antiguo con el nuevo
+              updatedNotes = invoice.notes.replace(
+                oldIbanPattern, 
+                `Número de cuenta: ${company.bankAccount}`
+              );
+              needsUpdate = true;
+            }
+          }
+          
+          if (needsUpdate) {
+            await storage.updateInvoice(invoice.id, { notes: updatedNotes });
+            updatedCount++;
+          }
+        } catch (invoiceError) {
+          console.error(`Error actualizando factura ${invoice.id}:`, invoiceError);
+          // Continuamos con las demás facturas a pesar del error
+        }
+      }
+      
+      return res.status(200).json({ 
+        message: `Updated ${updatedCount} invoices with the current IBAN`, 
+        success: true,
+        updatedCount 
+      });
+      
+    } catch (error) {
+      console.error("Error sincronizando IBAN en facturas:", error);
+      return res.status(500).json({ 
+        message: "Internal server error", 
+        success: false 
+      });
+    }
+  });
+  
   // Subir logo de la empresa
   app.post("/api/company/:id/logo", upload.single("companyLogo"), async (req: Request, res: Response) => {
     try {

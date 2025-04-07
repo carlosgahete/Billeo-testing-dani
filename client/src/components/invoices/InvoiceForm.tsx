@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, useFieldArray, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import * as z from "zod";
+
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import { DatePicker } from "@/components/ui/date-picker";
+import { AddItemButton } from "@/components/ui/add-item-button";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader } from "lucide-react";
+
 import {
   Select,
   SelectContent,
@@ -22,133 +22,109 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
-import FileUpload from "../common/FileUpload";
-import { ClientForm } from "../clients/ClientForm";
 
-// Función auxiliar para convertir texto a número
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+import { InvoiceItemRow } from "./InvoiceItemRow";
+import { InvoiceStatus } from "./InvoiceStatus";
+import { AdditionalTaxField } from "./AdditionalTaxField";
+import { FileUploader } from "../shared/FileUploader";
+import { invoiceSchema } from "@/schemas/invoiceFormSchema";
+import { apiRequest } from "../../lib/queryClient";
+import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
+import { ClientModal } from "../clients/ClientModal";
+
+// Función para convertir valores a números de manera segura
 function toNumber(value: any, defaultValue = 0): number {
-  if (value === null || value === undefined || value === '') return defaultValue;
-  if (typeof value === 'number') return value;
-  // Asegurar que las comas se convierten a puntos para operaciones matemáticas
-  const numericValue = parseFloat(String(value).replace(',', '.'));
-  return isNaN(numericValue) ? defaultValue : numericValue;
+  if (value === null || value === undefined || value === "") {
+    return defaultValue;
+  }
+  
+  // Si ya es un número, lo devolvemos
+  if (typeof value === "number") {
+    return value;
+  }
+  
+  // Si es string, intentamos convertirlo
+  const num = Number(value.toString().replace(/[^0-9.-]+/g, ""));
+  
+  // Verificamos si es un número válido
+  return isNaN(num) ? defaultValue : num;
 }
 
-// Función auxiliar para calcular totales (definida globalmente para evitar referencias circulares)
+// Función para calcular totales de factura
 function calculateInvoiceTotals(form: any) {
+  console.log("Calculando totales...");
   const items = form.getValues("items") || [];
   const additionalTaxes = form.getValues("additionalTaxes") || [];
   
-  // Calculate subtotal for each item
-  const updatedItems = items.map((item: any) => {
-    const quantity = toNumber(item.quantity, 0);
-    const unitPrice = toNumber(item.unitPrice, 0);
-    const subtotal = quantity * unitPrice;
-    
-    return {
-      ...item,
-      quantity: quantity,
-      unitPrice: unitPrice,
-      subtotal: subtotal
-    };
-  });
-  
-  form.setValue("items", updatedItems);
-  
-  // Calculate invoice totals
-  const subtotal = updatedItems.reduce((sum: number, item: any) => sum + toNumber(item.subtotal, 0), 0);
-  const tax = updatedItems.reduce((sum: number, item: any) => {
-    const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
-    return sum + itemTax;
-  }, 0);
-  
-  // Calcular el importe total de impuestos adicionales
-  let additionalTaxesTotal = 0;
-  
-  additionalTaxes.forEach((taxItem: any) => {
-    if (taxItem.isPercentage) {
-      const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
-      additionalTaxesTotal += percentageTax;
-    } else {
-      additionalTaxesTotal += toNumber(taxItem.amount, 0);
+  try {
+    // Cálculo de subtotal (suma de items.subtotal)
+    let subtotal = 0;
+    if (items.length > 0) {
+      subtotal = items.reduce((acc: number, item: any) => {
+        const itemSubtotal = toNumber(item.subtotal, 0);
+        return acc + itemSubtotal;
+      }, 0);
     }
-  });
-  
-  const total = subtotal + tax + additionalTaxesTotal;
-  const safeTotal = Math.max(0, total);
-  
-  form.setValue("subtotal", subtotal);
-  form.setValue("tax", tax);
-  form.setValue("total", safeTotal);
-  
-  console.log("💰 Cálculo de totales:", {
-    subtotal,
-    tax,
-    additionalTaxesTotal,
-    total: safeTotal,
-    desglose: additionalTaxes.map((tax: any) => ({
-      nombre: tax.name,
-      valor: tax.isPercentage ? 
-        `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
-        `${tax.amount}€`
-    }))
-  });
-  
-  return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
+    
+    // Cálculo del IVA estándar (21% del subtotal por defecto)
+    const standardTaxRate = 21; // Porcentaje de IVA estándar en España
+    const tax = subtotal * (standardTaxRate / 100);
+    
+    // Cálculo de impuestos adicionales
+    let additionalTaxesTotal = 0;
+    let additionalFixedTotal = 0;
+    
+    // Suma de impuestos adicionales (porcentajes y valores fijos)
+    if (additionalTaxes.length > 0) {
+      additionalTaxes.forEach((taxItem: any) => {
+        const taxAmount = toNumber(taxItem.amount, 0);
+        
+        if (taxItem.isPercentage) {
+          // Si es porcentaje, se calcula sobre el subtotal
+          const percentageAmount = subtotal * (taxAmount / 100);
+          additionalTaxesTotal += percentageAmount;
+        } else {
+          // Si es valor fijo, se suma directamente
+          additionalFixedTotal += taxAmount;
+        }
+      });
+    }
+    
+    // Total = Subtotal + IVA estándar + Suma de impuestos adicionales
+    const total = subtotal + tax + additionalTaxesTotal + additionalFixedTotal;
+    
+    console.log("Totales calculados:", {
+      subtotal,
+      tax,
+      additionalTaxesTotal,
+      additionalFixedTotal,
+      total
+    });
+    
+    // Actualizamos los campos en el formulario
+    form.setValue("subtotal", subtotal);
+    form.setValue("tax", tax);
+    form.setValue("total", total);
+    
+    return { subtotal, tax, additionalTaxesTotal, additionalFixedTotal, total };
+    
+  } catch (error) {
+    console.error("Error al calcular totales:", error);
+    return { subtotal: 0, tax: 0, additionalTaxesTotal: 0, additionalFixedTotal: 0, total: 0 };
+  }
 }
-
-// Define schema for additional tax
-const additionalTaxSchema = z.object({
-  name: z.string().min(1, "El nombre del impuesto es obligatorio"),
-  amount: z.coerce.number(), // Permitimos valores negativos para representar retenciones (como el IRPF)
-  isPercentage: z.boolean().default(false) // Indica si es un porcentaje o un valor fijo
-});
-
-// Define schema for line items
-const invoiceItemSchema = z.object({
-  description: z.string().min(1, "La descripción es obligatoria"),
-  quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor que cero"),
-  unitPrice: z.coerce.number().min(0.01, "El precio debe ser mayor que cero"),
-  taxRate: z.coerce.number().min(0, "El IVA no puede ser negativo"),
-  subtotal: z.coerce.number().min(0).optional(),
-});
-
-// Define schema for the whole invoice
-const invoiceSchema = z.object({
-  invoiceNumber: z.string().min(1, "El número de factura es obligatorio"),
-  clientId: z.coerce.number({
-    required_error: "El cliente es obligatorio",
-  }),
-  issueDate: z.string().min(1, "La fecha de emisión es obligatoria"),
-  dueDate: z.string().min(1, "La fecha de vencimiento es obligatoria"),
-  subtotal: z.coerce.number().min(0),
-  tax: z.coerce.number().min(0),
-  total: z.coerce.number().min(0),
-  additionalTaxes: z.array(additionalTaxSchema).optional().default([]),
-  status: z.string().min(1, "El estado es obligatorio"),
-  notes: z.string().nullable().optional(),
-  attachments: z.array(z.string()).nullable().optional(),
-  items: z.array(invoiceItemSchema).min(1, "Agrega al menos un ítem a la factura"),
-});
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
@@ -158,82 +134,54 @@ interface InvoiceFormProps {
 }
 
 const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
-  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const isEditMode = Boolean(invoiceId);
   const [attachments, setAttachments] = useState<string[]>([]);
-  const [showClientForm, setShowClientForm] = useState(false);
+  const [currentIban, setCurrentIban] = useState('');
   const [showTaxDialog, setShowTaxDialog] = useState(false);
-  const [newTaxData, setNewTaxData] = useState<{ name: string; amount: number; isPercentage: boolean }>({
-    name: '',
-    amount: 0,
-    isPercentage: true
-  });
-  const [clientToEdit, setClientToEdit] = useState<any>(null);
-  const [location, navigate] = useLocation();
+  const [newTaxData, setNewTaxData] = useState({ name: "", amount: 0, isPercentage: false });
+  const [showClientModal, setShowClientModal] = useState(false);
   const queryClient = useQueryClient();
-  const [currentIban, setCurrentIban] = useState<string>("ES04 0182 5322 2902 0848 5904");
   
-  const isEditMode = !!invoiceId;
-  
-  // Mutation para eliminar clientes
-  const deleteClientMutation = useMutation({
-    mutationFn: async (clientId: number) => {
-      return await apiRequest("DELETE", `/api/clients/${clientId}`);
-    },
-    onSuccess: () => {
-      // Invalidar consultas de clientes para actualizar la lista
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      
-      toast({
-        title: "Cliente eliminado",
-        description: "El cliente ha sido eliminado correctamente",
-      });
-    },
-    onError: (error) => {
-      console.error("Error al eliminar cliente:", error);
-      toast({
-        title: "Error",
-        description: `No se pudo eliminar el cliente: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  // Función para eliminar un cliente
-  const deleteClient = (clientId: number) => {
-    deleteClientMutation.mutate(clientId);
-  };
-  
-  // Función para editar un cliente
-  const editClient = (client: any) => {
-    setClientToEdit(client);
-    setShowClientForm(true);
-  };
-
-  // Fetch clients for dropdown
-  const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
-    queryKey: ["/api/clients"],
-  });
-
-  // Fetch company data to get the current IBAN
-  const { data: companyData, isLoading: companyLoading } = useQuery({
-    queryKey: ["/api/company"],
-  });
-
-  // Fetch invoice data if in edit mode with minimal options
-  const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
+  // Consultar datos de la factura si estamos en modo edición
+  const { data: invoiceData, isLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
-    enabled: isEditMode,
+    queryFn: () => apiRequest("GET", `/api/invoices/${invoiceId}`),
+    enabled: isEditMode && !initialData, // No ejecutar si tenemos datos iniciales proporcionados
+    staleTime: 0, // No cache
+  });
+  
+  // Consultar datos de clientes para el selector
+  const { data: clients = [] } = useQuery({
+    queryKey: ["/api/clients"],
+    queryFn: () => apiRequest("GET", "/api/clients"),
+    staleTime: 0, // Siempre obtener los datos más recientes de clientes
+  });
+  
+  // Consultar datos de la empresa para obtener el IBAN
+  const { data: companyData } = useQuery({
+    queryKey: ["/api/company"],
+    queryFn: () => apiRequest("GET", "/api/company"),
     staleTime: 0, // Siempre obtener los datos más recientes
     refetchOnWindowFocus: false, // Evitar refetch automático al volver a enfocar la ventana
   });
 
   // Actualizar el estado del IBAN cuando los datos de la empresa estén disponibles
   useEffect(() => {
-    if (companyData && typeof companyData === 'object' && 'bankAccount' in companyData && companyData.bankAccount) {
-      setCurrentIban(companyData.bankAccount);
+    if (companyData && typeof companyData === 'object' && 'bankAccount' in companyData) {
+      const bankAccount = companyData.bankAccount;
+      if (typeof bankAccount === 'string') {
+        setCurrentIban(bankAccount);
+        console.log("IBAN actualizado:", bankAccount);
+      }
     }
   }, [companyData]);
   
+  // Creamos los valores por defecto utilizando el IBAN actual
+  const getDefaultNotes = () => {
+    return `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban || ""}`;
+  };
+
   const defaultFormValues = {
     invoiceNumber: "",
     clientId: 0,
@@ -246,7 +194,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     total: 0,
     additionalTaxes: [],
     status: "pending",
-    notes: `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`,
+    notes: getDefaultNotes(),
     attachments: [],
     items: [
       {
@@ -311,7 +259,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
-        notes: invoice.notes || `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`,
+        notes: invoice.notes || getDefaultNotes(),
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
@@ -392,7 +340,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
-        notes: invoice.notes || `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`,
+        notes: invoice.notes || getDefaultNotes(),
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
@@ -568,7 +516,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           ? "La factura se ha actualizado correctamente"
           : "La factura se ha creado correctamente",
       });
-      navigate("/invoices");
+      setLocation("/invoices");
     },
     onError: (error) => {
       console.error("❌ Error al guardar factura:", error);
@@ -648,147 +596,98 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     // Actualizar la caché de react-query para incluir el nuevo cliente
     queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     
-    // Seleccionar automáticamente el nuevo cliente en el formulario si es uno nuevo
-    if (!clientToEdit) {
-      form.setValue("clientId", newClient.id);
-    }
+    // Seleccionar automáticamente el nuevo cliente en el formulario
+    form.setValue("clientId", newClient.id);
     
-    // Limpiar el cliente a editar
-    setClientToEdit(null);
-    
-    toast({
-      title: clientToEdit ? "Cliente actualizado" : "Cliente creado",
-      description: clientToEdit 
-        ? `El cliente ${newClient.name} ha sido actualizado correctamente`
-        : `El cliente ${newClient.name} ha sido creado correctamente`,
-    });
-  };
-  
-  // Función para manejar el cierre del modal de cliente sin guardar
-  const handleClientModalClose = (open: boolean) => {
-    if (!open) {
-      // Si se cierra el modal, reseteamos el cliente a editar
-      setClientToEdit(null);
-    }
-    setShowClientForm(open);
+    // Cerrar el modal de creación de cliente
+    setShowClientModal(false);
   };
 
-  if ((isEditMode && invoiceLoading && !initialData) || clientsLoading) {
-    return <div className="flex justify-center p-8">Cargando...</div>;
+  // Recalcular totales cuando cambia el valor de los items
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      if (name?.startsWith("items") || name?.startsWith("additionalTaxes")) {
+        calculateInvoiceTotals(form);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Loading state
+  if (isEditMode && isLoading && !initialData) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <Loader className="h-6 w-6 animate-spin mx-auto" />
+          <p className="mt-2">Cargando factura...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
-              <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
-                <h3 className="text-lg font-medium flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-blue-500" />
-                  Datos de la factura
-                </h3>
-              </div>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
+      <FormProvider {...form}>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Primera columna - Datos generales */}
+              <Card className="md:col-span-1 bg-card border border-border/40 shadow-md">
+                <CardContent className="pt-6 space-y-4">
+                  <h3 className="text-lg font-medium">Información general</h3>
+                  
                   <FormField
                     control={form.control}
                     name="invoiceNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center text-gray-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2"></span>
-                          Número de factura
-                        </FormLabel>
+                        <FormLabel>Número de factura</FormLabel>
                         <FormControl>
-                          <Input placeholder="F-2023-001" {...field} className="border-gray-200 focus-visible:ring-blue-500 focus-visible:ring-opacity-30" />
+                          <Input placeholder="FRA-001" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="clientId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cliente</FormLabel>
-                        <div className="flex gap-2 items-start">
-                          <div className="flex-1">
-                            <Select
-                              onValueChange={(value) => field.onChange(Number(value))}
-                              value={field.value ? field.value.toString() : undefined}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar cliente" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="max-h-60">
-                                {clients?.map((client: any) => (
-                                  <div key={client.id} className="flex items-center justify-between p-1 px-2 hover:bg-muted/50 rounded-sm group">
-                                    <SelectItem value={client.id.toString()} className="flex-1 data-[highlighted]:bg-transparent">
-                                      <div className="flex flex-col">
-                                        <span>{client.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                          {client.taxId} - {client.city || client.address}
-                                        </span>
-                                      </div>
-                                    </SelectItem>
-                                    <div className="flex">
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          editClient(client);
-                                        }}
-                                      >
-                                        <Pencil className="h-4 w-4 text-blue-500" />
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="ml-1 p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (confirm(`¿Estás seguro de que deseas eliminar el cliente ${client.name}?`)) {
-                                            deleteClient(client.id);
-                                          }
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                                {clients?.length === 0 && (
-                                  <div className="px-2 py-3 text-sm text-muted-foreground">
-                                    No hay clientes disponibles
-                                  </div>
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={() => setShowClientForm(true)}
-                            className="shrink-0"
+                  
+                  <div className="flex items-end space-x-2">
+                    <FormField
+                      control={form.control}
+                      name="clientId"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Cliente</FormLabel>
+                          <Select
+                            value={field.value.toString()}
+                            onValueChange={(value) => field.onChange(parseInt(value))}
                           >
-                            Nuevo
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecciona un cliente" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {clients.map((client: any) => (
+                                <SelectItem key={client.id} value={client.id.toString()}>
+                                  {client.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="mb-2 ml-2 border border-border/60 px-3 shrink-0"
+                      onClick={() => setShowClientModal(true)}
+                    >
+                      Nuevo
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="issueDate"
@@ -796,42 +695,16 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de emisión</FormLabel>
                           <FormControl>
-                            <div className="calendar-popup-wrapper">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    className="w-full justify-start text-left font-normal flex items-center h-12 text-base"
-                                  >
-                                    <CalendarIcon className="h-5 w-5 mr-2 opacity-70" />
-                                    {field.value ? format(new Date(field.value), "dd/MM/yyyy") : 
-                                    <span className="text-muted-foreground">Seleccionar fecha</span>}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value ? new Date(field.value) : undefined}
-                                    onSelect={(date) => {
-                                      if (date) {
-                                        const formattedDate = format(date, "yyyy-MM-dd");
-                                        console.log("Cambiando fecha de emisión a:", formattedDate);
-                                        field.onChange(formattedDate);
-                                      }
-                                    }}
-                                    disabled={(date) => date < new Date("1900-01-01")}
-                                    initialFocus
-                                    className="rounded-md border shadow p-4"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
+                            <Input
+                              type="date"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
+                    
                     <FormField
                       control={form.control}
                       name="dueDate"
@@ -839,603 +712,334 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         <FormItem>
                           <FormLabel>Fecha de vencimiento</FormLabel>
                           <FormControl>
-                            <div className="calendar-popup-wrapper">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    className="w-full justify-start text-left font-normal flex items-center h-12 text-base"
-                                  >
-                                    <CalendarIcon className="h-5 w-5 mr-2 opacity-70" />
-                                    {field.value ? format(new Date(field.value), "dd/MM/yyyy") : 
-                                    <span className="text-muted-foreground">Seleccionar fecha</span>}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value ? new Date(field.value) : undefined}
-                                    onSelect={(date) => {
-                                      if (date) {
-                                        const formattedDate = format(date, "yyyy-MM-dd");
-                                        console.log("Cambiando fecha de vencimiento a:", formattedDate);
-                                        field.onChange(formattedDate);
-                                      }
-                                    }}
-                                    disabled={(date) => date < new Date("1900-01-01")}
-                                    initialFocus
-                                    className="rounded-md border shadow p-4"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
+                            <Input
+                              type="date"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-
+                  
                   <FormField
                     control={form.control}
                     name="status"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Estado</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar estado" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pending">Pendiente</SelectItem>
-                            <SelectItem value="paid">Pagada</SelectItem>
-                            <SelectItem value="overdue">Vencida</SelectItem>
-                            <SelectItem value="canceled">Cancelada</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <InvoiceStatus field={field} />
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
-              <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
-                <h3 className="text-lg font-medium flex items-center">
-                  <Plus className="mr-2 h-5 w-5 text-green-500" />
-                  Información adicional
-                </h3>
-              </div>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
+                  
                   <FormField
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center text-gray-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></span>
-                          Notas
-                        </FormLabel>
+                        <FormLabel>Notas</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={`Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`}
+                            placeholder="Forma de pago, IBAN, condiciones especiales..."
+                            className="resize-none min-h-[100px]"
                             {...field}
-                            value={field.value || ""}
-                            className="border-gray-200 focus-visible:ring-green-500 focus-visible:ring-opacity-30 min-h-[100px]"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
+                  
                   <div>
                     <FormLabel>Archivos adjuntos</FormLabel>
                     <div className="mt-2">
-                      <FileUpload onUpload={handleFileUpload} />
-                      
-                      <div className="mt-3 space-y-2">
-                        {attachments.map((attachment, index) => (
-                          <div key={index} className="flex items-center space-x-2 text-sm">
-                            <FileText className="h-4 w-4" />
-                            <span className="flex-1 truncate">
-                              {attachment.split('/').pop()}
+                      <FileUploader onFileUploaded={handleFileUpload} />
+                    </div>
+                    {attachments.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {attachments.map((path, index) => (
+                          <div
+                            key={index}
+                            className="text-sm text-muted-foreground flex items-center"
+                          >
+                            <span className="truncate flex-1">
+                              {path.split("/").pop()}
                             </span>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                const newAttachments = [...attachments];
-                                newAttachments.splice(index, 1);
-                                setAttachments(newAttachments);
-                              }}
-                              className="h-7 w-7 p-0"
+                              className="h-6 px-2 text-destructive"
+                              onClick={() =>
+                                setAttachments(
+                                  attachments.filter((_, i) => i !== index)
+                                )
+                              }
                             >
-                              <Trash2 className="h-4 w-4" />
+                              Eliminar
                             </Button>
                           </div>
                         ))}
                       </div>
-                    </div>
+                    )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
 
-          <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
-            <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
-              <h3 className="text-lg font-medium flex items-center">
-                <FileText className="mr-2 h-5 w-5 text-purple-500" />
-                Detalles de la factura
-              </h3>
-            </div>
-            <CardContent className="pt-6">
-              
-              <div className="mb-4 space-y-4">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="grid grid-cols-12 gap-4 items-start"
-                  >
-                    <div className="col-span-12 md:col-span-5">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.description`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Descripción
-                            </FormLabel>
-                            <FormControl>
-                              <Input placeholder="Descripción" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+              {/* Segunda y tercera columna - Detalles de la factura */}
+              <Card className="md:col-span-2 bg-card border border-border/40 shadow-md">
+                <CardContent className="pt-6 space-y-4">
+                  <h3 className="text-lg font-medium">Detalle de factura</h3>
+                  
+                  {/* Tabla de líneas de factura */}
+                  <div className="border border-border/40 rounded-md">
+                    <div className="grid grid-cols-12 gap-2 p-3 bg-muted/50 text-sm font-medium rounded-t-md border-b border-border/40">
+                      <div className="col-span-5">Descripción</div>
+                      <div className="col-span-2 text-center">Cantidad</div>
+                      <div className="col-span-2 text-center">Precio</div>
+                      <div className="col-span-1 text-center">IVA %</div>
+                      <div className="col-span-1 text-center">Total</div>
+                      <div className="col-span-1"></div>
                     </div>
                     
-                    <div className="col-span-3 md:col-span-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.quantity`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Cantidad
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="text"
-                                placeholder="Cantidad"
-                                defaultValue={field.value || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-                                  field.onChange(value);
-                                }}
-                                onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <div className="p-2 space-y-2">
+                      {fields.map((field, index) => (
+                        <InvoiceItemRow
+                          key={field.id}
+                          index={index}
+                          remove={remove}
+                          onBlur={() => calculateInvoiceTotals(form)}
+                        />
+                      ))}
+                      
+                      <div className="pt-2">
+                        <AddItemButton
+                          onClick={() =>
+                            append({
+                              description: "",
+                              quantity: 1,
+                              unitPrice: 0,
+                              taxRate: 21,
+                              subtotal: 0,
+                            })
+                          }
+                          className="w-full"
+                        >
+                          Añadir línea
+                        </AddItemButton>
+                      </div>
                     </div>
-                    
-                    <div className="col-span-3 md:col-span-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.unitPrice`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Precio
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="text"
-                                placeholder="Precio"
-                                defaultValue={field.value || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-                                  field.onChange(value);
-                                }}
-                                onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-3 md:col-span-1">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.taxRate`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              IVA %
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="1"
-                                placeholder="IVA %"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(parseFloat(e.target.value));
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-3 md:col-span-1">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.subtotal`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
-                              Subtotal
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                disabled
-                                value={
-                                  form.getValues(`items.${index}.quantity`) *
-                                  form.getValues(`items.${index}.unitPrice`)
-                                }
-                                placeholder="Subtotal"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="col-span-12 md:col-span-1 flex items-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          remove(index);
-                          // Función calculateInvoiceTotals(form) reemplazada con código inline
-                        }}
-                        disabled={fields.length === 1}
-                        className="h-10 w-10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Eliminar ítem</span>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Esta es la fila con los botones de impuestos, alineados como en la imagen */}
-                <div className="grid grid-cols-12 gap-4 items-center mb-4">
-                  <div className="col-span-8 sm:col-span-9 flex">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        append({
-                          description: "",
-                          quantity: 1,
-                          unitPrice: 0,
-                          taxRate: 21,
-                          subtotal: 0,
-                        });
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Añadir ítem
-                    </Button>
-                  </div>
-                  <div className="col-span-4 sm:col-span-3 flex justify-start gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleAddTax('irpf');
-                      }}
-                      className="text-xs"
-                      title="Añadir retención de IRPF (-15%)"
-                    >
-                      <Minus className="h-3 w-3 mr-1" />
-                      Añadir IRPF
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        handleAddTax();
-                      }}
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Otro impuesto
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              
-              {/* Sección de impuestos adicionales - ahora directamente bajo los botones */}
-              {taxFields.length > 0 && (
-                <div className="w-full mt-4 mb-6 border-t border-b py-4">
-                  <div className="mb-2">
-                    <span className="text-sm font-medium">Impuestos adicionales:</span>
                   </div>
                   
-                  {taxFields.map((field, index) => (
-                    <div key={field.id} className="mb-4 pl-2 border-l-2 border-muted">
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-5">
-                          <FormField
-                            control={form.control}
-                            name={`additionalTaxes.${index}.name`}
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="sr-only">Nombre</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Nombre" 
-                                    {...field} 
-                                    className="h-8 text-sm"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                  {/* Sección de impuestos adicionales */}
+                  <div className="border border-border/40 rounded-md mt-6">
+                    <div className="p-3 bg-muted/50 text-sm font-medium rounded-t-md border-b border-border/40">
+                      Impuestos adicionales
+                    </div>
+                    
+                    <div className="p-2 space-y-2">
+                      {taxFields.length > 0 ? (
+                        <div className="grid grid-cols-12 gap-2 px-3 py-1 bg-muted/30 text-xs font-medium">
+                          <div className="col-span-5">Nombre</div>
+                          <div className="col-span-3 text-center">Importe/Porcentaje</div>
+                          <div className="col-span-3 text-center">Tipo</div>
+                          <div className="col-span-1"></div>
                         </div>
-                        <div className="col-span-5">
-                          <FormField
-                            control={form.control}
-                            name={`additionalTaxes.${index}.amount`}
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="sr-only">Importe</FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center">
-                                    <Input 
-                                      type="number" 
-                                      placeholder="Importe"
-                                      step="0.01"
-                                      {...field} 
-                                      onChange={(e) => {
-                                        field.onChange(parseFloat(e.target.value));
-                                        // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                      }}
-                                      className="h-8 text-sm"
-                                    />
-                                    
-                                    {/* Indicador de porcentaje o euros */}
-                                    <div className="ml-1">
-                                      <FormField
-                                        control={form.control}
-                                        name={`additionalTaxes.${index}.isPercentage`}
-                                        render={({ field }) => (
-                                          <FormItem className="space-y-0">
-                                            <FormLabel className="sr-only">Tipo</FormLabel>
-                                            <FormControl>
-                                              <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                  field.onChange(!field.value);
-                                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
-                                                }}
-                                                className="h-8 px-2 text-xs font-normal"
-                                              >
-                                                {field.value ? '%' : '€'}
-                                              </Button>
-                                            </FormControl>
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                      ) : null}
+                      
+                      {taxFields.map((field, index) => (
+                        <AdditionalTaxField
+                          key={field.id}
+                          index={index}
+                          remove={removeTax}
+                          onBlur={() => calculateInvoiceTotals(form)}
+                        />
+                      ))}
+                      
+                      <div className="pt-2 flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddTax('irpf')}
+                          className="flex-1 text-sm"
+                        >
+                          + Añadir IRPF
+                        </Button>
                         
-                        <div className="col-span-2 text-right">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              removeTax(index);
-                              // Función calculateInvoiceTotals(form) reemplazada con código inline
-                            }}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            <span className="sr-only">Eliminar impuesto</span>
-                          </Button>
-                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddTax('iva')}
+                          className="flex-1 text-sm"
+                        >
+                          + Añadir IVA adicional
+                        </Button>
                         
-                        {/* Mostrar el valor calculado después del campo */}
-                        <div className="col-span-12 pl-5 -mt-1">
-                          <span className="text-xs text-muted-foreground">
-                            {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
-                            <span className="font-medium ml-1">
-                              {form.getValues(`additionalTaxes.${index}.isPercentage`) 
-                                ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
-                                : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
-                              }
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddTax()}
+                          className="flex-1 text-sm"
+                        >
+                          + Añadir impuesto personalizado
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Resumen de totales */}
+                  <div className="flex justify-end pt-4">
+                    <div className="w-full max-w-md space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subtotal:</span>
+                        <FormField
+                          control={form.control}
+                          name="subtotal"
+                          render={({ field }) => (
+                            <span className="font-medium">
+                              {new Intl.NumberFormat("es-ES", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(toNumber(field.value))}
                             </span>
-                          </span>
-                        </div>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">IVA (21%):</span>
+                        <FormField
+                          control={form.control}
+                          name="tax"
+                          render={({ field }) => (
+                            <span className="font-medium">
+                              {new Intl.NumberFormat("es-ES", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(toNumber(field.value))}
+                            </span>
+                          )}
+                        />
+                      </div>
+                      
+                      <Separator className="my-2" />
+                      
+                      <div className="flex justify-between">
+                        <span className="font-bold">Total:</span>
+                        <FormField
+                          control={form.control}
+                          name="total"
+                          render={({ field }) => (
+                            <span className="font-bold">
+                              {new Intl.NumberFormat("es-ES", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(toNumber(field.value))}
+                            </span>
+                          )}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation("/invoices")}
+              >
+                Cancelar
+              </Button>
               
-              <div className="border-t pt-6 flex flex-col items-end">
-                <div className="bg-slate-50 rounded-lg p-4 w-full md:w-96 shadow-sm">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-slate-600">Subtotal:</span>
-                    <span className="font-medium">
-                      {form.getValues("subtotal").toFixed(2)} €
-                    </span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-slate-600">IVA:</span>
-                    <span className="font-medium">
-                      {form.getValues("tax").toFixed(2)} €
-                    </span>
-                  </div>
-                  
-                  {/* Mostrar impuestos adicionales */}
-                  {taxFields.map((field, index) => {
-                    const taxName = form.getValues(`additionalTaxes.${index}.name`);
-                    const taxAmount = form.getValues(`additionalTaxes.${index}.amount`);
-                    const isPercentage = form.getValues(`additionalTaxes.${index}.isPercentage`);
-                    const subtotal = form.getValues("subtotal");
-                    const calculatedAmount = isPercentage ? (subtotal * taxAmount / 100) : taxAmount;
-                    const isNegative = calculatedAmount < 0;
-                    
-                    return (
-                      <div key={field.id} className="flex justify-between mb-2">
-                        <span className="text-sm text-slate-600">
-                          {taxName || "Impuesto"}{isPercentage ? ` (${taxAmount}%)` : ''}:
-                        </span>
-                        <span className={`font-medium ${isNegative ? "text-red-600" : ""}`}>
-                          {calculatedAmount.toFixed(2)} €
-                        </span>
-                      </div>
-                    );
-                  })}
-                  
-                  <div className="flex justify-between mt-3 pt-3 border-t">
-                    <span className="font-semibold">Total:</span>
-                    <span className="font-bold text-lg text-blue-700">{form.getValues("total").toFixed(2)} €</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Button
+                type="submit"
+                disabled={mutation.isPending}
+                className={cn(
+                  "flex gap-2",
+                  mutation.isPending && "opacity-80"
+                )}
+              >
+                {mutation.isPending && (
+                  <Loader className="h-4 w-4 animate-spin" />
+                )}
+                {isEditMode ? "Actualizar factura" : "Crear factura"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </FormProvider>
 
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/invoices")}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" variant="default" disabled={mutation.isPending}>
-              {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
-            </Button>
-          </div>
-        </form>
-      </Form>
-
-      {/* Formulario de clientes como modal */}
-      <ClientForm 
-        open={showClientForm} 
-        onOpenChange={handleClientModalClose} 
-        onClientCreated={handleClientCreated}
-        clientToEdit={clientToEdit}
-      />
-
-      {/* Diálogo para agregar impuestos adicionales */}
+      {/* Modal para impuesto adicional */}
       <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Agregar nuevo impuesto</DialogTitle>
+            <DialogTitle>Añadir impuesto adicional</DialogTitle>
             <DialogDescription>
-              Ingresa los datos del impuesto que deseas agregar a la factura.
+              Introduce los datos del impuesto que deseas añadir a la factura.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="grid gap-4">
-              <div>
-                <label htmlFor="taxName" className="text-sm font-medium">
-                  Nombre del impuesto
-                </label>
-                <input
-                  id="taxName"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
-                  placeholder="Ej: IRPF, tasa municipal, etc."
-                  value={newTaxData.name}
-                  onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="taxAmount" className="text-sm font-medium">
-                  Importe
-                </label>
-                <div className="flex items-center mt-1">
-                  <input
-                    id="taxAmount"
-                    type="number"
-                    step="0.01"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Importe o porcentaje"
-                    value={newTaxData.amount}
-                    onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="ml-2 px-3"
-                    onClick={() => setNewTaxData({...newTaxData, isPercentage: !newTaxData.isPercentage})}
-                  >
-                    {newTaxData.isPercentage ? '%' : '€'}
-                  </Button>
-                </div>
-              </div>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="taxName">Nombre del impuesto</Label>
+              <Input
+                id="taxName"
+                placeholder="Ej: IRPF, Retención, etc."
+                value={newTaxData.name}
+                onChange={e => setNewTaxData({...newTaxData, name: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="taxAmount">Importe o porcentaje</Label>
+              <Input
+                id="taxAmount"
+                type="number"
+                placeholder="Ej: 15, -15, 100, etc."
+                value={newTaxData.amount}
+                onChange={e => setNewTaxData({...newTaxData, amount: Number(e.target.value)})}
+              />
+              <p className="text-sm text-muted-foreground">
+                Usa valores negativos para retenciones o descuentos.
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="tax-percentage"
+                checked={newTaxData.isPercentage}
+                onCheckedChange={checked => setNewTaxData({...newTaxData, isPercentage: checked})}
+              />
+              <Label htmlFor="tax-percentage">Es un porcentaje</Label>
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTaxDialog(false)}>Cancelar</Button>
-            <Button onClick={handleAddTaxFromDialog}>Agregar impuesto</Button>
-          </DialogFooter>
+          <div className="flex justify-end">
+            <Button onClick={handleAddTaxFromDialog}>Añadir impuesto</Button>
+          </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Modal para crear cliente */}
+      <ClientModal 
+        open={showClientModal} 
+        onOpenChange={setShowClientModal}
+        onClientCreated={handleClientCreated} 
+      />
     </>
   );
 };
+
+import { Label } from "@/components/ui/label";
 
 export default InvoiceForm;
