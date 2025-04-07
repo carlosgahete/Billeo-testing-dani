@@ -293,12 +293,8 @@ const TransactionList = () => {
         const type = row.original.type;
         const amount = row.getValue<number>("amount");
         
-        // Usar el ícono de categoría en lugar del signo + o -
-        const category = getCategory(row.original.categoryId);
-        
         return (
-          <div className="flex items-center">
-            <span className="mr-2 text-lg" style={{ color: category.color }}>{category.icon}</span>
+          <div>
             <span className={`font-medium ${type === "income" ? "text-secondary-600" : "text-danger-500"}`}>
               {formatCurrency(amount, type)}
             </span>
