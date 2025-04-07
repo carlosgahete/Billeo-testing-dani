@@ -2,15 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Paperclip, Upload } from "lucide-react";
+import { Paperclip, Upload, Camera } from "lucide-react";
 
 interface FileUploadProps {
   onUpload: (filePath: string) => void;
   accept?: string;
   compact?: boolean;
+  buttonLabel?: string;
 }
 
-const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false }: FileUploadProps) => {
+const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false, buttonLabel }: FileUploadProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -85,8 +86,12 @@ const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false
             </>
           ) : (
             <>
-              <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? "Subiendo..." : "Seleccionar archivo"}
+              {accept.includes(".jpg") || accept.includes(".png") ? (
+                <Camera className="h-4 w-4 mr-2" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              {isUploading ? "Subiendo..." : (buttonLabel || "Seleccionar archivo")}
             </>
           )}
         </Button>

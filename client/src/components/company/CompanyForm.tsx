@@ -11,12 +11,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Camera, Building2, MapPin, Phone, Mail, CreditCard } from "lucide-react";
 import FileUpload from "@/components/common/FileUpload";
 import { Company } from "@shared/schema";
 
@@ -142,43 +141,69 @@ const CompanyForm = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-light text-gray-800 tracking-tight">Perfil de empresa</h2>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Sección de información principal */}
+        <div className="space-y-8">
+          {/* Nombre y Logo */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-5 space-x-3">
+              <div className="rounded-full bg-blue-50 p-2">
+                <Building2 className="h-5 w-5 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Información principal</h3>
+            </div>
 
-        <div className="space-y-6">
-          <div className="flex flex-col space-y-6">
-            {/* Nombre y Logo */}
-            <div className="flex flex-col md:flex-row md:items-start gap-8">
+            <div className="flex flex-col md:flex-row md:items-start gap-6">
               <div className="flex-1">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel className="text-sm font-medium text-gray-700">Nombre de la empresa</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Nombre de la empresa" 
                           {...field} 
-                          className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
                 
-              <div className="flex items-center space-x-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="taxId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">CIF/NIF</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="B12345678" 
+                            {...field} 
+                            className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-center space-y-3 min-w-[140px]">
                 {logo ? (
-                  <div className="h-16 w-16 rounded-md overflow-hidden flex items-center justify-center bg-white border border-gray-100">
+                  <div className="h-24 w-24 rounded-2xl overflow-hidden flex items-center justify-center bg-white border border-gray-100 shadow-sm">
                     <img 
                       src={logo} 
                       alt="Logo" 
@@ -189,10 +214,8 @@ const CompanyForm = () => {
                     />
                   </div>
                 ) : (
-                  <div className="h-16 w-16 border border-gray-200 rounded-md flex items-center justify-center bg-gray-50">
-                    <svg className="h-8 w-8 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
+                  <div className="h-24 w-24 rounded-2xl border border-gray-200 flex items-center justify-center bg-gray-50">
+                    <Camera className="h-10 w-10 text-gray-300" />
                   </div>
                 )}
                 
@@ -200,26 +223,87 @@ const CompanyForm = () => {
                   <FileUpload 
                     onUpload={handleLogoUpload}
                     accept=".jpg,.jpeg,.png,.svg"
+                    buttonLabel="Subir logo"
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    JPG, PNG, SVG
+                  <p className="text-xs text-gray-500 mt-1 text-center">
+                    JPG, PNG o SVG
                   </p>
                 </div>
               </div>
             </div>
+          </div>
+          
+          {/* Sección de contacto */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-5 space-x-3">
+              <div className="rounded-full bg-green-50 p-2">
+                <Mail className="h-5 w-5 text-green-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Información de contacto</h3>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="empresa@ejemplo.com" 
+                          {...field}
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Teléfono</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="+34 123 456 789" 
+                          {...field}
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Sección de dirección */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-5 space-x-3">
+              <div className="rounded-full bg-purple-50 p-2">
+                <MapPin className="h-5 w-5 text-purple-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Dirección fiscal</h3>
+            </div>
+            
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="taxId"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">CIF/NIF</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Dirección</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="B12345678" 
-                        {...field} 
-                        className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
+                        placeholder="Calle, número, piso..." 
+                        {...field}
+                        className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                       />
                     </FormControl>
                     <FormMessage />
@@ -227,156 +311,103 @@ const CompanyForm = () => {
                 )}
               />
               
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Ciudad</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Ciudad" 
+                          {...field}
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="postalCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Código postal</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="28001" 
+                          {...field}
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">País</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="España" 
+                          {...field}
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Sección bancaria */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-5 space-x-3">
+              <div className="rounded-full bg-amber-50 p-2">
+                <CreditCard className="h-5 w-5 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Información bancaria</h3>
+            </div>
+            
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="bankAccount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Número de cuenta bancaria (IBAN)</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="empresa@ejemplo.com" 
-                        {...field} 
-                        className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
+                        placeholder="ES12 3456 7890 1234 5678 9012" 
+                        {...field}
+                        className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                       />
                     </FormControl>
                     <FormMessage />
+                    <p className="text-xs text-gray-500 mt-2 ml-1">
+                      Este número de cuenta se incluirá automáticamente en las notas de tus facturas.
+                    </p>
                   </FormItem>
                 )}
               />
             </div>
-          </div>
-
-          <div className="h-px bg-gray-100"></div>
-          
-          <div className="space-y-6">
-            <h3 className="text-lg font-light text-gray-800">Dirección</h3>
-            
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">Dirección</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Calle, número, piso..." 
-                      {...field} 
-                      className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Ciudad</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Ciudad" 
-                        {...field} 
-                        className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="postalCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Código postal</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="28001" 
-                        {...field} 
-                        className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">País</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="España" 
-                        {...field} 
-                        className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-              
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">Teléfono</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="+34 123 456 789" 
-                      {...field} 
-                      className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-            
-          <div className="h-px bg-gray-100"></div>
-          
-          <div>
-            <h3 className="text-lg font-light text-gray-800 mb-4">Información bancaria</h3>
-            <FormField
-              control={form.control}
-              name="bankAccount"
-              render={({ field }) => (
-                <FormItem className="mb-0">
-                  <FormLabel className="text-sm font-medium text-gray-700">Número de cuenta bancaria (IBAN)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="ES12 3456 7890 1234 5678 9012" 
-                      {...field} 
-                      className="border-gray-200 focus:border-blue-500 focus:ring-0 font-light"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Este número de cuenta se incluirá automáticamente en las notas de tus facturas.
-                  </p>
-                </FormItem>
-              )}
-            />
           </div>
         </div>
 
-        <div className="border-t border-gray-200 pt-6 mt-8">
+        <div className="flex justify-end">
           <Button 
             type="submit" 
             disabled={saveCompanyMutation.isPending}
-            className="ml-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md transition-colors font-normal text-sm"
+            className="shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-5 py-2 h-auto rounded-lg transition-all"
           >
             {saveCompanyMutation.isPending ? (
               <>
