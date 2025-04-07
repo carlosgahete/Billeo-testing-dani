@@ -307,200 +307,251 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="md:ml-16">
-        <h1 className="text-2xl font-bold text-neutral-800">Configuración</h1>
-        <p className="text-neutral-500">
-          Gestiona tu cuenta y tus preferencias
+    <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto">
+      {/* Encabezado estilo Apple */}
+      <div className="mb-8">
+        <div className="flex items-center mb-4 space-x-3">
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-2xl shadow-sm">
+            <User className="h-6 w-6 text-gray-600" />
+          </div>
+          <h1 className="text-2xl font-medium text-gray-900">Configuración</h1>
+        </div>
+        <p className="text-gray-500 ml-12 max-w-3xl">
+          Administra tu perfil, preferencias y configuración de seguridad
         </p>
       </div>
       
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="profile">Perfil</TabsTrigger>
-          <TabsTrigger value="security">Seguridad</TabsTrigger>
-          <TabsTrigger value="preferences">Preferencias</TabsTrigger>
+        <TabsList className="mb-8 p-1 bg-gray-100/80 backdrop-blur-sm rounded-xl flex space-x-1 w-fit">
+          <TabsTrigger className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2.5 text-sm font-medium" value="profile">Perfil</TabsTrigger>
+          <TabsTrigger className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2.5 text-sm font-medium" value="security">Seguridad</TabsTrigger>
+          <TabsTrigger className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 px-4 py-2.5 text-sm font-medium" value="preferences">Preferencias</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="profile" className="space-y-6">
-          {/* Imagen de perfil */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Imagen de perfil</CardTitle>
-              <CardDescription>
-                Sube una foto que aparecerá junto a tu nombre
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
-                <div className="flex flex-col items-center gap-3">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage 
-                      src={user?.profileImage ? user.profileImage : undefined} 
-                      alt={user?.name || "Usuario"} 
-                    />
-                    <AvatarFallback className="text-lg">
-                      {user?.name?.split(' ').map(n => n[0]).join('') || <User />}
-                    </AvatarFallback>
-                  </Avatar>
-                  {uploadingProfileImage && (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  )}
-                </div>
-                
-                <div className="flex-1">
-                  <p className="text-sm mb-3">
-                    Sube una imagen JPG, PNG o JPEG. Esta imagen se mostrará junto a tu nombre en la aplicación.
-                  </p>
-                  <FileUpload 
-                    onUpload={handleProfileImageUpload} 
-                    accept=".jpg,.jpeg,.png"
-                  />
-                </div>
+        <TabsContent value="profile" className="space-y-8">
+          {/* Imagen de perfil - Estilo Apple */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-5 space-x-3">
+              <div className="rounded-full bg-blue-50 p-2">
+                <User className="h-5 w-5 text-blue-500" />
               </div>
-            </CardContent>
-          </Card>
+              <h3 className="text-lg font-medium text-gray-900">Imagen de perfil</h3>
+            </div>
+            
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex flex-col items-center gap-3">
+                <Avatar className="h-32 w-32 rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  <AvatarImage 
+                    src={user?.profileImage ? user.profileImage : undefined} 
+                    alt={user?.name || "Usuario"} 
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
+                    {user?.name ? user.name.split(' ').map(n => n[0]).join('') : <User className="h-10 w-10" />}
+                  </AvatarFallback>
+                </Avatar>
+                {uploadingProfileImage && (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    <span className="text-sm text-blue-500">Actualizando...</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex-1 mt-4 md:mt-0">
+                <p className="text-gray-600 mb-4">
+                  Esta imagen aparecerá en tu perfil y en tus facturas generadas. Sube una imagen profesional en formato JPG, PNG o JPEG.
+                </p>
+                <FileUpload 
+                  onUpload={handleProfileImageUpload} 
+                  accept=".jpg,.jpeg,.png"
+                  buttonLabel="Cambiar imagen"
+                />
+              </div>
+            </div>
+          </div>
           
-          {/* Información del perfil */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Información de perfil</CardTitle>
-              <CardDescription>
-                Actualiza tu información personal
-              </CardDescription>
-            </CardHeader>
-            <form onSubmit={handleProfileSubmit}>
-              <CardContent className="space-y-4">
+          {/* Información del perfil - Estilo Apple */}
+          <form onSubmit={handleProfileSubmit}>
+            <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center mb-5 space-x-3">
+                <div className="rounded-full bg-purple-50 p-2">
+                  <User className="h-5 w-5 text-purple-500" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">Información personal</h3>
+              </div>
+              
+              <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nombre</Label>
+                  <Label htmlFor="name" className="text-gray-700 font-medium">Nombre completo</Label>
                   <Input 
                     id="name" 
                     value={profileForm.name}
                     onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
                     placeholder="Tu nombre" 
+                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-gray-700 font-medium">Correo electrónico</Label>
                   <Input 
                     id="email" 
                     type="email"
                     value={profileForm.email}
                     onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
                     placeholder="tu@email.com" 
+                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="bankAccount">Número de cuenta bancaria (IBAN)</Label>
+                  <Label htmlFor="bankAccount" className="text-gray-700 font-medium">Número de cuenta bancaria (IBAN)</Label>
                   <Input 
                     id="bankAccount" 
                     value={profileForm.bankAccount}
                     onChange={(e) => setProfileForm({...profileForm, bankAccount: e.target.value})}
                     placeholder="ES12 3456 7890 1234 5678 9012" 
+                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                   />
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
                     Este número de cuenta se incluirá automáticamente en las notas de tus facturas.
                   </p>
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  type="submit"
-                  disabled={updateProfileMutation.isPending}
-                  className="ml-auto"
-                >
-                  {updateProfileMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Guardar cambios
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
+                
+                <div className="pt-4 flex justify-end">
+                  <Button 
+                    type="submit"
+                    disabled={updateProfileMutation.isPending}
+                    className="shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-5 py-2 h-auto rounded-lg transition-all"
+                  >
+                    {updateProfileMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Guardar cambios
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
         </TabsContent>
         
-        <TabsContent value="security" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cambiar contraseña</CardTitle>
-              <CardDescription>
-                Actualiza tu contraseña para mantener tu cuenta segura
-              </CardDescription>
-            </CardHeader>
-            <form onSubmit={handlePasswordSubmit}>
-              <CardContent className="space-y-4">
+        <TabsContent value="security" className="space-y-8">
+          {/* Contraseña - Estilo Apple */}
+          <form onSubmit={handlePasswordSubmit}>
+            <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center mb-5 space-x-3">
+                <div className="rounded-full bg-green-50 p-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-5 w-5 text-green-500">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">Seguridad de la cuenta</h3>
+              </div>
+              
+              <div className="space-y-5">
+                <p className="text-gray-600 mb-4">
+                  Actualiza tu contraseña regularmente para mantener tu cuenta segura. Usa una combinación de letras, números y símbolos.
+                </p>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">Contraseña actual</Label>
+                  <Label htmlFor="current-password" className="text-gray-700 font-medium">Contraseña actual</Label>
                   <Input 
                     id="current-password" 
                     type="password"
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
                     placeholder="••••••••" 
+                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-green-400 focus:ring-1 focus:ring-green-100 shadow-sm"
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">Nueva contraseña</Label>
+                  <Label htmlFor="new-password" className="text-gray-700 font-medium">Nueva contraseña</Label>
                   <Input 
                     id="new-password" 
                     type="password"
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
                     placeholder="••••••••" 
+                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-green-400 focus:ring-1 focus:ring-green-100 shadow-sm"
                   />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    La contraseña debe tener al menos 6 caracteres.
+                  </p>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirmar nueva contraseña</Label>
+                  <Label htmlFor="confirm-password" className="text-gray-700 font-medium">Confirmar nueva contraseña</Label>
                   <Input 
                     id="confirm-password" 
                     type="password"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
                     placeholder="••••••••" 
+                    className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-green-400 focus:ring-1 focus:ring-green-100 shadow-sm"
                   />
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  type="submit"
-                  disabled={updatePasswordMutation.isPending}
-                  className="ml-auto"
-                >
-                  {updatePasswordMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Actualizando...
-                    </>
-                  ) : (
-                    "Actualizar contraseña"
-                  )}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
+                
+                <div className="pt-4 flex justify-end">
+                  <Button 
+                    type="submit"
+                    disabled={updatePasswordMutation.isPending}
+                    className="shadow-sm bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium px-5 py-2 h-auto rounded-lg transition-all"
+                  >
+                    {updatePasswordMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Actualizando...
+                      </>
+                    ) : (
+                      "Cambiar contraseña"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
         </TabsContent>
         
-        <TabsContent value="preferences" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferencias de aplicación</CardTitle>
-              <CardDescription>
-                Personaliza tu experiencia de usuario
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
+        <TabsContent value="preferences" className="space-y-8">
+          {/* Preferencias - Estilo Apple */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-5 space-x-3">
+              <div className="rounded-full bg-amber-50 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-5 w-5 text-amber-500">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Preferencias de aplicación</h3>
+            </div>
+            
+            <div className="space-y-6">
+              <p className="text-gray-600 mb-2">
+                Personaliza tu experiencia de Billeo ajustando las siguientes opciones.
+              </p>
+              
+              {/* Notificaciones */}
+              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notifications">Notificaciones por email</Label>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-1">
+                    <Label htmlFor="notifications" className="text-gray-700 font-medium flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="text-amber-500">
+                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                      </svg>
+                      <span>Notificaciones por email</span>
+                    </Label>
+                    <p className="text-sm text-gray-500">
                       Recibe notificaciones por email sobre facturas pendientes y recordatorios
                     </p>
                   </div>
@@ -508,22 +559,24 @@ const SettingsPage = () => {
                     id="notifications"
                     checked={isEmailNotificationsEnabled}
                     onCheckedChange={setIsEmailNotificationsEnabled}
+                    className="data-[state=checked]:bg-amber-500"
                   />
                 </div>
-                
-                <Separator />
-                
+              </div>
+              
+              {/* Tema */}
+              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="theme" className="text-gray-700 font-medium flex items-center space-x-2">
                       {isDarkModeEnabled ? (
-                        <Moon className="h-4 w-4 text-primary" />
+                        <Moon className="h-4 w-4 text-indigo-500" />
                       ) : (
                         <Sun className="h-4 w-4 text-amber-500" />
                       )}
-                      <Label htmlFor="theme">Modo oscuro</Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
+                      <span>Modo oscuro</span>
+                    </Label>
+                    <p className="text-sm text-gray-500">
                       Activa el modo oscuro para reducir la fatiga visual
                     </p>
                   </div>
@@ -534,39 +587,46 @@ const SettingsPage = () => {
                       setIsDarkModeEnabled(checked);
                       setTheme(checked ? "dark" : "light");
                     }}
+                    className="data-[state=checked]:bg-indigo-500"
                   />
                 </div>
               </div>
               
-              <Separator className="my-4" />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="categories" className="font-medium">Categorías y Etiquetas</Label>
+              {/* Categorías */}
+              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="categories" className="text-gray-700 font-medium flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="text-purple-500">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                      </svg>
+                      <span>Categorías y Etiquetas</span>
+                    </Label>
+                    <p className="text-sm text-gray-500">
+                      Personaliza las categorías para tus ingresos y gastos
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Personaliza las categorías para tus ingresos y gastos
-                  </p>
+                  <Button 
+                    onClick={() => window.location.href = "/settings/categories"}
+                    className="shadow-sm bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium px-4 py-2 h-auto rounded-lg transition-all"
+                  >
+                    Gestionar Categorías
+                  </Button>
                 </div>
+              </div>
+              
+              <div className="pt-4 flex justify-end">
                 <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = "/settings/categories"}
+                  onClick={handleSavePreferences}
+                  className="shadow-sm bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium px-5 py-2 h-auto rounded-lg transition-all"
                 >
-                  Gestionar Categorías
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar preferencias
                 </Button>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={handleSavePreferences}
-                className="ml-auto"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                Guardar preferencias
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
