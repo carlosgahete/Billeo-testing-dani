@@ -907,21 +907,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Si se actualizó el número de cuenta, actualizar las notas de las facturas pendientes
       if (isUpdatingBankAccount && req.body.bankAccount) {
         try {
-          // Obtener todas las facturas pendientes del usuario
+          // Obtener todas las facturas del usuario (no solo las pendientes)
           const invoices = await storage.getInvoicesByUserId(req.session.userId);
-          const pendingInvoices = invoices.filter(inv => 
-            ["draft", "sent", "pending", "overdue"].includes(inv.status)
-          );
           
           let updatedCount = 0;
           
-          for (const invoice of pendingInvoices) {
+          for (const invoice of invoices) {
             // Si las notas contienen información de cuenta bancaria, actualizarla
             if (invoice.notes && (
                 invoice.notes.includes("Número de cuenta:") || 
                 invoice.notes.includes("numero de cuenta:") ||
                 invoice.notes.includes("iban:") ||
-                invoice.notes.includes("IBAN:")
+                invoice.notes.includes("IBAN:") ||
+                invoice.notes.includes("cuenta") ||
+                invoice.notes.includes("Cuenta") ||
+                invoice.notes.includes("Transferencia") ||
+                invoice.notes.includes("transferencia")
             )) {
               // Reemplazar el IBAN antiguo con el nuevo
               const oldIbanPattern = /([A-Z]{2}\d{2}[\s]?(?:\d{4}[\s]?){5})/i;

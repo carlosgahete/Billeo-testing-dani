@@ -170,6 +170,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const [currentIban, setCurrentIban] = useState<string>("ES04 0182 5322 2902 0848 5904");
   
   const isEditMode = !!invoiceId;
   
@@ -213,6 +214,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
+  // Fetch company data to get the current IBAN
+  const { data: companyData, isLoading: companyLoading } = useQuery({
+    queryKey: ["/api/company"],
+  });
+
   // Fetch invoice data if in edit mode with minimal options
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
@@ -221,6 +227,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     refetchOnWindowFocus: false, // Evitar refetch automático al volver a enfocar la ventana
   });
 
+  // Actualizar el estado del IBAN cuando los datos de la empresa estén disponibles
+  useEffect(() => {
+    if (companyData && typeof companyData === 'object' && 'bankAccount' in companyData && companyData.bankAccount) {
+      setCurrentIban(companyData.bankAccount);
+    }
+  }, [companyData]);
+  
   const defaultFormValues = {
     invoiceNumber: "",
     clientId: 0,
@@ -233,7 +246,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     total: 0,
     additionalTaxes: [],
     status: "pending",
-    notes: "Forma de pago: Transferencia bancaria a la cuenta ES04 0182 5322 2902 0848 5903",
+    notes: `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`,
     attachments: [],
     items: [
       {
@@ -298,7 +311,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
-        notes: invoice.notes || "Forma de pago: Transferencia bancaria a la cuenta ES04 0182 5322 2902 0848 5903",
+        notes: invoice.notes || `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`,
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
@@ -379,7 +392,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         issueDate: formatDateForInput(invoice.issueDate),
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
-        notes: invoice.notes || "Forma de pago: Transferencia bancaria a la cuenta ES04 0182 5322 2902 0848 5903",
+        notes: invoice.notes || `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`,
         subtotal: Number(invoice.subtotal || 0),
         tax: Number(invoice.tax || 0),
         total: Number(invoice.total || 0),
@@ -913,7 +926,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Forma de pago: Transferencia bancaria a la cuenta ES04 0182 5322 2902 0848 5903"
+                            placeholder={`Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${currentIban}`}
                             {...field}
                             value={field.value || ""}
                             className="border-gray-200 focus-visible:ring-green-500 focus-visible:ring-opacity-30 min-h-[100px]"
