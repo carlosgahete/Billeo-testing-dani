@@ -96,16 +96,13 @@ export default function AuthPage() {
       
       {/* Logo y cabecera central */}
       <div className="text-center mb-10 relative z-10 animate-fadeIn">
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-2">
           <img 
             src={billeoLogo} 
             alt="Billeo Logo" 
-            className="h-12 animate-scaleIn"
+            className="h-16 animate-scaleIn"
           />
         </div>
-        <h1 className="text-3xl font-medium text-blue-600">
-          Billeo
-        </h1>
         <p className="text-gray-500 mt-2 max-w-sm">
           Gestión financiera simplificada
         </p>
