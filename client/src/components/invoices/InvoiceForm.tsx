@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import LogoUpload from "@/components/common/LogoUpload";
-
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,11 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
-
 import {
   Select,
   SelectContent,
@@ -29,87 +22,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-
-import { Building, CalendarIcon, FileText, Image, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
-import FileUpload from "@/components/common/FileUpload";
-import { ClientForm } from "@/components/clients/ClientForm";
+import { useLocation } from "wouter";
+import FileUpload from "../common/FileUpload";
+import { ClientForm } from "../clients/ClientForm";
 
-// Esquema de validación para facturas
-const invoiceSchema = z.object({
-  invoiceNumber: z.string().min(1, { message: "El número de factura es obligatorio" }),
-  clientId: z.number().min(1, { message: "Debes seleccionar un cliente" }),
-  issueDate: z.string().min(1, { message: "La fecha de emisión es obligatoria" }),
-  dueDate: z.string().min(1, { message: "La fecha de vencimiento es obligatoria" }),
-  status: z.string().min(1, { message: "El estado es obligatorio" }),
-  items: z.array(
-    z.object({
-      description: z.string().min(1, { message: "La descripción es obligatoria" }),
-      quantity: z.number().min(0.01, { message: "La cantidad debe ser mayor que 0" }),
-      unitPrice: z.number().min(0.01, { message: "El precio unitario debe ser mayor que 0" }),
-      taxRate: z.number().min(0, { message: "El IVA no puede ser negativo" }),
-      subtotal: z.number().optional(),
-    })
-  ).min(1, { message: "Debes añadir al menos un concepto" }),
-  notes: z.string().optional(),
-  subtotal: z.number().min(0),
-  tax: z.number().min(0),
-  total: z.number().min(0),
-  logo: z.string().optional().nullable(),
-  additionalTaxes: z.array(
-    z.object({
-      name: z.string().min(1, { message: "El nombre del impuesto es obligatorio" }),
-      amount: z.number(),
-      isPercentage: z.boolean(),
-    })
-  ).optional(),
-});
-
-// Helper para convertir valores a número
+// Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
-  if (value === null || value === undefined || value === "") return defaultValue;
-  
-  // Si ya es un número, devolverlo directamente
-  if (typeof value === "number") return value;
-  
-  // Si es string, intentar convertirlo
-  if (typeof value === "string") {
-    // Primero limpiar el string de caracteres no numéricos
-    const cleaned = value.replace(/[^\d,.]/g, '');
-    // Reemplazar comas por puntos para manejar formato europeo
-    const normalized = cleaned.replace(",", ".");
-    const parsed = parseFloat(normalized);
-    if (!isNaN(parsed)) return parsed;
-  }
-  
-  return defaultValue;
+  if (value === null || value === undefined || value === '') return defaultValue;
+  if (typeof value === 'number') return value;
+  // Asegurar que las comas se convierten a puntos para operaciones matemáticas
+  const numericValue = parseFloat(String(value).replace(',', '.'));
+  return isNaN(numericValue) ? defaultValue : numericValue;
 }
 
-// Función para calcular los totales de la factura basados en el formulario
+// Función auxiliar para calcular totales (definida globalmente para evitar referencias circulares)
 function calculateInvoiceTotals(form: any) {
   const items = form.getValues("items") || [];
   const additionalTaxes = form.getValues("additionalTaxes") || [];
   
   // Calculate subtotal for each item
   const updatedItems = items.map((item: any) => {
-    // Asegurarnos que tenemos números válidos usando nuestra función toNumber
     const quantity = toNumber(item.quantity, 0);
     const unitPrice = toNumber(item.unitPrice, 0);
     const subtotal = quantity * unitPrice;
@@ -122,7 +72,6 @@ function calculateInvoiceTotals(form: any) {
     };
   });
   
-  // Update form with calculated subtotals
   form.setValue("items", updatedItems);
   
   // Calculate invoice totals
@@ -135,24 +84,16 @@ function calculateInvoiceTotals(form: any) {
   // Calcular el importe total de impuestos adicionales
   let additionalTaxesTotal = 0;
   
-  // Procesamos cada impuesto adicional según su tipo
   additionalTaxes.forEach((taxItem: any) => {
     if (taxItem.isPercentage) {
-      // Si es un porcentaje, calculamos en base al subtotal
-      // El signo del importe determina si es un cargo (+) o un descuento (-)
       const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
       additionalTaxesTotal += percentageTax;
     } else {
-      // Si es un valor monetario, lo añadimos directamente manteniendo su signo
       additionalTaxesTotal += toNumber(taxItem.amount, 0);
     }
   });
   
-  // Calcular el total correctamente: base + IVA líneas + impuestos adicionales
-  // Los impuestos negativos (como IRPF) ya tienen signo negativo en additionalTaxesTotal
   const total = subtotal + tax + additionalTaxesTotal;
-  
-  // Asegurarnos que los valores nunca sean negativos
   const safeTotal = Math.max(0, total);
   
   form.setValue("subtotal", subtotal);
@@ -175,6 +116,40 @@ function calculateInvoiceTotals(form: any) {
   return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
 }
 
+// Define schema for additional tax
+const additionalTaxSchema = z.object({
+  name: z.string().min(1, "El nombre del impuesto es obligatorio"),
+  amount: z.coerce.number(), // Permitimos valores negativos para representar retenciones (como el IRPF)
+  isPercentage: z.boolean().default(false) // Indica si es un porcentaje o un valor fijo
+});
+
+// Define schema for line items
+const invoiceItemSchema = z.object({
+  description: z.string().min(1, "La descripción es obligatoria"),
+  quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor que cero"),
+  unitPrice: z.coerce.number().min(0.01, "El precio debe ser mayor que cero"),
+  taxRate: z.coerce.number().min(0, "El IVA no puede ser negativo"),
+  subtotal: z.coerce.number().min(0).optional(),
+});
+
+// Define schema for the whole invoice
+const invoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, "El número de factura es obligatorio"),
+  clientId: z.coerce.number({
+    required_error: "El cliente es obligatorio",
+  }),
+  issueDate: z.string().min(1, "La fecha de emisión es obligatoria"),
+  dueDate: z.string().min(1, "La fecha de vencimiento es obligatoria"),
+  subtotal: z.coerce.number().min(0),
+  tax: z.coerce.number().min(0),
+  total: z.coerce.number().min(0),
+  additionalTaxes: z.array(additionalTaxSchema).optional().default([]),
+  status: z.string().min(1, "El estado es obligatorio"),
+  notes: z.string().nullable().optional(),
+  attachments: z.array(z.string()).nullable().optional(),
+  items: z.array(invoiceItemSchema).min(1, "Agrega al menos un ítem a la factura"),
+});
+
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
 interface InvoiceFormProps {
@@ -182,204 +157,70 @@ interface InvoiceFormProps {
   initialData?: any; // Datos iniciales para el formulario
 }
 
-// Componente personalizado para campos de entrada numérica que mantiene el foco
-const PriceInput = ({ 
-  initialValue = 0, 
-  onValueChange, 
-  placeholder = "0.00",
-  className = "border-neutral-200 text-center" 
-}: { 
-  initialValue?: number; 
-  onValueChange: (value: number) => void;
-  placeholder?: string;
-  className?: string;
-}) => {
-  // Usamos una referencia para evitar re-renders completos
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  
-  // Asegurar que tenemos el valor inicial correcto
-  useEffect(() => {
-    if (inputRef.current && !inputRef.current.value) {
-      inputRef.current.value = initialValue.toString();
-    }
-  }, []);
-  
-  // Este useEffect solo actualiza el valor visible cuando cambia el initialValue
-  // y SOLO si el input no tiene el foco actualmente
-  useEffect(() => {
-    if (!inputRef.current || document.activeElement === inputRef.current) {
-      return;
-    }
-    
-    inputRef.current.value = initialValue.toString();
-  }, [initialValue]);
-  
-  // Timer para procesar los cambios con un pequeño retraso
-  const timerRef = React.useRef<any>(null);
-  
-  // Función para procesar un valor y enviarlo al padre
-  const processValue = React.useCallback((value: string) => {
-    if (!value) return;
-    
-    try {
-      // Limpiar el valor: remover caracteres no numéricos y convertir comas a puntos
-      const cleanedValue = value.replace(/[^\d,.]/g, '').replace(',', '.');
-      const numValue = parseFloat(cleanedValue);
-      
-      if (!isNaN(numValue)) {
-        onValueChange(numValue);
-      }
-    } catch (error) {
-      console.log("Error al procesar valor numérico:", error);
-    }
-  }, [onValueChange]);
-  
-  return (
-    <input
-      ref={inputRef}
-      type="text"
-      inputMode="decimal"
-      defaultValue={initialValue || ""}
-      onChange={(e) => {
-        // Cancelar cualquier timer pendiente
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-        }
-        
-        // Configurar un nuevo timer para procesar el valor después de que el usuario termine de escribir
-        timerRef.current = setTimeout(() => {
-          processValue(e.target.value);
-        }, 300); // Retraso de 300ms
-      }}
-      onBlur={(e) => {
-        // Cancelar cualquier timer pendiente
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-        }
-        
-        // Procesar el valor inmediatamente al perder el foco
-        processValue(e.target.value);
-        
-        // Formatear el valor si es necesario
-        if (inputRef.current) {
-          const cleanedValue = e.target.value.replace(/[^\d,.]/g, '').replace(',', '.');
-          const numValue = parseFloat(cleanedValue) || 0;
-          inputRef.current.value = numValue.toString();
-        }
-      }}
-      placeholder={placeholder}
-      className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    />
-  );
-};
-
 const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
-  const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [showTaxDialog, setShowTaxDialog] = useState(false);
+  const [newTaxData, setNewTaxData] = useState<{ name: string; amount: number; isPercentage: boolean }>({
+    name: '',
+    amount: 0,
+    isPercentage: true
+  });
+  const [clientToEdit, setClientToEdit] = useState<any>(null);
+  const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
-  // Modal de creación/edición de clientes
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [clientToEdit, setClientToEdit] = useState<any>(null);
-  
-  // Gestión de impuestos adicionales
-  const [showTaxDialog, setShowTaxDialog] = useState(false);
-  const [newTaxData, setNewTaxData] = useState<any>({ name: "", amount: "", isPercentage: false });
-  
-  // Archivos adjuntos
-  const [attachments, setAttachments] = useState<string[]>([]);
-  
-  // Logo de la factura
-  const [logo, setLogo] = useState<string | null>(null);
-  
-  // Estado para almacenar los datos originales y poder hacerles debug
-  const [debugOriginalData, setDebugOriginalData] = useState<any>(null);
-  
-  // Modo edición si hay ID
   const isEditMode = !!invoiceId;
   
-  // Editar un cliente existente
-  const editClient = (client: any) => {
-    setClientToEdit(client);
-    setShowClientForm(true);
-  };
-  
-  // Eliminar un cliente
-  const deleteClient = async (clientId: number) => {
-    try {
-      await apiRequest("DELETE", `/api/clients/${clientId}`);
+  // Mutation para eliminar clientes
+  const deleteClientMutation = useMutation({
+    mutationFn: async (clientId: number) => {
+      return await apiRequest("DELETE", `/api/clients/${clientId}`);
+    },
+    onSuccess: () => {
+      // Invalidar consultas de clientes para actualizar la lista
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      
       toast({
         title: "Cliente eliminado",
         description: "El cliente ha sido eliminado correctamente",
       });
-    } catch (error: any) {
+    },
+    onError: (error) => {
+      console.error("Error al eliminar cliente:", error);
       toast({
         title: "Error",
         description: `No se pudo eliminar el cliente: ${error.message}`,
         variant: "destructive",
       });
     }
+  });
+  
+  // Función para eliminar un cliente
+  const deleteClient = (clientId: number) => {
+    deleteClientMutation.mutate(clientId);
+  };
+  
+  // Función para editar un cliente
+  const editClient = (client: any) => {
+    setClientToEdit(client);
+    setShowClientForm(true);
   };
 
   // Fetch clients for dropdown
   const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/clients"],
   });
-  
-  // Obtener información de la empresa para las notas de factura
-  const { data: companyData, isLoading: companyLoading } = useQuery<{
-    id: number;
-    name: string;
-    taxId: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    country: string;
-    email?: string;
-    phone?: string;
-    logo?: string;
-    bankAccount?: string;
-  }>({
-    queryKey: ["/api/company"],
-  });
 
-  // Fetch invoice data if in edit mode using custom queryFn
+  // Fetch invoice data if in edit mode with minimal options
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
-    enabled: isEditMode && !initialData, // Solo hacer la consulta si estamos en modo edición y no tenemos datos iniciales
-    retry: 3, // Intentar hasta 3 veces
-    retryDelay: 1000, // Esperar 1 segundo entre reintentos
-    // Función personalizada para obtener datos, similar a la de EditInvoicePage
-    queryFn: async () => {
-      try {
-        // Intentar obtener los datos con el formato estándar
-        const invoiceResponse = await fetch(`/api/invoices/${invoiceId}`);
-        const invoiceData = await invoiceResponse.json();
-        console.log("🔎 InvoiceForm - Respuesta API (formato 1):", invoiceData);
-        
-        if (invoiceData && typeof invoiceData === 'object') {
-          return invoiceData;
-        }
-        
-        // Si falla, intentar obtener la factura y los items por separado
-        console.log("⚠️ InvoiceForm - Formato 1 falló, intentando formato alternativo");
-        const invoiceBasicResponse = await fetch(`/api/invoices/${invoiceId}?basic=true`);
-        const invoiceBasic = await invoiceBasicResponse.json();
-        
-        const invoiceItemsResponse = await fetch(`/api/invoices/${invoiceId}/items`);
-        const invoiceItems = await invoiceItemsResponse.json();
-        
-        console.log("🔎 InvoiceForm - Respuesta API (formato 2):", { invoice: invoiceBasic, items: invoiceItems });
-        return { invoice: invoiceBasic, items: invoiceItems };
-      } catch (err) {
-        console.error("❌ InvoiceForm - Error al obtener datos de la factura:", err);
-        throw new Error("No se pudieron obtener los datos de la factura. Por favor, intenta de nuevo.");
-      }
-    }
+    enabled: isEditMode,
+    staleTime: 0, // Siempre obtener los datos más recientes
+    refetchOnWindowFocus: false, // Evitar refetch automático al volver a enfocar la ventana
   });
 
-  // Valores por defecto para un formulario nuevo
   const defaultFormValues = {
     invoiceNumber: "",
     clientId: 0,
@@ -387,8 +228,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
+    subtotal: 0,
+    tax: 0,
+    total: 0,
+    additionalTaxes: [],
     status: "pending",
-    logo: null, // Añadimos logo como parte de los valores por defecto
+    notes: "",
+    attachments: [],
     items: [
       {
         description: "",
@@ -398,406 +244,230 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         subtotal: 0,
       },
     ],
-    notes: "",
-    subtotal: 0,
-    tax: 0,
-    total: 0,
-    additionalTaxes: [],
   };
 
-  // Configurar el formulario con react-hook-form
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: defaultFormValues,
   });
 
-  // Esta función procesa los datos externos para formatearlos correctamente para el formulario
-  const processExternalData = (externalData: any) => {
-    // Función de logging centralizada (solo en desarrollo)
-    const log = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
-      if (process.env.NODE_ENV === 'development') {
-        switch (level) {
-          case 'info':
-            console.log(message, data);
-            break;
-          case 'warn':
-            console.warn(message, data);
-            break;
-          case 'error':
-            console.error(message, data);
-            break;
-        }
-      }
-    };
-    
-    // Verificar si externalData es válido
-    if (!externalData) {
-      log('error', "Datos externos nulos o indefinidos");
-      return null;
-    }
-    
-    // Verificar si tiene el formato esperado
-    if (!externalData.invoice) {
-      log('warn', "No se encontró la propiedad 'invoice' en los datos externos:", externalData);
-      // Intentar adaptarlo si es un objeto simple
-      if (typeof externalData === 'object' && !Array.isArray(externalData)) {
-        log('info', "Intentando adaptar datos planos como factura");
-        externalData = { 
-          invoice: externalData,
-          items: externalData.items || []
-        };
-      } else {
-        log('error', "No se pudo adaptar los datos externos");
-        return null;
-      }
-    }
-    
-    // Asegurar que exista la propiedad items
-    if (!externalData.items) {
-      log('warn', "No se encontró la propiedad 'items' en los datos, se usará un array vacío");
-      externalData.items = [];
-    }
-    
-    const { invoice, items } = externalData;
-    
-    console.log("📝 Procesando factura:", invoice);
-    console.log("📝 Procesando items:", items);
-    
-    // Formatear fechas
-    const formatDate = (dateStr: string) => {
-      if (!dateStr) return new Date().toISOString().split("T")[0];
-      try {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) {
-          console.warn("⚠️ Fecha inválida:", dateStr);
-          return new Date().toISOString().split("T")[0];
-        }
-        return date.toISOString().split("T")[0];
-      } catch (e) {
-        console.error("Error al formatear fecha:", e);
-        return new Date().toISOString().split("T")[0];
-      }
-    };
-    
-    // Procesar impuestos adicionales
-    let additionalTaxes: any[] = [];
-    
-    // Verificar si hay additionalTaxes o si se llaman taxes
-    const taxesData = invoice.additionalTaxes || invoice.taxes || [];
-    
-    console.log("🔍 Datos de impuestos recibidos:", taxesData);
-    
-    if (taxesData) {
-      if (typeof taxesData === 'string') {
-        try {
-          additionalTaxes = JSON.parse(taxesData);
-          console.log("🔄 Impuestos parseados desde string:", additionalTaxes);
-        } catch (e) {
-          console.error("❌ Error al parsear additionalTaxes:", e);
-        }
-      } else if (Array.isArray(taxesData)) {
-        // Asegurarse de que cada impuesto tenga los campos correctos
-        additionalTaxes = taxesData.map(tax => ({
-          name: tax.name || '',
-          amount: typeof tax.amount === 'number' ? tax.amount : parseFloat(tax.amount || '0'),
-          isPercentage: tax.isPercentage === undefined ? true : tax.isPercentage
-        }));
-        console.log("🔄 Impuestos procesados:", additionalTaxes);
-      } else {
-        console.warn("⚠️ Formato de impuestos desconocido:", taxesData);
-      }
-    }
-    
-    // Procesar items asegurando conversión de tipos
-    const processedItems = Array.isArray(items) ? items.map((item: any) => {
-      // Obtener valores
-      const description = item.description || "";
-      
-      // Para quantity, unitPrice, taxRate y subtotal intentamos convertir a número
-      let quantity = 1;
-      try {
-        quantity = typeof item.quantity === 'number' ? item.quantity : 
-                   parseFloat(item.quantity || "1");
-        if (isNaN(quantity)) quantity = 1;
-      } catch (e) {
-        console.warn("⚠️ Error al procesar quantity:", e);
-      }
-      
-      let unitPrice = 0;
-      try {
-        unitPrice = typeof item.unitPrice === 'number' ? item.unitPrice : 
-                    parseFloat(item.unitPrice || "0");
-        if (isNaN(unitPrice)) unitPrice = 0;
-        
-        // Si no hay unitPrice pero hay price, usamos price
-        if (unitPrice === 0 && item.price) {
-          unitPrice = typeof item.price === 'number' ? item.price : 
-                      parseFloat(item.price || "0");
-        }
-      } catch (e) {
-        console.warn("⚠️ Error al procesar unitPrice:", e);
-      }
-      
-      let taxRate = 21; // IVA por defecto
-      try {
-        taxRate = typeof item.taxRate === 'number' ? item.taxRate : 
-                  parseFloat(item.taxRate || "21");
-        if (isNaN(taxRate)) taxRate = 21;
-      } catch (e) {
-        console.warn("⚠️ Error al procesar taxRate:", e);
-      }
-      
-      let subtotal = 0;
-      try {
-        subtotal = typeof item.subtotal === 'number' ? item.subtotal : 
-                   parseFloat(item.subtotal || "0");
-        if (isNaN(subtotal)) subtotal = 0;
-        
-        // Si no hay subtotal pero hay cantidad y precio, lo calculamos
-        if (subtotal === 0) {
-          subtotal = quantity * unitPrice;
-        }
-      } catch (e) {
-        console.warn("⚠️ Error al procesar subtotal:", e);
-      }
-      
-      return {
-        description: description,
-        quantity: quantity,
-        unitPrice: unitPrice,
-        taxRate: taxRate,
-        subtotal: subtotal,
-      };
-    }) : [];
-    
-    console.log("✅ Items procesados:", processedItems);
-    
-    // Si no hay items, añadimos uno vacío
-    if (processedItems.length === 0) {
-      processedItems.push({
-        description: "",
-        quantity: 1,
-        unitPrice: 0,
-        taxRate: 21,
-        subtotal: 0,
-      });
-    }
-    
-    // Construir el objeto de valores para el formulario
-    const result = {
-      invoiceNumber: invoice.invoiceNumber || "",
-      clientId: typeof invoice.clientId === 'number' ? invoice.clientId : 
-                parseInt(invoice.clientId) || 0,
-      issueDate: formatDate(invoice.issueDate),
-      dueDate: formatDate(invoice.dueDate),
-      status: invoice.status || "pending",
-      notes: invoice.notes || "",
-      logo: invoice.logo || null, // Incluir el logo en los datos del formulario
-      subtotal: typeof invoice.subtotal === 'number' ? invoice.subtotal : 
-                parseFloat(invoice.subtotal || "0"),
-      tax: typeof invoice.tax === 'number' ? invoice.tax : 
-           parseFloat(invoice.tax || "0"),
-      total: typeof invoice.total === 'number' ? invoice.total : 
-             parseFloat(invoice.total || "0"),
-      items: processedItems,
-      additionalTaxes: additionalTaxes.map((tax: any) => ({
-        name: tax.name || "",
-        amount: typeof tax.amount === 'number' ? tax.amount : 
-                parseFloat(tax.amount || "0"),
-        isPercentage: Boolean(tax.isPercentage),
-      })),
-    };
-    
-    console.log("🏞️ Logo en datos procesados:", result.logo);
-    
-    console.log("✅ Formulario procesado correctamente:", result);
-    return result;
-  };
-
-  // Efecto para inicializar el formulario cuando estamos en modo edición
+  // Initialize form with invoice data when loaded - either from API or passed in
   useEffect(() => {
-    if (!isEditMode) return;
-    
-    console.log("⚡ Modo edición activado, ID:", invoiceId);
-    console.log("⚡ Datos iniciales:", initialData);
-    console.log("⚡ Datos de API:", invoiceData);
-    
-    // Si tenemos datos, los usamos para inicializar el formulario
-    const dataSource = initialData || invoiceData;
-    
-    // Si no hay datos, no hacemos nada
-    if (!dataSource) {
-      console.log("⚠️ No hay datos disponibles para inicializar el formulario");
-      return;
-    }
-    
-    // Guardamos los datos originales para depuración
-    setDebugOriginalData(dataSource);
-    
-    try {
-      // Procesamos los datos externos
-      const formValues = processExternalData(dataSource);
+    // Primero intentar usar datos proporcionados directamente
+    if (initialData && isEditMode && initialData.invoice && initialData.items) {
+      console.log("⚡ Usando datos iniciales proporcionados directamente:", initialData);
       
-      if (!formValues) {
-        console.error("⚠️ No se pudieron procesar los datos externos");
-        return;
-      }
+      const { invoice, items } = initialData;
       
-      console.log("📋 Valores formateados para formulario:", formValues);
-      
-      // Resetear el formulario con los valores procesados
-      form.reset(formValues);
-      
-      // Actualizar los adjuntos si los hay
-      if (dataSource.invoice?.attachments) {
-        const attachmentData = dataSource.invoice.attachments;
-        if (Array.isArray(attachmentData)) {
-          setAttachments(attachmentData);
-        } else if (typeof attachmentData === 'string') {
-          setAttachments([attachmentData]);
-        }
-      }
-        
-      // Actualizar el logo si existe
-      if (dataSource.invoice?.logo) {
-        console.log("📸 LOGO ENCONTRADO EN DATOS:", dataSource.invoice.logo);
-        setLogo(dataSource.invoice.logo);
-        
-        // También actualizamos el valor en el formulario
-        form.setValue("logo", dataSource.invoice.logo);
-        console.log("📸 LOGO ESTABLECIDO EN FORMULARIO");
-      } else {
-        console.log("❌ NO SE ENCONTRÓ LOGO EN LOS DATOS");
-      }
-      
-      // Recalcular totales
-      setTimeout(() => calculateInvoiceTotals(form), 100);
-      
-      console.log("✅ Formulario inicializado correctamente");
-    } catch (error) {
-      console.error("❌ Error al inicializar formulario:", error);
-      toast({
-        title: "Error al cargar factura",
-        description: "No se pudieron cargar los datos de la factura correctamente",
-        variant: "destructive",
-      });
-    }
-  }, [invoiceId, initialData, invoiceData, form, isEditMode, toast]);
-  
-  // Efecto para añadir el número de cuenta bancaria a las notas por defecto si no estamos en modo edición
-  useEffect(() => {
-    if (!isEditMode && companyData && !companyLoading) {
-      const notesValue = form.getValues("notes");
-      
-      // Verificamos si companyData.bankAccount existe y no está vacío
-      if (companyData.bankAccount && companyData.bankAccount.trim() !== '') {
-        console.log("🏦 Añadiendo información bancaria a las notas:", companyData.bankAccount);
-        
-        // Solo añadimos el texto si las notas están vacías o no contienen ya el número de cuenta
-        if (!notesValue || !notesValue.includes("Número de cuenta")) {
-          const defaultNotes = `Forma de pago: Transferencia bancaria
-Número de cuenta: ${companyData.bankAccount}
-        
-${notesValue || ""}`;
-          
-          form.setValue("notes", defaultNotes);
-          console.log("✅ Información bancaria añadida a las notas");
-        }
-      } else {
-        console.log("⚠️ No hay número de cuenta bancaria configurado");
-      }
-    }
-  }, [companyData, companyLoading, form, isEditMode]);
-  
-  // Configuración del Field Array para items
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
-
-  // Configuración del Field Array para impuestos adicionales
-  const {
-    fields: taxFields,
-    append: appendTax,
-    remove: removeTax,
-    replace: replaceTaxes
-  } = useFieldArray({
-    control: form.control,
-    name: "additionalTaxes",
-  });
-  
-  // Solo debug cuando el formulario se actualiza, sin dependencia a taxFields
-  useEffect(() => {
-    if (isEditMode) {
-      const values = form.getValues();
-      console.log("📊 Estado actual del formulario:", values);
-      
-      // Verificar específicamente el estado de los impuestos adicionales
-      const taxes = form.getValues("additionalTaxes");
-      console.log("🧾 Impuestos en el formulario:", taxes);
-    }
-  }, [form, isEditMode]);
-  
-  // Efecto para garantizar que los impuestos se muestran correctamente en modo edición
-  // Este efecto se ejecuta cuando se carga el formulario en modo edición
-  useEffect(() => {
-    if (isEditMode) {
-      console.log("⚡ Verificando impuestos adicionales en modo edición");
-      
-      // Usamos setTimeout para asegurar que este efecto se ejecute después de que el formulario esté completamente cargado
-      const timer = setTimeout(() => {
-        const currentTaxes = form.getValues("additionalTaxes") || [];
-        
-        if (currentTaxes.length > 0) {
-          console.log("🔄 Actualizando taxFields con:", currentTaxes);
-          // Reemplazar los taxes con los que hay en el formulario
-          // Esto fuerza a que se actualice el componente visual de taxFields
-          replaceTaxes(currentTaxes);
-        }
-      }, 100);
-      
-      // Limpiar el timer si el componente se desmonta
-      return () => clearTimeout(timer);
-    }
-  }, [isEditMode, form, replaceTaxes]);
-
-  // Mutación para crear o actualizar factura
-  const mutation = useMutation({
-    mutationFn: async (data: InvoiceFormValues) => {
-      console.log("✅ Enviando datos del formulario:", data);
-      
-      // Formatear fechas a YYYY-MM-DD
-      const formatDate = (dateString: string) => {
-        if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
-          return dateString.split('T')[0]; 
-        }
+      // Aseguramos que las fechas estén en formato YYYY-MM-DD
+      const formatDateForInput = (dateString: string) => {
+        if (!dateString) return new Date().toISOString().split("T")[0];
         try {
           const date = new Date(dateString);
-          return date.toISOString().split('T')[0];
+          return date.toISOString().split("T")[0];
         } catch (e) {
           console.error("Error al formatear fecha:", e);
           return dateString;
         }
       };
       
-      // Datos para la factura
+      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
+      let additionalTaxesArray = [];
+      
+      if (invoice.additionalTaxes) {
+        // Si es una cadena JSON, intentamos parsearlo
+        if (typeof invoice.additionalTaxes === 'string') {
+          try {
+            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
+          } catch (e) {
+            console.error("Error al parsear additionalTaxes como JSON:", e);
+            additionalTaxesArray = [];
+          }
+        } 
+        // Si ya es un array, lo usamos directamente
+        else if (Array.isArray(invoice.additionalTaxes)) {
+          additionalTaxesArray = invoice.additionalTaxes;
+        }
+      }
+      
+      // Transformar los datos para el formulario
+      const formattedInvoice = {
+        ...invoice,
+        invoiceNumber: invoice.invoiceNumber || "",
+        clientId: invoice.clientId || 0,
+        issueDate: formatDateForInput(invoice.issueDate),
+        dueDate: formatDateForInput(invoice.dueDate),
+        status: invoice.status || "pending",
+        notes: invoice.notes || "",
+        subtotal: Number(invoice.subtotal || 0),
+        tax: Number(invoice.tax || 0),
+        total: Number(invoice.total || 0),
+        // Mapeamos los items asegurando valores correctos
+        items: (items || []).map((item: any) => ({
+          description: item.description || "",
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.unitPrice) || 0,
+          taxRate: Number(item.taxRate) || 21,
+          subtotal: Number(item.subtotal) || 0,
+        })),
+        // Formateamos los impuestos adicionales
+        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
+          name: tax.name || "",
+          amount: Number(tax.amount || 0),
+          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
+        }))
+      };
+      
+      console.log("🔄 Datos formateados para el formulario (initialData):", formattedInvoice);
+      
+      // Actualizar el formulario con los datos formateados
+      form.reset(formattedInvoice);
+      
+      // Si hay archivos adjuntos, actualizamos el estado
+      if (invoice.attachments) {
+        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+      }
+      
+      // Recalcular totales después de que el formulario se haya actualizado completamente
+      setTimeout(() => {
+        // Función calculateInvoiceTotals(form) reemplazada con código inline
+      }, 200);
+    }
+    // Si no, usar datos de la API
+    else if (isEditMode && invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData && 'items' in invoiceData) {
+      console.log("⚡ Cargando datos de factura para edición desde API:", invoiceData);
+      
+      // @ts-ignore - Aseguramos el acceso a las propiedades mediante comprobación previa
+      const { invoice, items } = invoiceData;
+      
+      // Aseguramos que las fechas estén en formato YYYY-MM-DD
+      const formatDateForInput = (dateString: string) => {
+        if (!dateString) return new Date().toISOString().split("T")[0];
+        try {
+          const date = new Date(dateString);
+          return date.toISOString().split("T")[0];
+        } catch (e) {
+          console.error("Error al formatear fecha:", e);
+          return dateString;
+        }
+      };
+      
+      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
+      let additionalTaxesArray = [];
+      
+      if (invoice.additionalTaxes) {
+        // Si es una cadena JSON, intentamos parsearlo
+        if (typeof invoice.additionalTaxes === 'string') {
+          try {
+            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
+          } catch (e) {
+            console.error("Error al parsear additionalTaxes como JSON:", e);
+            additionalTaxesArray = [];
+          }
+        } 
+        // Si ya es un array, lo usamos directamente
+        else if (Array.isArray(invoice.additionalTaxes)) {
+          additionalTaxesArray = invoice.additionalTaxes;
+        }
+      }
+      
+      // Transformar los datos para el formulario
+      const formattedInvoice = {
+        ...invoice,
+        invoiceNumber: invoice.invoiceNumber || "",
+        clientId: invoice.clientId || 0,
+        issueDate: formatDateForInput(invoice.issueDate),
+        dueDate: formatDateForInput(invoice.dueDate),
+        status: invoice.status || "pending",
+        notes: invoice.notes || "",
+        subtotal: Number(invoice.subtotal || 0),
+        tax: Number(invoice.tax || 0),
+        total: Number(invoice.total || 0),
+        // Mapeamos los items asegurando valores correctos
+        items: (items || []).map((item: any) => ({
+          description: item.description || "",
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.unitPrice) || 0,
+          taxRate: Number(item.taxRate) || 21,
+          subtotal: Number(item.subtotal) || 0,
+        })),
+        // Formateamos los impuestos adicionales
+        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
+          name: tax.name || "",
+          amount: Number(tax.amount || 0),
+          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
+        }))
+      };
+      
+      console.log("🔄 Datos formateados para el formulario:", formattedInvoice);
+      
+      // Actualizar el formulario con los datos formateados
+      form.reset(formattedInvoice);
+      
+      // Si hay archivos adjuntos, actualizamos el estado
+      if (invoice.attachments) {
+        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+      }
+      
+      // Recalcular totales después de que el formulario se haya actualizado completamente
+      setTimeout(() => {
+        // Función calculateInvoiceTotals(form) reemplazada con código inline
+      }, 200);
+    }
+  }, [invoiceData, initialData, isEditMode, form]);
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+
+  const {
+    fields: taxFields,
+    append: appendTax,
+    remove: removeTax
+  } = useFieldArray({
+    control: form.control,
+    name: "additionalTaxes",
+  });
+
+  // Create or update invoice mutation
+  const mutation = useMutation({
+    mutationFn: async (data: InvoiceFormValues) => {
+      console.log("✅ Enviando datos del formulario:", data);
+      
+      // Asegurarnos que las fechas están en formato YYYY-MM-DD
+      const formatDate = (dateString: string) => {
+        // Si ya está en formato ISO o yyyy-mm-dd, lo devolvemos directamente
+        if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+          return dateString.split('T')[0]; // Eliminar parte de tiempo si existe
+        }
+        // Si no, intentamos convertirlo a formato ISO
+        try {
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0];
+        } catch (e) {
+          console.error("Error al formatear fecha:", e);
+          return dateString; // Devolver original si hay error
+        }
+      };
+      
+      // Transformamos las fechas y aseguramos valores correctos
       const formattedData = {
         invoiceNumber: data.invoiceNumber,
         clientId: data.clientId,
         issueDate: formatDate(data.issueDate),
         dueDate: formatDate(data.dueDate),
-        // Convertir números a strings para la API
+        // Convertimos los números a strings para que coincidan con lo que espera el servidor
         subtotal: data.subtotal.toString(),
         tax: data.tax.toString(),
         total: data.total.toString(),
-        logo: data.logo,
         additionalTaxes: data.additionalTaxes || [],
         status: data.status,
         notes: data.notes || null,
         attachments: attachments.length > 0 ? attachments : null,
       };
       
-      // Datos para los items
+      // Transformamos los items de la factura
       const formattedItems = data.items.map(item => ({
         description: item.description,
         quantity: item.quantity.toString(),
@@ -806,264 +476,171 @@ ${notesValue || ""}`;
         subtotal: (item.subtotal || 0).toString(),
       }));
       
-      // Log de datos formateados
       console.log("🔄 Datos formateados para API:", { 
         invoice: formattedData, 
         items: formattedItems 
       });
       
-      // Si estamos en modo edición, actualizamos; si no, creamos
       if (isEditMode) {
-        console.log("🔄 Actualizando factura ID:", invoiceId);
+        // En modo edición, necesitamos asegurarnos de enviar todos los datos importantes
+        // y no perder información existente
+        console.log("🔄 Modo edición - ID:", invoiceId);
         
-        // Obtener datos originales para preservar campos que no se modifican
-        const originalInvoice = debugOriginalData?.invoice || {};
+        // Incorporar datos originales si están disponibles
+        // @ts-ignore - Ya verificamos en el useEffect que datos existe
+        const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice : {};
         
-        // Datos completos para la actualización
+        // Asegurar que los impuestos adicionales estén en el formato correcto
+        // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
+        let processedAdditionalTaxes = formattedData.additionalTaxes;
+        
+        console.log("📊 Impuestos antes de procesar:", processedAdditionalTaxes);
+        
+        // Si es un array vacío, asegurarnos de que siga siendo un array
+        if (Array.isArray(processedAdditionalTaxes) && processedAdditionalTaxes.length === 0) {
+          processedAdditionalTaxes = [];
+        }
+        
+        // Mantener los campos originales si no se proporcionan nuevos valores
         const completeInvoiceData = {
           ...originalInvoice,
           ...formattedData,
-          id: invoiceId,
+          // Asegurar campos críticos
+          id: invoiceId,  // Importante incluir el ID explícitamente
+          invoiceNumber: formattedData.invoiceNumber,
+          clientId: formattedData.clientId,
+          issueDate: formattedData.issueDate,
+          dueDate: formattedData.dueDate,
+          subtotal: formattedData.subtotal,
+          tax: formattedData.tax,
+          total: formattedData.total,
+          status: formattedData.status,
+          // Campos opcionales
+          notes: formattedData.notes !== null ? formattedData.notes : originalInvoice.notes,
+          additionalTaxes: processedAdditionalTaxes,
+          attachments: formattedData.attachments || originalInvoice.attachments
         };
         
-        console.log("📤 Datos completos a enviar:", {
+        console.log("📤 Enviando actualización completa:", {
+          invoice: completeInvoiceData,
+          items: formattedItems
+        });
+        
+        return apiRequest("PUT", `/api/invoices/${invoiceId}`, {
           invoice: completeInvoiceData,
           items: formattedItems,
         });
-        
-        try {
-          const result = await apiRequest("PUT", `/api/invoices/${invoiceId}`, {
-            invoice: completeInvoiceData,
-            items: formattedItems,
-          });
-          console.log("📥 Respuesta de actualización recibida:", result);
-          return result;
-        } catch (error) {
-          console.error("🚨 Error en la actualización:", error);
-          throw error;
-        }
       } else {
-        console.log("🔄 Creando nueva factura");
-        try {
-          const result = await apiRequest("POST", "/api/invoices", {
-            invoice: formattedData,
-            items: formattedItems,
-          });
-          console.log("📥 Respuesta de creación recibida:", result);
-          return result;
-        } catch (error) {
-          console.error("🚨 Error en la creación:", error);
-          throw error;
-        }
+        return apiRequest("POST", "/api/invoices", {
+          invoice: formattedData,
+          items: formattedItems,
+        });
       }
     },
     onSuccess: (data) => {
-      console.log("✅ Factura guardada con éxito:", data);
+      console.log("✅ Factura guardada:", data);
       
-      // Invalidar consultas para actualizar datos en la UI
-      // Invalidamos primero y después de un pequeño delay navegamos para asegurar 
-      // que los datos están actualizados
+      // Invalidar la lista de facturas para que se actualice automáticamente
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Invalidar también las estadísticas del dashboard
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Invalidar las facturas recientes (si existe esa consulta)
       queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
       
-      // Invalidar todas las consultas para garantizar que se actualice la vista en Ingresos y Gastos
-      queryClient.invalidateQueries();
-      
-      // Mostrar toast de éxito
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
         description: isEditMode
           ? "La factura se ha actualizado correctamente"
           : "La factura se ha creado correctamente",
       });
-      
-      // Aseguramos que se completan todas las operaciones antes de navegar
-      // usando un delay más largo para dar tiempo a que se completen todas las operaciones
-      setTimeout(() => {
-        console.log("✅ Navegando a la lista de facturas después de guardar");
-        if (isEditMode) {
-          console.log("✓ Redirección después de actualizar factura");
-        }
-        navigate("/invoices");
-      }, 1000);
+      navigate("/invoices");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("❌ Error al guardar factura:", error);
-      
-      // Capturar detalles del error para mostrar mejor información al usuario
-      let errorMessage = "Error desconocido";
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error.response) {
-        // Error de API con respuesta
-        try {
-          errorMessage = `Error ${error.response.status}: ${error.response.statusText || "Error desconocido"}`;
-        } catch (e) {
-          errorMessage = "Error en la respuesta del servidor";
-        }
-      }
-      
-      // Mostrar toast con mensaje detallado
       toast({
-        title: isEditMode ? "Error al actualizar factura" : "Error al crear factura",
-        description: `Ha ocurrido un error: ${errorMessage}`,
+        title: "Error",
+        description: `Ha ocurrido un error: ${error.message}`,
         variant: "destructive",
       });
     },
   });
 
-  // Manejar el envío del formulario con protección contra doble envío
+  // Ya tenemos calculateInvoiceTotals definida globalmente
+
   const handleSubmit = (data: InvoiceFormValues) => {
-    // Si la mutación ya está en progreso, ignorar
-    if (mutation.isPending) {
-      console.log("🚫 Operación ya en curso, evitando múltiples envíos");
-      return;
-    }
-    
-    // Recalcular totales antes de enviar
-    const { subtotal, tax, total } = calculateInvoiceTotals(form);
+    // Recalculate totals before submission
+    const { subtotal, tax, additionalTaxesTotal, total } = calculateInvoiceTotals(form);
     data.subtotal = subtotal;
     data.tax = tax;
     data.total = total;
     
-    // Incluir el logo en los datos del formulario
-    data.logo = logo;
-    console.log("🏞️ Logo incluido en la petición:", logo);
-    
-    // Incluir los archivos adjuntos
-    if (attachments.length > 0) {
-      // @ts-ignore - ignorar error de tipado ya que sabemos que el esquema permite archivos
-      data.attachments = attachments;
-    }
-    
-    // Eliminar impuestos duplicados si existen
-    if (data.additionalTaxes && data.additionalTaxes.length > 0) {
-      // Objeto para rastrear impuestos por nombre
-      const taxesByName: Record<string, any> = {};
-      
-      // Recorrer todos los impuestos y mantener solo el último de cada nombre
-      data.additionalTaxes.forEach((tax: any) => {
-        // Convertir los nombres a minúsculas para comparación sin distinción de mayúsculas
-        const normalizedName = tax.name.toLowerCase();
-        taxesByName[normalizedName] = tax;
-      });
-      
-      // Convertir de nuevo a array
-      data.additionalTaxes = Object.values(taxesByName);
-      
-      console.log("🔧 Impuestos después de eliminar duplicados:", data.additionalTaxes);
-    }
-    
-    // Iniciar la mutación
-    console.log("🚀 Iniciando creación/actualización de factura con logo:", data.logo);
     mutation.mutate(data);
   };
 
-  // Manejar la carga de archivos
   const handleFileUpload = (path: string) => {
     setAttachments([...attachments, path]);
   };
 
-  // Manejar el evento blur en campos numéricos
-  const handleNumericBlur = (value: any, defaultValue: number = 0) => {
+  // Función para manejar el evento onBlur en campos numéricos
+  const handleNumericBlur = (field: any, defaultValue: number = 0) => {
     return (e: React.FocusEvent<HTMLInputElement>) => {
-      // Calcular totales al perder el foco, sin manipular el valor directamente
-      setTimeout(() => calculateInvoiceTotals(form), 100);
+      const numericValue = toNumber(field.value, defaultValue);
+      if (numericValue > 0 || field.value !== "") {
+        field.onChange(numericValue.toString());
+      }
+      // Función calculateInvoiceTotals(form) reemplazada con código inline
     };
   };
   
-  // Agregar un nuevo impuesto adicional
+  // Función para agregar un nuevo impuesto adicional
   const handleAddTax = (taxType?: string) => {
-    // Obtener los impuestos actuales
-    const currentTaxes = form.getValues("additionalTaxes") || [];
-    
-    // Función para verificar si ya existe un impuesto por nombre (sin distinguir mayúsculas/minúsculas)
-    const hasTaxByName = (name: string) => {
-      return currentTaxes.some((tax: any) => 
-        tax.name.toLowerCase() === name.toLowerCase()
-      );
-    };
-    
+    // Si se especifica un tipo de impuesto, lo añadimos preconfigurado
     if (taxType === 'irpf') {
-      // Verificar si ya existe un impuesto IRPF (no sensible a mayúsculas/minúsculas)
-      if (!hasTaxByName("irpf")) {
-        appendTax({ 
-          name: "IRPF", 
-          amount: -15, 
-          isPercentage: true 
-        });
-      } else {
-        // Mostrar toast si ya existe
-        toast({
-          title: "IRPF ya existe",
-          description: "Ya existe un impuesto IRPF en esta factura",
-        });
-      }
+      // IRPF predeterminado (-15%)
+      appendTax({ 
+        name: "IRPF", 
+        amount: -15, 
+        isPercentage: true 
+      });
+      // Recalcular totales después de agregar impuesto
+      setTimeout(() => calculateInvoiceTotals(form), 0);
     } else if (taxType === 'iva') {
-      // Verificar si ya existe un IVA adicional (no sensible a mayúsculas/minúsculas)
-      if (!hasTaxByName("iva adicional")) {
-        appendTax({ 
-          name: "IVA adicional", 
-          amount: 21, 
-          isPercentage: true 
-        });
-      } else {
-        // Mostrar toast si ya existe
-        toast({
-          title: "IVA adicional ya existe",
-          description: "Ya existe un impuesto IVA adicional en esta factura",
-        });
-      }
+      // IVA adicional (21%)
+      appendTax({ 
+        name: "IVA adicional", 
+        amount: 21, 
+        isPercentage: true 
+      });
+      // Recalcular totales después de agregar impuesto
+      setTimeout(() => calculateInvoiceTotals(form), 0);
     } else {
-      setNewTaxData({ name: "", amount: "", isPercentage: false });
+      // Mostrar diálogo para impuesto personalizado
+      setNewTaxData({ name: "", amount: 0, isPercentage: false });
       setShowTaxDialog(true);
     }
-    
+  };
+  
+  // Función para agregar el impuesto desde el diálogo
+  const handleAddTaxFromDialog = () => {
+    appendTax(newTaxData);
+    setShowTaxDialog(false);
     // Recalcular totales después de agregar impuesto
     setTimeout(() => calculateInvoiceTotals(form), 0);
   };
-  
-  // Agregar impuesto desde diálogo
-  const handleAddTaxFromDialog = () => {
-    console.log("Añadiendo impuesto personalizado:", newTaxData);
-    
-    // Asegurar que los valores se convierten correctamente a número
-    const amount = typeof newTaxData.amount === 'string' 
-      ? parseFloat(newTaxData.amount) 
-      : Number(newTaxData.amount);
-    
-    // Solo agregar impuesto si el nombre no está vacío y el monto es un número válido
-    if (newTaxData.name && !isNaN(amount)) {
-      const tax = {
-        ...newTaxData,
-        amount: amount // Usar el valor numérico convertido
-      };
-      
-      appendTax(tax);
-      setShowTaxDialog(false);
-      setTimeout(() => calculateInvoiceTotals(form), 0);
-    } else {
-      // Mostrar error si el valor no es válido
-      toast({
-        title: "Valor no válido",
-        description: "Por favor introduce un valor numérico válido",
-        variant: "destructive",
-      });
-    }
-  };
 
-  // Manejar creación/edición de cliente
+  // Función que maneja la creación o actualización de un cliente
   const handleClientCreated = (newClient: any) => {
+    // Actualizar la caché de react-query para incluir el nuevo cliente
     queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     
+    // Seleccionar automáticamente el nuevo cliente en el formulario si es uno nuevo
     if (!clientToEdit) {
       form.setValue("clientId", newClient.id);
     }
     
+    // Limpiar el cliente a editar
     setClientToEdit(null);
     
     toast({
@@ -1074,32 +651,24 @@ ${notesValue || ""}`;
     });
   };
   
-  // Cerrar modal cliente sin guardar
+  // Función para manejar el cierre del modal de cliente sin guardar
   const handleClientModalClose = (open: boolean) => {
     if (!open) {
+      // Si se cierra el modal, reseteamos el cliente a editar
       setClientToEdit(null);
     }
     setShowClientForm(open);
   };
 
-  // Mostrar mensaje de carga mientras se carga la información
   if ((isEditMode && invoiceLoading && !initialData) || clientsLoading) {
     return <div className="flex justify-center p-8">Cargando...</div>;
-  }
-
-  // Si estamos en modo debug, mostrar datos originales
-  if (isEditMode && form.formState.isSubmitted && !form.formState.isValid) {
-    console.error("❌ Errores de validación:", form.formState.errors);
   }
 
   return (
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Datos Factura */}
             <Card className="border-0 shadow-md overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
                 <h3 className="text-lg font-medium flex items-center">
@@ -1119,11 +688,7 @@ ${notesValue || ""}`;
                           Número de factura
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="F-2023-001" 
-                            {...field} 
-                            className="border-blue-200 focus:border-blue-400" 
-                          />
+                          <Input placeholder="F-2023-001" {...field} className="border-blue-200 focus:border-blue-400" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1237,6 +802,7 @@ ${notesValue || ""}`;
                                     onSelect={(date) => {
                                       if (date) {
                                         const formattedDate = format(date, "yyyy-MM-dd");
+                                        console.log("Cambiando fecha de emisión a:", formattedDate);
                                         field.onChange(formattedDate);
                                       }
                                     }}
@@ -1279,6 +845,7 @@ ${notesValue || ""}`;
                                     onSelect={(date) => {
                                       if (date) {
                                         const formattedDate = format(date, "yyyy-MM-dd");
+                                        console.log("Cambiando fecha de vencimiento a:", formattedDate);
                                         field.onChange(formattedDate);
                                       }
                                     }}
@@ -1326,7 +893,6 @@ ${notesValue || ""}`;
               </CardContent>
             </Card>
 
-            {/* Información adicional */}
             <Card className="border-0 shadow-md overflow-hidden">
               <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
                 <h3 className="text-lg font-medium flex items-center">
@@ -1343,382 +909,438 @@ ${notesValue || ""}`;
                       <FormItem>
                         <FormLabel className="flex items-center text-green-700">
                           <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></span>
-                          Notas o condiciones
+                          Notas
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Añade notas o condiciones específicas a esta factura..."
+                            placeholder="Información adicional para la factura..."
                             {...field}
-                            className="min-h-[120px] border-green-200 focus:border-green-400"
+                            value={field.value || ""}
+                            className="border-green-200 focus:border-green-400 min-h-[100px]"
                           />
                         </FormControl>
-                        <FormDescription>
-                          Estas notas aparecerán en la factura impresa
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Logo de factura</Label>
-                      <div className="mt-2">
-                        <FormField
-                          control={form.control}
-                          name="logo"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <LogoUpload
-                                  initialLogo={field.value || null}
-                                  onUpload={(path) => {
-                                    field.onChange(path);
-                                    setLogo(path);
-                                  }}
-                                  onRemove={() => {
-                                    field.onChange(null);
-                                    setLogo(null);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Archivos adjuntos</Label>
-                        <div className="mt-2">
-                          <div className="w-full border-dashed border-2 border-green-200 hover:border-green-400 p-4 flex flex-col items-center justify-center">
-                            <Upload className="h-8 w-8 text-green-500 mb-2" />
-                            <span className="text-sm font-medium">Adjuntar un archivo</span>
-                            <span className="text-xs text-muted-foreground mt-1 mb-2">
-                              Seleccione un archivo para subir
-                            </span>
-                            <FileUpload 
-                              onUpload={handleFileUpload} 
-                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                  <div>
+                    <FormLabel>Archivos adjuntos</FormLabel>
+                    <div className="mt-2">
+                      <FileUpload onUpload={handleFileUpload} />
                       
-                      <div>
-                        <Label>Archivos adjuntos</Label>
-                        <div className="mt-2">
-                          <div className="w-full border-dashed border-2 border-blue-200 hover:border-blue-400 p-4 flex flex-col items-center justify-center">
-                            <div className="h-8 w-8 text-blue-500 mb-2 flex items-center justify-center">
-                              <FileText className="h-6 w-6" />
-                            </div>
-                            <span className="text-sm font-medium">Subir documento adjunto</span>
-                            <span className="text-xs text-muted-foreground mt-1 mb-2">
-                              Adjuntar archivos a la factura (PDF, JPG, PNG)
+                      <div className="mt-3 space-y-2">
+                        {attachments.map((attachment, index) => (
+                          <div key={index} className="flex items-center space-x-2 text-sm">
+                            <FileText className="h-4 w-4" />
+                            <span className="flex-1 truncate">
+                              {attachment.split('/').pop()}
                             </span>
-                            <FileUpload 
-                              onUpload={(path) => setAttachments([...attachments, path])}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-
-                      {attachments.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          {attachments.map((file, index) => (
-                            <div 
-                              key={index} 
-                              className="flex items-center justify-between p-2 bg-green-50 rounded border border-green-200"
-                            >
-                              <span className="text-sm truncate max-w-[250px]">
-                                {file.split('/').pop()}
-                              </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setAttachments(attachments.filter((_, i) => i !== index));
-                                }}
-                                className="h-6 w-6 p-0"
-                              >
-                                <X className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Conceptos */}
-          <Card className="border-0 shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
-              <h3 className="text-lg font-medium flex items-center">
-                <FileText className="mr-2 h-5 w-5" />
-                Conceptos
-              </h3>
-            </div>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="rounded-lg border overflow-hidden">
-                  <table className="min-w-full divide-y divide-neutral-200">
-                    <thead className="bg-neutral-50">
-                      <tr>
-                        <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider w-5/12">
-                          Descripción
-                        </th>
-                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
-                          Cantidad
-                        </th>
-                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
-                          Precio unitario
-                        </th>
-                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-1/12">
-                          IVA %
-                        </th>
-                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
-                          <span>Impuestos</span>
-                        </th>
-                        <th scope="col" className="px-3 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider w-2/12">
-                          Subtotal
-                        </th>
-                        <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider w-1/12">
-                          <span className="sr-only">Acciones</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-neutral-200">
-                      {fields.map((item, index) => (
-                        <tr key={item.id} className={index % 2 === 0 ? "bg-neutral-50" : "bg-white"}>
-                          <td className="px-3 py-2">
-                            <Input
-                              {...form.register(`items.${index}.description` as const)}
-                              placeholder="Descripción del producto o servicio"
-                              className="border-neutral-200"
-                            />
-                            {form.formState.errors.items?.[index]?.description && (
-                              <p className="text-xs text-red-500 mt-1">
-                                {form.formState.errors.items[index]?.description?.message}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <PriceInput 
-                              initialValue={form.getValues(`items.${index}.quantity`)}
-                              onValueChange={(numValue) => {
-                                form.setValue(`items.${index}.quantity` as const, numValue);
-                                calculateInvoiceTotals(form);
-                              }}
-                              placeholder="1"
-                            
-                            />
-                            {form.formState.errors.items?.[index]?.quantity && (
-                              <p className="text-xs text-red-500 mt-1">
-                                {form.formState.errors.items[index]?.quantity?.message}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <PriceInput 
-                              initialValue={form.getValues(`items.${index}.unitPrice`)}
-                              onValueChange={(numValue) => {
-                                form.setValue(`items.${index}.unitPrice` as const, numValue);
-                                calculateInvoiceTotals(form);
-                              }}
-                              placeholder="0.00"
-                            />
-                            {form.formState.errors.items?.[index]?.unitPrice && (
-                              <p className="text-xs text-red-500 mt-1">
-                                {form.formState.errors.items[index]?.unitPrice?.message}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <PriceInput 
-                              initialValue={form.getValues(`items.${index}.taxRate`)}
-                              onValueChange={(numValue) => {
-                                form.setValue(`items.${index}.taxRate` as const, numValue || 21);
-                                calculateInvoiceTotals(form);
-                              }}
-                              placeholder="21"
-                            
-                            />
-                            {form.formState.errors.items?.[index]?.taxRate && (
-                              <p className="text-xs text-red-500 mt-1">
-                                {form.formState.errors.items[index]?.taxRate?.message}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center align-middle">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowTaxDialog(true)}
-                              className="h-6 px-2 text-xs bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
-                            >
-                              Añadir
-                            </Button>
-                          </td>
-                          <td className="px-3 py-2 text-right align-middle">
-                            <div className="font-medium">
-                              {new Intl.NumberFormat("es-ES", {
-                                style: "currency",
-                                currency: "EUR",
-                              }).format(
-                                toNumber(form.getValues(`items.${index}.quantity`), 0) *
-                                  toNumber(form.getValues(`items.${index}.unitPrice`), 0)
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-center">
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                               onClick={() => {
-                                remove(index);
-                                // Recalcular totales después de eliminar el item
-                                setTimeout(() => calculateInvoiceTotals(form), 0);
+                                const newAttachments = [...attachments];
+                                newAttachments.splice(index, 1);
+                                setAttachments(newAttachments);
                               }}
+                              className="h-7 w-7 p-0"
                             >
-                              <X className="h-4 w-4" />
-                              <span className="sr-only">Eliminar</span>
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    append({
-                      description: "",
-                      quantity: 1,
-                      unitPrice: 0,
-                      taxRate: 21,
-                      subtotal: 0,
-                    });
-                  }}
-                  className="w-full border-dashed border-2"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir concepto
-                </Button>
-
-                {form.formState.errors.items?.message && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {form.formState.errors.items.message as string}
-                  </p>
-                )}
-
-                <div className="mt-6 space-y-4">
-                  <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 border-t pt-4">
-                    <div className="hidden">
-                      {/* Sección de botones de impuestos eliminada */}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="sm:text-right">
-                      <div className="space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-neutral-500 mr-8">Subtotal:</span>
-                          <span className="text-sm font-medium">
-                            {new Intl.NumberFormat("es-ES", {
-                              style: "currency",
-                              currency: "EUR",
-                            }).format(form.getValues("subtotal") || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-neutral-500 mr-8">IVA:</span>
-                          <span className="text-sm font-medium">
-                            {new Intl.NumberFormat("es-ES", {
-                              style: "currency",
-                              currency: "EUR",
-                            }).format(form.getValues("tax") || 0)}
-                          </span>
-                        </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                        {/* Impuestos adicionales */}
-                        {taxFields.length > 0 && (
-                          <div className="pt-1 border-t border-dashed border-neutral-200">
-                            {taxFields.map((tax, idx) => {
-                              const taxValue = form.getValues(`additionalTaxes.${idx}`);
-                              const taxAmount = taxValue.isPercentage
-                                ? (form.getValues("subtotal") * taxValue.amount) / 100
-                                : taxValue.amount;
-                              
-                              return (
-                                <div key={tax.id} className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <span className={`text-sm font-medium ${taxValue.amount < 0 ? 'text-red-500' : 'text-neutral-500'} mr-2`}>
-                                      {taxValue.name}:
-                                    </span>
-                                    <span className="text-xs text-neutral-400">
-                                      {taxValue.isPercentage 
-                                        ? `(${taxValue.amount}%)` 
-                                        : ''}
-                                    </span>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        removeTax(idx);
-                                        // Recalcular totales
-                                        setTimeout(() => calculateInvoiceTotals(form), 0);
-                                      }}
-                                      className="ml-1 h-6 w-6 p-0 text-neutral-400 hover:text-red-500"
-                                    >
-                                      <X className="h-3 w-3" />
-                                      <span className="sr-only">Eliminar</span>
-                                    </Button>
-                                  </div>
-                                  <span className={`text-sm font-medium ${taxAmount < 0 ? 'text-red-500' : 'text-neutral-700'}`}>
-                                    {new Intl.NumberFormat("es-ES", {
-                                      style: "currency",
-                                      currency: "EUR",
-                                      signDisplay: 'always'
-                                    }).format(taxAmount)}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
+          <Card className="border-0 shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-400 p-4 text-white">
+              <h3 className="text-lg font-medium flex items-center">
+                <FileText className="mr-2 h-5 w-5" />
+                Detalles de la factura
+              </h3>
+            </div>
+            <CardContent className="pt-6">
+              
+              <div className="mb-4 space-y-4">
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-12 gap-4 items-start"
+                  >
+                    <div className="col-span-12 md:col-span-5">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.description`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Descripción
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="Descripción" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-
-                        <div className="pt-2 border-t border-neutral-200">
-                          <div className="flex justify-between">
-                            <span className="text-lg font-bold text-neutral-800">Total:</span>
-                            <span className="text-lg font-bold text-blue-600">
-                              {new Intl.NumberFormat("es-ES", {
-                                style: "currency",
-                                currency: "EUR",
-                              }).format(form.getValues("total") || 0)}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Cantidad
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                placeholder="Cantidad"
+                                defaultValue={field.value || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+                                  field.onChange(value);
+                                }}
+                                onBlur={(e) => {
+                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.unitPrice`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Precio
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                placeholder="Precio"
+                                defaultValue={field.value || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+                                  field.onChange(value);
+                                }}
+                                onBlur={(e) => {
+                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-1">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.taxRate`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              IVA %
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="IVA %"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(parseFloat(e.target.value));
+                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-3 md:col-span-1">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.subtotal`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>
+                              Subtotal
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                disabled
+                                value={
+                                  form.getValues(`items.${index}.quantity`) *
+                                  form.getValues(`items.${index}.unitPrice`)
+                                }
+                                placeholder="Subtotal"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="col-span-12 md:col-span-1 flex items-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          remove(index);
+                          // Función calculateInvoiceTotals(form) reemplazada con código inline
+                        }}
+                        disabled={fields.length === 1}
+                        className="h-10 w-10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Eliminar ítem</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Esta es la fila con los botones de impuestos, alineados como en la imagen */}
+                <div className="grid grid-cols-12 gap-4 items-center mb-4">
+                  <div className="col-span-8 sm:col-span-9 flex">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        append({
+                          description: "",
+                          quantity: 1,
+                          unitPrice: 0,
+                          taxRate: 21,
+                          subtotal: 0,
+                        });
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Añadir ítem
+                    </Button>
+                  </div>
+                  <div className="col-span-4 sm:col-span-3 flex justify-start gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax('irpf');
+                      }}
+                      className="text-xs"
+                      title="Añadir retención de IRPF (-15%)"
+                    >
+                      <Minus className="h-3 w-3 mr-1" />
+                      Añadir IRPF
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        handleAddTax();
+                      }}
+                      className="text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Otro impuesto
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              
+              {/* Sección de impuestos adicionales - ahora directamente bajo los botones */}
+              {taxFields.length > 0 && (
+                <div className="w-full mt-4 mb-6 border-t border-b py-4">
+                  <div className="mb-2">
+                    <span className="text-sm font-medium">Impuestos adicionales:</span>
+                  </div>
+                  
+                  {taxFields.map((field, index) => (
+                    <div key={field.id} className="mb-4 pl-2 border-l-2 border-muted">
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-5">
+                          <FormField
+                            control={form.control}
+                            name={`additionalTaxes.${index}.name`}
+                            render={({ field }) => (
+                              <FormItem className="space-y-1">
+                                <FormLabel className="sr-only">Nombre</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Nombre" 
+                                    {...field} 
+                                    className="h-8 text-sm"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="col-span-5">
+                          <FormField
+                            control={form.control}
+                            name={`additionalTaxes.${index}.amount`}
+                            render={({ field }) => (
+                              <FormItem className="space-y-1">
+                                <FormLabel className="sr-only">Importe</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center">
+                                    <Input 
+                                      type="number" 
+                                      placeholder="Importe"
+                                      step="0.01"
+                                      {...field} 
+                                      onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value));
+                                        // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                      }}
+                                      className="h-8 text-sm"
+                                    />
+                                    
+                                    {/* Indicador de porcentaje o euros */}
+                                    <div className="ml-1">
+                                      <FormField
+                                        control={form.control}
+                                        name={`additionalTaxes.${index}.isPercentage`}
+                                        render={({ field }) => (
+                                          <FormItem className="space-y-0">
+                                            <FormLabel className="sr-only">Tipo</FormLabel>
+                                            <FormControl>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  field.onChange(!field.value);
+                                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                                }}
+                                                className="h-8 px-2 text-xs font-normal"
+                                              >
+                                                {field.value ? '%' : '€'}
+                                              </Button>
+                                            </FormControl>
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="col-span-2 text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              removeTax(index);
+                              // Función calculateInvoiceTotals(form) reemplazada con código inline
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span className="sr-only">Eliminar impuesto</span>
+                          </Button>
+                        </div>
+                        
+                        {/* Mostrar el valor calculado después del campo */}
+                        <div className="col-span-12 pl-5 -mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
+                            <span className="font-medium ml-1">
+                              {form.getValues(`additionalTaxes.${index}.isPercentage`) 
+                                ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
+                                : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
+                              }
                             </span>
-                          </div>
+                          </span>
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="border-t pt-6 flex flex-col items-end">
+                <div className="bg-slate-50 rounded-lg p-4 w-full md:w-96 shadow-sm">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-slate-600">Subtotal:</span>
+                    <span className="font-medium">
+                      {form.getValues("subtotal").toFixed(2)} €
+                    </span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-slate-600">IVA:</span>
+                    <span className="font-medium">
+                      {form.getValues("tax").toFixed(2)} €
+                    </span>
+                  </div>
+                  
+                  {/* Mostrar impuestos adicionales */}
+                  {taxFields.map((field, index) => {
+                    const taxName = form.getValues(`additionalTaxes.${index}.name`);
+                    const taxAmount = form.getValues(`additionalTaxes.${index}.amount`);
+                    const isPercentage = form.getValues(`additionalTaxes.${index}.isPercentage`);
+                    const subtotal = form.getValues("subtotal");
+                    const calculatedAmount = isPercentage ? (subtotal * taxAmount / 100) : taxAmount;
+                    const isNegative = calculatedAmount < 0;
+                    
+                    return (
+                      <div key={field.id} className="flex justify-between mb-2">
+                        <span className="text-sm text-slate-600">
+                          {taxName || "Impuesto"}{isPercentage ? ` (${taxAmount}%)` : ''}:
+                        </span>
+                        <span className={`font-medium ${isNegative ? "text-red-600" : ""}`}>
+                          {calculatedAmount.toFixed(2)} €
+                        </span>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex justify-between mt-3 pt-3 border-t">
+                    <span className="font-semibold">Total:</span>
+                    <span className="font-bold text-lg text-blue-700">{form.getValues("total").toFixed(2)} €</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-2">
             <Button
               type="button"
               variant="outline"
@@ -1726,117 +1348,77 @@ ${notesValue || ""}`;
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit"
-              disabled={form.formState.isSubmitting}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
-            >
-              {form.formState.isSubmitting && (
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              )}
-              {isEditMode ? "Actualizar factura" : "Crear factura"}
+            <Button type="submit" variant="default" disabled={mutation.isPending}>
+              {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
             </Button>
           </div>
         </form>
       </Form>
 
-      {/* Modal de cliente */}
-      <Dialog open={showClientForm} onOpenChange={handleClientModalClose}>
-        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] p-0">
-          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white sticky top-0 z-10">
-            <DialogTitle className="flex items-center text-lg">
-              <Building className="h-5 w-5 mr-2" />
-              {clientToEdit ? "Editar cliente" : "Nuevo cliente"}
-            </DialogTitle>
-            <DialogDescription className="text-blue-100">
-              {clientToEdit ? "Modifica los datos del cliente existente" : "Añade un nuevo cliente a tu lista"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-4">
-            <ClientForm 
-              clientToEdit={clientToEdit} 
-              onClientCreated={handleClientCreated}
-              open={true}
-              onOpenChange={() => {}}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Formulario de clientes como modal */}
+      <ClientForm 
+        open={showClientForm} 
+        onOpenChange={handleClientModalClose} 
+        onClientCreated={handleClientCreated}
+        clientToEdit={clientToEdit}
+      />
 
-      {/* Modal de impuesto personalizado */}
+      {/* Diálogo para agregar impuestos adicionales */}
       <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
-        <DialogContent className="max-w-md overflow-y-auto p-0">
-          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
-            <DialogTitle className="flex items-center text-lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Añadir impuesto personalizado
-            </DialogTitle>
-            <DialogDescription className="text-blue-100">
-              Configura un cargo o descuento adicional
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregar nuevo impuesto</DialogTitle>
+            <DialogDescription>
+              Ingresa los datos del impuesto que deseas agregar a la factura.
             </DialogDescription>
           </DialogHeader>
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tax-name">Nombre del impuesto</Label>
-              <Input 
-                id="tax-name" 
-                value={newTaxData.name} 
-                onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
-                placeholder="Ej: Descuento, Recargo, IGIC, etc."
-              />
+          
+          <div className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <div>
+                <label htmlFor="taxName" className="text-sm font-medium">
+                  Nombre del impuesto
+                </label>
+                <input
+                  id="taxName"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                  placeholder="Ej: IRPF, tasa municipal, etc."
+                  value={newTaxData.name}
+                  onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="taxAmount" className="text-sm font-medium">
+                  Importe
+                </label>
+                <div className="flex items-center mt-1">
+                  <input
+                    id="taxAmount"
+                    type="number"
+                    step="0.01"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Importe o porcentaje"
+                    value={newTaxData.amount}
+                    onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="ml-2 px-3"
+                    onClick={() => setNewTaxData({...newTaxData, isPercentage: !newTaxData.isPercentage})}
+                  >
+                    {newTaxData.isPercentage ? '%' : '€'}
+                  </Button>
+                </div>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="tax-amount">Valor</Label>
-              <Input 
-                id="tax-amount" 
-                type="text" 
-                inputMode="decimal" 
-                value={newTaxData.amount} 
-                onChange={(e) => {
-                  // Permitir números negativos y validar que sea un número
-                  const value = e.target.value;
-                  if (value === '' || value === '-' || /^-?\d*\.?\d*$/.test(value)) {
-                    setNewTaxData({...newTaxData, amount: value});
-                  }
-                }}
-                placeholder="Introduce el valor (ej: -15 para retenciones)"
-              />
-              <p className="text-xs text-muted-foreground">
-                Para descuentos, usa un valor negativo (ej: -10)
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="is-percentage" 
-                checked={newTaxData.isPercentage} 
-                onCheckedChange={(checked) => setNewTaxData({...newTaxData, isPercentage: checked})}
-              />
-              <Label htmlFor="is-percentage">Es un porcentaje</Label>
-            </div>
-            
-            <DialogFooter className="pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowTaxDialog(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                onClick={handleAddTaxFromDialog}
-                disabled={!newTaxData.name}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
-              >
-                Añadir
-              </Button>
-            </DialogFooter>
           </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTaxDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAddTaxFromDialog}>Agregar impuesto</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
