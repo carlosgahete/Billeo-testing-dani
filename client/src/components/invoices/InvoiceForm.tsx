@@ -669,10 +669,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-0 shadow-md overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white">
+            <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+              <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
                 <h3 className="text-lg font-medium flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
+                  <FileText className="mr-2 h-5 w-5 text-blue-500" />
                   Datos de la factura
                 </h3>
               </div>
@@ -683,12 +683,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     name="invoiceNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center text-blue-700">
+                        <FormLabel className="flex items-center text-gray-700">
                           <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2"></span>
                           Número de factura
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="F-2023-001" {...field} className="border-blue-200 focus:border-blue-400" />
+                          <Input placeholder="F-2023-001" {...field} className="border-gray-200 focus-visible:ring-blue-500 focus-visible:ring-opacity-30" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -893,10 +893,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md overflow-hidden">
-              <div className="bg-gradient-to-r from-green-600 to-green-400 p-4 text-white">
+            <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+              <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
                 <h3 className="text-lg font-medium flex items-center">
-                  <Plus className="mr-2 h-5 w-5" />
+                  <Plus className="mr-2 h-5 w-5 text-green-500" />
                   Información adicional
                 </h3>
               </div>
@@ -907,7 +907,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center text-green-700">
+                        <FormLabel className="flex items-center text-gray-700">
                           <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-2"></span>
                           Notas
                         </FormLabel>
@@ -916,7 +916,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             placeholder="Información adicional para la factura..."
                             {...field}
                             value={field.value || ""}
-                            className="border-green-200 focus:border-green-400 min-h-[100px]"
+                            className="border-gray-200 focus-visible:ring-green-500 focus-visible:ring-opacity-30 min-h-[100px]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -959,10 +959,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Card>
           </div>
 
-          <Card className="border-0 shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-purple-400 p-4 text-white">
+          <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+            <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
               <h3 className="text-lg font-medium flex items-center">
-                <FileText className="mr-2 h-5 w-5" />
+                <FileText className="mr-2 h-5 w-5 text-purple-500" />
                 Detalles de la factura
               </h3>
             </div>
