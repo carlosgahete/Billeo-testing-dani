@@ -432,41 +432,66 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </button>
             </div>
 
-            {/* Gráfico - Estilo Apple */}
-            <div className="h-[280px] p-4 bg-white rounded-xl border border-gray-100 glass-panel">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={financialComparisonData}
-                  margin={{
-                    top: 15,
-                    right: 15,
-                    left: 5,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                  <XAxis dataKey="quarter" axisLine={false} tickLine={false} />
-                  <YAxis 
-                    tickFormatter={(value) => `${value}€`}
-                    width={45}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [`${value}€`, undefined]}
-                    contentStyle={{ 
-                      borderRadius: '12px',
-                      boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                      border: 'none',
-                      padding: '10px'
+            {/* Comparativa financiera - Estilo Apple */}
+            <div className="bg-white rounded-xl border border-gray-100 p-4 glass-panel">
+              {/* Mostrar el resultado en grande */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-[#F5FFF7] p-3 rounded-lg border border-[#DCFFE5]">
+                  <div className="text-sm text-[#34C759] mb-1 font-medium">Ingresos</div>
+                  <div className="text-2xl font-semibold text-[#34C759] tracking-tight">
+                    {formatCurrency(baseImponibleIngresos)}
+                  </div>
+                </div>
+                <div className="bg-[#FFF5F5] p-3 rounded-lg border border-[#FFDFDF]">
+                  <div className="text-sm text-[#FF3B30] mb-1 font-medium">Gastos</div>
+                  <div className="text-2xl font-semibold text-[#FF3B30] tracking-tight">
+                    {formatCurrency(baseImponibleGastos)}
+                  </div>
+                </div>
+                <div className="bg-[#F0F7FF] p-3 rounded-lg border border-[#DAE8FF]">
+                  <div className="text-sm text-[#007AFF] mb-1 font-medium">Resultado</div>
+                  <div className="text-2xl font-semibold text-[#007AFF] tracking-tight">
+                    {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Gráfico más pequeño */}
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={financialComparisonData}
+                    margin={{
+                      top: 15,
+                      right: 15,
+                      left: 5,
+                      bottom: 5,
                     }}
-                  />
-                  <Legend iconType="circle" iconSize={8} />
-                  <Bar dataKey="Ingresos" fill="#34C759" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="Gastos" fill="#FF3B30" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="Resultado" fill="#007AFF" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                    <XAxis dataKey="quarter" axisLine={false} tickLine={false} />
+                    <YAxis 
+                      tickFormatter={(value) => `${value}€`}
+                      width={45}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value}€`, undefined]}
+                      contentStyle={{ 
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+                        border: 'none',
+                        padding: '10px'
+                      }}
+                    />
+                    <Legend iconType="circle" iconSize={6} />
+                    <Bar dataKey="Ingresos" fill="#34C759" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="Gastos" fill="#FF3B30" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="Resultado" fill="#007AFF" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
