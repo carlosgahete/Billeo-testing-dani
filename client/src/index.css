@@ -4,7 +4,8 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Fondo general gris super claro (Apple) */
+    --background: 240 30% 98%;
     --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
@@ -198,22 +199,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Estilos para cards de dashboard con estilo Apple */
 .dashboard-card {
-  @apply rounded-3xl border border-gray-100/50 bg-white overflow-hidden dark:border-gray-800;
+  @apply rounded-3xl border border-gray-100/40 bg-white overflow-hidden dark:border-gray-800;
   box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.06),
-    0 1px 1px rgba(0, 0, 0, 0.01),
-    0 3px 5px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    0 8px 24px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.01);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .dashboard-card:hover {
   box-shadow: 
-    0 15px 40px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    0 5px 10px rgba(0, 0, 0, 0.04);
-  transform: translateY(-3px);
+    0 12px 32px rgba(0, 0, 0, 0.07),
+    0 1px 3px rgba(0, 0, 0, 0.02);
+  transform: translateY(-4px);
 }
 
 .dark .dashboard-card {
@@ -292,14 +291,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply w-3 h-3 rounded mr-1;
 }
 
-/* Animación para cargar datos */
+/* Animaciones estilo Apple, rápidas y suaves */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* Animación para gráficos de barras */
@@ -309,14 +314,30 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     opacity: 0; 
     transform: scaleY(0.1);
   }
-  50% {
-    opacity: 0.5;
-    transform: scaleY(1.05);
+  70% {
+    opacity: 0.8;
+    transform: scaleY(1.02);
   }
   to { 
     opacity: 1; 
     transform: scaleY(1);
   }
+}
+
+/* Animación para la entrada con escala */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* Personalización de la barra de navegación móvil */
@@ -542,15 +563,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Efecto de glassmorfismo para paneles estilo Apple */
 .glass-panel {
-  @apply rounded-2xl overflow-hidden border border-white/20;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  @apply rounded-2xl overflow-hidden border border-white/10;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.03),
+    0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .glass-panel:hover {
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 
+    0 12px 28px rgba(0, 0, 0, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.03);
   transform: translateY(-2px);
 }
 
