@@ -1,70 +1,92 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import billeoLogo from '../assets/billeo-logo.png';
+
+interface SessionData {
+  authenticated: boolean;
+  user?: {
+    id: number;
+    username: string;
+    name: string;
+    role: string;
+  };
+}
 
 const LoginPage = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   
-  const { 
-    user, 
-    isLoading: isAuthLoading, 
-    loginMutation,
-    registerMutation
-  } = useAuth();
+  // Check if the user is already authenticated
+  const { data: sessionData, isLoading: isSessionLoading } = useQuery<SessionData>({
+    queryKey: ["/api/auth/session"],
+    retry: false,
+    refetchOnWindowFocus: false
+  });
   
-  // Si el usuario ya está autenticado, redirigir al dashboard
+  // If user is already authenticated, redirect to dashboard
   useEffect(() => {
-    if (user?.id) {
+    if (sessionData?.authenticated) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [sessionData, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      // Si es el usuario demo, intentar registrarlo primero
+      // Create a demo user if one doesn't exist yet
       if (username === "demo" && password === "demo") {
         try {
-          // Intentar registrar un usuario demo
-          await registerMutation.mutateAsync({
-            name: "Usuario Demo", 
-            username: "demo", 
+          // Try to register the demo user first (will fail if it already exists, which is fine)
+          await apiRequest("/api/users", "POST", {
+            name: "Ana García",
+            username: "demo",
             password: "demo",
-            email: "demo@example.com",
-            role: "autonomo"
+            email: "anagarcia@example.com",
+            role: "Autonomo"
           });
-          console.log("Demo user registered successfully");
         } catch (error) {
-          // Ignorar error si el usuario ya existe
-          console.log("Demo user already exists or couldn't be created:", error);
+          // Ignore error if user already exists
+          console.log("Demo user already exists");
         }
       }
 
-      // Intentar iniciar sesión usando el hook de auth
-      await loginMutation.mutateAsync({ 
+      // Attempt to login
+      await apiRequest("/api/auth/login", "POST", { 
         username, 
         password 
       });
       
-      // loginMutation ya maneja el éxito y el error con toast
-      // y también actualiza el cache de autenticación
+      // Invalidate auth session cache immediately
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
       
-      // Redirigir al dashboard (esto debería ocurrir automáticamente 
-      // cuando useEffect detecte que user?.id existe)
+      // Show success message
+      toast({
+        title: "Inicio de sesión exitoso",
+        description: "Bienvenido al sistema de gestión financiera",
+      });
+      
+      // Redirect to dashboard
       navigate("/");
     } catch (error) {
-      // El error ya es manejado por loginMutation.onError
-      console.error("Error de inicio de sesión:", error);
+      toast({
+        title: "Error de inicio de sesión",
+        description: "Usuario o contraseña incorrectos",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,9 +131,9 @@ const LoginPage = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={loginMutation.isPending || isAuthLoading}
+              disabled={isLoading}
             >
-              {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
+              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
             <div className="text-center text-sm">
               <p className="text-neutral-500 mt-2">

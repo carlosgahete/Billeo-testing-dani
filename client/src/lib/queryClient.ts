@@ -1,87 +1,72 @@
-import { QueryClient, MutationFunction, QueryFunction } from '@tanstack/react-query';
+import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-/**
- * Función para realizar llamadas a la API
- */
-export async function apiRequest<T>(
-  url: string,
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
-  data?: any
-): Promise<T> {
-  try {
-    // Añadir logs para depuración
-    console.log(`Realizando petición ${method} a ${url}`, data);
-    
-    const options: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    };
-
-    if (data) {
-      options.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(url, options);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
-      console.error('Error de respuesta API:', errorMessage);
-      throw new Error(errorMessage);
-    }
-
-    // Si la respuesta es 204 No Content, devolvemos un objeto vacío
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    const result = await response.json() as T;
-    console.log(`Respuesta de ${url}:`, result);
-    return result;
-  } catch (error) {
-    console.error('API Request Error:', error);
-    throw error;
+async function throwIfResNotOk(res: Response) {
+  if (!res.ok) {
+    const text = (await res.text()) || res.statusText;
+    throw new Error(`${res.status}: ${text}`);
   }
 }
 
-/**
- * Función para obtener un queryFn para React Query
- * Esta función se utiliza como queryFn por defecto en useQuery
- */
-export const getQueryFn = <T>(
-  url: string
-): QueryFunction<T> => {
-  return async () => {
-    return apiRequest<T>(url);
-  };
-};
-
-/**
- * Crea una función de mutación para actualizar datos
- */
-export function createMutation<T, V = void>(
+export async function apiRequest<T = any>(
+  method: string = "GET",
   url: string,
-  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST'
-): MutationFunction<T, V> {
-  return async (variables) => {
-    return apiRequest<T>(url, method, variables);
-  };
+  data?: unknown | undefined,
+): Promise<Response> {
+  console.log(`API Request: ${method} ${url}`, data);
+  
+  const res = await fetch(url, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
+  
+  console.log(`API Response: ${res.status} ${res.statusText}`);
+  
+  // No lanzamos error aquí para que el componente pueda manejar la respuesta
+  // incluso si es un error 401 o 400
+  if (!res.ok) {
+    console.error(`API Error: ${res.status} ${res.statusText}`);
+  }
+  
+  return res;
 }
 
-/**
- * Cliente de consulta global para React Query
- */
+type UnauthorizedBehavior = "returnNull" | "throw";
+export const getQueryFn: <T>(options: {
+  on401: UnauthorizedBehavior;
+}) => QueryFunction<T> =
+  ({ on401: unauthorizedBehavior }) =>
+  async ({ queryKey }) => {
+    const res = await fetch(queryKey[0] as string, {
+      credentials: "include",
+    });
+
+    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      return null;
+    }
+
+    await throwIfResNotOk(res);
+    return await res.json();
+  };
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutos
-      retry: 1,
+      queryFn: getQueryFn({ on401: "throw" }),
+      refetchInterval: false,
+      refetchOnWindowFocus: true, // Permitir recargar datos cuando la ventana recibe foco
+      staleTime: 5 * 1000, // 5 segundos - reducido para mejorar actualización de datos en tiempo real
+      gcTime: 60 * 60 * 1000, // 60 minutes - mantener datos en caché
+      retry: 0, // No retries to speed up initial load
+      refetchOnMount: "always", // Siempre refrescar al montar para asegurar datos actualizados
+      retryOnMount: false, // No reintentar al montar para mejorar rendimiento inicial
+    },
+    mutations: {
+      retry: 0, // No retries to speed up mutations
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      }
     },
   },
 });
-
-export default queryClient;

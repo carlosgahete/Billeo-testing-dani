@@ -894,178 +894,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Verificar si se está actualizando el número de cuenta bancaria
-      const isUpdatingBankAccount = req.body.bankAccount !== undefined && 
-                                   company.bankAccount !== req.body.bankAccount;
-      
       const updatedCompany = await storage.updateCompany(companyId, companyResult.data);
       
       if (!updatedCompany) {
         return res.status(404).json({ message: "Failed to update company" });
       }
       
-      // Si se actualizó el número de cuenta, actualizar las notas de las facturas pendientes
-      if (isUpdatingBankAccount && req.body.bankAccount) {
-        try {
-          // Obtener todas las facturas del usuario (no solo las pendientes)
-          const invoices = await storage.getInvoicesByUserId(req.session.userId);
-          
-          let updatedCount = 0;
-          
-          for (const invoice of invoices) {
-            // Si las notas contienen información de cuenta bancaria, actualizarla
-            if (invoice.notes && (
-                invoice.notes.includes("Número de cuenta:") || 
-                invoice.notes.includes("numero de cuenta:") ||
-                invoice.notes.includes("iban:") ||
-                invoice.notes.includes("IBAN:") ||
-                invoice.notes.includes("cuenta") ||
-                invoice.notes.includes("Cuenta") ||
-                invoice.notes.includes("Transferencia") ||
-                invoice.notes.includes("transferencia")
-            )) {
-              // Reemplazar el IBAN antiguo con el nuevo
-              const oldIbanPattern = /([A-Z]{2}\d{2}[\s]?(?:\d{4}[\s]?){5})/i;
-              let updatedNotes = invoice.notes;
-              
-              // Si encontramos un IBAN en las notas, lo reemplazamos
-              if (oldIbanPattern.test(invoice.notes)) {
-                updatedNotes = invoice.notes.replace(oldIbanPattern, req.body.bankAccount);
-              } else {
-                // Si no encontramos un IBAN explícito pero hay mención a cuenta, añadimos el nuevo
-                if (invoice.notes.includes("Número de cuenta:") || invoice.notes.includes("numero de cuenta:")) {
-                  const pattern = /(Número de cuenta:|numero de cuenta:)(?:[^\\n]*)(\n|$)/i;
-                  updatedNotes = invoice.notes.replace(pattern, `$1 ${req.body.bankAccount}$2`);
-                }
-              }
-              
-              if (updatedNotes !== invoice.notes) {
-                await storage.updateInvoice(invoice.id, { notes: updatedNotes });
-                updatedCount++;
-              }
-            } else if (invoice.notes) {
-              // Si hay notas pero no incluyen información de cuenta, añadimos la información
-              let updatedNotes = invoice.notes;
-              
-              // Verificar si las notas terminan con un salto de línea
-              if (!updatedNotes.endsWith("\n")) {
-                updatedNotes += "\n";
-              }
-              
-              updatedNotes += `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${req.body.bankAccount}\n`;
-              await storage.updateInvoice(invoice.id, { notes: updatedNotes });
-              updatedCount++;
-            } else {
-              // Si no hay notas, crear nuevas notas con la información de cuenta
-              const newNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${req.body.bankAccount}\n`;
-              await storage.updateInvoice(invoice.id, { notes: newNotes });
-              updatedCount++;
-            }
-          }
-          
-          console.log(`Actualizadas ${updatedCount} facturas con el nuevo IBAN: ${req.body.bankAccount}`);
-        } catch (updateError) {
-          console.error("Error al actualizar notas de facturas:", updateError);
-          // No interrumpimos el flujo principal si hay un error en la actualización de notas
-        }
-      }
-      
       return res.status(200).json(updatedCompany);
     } catch (error) {
-      console.error("Error al actualizar empresa:", error);
       return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-  
-  // Endpoint para sincronizar manualmente el IBAN en todas las facturas
-  app.post("/api/company/sync-iban", async (req: Request, res: Response) => {
-    try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Obtener los datos de la empresa
-      const company = await storage.getCompany(req.session.userId);
-      
-      if (!company) {
-        return res.status(404).json({ message: "Company not found" });
-      }
-      
-      // Verificar que la empresa tiene un IBAN configurado
-      if (!company.bankAccount) {
-        return res.status(400).json({ 
-          message: "No bank account configured for the company", 
-          success: false 
-        });
-      }
-      
-      // Obtener todas las facturas del usuario
-      const invoices = await storage.getInvoicesByUserId(req.session.userId);
-      
-      if (invoices.length === 0) {
-        return res.status(200).json({ 
-          message: "No invoices found to update", 
-          success: true,
-          updatedCount: 0 
-        });
-      }
-      
-      let updatedCount = 0;
-      
-      // Actualizar cada factura con el IBAN actual
-      for (const invoice of invoices) {
-        try {
-          let needsUpdate = false;
-          let updatedNotes = invoice.notes || "";
-          
-          // Caso 1: No hay notas, creamos nuevas con el IBAN
-          if (!invoice.notes) {
-            updatedNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}`;
-            needsUpdate = true;
-          } 
-          // Caso 2: Hay notas con formato estándar pero sin IBAN
-          else if (invoice.notes.includes("Forma de pago: Transferencia bancaria") && 
-                  !invoice.notes.includes("Número de cuenta:")) {
-            updatedNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}`;
-            needsUpdate = true;
-          } 
-          // Caso 3: Hay notas con IBAN, pero podría ser desactualizado
-          else if (invoice.notes.includes("Número de cuenta:")) {
-            const oldIbanPattern = /Número de cuenta:\s*([A-Z0-9\s]+)/i;
-            const match = invoice.notes.match(oldIbanPattern);
-            
-            if (match && match[1].trim() !== company.bankAccount) {
-              // Reemplazar el IBAN antiguo con el nuevo
-              updatedNotes = invoice.notes.replace(
-                oldIbanPattern, 
-                `Número de cuenta: ${company.bankAccount}`
-              );
-              needsUpdate = true;
-            }
-          }
-          
-          if (needsUpdate) {
-            await storage.updateInvoice(invoice.id, { notes: updatedNotes });
-            updatedCount++;
-          }
-        } catch (invoiceError) {
-          console.error(`Error actualizando factura ${invoice.id}:`, invoiceError);
-          // Continuamos con las demás facturas a pesar del error
-        }
-      }
-      
-      return res.status(200).json({ 
-        message: `Updated ${updatedCount} invoices with the current IBAN`, 
-        success: true,
-        updatedCount 
-      });
-      
-    } catch (error) {
-      console.error("Error sincronizando IBAN en facturas:", error);
-      return res.status(500).json({ 
-        message: "Internal server error", 
-        success: false 
-      });
     }
   });
   
@@ -1347,36 +1184,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Asegurar que todos los campos requeridos estén presentes
       // Convertir las cadenas de fecha ISO en objetos Date
-      // Obtener información de la empresa para añadir el IBAN en las notas si es necesario
-      const company = await storage.getCompanyByUserId(req.session.userId);
-      
-      // Preparar las notas de la factura
-      let invoiceNotes = invoice.notes ?? null;
-      
-      // Si la empresa tiene un número de cuenta bancaria y las notas no lo incluyen ya, añadirlo
-      if (company && company.bankAccount && 
-          (!invoiceNotes || 
-           (!invoiceNotes.includes(company.bankAccount) && 
-            !invoiceNotes.toLowerCase().includes("número de cuenta")))) {
-        // Si no hay notas, crear nuevas notas
-        if (!invoiceNotes) {
-          invoiceNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}\n`;
-        } else {
-          // Si hay notas pero no terminan con salto de línea, añadirlo
-          if (!invoiceNotes.endsWith("\n")) {
-            invoiceNotes += "\n";
-          }
-          // Añadir la información de la cuenta bancaria
-          invoiceNotes += `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}\n`;
-        }
-      }
-      
       const invoiceData = {
         ...invoice,
         userId: req.session.userId,
         invoiceNumber: finalInvoiceNumber, // Usar el nuevo formato de número de factura o el proporcionado por el usuario
         status: invoice.status || "pending",
-        notes: invoiceNotes,
+        notes: invoice.notes ?? null,
         attachments: invoice.attachments ?? null,
         // Convertir explícitamente las fechas de string a Date
         issueDate: issueDate,
@@ -1441,30 +1254,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("[SERVER] Actualizando factura:", invoiceId);
       console.log("[SERVER] Datos recibidos:", JSON.stringify(invoiceData, null, 2));
-      
-      // Si estamos actualizando las notas, verificar si necesitamos actualizar o añadir el IBAN
-      if (invoiceData && invoiceData.notes !== undefined) {
-        // Obtener la empresa para acceder al IBAN
-        const company = await storage.getCompanyByUserId(req.session.userId);
-        
-        if (company && company.bankAccount) {
-          const oldIbanPattern = /([A-Z]{2}\d{2}[\s]?(?:\d{4}[\s]?){5})/i;
-          
-          // Si hay un IBAN en las notas, lo actualizamos
-          if (oldIbanPattern.test(invoiceData.notes)) {
-            invoiceData.notes = invoiceData.notes.replace(oldIbanPattern, company.bankAccount);
-          } 
-          // Si no hay información de cuenta en las notas, la añadimos
-          else if (!invoiceData.notes.toLowerCase().includes("número de cuenta") && 
-                   !invoiceData.notes.includes(company.bankAccount)) {
-            // Añadir salto de línea si es necesario
-            if (!invoiceData.notes.endsWith("\n")) {
-              invoiceData.notes += "\n";
-            }
-            invoiceData.notes += `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}\n`;
-          }
-        }
-      }
       
       // Asegurarnos que tenemos todos los campos originales si no se están actualizando
       const completeInvoiceData = {
@@ -1628,33 +1417,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      // Obtener información de la empresa para añadir el IBAN en las notas si es necesario
-      const company = await storage.getCompanyByUserId(req.session.userId);
-      
-      // Preparar las notas del presupuesto
-      let quoteNotes = req.body.notes ?? null;
-      
-      // Si la empresa tiene un número de cuenta bancaria y las notas no lo incluyen ya, añadirlo
-      if (company && company.bankAccount && 
-          (!quoteNotes || 
-           (!quoteNotes.includes(company.bankAccount) && 
-            !quoteNotes.toLowerCase().includes("número de cuenta")))) {
-        // Si no hay notas, crear nuevas notas
-        if (!quoteNotes) {
-          quoteNotes = `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}\n`;
-        } else {
-          // Si hay notas pero no terminan con salto de línea, añadirlo
-          if (!quoteNotes.endsWith("\n")) {
-            quoteNotes += "\n";
-          }
-          // Añadir la información de la cuenta bancaria
-          quoteNotes += `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}\n`;
-        }
-      }
-      
       const quoteData = {
         ...req.body,
-        notes: quoteNotes,
         userId: req.session.userId
       };
       
@@ -1715,30 +1479,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (quote.userId !== req.session.userId) {
         return res.status(403).json({ message: "Unauthorized to update this quote" });
-      }
-      
-      // Si estamos actualizando las notas, verificar si necesitamos actualizar o añadir el IBAN
-      if (req.body.notes !== undefined) {
-        // Obtener la empresa para acceder al IBAN
-        const company = await storage.getCompanyByUserId(req.session.userId);
-        
-        if (company && company.bankAccount) {
-          const oldIbanPattern = /([A-Z]{2}\d{2}[\s]?(?:\d{4}[\s]?){5})/i;
-          
-          // Si hay un IBAN en las notas, lo actualizamos
-          if (oldIbanPattern.test(req.body.notes)) {
-            req.body.notes = req.body.notes.replace(oldIbanPattern, company.bankAccount);
-          } 
-          // Si no hay información de cuenta en las notas, la añadimos
-          else if (!req.body.notes.toLowerCase().includes("número de cuenta") && 
-                   !req.body.notes.includes(company.bankAccount)) {
-            // Añadir salto de línea si es necesario
-            if (!req.body.notes.endsWith("\n")) {
-              req.body.notes += "\n";
-            }
-            req.body.notes += `Forma de pago: Transferencia bancaria\nNúmero de cuenta: ${company.bankAccount}\n`;
-          }
-        }
       }
       
       // Validar los datos actualizados del presupuesto

@@ -15,7 +15,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
 import { useState, useEffect } from "react";
-import { Loader2, Camera, Building2, MapPin, Phone, Mail, CreditCard, RefreshCcw } from "lucide-react";
+import { Loader2, Camera, Building2, MapPin, Phone, Mail, CreditCard } from "lucide-react";
 import FileUpload from "@/components/common/FileUpload";
 import { Company } from "@shared/schema";
 
@@ -129,29 +129,6 @@ const CompanyForm = () => {
       });
     },
   });
-
-  const syncIbanMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/company/sync-iban", {});
-    },
-    onSuccess: (data: { updatedCount: number; message: string; success: boolean }) => {
-      toast({
-        title: "IBAN sincronizado",
-        description: `Se han actualizado ${data.updatedCount} facturas con el IBAN actual`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error al sincronizar IBAN",
-        description: `No se pudieron actualizar las facturas: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSyncIban = () => {
-    syncIbanMutation.mutate();
-  };
 
   const onSubmit = (data: CompanyFormValues) => {
     saveCompanyMutation.mutate(data);
@@ -410,7 +387,7 @@ const CompanyForm = () => {
                     <FormLabel className="text-sm font-medium text-gray-700">Número de cuenta bancaria (IBAN)</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="ES04 0182 5322 2902 0848 5903" 
+                        placeholder="ES12 3456 7890 1234 5678 9012" 
                         {...field}
                         className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
                       />
@@ -422,33 +399,6 @@ const CompanyForm = () => {
                   </FormItem>
                 )}
               />
-              
-              {company && company.bankAccount && (
-                <div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleSyncIban}
-                    disabled={syncIbanMutation.isPending}
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50 focus:ring-amber-100 mt-2 text-sm shadow-sm"
-                  >
-                    {syncIbanMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sincronizando...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        Sincronizar IBAN en facturas existentes
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-2 ml-1">
-                    Usa este botón si necesitas actualizar manualmente el IBAN en todas tus facturas existentes.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>

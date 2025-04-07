@@ -291,7 +291,7 @@ export async function generateInvoicePDF(
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text("FORMA DE PAGO: Transferencia bancaria", 14, finalY + 30);
-  doc.text("IBAN: ES04 0182 5322 2902 0848 5903", 14, finalY + 36);
+  doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, finalY + 36);
   
   if (invoice.notes) {
     doc.text("NOTAS:", 14, finalY + 46);
@@ -492,7 +492,7 @@ export async function generateInvoicePDFAsBase64(
   if (companyInfo?.bankAccount) {
     doc.text(`IBAN: ${companyInfo.bankAccount}`, 14, finalY + 36);
   } else {
-    doc.text("IBAN: ES04 0182 5322 2902 0848 5903", 14, finalY + 36);
+    doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, finalY + 36);
   }
   
   if (invoice.notes) {
