@@ -186,7 +186,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <div className="mb-5">
-              <div className="stat-value">
+              <div className="text-3xl font-bold text-[#34C759] pt-4">
                 {formatCurrency(baseImponibleIngresos)}
               </div>
               <div className="stat-label mt-1">
@@ -227,7 +227,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <div className="mb-5">
-              <div className="stat-value" style={{background: 'linear-gradient(90deg, #FF3B30, #FF9500)'}}>
+              <div className="text-3xl font-bold text-[#FF3B30] pt-4">
                 {formatCurrency(baseImponibleGastos)}
               </div>
               <div className="stat-label mt-1">
@@ -268,7 +268,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <div className="mb-5">
-              <div className="stat-value" style={{background: 'linear-gradient(90deg, #007AFF, #5AC8FA)'}}>
+              <div className="text-3xl font-bold text-[#007AFF] pt-4">
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
               <div className="stat-label mt-1">
