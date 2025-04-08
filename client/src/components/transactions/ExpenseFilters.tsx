@@ -119,54 +119,72 @@ const ExpenseFilters = ({
 
   return (
     <div>
-      <div className="bg-red-600 rounded-md p-3 mb-4 flex justify-between items-center">
-        <h2 className="text-white font-medium flex items-center">
-          <span className="mr-2">Lista de Gastos</span>
-        </h2>
-        <div className="flex space-x-2">
-          {/* Botón de exportar gastos (visible siempre) */}
-          {onExportClick && (
+      <div className="bg-[#F5F5F7] dark:bg-[#1D1D1F] rounded-xl p-4 mb-4 shadow-sm backdrop-blur-sm border border-gray-200/50">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <h2 className="text-[#1D1D1F] dark:text-white font-medium text-lg flex items-center">
+              <span className="mr-2">Lista de Gastos</span>
+              {filtersApplied && (
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#007AFF] text-white text-xs font-semibold">
+                  ✓
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex space-x-2">
+            {/* Botón de exportar gastos (visible siempre) */}
+            {onExportClick && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="rounded-full hover:bg-[#007AFF]/10 hover:text-[#007AFF] transition-all duration-200 border border-gray-200/70 backdrop-blur-sm bg-white/80 px-4"
+                onClick={onExportClick}
+              >
+                <FileDown className="h-4 w-4 mr-1.5 text-[#007AFF]" />
+                <span className="text-[#1D1D1F] dark:text-white font-medium">Exportar</span>
+              </Button>
+            )}
+            
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm"
-              className="bg-white text-red-600 border-white hover:bg-red-50 hover:text-red-700"
-              onClick={onExportClick}
+              className={`rounded-full transition-all duration-200 border border-gray-200/70 backdrop-blur-sm px-4 ${
+                showFilters 
+                  ? "bg-[#007AFF] text-white hover:bg-[#0071EB]" 
+                  : "bg-white/80 hover:bg-[#007AFF]/10 hover:text-[#007AFF]"
+              }`}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              <FileDown className="h-4 w-4 mr-1.5" />
-              <span>Exportar</span>
+              {showFilters ? "Ocultar filtros" : "Filtrar"}
             </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="bg-white text-red-600 border-white hover:bg-red-50 hover:text-red-700"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            {showFilters ? "Ocultar filtros" : "Filtrar"}
-          </Button>
+          </div>
         </div>
       </div>
       
       {showFilters && (
-        <div className="bg-white rounded-md border border-red-100 shadow-sm p-4 mb-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Filtrar gastos por:</h3>
+        <div className="bg-white/90 rounded-xl border border-gray-200/60 shadow-sm p-5 mb-4 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-300">
+          <h3 className="text-sm font-medium text-[#1D1D1F] mb-4 flex items-center">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#007AFF] text-white text-xs font-semibold mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+            </span>
+            Filtrar gastos por
+          </h3>
           
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-4">
+          <div className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-4">
               {/* Filtro de categorías */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                   Categorías
                 </label>
                 <Select 
                   value={selectedCategory}
                   onValueChange={setSelectedCategory}
                 >
-                  <SelectTrigger className="w-full h-9 text-sm">
+                  <SelectTrigger className="w-full h-10 text-sm rounded-lg border-gray-200/80 bg-[#F5F5F7]/50 focus:border-[#007AFF] focus:ring-[#007AFF]/10">
                     <SelectValue placeholder="Todas las categorías" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-lg">
                     <SelectItem value="all">Todas las categorías</SelectItem>
                     {categories
                       .filter(cat => cat.type === 'expense')
@@ -189,12 +207,12 @@ const ExpenseFilters = ({
               
               {/* Filtro de fecha desde */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                   Desde
                 </label>
                 <Input
                   type="date"
-                  className="h-9 text-sm w-full"
+                  className="h-10 text-sm w-full rounded-lg border-gray-200/80 bg-[#F5F5F7]/50 focus:border-[#007AFF] focus:ring-[#007AFF]/10"
                   value={dateRange.start}
                   onChange={(e) => {
                     setDateRange({
@@ -207,12 +225,12 @@ const ExpenseFilters = ({
               
               {/* Filtro de fecha hasta */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                   Hasta
                 </label>
                 <Input
                   type="date"
-                  className="h-9 text-sm w-full"
+                  className="h-10 text-sm w-full rounded-lg border-gray-200/80 bg-[#F5F5F7]/50 focus:border-[#007AFF] focus:ring-[#007AFF]/10"
                   value={dateRange.end}
                   onChange={(e) => {
                     setDateRange({
@@ -225,7 +243,7 @@ const ExpenseFilters = ({
               
               {/* Filtro de importe mínimo */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                   Importe mínimo
                 </label>
                 <Input
@@ -233,7 +251,7 @@ const ExpenseFilters = ({
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  className="h-9 text-sm w-full"
+                  className="h-10 text-sm w-full rounded-lg border-gray-200/80 bg-[#F5F5F7]/50 focus:border-[#007AFF] focus:ring-[#007AFF]/10"
                   value={priceRange.min}
                   onChange={(e) => {
                     setPriceRange({
@@ -245,7 +263,7 @@ const ExpenseFilters = ({
               </div>
             </div>
             
-            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-4">
               {/* Placeholder para alinear con la primera fila */}
               <div></div>
               
@@ -257,7 +275,7 @@ const ExpenseFilters = ({
               
               {/* Filtro de importe máximo */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                   Importe máximo
                 </label>
                 <Input
@@ -265,7 +283,7 @@ const ExpenseFilters = ({
                   min="0"
                   step="0.01"
                   placeholder="Sin límite"
-                  className="h-9 text-sm w-full"
+                  className="h-10 text-sm w-full rounded-lg border-gray-200/80 bg-[#F5F5F7]/50 focus:border-[#007AFF] focus:ring-[#007AFF]/10"
                   value={priceRange.max}
                   onChange={(e) => {
                     setPriceRange({
@@ -278,18 +296,19 @@ const ExpenseFilters = ({
             </div>
             
             {/* Botones de acción */}
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-3 pt-2">
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={clearFilters}
+                className="rounded-full px-4 border-gray-300 text-[#1D1D1F] hover:bg-gray-100 transition-all duration-200"
               >
                 Limpiar filtros
               </Button>
               
               <Button 
                 size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="rounded-full bg-[#007AFF] hover:bg-[#0071EB] text-white px-4 transition-all duration-200"
                 onClick={applyFilters}
               >
                 Aplicar filtros
