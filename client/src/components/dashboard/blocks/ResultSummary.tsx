@@ -1,5 +1,5 @@
 import React from "react";
-import { BarChart3, BarChart, TrendingUp } from "lucide-react";
+import { BarChart3, BarChart, TrendingUp, ExternalLink } from "lucide-react";
 import BaseBlock from "./BaseBlock";
 import { formatCurrency } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
@@ -117,9 +117,13 @@ const ResultSummary: React.FC<ResultSummaryProps> = ({ data: propData, isLoading
         </div>
         
         <div className="mt-3">
-          <button className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition">
+          <a 
+            href="/reports" 
+            className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition flex items-center justify-center"
+          >
             Ver informe fiscal
-          </button>
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </a>
         </div>
       </div>
     </BaseBlock>

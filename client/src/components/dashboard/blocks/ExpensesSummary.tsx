@@ -64,10 +64,13 @@ const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({ data, isLoading }) =>
         </div>
         
         <div className="mt-4">
-          <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
+          <a 
+            href="/transactions" 
+            className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center"
+          >
             Ver gastos
             <ExternalLink className="ml-1 h-3 w-3" />
-          </button>
+          </a>
         </div>
       </CardContent>
     </Card>

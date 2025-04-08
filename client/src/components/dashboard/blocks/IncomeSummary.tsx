@@ -72,10 +72,13 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
         </div>
         
         <div className="mt-4">
-          <button className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center">
+          <a 
+            href="/invoices" 
+            className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center"
+          >
             Ver facturas
             <ExternalLink className="ml-1 h-3 w-3" />
-          </button>
+          </a>
         </div>
       </CardContent>
     </Card>
