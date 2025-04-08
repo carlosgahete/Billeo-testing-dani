@@ -689,72 +689,143 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6 fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-medium text-gray-800 tracking-tight">
-            Ingresos y Gastos
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Gestiona todos tus movimientos económicos
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3 justify-start sm:justify-end w-full sm:w-auto">
-          {/* Espacio reservado para botones futuros si son necesarios */}
+      <div className="relative mb-8 pb-6 border-b border-gray-100 after:absolute after:bottom-0 after:left-0 after:w-24 after:h-1 after:bg-gradient-to-r after:from-[#34C759] after:to-[#30D158]">
+        <div className="flex flex-row justify-between items-center">
+          <div className="max-w-[70%]">
+            <div className="flex items-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#34C759] to-[#30D158] shadow-md mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="20" x2="12" y2="10" />
+                  <line x1="18" y1="20" x2="18" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="16" />
+                </svg>
+              </div>
+              <h1 className="text-[28px] font-medium text-[#1D1D1F] tracking-tight">
+                Ingresos y Gastos
+              </h1>
+            </div>
+            <p className="text-[#6E6E73] text-sm mt-2 ml-14">
+              Visualiza y gestiona todos tus movimientos económicos
+            </p>
+          </div>
+          <div className="ml-auto">
+            {/* Área reservada para controles futuros */}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-2">
-        <div className="dashboard-card scale-in">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Tarjeta de Ingresos Totales */}
+        <div className="scale-in bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl">
+          <div className="bg-gradient-to-r from-[#E3F4E9] to-[#E7F9F0] px-6 py-4 flex items-center">
+            <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+            </div>
+            <span className="text-[#1D1D1F] font-medium">Ingresos totales</span>
+          </div>
           <div className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-gray-500 text-sm mb-2">Ingresos totales</p>
-                <p className="text-2xl font-medium text-gray-800 flex items-center">
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-3xl font-semibold text-[#1D1D1F]">
                   {formatCurrency(incomeTotal, "income")}
                 </p>
-                <div className="text-xs text-gray-500 mt-1">
-                  <p>Facturas: {formatCurrency(invoiceIncomeTotal, "income")}</p>
-                  <p>Transacciones: {formatCurrency(transactionIncomeTotal, "income")}</p>
+                <div className="bg-[#34C759] h-8 w-8 rounded-full text-white shadow-md flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4" />
                 </div>
               </div>
-              <div className="p-2.5 rounded-full bg-[#E3F4E9] text-[#34C759]">
-                <Download className="h-5 w-5" />
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="flex flex-col p-3 bg-[#F5F5F7] rounded-xl">
+                  <span className="text-xs text-[#86868B] mb-1">Facturas</span>
+                  <span className="text-sm font-medium text-[#1D1D1F]">{formatCurrency(invoiceIncomeTotal, "income")}</span>
+                </div>
+                <div className="flex flex-col p-3 bg-[#F5F5F7] rounded-xl">
+                  <span className="text-xs text-[#86868B] mb-1">Transacciones</span>
+                  <span className="text-sm font-medium text-[#1D1D1F]">{formatCurrency(transactionIncomeTotal, "income")}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="dashboard-card scale-in">
+        {/* Tarjeta de Gastos Totales */}
+        <div className="scale-in bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl">
+          <div className="bg-gradient-to-r from-[#FFE9EA] to-[#FFECED] px-6 py-4 flex items-center">
+            <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            </div>
+            <span className="text-[#1D1D1F] font-medium">Gastos totales</span>
+          </div>
           <div className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-gray-500 text-sm mb-2">Gastos totales</p>
-                <p className="text-2xl font-medium text-gray-800">
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-3xl font-semibold text-[#1D1D1F]">
                   {formatCurrency(expenseTotal, "expense")}
                 </p>
+                <div className="bg-[#FF3B30] h-8 w-8 rounded-full text-white shadow-md flex items-center justify-center">
+                  <TrendingDown className="h-4 w-4" />
+                </div>
               </div>
-              <div className="p-2.5 rounded-full bg-[#FFE9EA] text-[#FF3B30]">
-                <Upload className="h-5 w-5" />
+              <div className="mt-2 p-3 bg-[#F5F5F7] rounded-xl flex items-center justify-center h-[68px]">
+                <div className="flex items-center">
+                  <ScanText className="h-5 w-5 text-[#86868B] mr-2" />
+                  <span className="text-[#86868B] text-sm">
+                    {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="dashboard-card scale-in">
+        {/* Tarjeta de Balance Neto */}
+        <div className="scale-in bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl">
+          <div className={`bg-gradient-to-r ${
+            balance >= 0 
+              ? "from-[#E3F4E9] to-[#E7F9F0]" 
+              : "from-[#FFE9EA] to-[#FFECED]"
+          } px-6 py-4 flex items-center`}>
+            <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                stroke={balance >= 0 ? "#34C759" : "#FF3B30"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="20" x2="12" y2="10"></line>
+                <line x1="18" y1="20" x2="18" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="16"></line>
+              </svg>
+            </div>
+            <span className="text-[#1D1D1F] font-medium">Balance neto</span>
+          </div>
           <div className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-gray-500 text-sm mb-2">Balance neto</p>
-                <p className={`text-2xl font-medium ${balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}`}>
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <p className={`text-3xl font-semibold ${
+                  balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+                }`}>
                   {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
                 </p>
+                <div className={`${
+                  balance >= 0 ? "bg-[#34C759]" : "bg-[#FF3B30]"
+                } h-8 w-8 rounded-full text-white shadow-md flex items-center justify-center`}>
+                  {balance >= 0 ? (
+                    <Plus className="h-4 w-4" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4" />
+                  )}
+                </div>
               </div>
-              <div className={`p-2.5 rounded-full ${balance >= 0 ? "bg-[#E3F4E9] text-[#34C759]" : "bg-[#FFE9EA] text-[#FF3B30]"}`}>
-                {balance >= 0 ? (
-                  <Plus className="h-5 w-5" />
-                ) : (
-                  <TrendingDown className="h-5 w-5" />
-                )}
+              <div className="mt-2 p-3 bg-[#F5F5F7] rounded-xl flex items-center justify-center h-[68px]">
+                <span className={`text-sm font-medium ${
+                  balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+                }`}>
+                  {balance >= 0 
+                    ? `🎯 Balance positivo (${Math.round(balance/incomeTotal*100)}% de los ingresos)` 
+                    : `⚠️ Balance negativo (${Math.abs(Math.round(balance/expenseTotal*100))}% por encima de los ingresos)`}
+                </span>
               </div>
             </div>
           </div>
