@@ -284,7 +284,7 @@ const DeleteInvoiceDialog = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-red-600 hover:bg-red-50">
+        <Button variant="ghost" size="icon">
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
@@ -671,7 +671,7 @@ const InvoiceList = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div>
+                    <span>
                       <DeleteInvoiceDialog
                         invoiceId={invoice.id}
                         invoiceNumber={invoice.invoiceNumber}
@@ -680,7 +680,7 @@ const InvoiceList = () => {
                           forceDataRefresh();
                         }}
                       />
-                    </div>
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Eliminar factura</p>
