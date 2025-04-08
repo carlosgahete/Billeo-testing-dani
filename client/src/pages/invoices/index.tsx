@@ -28,7 +28,7 @@ const InvoicesPage = () => {
       {/* Cabecera estilo Apple */}
       <div className="section-header mx-2 fade-in">
         <div className="flex items-center">
-          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1">
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1 ml-10 md:ml-12">
             <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
           <div className="flex-grow my-auto">
