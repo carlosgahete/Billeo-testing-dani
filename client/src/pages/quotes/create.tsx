@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import QuoteFormApple from "@/components/quotes/QuoteFormApple";
+import QuoteFormSimple from "@/components/quotes/QuoteFormSimple";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 
@@ -17,7 +17,7 @@ export default function CreateQuotePage() {
         description="Crea un nuevo presupuesto para tus clientes." 
       />
       <div className="my-6">
-        <QuoteFormApple />
+        <QuoteFormSimple />
       </div>
     </Layout>
   );

@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useRoute } from "wouter";
-import QuoteFormApple from "@/components/quotes/QuoteFormApple";
+import QuoteFormSimple from "@/components/quotes/QuoteFormSimple";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 
@@ -21,7 +21,7 @@ export default function EditQuotePage() {
         description="Modifica los datos de tu presupuesto." 
       />
       <div className="my-6">
-        <QuoteFormApple quoteId={quoteId} />
+        <QuoteFormSimple quoteId={quoteId} />
       </div>
     </Layout>
   );
