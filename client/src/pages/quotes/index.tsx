@@ -170,32 +170,32 @@ export default function QuotesPage() {
     <Layout>
       {/* Cabecera estilo Apple consistente con las otras secciones */}
       <div className="section-header mx-4 md:ml-0 fade-in mb-6 pl-8 sm:pl-12">
-        <div className="flex items-center">
-          <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 self-start mt-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 self-start mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+            </div>
+            <div className="flex-grow my-auto">
+              <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1 mt-2">Presupuestos</h2>
+              <p className="text-sm text-gray-500">Gestiona tus propuestas comerciales</p>
+            </div>
           </div>
-          <div className="flex-grow my-auto">
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1 mt-2">Presupuestos</h2>
-            <p className="text-sm text-gray-500">Gestiona tus propuestas comerciales</p>
+          <div>
+            <button 
+              className="button-apple button-apple-sm flex items-center"
+              onClick={() => navigate("/quotes/create")}
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              <span>Nuevo presupuesto</span>
+            </button>
           </div>
         </div>
-      </div>
-      
-      {/* Botón de nuevo presupuesto */}
-      <div className="flex justify-end fade-in mb-3">
-        <button 
-          className="button-apple button-apple-sm flex items-center"
-          onClick={() => navigate("/quotes/create")}
-        >
-          <Plus className="h-4 w-4 mr-1.5" />
-          <span>Nuevo presupuesto</span>
-        </button>
       </div>
 
       {/* Dashboard de presupuestos con estilo Apple */}
