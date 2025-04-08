@@ -374,8 +374,12 @@ const InvoiceList = () => {
         throw new Error("No se pudo generar el PDF");
       }
       
+      // Generar un ID único para esta instancia
+      const instanceId = `invoice-pdf-${invoice.id}-${Date.now()}`;
+      
       // Mostrar la factura en una tarjeta similar a la vista múltiple pero con un solo elemento
       const container = document.createElement('div');
+      container.id = `container-${instanceId}`;
       container.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
       container.style.backdropFilter = 'blur(4px)';
       
@@ -387,7 +391,7 @@ const InvoiceList = () => {
       header.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
       header.innerHTML = `
         <h2 class="text-lg font-medium text-gray-800">Factura ${invoice.invoiceNumber}</h2>
-        <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+        <button id="close-modal-${instanceId}" class="text-gray-500 hover:text-gray-700">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -402,6 +406,9 @@ const InvoiceList = () => {
       
       const fileName = formatInvoiceFileName(invoice, client.name, "visualizacion");
       const url = URL.createObjectURL(pdfBlob);
+      
+      // Guardar la URL para revocarla después
+      const pdfUrl = url;
       
       body.innerHTML = `
         <div class="flex flex-col items-center justify-center">
@@ -419,7 +426,7 @@ const InvoiceList = () => {
             </div>
             
             <div class="flex justify-center space-x-3">
-              <a href="${url}" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
+              <a href="${url}" id="view-pdf-${instanceId}" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -428,7 +435,7 @@ const InvoiceList = () => {
                 </svg>
                 Ver PDF
               </a>
-              <a href="${url}" download="${fileName}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+              <a href="${url}" id="download-pdf-${instanceId}" download="${fileName}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -446,7 +453,7 @@ const InvoiceList = () => {
       const footer = document.createElement('div');
       footer.className = 'p-4 border-t border-gray-200 flex justify-end';
       footer.innerHTML = `
-        <button id="close-button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+        <button id="close-button-${instanceId}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
           Cerrar
         </button>
       `;
@@ -458,13 +465,32 @@ const InvoiceList = () => {
       container.appendChild(card);
       document.body.appendChild(container);
       
-      // Añadir eventos
-      document.getElementById('close-modal')?.addEventListener('click', () => {
+      // Función para cerrar y limpiar
+      const closeModal = () => {
+        // Revocar la URL del Blob para liberar memoria
+        URL.revokeObjectURL(pdfUrl);
         document.body.removeChild(container);
+        console.log(`Liberada URL para factura ${invoice.invoiceNumber}`);
+      };
+      
+      // Añadir eventos
+      document.getElementById(`close-modal-${instanceId}`)?.addEventListener('click', closeModal);
+      document.getElementById(`close-button-${instanceId}`)?.addEventListener('click', closeModal);
+      
+      // También limpiar cuando se descargue o vea el PDF
+      document.getElementById(`view-pdf-${instanceId}`)?.addEventListener('click', () => {
+        // Dar tiempo para que el navegador abra el PDF antes de revocar la URL
+        setTimeout(() => {
+          // No cerramos el modal, solo aseguramos que se liberará la memoria cuando se cierre
+          console.log(`PDF visualizado: ${fileName}`);
+        }, 1000);
       });
       
-      document.getElementById('close-button')?.addEventListener('click', () => {
-        document.body.removeChild(container);
+      document.getElementById(`download-pdf-${instanceId}`)?.addEventListener('click', () => {
+        setTimeout(() => {
+          console.log(`PDF descargado: ${fileName}`);
+          // No cerramos el modal, solo registramos la acción
+        }, 1000);
       });
       
     } catch (error: any) {

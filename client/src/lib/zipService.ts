@@ -162,11 +162,12 @@ export const downloadFilteredInvoicesAsZip = async (
   console.log(`Preparando descarga de ZIP: ${zipFileName}.zip`);
   
   try {
-    // 2. Crear un array para almacenar las promesas de generación de PDFs
+    // 2. Crear un array para almacenar la información de los PDFs
     const files: { name: string; data: Blob }[] = [];
     const filterSuffix = zipFileName.replace('Facturas_', '');
     
-    // 3. Generar PDFs para cada factura
+    // 3. Generar PDFs para cada factura con sufijo único por factura
+    // para evitar problemas con nombres duplicados
     for (const invoice of invoices) {
       const client = clients.find(c => c.id === invoice.clientId);
       
@@ -179,8 +180,12 @@ export const downloadFilteredInvoicesAsZip = async (
         // Obtener los items de la factura
         const items = await getInvoiceItems(invoice.id);
         
+        // Generar un sufijo único para cada factura que incluya la fecha y hora actual
+        // y el ID de la factura para garantizar unicidad
+        const uniqueSuffix = `${filterSuffix}_id${invoice.id}_${Date.now()}`;
+        
         // Generar el nombre del archivo PDF dentro del ZIP
-        const pdfFileName = formatInvoiceFileName(invoice, client.name, filterSuffix);
+        const pdfFileName = formatInvoiceFileName(invoice, client.name, uniqueSuffix);
         
         // Generar el PDF como Blob
         const pdfBlob = await generateInvoicePDFBlob(invoice, client, items);
@@ -191,7 +196,7 @@ export const downloadFilteredInvoicesAsZip = async (
           data: pdfBlob
         });
         
-        console.log(`PDF generado: ${pdfFileName}`);
+        console.log(`PDF generado: ${pdfFileName} para la factura ${invoice.invoiceNumber}`);
       } catch (error) {
         console.error(`Error al generar PDF para factura ${invoice.invoiceNumber}:`, error);
       }
@@ -294,14 +299,30 @@ export const downloadFilteredInvoicesAsZip = async (
     container.appendChild(card);
     document.body.appendChild(container);
     
-    // Añadir eventos
-    document.getElementById('close-modal')?.addEventListener('click', () => {
-      document.body.removeChild(container);
+    // Crear un array para almacenar las URLs de los blobs
+    const createdURLs: string[] = [];
+    
+    // Guardar las URLs para limpiarlas después
+    document.querySelectorAll('a[href^="blob:"]').forEach(element => {
+      const url = element.getAttribute('href');
+      if (url) createdURLs.push(url);
     });
     
-    document.getElementById('close-button')?.addEventListener('click', () => {
+    // Función para limpiar recursos y cerrar modal
+    const closeAndCleanup = () => {
+      // Revocar todas las URLs de blobs
+      createdURLs.forEach(url => {
+        URL.revokeObjectURL(url);
+      });
+      
+      // Eliminar el modal
       document.body.removeChild(container);
-    });
+      console.log(`Limpiadas ${createdURLs.length} URLs de blobs`);
+    };
+    
+    // Añadir eventos
+    document.getElementById('close-modal')?.addEventListener('click', closeAndCleanup);
+    document.getElementById('close-button')?.addEventListener('click', closeAndCleanup);
     
     document.getElementById('download-all')?.addEventListener('click', async () => {
       try {
@@ -357,14 +378,27 @@ export const downloadFilteredInvoicesAsZip = async (
         }
         
         // Método alternativo: descargar individualmente
+        const downloadUrls: string[] = [];
+        
         for (const file of files) {
+          const url = URL.createObjectURL(file.data);
+          downloadUrls.push(url);
+          
           const downloadLink = document.createElement('a');
-          downloadLink.href = URL.createObjectURL(file.data);
+          downloadLink.href = url;
           downloadLink.download = file.name;
           document.body.appendChild(downloadLink);
           downloadLink.click();
           document.body.removeChild(downloadLink);
         }
+        
+        // Limpieza después de un breve tiempo para asegurar que las descargas se iniciaron
+        setTimeout(() => {
+          downloadUrls.forEach(url => {
+            URL.revokeObjectURL(url);
+          });
+          console.log(`Limpiadas ${downloadUrls.length} URLs de blobs de descargas`);
+        }, 2000);
         
         alert(`Se han descargado ${files.length} facturas. 
 Como tu navegador no soporta la selección de carpetas, los archivos se han descargado individualmente en tu carpeta de descargas.`);
