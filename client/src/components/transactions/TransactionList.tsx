@@ -137,7 +137,7 @@ const DeleteTransactionDialog = ({
 const TransactionList = () => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  // Ya no utilizamos el diálogo de importación de CSV
   
   // Obtener tab de los parámetros de URL
   const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -189,16 +189,7 @@ const TransactionList = () => {
     return formattedValue;
   };
 
-  const handleImportCSV = (filePath: string) => {
-    toast({
-      title: "CSV importado",
-      description: "El archivo CSV se ha importado correctamente. Los movimientos han sido añadidos.",
-    });
-    setIsImportDialogOpen(false);
-    
-    // In a real app, we'd wait for the server to process the import and then reload the data
-    queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-  };
+  // La función de importación CSV ha sido eliminada
   
   // Función para exportar los gastos filtrados
   const handleExportFilteredExpenses = async () => {
@@ -607,30 +598,7 @@ const TransactionList = () => {
         </div>
         <div className="flex flex-wrap gap-3 justify-start sm:justify-end w-full sm:w-auto">
           {/* Siempre visible: Importar CSV */}
-          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-            <DialogTrigger asChild>
-              <button className="button-apple-secondary button-apple-sm flex items-center">
-                <Upload className="h-4 w-4 mr-1.5 sm:mr-2" />
-                <span className="hidden sm:inline">Importar CSV</span>
-                <span className="sm:hidden">Importar</span>
-              </button>
-            </DialogTrigger>
-            <DialogContent className="glass-modal">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-medium tracking-tight">Importar movimientos desde CSV</DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                  Sube un archivo CSV con tus movimientos bancarios para importarlos al sistema.
-                  El archivo debe tener columnas para fecha, descripción, importe y tipo de movimiento.
-                </p>
-                <FileUpload
-                  onUpload={handleImportCSV}
-                  accept=".csv"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          {/* El botón de importar CSV ha sido eliminado */}
           
           {/* Visible solo en la pestaña 'income': Nuevo ingreso */}
           {currentTab === 'income' && (
@@ -641,30 +609,6 @@ const TransactionList = () => {
               <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
               <span className="hidden sm:inline">Nuevo ingreso</span>
               <span className="sm:hidden">Ingreso</span>
-            </button>
-          )}
-          
-          {/* Visible solo en la pestaña 'income': Nuevo ingreso */}
-          {currentTab === 'income' && (
-            <button 
-              className="button-apple-primary button-apple-sm flex items-center"
-              onClick={() => navigate("/transactions/new?type=income")}
-            >
-              <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">Nuevo ingreso</span>
-              <span className="sm:hidden">Ingreso</span>
-            </button>
-          )}
-          
-          {/* Visible solo en la pestaña 'income': Crear factura */}
-          {currentTab === 'income' && (
-            <button 
-              className="button-apple button-apple-sm flex items-center"
-              onClick={() => navigate("/invoices/new")}
-            >
-              <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">Crear factura</span>
-              <span className="sm:hidden">Factura</span>
             </button>
           )}
           
@@ -781,16 +725,7 @@ const TransactionList = () => {
             searchPlaceholder="Buscar movimientos por descripción, importe o fecha..."
             actionButtons={currentTab === 'expense' ? (
               <>
-                {/* Importar CSV */}
-                <button 
-                  className="button-apple-secondary button-apple-sm flex items-center"
-                  onClick={() => setIsImportDialogOpen(true)}
-                >
-                  <Upload className="h-4 w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden sm:inline">Importar CSV</span>
-                  <span className="sm:hidden">Importar</span>
-                </button>
-                
+
                 {/* Nuevo gasto */}
                 <button 
                   className="button-apple-primary button-apple-sm flex items-center"
@@ -857,6 +792,28 @@ const TransactionList = () => {
                       "Exportar todos los gastos"}
                   </span>
                   <span className="sm:hidden">Exportar</span>
+                </button>
+              </>
+            ) : currentTab === 'income' ? (
+              <>
+                {/* Nuevo ingreso */}
+                <button 
+                  className="button-apple-primary button-apple-sm flex items-center"
+                  onClick={() => navigate("/transactions/new?type=income")}
+                >
+                  <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Nuevo ingreso</span>
+                  <span className="sm:hidden">Ingreso</span>
+                </button>
+
+                {/* Crear factura */}
+                <button 
+                  className="button-apple button-apple-sm flex items-center"
+                  onClick={() => navigate("/invoices/new")}
+                >
+                  <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Crear factura</span>
+                  <span className="sm:hidden">Factura</span>
                 </button>
               </>
             ) : null}
