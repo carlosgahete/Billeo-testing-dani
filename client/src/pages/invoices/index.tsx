@@ -24,9 +24,9 @@ const InvoicesPage = () => {
   }
 
   return (
-    <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
+    <div className="w-full pl-0 pr-2 md:px-2 space-y-6 mt-2 max-w-full">
       {/* Cabecera estilo Apple */}
-      <div className="section-header mx-4 md:ml-0 fade-in">
+      <div className="section-header mx-2 fade-in">
         <div className="flex items-center">
           <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1">
             <Receipt className="h-5 w-5 text-[#007AFF]" />
@@ -47,7 +47,7 @@ const InvoicesPage = () => {
       </div>
       
       {/* Tarjetas de resumen estilo Apple */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-4 md:ml-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">

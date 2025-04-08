@@ -1418,7 +1418,7 @@ const InvoiceList = () => {
   return (
     <div className="w-full fade-in">
       {/* Encabezado estilo Apple */}
-      <div className="glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 flex justify-between items-center mx-4 md:ml-0 mb-4 border border-[#007AFF]/20">
+      <div className="glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 flex justify-between items-center mx-2 mb-4 border border-[#007AFF]/20">
         <div className="flex items-center">
           <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
             <FileCheck className="h-4 w-4 text-[#007AFF]" />
@@ -1466,7 +1466,7 @@ const InvoiceList = () => {
       </div>
 
       {/* Panel de filtros - Botón integrado en la interfaz de DataTable */}
-      <div className="mb-4 mx-4 md:ml-0">
+      <div className="mb-4 mx-2">
         {isFilterVisible && (
           <Card className="p-4 mb-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/60">
             <CardContent className="p-0">
@@ -1582,7 +1582,7 @@ const InvoiceList = () => {
       </div>
 
       {/* Tabla de facturas */}
-      <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-4 md:ml-0 scale-in">
+      <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-2 scale-in">
         <div className="w-full">
           {/* Usar el nuevo componente SearchBar */}
           <SearchBar
