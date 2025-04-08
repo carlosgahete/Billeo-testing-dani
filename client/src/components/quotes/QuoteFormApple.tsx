@@ -23,7 +23,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import QuoteHeader from './QuoteHeader';
+// No necesitamos QuoteHeader ya que la cabecera está en la página
 
 // Interfaz mínima para las props
 interface QuoteFormProps {
@@ -473,17 +473,9 @@ const QuoteFormApple: React.FC<QuoteFormProps> = ({ quoteId }) => {
   }
 
   return (
-    <div className="w-full px-4 py-3">
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="fade-in">
-        {/* Encabezado estilo Apple */}
-        <QuoteHeader
-          title={quoteId ? 'Editar Presupuesto' : 'Crear Presupuesto'}
-          subtitle="Introduce los datos básicos para el presupuesto"
-          isEdit={!!quoteId}
-          logoPreview={logoPreview}
-          isUploading={isUploading}
-          onSelectFile={handleSelectFile}
-        />
+        {/* No necesitamos QuoteHeader ya que la cabecera está en la página */}
         
         {/* Contenido del formulario con estilo Apple */}
         <div className="dashboard-card mb-6 p-6">
