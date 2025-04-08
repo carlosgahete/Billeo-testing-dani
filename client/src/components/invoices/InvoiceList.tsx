@@ -444,20 +444,34 @@ const InvoiceList = () => {
       }
       
       // Filtrar por búsqueda global
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      if (searchQuery && searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase().trim();
+        
+        // Convertir datos a minúsculas para búsqueda no sensible a mayúsculas
         const invoiceNumber = invoice.invoiceNumber.toLowerCase();
         const clientName = getClientName(invoice.clientId).toLowerCase();
         const issueDateFormatted = formatDate(invoice.issueDate).toLowerCase();
         const statusText = invoice.status.toLowerCase();
+        const subtotalText = invoice.subtotal.toString();
+        const totalText = invoice.total.toString();
         
-        // Buscar en número de factura, cliente, fecha o estado
+        // También buscar en clientes completos para evitar problemas parciales
+        const allClients = clientsData.map(c => c.name.toLowerCase());
+        const matchesAnyClient = allClients.some(name => name.includes(query));
+        
+        // Versión más robusta de búsqueda
         if (!invoiceNumber.includes(query) && 
             !clientName.includes(query) && 
             !issueDateFormatted.includes(query) && 
-            !statusText.includes(query)) {
+            !statusText.includes(query) && 
+            !subtotalText.includes(query) && 
+            !totalText.includes(query) &&
+            !matchesAnyClient) {
+          console.log(`No coincide para "${query}" en factura ${invoiceNumber}, cliente "${clientName}"`);
           return false;
         }
+        
+        console.log(`Coincidencia encontrada para "${query}" en factura ${invoiceNumber}, cliente "${clientName}"`);
       }
       
       return true;
