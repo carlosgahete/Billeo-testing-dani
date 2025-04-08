@@ -32,8 +32,8 @@ const InvoicesPage = () => {
             <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
           <div className="flex-grow my-auto">
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1 mt-2">Gestión de Facturas</h2>
-            <p className="text-sm text-gray-500">Administra y controla tus documentos fiscales</p>
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5 mt-2">Gestión de Facturas</h2>
+            <p className="text-sm text-gray-500 mt-0 leading-tight">Administra y controla tus documentos fiscales</p>
           </div>
         </div>
         

@@ -624,8 +624,8 @@ const TransactionList = () => {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Ingresos y Gastos</h2>
-            <p className="text-sm text-gray-500">Visualiza y gestiona todos tus movimientos económicos</p>
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5">Ingresos y Gastos</h2>
+            <p className="text-sm text-gray-500 mt-0 leading-tight">Visualiza y gestiona todos tus movimientos económicos</p>
           </div>
         </div>
       </div>

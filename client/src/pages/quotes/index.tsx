@@ -181,8 +181,8 @@ export default function QuotesPage() {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Presupuestos</h2>
-            <p className="text-sm text-gray-500">Gestiona tus propuestas comerciales</p>
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5">Presupuestos</h2>
+            <p className="text-sm text-gray-500 mt-0 leading-tight">Gestiona tus propuestas comerciales</p>
           </div>
         </div>
       </div>
