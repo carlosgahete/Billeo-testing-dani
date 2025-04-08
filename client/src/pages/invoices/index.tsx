@@ -27,25 +27,23 @@ const InvoicesPage = () => {
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
       {/* Cabecera estilo Apple */}
       <div className="section-header mx-4 md:ml-0 fade-in">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
-              <Receipt className="h-5 w-5 text-[#007AFF]" />
-            </div>
-            <div className="flex flex-col justify-center">
-              <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-tight">Gestión de Facturas</h2>
-              <p className="text-sm text-gray-500">Administra y controla tus documentos fiscales</p>
-            </div>
+        <div className="flex items-center">
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1">
+            <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
-          
-          <Button 
-            className="button-apple"
-            onClick={() => navigate("/invoices/create")}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Factura
-          </Button>
+          <div className="flex-grow my-auto">
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1 mt-2">Gestión de Facturas</h2>
+            <p className="text-sm text-gray-500">Administra y controla tus documentos fiscales</p>
+          </div>
         </div>
+        
+        <Button 
+          className="button-apple"
+          onClick={() => navigate("/invoices/create")}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Nueva Factura
+        </Button>
       </div>
       
       {/* Tarjetas de resumen estilo Apple */}
