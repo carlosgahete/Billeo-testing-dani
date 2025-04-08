@@ -5,6 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SearchBar } from "@/components/ui/search-bar";
 import { 
   Edit, 
   Trash2, 
@@ -446,7 +447,6 @@ const InvoiceList = () => {
       // Filtrar por búsqueda global
       if (searchQuery && searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase().trim();
-        console.log(`InvoiceList: Buscando con query: "${query}"`);
         
         // Convertir datos a minúsculas para búsqueda no sensible a mayúsculas
         const invoiceNumber = invoice.invoiceNumber?.toLowerCase() || '';
@@ -943,22 +943,34 @@ const InvoiceList = () => {
 
       {/* Tabla de facturas */}
       <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-4 md:ml-0 scale-in">
-        <DataTable
-          columns={columns}
-          data={filteredInvoices}
-          searchPlaceholder="Buscar facturas por número, cliente o fecha..."
-          onSearch={(value) => setSearchQuery(value)}
-          filterButton={
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-1"
-              onClick={() => setIsFilterVisible(!isFilterVisible)}
-            >
-              <Filter className="h-4 w-4" />
-              {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
-            </Button>
-          }
-        />
+        <div className="w-full">
+          {/* Usar el nuevo componente SearchBar */}
+          <SearchBar
+            placeholder="Buscar facturas por número, cliente o fecha..."
+            initialValue={searchQuery}
+            onSearch={(value) => {
+              console.log(`InvoiceList: SearchBar actualizó query a "${value}"`);
+              setSearchQuery(value);
+            }}
+            filterButton={
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-1"
+                onClick={() => setIsFilterVisible(!isFilterVisible)}
+              >
+                <Filter className="h-4 w-4" />
+                {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
+              </Button>
+            }
+          />
+          
+          {/* DataTable sin búsqueda (ya tenemos nuestra propia barra) */}
+          <DataTable
+            columns={columns}
+            data={filteredInvoices}
+            pagination={true}
+          />
+        </div>
       </div>
     </div>
   );

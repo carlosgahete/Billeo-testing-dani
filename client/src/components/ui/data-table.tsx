@@ -58,17 +58,24 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // Implementación sencilla pero efectiva de búsqueda
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Guardar el valor en el estado local
+    
+    // Actualizar el estado local siempre
     setGlobalFilter(value);
     
-    // Y también notificar al componente padre
-    if (onSearch) {
-      console.log("DataTable: Enviando búsqueda al padre:", value);
-      onSearch(value);
-    } else {
-      console.log("DataTable: No hay función onSearch configurada");
+    // Usar un timeout para no llamar constantemente al callback en cada keystroke
+    if (typeof window !== "undefined") {
+      window.clearTimeout((window as any).searchTimeout);
+      (window as any).searchTimeout = window.setTimeout(() => {
+        console.log(`DataTable: Enviando búsqueda: "${value}"`);
+        
+        // Llamar al callback del componente padre si existe
+        if (onSearch) {
+          onSearch(value);
+        }
+      }, 300); // 300ms debería ser suficiente para evitar demasiadas llamadas
     }
   };
 
