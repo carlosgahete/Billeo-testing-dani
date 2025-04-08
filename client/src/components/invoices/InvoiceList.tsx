@@ -333,6 +333,7 @@ const InvoiceList = () => {
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { data: invoicesData = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -442,9 +443,26 @@ const InvoiceList = () => {
         return false;
       }
       
+      // Filtrar por búsqueda global
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const invoiceNumber = invoice.invoiceNumber.toLowerCase();
+        const clientName = getClientName(invoice.clientId).toLowerCase();
+        const issueDateFormatted = formatDate(invoice.issueDate).toLowerCase();
+        const statusText = invoice.status.toLowerCase();
+        
+        // Buscar en número de factura, cliente, fecha o estado
+        if (!invoiceNumber.includes(query) && 
+            !clientName.includes(query) && 
+            !issueDateFormatted.includes(query) && 
+            !statusText.includes(query)) {
+          return false;
+        }
+      }
+      
       return true;
     });
-  }, [invoicesData, yearFilter, quarterFilter, clientFilter, statusFilter]);
+  }, [invoicesData, yearFilter, quarterFilter, clientFilter, statusFilter, searchQuery, clientsData]);
   
   // Función para exportar todas las facturas a PDF
   const exportAllInvoices = async () => {
@@ -903,6 +921,7 @@ const InvoiceList = () => {
           columns={columns}
           data={filteredInvoices}
           searchPlaceholder="Buscar facturas por número, cliente o fecha..."
+          onSearch={(value) => setSearchQuery(value)}
           filterButton={
             <Button 
               variant="outline" 
