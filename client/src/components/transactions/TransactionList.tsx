@@ -614,8 +614,8 @@ const TransactionList = () => {
   return (
     <div className="space-y-6 fade-in">
       {/* Cabecera estilo Apple alineada con menú hamburguesa */}
-      <div className="section-header fade-in mb-3 mt-0 pt-0 flex items-center">
-        <div className="flex items-center ml-16 md:ml-12">
+      <div className="section-header mt-4 sm:mt-6 mb-6 flex items-center">
+        <div className="flex items-center ml-[70px] md:ml-[70px]">
           <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="20" x2="12" y2="10" />
