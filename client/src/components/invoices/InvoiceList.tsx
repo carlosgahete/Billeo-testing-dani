@@ -781,17 +781,8 @@ const InvoiceList = () => {
         </div>
       </div>
 
-      {/* Panel de filtros */}
+      {/* Panel de filtros - Botón integrado en la interfaz de DataTable */}
       <div className="mb-4 mx-4 md:ml-0">
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-1 mb-2"
-          onClick={() => setIsFilterVisible(!isFilterVisible)}
-        >
-          <Filter className="h-4 w-4" />
-          {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
-        </Button>
-
         {isFilterVisible && (
           <Card className="p-4 mb-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/60">
             <CardContent className="p-0">
@@ -912,6 +903,16 @@ const InvoiceList = () => {
           columns={columns}
           data={filteredInvoices}
           searchPlaceholder="Buscar facturas por número, cliente o fecha..."
+          filterButton={
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={() => setIsFilterVisible(!isFilterVisible)}
+            >
+              <Filter className="h-4 w-4" />
+              {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
+            </Button>
+          }
         />
       </div>
     </div>

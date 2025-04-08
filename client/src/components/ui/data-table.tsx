@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -29,6 +29,7 @@ interface DataTableProps<TData, TValue> {
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   pagination?: boolean;
+  filterButton?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -37,6 +38,7 @@ export function DataTable<TData, TValue>({
   onSearch,
   searchPlaceholder = "Buscar...",
   pagination = true,
+  filterButton,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -66,8 +68,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {/* Search input con estilo Apple */}
-      <div className="flex items-center py-4 px-4">
+      {/* Search input con estilo Apple y botón de filtro */}
+      <div className="flex items-center justify-between py-4 px-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#8E8E93]" />
           <Input
@@ -77,6 +79,11 @@ export function DataTable<TData, TValue>({
             className="pl-9 rounded-xl border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/20 text-sm placeholder:text-[#8E8E93]"
           />
         </div>
+        {filterButton && (
+          <div className="ml-2">
+            {filterButton}
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto bg-white">
