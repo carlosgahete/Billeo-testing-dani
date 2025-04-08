@@ -440,9 +440,10 @@ const InvoiceList = () => {
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
-      header: "Nº Factura",
+      header: "Nº",
+      size: 60,
       cell: ({ row }) => (
-        <div className="font-medium text-primary-600 px-2 py-3 text-sm">
+        <div className="font-medium text-primary-600 px-3 py-3 text-sm">
           {row.getValue("invoiceNumber")}
         </div>
       ),
@@ -450,26 +451,29 @@ const InvoiceList = () => {
     {
       accessorKey: "clientId",
       header: "Cliente",
+      size: 180,
       cell: ({ row }) => (
-        <div className="px-2 py-3 text-sm">
+        <div className="px-3 py-3 text-sm">
           {getClientName(row.getValue("clientId"))}
         </div>
       ),
     },
     {
       accessorKey: "issueDate",
-      header: "Fecha emisión",
+      header: "Emisión",
+      size: 100,
       cell: ({ row }) => (
-        <div className="px-2 py-3 text-sm">
+        <div className="px-3 py-3 text-sm">
           {formatDate(row.getValue("issueDate"))}
         </div>
       ),
     },
     {
       accessorKey: "dueDate",
-      header: "Vencimiento",
+      header: "Venc.",
+      size: 100,
       cell: ({ row }) => (
-        <div className="px-2 py-3 text-sm">
+        <div className="px-3 py-3 text-sm">
           {formatDate(row.getValue("dueDate"))}
         </div>
       ),
@@ -477,8 +481,9 @@ const InvoiceList = () => {
     {
       accessorKey: "subtotal",
       header: "Base",
+      size: 100,
       cell: ({ row }) => (
-        <div className="px-2 py-3 text-sm">
+        <div className="px-3 py-3 text-sm">
           {new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR',
@@ -492,8 +497,9 @@ const InvoiceList = () => {
     {
       accessorKey: "tax",
       header: "IVA",
+      size: 80,
       cell: ({ row }) => (
-        <div className="px-2 py-3 text-sm">
+        <div className="px-3 py-3 text-sm">
           {new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR',
@@ -507,8 +513,9 @@ const InvoiceList = () => {
     {
       accessorKey: "total",
       header: "Total",
+      size: 100,
       cell: ({ row }) => (
-        <div className="font-medium px-2 py-3 text-sm">
+        <div className="font-medium px-3 py-3 text-sm">
           {new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR',
@@ -522,14 +529,16 @@ const InvoiceList = () => {
     {
       accessorKey: "status",
       header: "Estado",
+      size: 100,
       cell: ({ row }) => (
-        <div className="px-2 py-3">
+        <div className="px-3 py-3">
           <StatusBadge status={row.getValue("status")} />
         </div>
       ),
     },
     {
       id: "actions",
+      size: 150,
       cell: ({ row }) => {
         const invoice = row.original;
         
