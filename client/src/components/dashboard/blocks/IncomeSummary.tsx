@@ -26,8 +26,12 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
     );
   }
 
+  // Obtenemos los datos calculados
   const income = data?.income || 0;
   const pendingAmount = data?.pendingInvoices || 0;
+  const baseImponible = data?.baseImponible || Math.round(income / 1.21);
+  const ivaRepercutido = data?.ivaRepercutido || data?.taxStats?.ivaRepercutido || income - baseImponible;
+  const irpfRetenido = data?.irpfRetenidoIngresos || data?.taxStats?.irpfRetenido || 0;
 
   // Formatear valores monetarios con el formato español
   const formatCurrency = (amount: number) => {
@@ -48,13 +52,21 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
         <div className="space-y-3">
           <div>
             <h3 className="text-2xl font-bold text-green-600">{formatCurrency(income)} €</h3>
-            <p className="text-sm text-gray-500">IVA repercutido: {formatCurrency(income * 0.21)} €</p>
+            <p className="text-sm text-gray-500">Base imponible: {formatCurrency(baseImponible)} €</p>
+            <p className="text-sm text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)} €</p>
           </div>
+          
+          {irpfRetenido > 0 && (
+            <div className="text-sm">
+              <span className="text-gray-600">IRPF retenido:</span>
+              <span className="text-amber-600 ml-1">{formatCurrency(irpfRetenido)} €</span>
+            </div>
+          )}
           
           {pendingAmount > 0 && (
             <div className="text-sm">
-              <span className="text-gray-600">IRPF a liquidar por gastos:</span>
-              <span className="text-red-500 ml-1">-0 €</span>
+              <span className="text-gray-600">Facturación pendiente:</span>
+              <span className="text-orange-500 ml-1">{formatCurrency(pendingAmount)} €</span>
             </div>
           )}
         </div>

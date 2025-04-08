@@ -1,0 +1,80 @@
+Perfecto, aquí tienes todo junto, organizado y pensando para que tu IA lo pueda seguir de forma clara, precisa y completa:
+
+⸻
+
+Instrucciones completas para el apartado de Ingresos, Gastos y Resultado Final (usando bases imponibles)
+
+1. Principios básicos
+	•	Ingresos:
+Sumar solo las bases imponibles (sin IVA ni otros impuestos) de todas las facturas o cobros.
+	•	Gastos:
+Sumar solo las bases imponibles de todas las facturas o pagos.
+	•	Resultado final:
+Resultado final = Ingresos netos - Gastos netos
+
+⸻
+
+2. ¿Cómo sacar la base imponible si el importe es total con IVA?
+	•	Si el IVA aplicado es 21%:
+Base imponible = Total / 1,21
+	•	Si el IVA aplicado es 10%:
+Base imponible = Total / 1,10
+	•	Si el IVA aplicado es 4%:
+Base imponible = Total / 1,04
+	•	Si el IVA es 0%:
+Base imponible = Total (no hace falta dividir).
+
+⸻
+
+3. ¿Cómo identificar el IVA aplicable si no está explícito?
+
+(opcional pero recomendado para máxima precisión)
+
+Tipo de producto o servicio	IVA habitual	Fórmula de base imponible
+Productos electrónicos / tecnología	21%	Total / 1,21
+Ropa y complementos	21%	Total / 1,21
+Restaurantes, bares y hostelería	10%	Total / 1,10
+Productos alimentarios básicos (pan, leche)	4%	Total / 1,04
+Servicios médicos, educativos oficiales	0%	Total
+
+Nota: Si no se puede saber el tipo de IVA, pedir confirmación o asumir por defecto 21% (opcional según configuración de la IA).
+
+⸻
+
+4. Resumen de flujo que debe seguir la IA
+	1.	Extraer todos los ingresos y gastos.
+	2.	Verificar si los importes son bases imponibles o totales con IVA.
+	3.	Si son totales con IVA, aplicar la fórmula correspondiente para obtener la base imponible.
+	4.	Sumar todos los ingresos netos y todos los gastos netos.
+	5.	Calcular:
+Resultado final = Ingresos netos - Gastos netos
+	6.	Mostrar los resultados finales expresados solo en bases imponibles.
+
+⸻
+
+5. Ejemplo práctico
+
+Facturas de ingresos:
+	•	Venta A: 121€ (IVA 21%) → Base imponible = 121 / 1,21 = 100€
+	•	Venta B: 220€ (IVA 10%) → Base imponible = 220 / 1,10 = 200€
+
+Facturas de gastos:
+	•	Compra A: 1210€ (IVA 21%) → Base imponible = 1210 / 1,21 = 1000€
+	•	Alquiler mensual: 550€ (IVA 21%) → Base imponible = 550 / 1,21 = 454,54€
+
+Resultados:
+	•	Ingresos netos = 100€ + 200€ = 300€
+	•	Gastos netos = 1000€ + 454,54€ = 1454,54€
+	•	Resultado final = 300€ - 1454,54€ = -1154,54€ (pérdida)
+
+⸻
+
+6. Extra (Opcional para más precisión)
+	•	Si tienes acceso a los datos de IVA desglosados (base imponible + IVA por separado), usar directamente la base imponible, sin necesidad de calcular nada.
+	•	Permitir configuración de IVA predeterminado (por ejemplo, asumir 21% si no se especifica).
+
+⸻
+
+¿Te gustaría que también te prepare una mini pseudocódigo para que, si estás programándolo, se lo pases tal cual?
+(sería como un pequeño esquema de pasos para convertir esto en código directo si quieres)
+¡Dime y te lo mando en un momento!

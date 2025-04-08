@@ -10,6 +10,7 @@ interface ResultSummaryProps {
   data?: {
     income: number;
     expenses: number;
+    baseImponible?: number;
     taxes?: {
       ivaALiquidar?: number;
       incomeTax?: number;
@@ -43,6 +44,10 @@ const ResultSummary: React.FC<ResultSummaryProps> = ({ data: propData, isLoading
   const result = income - expenses;
   
   // Datos de impuestos
+  const baseImponibleIngresos = data.baseImponible || Math.round(income / 1.21);
+  const baseImponibleGastos = Math.round(expenses / 1.21);
+  const resultadoBaseImponible = baseImponibleIngresos - baseImponibleGastos;
+  
   const ivaRepercutido = data.taxStats?.ivaRepercutido || 0;
   const ivaSoportado = data.taxStats?.ivaSoportado || 0;
   const ivaALiquidar = data.taxes?.ivaALiquidar || data.taxStats?.ivaLiquidar || 0;
@@ -73,8 +78,16 @@ const ResultSummary: React.FC<ResultSummaryProps> = ({ data: propData, isLoading
               {formatCurrency(result)}
             </span>
             <span className="text-sm text-muted-foreground">
-              Resultado bruto
+              Resultado con IVA
             </span>
+          </div>
+          
+          <div className="px-2 py-1.5 bg-gray-50 rounded-md border">
+            <span className="flex justify-between items-center text-sm mb-1">
+              <span className="font-medium">Base imponible</span>
+              <span className="font-semibold">{formatCurrency(resultadoBaseImponible)}</span>
+            </span>
+            <p className="text-xs text-gray-500">Resultado calculado con los valores sin IVA</p>
           </div>
           
           <div className="grid grid-cols-2 gap-3">

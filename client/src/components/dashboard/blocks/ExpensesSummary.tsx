@@ -26,7 +26,11 @@ const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({ data, isLoading }) =>
     );
   }
 
+  // Calculamos los valores relevantes
   const expenses = data?.expenses || 0;
+  const baseImponibleGastos = Math.round(expenses / 1.21);
+  const ivaSoportado = data?.ivaSoportado || data?.taxStats?.ivaSoportado || expenses - baseImponibleGastos;
+  const totalWithholdings = data?.totalWithholdings || 0;
 
   // Formatear valores monetarios con el formato español
   const formatCurrency = (amount: number) => {
@@ -47,13 +51,16 @@ const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({ data, isLoading }) =>
         <div className="space-y-3">
           <div>
             <h3 className="text-2xl font-bold text-red-600">{formatCurrency(expenses)} €</h3>
-            <p className="text-sm text-gray-500">IVA incluido en los gastos: {formatCurrency(expenses > 0 ? Math.round(expenses * 0.21) : 0)} €</p>
+            <p className="text-sm text-gray-500">Base imponible: {formatCurrency(baseImponibleGastos)} €</p>
+            <p className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)} €</p>
           </div>
           
-          <div className="text-sm">
-            <span className="text-gray-600">IRPF a liquidar por gastos:</span>
-            <span className="text-red-500 ml-1">-0 €</span>
-          </div>
+          {totalWithholdings > 0 && (
+            <div className="text-sm">
+              <span className="text-gray-600">IRPF en gastos:</span>
+              <span className="text-amber-600 ml-1">{formatCurrency(totalWithholdings)} €</span>
+            </div>
+          )}
         </div>
         
         <div className="mt-4">
