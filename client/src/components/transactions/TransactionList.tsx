@@ -36,6 +36,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExpenseFilters from "@/components/transactions/ExpenseFilters";
+import IncomeFilters from "@/components/transactions/IncomeFilters";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
@@ -146,6 +147,7 @@ const TransactionList = () => {
   
   const [currentTab, setCurrentTab] = useState<string>(initialTab);
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
+  const [filteredIncomeTransactions, setFilteredIncomeTransactions] = useState<Transaction[]>([]);
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -358,13 +360,113 @@ const TransactionList = () => {
     }
   };
 
+  // Función para exportar los ingresos filtrados
+  const handleExportFilteredIncome = async () => {
+    try {
+      // Obtenemos los ingresos que vamos a exportar
+      const incomeToExport = filteredIncomeTransactions.length > 0
+        ? filteredIncomeTransactions
+        : transactions?.filter(t => t.type === 'income') || [];
+      
+      if (incomeToExport.length === 0) {
+        toast({
+          title: "No hay ingresos",
+          description: "No se encontraron ingresos para exportar.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Preparando ingresos",
+        description: filteredIncomeTransactions.length > 0
+          ? `Generando informe de ${filteredIncomeTransactions.length} ingresos filtrados...`
+          : `Generando informe de todos los ingresos (${incomeToExport.length})...`,
+      });
+      
+      // Similar a la exportación de gastos, pero con colores verdes en lugar de rojos
+      const doc = new jsPDF();
+      
+      // Añadir título y fecha
+      const currentDate = new Date().toLocaleDateString('es-ES');
+      doc.setFontSize(18);
+      doc.text("Informe de Ingresos", 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(`Generado el ${currentDate}`, 105, 22, { align: 'center' });
+      
+      // Preparar los datos para la tabla
+      const tableData = incomeToExport.map(income => {
+        const category = getCategory(income.categoryId);
+        const formattedDate = formatDate(income.date);
+        const formattedAmount = formatCurrency(income.amount, 'income');
+        
+        return [
+          formattedDate,
+          income.title || 'No especificado',
+          income.description,
+          category.name,
+          formattedAmount
+        ];
+      });
+      
+      // Calcular total de ingresos
+      const totalAmount = incomeToExport.reduce((sum, income) => sum + Number(income.amount), 0);
+      const formattedTotal = formatCurrency(totalAmount, 'income');
+      
+      // Añadir tabla al PDF con colores verdes
+      autoTable(doc, {
+        head: [['Fecha', 'Cliente', 'Descripción', 'Categoría', 'Importe']],
+        body: tableData,
+        foot: [['Total', '', '', '', formattedTotal]],
+        theme: 'striped',
+        headStyles: { fillColor: [0, 150, 50], textColor: [255, 255, 255] },
+        footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' },
+        margin: { top: 30 },
+      });
+      
+      // Añadir pie de página
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Página ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+      }
+      
+      // Generar nombre de archivo
+      const fileName = filteredIncomeTransactions.length > 0
+        ? `Ingresos_Filtrados_${new Date().toISOString().split('T')[0]}.pdf`
+        : `Todos_Los_Ingresos_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      // Descargar PDF
+      doc.save(fileName);
+      
+      toast({
+        title: "Informe generado",
+        description: filteredIncomeTransactions.length > 0
+          ? "El informe de ingresos filtrados ha sido generado y descargado exitosamente."
+          : "El informe con todos los ingresos ha sido generado y descargado exitosamente.",
+      });
+      
+    } catch (error: any) {
+      console.error("Error al exportar ingresos filtrados:", error);
+      
+      toast({
+        title: "Error",
+        description: `No se pudo generar el informe: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   // Manejo de transacciones filtradas
   const getFilteredTransactions = () => {
     if (!Array.isArray(transactions)) return [];
     
-    // Si estamos en la pestaña de gastos y hay filtros aplicados, usar las transacciones filtradas
+    // Si estamos en la pestaña correspondiente y hay filtros aplicados, usar las transacciones filtradas
     if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
       return filteredExpenseTransactions;
+    } else if (currentTab === "income" && filteredIncomeTransactions.length > 0) {
+      return filteredIncomeTransactions;
     }
     
     // En caso contrario, aplicar el filtro por tipo según la pestaña seleccionada
@@ -707,14 +809,26 @@ const TransactionList = () => {
           </Tabs>
         </div>
         <div className="p-5">
-          {/* Mostrar filtros solo cuando estamos en la pestaña de gastos */}
+          {/* Mostrar filtros de gastos cuando estamos en la pestaña de gastos */}
           {currentTab === "expense" && transactions && categories && (
-            <div className="mb-6 bg-gray-50/80 p-4 rounded-xl border border-gray-100">
+            <div className="mb-6">
               <ExpenseFilters 
                 transactions={transactions}
                 categories={categories}
                 onFilterChange={setFilteredExpenseTransactions}
                 onExportClick={handleExportFilteredExpenses}
+              />
+            </div>
+          )}
+          
+          {/* Mostrar filtros de ingresos cuando estamos en la pestaña de ingresos */}
+          {currentTab === "income" && transactions && categories && (
+            <div className="mb-6">
+              <IncomeFilters 
+                transactions={transactions}
+                categories={categories}
+                onFilterChange={setFilteredIncomeTransactions}
+                onExportClick={handleExportFilteredIncome}
               />
             </div>
           )}
@@ -814,6 +928,24 @@ const TransactionList = () => {
                   <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
                   <span className="hidden sm:inline">Crear factura</span>
                   <span className="sm:hidden">Factura</span>
+                </button>
+
+                {/* Exportar ingresos */}
+                <button 
+                  className="button-apple-secondary button-apple-sm flex items-center"
+                  onClick={() => handleExportFilteredIncome()}
+                  disabled={transactions?.filter(t => t.type === 'income').length === 0}
+                  title={filteredIncomeTransactions.length > 0 ? 
+                    `Exportar ${filteredIncomeTransactions.length} ingresos filtrados` : 
+                    `Exportar todos los ingresos (${transactions?.filter(t => t.type === 'income').length || 0})`}
+                >
+                  <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    {filteredIncomeTransactions.length > 0 ? 
+                      `Exportar ${filteredIncomeTransactions.length} filtrados` : 
+                      "Exportar todos los ingresos"}
+                  </span>
+                  <span className="sm:hidden">Exportar</span>
                 </button>
               </>
             ) : null}
