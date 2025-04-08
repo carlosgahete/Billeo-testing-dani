@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
@@ -6,7 +6,6 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Eye, 
   Edit, 
   Trash2, 
   Download, 
@@ -17,7 +16,10 @@ import {
   Check, 
   MoreVertical,
   Mail,
-  FileCheck
+  FileCheck,
+  Filter,
+  Calendar,
+  Tag
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -44,6 +46,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { generateInvoicePDF } from "@/lib/pdf";
 import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
@@ -315,6 +326,13 @@ const DeleteInvoiceDialog = ({
 const InvoiceList = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // Estados para los filtros
+  const [yearFilter, setYearFilter] = useState<string>("all");
+  const [quarterFilter, setQuarterFilter] = useState<string>("all");
+  const [clientFilter, setClientFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   const { data: invoicesData = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -371,6 +389,62 @@ const InvoiceList = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES");
   };
+  
+  // Funciones para obtener años y trimestres disponibles
+  const getAvailableYears = () => {
+    if (!invoicesData || invoicesData.length === 0) return ["all"];
+    
+    const yearsSet = new Set<string>();
+    yearsSet.add("all");
+    
+    invoicesData.forEach(invoice => {
+      const date = new Date(invoice.issueDate);
+      yearsSet.add(date.getFullYear().toString());
+    });
+    
+    return Array.from(yearsSet).sort();
+  };
+  
+  const getQuarterFromMonth = (month: number) => {
+    if (month >= 0 && month <= 2) return "q1";
+    if (month >= 3 && month <= 5) return "q2";
+    if (month >= 6 && month <= 8) return "q3";
+    return "q4";
+  };
+  
+  // Función para filtrar facturas según los filtros aplicados
+  const filteredInvoices = useMemo(() => {
+    if (!invoicesData) return [];
+    
+    return invoicesData.filter(invoice => {
+      const date = new Date(invoice.issueDate);
+      const invoiceYear = date.getFullYear().toString();
+      const invoiceMonth = date.getMonth();
+      const invoiceQuarter = getQuarterFromMonth(invoiceMonth);
+      
+      // Filtrar por año
+      if (yearFilter !== "all" && invoiceYear !== yearFilter) {
+        return false;
+      }
+      
+      // Filtrar por trimestre
+      if (quarterFilter !== "all" && invoiceQuarter !== quarterFilter) {
+        return false;
+      }
+      
+      // Filtrar por cliente
+      if (clientFilter !== "all" && invoice.clientId.toString() !== clientFilter) {
+        return false;
+      }
+      
+      // Filtrar por estado
+      if (statusFilter !== "all" && invoice.status !== statusFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [invoicesData, yearFilter, quarterFilter, clientFilter, statusFilter]);
   
   // Función para exportar todas las facturas a PDF
   const exportAllInvoices = async () => {
@@ -707,10 +781,136 @@ const InvoiceList = () => {
         </div>
       </div>
 
+      {/* Panel de filtros */}
+      <div className="mb-4 mx-4 md:ml-0">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-1 mb-2"
+          onClick={() => setIsFilterVisible(!isFilterVisible)}
+        >
+          <Filter className="h-4 w-4" />
+          {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
+        </Button>
+
+        {isFilterVisible && (
+          <Card className="p-4 mb-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/60">
+            <CardContent className="p-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Filtro por año */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    Año
+                  </label>
+                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un año" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los años</SelectItem>
+                      {getAvailableYears().filter(year => year !== "all").map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtro por trimestre */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    Trimestre
+                  </label>
+                  <Select value={quarterFilter} onValueChange={setQuarterFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un trimestre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los trimestres</SelectItem>
+                      <SelectItem value="q1">1º Trimestre (Ene-Mar)</SelectItem>
+                      <SelectItem value="q2">2º Trimestre (Abr-Jun)</SelectItem>
+                      <SelectItem value="q3">3º Trimestre (Jul-Sep)</SelectItem>
+                      <SelectItem value="q4">4º Trimestre (Oct-Dic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtro por cliente */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium flex items-center gap-1">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    Cliente
+                  </label>
+                  <Select value={clientFilter} onValueChange={setClientFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los clientes</SelectItem>
+                      {clientsData.map(client => (
+                        <SelectItem key={client.id} value={client.id.toString()}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtro por estado */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium flex items-center gap-1">
+                    <CheckCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    Estado
+                  </label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem value="pending">Pendiente</SelectItem>
+                      <SelectItem value="paid">Pagada</SelectItem>
+                      <SelectItem value="overdue">Vencida</SelectItem>
+                      <SelectItem value="canceled">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Resumen de filtros aplicados */}
+              <div className="mt-4 text-sm text-muted-foreground">
+                Mostrando {filteredInvoices.length} de {invoicesData.length} facturas
+                {yearFilter !== "all" && <span> del año <b>{yearFilter}</b></span>}
+                {quarterFilter !== "all" && (
+                  <span> del <b>
+                    {quarterFilter === "q1" && "1º trimestre"}
+                    {quarterFilter === "q2" && "2º trimestre"}
+                    {quarterFilter === "q3" && "3º trimestre"}
+                    {quarterFilter === "q4" && "4º trimestre"}
+                  </b></span>
+                )}
+                {clientFilter !== "all" && (
+                  <span> de <b>{getClientName(parseInt(clientFilter))}</b></span>
+                )}
+                {statusFilter !== "all" && (
+                  <span> con estado <b>
+                    {statusFilter === "pending" && "Pendiente"}
+                    {statusFilter === "paid" && "Pagada"}
+                    {statusFilter === "overdue" && "Vencida"}
+                    {statusFilter === "canceled" && "Cancelada"}
+                  </b></span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Tabla de facturas */}
       <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-4 md:ml-0 scale-in">
         <DataTable
           columns={columns}
-          data={invoicesData || []}
+          data={filteredInvoices}
           searchPlaceholder="Buscar facturas por número, cliente o fecha..."
         />
       </div>
