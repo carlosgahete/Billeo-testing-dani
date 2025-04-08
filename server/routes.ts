@@ -1101,25 +1101,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/invoices/:id", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
+        console.log('Intento de acceso a factura sin sesión');
         return res.status(401).json({ message: "Not authenticated" });
       }
       
       const invoiceId = parseInt(req.params.id);
+      
+      // Validar que el ID sea un número
+      if (isNaN(invoiceId)) {
+        console.log(`ID de factura inválido: ${req.params.id}`);
+        return res.status(400).json({ message: "Invalid invoice ID" });
+      }
+      
+      console.log(`Intentando obtener factura con ID: ${invoiceId} para usuario ${req.session.userId}`);
+      
       const invoice = await storage.getInvoice(invoiceId);
       
       if (!invoice) {
+        console.log(`Factura con ID ${invoiceId} no encontrada`);
         return res.status(404).json({ message: "Invoice not found" });
       }
       
       if (invoice.userId !== req.session.userId) {
+        console.log(`Usuario ${req.session.userId} no autorizado para acceder a la factura ${invoiceId} del usuario ${invoice.userId}`);
         return res.status(403).json({ message: "Unauthorized to access this invoice" });
       }
       
       const items = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+      console.log(`Obtenidos ${items?.length || 0} items para la factura ${invoiceId}`);
       
       return res.status(200).json({ invoice, items });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      console.error(`Error al obtener factura: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      return res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

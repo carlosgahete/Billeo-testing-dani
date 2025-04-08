@@ -544,7 +544,10 @@ const InvoiceList = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                  <DropdownMenuItem onClick={() => {
+                    console.log(`Navegando a factura ID (móvil): ${invoice.id}`);
+                    navigate(`/invoices/${invoice.id}`);
+                  }}>
                     <Eye className="h-4 w-4 mr-2" /> Ver
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate(`/invoices/edit/${invoice.id}`)}>
@@ -602,7 +605,10 @@ const InvoiceList = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/invoices/${invoice.id}`)}
+                      onClick={() => {
+                        console.log(`Navegando a factura ID: ${invoice.id}`);
+                        navigate(`/invoices/${invoice.id}`);
+                      }}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
