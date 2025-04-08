@@ -544,12 +544,7 @@ const InvoiceList = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => {
-                    console.log(`Navegando a factura ID (móvil): ${invoice.id}`);
-                    navigate(`/invoices/${invoice.id}`);
-                  }}>
-                    <Eye className="h-4 w-4 mr-2" /> Ver
-                  </DropdownMenuItem>
+
                   <DropdownMenuItem onClick={() => navigate(`/invoices/edit/${invoice.id}`)}>
                     <Edit className="h-4 w-4 mr-2" /> Editar
                   </DropdownMenuItem>
@@ -599,25 +594,7 @@ const InvoiceList = () => {
             
             {/* Versión desktop: Botones individuales */}
             <div className="hidden md:flex justify-end space-x-1" data-invoice-id={invoice.id}>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        console.log(`Navegando a factura ID: ${invoice.id}`);
-                        navigate(`/invoices/${invoice.id}`);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Ver detalles</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+
 
               <TooltipProvider>
                 <Tooltip>
