@@ -781,61 +781,43 @@ const TransactionList = () => {
           </div>
         </div>
         
-        {/* Tarjeta de Balance Neto - Estilo Apple moderno con gradiente e iconos */}
+        {/* Tarjeta de Balance Neto - Con color azul e icono de cerdito */}
         <div className="scale-in dashboard-card relative overflow-hidden">
-          <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${
-            balance >= 0 
-              ? "from-[#34C759] to-[#30D158]" 
-              : "from-[#FF3B30] to-[#FF453A]"
-          }`}></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0070F3] to-[#39F]"></div>
           <div className="p-6">
             <div className="flex items-center mb-3">
-              <div className={`w-10 h-10 ${
-                balance >= 0 
-                  ? "bg-[#34C759]/10" 
-                  : "bg-[#FF3B30]/10"
-              } rounded-full flex items-center justify-center mr-3`}>
-                {balance >= 0 ? (
-                  <ArrowUp className={`h-5 w-5 ${
-                    balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
-                  }`} />
-                ) : (
-                  <TrendingDown className={`h-5 w-5 ${
-                    balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
-                  }`} />
-                )}
+              <div className="w-10 h-10 bg-[#0070F3]/10 rounded-full flex items-center justify-center mr-3">
+                {/* Icono de cerdito */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V5z"/>
+                  <path d="M2 9v1c0 1.1.9 2 2 2h1"/>
+                  <path d="M16 11h0"/>
+                </svg>
               </div>
               <h3 className="text-base font-medium text-[#1D1D1F]">Balance neto</h3>
             </div>
             
-            <p className={`text-3xl font-semibold ${
-              balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
-            } mb-5 pl-1`}>
+            <p className="text-3xl font-semibold text-[#0070F3] mb-5 pl-1">
               {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
             </p>
             
-            <div className={`p-3 ${
-              balance >= 0 
-                ? "bg-[#34C759]/5 border border-[#34C759]/10 hover:bg-[#34C759]/10" 
-                : "bg-[#FF3B30]/5 border border-[#FF3B30]/10 hover:bg-[#FF3B30]/10"
-            } rounded-xl flex items-center justify-center transition-all`}>
+            <div className="p-3 bg-[#0070F3]/5 border border-[#0070F3]/10 hover:bg-[#0070F3]/10 rounded-xl flex items-center justify-center transition-all">
               <div className="flex items-center">
                 {balance >= 0 ? (
                   <>
-                    <svg className="h-4 w-4 text-[#34C759] mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22 11.0801V12.0001C21.9988 14.1565 21.3005 16.2548 20.0093 17.9819C18.7182 19.7091 16.9033 20.9726 14.8354 21.5839C12.7674 22.1952 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2462 3.61096 17.4371C2.43727 15.628 1.87979 13.4882 2.02168 11.3364C2.16356 9.18467 2.99721 7.13643 4.39828 5.49718C5.79935 3.85793 7.69279 2.71549 9.79619 2.24025C11.8996 1.76502 14.1003 1.98245 16.07 2.86011" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg className="h-4 w-4 text-[#0070F3] mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2m-1 5v4H7v2h4v4h2v-4h4v-2h-4V7h-2z" fill="currentColor"/>
                     </svg>
-                    <span className={`text-sm font-medium text-[#34C759]`}>
+                    <span className="text-sm font-medium text-[#0070F3]">
                       Balance positivo: {Math.round(balance/incomeTotal*100)}% de ingresos
                     </span>
                   </>
                 ) : (
                   <>
-                    <svg className="h-4 w-4 text-[#FF3B30] mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 9V13M12 17H12.01M7.86489 2H16.1351C17.1587 2 18.1055 2.31424 18.8862 2.89461C19.6669 3.47498 20.241 4.29183 20.5303 5.22862L22.961 13.632C23.1232 14.1424 23.1812 14.6797 23.1316 15.212C23.0819 15.7442 22.9259 16.2595 22.6747 16.7298C22.4235 17.2001 22.0823 17.6154 21.6723 17.9463C21.2622 18.2772 20.792 18.5163 20.291 18.6453L13.9559 20.2C13.3254 20.3564 12.6647 20.3564 12.0342 20.2L5.70896 18.6453C5.20798 18.5163 4.73773 18.2772 4.32766 17.9463C3.9176 17.6154 3.57645 17.2001 3.32524 16.7298C3.07404 16.2595 2.91805 15.7442 2.86839 15.212C2.81873 14.6797 2.87671 14.1424 3.03896 13.632L5.46962 5.22862C5.75901 4.29183 6.33305 3.47498 7.11379 2.89461C7.89454 2.31424 8.84127 2 9.86489 2H7.86489Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg className="h-4 w-4 text-[#0070F3] mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2m-1 5v8h2V7h-2z" fill="currentColor"/>
                     </svg>
-                    <span className={`text-sm font-medium text-[#FF3B30]`}>
+                    <span className="text-sm font-medium text-[#0070F3]">
                       Balance negativo: {Math.abs(Math.round(balance/expenseTotal*100))}% sobre ingresos
                     </span>
                   </>
