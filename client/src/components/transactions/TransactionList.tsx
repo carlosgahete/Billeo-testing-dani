@@ -644,85 +644,28 @@ const TransactionList = () => {
             </button>
           )}
           
-          {/* Visible solo en la pestaña 'expense': Nuevo gasto */}
-          {currentTab === 'expense' && (
+          {/* Visible solo en la pestaña 'income': Nuevo ingreso */}
+          {currentTab === 'income' && (
             <button 
               className="button-apple-primary button-apple-sm flex items-center"
-              onClick={() => navigate("/transactions/new?type=expense")}
+              onClick={() => navigate("/transactions/new?type=income")}
             >
               <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">Nuevo gasto</span>
-              <span className="sm:hidden">Gasto</span>
+              <span className="hidden sm:inline">Nuevo ingreso</span>
+              <span className="sm:hidden">Ingreso</span>
             </button>
           )}
           
-          {/* Visible solo en la pestaña 'expense': Escanear gasto */}
-          {currentTab === 'expense' && (
+          {/* Visible solo en la pestaña 'income': Crear factura */}
+          {currentTab === 'income' && (
             <button 
               className="button-apple button-apple-sm flex items-center"
-              onClick={() => navigate("/documents/scan")}
+              onClick={() => navigate("/invoices/new")}
             >
-              <ScanText className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">Escanear gasto</span>
-              <span className="sm:hidden">Escanear</span>
+              <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">Crear factura</span>
+              <span className="sm:hidden">Factura</span>
             </button>
-          )}
-          
-          {/* Visible siempre en la pestaña 'expense': Botones para descargar/exportar */}
-          {currentTab === 'expense' && (
-            <>
-              {/* Botón para descargar documentos originales */}
-              <button 
-                className="button-apple button-apple-sm flex items-center"
-                onClick={() => {
-                  // Importamos dinámicamente para evitar problemas de dependencias cíclicas
-                  import('@/lib/attachmentService').then(({ downloadExpenseOriginalsAsZip }) => {
-                    // Filtrar los gastos que tienen documentos adjuntos
-                    const expenses = (filteredExpenseTransactions.length > 0 ? filteredExpenseTransactions : transactions)
-                      .filter(t => t.type === 'expense' && t.attachments && t.attachments.length > 0);
-                    
-                    if (expenses.length === 0) {
-                      // Usamos toast desde el hook ya destructurado
-                      toast({
-                        title: "Sin documentos originales",
-                        description: "No hay documentos originales disponibles para descargar.",
-                        variant: "default"
-                      });
-                      return;
-                    }
-                    
-                    downloadExpenseOriginalsAsZip(expenses as any, categories || []);
-                  });
-                }}
-                title="Descargar documentos originales de los gastos"
-              >
-                <Download className="h-4 w-4 mr-1.5 sm:mr-2" />
-                <span className="hidden sm:inline">Descargar originales</span>
-                <span className="sm:hidden">Originales</span>
-              </button>
-            </>
-          )}
-          
-          {/* Botón para exportar a PDF - Este botón aparece en otra posición según la imagen */}
-          {currentTab === 'expense' && (
-            <div className="w-full flex justify-end mt-2 sm:mt-0 sm:w-auto">
-              <button 
-                className="button-apple-secondary button-apple-sm flex items-center"
-                onClick={() => handleExportFilteredExpenses()}
-                disabled={transactions?.filter(t => t.type === 'expense').length === 0}
-                title={filteredExpenseTransactions.length > 0 ? 
-                  `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
-                  `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
-              >
-                <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
-                <span className="hidden sm:inline">
-                  {filteredExpenseTransactions.length > 0 ? 
-                    `Exportar ${filteredExpenseTransactions.length} filtrados` : 
-                    "Exportar todos los gastos"}
-                </span>
-                <span className="sm:hidden">Exportar</span>
-              </button>
-            </div>
           )}
           
           {/* Visible solo en la pestaña 'income': Crear factura */}
@@ -836,6 +779,87 @@ const TransactionList = () => {
             columns={columns}
             data={filteredTransactions || []}
             searchPlaceholder="Buscar movimientos por descripción, importe o fecha..."
+            actionButtons={currentTab === 'expense' ? (
+              <>
+                {/* Importar CSV */}
+                <button 
+                  className="button-apple-secondary button-apple-sm flex items-center"
+                  onClick={() => setIsImportDialogOpen(true)}
+                >
+                  <Upload className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Importar CSV</span>
+                  <span className="sm:hidden">Importar</span>
+                </button>
+                
+                {/* Nuevo gasto */}
+                <button 
+                  className="button-apple-primary button-apple-sm flex items-center"
+                  onClick={() => navigate("/transactions/new?type=expense")}
+                >
+                  <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Nuevo gasto</span>
+                  <span className="sm:hidden">Gasto</span>
+                </button>
+                
+                {/* Escanear gasto */}
+                <button 
+                  className="button-apple button-apple-sm flex items-center"
+                  onClick={() => navigate("/documents/scan")}
+                >
+                  <ScanText className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Escanear gasto</span>
+                  <span className="sm:hidden">Escanear</span>
+                </button>
+                
+                {/* Descargar originales */}
+                <button 
+                  className="button-apple button-apple-sm flex items-center"
+                  onClick={() => {
+                    // Importamos dinámicamente para evitar problemas de dependencias cíclicas
+                    import('@/lib/attachmentService').then(({ downloadExpenseOriginalsAsZip }) => {
+                      // Filtrar los gastos que tienen documentos adjuntos
+                      const expenses = (filteredExpenseTransactions.length > 0 ? filteredExpenseTransactions : transactions)
+                        .filter(t => t.type === 'expense' && t.attachments && t.attachments.length > 0);
+                      
+                      if (expenses.length === 0) {
+                        // Usamos toast desde el hook ya destructurado
+                        toast({
+                          title: "Sin documentos originales",
+                          description: "No hay documentos originales disponibles para descargar.",
+                          variant: "default"
+                        });
+                        return;
+                      }
+                      
+                      downloadExpenseOriginalsAsZip(expenses as any, categories || []);
+                    });
+                  }}
+                  title="Descargar documentos originales de los gastos"
+                >
+                  <Download className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Descargar originales</span>
+                  <span className="sm:hidden">Originales</span>
+                </button>
+                
+                {/* Exportar todos los gastos */}
+                <button 
+                  className="button-apple-secondary button-apple-sm flex items-center"
+                  onClick={() => handleExportFilteredExpenses()}
+                  disabled={transactions?.filter(t => t.type === 'expense').length === 0}
+                  title={filteredExpenseTransactions.length > 0 ? 
+                    `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
+                    `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
+                >
+                  <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    {filteredExpenseTransactions.length > 0 ? 
+                      `Exportar ${filteredExpenseTransactions.length} filtrados` : 
+                      "Exportar todos los gastos"}
+                  </span>
+                  <span className="sm:hidden">Exportar</span>
+                </button>
+              </>
+            ) : null}
           />
         </div>
       </div>

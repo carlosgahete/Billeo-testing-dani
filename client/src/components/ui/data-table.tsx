@@ -31,6 +31,7 @@ interface DataTableProps<TData, TValue> {
   pagination?: boolean;
   filterButton?: React.ReactNode;
   showSearch?: boolean;
+  actionButtons?: React.ReactNode; // Añadido para los botones de acción
 }
 
 export function DataTable<TData, TValue>({
@@ -41,6 +42,7 @@ export function DataTable<TData, TValue>({
   pagination = true,
   filterButton,
   showSearch = true,
+  actionButtons,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -83,7 +85,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {/* Search input con estilo Apple y botón de filtro */}
+      {/* Search input con estilo Apple, botones de acción y botón de filtro */}
       {showSearch && (
         <div className="flex items-center justify-between py-4 px-4">
           <div className="relative flex-1 max-w-md">
@@ -95,6 +97,15 @@ export function DataTable<TData, TValue>({
               className="pl-9 rounded-xl border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/20 text-sm placeholder:text-[#8E8E93]"
             />
           </div>
+          
+          {/* Botones de acción */}
+          {actionButtons && (
+            <div className="flex items-center space-x-2 ml-4">
+              {actionButtons}
+            </div>
+          )}
+          
+          {/* Botón de filtro */}
           {filterButton && (
             <div className="ml-2">
               {filterButton}
