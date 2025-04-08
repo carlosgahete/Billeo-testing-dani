@@ -700,8 +700,12 @@ const TransactionList = () => {
                 <span className="hidden sm:inline">Descargar originales</span>
                 <span className="sm:hidden">Originales</span>
               </button>
-              
-              {/* Botón para exportar a PDF */}
+            </>
+          )}
+          
+          {/* Botón para exportar a PDF - Este botón aparece en otra posición según la imagen */}
+          {currentTab === 'expense' && (
+            <div className="w-full flex justify-end mt-2 sm:mt-0 sm:w-auto">
               <button 
                 className="button-apple-secondary button-apple-sm flex items-center"
                 onClick={() => handleExportFilteredExpenses()}
@@ -718,7 +722,7 @@ const TransactionList = () => {
                 </span>
                 <span className="sm:hidden">Exportar</span>
               </button>
-            </>
+            </div>
           )}
           
           {/* Visible solo en la pestaña 'income': Crear factura */}
