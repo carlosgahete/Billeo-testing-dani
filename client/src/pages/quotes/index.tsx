@@ -3,6 +3,7 @@ import { QuoteList } from "@/components/quotes/QuoteList";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/ui/header";
 import { 
   Card, 
   CardContent, 
@@ -168,24 +169,22 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      {/* Header con estilo Apple moderno y minimalista */}
-      <div className="flex items-center px-4 pb-6 pt-2">
-        <div className="flex items-center">
-          <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Presupuestos</h2>
-            <p className="text-sm text-gray-500">Gestiona tus propuestas comerciales</p>
-          </div>
-        </div>
-      </div>
+      {/* Header estándar en todas las páginas */}
+      <Header
+        title="Presupuestos"
+        subtitle="Gestiona tus propuestas comerciales"
+        icon={
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <line x1="10" y1="9" x2="8" y2="9"></line>
+          </svg>
+        }
+        iconBgColor="#FFF8E7"
+        iconColor="#FF9500"
+      />
 
       {/* Dashboard de presupuestos con estilo Apple */}
       <div className="mb-8 fade-in">

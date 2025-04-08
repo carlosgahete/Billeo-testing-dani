@@ -4,6 +4,7 @@ import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle, Cal
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Header } from "@/components/ui/header";
 
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
@@ -25,28 +26,22 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Header con estilo Apple moderno y minimalista */}
-      <div className="flex items-center px-4 pb-6 pt-2 justify-between">
-        <div className="flex items-center">
-          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 flex-shrink-0">
-            <Receipt className="h-5 w-5 text-[#007AFF]" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Gestión de Facturas</h2>
-            <p className="text-sm text-gray-500">Administra y controla tus documentos fiscales</p>
-          </div>
-        </div>
-        
-        <div>
-          <Button 
-            className="button-apple"
-            onClick={() => navigate("/invoices/create")}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Factura
-          </Button>
-        </div>
-      </div>
+      {/* Header estandarizado */}
+      <Header
+        title="Gestión de Facturas"
+        subtitle="Administra y controla tus documentos fiscales"
+        icon={<Receipt className="h-5 w-5" />}
+        iconBgColor="#E9F8FB"
+        iconColor="#007AFF"
+        actions={[
+          {
+            label: "Nueva Factura",
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => navigate("/invoices/create"),
+            variant: "default"
+          }
+        ]}
+      />
       
       {/* Tarjetas de resumen estilo Apple */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-4 md:ml-0">

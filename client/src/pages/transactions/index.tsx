@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import TransactionList from "@/components/transactions/TransactionList";
-import { Loader2 } from "lucide-react";
+import { Loader2, BarChart3 } from "lucide-react";
+import { Header } from "@/components/ui/header";
 
 const TransactionsPage = () => {
   const { isLoading: authLoading } = useQuery({
