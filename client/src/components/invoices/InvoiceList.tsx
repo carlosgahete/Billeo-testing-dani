@@ -969,6 +969,7 @@ const InvoiceList = () => {
             columns={columns}
             data={filteredInvoices}
             pagination={true}
+            showSearch={false}
           />
         </div>
       </div>

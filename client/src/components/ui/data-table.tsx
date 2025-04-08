@@ -30,6 +30,7 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string;
   pagination?: boolean;
   filterButton?: React.ReactNode;
+  showSearch?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +40,7 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Buscar...",
   pagination = true,
   filterButton,
+  showSearch = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -82,22 +84,24 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       {/* Search input con estilo Apple y botón de filtro */}
-      <div className="flex items-center justify-between py-4 px-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#8E8E93]" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={globalFilter}
-            onChange={handleSearch}
-            className="pl-9 rounded-xl border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/20 text-sm placeholder:text-[#8E8E93]"
-          />
-        </div>
-        {filterButton && (
-          <div className="ml-2">
-            {filterButton}
+      {showSearch && (
+        <div className="flex items-center justify-between py-4 px-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#8E8E93]" />
+            <Input
+              placeholder={searchPlaceholder}
+              value={globalFilter}
+              onChange={handleSearch}
+              className="pl-9 rounded-xl border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/20 text-sm placeholder:text-[#8E8E93]"
+            />
           </div>
-        )}
-      </div>
+          {filterButton && (
+            <div className="ml-2">
+              {filterButton}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto bg-white">
         <Table className="min-w-full">
