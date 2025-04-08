@@ -284,7 +284,7 @@ const DeleteInvoiceDialog = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="flex items-center justify-center w-8 h-8 p-0">
+        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-red-600 hover:bg-red-50">
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
@@ -440,55 +440,50 @@ const InvoiceList = () => {
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
-      header: "Nº",
-      size: 60,
+      header: "Nº Factura",
       cell: ({ row }) => (
-        <div className="font-medium text-primary-600 px-3 py-3 text-sm">
+        <div className="font-medium text-primary-600 px-2 py-3">
           {row.getValue("invoiceNumber")}
         </div>
       ),
     },
     {
       accessorKey: "clientId",
-      header: "Cliente",
-      size: 180,
+      header: () => <span className="hidden md:inline px-2">Cliente</span>,
       cell: ({ row }) => (
-        <div className="px-3 py-3 text-sm">
+        <div className="hidden md:table-cell px-2 py-3">
           {getClientName(row.getValue("clientId"))}
         </div>
       ),
     },
     {
       accessorKey: "issueDate",
-      header: "Emisión",
-      size: 100,
+      header: () => <span className="hidden sm:inline px-2">Fecha emisión</span>,
       cell: ({ row }) => (
-        <div className="px-3 py-3 text-sm">
+        <div className="hidden sm:table-cell px-2 py-3">
           {formatDate(row.getValue("issueDate"))}
         </div>
       ),
     },
     {
       accessorKey: "dueDate",
-      header: "Venc.",
-      size: 100,
+      header: () => <span className="hidden lg:inline px-2">Vencimiento</span>,
       cell: ({ row }) => (
-        <div className="px-3 py-3 text-sm">
+        <div className="hidden lg:table-cell px-2 py-3">
           {formatDate(row.getValue("dueDate"))}
         </div>
       ),
     },
     {
       accessorKey: "subtotal",
-      header: "Base",
-      size: 100,
+      header: () => <span className="hidden lg:inline px-2">Base</span>,
       cell: ({ row }) => (
-        <div className="px-3 py-3 text-sm">
+        <div className="hidden lg:table-cell px-2 py-3">
           {new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR',
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
             useGrouping: true
           }).format(Number(row.getValue("subtotal")))}
         </div>
@@ -496,15 +491,14 @@ const InvoiceList = () => {
     },
     {
       accessorKey: "tax",
-      header: "IVA",
-      size: 80,
+      header: () => <span className="hidden xl:inline px-2">IVA</span>,
       cell: ({ row }) => (
-        <div className="px-3 py-3 text-sm">
+        <div className="hidden xl:table-cell px-2 py-3">
           {new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR',
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
             useGrouping: true
           }).format(Number(row.getValue("tax")))}
         </div>
@@ -513,14 +507,13 @@ const InvoiceList = () => {
     {
       accessorKey: "total",
       header: "Total",
-      size: 100,
       cell: ({ row }) => (
-        <div className="font-medium px-3 py-3 text-sm">
+        <div className="font-medium px-2 py-3">
           {new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR',
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
             useGrouping: true
           }).format(Number(row.getValue("total")))}
         </div>
@@ -529,16 +522,14 @@ const InvoiceList = () => {
     {
       accessorKey: "status",
       header: "Estado",
-      size: 100,
       cell: ({ row }) => (
-        <div className="px-3 py-3">
+        <div className="px-2 py-3">
           <StatusBadge status={row.getValue("status")} />
         </div>
       ),
     },
     {
       id: "actions",
-      size: 170,
       cell: ({ row }) => {
         const invoice = row.original;
         
@@ -604,7 +595,7 @@ const InvoiceList = () => {
             </div>
             
             {/* Versión desktop: Botones individuales */}
-            <div className="hidden md:flex justify-end space-x-2" data-invoice-id={invoice.id}>
+            <div className="hidden md:flex justify-end space-x-1" data-invoice-id={invoice.id}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -671,7 +662,7 @@ const InvoiceList = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center justify-center">
+                    <div>
                       <DeleteInvoiceDialog
                         invoiceId={invoice.id}
                         invoiceNumber={invoice.invoiceNumber}
@@ -733,14 +724,12 @@ const InvoiceList = () => {
         </div>
       </div>
 
-      <div className="glass-panel w-full overflow-auto rounded-2xl border border-gray-200/50 shadow-sm mx-4 md:ml-0 scale-in">
-        <div className="min-w-full">
-          <DataTable
-            columns={columns}
-            data={invoicesData || []}
-            searchPlaceholder="Buscar facturas por número, cliente o fecha..."
-          />
-        </div>
+      <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-4 md:ml-0 scale-in">
+        <DataTable
+          columns={columns}
+          data={invoicesData || []}
+          searchPlaceholder="Buscar facturas por número, cliente o fecha..."
+        />
       </div>
     </div>
   );

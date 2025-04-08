@@ -80,7 +80,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       <div className="rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto bg-white">
-        <Table className="w-full table-fixed">
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-b-0">
@@ -88,7 +88,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="whitespace-nowrap px-3 py-3 font-medium text-xs text-gray-500 bg-gray-50/80 tracking-wide uppercase first:rounded-tl-2xl last:rounded-tr-2xl"
+                      className="whitespace-nowrap px-5 py-3.5 font-medium text-xs text-gray-500 bg-gray-50/80 tracking-wide uppercase first:rounded-tl-2xl last:rounded-tr-2xl"
                     >
                       {header.isPlaceholder
                         ? null
@@ -118,7 +118,7 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell 
                       key={cell.id} 
-                      className="py-2 px-3 text-sm text-gray-800"
+                      className="py-3.5 px-5 text-sm text-gray-800"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
