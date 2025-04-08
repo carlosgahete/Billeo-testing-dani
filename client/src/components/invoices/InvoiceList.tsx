@@ -612,34 +612,264 @@ const InvoiceList = () => {
     });
   }, [invoicesData, yearFilter, quarterFilter, clientFilter, statusFilter, searchQuery, clientsData]);
   
-  // Función para exportar todas las facturas a PDF utilizando la visualización en tarjeta
+  // Función para exportar todas las facturas
   const exportAllInvoices = async () => {
+    // Reutilizamos la función de exportar facturas filtradas pero con TODAS las facturas 
+    // (como si estuvieran filtradas a "all")
     try {
+      if (!invoicesData || invoicesData.length === 0) {
+        toast({
+          title: "No hay facturas",
+          description: "No hay facturas disponibles para exportar.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       toast({
-        title: "Preparando facturas",
-        description: "Generando todas las facturas para exportar...",
+        title: "Preparando todas las facturas",
+        description: `Generando ${invoicesData.length} facturas para descargar...`,
       });
       
-      // Función para obtener los items de una factura
-      const getInvoiceItems = async (invoiceId: number) => {
-        const response = await apiRequest("GET", `/api/invoices/${invoiceId}`);
-        const data = await response.json();
-        return data.items || [];
+      // Crear un contenedor para mostrar progreso
+      const progressContainer = document.createElement('div');
+      progressContainer.id = 'export-progress-container';
+      progressContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      progressContainer.style.backdropFilter = 'blur(4px)';
+      
+      const progressCard = document.createElement('div');
+      progressCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
+      
+      progressCard.innerHTML = `
+        <h2 class="text-xl font-medium text-center mb-4">Generando todas las facturas</h2>
+        <div class="mb-4">
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-600 rounded-full" style="width: 0%"></div>
+          </div>
+          <p id="progress-text" class="text-sm text-center mt-2">Preparando facturas (0/${invoicesData.length})</p>
+        </div>
+        <div id="progress-details" class="max-h-32 overflow-y-auto text-xs text-gray-500 mb-4"></div>
+      `;
+      
+      progressContainer.appendChild(progressCard);
+      document.body.appendChild(progressContainer);
+      
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const progressDetails = document.getElementById('progress-details');
+      
+      // Función para actualizar el progreso
+      const updateProgress = (current: number, message: string) => {
+        const percentage = Math.round((current / invoicesData.length) * 100);
+        if (progressBar) progressBar.style.width = `${percentage}%`;
+        if (progressText) progressText.textContent = `Procesando facturas (${current}/${invoicesData.length})`;
+        
+        if (progressDetails) {
+          const detail = document.createElement('div');
+          detail.className = 'mb-1';
+          detail.textContent = message;
+          progressDetails.appendChild(detail);
+          progressDetails.scrollTop = progressDetails.scrollHeight;
+        }
       };
       
-      // Ejecutar la descarga de todas las facturas utilizando la misma función
-      // pero con filtros en "all"
-      await downloadFilteredInvoicesAsZip(
-        invoicesData || [],
-        clientsData || [],
-        "all",
-        "all",
-        "all",
-        "all",
-        getInvoiceItems
-      );
-      
-      // No mostramos toast porque ya se muestra el modal con las facturas
+      try {
+        // Generar cada PDF individualmente
+        const downloads: Array<{
+          blob: Blob,
+          fileName: string,
+          invoiceNumber: string
+        }> = [];
+        
+        for (let i = 0; i < invoicesData.length; i++) {
+          const invoice = invoicesData[i];
+          
+          // Buscar cliente
+          const client = clientsData?.find(c => c.id === invoice.clientId);
+          if (!client) {
+            updateProgress(i + 1, `⚠️ Omitida factura ${invoice.invoiceNumber}: Cliente no encontrado`);
+            continue;
+          }
+          
+          try {
+            // Obtener items
+            updateProgress(i + 1, `Obteniendo detalles de factura ${invoice.invoiceNumber}...`);
+            const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+            const data = await response.json();
+            const items = data.items || [];
+            
+            // Generar PDF
+            updateProgress(i + 1, `Generando PDF para factura ${invoice.invoiceNumber}...`);
+            const pdfBlob = await generateInvoicePDFBlob(invoice, client, items);
+            
+            // Nombre único para el archivo
+            const fileName = `Factura_${invoice.invoiceNumber}_${client.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+            
+            // Crear objeto de descarga
+            downloads.push({
+              blob: pdfBlob,
+              fileName: fileName,
+              invoiceNumber: invoice.invoiceNumber
+            });
+            
+            updateProgress(i + 1, `✓ Factura ${invoice.invoiceNumber} lista para descargar`);
+          } catch (error) {
+            console.error(`Error al generar PDF para factura ${invoice.invoiceNumber}:`, error);
+            updateProgress(i + 1, `❌ Error en factura ${invoice.invoiceNumber}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+          }
+        }
+        
+        // Eliminar el modal de progreso
+        document.body.removeChild(progressContainer);
+        
+        if (downloads.length === 0) {
+          toast({
+            title: "Error",
+            description: "No se pudo generar ninguna factura para descargar.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Mostrar diálogo de confirmación con las facturas generadas
+        const confirmContainer = document.createElement('div');
+        confirmContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        confirmContainer.style.backdropFilter = 'blur(4px)';
+        
+        const confirmCard = document.createElement('div');
+        confirmCard.className = 'bg-white rounded-xl shadow-xl max-w-xl w-full overflow-hidden flex flex-col';
+        
+        // Crear cabecera
+        const header = document.createElement('div');
+        header.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
+        header.innerHTML = `
+          <h2 class="text-lg font-medium text-gray-800">Todas las facturas generadas (${downloads.length})</h2>
+          <button id="close-dialog" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        `;
+        
+        // Lista de facturas
+        const body = document.createElement('div');
+        body.className = 'p-4 overflow-auto max-h-[60vh]';
+        
+        const fileList = document.createElement('ul');
+        fileList.className = 'divide-y divide-gray-200';
+        
+        downloads.forEach((download, index) => {
+          const item = document.createElement('li');
+          item.className = 'py-3 flex justify-between items-center';
+          
+          item.innerHTML = `
+            <span class="font-medium">${download.invoiceNumber}</span>
+            <button id="download-btn-${index}" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+              Descargar
+            </button>
+          `;
+          
+          fileList.appendChild(item);
+        });
+        
+        body.appendChild(fileList);
+        
+        // Footer con botones
+        const footer = document.createElement('div');
+        footer.className = 'p-4 border-t border-gray-200 flex justify-between';
+        
+        footer.innerHTML = `
+          <button id="download-all-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+            Descargar todas
+          </button>
+          <button id="close-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+            Cerrar
+          </button>
+        `;
+        
+        // Añadir elementos al DOM
+        confirmCard.appendChild(header);
+        confirmCard.appendChild(body);
+        confirmCard.appendChild(footer);
+        confirmContainer.appendChild(confirmCard);
+        document.body.appendChild(confirmContainer);
+        
+        // Función para limpiar recursos
+        const cleanup = () => {
+          document.body.removeChild(confirmContainer);
+        };
+        
+        // Event listeners
+        document.getElementById('close-dialog')?.addEventListener('click', cleanup);
+        document.getElementById('close-btn')?.addEventListener('click', cleanup);
+        
+        // Botones individuales de descarga
+        downloads.forEach((download, index) => {
+          document.getElementById(`download-btn-${index}`)?.addEventListener('click', () => {
+            // Descargar archivo individual
+            const url = URL.createObjectURL(download.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = download.fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Revocar URL después de un momento
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+            }, 1000);
+          });
+        });
+        
+        // Botón descargar todas
+        document.getElementById('download-all-btn')?.addEventListener('click', () => {
+          // Descargar todas secuencialmente con un pequeño retardo entre cada una
+          toast({
+            title: "Descargando facturas",
+            description: `Descargando ${downloads.length} facturas...`,
+          });
+          
+          // Secuencia con delay para evitar problemas del navegador
+          const downloadSequentially = async () => {
+            for (let i = 0; i < downloads.length; i++) {
+              const download = downloads[i];
+              const url = URL.createObjectURL(download.blob);
+              
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = download.fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              
+              // Esperar un momento entre descargas
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Revocar URL
+              URL.revokeObjectURL(url);
+            }
+            
+            toast({
+              title: "Descarga completada",
+              description: `Se han descargado ${downloads.length} facturas.`,
+            });
+          };
+          
+          downloadSequentially();
+        });
+        
+      } catch (error) {
+        // En caso de error, eliminar modal de progreso si sigue existiendo
+        const container = document.getElementById('export-progress-container');
+        if (container && container.parentNode) {
+          container.parentNode.removeChild(container);
+        }
+        
+        throw error; // Re-lanzar para el catch exterior
+      }
     } catch (error: any) {
       console.error("Error al exportar todas las facturas:", error);
       
@@ -656,65 +886,259 @@ const InvoiceList = () => {
     try {
       // Verificar si hay facturas filtradas
       if (!filteredInvoices || filteredInvoices.length === 0) {
-        // Mostrar un modal informativo con estilo coherente
-        const noInvoicesContainer = document.createElement('div');
-        noInvoicesContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-        noInvoicesContainer.style.backdropFilter = 'blur(4px)';
-        
-        const noInvoicesCard = document.createElement('div');
-        noInvoicesCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
-        
-        noInvoicesCard.innerHTML = `
-          <div class="flex items-center justify-center mb-4 text-amber-500">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" 
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-          </div>
-          <h2 class="text-xl font-medium text-center mb-2">No hay facturas para exportar</h2>
-          <p class="text-gray-600 text-center mb-6">No se encontraron facturas que cumplan con los filtros actuales.</p>
-          <div class="flex justify-center">
-            <button id="no-invoices-close" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-              Cerrar
-            </button>
-          </div>
-        `;
-        
-        noInvoicesContainer.appendChild(noInvoicesCard);
-        document.body.appendChild(noInvoicesContainer);
-        
-        document.getElementById('no-invoices-close')?.addEventListener('click', () => {
-          document.body.removeChild(noInvoicesContainer);
+        toast({
+          title: "No hay facturas",
+          description: "No se encontraron facturas que cumplan con los filtros actuales.",
+          variant: "destructive",
         });
         return;
       }
       
       toast({
         title: "Preparando facturas",
-        description: `Generando ${filteredInvoices.length} facturas según los filtros aplicados...`,
+        description: `Generando ${filteredInvoices.length} facturas para descargar...`,
       });
       
-      // Función para obtener los items de una factura
-      const getInvoiceItems = async (invoiceId: number) => {
-        const response = await apiRequest("GET", `/api/invoices/${invoiceId}`);
-        const data = await response.json();
-        return data.items || [];
+      // Crear un contenedor para mostrar progreso
+      const progressContainer = document.createElement('div');
+      progressContainer.id = 'export-progress-container';
+      progressContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      progressContainer.style.backdropFilter = 'blur(4px)';
+      
+      const progressCard = document.createElement('div');
+      progressCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
+      
+      progressCard.innerHTML = `
+        <h2 class="text-xl font-medium text-center mb-4">Generando facturas</h2>
+        <div class="mb-4">
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-600 rounded-full" style="width: 0%"></div>
+          </div>
+          <p id="progress-text" class="text-sm text-center mt-2">Preparando facturas (0/${filteredInvoices.length})</p>
+        </div>
+        <div id="progress-details" class="max-h-32 overflow-y-auto text-xs text-gray-500 mb-4"></div>
+      `;
+      
+      progressContainer.appendChild(progressCard);
+      document.body.appendChild(progressContainer);
+      
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const progressDetails = document.getElementById('progress-details');
+      
+      // Función para actualizar el progreso
+      const updateProgress = (current: number, message: string) => {
+        const percentage = Math.round((current / filteredInvoices.length) * 100);
+        if (progressBar) progressBar.style.width = `${percentage}%`;
+        if (progressText) progressText.textContent = `Procesando facturas (${current}/${filteredInvoices.length})`;
+        
+        if (progressDetails) {
+          const detail = document.createElement('div');
+          detail.className = 'mb-1';
+          detail.textContent = message;
+          progressDetails.appendChild(detail);
+          progressDetails.scrollTop = progressDetails.scrollHeight;
+        }
       };
       
-      // Ejecutar la descarga de facturas como ZIPs individuales
-      await downloadFilteredInvoicesAsZip(
-        filteredInvoices,
-        clientsData || [],
-        yearFilter,
-        quarterFilter,
-        clientFilter,
-        statusFilter,
-        getInvoiceItems
-      );
-      
-      // Ya no necesitamos mostrar esta notificación ya que ahora mostramos las facturas en una ventana modal
+      try {
+        // Generar cada PDF individualmente y descargarlos uno por uno
+        // para asegurar que todas las facturas se descarguen
+        const downloads: Array<{
+          blob: Blob,
+          fileName: string,
+          invoiceNumber: string
+        }> = [];
+        
+        for (let i = 0; i < filteredInvoices.length; i++) {
+          const invoice = filteredInvoices[i];
+          
+          // Buscar cliente
+          const client = clientsData?.find(c => c.id === invoice.clientId);
+          if (!client) {
+            updateProgress(i + 1, `⚠️ Omitida factura ${invoice.invoiceNumber}: Cliente no encontrado`);
+            continue;
+          }
+          
+          try {
+            // Obtener items
+            updateProgress(i + 1, `Obteniendo detalles de factura ${invoice.invoiceNumber}...`);
+            const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+            const data = await response.json();
+            const items = data.items || [];
+            
+            // Generar PDF
+            updateProgress(i + 1, `Generando PDF para factura ${invoice.invoiceNumber}...`);
+            const pdfBlob = await generateInvoicePDFBlob(invoice, client, items);
+            
+            // Nombre único para el archivo 
+            const fileName = `Factura_${invoice.invoiceNumber}_${client.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+            
+            // Crear objeto de descarga
+            downloads.push({
+              blob: pdfBlob,
+              fileName: fileName,
+              invoiceNumber: invoice.invoiceNumber
+            });
+            
+            updateProgress(i + 1, `✓ Factura ${invoice.invoiceNumber} lista para descargar`);
+          } catch (error) {
+            console.error(`Error al generar PDF para factura ${invoice.invoiceNumber}:`, error);
+            updateProgress(i + 1, `❌ Error en factura ${invoice.invoiceNumber}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+          }
+        }
+        
+        // Eliminar el modal de progreso
+        document.body.removeChild(progressContainer);
+        
+        if (downloads.length === 0) {
+          toast({
+            title: "Error",
+            description: "No se pudo generar ninguna factura para descargar.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Mostrar diálogo de confirmación con las facturas generadas
+        const confirmContainer = document.createElement('div');
+        confirmContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        confirmContainer.style.backdropFilter = 'blur(4px)';
+        
+        const confirmCard = document.createElement('div');
+        confirmCard.className = 'bg-white rounded-xl shadow-xl max-w-xl w-full overflow-hidden flex flex-col';
+        
+        // Crear cabecera
+        const header = document.createElement('div');
+        header.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
+        header.innerHTML = `
+          <h2 class="text-lg font-medium text-gray-800">Facturas generadas (${downloads.length})</h2>
+          <button id="close-dialog" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        `;
+        
+        // Lista de facturas
+        const body = document.createElement('div');
+        body.className = 'p-4 overflow-auto max-h-[60vh]';
+        
+        const fileList = document.createElement('ul');
+        fileList.className = 'divide-y divide-gray-200';
+        
+        downloads.forEach((download, index) => {
+          const item = document.createElement('li');
+          item.className = 'py-3 flex justify-between items-center';
+          
+          item.innerHTML = `
+            <span class="font-medium">${download.invoiceNumber}</span>
+            <button id="download-btn-${index}" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+              Descargar
+            </button>
+          `;
+          
+          fileList.appendChild(item);
+        });
+        
+        body.appendChild(fileList);
+        
+        // Footer con botones
+        const footer = document.createElement('div');
+        footer.className = 'p-4 border-t border-gray-200 flex justify-between';
+        
+        footer.innerHTML = `
+          <button id="download-all-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+            Descargar todas
+          </button>
+          <button id="close-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+            Cerrar
+          </button>
+        `;
+        
+        // Añadir elementos al DOM
+        confirmCard.appendChild(header);
+        confirmCard.appendChild(body);
+        confirmCard.appendChild(footer);
+        confirmContainer.appendChild(confirmCard);
+        document.body.appendChild(confirmContainer);
+        
+        // Función para limpiar recursos
+        const cleanup = () => {
+          document.body.removeChild(confirmContainer);
+        };
+        
+        // Event listeners
+        document.getElementById('close-dialog')?.addEventListener('click', cleanup);
+        document.getElementById('close-btn')?.addEventListener('click', cleanup);
+        
+        // Botones individuales de descarga
+        downloads.forEach((download, index) => {
+          document.getElementById(`download-btn-${index}`)?.addEventListener('click', () => {
+            // Descargar archivo individual
+            const url = URL.createObjectURL(download.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = download.fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Revocar URL después de un momento
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+            }, 1000);
+          });
+        });
+        
+        // Botón descargar todas
+        document.getElementById('download-all-btn')?.addEventListener('click', () => {
+          // Descargar todas secuencialmente con un pequeño retardo entre cada una
+          toast({
+            title: "Descargando facturas",
+            description: `Descargando ${downloads.length} facturas...`,
+          });
+          
+          // Secuencia con delay para evitar problemas del navegador
+          const downloadSequentially = async () => {
+            for (let i = 0; i < downloads.length; i++) {
+              const download = downloads[i];
+              const url = URL.createObjectURL(download.blob);
+              
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = download.fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              
+              // Esperar un momento entre descargas
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Revocar URL
+              URL.revokeObjectURL(url);
+            }
+            
+            toast({
+              title: "Descarga completada",
+              description: `Se han descargado ${downloads.length} facturas.`,
+            });
+          };
+          
+          downloadSequentially();
+        });
+        
+      } catch (error) {
+        // En caso de error, eliminar modal de progreso si sigue existiendo
+        const container = document.getElementById('export-progress-container');
+        if (container && container.parentNode) {
+          container.parentNode.removeChild(container);
+        }
+        
+        throw error; // Re-lanzar para el catch exterior
+      }
     } catch (error: any) {
       console.error("Error al exportar facturas filtradas:", error);
       toast({
