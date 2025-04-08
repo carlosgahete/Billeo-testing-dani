@@ -3198,48 +3198,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ========================
-  // RUTAS PARA UTILIDADES
-  // ========================
-  
-  // Endpoint para procesar múltiples PDFs (alternativa a la compresión ZIP)
-  app.post("/api/combine-pdf-files", upload.array("file", 50), async (req, res) => {
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      
-      // Verificar que hay archivos para procesar
-      if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-        return res.status(400).json({ error: "No se proporcionaron archivos" });
-      }
-      
-      const files = req.files as Express.Multer.File[];
-      
-      // Para evitar problemas con el ZIP, devolvemos los archivos uno por uno al cliente
-      // y dejamos que el cliente los descargue individualmente
-      
-      // Crear un arreglo con las URLs de los archivos
-      const fileUrls = files.map(file => {
-        // Renombrar el archivo para que tenga un nombre más descriptivo
-        const originalName = path.parse(file.originalname);
-        const newFilename = `${originalName.name}_${Date.now()}${originalName.ext}`;
-        const newPath = path.join(uploadDir, newFilename);
-        
-        // Copiar el archivo con nuevo nombre
-        fs.copyFileSync(file.path, newPath);
-        
-        // Devolver la URL del archivo
-        return `/uploads/${newFilename}`;
-      });
-      
-      // Devolver las URLs de los archivos
-      return res.status(200).json({ files: fileUrls });
-      
-    } catch (error) {
-      console.error('Error al procesar archivos PDF:', error);
-      res.status(500).json({ error: "Error al procesar archivos PDF" });
-    }
-  });
-
   return httpServer;
 }
