@@ -134,7 +134,7 @@ const DeleteTransactionDialog = ({
 };
 
 const TransactionList = () => {
-  const [navigate, setLocation] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [currentTab, setCurrentTab] = useState("all");
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
