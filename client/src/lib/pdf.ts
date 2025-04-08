@@ -129,8 +129,9 @@ function getStatusColor(status: string): number[] {
 export async function generateInvoicePDF(
   invoice: Invoice,
   client: Client,
-  items: InvoiceItem[]
-): Promise<void> {
+  items: InvoiceItem[],
+  returnBlob: boolean = false
+): Promise<void | Blob> {
   // Create a new PDF
   const doc = new jsPDF();
   
@@ -311,7 +312,13 @@ export async function generateInvoicePDF(
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
   }
   
-  // Save the PDF
+  // Si se solicita devolver el Blob, lo hacemos
+  if (returnBlob) {
+    const pdfData = doc.output('arraybuffer');
+    return new Blob([pdfData], { type: 'application/pdf' });
+  }
+  
+  // De lo contrario, guardamos el PDF como descarga
   doc.save(`Factura_${invoice.invoiceNumber}.pdf`);
 }
 

@@ -58,6 +58,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { generateInvoicePDF } from "@/lib/pdf";
+import { downloadFilteredInvoicesAsZip } from "@/lib/zipService";
 import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 
 // Función de utilidad para forzar la actualización de datos
@@ -524,6 +525,56 @@ const InvoiceList = () => {
     }
   };
   
+  // Función para exportar facturas filtradas como ZIP
+  const handleExportFilteredInvoices = async () => {
+    try {
+      // Verificar si hay facturas filtradas
+      if (!filteredInvoices || filteredInvoices.length === 0) {
+        toast({
+          title: "No hay facturas para exportar",
+          description: "No se encontraron facturas que cumplan con los filtros actuales.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Preparando facturas",
+        description: `Generando ${filteredInvoices.length} facturas según los filtros aplicados...`,
+      });
+      
+      // Función para obtener los items de una factura
+      const getInvoiceItems = async (invoiceId: number) => {
+        const response = await apiRequest("GET", `/api/invoices/${invoiceId}`);
+        const data = await response.json();
+        return data.items || [];
+      };
+      
+      // Ejecutar la descarga de facturas como ZIPs individuales
+      await downloadFilteredInvoicesAsZip(
+        filteredInvoices,
+        clientsData || [],
+        yearFilter,
+        quarterFilter,
+        clientFilter,
+        statusFilter,
+        getInvoiceItems
+      );
+      
+      toast({
+        title: "Facturas generadas",
+        description: `Se han descargado ${filteredInvoices.length} facturas basadas en los filtros aplicados.`,
+      });
+    } catch (error: any) {
+      console.error("Error al exportar facturas filtradas:", error);
+      toast({
+        title: "Error",
+        description: `No se pudieron exportar las facturas: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Función para manejar "Marcar como pagada" en el menú móvil
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
@@ -814,8 +865,23 @@ const InvoiceList = () => {
             <span className="hidden sm:inline">Exportar todo</span>
             <span className="sm:hidden">Exportar</span>
           </button>
+          
+          {/* Botón para exportar solo las facturas filtradas */}
+          {filteredInvoices.length > 0 && filteredInvoices.length !== invoicesData?.length && (
+            <button
+              className="button-apple-secondary button-apple-sm flex items-center ml-1"
+              onClick={handleExportFilteredInvoices}
+              title={`Exportar ${filteredInvoices.length} facturas filtradas`}
+            >
+              <FileDown className="h-4 w-4 mr-1.5" />
+              <span className="hidden lg:inline">Exportar filtradas</span>
+              <span className="hidden sm:inline lg:hidden">Filtradas</span>
+              <span className="sm:hidden">{filteredInvoices.length}</span>
+            </button>
+          )}
+          
           <button
-            className="button-apple button-apple-sm flex items-center"
+            className="button-apple button-apple-sm flex items-center ml-1"
             onClick={() => navigate("/invoices/create")}
           >
             <Plus className="h-4 w-4 mr-1.5" />

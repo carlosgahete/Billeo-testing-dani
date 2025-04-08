@@ -1,0 +1,114 @@
+Perfecto, te voy a preparar la explicación lo más completa, clara y estructurada posible para que tu Inteligencia Artificial lo entienda sin ninguna duda:
+
+⸻
+
+Instrucciones detalladas para implementar la función de descarga de facturas filtradas
+
+Objetivo general:
+
+Quiero que cuando un usuario aplique cualquier filtro sobre las facturas (por fechas, por categorías, por precios, etc.), aparezca un botón de “Descargar” que permita descargar todas las facturas filtradas en una carpeta comprimida (.zip).
+
+Además, tanto el nombre del ZIP como los nombres individuales de las facturas dentro del ZIP deben adaptarse automáticamente según los filtros seleccionados.
+
+⸻
+
+Funcionamiento que debe implementar la IA:
+
+1. Aplicación de filtros
+
+Cuando el usuario utilice cualquier opción de filtro (por ejemplo:
+	•	“Tercer trimestre 2025”,
+	•	“Categoría: Marketing”,
+	•	“Facturas entre 01/01/2025 y 31/03/2025”,
+etc.),
+el sistema filtra correctamente las facturas que cumplen esas condiciones.
+
+(Este funcionamiento de filtros ya existe, no debe cambiarse.)
+
+⸻
+
+2. Aparición del botón “Descargar”
+
+Después de aplicar el filtro, si existen facturas que cumplan el criterio:
+	•	Mostrar un botón de “Descargar” de manera clara en el dashboard.
+	•	Si no hay facturas que cumplan el filtro, el botón:
+	•	No debe aparecer, o
+	•	Debe estar desactivado.
+
+⸻
+
+3. Generación del archivo ZIP
+
+Cuando el usuario pulse el botón “Descargar”:
+	•	El sistema debe generar un archivo .zip.
+	•	Dentro del ZIP deben estar todas las facturas que cumplen el filtro aplicado.
+
+⸻
+
+4. Nombres del archivo ZIP y de las facturas internas
+
+Nombre del archivo ZIP:
+
+Debe ser automático y descriptivo, en función del filtro aplicado.
+Ejemplos:
+	•	Si se filtra por trimestre:
+→ Facturas_TercerTrimestre_2025.zip
+	•	Si se filtra por categoría (Marketing):
+→ Facturas_Marketing_2025.zip
+	•	Si se filtra por rango de fechas:
+→ Facturas_Enero-Marzo_2025.zip
+
+⸻
+
+Nombres de las facturas dentro del ZIP:
+
+Cada factura individual dentro del ZIP también debe tener un nombre coherente que incluya información del filtro.
+
+Formato recomendado:
+
+Factura_[Proveedor o Descripción]_[FiltroAplicado].pdf
+
+Ejemplos:
+	•	Factura_GoogleAds_TercerTrimestre2025.pdf
+	•	Factura_Facebook_Marketing_2025.pdf
+	•	Factura_ProveedorX_Enero-Marzo2025.pdf
+
+⸻
+
+5. Notas importantes:
+	•	No se debe cambiar el funcionamiento de los filtros ni de otros botones, solo se debe añadir esta opción de descarga.
+	•	Todo el proceso debe ser automático, rápido y sencillo para el usuario.
+	•	El usuario debe recibir directamente un archivo .zip limpio y organizado.
+	•	El sistema debe manejar correctamente los casos especiales:
+	•	Si solo hay una factura, igualmente se descarga en ZIP.
+	•	Si hay muchas facturas, todas se organizan dentro del ZIP con nombres claros.
+
+⸻
+
+Resumen ultra claro para que la IA lo entienda fácil:
+
+Filtro aplicado → Mostrar botón “Descargar” → Generar ZIP → Facturas internas renombradas con el filtro → ZIP nombrado automáticamente → Todo automático, no cambiar funcionamiento actual.
+
+⸻
+
+Ejemplo práctico completo para que la IA vea un caso real
+
+Usuario selecciona:
+	•	Categoría: “Marketing”
+	•	Fechas: “01/01/2025 al 31/03/2025”
+
+Acción esperada:
+	•	Aparece botón “Descargar”
+	•	Usuario pulsa “Descargar”
+	•	Se descarga:
+Archivo .zip llamado:
+→ Facturas_Marketing_Enero-Marzo2025.zip
+	•	Dentro del ZIP hay facturas como:
+	•	Factura_GoogleAds_Enero-Marzo2025.pdf
+	•	Factura_MetaAds_Enero-Marzo2025.pdf
+	•	Factura_ProveedorSEO_Enero-Marzo2025.pdf
+
+⸻
+
+¿Quieres que también te prepare cómo debería ser visualmente el botón “Descargar” y el proceso de descarga?
+Podría dejarlo aún más “cerrado” para que la IA no cometa ni un pequeño error. ¿Te lo preparo también?
