@@ -126,21 +126,21 @@ const ExpenseFilters = ({
         <div className="flex justify-between items-center relative z-10">
           <div className="flex items-center">
             <div className="mr-3.5 p-2.5 bg-white rounded-xl shadow-sm flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="5" width="20" height="14" rx="2" />
                 <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
             </div>
-            <div className="flex flex-col justify-center py-0.5">
-              <h2 className="text-white font-semibold text-xl flex items-center leading-tight">
-                <span className="mr-2">Lista de Gastos</span>
+            <div className="-mt-1.5">
+              <h2 className="text-white font-semibold text-xl">
+                Lista de Gastos
                 {filtersApplied && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-lg bg-white text-[#FF9F0A] text-xs font-semibold shadow-sm">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-lg bg-white text-[#FF9F0A] text-xs font-semibold shadow-sm ml-2">
                     ✓
                   </span>
                 )}
               </h2>
-              <p className="text-white/80 text-xs mt-1 font-medium">
+              <p className="text-white/80 text-xs font-medium -mt-0.5">
                 {filtersApplied ? 'Filtros personalizados aplicados' : 'Visualizando todos los gastos'}
               </p>
             </div>
