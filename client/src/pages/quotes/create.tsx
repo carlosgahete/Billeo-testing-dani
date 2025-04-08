@@ -12,10 +12,6 @@ export default function CreateQuotePage() {
 
   return (
     <Layout>
-      <PageTitle 
-        title="Crear presupuesto" 
-        description="Crea un nuevo presupuesto para tus clientes." 
-      />
       <div className="my-6">
         <QuoteFormApple />
       </div>

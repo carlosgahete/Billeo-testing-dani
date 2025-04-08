@@ -16,10 +16,6 @@ export default function EditQuotePage() {
 
   return (
     <Layout>
-      <PageTitle 
-        title="Editar presupuesto" 
-        description="Modifica los datos de tu presupuesto." 
-      />
       <div className="my-6">
         <QuoteFormApple quoteId={quoteId} />
       </div>
