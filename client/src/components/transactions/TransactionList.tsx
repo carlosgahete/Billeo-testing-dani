@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -36,20 +36,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExpenseFilters from "@/components/transactions/ExpenseFilters";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Transaction, Category } from "@/types";
 
-interface Transaction {
-  id: number;
-  title?: string;
-  description: string;
-  amount: number;
-  date: string;
-  type: "income" | "expense";
-  categoryId: number | null;
-  paymentMethod: string;
-  notes?: string;
-  additionalTaxes?: string;
-}
-
+// Mantenemos la definición Invoice propia de este componente
 interface Invoice {
   id: number;
   invoiceNumber: string;
@@ -61,14 +52,6 @@ interface Invoice {
   tax: string;
   total: string;
   additionalTaxes?: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  type: "income" | "expense";
-  color: string;
-  icon?: string;
 }
 
 const PaymentMethodBadge = ({ method }: { method: string }) => {
@@ -215,6 +198,159 @@ const TransactionList = () => {
     
     // In a real app, we'd wait for the server to process the import and then reload the data
     queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+  };
+  
+  // Función para exportar los gastos filtrados
+  const handleExportFilteredExpenses = async () => {
+    try {
+      if (!filteredExpenseTransactions || filteredExpenseTransactions.length === 0) {
+        toast({
+          title: "No hay gastos",
+          description: "No se encontraron gastos que cumplan con los filtros actuales.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Preparando gastos",
+        description: `Generando informe de ${filteredExpenseTransactions.length} gastos según los filtros aplicados...`,
+      });
+      
+      // Crear un contenedor para mostrar progreso
+      const progressContainer = document.createElement('div');
+      progressContainer.id = 'export-progress-container';
+      progressContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      progressContainer.style.backdropFilter = 'blur(4px)';
+      
+      const progressCard = document.createElement('div');
+      progressCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
+      
+      progressCard.innerHTML = `
+        <h2 class="text-xl font-medium text-center mb-4">Generando informe de gastos</h2>
+        <div class="mb-4">
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-600 rounded-full" style="width: 0%"></div>
+          </div>
+          <p id="progress-text" class="text-sm text-center mt-2">Preparando informe...</p>
+        </div>
+      `;
+      
+      progressContainer.appendChild(progressCard);
+      document.body.appendChild(progressContainer);
+      
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      
+      // Función para actualizar el progreso
+      const updateProgress = (percentage: number, message: string) => {
+        if (progressBar) progressBar.style.width = `${percentage}%`;
+        if (progressText) progressText.textContent = message;
+      };
+      
+      try {
+        updateProgress(20, "Obteniendo datos de categorías...");
+        
+        // Crear un PDF para la exportación
+        const doc = new jsPDF();
+        
+        // Añadir título y fecha
+        const currentDate = new Date().toLocaleDateString('es-ES');
+        doc.setFontSize(18);
+        doc.text("Informe de Gastos", 105, 15, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Generado el ${currentDate}`, 105, 22, { align: 'center' });
+        
+        updateProgress(40, "Procesando datos de gastos...");
+        
+        // Preparar los datos para la tabla
+        const tableData = filteredExpenseTransactions.map(expense => {
+          // Obtener información de la categoría
+          const category = getCategory(expense.categoryId);
+          
+          // Formatear datos
+          const formattedDate = formatDate(expense.date);
+          const formattedAmount = formatCurrency(expense.amount, 'expense');
+          
+          // Detectar si hay información del proveedor en las notas
+          let providerName = "No especificado";
+          if (expense.notes) {
+            const providerMatch = expense.notes.match(/🏢 Proveedor:\s*([^\n]+)/);
+            if (providerMatch && providerMatch[1] && providerMatch[1] !== 'No detectado') {
+              providerName = providerMatch[1].trim();
+            }
+          }
+          
+          return [
+            formattedDate,
+            expense.title || providerName,
+            expense.description,
+            category.name,
+            formattedAmount
+          ];
+        });
+        
+        updateProgress(70, "Generando PDF...");
+        
+        // Calcular total de gastos
+        const totalAmount = filteredExpenseTransactions.reduce((sum, expense) => sum + Number(expense.amount), 0);
+        const formattedTotal = formatCurrency(totalAmount, 'expense');
+        
+        // Añadir tabla al PDF
+        autoTable(doc, {
+          head: [['Fecha', 'Proveedor', 'Descripción', 'Categoría', 'Importe']],
+          body: tableData,
+          foot: [['Total', '', '', '', formattedTotal]],
+          theme: 'striped',
+          headStyles: { fillColor: [170, 0, 0], textColor: [255, 255, 255] },
+          footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' },
+          margin: { top: 30 },
+        });
+        
+        updateProgress(90, "Finalizando documento...");
+        
+        // Añadir pie de página
+        const pageCount = doc.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.text(`Página ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        }
+        
+        // Generar nombre de archivo
+        const fileName = `Gastos_Filtrados_${new Date().toISOString().split('T')[0]}.pdf`;
+        
+        updateProgress(100, "¡Informe listo para descargar!");
+        
+        // Limpiar modal de progreso
+        setTimeout(() => {
+          document.body.removeChild(progressContainer);
+          
+          // Descargar PDF
+          doc.save(fileName);
+          
+          toast({
+            title: "Informe generado",
+            description: "El informe de gastos filtrados ha sido generado y descargado exitosamente.",
+          });
+        }, 1000);
+        
+      } catch (error) {
+        // En caso de error, eliminar modal de progreso
+        if (document.body.contains(progressContainer)) {
+          document.body.removeChild(progressContainer);
+        }
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error al exportar gastos filtrados:", error);
+      
+      toast({
+        title: "Error",
+        description: `No se pudo generar el informe: ${error.message}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Manejo de transacciones filtradas
@@ -444,6 +580,18 @@ const TransactionList = () => {
               <ScanText className="h-4 w-4 mr-1.5 sm:mr-2" />
               <span className="hidden sm:inline">Escanear gasto</span>
               <span className="sm:hidden">Escanear</span>
+            </button>
+          )}
+          
+          {/* Visible solo en la pestaña 'expense' cuando hay gastos filtrados: Exportar gastos filtrados */}
+          {currentTab === 'expense' && filteredExpenseTransactions.length > 0 && (
+            <button 
+              className="button-apple-secondary button-apple-sm flex items-center"
+              onClick={() => handleExportFilteredExpenses()}
+            >
+              <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">Exportar gastos filtrados</span>
+              <span className="sm:hidden">Exportar</span>
             </button>
           )}
           

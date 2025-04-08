@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,32 +10,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
-
-interface Category {
-  id: number;
-  name: string;
-  type?: "income" | "expense";
-  color?: string;
-  icon?: string;
-}
-
-interface Transaction {
-  id: number;
-  description: string;
-  amount: number;
-  date: string;
-  type: "income" | "expense";
-  categoryId: number | null;
-  paymentMethod?: string;
-  attachments?: string[];
-  tax?: number | string;
-  notes?: string;
-}
+import { Transaction, Category } from "@/types";
 
 interface ExpenseFiltersProps {
   transactions: Transaction[];
   categories: Category[];
-  onFilterChange: (filteredTransactions: Transaction[]) => void;
+  onFilterChange: React.Dispatch<React.SetStateAction<Transaction[]>>;
 }
 
 const ExpenseFilters = ({
