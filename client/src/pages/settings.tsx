@@ -248,17 +248,17 @@ const SettingsPage = () => {
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto">
-      {/* Header con estilo Apple moderno y minimalista */}
-      <div className="flex items-center px-4 pb-6 pt-2">
-        <div className="flex items-center">
-          <div className="bg-[#F9F9FB] p-3 rounded-full mr-3 flex-shrink-0">
-            <User className="h-5 w-5 text-gray-700" />
+      {/* Encabezado estilo Apple */}
+      <div className="mb-8">
+        <div className="flex items-center mb-4 space-x-3">
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-2xl shadow-sm">
+            <User className="h-6 w-6 text-gray-600" />
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Configuración</h2>
-            <p className="text-sm text-gray-500">Administra tu perfil, preferencias y configuración de seguridad</p>
-          </div>
+          <h1 className="text-2xl font-medium text-gray-900">Configuración</h1>
         </div>
+        <p className="text-gray-500 ml-12 max-w-3xl">
+          Administra tu perfil, preferencias y configuración de seguridad
+        </p>
       </div>
       
       <Tabs defaultValue="profile" className="w-full">
