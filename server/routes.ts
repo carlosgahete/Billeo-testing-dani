@@ -124,8 +124,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Crear nombre de descarga amigable
       let downloadName = filename;
-      // Si es un nombre generado por multer, extraer solo la extensión y usar nombre genérico
-      if (filename.startsWith('file-')) {
+      
+      // Si hay información de transacción en la consulta, la usamos para el nombre del archivo
+      const { provider, date, category } = req.query;
+      
+      if (provider && date && category) {
+        // Si tenemos todos los datos, creamos un nombre más descriptivo
+        const cleanProvider = (provider as string).replace(/[^a-zA-Z0-9\-_]/g, '');
+        const formattedDate = (date as string).replace(/[\/]/g, '-');
+        const cleanCategory = (category as string).replace(/[^a-zA-Z0-9\-_]/g, '');
+        
+        downloadName = `${cleanProvider}_${formattedDate}_${cleanCategory}${ext}`;
+      } 
+      // Si no hay información completa pero es un nombre generado por multer, usar fecha genérica
+      else if (filename.startsWith('file-')) {
         const datePart = filename.split('-')[1] || '';
         const dateFormatted = datePart ? new Date(parseInt(datePart)).toISOString().split('T')[0] : '';
         downloadName = `documento_${dateFormatted || 'descargado'}${ext}`;

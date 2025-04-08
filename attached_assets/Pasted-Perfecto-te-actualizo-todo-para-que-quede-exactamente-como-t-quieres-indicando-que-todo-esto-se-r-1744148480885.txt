@@ -1,0 +1,82 @@
+Perfecto, te actualizo todo para que quede exactamente como tú quieres, indicando que todo esto se realiza dentro del apartado de Gastos, no desde el Dashboard general.
+
+Aquí tienes el mensaje definitivo, unificado y corregido:
+
+⸻
+
+Instrucción definitiva para la IA: Descarga de gastos originales en el apartado de Gastos
+
+Contexto:
+
+Todo esto se debe implementar en el apartado de “Gastos”, que es el módulo donde ya estamos trabajando, no en el dashboard principal.
+
+⸻
+
+Objetivo:
+
+Quiero que el apartado de Gastos permita a los usuarios:
+	•	Descargar los documentos originales que subieron (PDFs, imágenes, etc.).
+	•	Sin modificar formatos.
+	•	De manera individual o masiva (varios gastos a la vez).
+
+Esto es fundamental para que el usuario pueda tener una copia real y exacta de sus facturas o tickets originales en caso de inspecciones o auditorías.
+
+⸻
+
+Funcionalidades concretas a desarrollar:
+
+1. Botón de descarga individual:
+	•	En cada gasto que aparece listado en el apartado de Gastos, debe haber un botón llamado “Descargar original”.
+	•	Ubicación exacta:
+	•	Pegado a la derecha del botón “Editar” (como mostré en la imagen enviada).
+	•	Estilo: mismo estilo de botones que ya existe en el listado (coherencia visual).
+	•	Función:
+Al pulsar “Descargar original” en un gasto concreto → debe descargarse directamente el documento original tal como fue subido (PDF, PNG, JPG, etc.).
+
+⸻
+
+2. Botón de descarga masiva:
+	•	Ubicación:
+	•	Un botón general “Descargar originales” debe estar arriba a la derecha del apartado de Gastos.
+	•	Función:
+Cuando el usuario pulse este botón:
+	•	Se debe generar y descargar un archivo ZIP.
+	•	El ZIP debe contener todos los documentos originales de los gastos que estén filtrados o visibles en pantalla (por ejemplo, gastos de un trimestre, gastos de una categoría, etc.).
+
+⸻
+
+3. Nombres de los archivos descargados:
+	•	Los archivos dentro del ZIP o al descargarlos individualmente deben tener un nombre claro y estructurado, siguiendo este formato:
+
+[NombreProveedor]_[FechaGasto]_[Categoría].(extensión original)
+
+Ejemplos:
+	•	RestauranteLaPlaza_15-03-2025_Hostelería.pdf
+	•	HotelSol_20-03-2025_Viajes.pdf
+	•	Importante:
+Si el gasto no tiene información suficiente, mantener el nombre original del archivo subido.
+
+⸻
+
+Detalles técnicos y visuales que debe cumplir:
+	•	No alterar ni modificar el formato de los archivos originales.
+	•	No cambiar el funcionamiento actual de los botones de editar, borrar, filtros, etc.
+	•	Añadir estos nuevos botones respetando el diseño actual:
+	•	Limpio, sencillo, intuitivo.
+	•	Coherente con el estilo visual general del apartado Gastos.
+	•	Todo el proceso debe ser rápido y sin pasos intermedios innecesarios.
+
+⸻
+
+Resumen ultra claro para la IA:
+
+En el apartado de Gastos:
+Cada gasto listado debe tener un botón “Descargar original” (pegado a “Editar”).
+También debe haber un botón general “Descargar originales” arriba a la derecha.
+Los archivos se deben descargar en su formato original, con nombres claros basados en proveedor, fecha y categoría.
+Todo debe mantener el mismo estilo visual y no debe cambiar el funcionamiento de los demás elementos.
+
+⸻
+
+¿Quieres que también te prepare un pequeño ejemplo de flujo de usuario paso a paso para que tu IA lo tenga aún más claro (tipo: subir gasto → ver botón → descargar → comprobar ZIP)?
+Puedo hacer que no haya ninguna duda. ¿Te lo preparo?

@@ -517,13 +517,38 @@ const TransactionList = () => {
       id: "actions",
       cell: ({ row }) => {
         const transaction = row.original;
+        const hasAttachments = transaction.attachments && transaction.attachments.length > 0;
+        
+        // Solo mostrar botón de descarga si es un gasto y tiene archivos adjuntos
+        const showDownloadButton = transaction.type === 'expense' && hasAttachments;
         
         return (
           <div className="flex justify-end space-x-1">
+            {showDownloadButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  // Importamos dinámicamente para evitar problemas de dependencias cíclicas
+                  import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
+                    const category = getCategory(transaction.categoryId);
+                    // Para simplificar, descargamos el primer adjunto
+                    // En una mejora futura podríamos mostrar un menú desplegable si hay varios
+                    if (transaction.attachments && transaction.attachments.length > 0) {
+                      downloadExpenseOriginal(transaction.attachments[0], transaction as any, category);
+                    }
+                  });
+                }}
+                title="Descargar original"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
+              title="Editar"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -640,25 +665,57 @@ const TransactionList = () => {
             </button>
           )}
           
-          {/* Visible siempre en la pestaña 'expense': Exportar gastos (filtrados o todos) */}
-          {/* Ubicamos el botón de exportación al lado de los demás botones en el header */}
+          {/* Visible siempre en la pestaña 'expense': Botones para descargar/exportar */}
           {currentTab === 'expense' && (
-            <button 
-              className="button-apple-secondary button-apple-sm flex items-center"
-              onClick={() => handleExportFilteredExpenses()}
-              disabled={transactions?.filter(t => t.type === 'expense').length === 0}
-              title={filteredExpenseTransactions.length > 0 ? 
-                `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
-                `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
-            >
-              <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">
-                {filteredExpenseTransactions.length > 0 ? 
-                  `Exportar ${filteredExpenseTransactions.length} filtrados` : 
-                  "Exportar todos los gastos"}
-              </span>
-              <span className="sm:hidden">Exportar</span>
-            </button>
+            <>
+              {/* Botón para descargar documentos originales */}
+              <button 
+                className="button-apple button-apple-sm flex items-center"
+                onClick={() => {
+                  // Importamos dinámicamente para evitar problemas de dependencias cíclicas
+                  import('@/lib/attachmentService').then(({ downloadExpenseOriginalsAsZip }) => {
+                    // Filtrar los gastos que tienen documentos adjuntos
+                    const expenses = (filteredExpenseTransactions.length > 0 ? filteredExpenseTransactions : transactions)
+                      .filter(t => t.type === 'expense' && t.attachments && t.attachments.length > 0);
+                    
+                    if (expenses.length === 0) {
+                      // Usamos toast desde el hook ya destructurado
+                      toast({
+                        title: "Sin documentos originales",
+                        description: "No hay documentos originales disponibles para descargar.",
+                        variant: "default"
+                      });
+                      return;
+                    }
+                    
+                    downloadExpenseOriginalsAsZip(expenses as any, categories || []);
+                  });
+                }}
+                title="Descargar documentos originales de los gastos"
+              >
+                <Download className="h-4 w-4 mr-1.5 sm:mr-2" />
+                <span className="hidden sm:inline">Descargar originales</span>
+                <span className="sm:hidden">Originales</span>
+              </button>
+              
+              {/* Botón para exportar a PDF */}
+              <button 
+                className="button-apple-secondary button-apple-sm flex items-center"
+                onClick={() => handleExportFilteredExpenses()}
+                disabled={transactions?.filter(t => t.type === 'expense').length === 0}
+                title={filteredExpenseTransactions.length > 0 ? 
+                  `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
+                  `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
+              >
+                <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                <span className="hidden sm:inline">
+                  {filteredExpenseTransactions.length > 0 ? 
+                    `Exportar ${filteredExpenseTransactions.length} filtrados` : 
+                    "Exportar todos los gastos"}
+                </span>
+                <span className="sm:hidden">Exportar</span>
+              </button>
+            </>
           )}
           
           {/* Visible solo en la pestaña 'income': Crear factura */}
