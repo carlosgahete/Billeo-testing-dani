@@ -1,5 +1,5 @@
-// Importamos la función y los tipos directamente desde pdf.ts
-import { generateInvoicePDF } from './pdf';
+// Importamos la función directamente desde pdf.ts
+import { generateInvoicePDF, generateInvoicePDFBlob } from './pdf';
 
 // Reutilizamos las mismas interfaces de pdf.ts por coherencia de tipos
 interface AdditionalTax {
@@ -127,17 +127,7 @@ export const formatInvoiceFileName = (
   return `Factura_${invoice.invoiceNumber}_${safeClientName}_${filterInfo}.pdf`;
 };
 
-// Función para generar un blob de PDF para una factura
-export const generateInvoicePDFBlob = async (
-  invoice: Invoice,
-  client: Client,
-  items: InvoiceItem[]
-): Promise<Blob> => {
-  // Usar la función existente para generar un PDF, pero en lugar de descargarlo,
-  // capturarlo como un Blob
-  const pdfData = await generateInvoicePDF(invoice, client, items, true) as Blob;
-  return pdfData;
-};
+// Nota: La función generateInvoicePDFBlob ahora está definida en pdf.ts
 
 // Función principal para descargar facturas filtradas como ZIP
 export const downloadFilteredInvoicesAsZip = async (
@@ -313,15 +303,74 @@ export const downloadFilteredInvoicesAsZip = async (
       document.body.removeChild(container);
     });
     
-    document.getElementById('download-all')?.addEventListener('click', () => {
-      // Descargar todas las facturas
-      for (const file of files) {
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(file.data);
-        downloadLink.download = file.name;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+    document.getElementById('download-all')?.addEventListener('click', async () => {
+      try {
+        // Intentar primero con la API de File System Access si está disponible
+        // Esta API permite al usuario seleccionar una carpeta donde guardar los archivos
+        if ('showDirectoryPicker' in window) {
+          try {
+            // Mostrar diálogo para seleccionar carpeta
+            const directoryHandle = await (window as any).showDirectoryPicker({
+              mode: 'readwrite',
+              startIn: 'downloads',
+              id: 'facturas-billeo',
+              suggestedName: `Facturas_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}`
+            });
+            
+            // Crear subcarpeta con la fecha actual
+            const folderName = `Facturas_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}`;
+            let subfolder;
+            
+            try {
+              // Intentar obtener la carpeta si ya existe
+              subfolder = await directoryHandle.getDirectoryHandle(folderName);
+            } catch (e) {
+              // Crear la carpeta si no existe
+              subfolder = await directoryHandle.getDirectoryHandle(folderName, { create: true });
+            }
+            
+            // Guardar cada archivo en la carpeta
+            let savedCount = 0;
+            for (const file of files) {
+              try {
+                // Crear o sobrescribir el archivo en la carpeta
+                const fileHandle = await subfolder.getFileHandle(file.name, { create: true });
+                // Obtener un writable stream
+                const writable = await fileHandle.createWritable();
+                // Escribir el contenido del archivo
+                await writable.write(file.data);
+                // Cerrar el stream
+                await writable.close();
+                savedCount++;
+              } catch (fileError) {
+                console.error(`Error al guardar el archivo ${file.name}:`, fileError);
+              }
+            }
+            
+            // Mensaje de éxito
+            alert(`Se han guardado ${savedCount} facturas en la carpeta "${folderName}".`);
+            return;
+          } catch (err) {
+            // Si el usuario cancela la selección de carpeta o hay otro error, usar el método alternativo
+            console.log('No se pudo usar File System Access API, usando método alternativo:', err);
+          }
+        }
+        
+        // Método alternativo: descargar individualmente
+        for (const file of files) {
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(file.data);
+          downloadLink.download = file.name;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        }
+        
+        alert(`Se han descargado ${files.length} facturas. 
+Como tu navegador no soporta la selección de carpetas, los archivos se han descargado individualmente en tu carpeta de descargas.`);
+      } catch (error) {
+        console.error('Error al descargar facturas:', error);
+        alert('Ha ocurrido un error al descargar las facturas.');
       }
     });
     

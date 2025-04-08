@@ -322,12 +322,22 @@ export async function generateInvoicePDF(
   doc.save(`Factura_${invoice.invoiceNumber}.pdf`);
 }
 
+// Función para generar un PDF como Blob (para uso interno)
+export async function generateInvoicePDFBlob(
+  invoice: Invoice,
+  client: Client,
+  items: InvoiceItem[]
+): Promise<Blob> {
+  // Llamamos a la función original pero con returnBlob = true
+  const pdfBlob = await generateInvoicePDF(invoice, client, items, true) as Blob;
+  return pdfBlob;
+}
+
 // Función para generar un PDF como base64 para enviar por email
 export async function generateInvoicePDFAsBase64(
   invoice: Invoice,
   client: Client,
-  items: InvoiceItem[],
-  companyInfo: Company | null = null
+  items: InvoiceItem[]
 ): Promise<string> {
   // Create a new PDF
   const doc = new jsPDF();
@@ -378,22 +388,20 @@ export async function generateInvoicePDFAsBase64(
   // Add company logo and info from company profile
   doc.setFontSize(20);
   doc.setTextColor(37, 99, 235); // blue-600
-  // Utilizar información de la empresa proporcionada, o valores predeterminados basados en la imagen
-  doc.text(companyInfo?.name || "Eventos gaper", 14, 22);
+  // Utilizar información predeterminada basada en la imagen
+  doc.text("Eventos gaper", 14, 22);
   
   doc.setFontSize(10);
   doc.setTextColor(0);
-  // Usar los datos reales de la empresa cuando estén disponibles
-  doc.text(companyInfo?.taxId || "CIF/NIF: B55410351", 14, 30);
-  doc.text(companyInfo?.address || "Playa de sitges 22b", 14, 35);
+  // Usar valores predeterminados
+  doc.text("CIF/NIF: B55410351", 14, 30);
+  doc.text("Playa de sitges 22b", 14, 35);
   
   // Formatear dirección completa
-  const postalCode = companyInfo?.postalCode || "28232";
-  const city = companyInfo?.city || "Las Rozas";
-  const country = companyInfo?.country || "España";
+  const postalCode = "28232";
+  const city = "Las Rozas";
+  const country = "España";
   doc.text(`${postalCode} ${city}, ${country}`, 14, 40);
-  if (companyInfo?.email) doc.text(`Email: ${companyInfo.email}`, 14, 45);
-  if (companyInfo?.phone) doc.text(`Teléfono: ${companyInfo.phone}`, 14, 50);
   
   // Add invoice title and number
   doc.setFontSize(16);
@@ -496,11 +504,7 @@ export async function generateInvoicePDFAsBase64(
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text("FORMA DE PAGO: Transferencia bancaria", 14, finalY + 30);
-  if (companyInfo?.bankAccount) {
-    doc.text(`IBAN: ${companyInfo.bankAccount}`, 14, finalY + 36);
-  } else {
-    doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, finalY + 36);
-  }
+  doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, finalY + 36);
   
   if (invoice.notes) {
     doc.text("NOTAS:", 14, finalY + 46);
@@ -514,7 +518,7 @@ export async function generateInvoicePDFAsBase64(
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text(
-      `${companyInfo?.name || "Billeo"} - Sistema de gestión financiera`,
+      "Billeo - Sistema de gestión financiera",
       105, 285, { align: "center" }
     );
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });

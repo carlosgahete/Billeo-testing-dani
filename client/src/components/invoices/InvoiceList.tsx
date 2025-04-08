@@ -23,6 +23,8 @@ import {
   Tag
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { generateInvoicePDFBlob, generateInvoicePDF } from "@/lib/pdf";
+import { formatInvoiceFileName, downloadFilteredInvoicesAsZip } from "@/lib/zipService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,8 +59,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { generateInvoicePDF } from "@/lib/pdf";
-import { downloadFilteredInvoicesAsZip } from "@/lib/zipService";
 import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 
 // Función de utilidad para forzar la actualización de datos
@@ -400,7 +400,7 @@ const InvoiceList = () => {
       const body = document.createElement('div');
       body.className = 'p-6 overflow-auto flex-1';
       
-      const fileName = formatInvoiceFileName(invoice, "all", "all", "all", "all");
+      const fileName = formatInvoiceFileName(invoice, client.name, "visualizacion");
       const url = URL.createObjectURL(pdfBlob);
       
       body.innerHTML = `
