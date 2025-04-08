@@ -538,7 +538,7 @@ const InvoiceList = () => {
     },
     {
       id: "actions",
-      size: 150,
+      size: 170,
       cell: ({ row }) => {
         const invoice = row.original;
         
@@ -604,7 +604,7 @@ const InvoiceList = () => {
             </div>
             
             {/* Versión desktop: Botones individuales */}
-            <div className="hidden md:flex justify-end space-x-1" data-invoice-id={invoice.id}>
+            <div className="hidden md:flex justify-end space-x-2" data-invoice-id={invoice.id}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
