@@ -715,29 +715,14 @@ const TransactionList = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Tarjeta de Ingresos Totales */}
+        {/* Tarjeta de Ingresos Totales - Estilo minimalista Apple */}
         <div className="scale-in dashboard-card p-6">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-[#E3F4E9] rounded-full flex items-center justify-center mr-3 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <polyline points="19 12 12 19 5 12"></polyline>
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-[#1D1D1F]">Ingresos totales</h3>
-          </div>
+          <h3 className="text-sm text-[#86868B] font-medium mb-2">Ingresos totales</h3>
+          <p className="text-3xl font-semibold text-[#1D1D1F] mb-4">
+            {formatCurrency(incomeTotal, "income")}
+          </p>
           
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-3xl font-semibold text-[#1D1D1F]">
-              {formatCurrency(incomeTotal, "income")}
-            </p>
-            <div className="bg-[#34C759]/10 text-[#34C759] px-3 py-1 rounded-full text-sm font-medium">
-              <ArrowUp className="h-4 w-4 inline mr-1" />
-              Ingresos
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mt-auto">
             <div className="flex flex-col p-3 bg-[#F5F5F7] rounded-xl">
               <span className="text-xs text-[#86868B] mb-1">Facturas</span>
               <span className="text-sm font-medium text-[#1D1D1F]">{formatCurrency(invoiceIncomeTotal, "income")}</span>
@@ -749,84 +734,36 @@ const TransactionList = () => {
           </div>
         </div>
         
-        {/* Tarjeta de Gastos Totales */}
+        {/* Tarjeta de Gastos Totales - Estilo minimalista Apple */}
         <div className="scale-in dashboard-card p-6">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-[#FFE9EA] rounded-full flex items-center justify-center mr-3 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="19" x2="12" y2="5"></line>
-                <polyline points="5 12 12 5 19 12"></polyline>
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-[#1D1D1F]">Gastos totales</h3>
-          </div>
+          <h3 className="text-sm text-[#86868B] font-medium mb-2">Gastos totales</h3>
+          <p className="text-3xl font-semibold text-[#1D1D1F] mb-4">
+            {formatCurrency(expenseTotal, "expense")}
+          </p>
           
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-3xl font-semibold text-[#1D1D1F]">
-              {formatCurrency(expenseTotal, "expense")}
-            </p>
-            <div className="bg-[#FF3B30]/10 text-[#FF3B30] px-3 py-1 rounded-full text-sm font-medium">
-              <TrendingDown className="h-4 w-4 inline mr-1" />
-              Gastos
-            </div>
-          </div>
-          
-          <div className="p-3 bg-[#F5F5F7] rounded-xl flex items-center justify-center h-[55px]">
-            <div className="flex items-center">
-              <ScanText className="h-5 w-5 text-[#86868B] mr-2" />
-              <span className="text-[#86868B] text-sm">
-                {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
-              </span>
-            </div>
+          <div className="p-3 bg-[#F5F5F7] rounded-xl flex items-center h-[59px] mt-auto">
+            <span className="text-[#86868B] text-sm">
+              {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
+            </span>
           </div>
         </div>
         
-        {/* Tarjeta de Balance Neto */}
+        {/* Tarjeta de Balance Neto - Estilo minimalista Apple */}
         <div className="scale-in dashboard-card p-6">
-          <div className="flex items-center mb-4">
-            <div className={`w-10 h-10 ${
-              balance >= 0 ? "bg-[#E3F4E9]" : "bg-[#FFE9EA]"
-            } rounded-full flex items-center justify-center mr-3 shadow-sm`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" 
-                stroke={balance >= 0 ? "#34C759" : "#FF3B30"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="20" x2="12" y2="10"></line>
-                <line x1="18" y1="20" x2="18" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="16"></line>
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-[#1D1D1F]">Balance neto</h3>
-          </div>
+          <h3 className="text-sm text-[#86868B] font-medium mb-2">Balance neto</h3>
+          <p className={`text-3xl font-semibold ${
+            balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
+          } mb-4`}>
+            {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
+          </p>
           
-          <div className="flex justify-between items-center mb-4">
-            <p className={`text-3xl font-semibold ${
-              balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
-            }`}>
-              {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
-            </p>
-            <div className={`${
-              balance >= 0 ? "bg-[#34C759]/10 text-[#34C759]" : "bg-[#FF3B30]/10 text-[#FF3B30]"
-            } px-3 py-1 rounded-full text-sm font-medium`}>
-              {balance >= 0 ? (
-                <>
-                  <Plus className="h-4 w-4 inline mr-1" />
-                  Positivo
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="h-4 w-4 inline mr-1" />
-                  Negativo
-                </>
-              )}
-            </div>
-          </div>
-          
-          <div className="p-3 bg-[#F5F5F7] rounded-xl flex items-center justify-center h-[55px]">
-            <span className={`text-sm font-medium ${
+          <div className="p-3 bg-[#F5F5F7] rounded-xl flex items-center h-[59px] mt-auto">
+            <span className={`text-sm ${
               balance >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"
             }`}>
               {balance >= 0 
-                ? `🎯 ${Math.round(balance/incomeTotal*100)}% de los ingresos` 
-                : `⚠️ ${Math.abs(Math.round(balance/expenseTotal*100))}% por encima de ingresos`}
+                ? `${Math.round(balance/incomeTotal*100)}% de los ingresos` 
+                : `${Math.abs(Math.round(balance/expenseTotal*100))}% por encima de ingresos`}
             </span>
           </div>
         </div>
