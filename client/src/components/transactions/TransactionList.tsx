@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ScanText, Receipt, FileDown } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ArrowUp, ScanText, Receipt, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -733,7 +733,7 @@ const TransactionList = () => {
                   {formatCurrency(incomeTotal, "income")}
                 </p>
                 <div className="bg-[#34C759] h-8 w-8 rounded-full text-white shadow-md flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4" />
+                  <ArrowUp className="h-4 w-4" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-2">
