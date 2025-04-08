@@ -168,10 +168,10 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      {/* Header completamente rediseñado para coincidir con el menú hamburguesa */}
-      <div className="flex items-center pb-4 pt-2">
-        <div className="flex items-center absolute left-20">
-          <div className="bg-[#FFF8E7] p-3 rounded-full mr-3">
+      {/* Header con estilo Apple moderno y minimalista */}
+      <div className="flex items-center px-4 pb-6 pt-2">
+        <div className="flex items-center">
+          <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -186,9 +186,6 @@ export default function QuotesPage() {
           </div>
         </div>
       </div>
-      
-      {/* Espaciador para mantener el layout correcto */}
-      <div className="h-2"></div>
 
       {/* Dashboard de presupuestos con estilo Apple */}
       <div className="mb-8 fade-in">

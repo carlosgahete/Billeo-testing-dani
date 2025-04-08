@@ -25,10 +25,10 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Header estilo Apple alineado con menú hamburguesa */}
-      <div className="flex items-center pb-4 pt-2 relative justify-between">
-        <div className="flex items-center absolute left-20">
-          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
+      {/* Header con estilo Apple moderno y minimalista */}
+      <div className="flex items-center px-4 pb-6 pt-2 justify-between">
+        <div className="flex items-center">
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 flex-shrink-0">
             <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
           <div>
@@ -37,7 +37,7 @@ const InvoicesPage = () => {
           </div>
         </div>
         
-        <div className="ml-auto mr-4">
+        <div>
           <Button 
             className="button-apple"
             onClick={() => navigate("/invoices/create")}
@@ -47,9 +47,6 @@ const InvoicesPage = () => {
           </Button>
         </div>
       </div>
-      
-      {/* Espaciador para mantener el layout correcto */}
-      <div className="h-2"></div>
       
       {/* Tarjetas de resumen estilo Apple */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-4 md:ml-0">
