@@ -1,6 +1,13 @@
+// Este componente ya no se utiliza
+/*
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+*/ 
+
+export default function QuoteFormSimple() {
+  return null;
+}
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
