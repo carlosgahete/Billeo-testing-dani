@@ -131,18 +131,18 @@ const ExpenseFilters = ({
                 <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
             </div>
-            <div className="-mt-1.5">
-              <h2 className="text-white font-semibold text-xl">
+            <div className="flex flex-col justify-center h-[36px]">
+              <span className="text-white font-semibold leading-none">
                 Lista de Gastos
                 {filtersApplied && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-lg bg-white text-[#FF9F0A] text-xs font-semibold shadow-sm ml-2">
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-lg bg-white text-[#FF9F0A] text-xs font-semibold shadow-sm ml-2">
                     ✓
                   </span>
                 )}
-              </h2>
-              <p className="text-white/80 text-xs font-medium -mt-0.5">
+              </span>
+              <span className="text-white/80 text-[11px] font-medium mt-0.5">
                 {filtersApplied ? 'Filtros personalizados aplicados' : 'Visualizando todos los gastos'}
-              </p>
+              </span>
             </div>
           </div>
           <div className="flex space-x-3">
