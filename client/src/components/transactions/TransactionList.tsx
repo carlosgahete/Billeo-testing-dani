@@ -613,18 +613,18 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6 fade-in">
-      {/* Cabecera estilo Apple consistente con la sección de facturas */}
-      <div className="section-header mx-4 md:ml-0 fade-in mb-3 pl-8 sm:pl-12 mt-0 pt-0">
-        <div className="flex items-center">
-          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start">
+      {/* Cabecera estilo Apple alineada con menú hamburguesa */}
+      <div className="section-header fade-in mb-3 mt-0 pt-0 flex items-center">
+        <div className="flex items-center ml-16 md:ml-12">
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="20" x2="12" y2="10" />
               <line x1="18" y1="20" x2="18" y2="4" />
               <line x1="6" y1="20" x2="6" y2="16" />
             </svg>
           </div>
-          <div className="flex-grow">
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1">Ingresos y Gastos</h2>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Ingresos y Gastos</h2>
             <p className="text-sm text-gray-500">Visualiza y gestiona todos tus movimientos económicos</p>
           </div>
         </div>
