@@ -212,34 +212,154 @@ export const downloadFilteredInvoicesAsZip = async (
       return;
     }
     
-    // 4. Ya que no podemos utilizar JSZip en este momento, descargamos los PDFs individualmente
-    // y mostramos un mensaje informativo al usuario
+    // 4. Ya que no podemos utilizar JSZip en este momento, mostramos las facturas en una tarjeta
+    // en el DOM para que el usuario pueda acceder a ellas
     
-    // Primero mostramos una alerta informativa
-    alert(`Se van a descargar ${files.length} facturas individuales ya que la función de ZIP no está disponible.
-Por favor, espere mientras se completan las descargas.`);
+    // Crear un contenedor para las facturas
+    const container = document.createElement('div');
+    container.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+    container.style.backdropFilter = 'blur(4px)';
     
-    // Descargamos cada archivo individualmente
+    // Crear la tarjeta
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col';
+    
+    // Crear la cabecera de la tarjeta
+    const header = document.createElement('div');
+    header.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
+    header.innerHTML = `
+      <h2 class="text-lg font-medium text-gray-800">Facturas exportadas (${files.length})</h2>
+      <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    `;
+    
+    // Crear el cuerpo de la tarjeta
+    const body = document.createElement('div');
+    body.className = 'p-4 overflow-auto flex-1';
+    
+    // Crear una lista de facturas
+    const list = document.createElement('div');
+    list.className = 'grid gap-3 grid-cols-1 sm:grid-cols-2';
+    
+    // Añadir cada factura a la lista
     for (const file of files) {
-      const downloadLink = document.createElement('a');
-      downloadLink.href = URL.createObjectURL(file.data);
-      downloadLink.download = file.name;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      const item = document.createElement('div');
+      item.className = 'border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow';
       
-      // Pequeña pausa para no saturar
-      await new Promise(resolve => setTimeout(resolve, 500)); // Aumentamos el tiempo para evitar bloqueos
+      const url = URL.createObjectURL(file.data);
+      
+      item.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-800 truncate">${file.name}</span>
+        </div>
+        <div class="flex space-x-2">
+          <a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            Ver
+          </a>
+          <a href="${url}" download="${file.name}" class="text-green-600 hover:text-green-800 text-sm flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Descargar
+          </a>
+        </div>
+      `;
+      
+      list.appendChild(item);
     }
     
-    // Informamos al usuario que se completó la operación
-    alert(`Se han descargado ${files.length} facturas correctamente.
+    // Añadir la lista al cuerpo
+    body.appendChild(list);
     
-Las facturas tienen el formato: Factura_[Número]_[Cliente]_[Filtros].pdf`);
+    // Añadir el footer con botón para cerrar
+    const footer = document.createElement('div');
+    footer.className = 'p-4 border-t border-gray-200 flex justify-end';
+    footer.innerHTML = `
+      <button id="download-all" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 mr-2">
+        Descargar todas
+      </button>
+      <button id="close-button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+        Cerrar
+      </button>
+    `;
     
-    console.log(`Descargados ${files.length} archivos PDF de facturas`);
+    // Añadir todos los elementos
+    card.appendChild(header);
+    card.appendChild(body);
+    card.appendChild(footer);
+    container.appendChild(card);
+    document.body.appendChild(container);
+    
+    // Añadir eventos
+    document.getElementById('close-modal')?.addEventListener('click', () => {
+      document.body.removeChild(container);
+    });
+    
+    document.getElementById('close-button')?.addEventListener('click', () => {
+      document.body.removeChild(container);
+    });
+    
+    document.getElementById('download-all')?.addEventListener('click', () => {
+      // Descargar todas las facturas
+      for (const file of files) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(file.data);
+        downloadLink.download = file.name;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+    });
+    
+    console.log(`Generados ${files.length} archivos PDF de facturas y mostrados en tarjeta`);
   } catch (error) {
-    console.error('Error al generar o descargar los PDFs:', error);
-    alert('Ha ocurrido un error al generar los PDFs. Por favor, inténtelo de nuevo.');
+    console.error('Error al generar o mostrar los PDFs:', error);
+    
+    // Mostrar un mensaje de error más amigable con estilo propio de la aplicación
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+    errorContainer.style.backdropFilter = 'blur(4px)';
+    
+    const errorCard = document.createElement('div');
+    errorCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
+    
+    errorCard.innerHTML = `
+      <div class="flex items-center justify-center mb-4 text-red-500">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" 
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <h2 class="text-xl font-medium text-center mb-2">Error al generar los PDFs</h2>
+      <p class="text-gray-600 text-center mb-6">Ha ocurrido un problema al procesar las facturas. Por favor, inténtelo de nuevo.</p>
+      <div class="flex justify-center">
+        <button id="error-close" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+          Cerrar
+        </button>
+      </div>
+    `;
+    
+    errorContainer.appendChild(errorCard);
+    document.body.appendChild(errorContainer);
+    
+    document.getElementById('error-close')?.addEventListener('click', () => {
+      document.body.removeChild(errorContainer);
+    });
   }
 };

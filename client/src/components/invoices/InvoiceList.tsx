@@ -367,13 +367,108 @@ const InvoiceList = () => {
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
       const data = await response.json();
       
-      await generateInvoicePDF(invoice, client, data.items);
+      // Generar el PDF como Blob en lugar de descargarlo directamente
+      const pdfBlob = await generateInvoicePDFBlob(invoice, client, data.items);
       
-      toast({
-        title: "PDF generado",
-        description: `La factura ${invoice.invoiceNumber} ha sido exportada a PDF`,
+      if (!pdfBlob) {
+        throw new Error("No se pudo generar el PDF");
+      }
+      
+      // Mostrar la factura en una tarjeta similar a la vista múltiple pero con un solo elemento
+      const container = document.createElement('div');
+      container.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      container.style.backdropFilter = 'blur(4px)';
+      
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col';
+      
+      // Crear la cabecera de la tarjeta
+      const header = document.createElement('div');
+      header.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
+      header.innerHTML = `
+        <h2 class="text-lg font-medium text-gray-800">Factura ${invoice.invoiceNumber}</h2>
+        <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      `;
+      
+      // Crear el cuerpo de la tarjeta
+      const body = document.createElement('div');
+      body.className = 'p-6 overflow-auto flex-1';
+      
+      const fileName = formatInvoiceFileName(invoice, "all", "all", "all", "all");
+      const url = URL.createObjectURL(pdfBlob);
+      
+      body.innerHTML = `
+        <div class="flex flex-col items-center justify-center">
+          <div class="text-center mb-4">
+            <p class="text-sm text-gray-600 mb-2">Cliente: ${client.name}</p>
+            <p class="text-sm text-gray-600 mb-4">Total: ${new Intl.NumberFormat('es-ES', {
+              style: 'currency',
+              currency: 'EUR',
+              maximumFractionDigits: 2
+            }).format(invoice.total)}</p>
+            
+            <div class="bg-gray-100 rounded-lg p-4 mb-4">
+              <p class="text-xs text-gray-500 mb-2">Previsualización no disponible</p>
+              <p class="text-xs text-gray-500">Haz clic en "Ver PDF" para visualizar el documento completo</p>
+            </div>
+            
+            <div class="flex justify-center space-x-3">
+              <a href="${url}" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Ver PDF
+              </a>
+              <a href="${url}" download="${fileName}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Descargar
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Añadir el footer con botón para cerrar
+      const footer = document.createElement('div');
+      footer.className = 'p-4 border-t border-gray-200 flex justify-end';
+      footer.innerHTML = `
+        <button id="close-button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+          Cerrar
+        </button>
+      `;
+      
+      // Añadir todos los elementos
+      card.appendChild(header);
+      card.appendChild(body);
+      card.appendChild(footer);
+      container.appendChild(card);
+      document.body.appendChild(container);
+      
+      // Añadir eventos
+      document.getElementById('close-modal')?.addEventListener('click', () => {
+        document.body.removeChild(container);
       });
+      
+      document.getElementById('close-button')?.addEventListener('click', () => {
+        document.body.removeChild(container);
+      });
+      
     } catch (error: any) {
+      console.error("Error al generar el PDF:", error);
       toast({
         title: "Error",
         description: `No se pudo generar el PDF: ${error.message}`,
@@ -491,32 +586,37 @@ const InvoiceList = () => {
     });
   }, [invoicesData, yearFilter, quarterFilter, clientFilter, statusFilter, searchQuery, clientsData]);
   
-  // Función para exportar todas las facturas a PDF
+  // Función para exportar todas las facturas a PDF utilizando la visualización en tarjeta
   const exportAllInvoices = async () => {
     try {
       toast({
-        title: "Exportando facturas",
-        description: "Preparando la exportación de todas las facturas...",
+        title: "Preparando facturas",
+        description: "Generando todas las facturas para exportar...",
       });
       
-      // Si hay muchas facturas, esto podría tomar tiempo
-      for (const invoice of invoicesData || []) {
-        const client = clientsData?.find((c: Client) => c.id === invoice.clientId);
-        
-        if (!client) continue;
-        
-        // Get invoice items
-        const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      // Función para obtener los items de una factura
+      const getInvoiceItems = async (invoiceId: number) => {
+        const response = await apiRequest("GET", `/api/invoices/${invoiceId}`);
         const data = await response.json();
-        
-        await generateInvoicePDF(invoice, client, data.items);
-      }
+        return data.items || [];
+      };
       
-      toast({
-        title: "Exportación completada",
-        description: `Se han exportado ${invoicesData?.length || 0} facturas a PDF`,
-      });
+      // Ejecutar la descarga de todas las facturas utilizando la misma función
+      // pero con filtros en "all"
+      await downloadFilteredInvoicesAsZip(
+        invoicesData || [],
+        clientsData || [],
+        "all",
+        "all",
+        "all",
+        "all",
+        getInvoiceItems
+      );
+      
+      // No mostramos toast porque ya se muestra el modal con las facturas
     } catch (error: any) {
+      console.error("Error al exportar todas las facturas:", error);
+      
       toast({
         title: "Error",
         description: `No se pudo completar la exportación: ${error.message}`,
@@ -530,10 +630,37 @@ const InvoiceList = () => {
     try {
       // Verificar si hay facturas filtradas
       if (!filteredInvoices || filteredInvoices.length === 0) {
-        toast({
-          title: "No hay facturas para exportar",
-          description: "No se encontraron facturas que cumplan con los filtros actuales.",
-          variant: "destructive",
+        // Mostrar un modal informativo con estilo coherente
+        const noInvoicesContainer = document.createElement('div');
+        noInvoicesContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        noInvoicesContainer.style.backdropFilter = 'blur(4px)';
+        
+        const noInvoicesCard = document.createElement('div');
+        noInvoicesCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
+        
+        noInvoicesCard.innerHTML = `
+          <div class="flex items-center justify-center mb-4 text-amber-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <h2 class="text-xl font-medium text-center mb-2">No hay facturas para exportar</h2>
+          <p class="text-gray-600 text-center mb-6">No se encontraron facturas que cumplan con los filtros actuales.</p>
+          <div class="flex justify-center">
+            <button id="no-invoices-close" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+              Cerrar
+            </button>
+          </div>
+        `;
+        
+        noInvoicesContainer.appendChild(noInvoicesCard);
+        document.body.appendChild(noInvoicesContainer);
+        
+        document.getElementById('no-invoices-close')?.addEventListener('click', () => {
+          document.body.removeChild(noInvoicesContainer);
         });
         return;
       }
@@ -561,10 +688,7 @@ const InvoiceList = () => {
         getInvoiceItems
       );
       
-      toast({
-        title: "Facturas generadas",
-        description: `Se han descargado ${filteredInvoices.length} facturas basadas en los filtros aplicados.`,
-      });
+      // Ya no necesitamos mostrar esta notificación ya que ahora mostramos las facturas en una ventana modal
     } catch (error: any) {
       console.error("Error al exportar facturas filtradas:", error);
       toast({
