@@ -9,19 +9,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, FileDown } from "lucide-react";
 import { Transaction, Category } from "@/types";
 
 interface ExpenseFiltersProps {
   transactions: Transaction[];
   categories: Category[];
   onFilterChange: React.Dispatch<React.SetStateAction<Transaction[]>>;
+  onExportClick?: () => void;
 }
 
 const ExpenseFilters = ({
   transactions,
   categories,
   onFilterChange,
+  onExportClick,
 }: ExpenseFiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -33,6 +35,7 @@ const ExpenseFilters = ({
     min: "", 
     max: ""
   });
+  const [filtersApplied, setFiltersApplied] = useState(false);
 
   // Restablecer los filtros cuando se oculta el panel
   useEffect(() => {
@@ -40,6 +43,15 @@ const ExpenseFilters = ({
       clearFilters();
     }
   }, [showFilters]);
+
+  // Marcar filtros como aplicados cuando hay criterios seleccionados
+  useEffect(() => {
+    const hasCategory = selectedCategory !== "all";
+    const hasDateFilter = dateRange.start !== "" || dateRange.end !== "";
+    const hasPriceFilter = priceRange.min !== "" || priceRange.max !== "";
+    
+    setFiltersApplied(hasCategory || hasDateFilter || hasPriceFilter);
+  }, [selectedCategory, dateRange, priceRange]);
 
   // Aplicar filtros a las transacciones
   const applyFilters = () => {
@@ -101,6 +113,7 @@ const ExpenseFilters = ({
     setSelectedCategory("all");
     setDateRange({ start: "", end: "" });
     setPriceRange({ min: "", max: "" });
+    setFiltersApplied(false);
     onFilterChange([]);
   };
 
@@ -110,14 +123,29 @@ const ExpenseFilters = ({
         <h2 className="text-white font-medium flex items-center">
           <span className="mr-2">Lista de Gastos</span>
         </h2>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="bg-white text-red-600 border-white hover:bg-red-50 hover:text-red-700"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          {showFilters ? "Ocultar filtros" : "Filtrar"}
-        </Button>
+        <div className="flex space-x-2">
+          {/* Botón de exportar gastos (visible siempre) */}
+          {onExportClick && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-white text-red-600 border-white hover:bg-red-50 hover:text-red-700"
+              onClick={onExportClick}
+            >
+              <FileDown className="h-4 w-4 mr-1.5" />
+              <span>Exportar</span>
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-white text-red-600 border-white hover:bg-red-50 hover:text-red-700"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? "Ocultar filtros" : "Filtrar"}
+          </Button>
+        </div>
       </div>
       
       {showFilters && (

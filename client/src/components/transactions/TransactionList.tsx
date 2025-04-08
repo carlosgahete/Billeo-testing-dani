@@ -597,19 +597,23 @@ const TransactionList = () => {
             </button>
           )}
           
-          {/* Visible solo en la pestaña 'expense' cuando hay gastos filtrados: Exportar gastos filtrados */}
+          {/* Visible siempre en la pestaña 'expense': Exportar gastos (filtrados o todos) */}
           {/* Ubicamos el botón de exportación al lado de los demás botones en el header */}
           {currentTab === 'expense' && (
             <button 
               className="button-apple-secondary button-apple-sm flex items-center"
               onClick={() => handleExportFilteredExpenses()}
-              disabled={!filteredExpenseTransactions.length && transactions?.filter(t => t.type === 'expense').length === 0}
+              disabled={transactions?.filter(t => t.type === 'expense').length === 0}
               title={filteredExpenseTransactions.length > 0 ? 
                 `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
-                "Aplica filtros para exportar gastos"}
+                `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
             >
               <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">Exportar gastos</span>
+              <span className="hidden sm:inline">
+                {filteredExpenseTransactions.length > 0 ? 
+                  `Exportar ${filteredExpenseTransactions.length} filtrados` : 
+                  "Exportar todos los gastos"}
+              </span>
               <span className="sm:hidden">Exportar</span>
             </button>
           )}
@@ -716,6 +720,7 @@ const TransactionList = () => {
                 transactions={transactions}
                 categories={categories}
                 onFilterChange={setFilteredExpenseTransactions}
+                onExportClick={handleExportFilteredExpenses}
               />
             </div>
           )}
