@@ -613,10 +613,10 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6 fade-in">
-      {/* Cabecera estilo Apple alineada con menú hamburguesa */}
-      <div className="section-header mt-4 sm:mt-6 mb-6 flex items-center">
-        <div className="flex items-center ml-[70px] md:ml-[70px]">
-          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
+      {/* Header con icono circular - Estilo Apple */}
+      <div className="flex items-center py-4 px-4 sm:px-8">
+        <div className="flex items-center">
+          <div className="w-10 h-10 flex items-center justify-center bg-[#E9F8FB] rounded-full mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="20" x2="12" y2="10" />
               <line x1="18" y1="20" x2="18" y2="4" />
@@ -624,7 +624,7 @@ const TransactionList = () => {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Ingresos y Gastos</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Ingresos y Gastos</h2>
             <p className="text-sm text-gray-500">Visualiza y gestiona todos tus movimientos económicos</p>
           </div>
         </div>

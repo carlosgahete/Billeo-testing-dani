@@ -25,14 +25,14 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Cabecera estilo Apple */}
-      <div className="section-header mx-4 md:ml-0 fade-in">
+      {/* Header con icono circular - Estilo Apple */}
+      <div className="flex items-center justify-between py-4 px-4 sm:px-8">
         <div className="flex items-center">
-          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1">
+          <div className="w-10 h-10 flex items-center justify-center bg-[#E9F8FB] rounded-full mr-3">
             <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
-          <div className="flex-grow my-auto">
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1 mt-2">Gestión de Facturas</h2>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">Gestión de Facturas</h2>
             <p className="text-sm text-gray-500">Administra y controla tus documentos fiscales</p>
           </div>
         </div>

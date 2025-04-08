@@ -168,10 +168,10 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      {/* Cabecera estilo Apple alineada con menú hamburguesa */}
-      <div className="section-header mt-4 sm:mt-6 mb-6 flex items-center">
-        <div className="flex items-center ml-[70px] md:ml-[70px]">
-          <div className="bg-[#FFF8E7] p-3 rounded-full mr-3">
+      {/* Header con icono circular - Estilo Apple */}
+      <div className="flex items-center py-4 px-4 sm:px-8">
+        <div className="flex items-center">
+          <div className="w-10 h-10 flex items-center justify-center bg-[#FFF8E7] rounded-full mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -181,7 +181,7 @@ export default function QuotesPage() {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none">Presupuestos</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Presupuestos</h2>
             <p className="text-sm text-gray-500">Gestiona tus propuestas comerciales</p>
           </div>
         </div>
