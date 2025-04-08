@@ -203,18 +203,28 @@ const TransactionList = () => {
   // Función para exportar los gastos filtrados
   const handleExportFilteredExpenses = async () => {
     try {
-      if (!filteredExpenseTransactions || filteredExpenseTransactions.length === 0) {
+      // Obtenemos los gastos que vamos a exportar
+      // Si hay filtros aplicados, usamos esos gastos filtrados
+      // Si no hay filtros, usamos todos los gastos de transacciones
+      const expensesToExport = filteredExpenseTransactions.length > 0
+        ? filteredExpenseTransactions
+        : transactions?.filter(t => t.type === 'expense') || [];
+      
+      if (expensesToExport.length === 0) {
         toast({
           title: "No hay gastos",
-          description: "No se encontraron gastos que cumplan con los filtros actuales.",
+          description: "No se encontraron gastos para exportar.",
           variant: "destructive",
         });
         return;
       }
       
+      // Mostrar un mensaje descriptivo dependiendo si son gastos filtrados o todos
       toast({
         title: "Preparando gastos",
-        description: `Generando informe de ${filteredExpenseTransactions.length} gastos según los filtros aplicados...`,
+        description: filteredExpenseTransactions.length > 0
+          ? `Generando informe de ${filteredExpenseTransactions.length} gastos filtrados...`
+          : `Generando informe de todos los gastos (${expensesToExport.length})...`,
       });
       
       // Crear un contenedor para mostrar progreso
@@ -264,7 +274,7 @@ const TransactionList = () => {
         updateProgress(40, "Procesando datos de gastos...");
         
         // Preparar los datos para la tabla
-        const tableData = filteredExpenseTransactions.map(expense => {
+        const tableData = expensesToExport.map(expense => {
           // Obtener información de la categoría
           const category = getCategory(expense.categoryId);
           
@@ -293,7 +303,7 @@ const TransactionList = () => {
         updateProgress(70, "Generando PDF...");
         
         // Calcular total de gastos
-        const totalAmount = filteredExpenseTransactions.reduce((sum, expense) => sum + Number(expense.amount), 0);
+        const totalAmount = expensesToExport.reduce((sum, expense) => sum + Number(expense.amount), 0);
         const formattedTotal = formatCurrency(totalAmount, 'expense');
         
         // Añadir tabla al PDF
@@ -317,8 +327,10 @@ const TransactionList = () => {
           doc.text(`Página ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
         }
         
-        // Generar nombre de archivo
-        const fileName = `Gastos_Filtrados_${new Date().toISOString().split('T')[0]}.pdf`;
+        // Generar nombre de archivo con el tipo apropiado (filtrados o todos)
+        const fileName = filteredExpenseTransactions.length > 0
+          ? `Gastos_Filtrados_${new Date().toISOString().split('T')[0]}.pdf`
+          : `Todos_Los_Gastos_${new Date().toISOString().split('T')[0]}.pdf`;
         
         updateProgress(100, "¡Informe listo para descargar!");
         
@@ -331,7 +343,9 @@ const TransactionList = () => {
           
           toast({
             title: "Informe generado",
-            description: "El informe de gastos filtrados ha sido generado y descargado exitosamente.",
+            description: filteredExpenseTransactions.length > 0
+              ? "El informe de gastos filtrados ha sido generado y descargado exitosamente."
+              : "El informe con todos los gastos ha sido generado y descargado exitosamente.",
           });
         }, 1000);
         
@@ -584,13 +598,18 @@ const TransactionList = () => {
           )}
           
           {/* Visible solo en la pestaña 'expense' cuando hay gastos filtrados: Exportar gastos filtrados */}
-          {currentTab === 'expense' && filteredExpenseTransactions.length > 0 && (
+          {/* Ubicamos el botón de exportación al lado de los demás botones en el header */}
+          {currentTab === 'expense' && (
             <button 
               className="button-apple-secondary button-apple-sm flex items-center"
               onClick={() => handleExportFilteredExpenses()}
+              disabled={!filteredExpenseTransactions.length && transactions?.filter(t => t.type === 'expense').length === 0}
+              title={filteredExpenseTransactions.length > 0 ? 
+                `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
+                "Aplica filtros para exportar gastos"}
             >
               <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline">Exportar gastos filtrados</span>
+              <span className="hidden sm:inline">Exportar gastos</span>
               <span className="sm:hidden">Exportar</span>
             </button>
           )}
