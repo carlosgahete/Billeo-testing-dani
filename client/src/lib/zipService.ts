@@ -356,18 +356,89 @@ export const downloadFilteredInvoicesAsZip = async (
           }
         }
         
-        // Método alternativo: descargar individualmente
-        for (const file of files) {
-          const downloadLink = document.createElement('a');
-          downloadLink.href = URL.createObjectURL(file.data);
-          downloadLink.download = file.name;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
+        // Método alternativo para navegadores que no soportan File System Access API
+        try {
+          // Subir los archivos al servidor para obtener URLs de descarga
+          const formData = new FormData();
+          
+          // Añadir cada archivo al FormData
+          files.forEach((file, index) => {
+            formData.append(`file`, file.data, file.name);
+          });
+          
+          // Enviar al servidor para procesar
+          const response = await fetch('/api/combine-pdf-files', {
+            method: 'POST',
+            body: formData
+          });
+          
+          // Comprobar si la respuesta es correcta
+          if (!response.ok) {
+            throw new Error('Error en el servidor al procesar los archivos');
+          }
+          
+          // Obtener las URLs de los archivos
+          const result = await response.json();
+          
+          if (result.files && result.files.length > 0) {
+            // Crear una ventana modal para mostrar los enlaces de descarga
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+            modalContainer.style.backdropFilter = 'blur(4px)';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'bg-white rounded-xl shadow-xl p-6 max-w-lg w-full max-h-[80vh] overflow-auto';
+            
+            // Crear el contenido de la modal
+            modalContent.innerHTML = `
+              <h2 class="text-xl font-medium mb-4">Descargar Facturas</h2>
+              <p class="text-gray-600 mb-4">Haga clic en cada enlace para descargar las facturas individualmente:</p>
+              <div class="space-y-2 mb-6">
+                ${result.files.map((url: string, index: number) => `
+                  <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                    <span class="text-sm truncate">Factura ${index + 1}</span>
+                    <a href="${url}" download class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600">
+                      Descargar
+                    </a>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="flex justify-end">
+                <button id="modal-close" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                  Cerrar
+                </button>
+              </div>
+            `;
+            
+            modalContainer.appendChild(modalContent);
+            document.body.appendChild(modalContainer);
+            
+            // Manejar el cierre de la modal
+            document.getElementById('modal-close')?.addEventListener('click', () => {
+              document.body.removeChild(modalContainer);
+            });
+            
+            console.log(`Se han procesado ${files.length} facturas.`);
+          } else {
+            throw new Error('No se recibieron URLs de archivos del servidor');
+          }
+          
+          return; // Importante: detener la ejecución aquí si todo fue exitoso
+        } catch (zipError) {
+          console.error('Error al crear ZIP, descargando individualmente:', zipError);
+          
+          // Si falla el ZIP, descargar individualmente como último recurso
+          for (const file of files) {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(file.data);
+            downloadLink.download = file.name;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+          }
+          
+          alert(`Se han descargado ${files.length} facturas individualmente en tu carpeta de descargas.`);
         }
-        
-        alert(`Se han descargado ${files.length} facturas. 
-Como tu navegador no soporta la selección de carpetas, los archivos se han descargado individualmente en tu carpeta de descargas.`);
       } catch (error) {
         console.error('Error al descargar facturas:', error);
         alert('Ha ocurrido un error al descargar las facturas.');
