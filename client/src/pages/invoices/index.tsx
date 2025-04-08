@@ -36,14 +36,6 @@ const InvoicesPage = () => {
             <p className="text-sm text-gray-500 mt-0 leading-tight">Administra y controla tus documentos fiscales</p>
           </div>
         </div>
-        
-        <Button 
-          className="button-apple"
-          onClick={() => navigate("/invoices/create")}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Factura
-        </Button>
       </div>
       
       {/* Tarjetas de resumen estilo Apple */}
