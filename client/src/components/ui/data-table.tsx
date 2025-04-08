@@ -60,9 +60,15 @@ export function DataTable<TData, TValue>({
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    // Guardar el valor en el estado local
     setGlobalFilter(value);
+    
+    // Y también notificar al componente padre
     if (onSearch) {
+      console.log("DataTable: Enviando búsqueda al padre:", value);
       onSearch(value);
+    } else {
+      console.log("DataTable: No hay función onSearch configurada");
     }
   };
 

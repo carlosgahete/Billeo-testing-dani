@@ -446,32 +446,44 @@ const InvoiceList = () => {
       // Filtrar por búsqueda global
       if (searchQuery && searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase().trim();
+        console.log(`InvoiceList: Buscando con query: "${query}"`);
         
         // Convertir datos a minúsculas para búsqueda no sensible a mayúsculas
-        const invoiceNumber = invoice.invoiceNumber.toLowerCase();
-        const clientName = getClientName(invoice.clientId).toLowerCase();
-        const issueDateFormatted = formatDate(invoice.issueDate).toLowerCase();
-        const statusText = invoice.status.toLowerCase();
-        const subtotalText = invoice.subtotal.toString();
-        const totalText = invoice.total.toString();
+        const invoiceNumber = invoice.invoiceNumber?.toLowerCase() || '';
+        const clientName = getClientName(invoice.clientId)?.toLowerCase() || '';
+        const issueDateFormatted = formatDate(invoice.issueDate)?.toLowerCase() || '';
+        const statusText = invoice.status?.toLowerCase() || '';
+        const subtotalText = invoice.subtotal?.toString() || '';
+        const totalText = invoice.total?.toString() || '';
         
-        // También buscar en clientes completos para evitar problemas parciales
-        const allClients = clientsData.map(c => c.name.toLowerCase());
-        const matchesAnyClient = allClients.some(name => name.includes(query));
-        
-        // Versión más robusta de búsqueda
-        if (!invoiceNumber.includes(query) && 
-            !clientName.includes(query) && 
-            !issueDateFormatted.includes(query) && 
-            !statusText.includes(query) && 
-            !subtotalText.includes(query) && 
-            !totalText.includes(query) &&
-            !matchesAnyClient) {
-          console.log(`No coincide para "${query}" en factura ${invoiceNumber}, cliente "${clientName}"`);
-          return false;
+        // Verificar si algún campo contiene la cadena de búsqueda
+        const hasMatch = 
+          invoiceNumber.includes(query) || 
+          clientName.includes(query) || 
+          issueDateFormatted.includes(query) || 
+          statusText.includes(query) || 
+          subtotalText.includes(query) || 
+          totalText.includes(query);
+            
+        if (hasMatch) {
+          console.log(`Coincidencia encontrada para "${query}" en factura ${invoiceNumber}, cliente "${clientName}"`);
+          return true;
         }
         
-        console.log(`Coincidencia encontrada para "${query}" en factura ${invoiceNumber}, cliente "${clientName}"`);
+        // Si no hay coincidencia directa, buscar en nombres completos de clientes
+        if (clientsData) {
+          const matchingClient = clientsData.find(c => 
+            c.name?.toLowerCase()?.includes(query)
+          );
+          
+          if (matchingClient && matchingClient.id === invoice.clientId) {
+            console.log(`Coincidencia encontrada por cliente completo "${matchingClient.name}" para factura ${invoiceNumber}`);
+            return true;
+          }
+        }
+        
+        console.log(`No coincide para "${query}" en factura ${invoiceNumber}, cliente "${clientName}"`);
+        return false;
       }
       
       return true;
