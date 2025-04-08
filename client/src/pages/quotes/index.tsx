@@ -407,15 +407,6 @@ export default function QuotesPage() {
                 </div>
                 <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  className="button-apple-secondary button-apple-sm"
-                  onClick={() => navigate("/quotes/create")}
-                >
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Nuevo
-                </button>
-              </div>
             </div>
             
             <QuoteList userId={user.id} showActions={true} />
