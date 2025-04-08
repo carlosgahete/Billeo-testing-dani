@@ -168,10 +168,10 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      {/* Header con icono circular - Estilo Apple */}
-      <div className="flex items-center py-4 px-4 sm:px-8">
+      {/* Encabezado con icono circular - Estilo Apple */}
+      <div className="flex items-center justify-between mb-5 pt-3 px-6">
         <div className="flex items-center">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#FFF8E7] rounded-full mr-3">
+          <div className="w-11 h-11 bg-[#FFF8E7] rounded-full flex items-center justify-center mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -185,6 +185,14 @@ export default function QuotesPage() {
             <p className="text-sm text-gray-500">Gestiona tus propuestas comerciales</p>
           </div>
         </div>
+        
+        <button
+          className="button-apple"
+          onClick={() => navigate("/quotes/create")}
+        >
+          <FilePlus className="h-4 w-4 mr-2" />
+          Nuevo Presupuesto
+        </button>
       </div>
 
       {/* Dashboard de presupuestos con estilo Apple */}

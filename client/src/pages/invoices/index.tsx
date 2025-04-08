@@ -25,10 +25,10 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-4 md:px-4 md:pl-14 space-y-6 mt-2">
-      {/* Header con icono circular - Estilo Apple */}
-      <div className="flex items-center justify-between py-4 px-4 sm:px-8">
+      {/* Encabezado con icono circular - Estilo Apple */}
+      <div className="flex items-center justify-between mb-5 pt-3 px-6">
         <div className="flex items-center">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#E9F8FB] rounded-full mr-3">
+          <div className="w-11 h-11 bg-[#E9F8FB] rounded-full flex items-center justify-center mr-3">
             <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
           <div>

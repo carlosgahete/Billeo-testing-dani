@@ -613,10 +613,10 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6 fade-in">
-      {/* Header con icono circular - Estilo Apple */}
-      <div className="flex items-center py-4 px-4 sm:px-8">
+      {/* Encabezado con icono circular - Estilo Apple */}
+      <div className="flex items-center justify-between mb-5 pt-3 px-6">
         <div className="flex items-center">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#E9F8FB] rounded-full mr-3">
+          <div className="w-11 h-11 bg-[#E9F8FB] rounded-full flex items-center justify-center mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="20" x2="12" y2="10" />
               <line x1="18" y1="20" x2="18" y2="4" />
@@ -627,6 +627,26 @@ const TransactionList = () => {
             <h2 className="text-xl font-semibold text-gray-800">Ingresos y Gastos</h2>
             <p className="text-sm text-gray-500">Visualiza y gestiona todos tus movimientos económicos</p>
           </div>
+        </div>
+        
+        <div className="flex space-x-3">
+          <button 
+            className="button-apple"
+            onClick={() => navigate("/documents/scan")}
+          >
+            <ScanText className="h-4 w-4 mr-2" />
+            Escanear gasto
+          </button>
+          
+          <button 
+            className="button-apple-secondary"
+            onClick={() => currentTab === 'income' ? 
+              navigate("/transactions/new?type=income") : 
+              navigate("/transactions/new?type=expense")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {currentTab === 'income' ? 'Nuevo ingreso' : 'Nuevo gasto'}
+          </button>
         </div>
       </div>
 
