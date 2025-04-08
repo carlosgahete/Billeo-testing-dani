@@ -119,29 +119,28 @@ const ExpenseFilters = ({
 
   return (
     <div>
-      <div className="bg-gradient-to-r from-[#F2F2F7] to-[#F9F9FB] dark:from-[#1D1D1F] dark:to-[#2C2C2E] rounded-2xl p-5 mb-5 shadow-md backdrop-blur-lg border border-gray-200/50 relative overflow-hidden transition-all duration-300 hover:shadow-lg">
-        {/* Elementos decorativos con formas Apple */}
-        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#007AFF]/10 to-[#5AC8FA]/5 rounded-full transform translate-x-8 -translate-y-8 blur-2xl"></div>
-        <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-[#FF9500]/5 to-[#FF2D55]/10 rounded-full transform -translate-x-6 translate-y-6 blur-xl"></div>
+      <div className="bg-[#FF9F0A] dark:bg-[#FF9500] rounded-2xl p-4 mb-5 shadow-md border border-[#FF9F0A]/50 relative overflow-hidden transition-all duration-300">
+        {/* Forma decorativa */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
         
         <div className="flex justify-between items-center relative z-10">
           <div className="flex items-center">
-            <div className="mr-3 p-2 bg-[#007AFF] rounded-full shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23"></line>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            <div className="mr-3 p-2 bg-white rounded-xl shadow-sm flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
             </div>
             <div>
-              <h2 className="text-[#1D1D1F] dark:text-white font-semibold text-xl flex items-center">
+              <h2 className="text-white font-semibold text-xl flex items-center">
                 <span className="mr-2">Lista de Gastos</span>
                 {filtersApplied && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#34C759] text-white text-xs font-semibold animate-pulse shadow-sm">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-lg bg-white text-[#FF9F0A] text-xs font-semibold shadow-sm">
                     ✓
                   </span>
                 )}
               </h2>
-              <p className="text-[#6E6E73] text-xs mt-0.5">
+              <p className="text-white/80 text-xs mt-0.5 font-medium">
                 {filtersApplied ? 'Filtros personalizados aplicados' : 'Visualizando todos los gastos'}
               </p>
             </div>
@@ -150,23 +149,23 @@ const ExpenseFilters = ({
             {/* Botón de exportar gastos (visible siempre) */}
             {onExportClick && (
               <Button 
-                variant="ghost" 
+                variant="secondary" 
                 size="sm"
-                className="rounded-full hover:bg-[#007AFF]/10 hover:text-[#007AFF] transition-all duration-300 border border-gray-200/70 backdrop-blur-sm bg-white/90 px-5 py-2.5 hover:scale-105 shadow-sm hover:shadow"
+                className="rounded-xl bg-white hover:bg-white/90 text-[#FF9F0A] transition-all duration-200 shadow-sm px-4 py-2"
                 onClick={onExportClick}
               >
-                <FileDown className="h-4 w-4 mr-2 text-[#007AFF]" />
-                <span className="text-[#1D1D1F] dark:text-white font-medium">Exportar</span>
+                <FileDown className="h-4 w-4 mr-2" />
+                <span className="font-medium">Exportar</span>
               </Button>
             )}
             
             <Button 
-              variant="ghost" 
+              variant="secondary" 
               size="sm"
-              className={`rounded-full transition-all duration-300 border border-gray-200/70 backdrop-blur-sm px-5 py-2.5 hover:scale-105 shadow-sm hover:shadow ${
+              className={`rounded-xl transition-all duration-200 px-4 py-2 shadow-sm ${
                 showFilters 
-                  ? "bg-gradient-to-r from-[#007AFF] to-[#5AC8FA] text-white hover:from-[#0062CC] hover:to-[#4DB8EA]" 
-                  : "bg-white/90 hover:bg-[#007AFF]/10 hover:text-[#007AFF]"
+                  ? "bg-white/20 text-white border border-white/40 hover:bg-white/30" 
+                  : "bg-white text-[#FF9F0A] hover:bg-white/90"
               }`}
               onClick={() => setShowFilters(!showFilters)}
             >
@@ -177,38 +176,35 @@ const ExpenseFilters = ({
       </div>
       
       {showFilters && (
-        <div className="relative animate-in fade-in slide-in-from-top-4 duration-500">
-          {/* Elementos decorativos */}
-          <div className="absolute top-0 left-1/4 w-28 h-28 bg-gradient-to-br from-[#34C759]/5 to-[#007AFF]/10 rounded-full blur-2xl z-0"></div>
-          <div className="absolute bottom-20 right-1/3 w-36 h-36 bg-gradient-to-tr from-[#FF2D55]/5 to-[#5AC8FA]/10 rounded-full blur-3xl z-0"></div>
-          
-          <div className="bg-gradient-to-b from-white/95 to-white/90 dark:from-[#1D1D1F]/95 dark:to-[#2C2C2E]/90 rounded-2xl border border-gray-200/60 shadow-lg p-6 mb-5 backdrop-blur-md relative z-10 overflow-hidden">
-            <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-[#007AFF] via-[#5AC8FA] to-[#34C759]"></div>
+        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 mb-5 relative overflow-hidden">
+            {/* Barra superior naranja */}
+            <div className="absolute top-0 right-0 w-full h-1 bg-[#FF9F0A]"></div>
             
-            <h3 className="text-base font-semibold text-[#1D1D1F] mb-5 flex items-center">
-              <div className="mr-3 p-1.5 bg-gradient-to-r from-[#5AC8FA] to-[#007AFF] rounded-md shadow-md flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+            <h3 className="text-base font-medium text-[#1D1D1F] mb-4 flex items-center">
+              <div className="mr-3 bg-[#FF9F0A] p-1.5 rounded-lg text-white flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                </svg>
               </div>
-              <span className="bg-gradient-to-r from-[#1D1D1F] to-[#1D1D1F] bg-clip-text text-transparent dark:from-white dark:to-gray-200">
-                Personalizar filtros
-              </span>
+              Filtrar gastos
             </h3>
             
-            <div className="space-y-6">
-              <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-4">
+            <div className="space-y-5">
+              <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-4">
                 {/* Filtro de categorías */}
-                <div className="group">
-                  <label className="block text-xs font-medium text-[#6E6E73] mb-2 transition-all duration-300 group-hover:text-[#007AFF]">
+                <div>
+                  <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                     Categorías
                   </label>
                   <Select 
                     value={selectedCategory}
                     onValueChange={setSelectedCategory}
                   >
-                    <SelectTrigger className="w-full h-11 text-sm rounded-xl border-gray-200/80 bg-[#F5F5F7]/70 focus:border-[#007AFF] focus:ring-[#007AFF]/10 transition-all duration-300 hover:border-[#007AFF]/30 shadow-sm">
+                    <SelectTrigger className="w-full h-10 text-sm rounded-lg border-gray-200 focus:border-[#FF9F0A] focus:ring-[#FF9F0A]/10">
                       <SelectValue placeholder="Todas las categorías" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
+                    <SelectContent className="rounded-lg">
                       <SelectItem value="all">Todas las categorías</SelectItem>
                       {categories
                         .filter(cat => cat.type === 'expense')
@@ -230,14 +226,13 @@ const ExpenseFilters = ({
                 </div>
                 
                 {/* Filtro de fecha desde */}
-                <div className="group">
-                  <label className="block text-xs font-medium text-[#6E6E73] mb-2 transition-all duration-300 group-hover:text-[#007AFF]">
+                <div>
+                  <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                     Desde
                   </label>
                   <Input
                     type="date"
-                    className="h-11 text-sm w-full rounded-xl border-gray-200/80 bg-[#F5F5F7]/70 shadow-sm
-                      focus:border-[#007AFF] focus:ring-[#007AFF]/10 transition-all duration-300 hover:border-[#007AFF]/30"
+                    className="h-10 text-sm w-full rounded-lg border-gray-200 focus:border-[#FF9F0A] focus:ring-[#FF9F0A]/10"
                     value={dateRange.start}
                     onChange={(e) => {
                       setDateRange({
@@ -249,14 +244,13 @@ const ExpenseFilters = ({
                 </div>
                 
                 {/* Filtro de fecha hasta */}
-                <div className="group">
-                  <label className="block text-xs font-medium text-[#6E6E73] mb-2 transition-all duration-300 group-hover:text-[#007AFF]">
+                <div>
+                  <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                     Hasta
                   </label>
                   <Input
                     type="date"
-                    className="h-11 text-sm w-full rounded-xl border-gray-200/80 bg-[#F5F5F7]/70 shadow-sm
-                      focus:border-[#007AFF] focus:ring-[#007AFF]/10 transition-all duration-300 hover:border-[#007AFF]/30"
+                    className="h-10 text-sm w-full rounded-lg border-gray-200 focus:border-[#FF9F0A] focus:ring-[#FF9F0A]/10"
                     value={dateRange.end}
                     onChange={(e) => {
                       setDateRange({
@@ -268,19 +262,23 @@ const ExpenseFilters = ({
                 </div>
                 
                 {/* Filtro de importe mínimo */}
-                <div className="group">
-                  <label className="block text-xs font-medium text-[#6E6E73] mb-2 transition-all duration-300 group-hover:text-[#007AFF]">
+                <div>
+                  <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                     Importe mínimo
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93]">€</span>
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93] flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                    </div>
                     <Input
                       type="number"
                       min="0"
                       step="0.01"
                       placeholder="0.00"
-                      className="h-11 text-sm w-full rounded-xl pl-7 border-gray-200/80 bg-[#F5F5F7]/70 shadow-sm
-                        focus:border-[#007AFF] focus:ring-[#007AFF]/10 transition-all duration-300 hover:border-[#007AFF]/30"
+                      className="h-10 text-sm w-full rounded-lg pl-7 border-gray-200 focus:border-[#FF9F0A] focus:ring-[#FF9F0A]/10"
                       value={priceRange.min}
                       onChange={(e) => {
                         setPriceRange({
@@ -293,7 +291,7 @@ const ExpenseFilters = ({
                 </div>
               </div>
               
-              <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-4">
+              <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-4">
                 {/* Placeholder para alinear con la primera fila */}
                 <div></div>
                 
@@ -304,19 +302,23 @@ const ExpenseFilters = ({
                 <div></div>
                 
                 {/* Filtro de importe máximo */}
-                <div className="group">
-                  <label className="block text-xs font-medium text-[#6E6E73] mb-2 transition-all duration-300 group-hover:text-[#007AFF]">
+                <div>
+                  <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
                     Importe máximo
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93]">€</span>
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93] flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                    </div>
                     <Input
                       type="number"
                       min="0"
                       step="0.01"
                       placeholder="Sin límite"
-                      className="h-11 text-sm w-full rounded-xl pl-7 border-gray-200/80 bg-[#F5F5F7]/70 shadow-sm
-                        focus:border-[#007AFF] focus:ring-[#007AFF]/10 transition-all duration-300 hover:border-[#007AFF]/30"
+                      className="h-10 text-sm w-full rounded-lg pl-7 border-gray-200 focus:border-[#FF9F0A] focus:ring-[#FF9F0A]/10"
                       value={priceRange.max}
                       onChange={(e) => {
                         setPriceRange({
@@ -335,19 +337,18 @@ const ExpenseFilters = ({
                   variant="outline" 
                   size="sm"
                   onClick={clearFilters}
-                  className="rounded-full px-5 py-2.5 border-gray-300 text-[#1D1D1F] hover:bg-gray-100 transition-all duration-300 hover:scale-105"
+                  className="rounded-xl px-4 py-2 border-gray-300 text-[#1D1D1F] hover:bg-gray-100 transition-all duration-200"
                 >
-                  <X className="h-4 w-4 mr-2 text-[#8E8E93]" />
-                  Limpiar filtros
+                  <X className="h-4 w-4 mr-1.5" />
+                  Limpiar
                 </Button>
                 
                 <Button 
                   size="sm"
-                  className="rounded-full bg-gradient-to-r from-[#007AFF] to-[#5AC8FA] hover:from-[#0062CC] hover:to-[#4DB8EA] 
-                    text-white px-5 py-2.5 transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+                  className="rounded-xl bg-[#FF9F0A] hover:bg-[#FF9F0A]/90 text-white px-4 py-2 transition-all duration-200"
                   onClick={applyFilters}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                   Aplicar filtros
                 </Button>
               </div>
