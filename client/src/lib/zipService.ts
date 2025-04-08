@@ -145,6 +145,8 @@ export const downloadFilteredInvoicesAsZip = async (
     return;
   }
   
+  console.log(`Procesando ${invoices.length} facturas para exportar...`);
+
   // 1. Determinar el nombre del archivo ZIP
   const clientName = clientFilter !== 'all' && clients
     ? clients.find(c => c.id.toString() === clientFilter.toString())?.name || ''
@@ -159,16 +161,17 @@ export const downloadFilteredInvoicesAsZip = async (
     dateRange
   );
   
-  console.log(`Preparando descarga de ZIP: ${zipFileName}.zip`);
+  console.log(`Preparando descarga de ZIP: ${zipFileName}.zip con ${invoices.length} facturas`);
   
   try {
     // 2. Crear un array para almacenar la información de los PDFs
     const files: { name: string; data: Blob }[] = [];
     const filterSuffix = zipFileName.replace('Facturas_', '');
     
-    // 3. Generar PDFs para cada factura con sufijo único por factura
-    // para evitar problemas con nombres duplicados
-    for (const invoice of invoices) {
+    // 3. Generar PDFs para cada factura 
+    // Usamos un enfoque secuencial para evitar problemas de concurrencia
+    for (let i = 0; i < invoices.length; i++) {
+      const invoice = invoices[i];
       const client = clients.find(c => c.id === invoice.clientId);
       
       if (!client) {
@@ -176,19 +179,26 @@ export const downloadFilteredInvoicesAsZip = async (
         continue;
       }
       
+      console.log(`Procesando factura ${i+1}/${invoices.length}: ${invoice.invoiceNumber} - Cliente: ${client.name}`);
+      
       try {
         // Obtener los items de la factura
         const items = await getInvoiceItems(invoice.id);
+        console.log(`Factura ${invoice.invoiceNumber}: Obtenidos ${items.length} items`);
         
-        // Generar un sufijo único para cada factura que incluya la fecha y hora actual
-        // y el ID de la factura para garantizar unicidad
-        const uniqueSuffix = `${filterSuffix}_id${invoice.id}_${Date.now()}`;
+        // Generar un sufijo único para cada factura
+        const uniqueId = `id${invoice.id}_${new Date().getTime()}_${i}`;
         
-        // Generar el nombre del archivo PDF dentro del ZIP
-        const pdfFileName = formatInvoiceFileName(invoice, client.name, uniqueSuffix);
+        // Generar el nombre del archivo PDF 
+        const pdfFileName = `Factura_${invoice.invoiceNumber}_${client.name.replace(/\s+/g, '_')}_${uniqueId}.pdf`;
         
         // Generar el PDF como Blob
         const pdfBlob = await generateInvoicePDFBlob(invoice, client, items);
+        
+        // Verificar que el blob no esté vacío
+        if (!pdfBlob || pdfBlob.size === 0) {
+          throw new Error('El PDF generado está vacío');
+        }
         
         // Agregar a la lista de archivos
         files.push({
@@ -196,7 +206,7 @@ export const downloadFilteredInvoicesAsZip = async (
           data: pdfBlob
         });
         
-        console.log(`PDF generado: ${pdfFileName} para la factura ${invoice.invoiceNumber}`);
+        console.log(`PDF ${i+1}/${invoices.length} generado correctamente: ${pdfFileName} (${pdfBlob.size} bytes)`);
       } catch (error) {
         console.error(`Error al generar PDF para factura ${invoice.invoiceNumber}:`, error);
       }

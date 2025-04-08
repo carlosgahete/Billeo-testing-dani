@@ -328,9 +328,26 @@ export async function generateInvoicePDFBlob(
   client: Client,
   items: InvoiceItem[]
 ): Promise<Blob> {
-  // Llamamos a la función original pero con returnBlob = true
-  const pdfBlob = await generateInvoicePDF(invoice, client, items, true) as Blob;
-  return pdfBlob;
+  try {
+    console.log(`Generando PDF para factura ${invoice.invoiceNumber} del cliente ${client?.name || 'desconocido'} con ${items?.length || 0} items`);
+    
+    // Llamamos a la función original pero con returnBlob = true
+    const pdfBlob = await generateInvoicePDF(invoice, client, items, true) as Blob;
+    
+    if (!pdfBlob || !(pdfBlob instanceof Blob)) {
+      console.error('Error: No se generó un blob válido para el PDF');
+      // Si no hay un blob válido, crear uno básico con un mensaje de error
+      return new Blob(['Error al generar el PDF'], { type: 'application/pdf' });
+    }
+    
+    console.log(`PDF generado correctamente: ${pdfBlob.size} bytes`);
+    return pdfBlob;
+  } catch (error) {
+    console.error('Error en generateInvoicePDFBlob:', error);
+    // En caso de error, devolvemos un blob básico con un mensaje de error
+    return new Blob(['Error al generar el PDF: ' + (error instanceof Error ? error.message : String(error))], 
+                    { type: 'application/pdf' });
+  }
 }
 
 // Función para generar un PDF como base64 para enviar por email
