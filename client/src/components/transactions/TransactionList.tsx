@@ -524,6 +524,16 @@ const TransactionList = () => {
         
         return (
           <div className="flex justify-end space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
+              title="Editar"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            
+            {/* Mostrar botón de descarga inmediatamente después del botón de editar */}
             {showDownloadButton && (
               <Button
                 variant="ghost"
@@ -544,14 +554,7 @@ const TransactionList = () => {
                 <Download className="h-4 w-4" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
-              title="Editar"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            
             <DeleteTransactionDialog
               transactionId={transaction.id}
               description={transaction.description}
