@@ -400,6 +400,44 @@ const TransactionList = () => {
         const description = row.getValue("description") as string;
         const notes = row.original.notes as string || '';
         const type = row.original.type as string;
+        const attachments = row.original.attachments as string[] || [];
+        
+        // Función para descargar archivos adjuntos
+        const handleDownloadAttachment = (filename: string) => {
+          window.open(`/api/download/${filename}`, '_blank');
+        };
+        
+        // Renderizar archivos adjuntos
+        const renderAttachments = () => {
+          if (!attachments || attachments.length === 0) return null;
+          
+          return (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {attachments.map((filename, index) => {
+                // Determinar el tipo de archivo para mostrar el icono adecuado
+                const ext = filename.split('.').pop()?.toLowerCase() || '';
+                let icon = '📄'; // Documento genérico por defecto
+                
+                if (['pdf'].includes(ext)) icon = '📑';
+                else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) icon = '🖼️';
+                else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = '📊';
+                else if (['doc', 'docx', 'txt'].includes(ext)) icon = '📝';
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleDownloadAttachment(filename)}
+                    className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs hover:bg-blue-100"
+                    title={`Descargar ${filename}`}
+                  >
+                    <span className="mr-1">{icon}</span>
+                    <span>Descargar</span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        };
         
         // Si hay un título definido, mostrarlo como título principal
         if (title) {
@@ -407,6 +445,7 @@ const TransactionList = () => {
             <div className="max-w-[250px]">
               <div className="font-medium text-gray-800">{title}</div>
               <div className="text-xs text-gray-500 truncate">{description}</div>
+              {renderAttachments()}
             </div>
           );
         }
@@ -423,6 +462,7 @@ const TransactionList = () => {
               <div className="max-w-[250px]">
                 <div className="font-medium text-gray-800">{providerName}</div>
                 <div className="text-xs text-gray-500 truncate">{description}</div>
+                {renderAttachments()}
               </div>
             );
           }
@@ -430,8 +470,11 @@ const TransactionList = () => {
         
         // Si no hay título ni proveedor, mostrar solo la descripción
         return (
-          <div className="max-w-[200px] truncate">
-            {description}
+          <div className="max-w-[250px]">
+            <div className="max-w-[200px] truncate font-medium text-gray-800">
+              {description}
+            </div>
+            {renderAttachments()}
           </div>
         );
       },

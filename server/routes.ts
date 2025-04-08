@@ -86,6 +86,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Servir archivos estáticos de la carpeta uploads
   app.use('/uploads', express.static(uploadDir));
   
+  // Ruta para descargar archivos adjuntos con su nombre original
+  app.get('/api/download/:filename', (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const filename = req.params.filename;
+      const filepath = path.join(uploadDir, filename);
+      
+      // Verificar que el archivo existe
+      if (!fs.existsSync(filepath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      // Extraer extensión para determinar tipo de contenido
+      const ext = path.extname(filename).toLowerCase();
+      let contentType = 'application/octet-stream';
+      
+      // Mapear extensiones comunes a tipos de contenido
+      const contentTypeMap: {[key: string]: string} = {
+        '.pdf': 'application/pdf',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.txt': 'text/plain',
+        '.csv': 'text/csv',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      };
+      
+      if (contentTypeMap[ext]) {
+        contentType = contentTypeMap[ext];
+      }
+      
+      // Crear nombre de descarga amigable
+      let downloadName = filename;
+      // Si es un nombre generado por multer, extraer solo la extensión y usar nombre genérico
+      if (filename.startsWith('file-')) {
+        const datePart = filename.split('-')[1] || '';
+        const dateFormatted = datePart ? new Date(parseInt(datePart)).toISOString().split('T')[0] : '';
+        downloadName = `documento_${dateFormatted || 'descargado'}${ext}`;
+      }
+      
+      // Configurar cabeceras para descarga
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+      
+      // Enviar archivo
+      const filestream = fs.createReadStream(filepath);
+      filestream.pipe(res);
+      
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      return res.status(500).json({ message: "Error al descargar el archivo" });
+    }
+  });
+  
   // Setup authentication
   setupAuth(app);
   
