@@ -107,7 +107,7 @@ const DeleteTransactionDialog = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" title="Eliminar">
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
@@ -115,17 +115,15 @@ const DeleteTransactionDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción eliminará permanentemente el movimiento "{description}" y no se puede deshacer.
+            Esta acción eliminará permanentemente el movimiento "{description}".
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelete();
-            }}
+            onClick={handleDelete}
             disabled={isPending}
+            className="bg-red-500 hover:bg-red-600"
           >
             {isPending ? "Eliminando..." : "Eliminar"}
           </AlertDialogAction>
@@ -136,451 +134,376 @@ const DeleteTransactionDialog = ({
 };
 
 const TransactionList = () => {
-  const [location, navigate] = useLocation();
+  const [navigate, setLocation] = useLocation();
   const { toast } = useToast();
-  // Ya no utilizamos el diálogo de importación de CSV
-  
-  // Obtener tab de los parámetros de URL
-  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const tabParam = urlParams.get('tab');
-  const initialTab = tabParam === 'income' || tabParam === 'expense' ? tabParam : 'all';
-  
-  const [currentTab, setCurrentTab] = useState<string>(initialTab);
+  const [currentTab, setCurrentTab] = useState("all");
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
   const [filteredIncomeTransactions, setFilteredIncomeTransactions] = useState<Transaction[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
+  // Obtener parámetros de la URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab) {
+      setCurrentTab(tab);
+    }
+  }, []);
+
+  // Estados de las consultas
+  const { data: transactions, isLoading } = useQuery({
     queryKey: ["/api/transactions"],
-    refetchInterval: 5000, // Actualización automática cada 5 segundos
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
+  const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
   });
-  
-  // Obtener facturas para calcular ingresos correctamente
-  const { data: invoices, isLoading: invoicesLoading } = useQuery<Invoice[]>({
+
+  const { data: invoices } = useQuery({
     queryKey: ["/api/invoices"],
   });
 
-  const isLoading = transactionsLoading || categoriesLoading || invoicesLoading;
-
-  const getCategory = (categoryId: number | null) => {
-    if (!categoryId || !categories || !Array.isArray(categories)) {
-      return { name: "Sin categoría", icon: "📂", color: "#999999" };
-    }
-    const category = categories.find((c: Category) => c.id === categoryId);
-    return category 
-      ? { name: category.name, icon: category.icon || "📂", color: category.color }
-      : { name: "Sin categoría", icon: "📂", color: "#999999" };
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES");
-  };
-
-  const formatCurrency = (value: number, type: string) => {
-    const formattedValue = new Intl.NumberFormat('es-ES', { 
-      style: 'currency', 
-      currency: 'EUR' 
-    }).format(Math.abs(Number(value)));
+  // Función para determinar qué datos mostrar según los filtros activos
+  const filteredTransactions = React.useMemo(() => {
+    if (!transactions) return [];
     
-    return formattedValue;
+    // Si estamos en la pestaña de gastos y hay filtros aplicados
+    if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
+      return filteredExpenseTransactions;
+    }
+    // Si estamos en la pestaña de ingresos y hay filtros aplicados
+    else if (currentTab === "income" && filteredIncomeTransactions.length > 0) {
+      return filteredIncomeTransactions;
+    }
+    // Si no hay filtros, filtramos por el tipo de la pestaña seleccionada
+    else if (currentTab !== "all") {
+      return transactions.filter((t: Transaction) => t.type === currentTab);
+    }
+    // En la pestaña "todos", mostramos todas las transacciones
+    return transactions;
+  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions]);
+
+  // Obtener categoría por ID
+  const getCategory = (categoryId: number) => {
+    if (!categories) return null;
+    const category = categories.find((c: Category) => c.id === categoryId);
+    return category || null;
   };
 
-  // La función de importación CSV ha sido eliminada
-  
-  // Función para exportar los gastos filtrados
+  // Formatear fecha a formato español
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit' 
+    };
+    return new Date(dateString).toLocaleDateString('es-ES', options);
+  };
+
+  // Formatear importes como moneda española
+  const formatCurrency = (amount: number, type: string = "income") => {
+    // Para gastos, mostramos el signo negativo delante
+    const prefix = type === "expense" ? "-" : "";
+    // Formateamos con 2 decimales y separador de miles
+    return `${prefix}${amount.toLocaleString('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  // Exportar gastos filtrados a PDF
   const handleExportFilteredExpenses = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    
     try {
-      // Obtenemos los gastos que vamos a exportar
-      // Si hay filtros aplicados, usamos esos gastos filtrados
-      // Si no hay filtros, usamos todos los gastos de transacciones
-      const expensesToExport = filteredExpenseTransactions.length > 0
-        ? filteredExpenseTransactions
-        : transactions?.filter(t => t.type === 'expense') || [];
+      // Determinar qué gastos exportar (filtrados o todos)
+      const expensesToExport = filteredExpenseTransactions.length > 0 
+        ? filteredExpenseTransactions 
+        : transactions?.filter((t: Transaction) => t.type === 'expense') || [];
       
       if (expensesToExport.length === 0) {
         toast({
-          title: "No hay gastos",
-          description: "No se encontraron gastos para exportar.",
-          variant: "destructive",
+          title: "No hay gastos para exportar",
+          description: "No se encontraron gastos que cumplan con los criterios de filtrado.",
+          variant: "default"
         });
+        setIsExporting(false);
         return;
       }
       
-      // Mostrar un mensaje descriptivo dependiendo si son gastos filtrados o todos
-      toast({
-        title: "Preparando gastos",
-        description: filteredExpenseTransactions.length > 0
-          ? `Generando informe de ${filteredExpenseTransactions.length} gastos filtrados...`
-          : `Generando informe de todos los gastos (${expensesToExport.length})...`,
+      // Crear nuevo documento PDF
+      const pdf = new jsPDF();
+      
+      // Añadir título y metadata
+      pdf.setProperties({
+        title: `Informe de Gastos - ${new Date().toLocaleDateString('es-ES')}`,
+        author: 'Billeo App',
+        subject: 'Informe de Gastos',
+        keywords: 'gastos, finanzas, autónomos',
       });
       
-      // Crear un contenedor para mostrar progreso
-      const progressContainer = document.createElement('div');
-      progressContainer.id = 'export-progress-container';
-      progressContainer.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-      progressContainer.style.backdropFilter = 'blur(4px)';
+      // Añadir cabecera al documento
+      pdf.setFontSize(22);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text('Informe de Gastos', 14, 22);
       
-      const progressCard = document.createElement('div');
-      progressCard.className = 'bg-white rounded-xl shadow-xl p-6 max-w-md w-full';
+      // Añadir fecha de generación
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 14, 28);
       
-      progressCard.innerHTML = `
-        <h2 class="text-xl font-medium text-center mb-4">Generando informe de gastos</h2>
-        <div class="mb-4">
-          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div id="progress-bar" class="h-full bg-blue-600 rounded-full" style="width: 0%"></div>
-          </div>
-          <p id="progress-text" class="text-sm text-center mt-2">Preparando informe...</p>
-        </div>
-      `;
+      // Añadir número de gastos exportados
+      pdf.text(`Total de gastos: ${expensesToExport.length}`, 14, 33);
       
-      progressContainer.appendChild(progressCard);
-      document.body.appendChild(progressContainer);
-      
-      const progressBar = document.getElementById('progress-bar');
-      const progressText = document.getElementById('progress-text');
-      
-      // Función para actualizar el progreso
-      const updateProgress = (percentage: number, message: string) => {
-        if (progressBar) progressBar.style.width = `${percentage}%`;
-        if (progressText) progressText.textContent = message;
-      };
-      
-      try {
-        updateProgress(20, "Obteniendo datos de categorías...");
-        
-        // Crear un PDF para la exportación
-        const doc = new jsPDF();
-        
-        // Añadir título y fecha
-        const currentDate = new Date().toLocaleDateString('es-ES');
-        doc.setFontSize(18);
-        doc.text("Informe de Gastos", 105, 15, { align: 'center' });
-        doc.setFontSize(10);
-        doc.text(`Generado el ${currentDate}`, 105, 22, { align: 'center' });
-        
-        updateProgress(40, "Procesando datos de gastos...");
-        
-        // Preparar los datos para la tabla
-        const tableData = expensesToExport.map(expense => {
-          // Obtener información de la categoría
-          const category = getCategory(expense.categoryId);
-          
-          // Formatear datos
-          const formattedDate = formatDate(expense.date);
-          const formattedAmount = formatCurrency(expense.amount, 'expense');
-          
-          // Detectar si hay información del proveedor en las notas
-          let providerName = "No especificado";
-          if (expense.notes) {
-            const providerMatch = expense.notes.match(/🏢 Proveedor:\s*([^\n]+)/);
-            if (providerMatch && providerMatch[1] && providerMatch[1] !== 'No detectado') {
-              providerName = providerMatch[1].trim();
-            }
-          }
-          
-          return [
-            formattedDate,
-            expense.title || providerName,
-            expense.description,
-            category.name,
-            formattedAmount
-          ];
-        });
-        
-        updateProgress(70, "Generando PDF...");
-        
-        // Calcular total de gastos
-        const totalAmount = expensesToExport.reduce((sum, expense) => sum + Number(expense.amount), 0);
-        const formattedTotal = formatCurrency(totalAmount, 'expense');
-        
-        // Añadir tabla al PDF
-        autoTable(doc, {
-          head: [['Fecha', 'Proveedor', 'Descripción', 'Categoría', 'Importe']],
-          body: tableData,
-          foot: [['Total', '', '', '', formattedTotal]],
-          theme: 'striped',
-          headStyles: { fillColor: [170, 0, 0], textColor: [255, 255, 255] },
-          footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' },
-          margin: { top: 30 },
-        });
-        
-        updateProgress(90, "Finalizando documento...");
-        
-        // Añadir pie de página
-        const pageCount = doc.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
-          doc.setFontSize(8);
-          doc.text(`Página ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
-        }
-        
-        // Generar nombre de archivo con el tipo apropiado (filtrados o todos)
-        const fileName = filteredExpenseTransactions.length > 0
-          ? `Gastos_Filtrados_${new Date().toISOString().split('T')[0]}.pdf`
-          : `Todos_Los_Gastos_${new Date().toISOString().split('T')[0]}.pdf`;
-        
-        updateProgress(100, "¡Informe listo para descargar!");
-        
-        // Limpiar modal de progreso
-        setTimeout(() => {
-          document.body.removeChild(progressContainer);
-          
-          // Descargar PDF
-          doc.save(fileName);
-          
-          toast({
-            title: "Informe generado",
-            description: filteredExpenseTransactions.length > 0
-              ? "El informe de gastos filtrados ha sido generado y descargado exitosamente."
-              : "El informe con todos los gastos ha sido generado y descargado exitosamente.",
-          });
-        }, 1000);
-        
-      } catch (error) {
-        // En caso de error, eliminar modal de progreso
-        if (document.body.contains(progressContainer)) {
-          document.body.removeChild(progressContainer);
-        }
-        throw error;
-      }
-    } catch (error: any) {
-      console.error("Error al exportar gastos filtrados:", error);
-      
-      toast({
-        title: "Error",
-        description: `No se pudo generar el informe: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Función para exportar los ingresos filtrados
-  const handleExportFilteredIncome = async () => {
-    try {
-      // Obtenemos los ingresos que vamos a exportar
-      const incomeToExport = filteredIncomeTransactions.length > 0
-        ? filteredIncomeTransactions
-        : transactions?.filter(t => t.type === 'income') || [];
-      
-      if (incomeToExport.length === 0) {
-        toast({
-          title: "No hay ingresos",
-          description: "No se encontraron ingresos para exportar.",
-          variant: "destructive",
-        });
-        return;
+      // Si hay filtros aplicados, mostrar información de filtrado
+      if (filteredExpenseTransactions.length > 0) {
+        pdf.text('* Informe filtrado según criterios personalizados', 14, 38);
       }
       
-      toast({
-        title: "Preparando ingresos",
-        description: filteredIncomeTransactions.length > 0
-          ? `Generando informe de ${filteredIncomeTransactions.length} ingresos filtrados...`
-          : `Generando informe de todos los ingresos (${incomeToExport.length})...`,
-      });
+      // Calcular el total de gastos
+      const totalAmount = expensesToExport.reduce((sum, t: Transaction) => sum + Number(t.amount), 0);
+      pdf.text(`Importe total: ${formatCurrency(totalAmount, 'expense')}`, 14, 43);
       
-      // Similar a la exportación de gastos, pero con colores verdes en lugar de rojos
-      const doc = new jsPDF();
-      
-      // Añadir título y fecha
-      const currentDate = new Date().toLocaleDateString('es-ES');
-      doc.setFontSize(18);
-      doc.text("Informe de Ingresos", 105, 15, { align: 'center' });
-      doc.setFontSize(10);
-      doc.text(`Generado el ${currentDate}`, 105, 22, { align: 'center' });
-      
-      // Preparar los datos para la tabla
-      const tableData = incomeToExport.map(income => {
-        const category = getCategory(income.categoryId);
-        const formattedDate = formatDate(income.date);
-        const formattedAmount = formatCurrency(income.amount, 'income');
-        
+      // Preparar datos para la tabla
+      const tableData = expensesToExport.map((t: Transaction) => {
+        const category = getCategory(t.categoryId);
         return [
-          formattedDate,
-          income.title || 'No especificado',
-          income.description,
-          category.name,
-          formattedAmount
+          formatDate(t.date),
+          t.title,
+          t.description,
+          category ? category.name : 'Sin categoría',
+          formatCurrency(Number(t.amount), 'expense')
         ];
       });
       
-      // Calcular total de ingresos
-      const totalAmount = incomeToExport.reduce((sum, income) => sum + Number(income.amount), 0);
-      const formattedTotal = formatCurrency(totalAmount, 'income');
-      
-      // Añadir tabla al PDF con colores verdes
-      autoTable(doc, {
-        head: [['Fecha', 'Cliente', 'Descripción', 'Categoría', 'Importe']],
+      // Añadir tabla al PDF
+      autoTable(pdf, {
+        head: [['Fecha', 'Concepto', 'Descripción', 'Categoría', 'Importe']],
         body: tableData,
-        foot: [['Total', '', '', '', formattedTotal]],
-        theme: 'striped',
-        headStyles: { fillColor: [0, 150, 50], textColor: [255, 255, 255] },
-        footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' },
-        margin: { top: 30 },
+        startY: 50,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [0, 122, 255],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        margin: { top: 50 },
+        styles: {
+          overflow: 'linebreak',
+          cellPadding: 3,
+          fontSize: 9
+        },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Fecha
+          1: { cellWidth: 35 }, // Concepto
+          2: { cellWidth: 'auto' }, // Descripción (ajusta automáticamente)
+          3: { cellWidth: 30 }, // Categoría
+          4: { cellWidth: 30, halign: 'right' } // Importe (alineado a la derecha)
+        }
       });
       
       // Añadir pie de página
-      const pageCount = doc.getNumberOfPages();
+      const pageCount = pdf.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text(`Página ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Página ${i} de ${pageCount} | Generado por Billeo App`,
+          pdf.internal.pageSize.getWidth() / 2,
+          pdf.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
       }
       
-      // Generar nombre de archivo
-      const fileName = filteredIncomeTransactions.length > 0
-        ? `Ingresos_Filtrados_${new Date().toISOString().split('T')[0]}.pdf`
-        : `Todos_Los_Ingresos_${new Date().toISOString().split('T')[0]}.pdf`;
-      
-      // Descargar PDF
-      doc.save(fileName);
+      // Guardar PDF
+      pdf.save(`Informe_Gastos_${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast({
-        title: "Informe generado",
-        description: filteredIncomeTransactions.length > 0
-          ? "El informe de ingresos filtrados ha sido generado y descargado exitosamente."
-          : "El informe con todos los ingresos ha sido generado y descargado exitosamente.",
+        title: "Informe generado correctamente",
+        description: `Se han exportado ${expensesToExport.length} gastos al PDF.`,
+        variant: "default"
       });
-      
     } catch (error: any) {
-      console.error("Error al exportar ingresos filtrados:", error);
+      toast({
+        title: "Error al generar el informe",
+        description: error.message || "Ocurrió un error al intentar generar el PDF.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Exportar ingresos filtrados a PDF
+  const handleExportFilteredIncome = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    
+    try {
+      // Determinar qué ingresos exportar (filtrados o todos)
+      const incomeToExport = filteredIncomeTransactions.length > 0 
+        ? filteredIncomeTransactions 
+        : transactions?.filter((t: Transaction) => t.type === 'income') || [];
+      
+      if (incomeToExport.length === 0) {
+        toast({
+          title: "No hay ingresos para exportar",
+          description: "No se encontraron ingresos que cumplan con los criterios de filtrado.",
+          variant: "default"
+        });
+        setIsExporting(false);
+        return;
+      }
+      
+      // Crear nuevo documento PDF
+      const pdf = new jsPDF();
+      
+      // Añadir título y metadata
+      pdf.setProperties({
+        title: `Informe de Ingresos - ${new Date().toLocaleDateString('es-ES')}`,
+        author: 'Billeo App',
+        subject: 'Informe de Ingresos',
+        keywords: 'ingresos, finanzas, autónomos',
+      });
+      
+      // Añadir cabecera al documento
+      pdf.setFontSize(22);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text('Informe de Ingresos', 14, 22);
+      
+      // Añadir fecha de generación
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 14, 28);
+      
+      // Añadir número de ingresos exportados
+      pdf.text(`Total de ingresos: ${incomeToExport.length}`, 14, 33);
+      
+      // Si hay filtros aplicados, mostrar información de filtrado
+      if (filteredIncomeTransactions.length > 0) {
+        pdf.text('* Informe filtrado según criterios personalizados', 14, 38);
+      }
+      
+      // Calcular el total de ingresos
+      const totalAmount = incomeToExport.reduce((sum, t: Transaction) => sum + Number(t.amount), 0);
+      pdf.text(`Importe total: ${formatCurrency(totalAmount, 'income')}`, 14, 43);
+      
+      // Preparar datos para la tabla
+      const tableData = incomeToExport.map((t: Transaction) => {
+        const category = getCategory(t.categoryId);
+        return [
+          formatDate(t.date),
+          t.title,
+          t.description,
+          category ? category.name : 'Sin categoría',
+          formatCurrency(Number(t.amount), 'income')
+        ];
+      });
+      
+      // Añadir tabla al PDF
+      autoTable(pdf, {
+        head: [['Fecha', 'Concepto', 'Descripción', 'Categoría', 'Importe']],
+        body: tableData,
+        startY: 50,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [52, 199, 89], // Color verde para ingresos
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        margin: { top: 50 },
+        styles: {
+          overflow: 'linebreak',
+          cellPadding: 3,
+          fontSize: 9
+        },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Fecha
+          1: { cellWidth: 35 }, // Concepto
+          2: { cellWidth: 'auto' }, // Descripción (ajusta automáticamente)
+          3: { cellWidth: 30 }, // Categoría
+          4: { cellWidth: 30, halign: 'right' } // Importe (alineado a la derecha)
+        }
+      });
+      
+      // Añadir pie de página
+      const pageCount = pdf.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Página ${i} de ${pageCount} | Generado por Billeo App`,
+          pdf.internal.pageSize.getWidth() / 2,
+          pdf.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      }
+      
+      // Guardar PDF
+      pdf.save(`Informe_Ingresos_${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast({
-        title: "Error",
-        description: `No se pudo generar el informe: ${error.message}`,
-        variant: "destructive",
+        title: "Informe generado correctamente",
+        description: `Se han exportado ${incomeToExport.length} ingresos al PDF.`,
+        variant: "default"
       });
+    } catch (error: any) {
+      toast({
+        title: "Error al generar el informe",
+        description: error.message || "Ocurrió un error al intentar generar el PDF.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
     }
   };
 
-  // Manejo de transacciones filtradas
-  const getFilteredTransactions = () => {
-    if (!Array.isArray(transactions)) return [];
-    
-    // Si estamos en la pestaña correspondiente y hay filtros aplicados, usar las transacciones filtradas
-    if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
-      return filteredExpenseTransactions;
-    } else if (currentTab === "income" && filteredIncomeTransactions.length > 0) {
-      return filteredIncomeTransactions;
-    }
-    
-    // En caso contrario, aplicar el filtro por tipo según la pestaña seleccionada
-    return transactions.filter((transaction: Transaction) => {
-      if (currentTab === "all") return true;
-      return transaction.type === currentTab;
-    });
-  };
-  
-  const filteredTransactions = getFilteredTransactions();
-
+  // Definición de columnas para la tabla
   const columns: ColumnDef<Transaction>[] = [
     {
       accessorKey: "date",
       header: "Fecha",
-      cell: ({ row }) => formatDate(row.getValue("date")),
+      cell: ({ row }) => formatDate(row.original.date),
+    },
+    {
+      accessorKey: "title",
+      header: "Concepto",
+      cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
     },
     {
       accessorKey: "description",
       header: "Descripción",
-      cell: ({ row }) => {
-        // Obtener el título (si existe), la descripción y las notas
-        const title = row.original.title as string;
-        const description = row.getValue("description") as string;
-        const notes = row.original.notes as string || '';
-        const type = row.original.type as string;
-        const attachments = row.original.attachments as string[] || [];
-        
-        // Función para descargar archivos adjuntos
-        const handleDownloadAttachment = (filename: string) => {
-          window.open(`/api/download/${filename}`, '_blank');
-        };
-        
-        // Renderizar archivos adjuntos
-        const renderAttachments = () => {
-          if (!attachments || attachments.length === 0) return null;
-          
-          return (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {attachments.map((filename, index) => {
-                // Determinar el tipo de archivo para mostrar el icono adecuado
-                const ext = filename.split('.').pop()?.toLowerCase() || '';
-                let icon = '📄'; // Documento genérico por defecto
-                
-                if (['pdf'].includes(ext)) icon = '📑';
-                else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) icon = '🖼️';
-                else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = '📊';
-                else if (['doc', 'docx', 'txt'].includes(ext)) icon = '📝';
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleDownloadAttachment(filename)}
-                    className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs hover:bg-blue-100"
-                    title={`Descargar ${filename}`}
-                  >
-                    <span className="mr-1">{icon}</span>
-                    <span>Descargar</span>
-                  </button>
-                );
-              })}
-            </div>
-          );
-        };
-        
-        // Si hay un título definido, mostrarlo como título principal
-        if (title) {
-          return (
-            <div className="max-w-[250px]">
-              <div className="font-medium text-gray-800">{title}</div>
-              <div className="text-xs text-gray-500 truncate">{description}</div>
-              {renderAttachments()}
-            </div>
-          );
-        }
-        
-        // Si no hay título pero es un gasto, intentamos detectar el proveedor en las notas
-        if (type === 'expense') {
-          // Buscar el proveedor en las notas (generadas por el escaneo de documentos)
-          const providerMatch = notes.match(/🏢 Proveedor:\s*([^\n]+)/);
-          
-          if (providerMatch && providerMatch[1] && providerMatch[1] !== 'No detectado') {
-            // Si encontramos un proveedor, mostramos el nombre como título y la descripción como subtítulo
-            const providerName = providerMatch[1].trim();
-            return (
-              <div className="max-w-[250px]">
-                <div className="font-medium text-gray-800">{providerName}</div>
-                <div className="text-xs text-gray-500 truncate">{description}</div>
-                {renderAttachments()}
-              </div>
-            );
-          }
-        }
-        
-        // Si no hay título ni proveedor, mostrar solo la descripción
-        return (
-          <div className="max-w-[250px]">
-            <div className="max-w-[200px] truncate font-medium text-gray-800">
-              {description}
-            </div>
-            {renderAttachments()}
-          </div>
-        );
-      },
+      cell: ({ row }) => <div className="max-w-[300px] truncate">{row.original.description}</div>,
     },
     {
-      accessorKey: "categoryId",
+      accessorKey: "category",
       header: "Categoría",
       cell: ({ row }) => {
-        const category = getCategory(row.getValue("categoryId"));
+        const category = getCategory(row.original.categoryId);
         return (
           <div className="flex items-center">
-            <span className="mr-2 text-xl" style={{ color: category.color }}>{category.icon}</span>
-            <span>{category.name}</span>
+            {category ? (
+              <>
+                <div 
+                  className="w-3 h-3 rounded-full mr-2" 
+                  style={{ backgroundColor: category.color || '#ccc' }}
+                />
+                <span>{category.name}</span>
+              </>
+            ) : (
+              <span className="text-gray-400">Sin categoría</span>
+            )}
           </div>
         );
       },
@@ -588,15 +511,16 @@ const TransactionList = () => {
     {
       accessorKey: "paymentMethod",
       header: "Método de pago",
-      cell: ({ row }) => <PaymentMethodBadge method={row.getValue("paymentMethod")} />,
+      cell: ({ row }) => {
+        const { paymentMethod } = row.original;
+        return paymentMethod ? <PaymentMethodBadge method={paymentMethod} /> : null;
+      },
     },
     {
       accessorKey: "amount",
-      header: "Base Imponible",
+      header: "Importe",
       cell: ({ row }) => {
-        const type = row.original.type;
-        const amount = row.getValue<number>("amount");
-        
+        const { amount, type } = row.original;
         return (
           <div>
             <span className={`font-medium ${type === "income" ? "text-secondary-600" : "text-danger-500"}`}>
@@ -634,7 +558,7 @@ const TransactionList = () => {
                 onClick={() => {
                   // Importamos dinámicamente para evitar problemas de dependencias cíclicas
                   import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
-                    const category = getCategory(transaction.categoryId);
+                    const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
                     // Para simplificar, descargamos el primer adjunto
                     // En una mejora futura podríamos mostrar un menú desplegable si hay varios
                     if (transaction.attachments && transaction.attachments.length > 0) {
@@ -689,27 +613,19 @@ const TransactionList = () => {
 
   return (
     <div className="space-y-6 fade-in">
-      <div className="relative mb-8 pb-6 border-b border-gray-100 after:absolute after:bottom-0 after:left-0 after:w-24 after:h-1 after:bg-gradient-to-r after:from-[#34C759] after:to-[#30D158]">
-        <div className="flex flex-row justify-between items-center">
-          <div className="max-w-[70%]">
-            <div className="flex items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#34C759] to-[#30D158] shadow-md mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="20" x2="12" y2="10" />
-                  <line x1="18" y1="20" x2="18" y2="4" />
-                  <line x1="6" y1="20" x2="6" y2="16" />
-                </svg>
-              </div>
-              <h1 className="text-[28px] font-medium text-[#1D1D1F] tracking-tight">
-                Ingresos y Gastos
-              </h1>
-            </div>
-            <p className="text-[#6E6E73] text-sm mt-2 ml-14">
-              Visualiza y gestiona todos tus movimientos económicos
-            </p>
+      {/* Cabecera estilo Apple consistente con la sección de facturas */}
+      <div className="section-header mx-4 md:ml-0 fade-in mb-6">
+        <div className="flex items-center">
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="20" x2="12" y2="10" />
+              <line x1="18" y1="20" x2="18" y2="4" />
+              <line x1="6" y1="20" x2="6" y1="16" />
+            </svg>
           </div>
-          <div className="ml-auto">
-            {/* Área reservada para controles futuros */}
+          <div className="flex-grow my-auto">
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-1 mt-2">Ingresos y Gastos</h2>
+            <p className="text-sm text-gray-500">Visualiza y gestiona todos tus movimientos económicos</p>
           </div>
         </div>
       </div>
