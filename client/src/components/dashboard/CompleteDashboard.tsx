@@ -158,33 +158,65 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Comprobar signos y valores para colores
   const isPositiveResult = finalResult >= 0;
   
+  // Función para obtener el trimestre a partir de una fecha
+  const getQuarterFromDate = (date: Date) => {
+    const month = date.getMonth();
+    if (month < 3) return "Q1";
+    if (month < 6) return "Q2";
+    if (month < 9) return "Q3";
+    return "Q4";
+  };
+
+  // Preparar datos reales para el gráfico de comparativa financiera
+  const prepareFinancialComparisonData = () => {
+    if (!transactions) return [];
+
+    // Inicializar estructura de datos para los trimestres
+    const quarterlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
+      "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+      "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+      "Q3": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+      "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
+    };
+
+    // Procesar transacciones y agruparlas por trimestre
+    transactions.forEach(tx => {
+      if (!tx.date) return;
+      
+      const txDate = new Date(tx.date);
+      if (txDate.getFullYear().toString() !== year) return;
+      
+      const quarter = getQuarterFromDate(txDate);
+      const amount = parseFloat(tx.amount);
+
+      if (tx.type === "income") {
+        // Para ingresos, usamos la base imponible (sin IVA)
+        const baseAmount = Math.round(amount / 1.21);
+        quarterlyData[quarter].Ingresos += baseAmount;
+      } else {
+        // Para gastos, usamos la base imponible (sin IVA)
+        const baseAmount = Math.round(amount / 1.21);
+        quarterlyData[quarter].Gastos += baseAmount;
+      }
+    });
+
+    // Calcular el resultado para cada trimestre
+    Object.keys(quarterlyData).forEach(quarter => {
+      quarterlyData[quarter].Resultado = 
+        quarterlyData[quarter].Ingresos - quarterlyData[quarter].Gastos;
+    });
+
+    // Convertir a array para el gráfico
+    return Object.entries(quarterlyData).map(([quarter, data]) => ({
+      quarter,
+      Ingresos: data.Ingresos,
+      Gastos: data.Gastos,
+      Resultado: data.Resultado
+    }));
+  };
+
   // Datos para el gráfico de comparativa financiera
-  const financialComparisonData = [
-    {
-      quarter: "Q1",
-      Ingresos: 1200,
-      Gastos: 800,
-      Resultado: 400
-    },
-    {
-      quarter: "Q2",
-      Ingresos: 1800,
-      Gastos: 1000,
-      Resultado: 800
-    },
-    {
-      quarter: "Q3",
-      Ingresos: 1500,
-      Gastos: 1100,
-      Resultado: 400
-    },
-    {
-      quarter: "Q4",
-      Ingresos: 2000,
-      Gastos: 1200,
-      Resultado: 800
-    }
-  ];
+  const financialComparisonData = prepareFinancialComparisonData();
 
   const isLoading = statsLoading || transactionsLoading || categoriesLoading;
   
@@ -531,52 +563,66 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </div>
               </div>
               
-              {/* Gráfico */}
+              {/* Gráfico o mensaje de datos insuficientes */}
               <div className="h-[180px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={financialComparisonData}
-                    margin={{
-                      top: 5,
-                      right: 5,
-                      left: 5,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
-                    <XAxis 
-                      dataKey="quarter" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fontSize: 10 }}
-                    />
-                    <YAxis 
-                      tickFormatter={(value) => `${value}€`}
-                      width={30}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 10 }}
-                    />
-                    <Tooltip 
-                      formatter={(value: number) => [`${value}€`, undefined]}
-                      contentStyle={{ 
-                        borderRadius: '10px',
-                        boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                        border: 'none',
-                        padding: '6px',
-                        fontSize: '10px'
+                {financialComparisonData.some(item => item.Ingresos > 0 || item.Gastos > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={financialComparisonData}
+                      margin={{
+                        top: 5,
+                        right: 5,
+                        left: 5,
+                        bottom: 5,
                       }}
-                    />
-                    <Legend 
-                      iconType="circle" 
-                      iconSize={5}
-                      wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }}
-                    />
-                    <Bar dataKey="Ingresos" fill="#34C759" radius={[4, 4, 0, 0]} barSize={16} />
-                    <Bar dataKey="Gastos" fill="#FF3B30" radius={[4, 4, 0, 0]} barSize={16} />
-                    <Bar dataKey="Resultado" fill="#007AFF" radius={[4, 4, 0, 0]} barSize={16} />
-                  </BarChart>
-                </ResponsiveContainer>
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
+                      <XAxis 
+                        dataKey="quarter" 
+                        axisLine={false} 
+                        tickLine={false}
+                        tick={{ fontSize: 10 }}
+                      />
+                      <YAxis 
+                        tickFormatter={(value) => `${value}€`}
+                        width={30}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10 }}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => [`${value}€`, undefined]}
+                        contentStyle={{ 
+                          borderRadius: '10px',
+                          boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
+                          border: 'none',
+                          padding: '6px',
+                          fontSize: '10px'
+                        }}
+                      />
+                      <Legend 
+                        iconType="circle" 
+                        iconSize={5}
+                        wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }}
+                      />
+                      <Bar dataKey="Ingresos" fill="#34C759" radius={[4, 4, 0, 0]} barSize={16} />
+                      <Bar dataKey="Gastos" fill="#FF3B30" radius={[4, 4, 0, 0]} barSize={16} />
+                      <Bar dataKey="Resultado" fill="#007AFF" radius={[4, 4, 0, 0]} barSize={16} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center">
+                    <div className="text-gray-400 mb-2">
+                      <BarChart3 className="h-12 w-12 mx-auto text-gray-200" strokeWidth={1} />
+                    </div>
+                    <p className="text-gray-500 text-sm text-center">
+                      No hay datos para este año
+                    </p>
+                    <p className="text-gray-400 text-xs text-center mt-1">
+                      Los datos se mostrarán cuando registres transacciones
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
