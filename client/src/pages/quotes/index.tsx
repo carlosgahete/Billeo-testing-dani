@@ -198,8 +198,8 @@ export default function QuotesPage() {
                   <FileText className="h-5 w-5 text-[#5856D6]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-800">Resumen</h3>
-                  <p className="text-sm text-gray-500">Estado de presupuestos</p>
+                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Resumen</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Estado de presupuestos</p>
                 </div>
               </div>
               
@@ -253,8 +253,8 @@ export default function QuotesPage() {
                   <Banknote className="h-5 w-5 text-[#34C759]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-800">Valor económico</h3>
-                  <p className="text-sm text-gray-500">Importe total presupuestado</p>
+                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Valor económico</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Importe total presupuestado</p>
                 </div>
               </div>
               
@@ -298,8 +298,8 @@ export default function QuotesPage() {
                   <BarChart3 className="h-5 w-5 text-[#007AFF]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-800">Tasa de conversión</h3>
-                  <p className="text-sm text-gray-500">Efectividad de presupuestos</p>
+                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Tasa de conversión</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Efectividad de presupuestos</p>
                 </div>
               </div>
               
@@ -349,8 +349,8 @@ export default function QuotesPage() {
                   <FileClock className="h-5 w-5 text-[#FF9500]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-800">Pendientes</h3>
-                  <p className="text-sm text-gray-500">Requieren seguimiento</p>
+                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Pendientes</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Requieren seguimiento</p>
                 </div>
               </div>
               
