@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { 
   Loader2, 
+  ChevronDown, 
   ArrowUpFromLine, 
   ArrowDownToLine, 
   PiggyBank, 
@@ -19,12 +20,24 @@ import {
   CardTitle, 
   CardDescription 
 } from "@/components/ui/card";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
@@ -244,6 +257,36 @@ const Dashboard = () => {
     ? ((balanceTotal / incomeTotal) * 100).toFixed(1) 
     : "0.0";
   const isPositiveMargin = balanceTotal > 0;
+  
+  // Efecto para cerrar menús al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const yearMenu = document.getElementById('yearMenu');
+      const periodMenu = document.getElementById('periodMenu');
+      const yearButton = document.getElementById('yearButton');
+      const periodButton = document.getElementById('periodButton');
+      
+      // Cerrar el menú de año si el clic no fue en él o en su botón asociado
+      if (yearMenu && !yearMenu.contains(event.target as Node) && 
+          yearButton && !yearButton.contains(event.target as Node)) {
+        yearMenu.classList.add('hidden');
+      }
+      
+      // Cerrar el menú de período si el clic no fue en él o en su botón asociado
+      if (periodMenu && !periodMenu.contains(event.target as Node) && 
+          periodButton && !periodButton.contains(event.target as Node)) {
+        periodMenu.classList.add('hidden');
+      }
+    };
+    
+    // Agregar el event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Limpiar el event listener al desmontar el componente
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="space-y-2">
@@ -252,11 +295,12 @@ const Dashboard = () => {
           title="Resumen Contable"
           description="Visión general de tu actividad económica"
           variant="gradient"
-          className="w-full"
+          className="w-full overflow-visible"
         >
           <div className="flex justify-end items-center mt-1">
-            <div className="text-white text-sm font-medium bg-white/10 px-4 py-1.5 rounded-md">
-              Datos financieros {year} - {period === "all" ? "Todo el año" : 
+            <div className="flex items-center">
+              <div className="text-white text-sm font-medium">
+                Datos financieros {year} - {period === "all" ? "Todo el año" : 
                 period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
                 period === "m1" ? "Enero" :
                 period === "m2" ? "Febrero" :
@@ -269,6 +313,7 @@ const Dashboard = () => {
                 period === "m9" ? "Septiembre" :
                 period === "m10" ? "Octubre" :
                 period === "m11" ? "Noviembre" : "Diciembre"}
+              </div>
             </div>
           </div>
         </PageTitle>
