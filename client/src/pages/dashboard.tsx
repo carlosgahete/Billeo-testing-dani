@@ -33,6 +33,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
@@ -263,58 +268,110 @@ const Dashboard = () => {
           className="w-full overflow-visible"
         >
           <div className="flex justify-end items-center mt-1">
-            <div className="flex bg-white/10 backdrop-blur-md p-2 rounded-full gap-4">
-              <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[80px] h-8 min-h-0">
-                  <span className="text-white text-sm font-semibold">{year}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2025">2025</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex gap-3">
+              {/* Botón de año - Estilo Apple */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="apple-button flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0">
+                    <span className="text-white text-sm font-medium">{year}</span>
+                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[100px] p-0 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden" align="end">
+                  <div className="py-1">
+                    {["2023", "2024", "2025"].map((yearOption) => (
+                      <button
+                        key={yearOption}
+                        className={`w-full px-4 py-1.5 text-left text-sm transition-colors
+                          ${year === yearOption ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
+                        onClick={() => setYear(yearOption)}
+                      >
+                        {yearOption}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               
-              <div className="w-px h-5 bg-white/20 self-center"></div>
-              
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[140px] h-8 min-h-0">
-                  <span className="text-white text-sm font-semibold">
-                    {period === "all" ? "Todo el año" : 
-                     period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                     period === "m1" ? "Enero" :
-                     period === "m2" ? "Febrero" :
-                     period === "m3" ? "Marzo" :
-                     period === "m4" ? "Abril" :
-                     period === "m5" ? "Mayo" :
-                     period === "m6" ? "Junio" :
-                     period === "m7" ? "Julio" :
-                     period === "m8" ? "Agosto" :
-                     period === "m9" ? "Septiembre" :
-                     period === "m10" ? "Octubre" :
-                     period === "m11" ? "Noviembre" : "Diciembre"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todo el año</SelectItem>
-                  <SelectItem value="q1">1er trimestre</SelectItem>
-                  <SelectItem value="q2">2º trimestre</SelectItem>
-                  <SelectItem value="q3">3er trimestre</SelectItem>
-                  <SelectItem value="q4">4º trimestre</SelectItem>
-                  <SelectItem value="m1">Enero</SelectItem>
-                  <SelectItem value="m2">Febrero</SelectItem>
-                  <SelectItem value="m3">Marzo</SelectItem>
-                  <SelectItem value="m4">Abril</SelectItem>
-                  <SelectItem value="m5">Mayo</SelectItem>
-                  <SelectItem value="m6">Junio</SelectItem>
-                  <SelectItem value="m7">Julio</SelectItem>
-                  <SelectItem value="m8">Agosto</SelectItem>
-                  <SelectItem value="m9">Septiembre</SelectItem>
-                  <SelectItem value="m10">Octubre</SelectItem>
-                  <SelectItem value="m11">Noviembre</SelectItem>
-                  <SelectItem value="m12">Diciembre</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Botón de período - Estilo Apple */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="apple-button flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0">
+                    <span className="text-white text-sm font-medium">
+                      {period === "all" ? "Todo el año" : 
+                       period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                       period === "m1" ? "Enero" :
+                       period === "m2" ? "Febrero" :
+                       period === "m3" ? "Marzo" :
+                       period === "m4" ? "Abril" :
+                       period === "m5" ? "Mayo" :
+                       period === "m6" ? "Junio" :
+                       period === "m7" ? "Julio" :
+                       period === "m8" ? "Agosto" :
+                       period === "m9" ? "Septiembre" :
+                       period === "m10" ? "Octubre" :
+                       period === "m11" ? "Noviembre" : "Diciembre"}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[170px] p-0 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden" align="end">
+                  <div className="py-1 max-h-[300px] overflow-y-auto">
+                    <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 border-b border-gray-100">
+                      Períodos
+                    </div>
+                    <button
+                      className={`w-full px-4 py-1.5 text-left text-sm transition-colors
+                        ${period === "all" ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
+                      onClick={() => setPeriod("all")}
+                    >
+                      Todo el año
+                    </button>
+                    <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 border-t border-b border-gray-100">
+                      Trimestres
+                    </div>
+                    {["q1", "q2", "q3", "q4"].map((quarter) => (
+                      <button
+                        key={quarter}
+                        className={`w-full px-4 py-1.5 text-left text-sm transition-colors
+                          ${period === quarter ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
+                        onClick={() => setPeriod(quarter)}
+                      >
+                        {quarter === "q1" ? "1er trimestre" : 
+                         quarter === "q2" ? "2º trimestre" : 
+                         quarter === "q3" ? "3er trimestre" : 
+                         "4º trimestre"}
+                      </button>
+                    ))}
+                    <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 border-t border-b border-gray-100">
+                      Meses
+                    </div>
+                    {[
+                      {id: "m1", name: "Enero"},
+                      {id: "m2", name: "Febrero"},
+                      {id: "m3", name: "Marzo"},
+                      {id: "m4", name: "Abril"},
+                      {id: "m5", name: "Mayo"},
+                      {id: "m6", name: "Junio"},
+                      {id: "m7", name: "Julio"},
+                      {id: "m8", name: "Agosto"},
+                      {id: "m9", name: "Septiembre"},
+                      {id: "m10", name: "Octubre"},
+                      {id: "m11", name: "Noviembre"},
+                      {id: "m12", name: "Diciembre"}
+                    ].map((month) => (
+                      <button
+                        key={month.id}
+                        className={`w-full px-4 py-1.5 text-left text-sm transition-colors
+                          ${period === month.id ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
+                        onClick={() => setPeriod(month.id)}
+                      >
+                        {month.name}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </PageTitle>
