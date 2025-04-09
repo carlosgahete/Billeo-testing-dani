@@ -623,18 +623,38 @@ const TransactionList = () => {
     
     setIsRepairing(true);
     try {
-      const response = await apiRequest('POST', '/api/repair/invoice-transactions');
-      
-      // Obtener los resultados
-      const repairResults = await response.json();
+      const response = await apiRequest('POST', '/api/repair/invoice-transactions', {});
       
       // Refrescar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+
+      // Manejo más seguro de la respuesta
+      let processedCount = 'varias';
+      let createdCount = 'varias';
+      
+      try {
+        if (response && typeof response === 'object') {
+          if (response.totalCreated !== undefined) {
+            createdCount = response.totalCreated;
+          }
+          if (response.processed !== undefined) {
+            processedCount = response.processed;
+          } else if (response.message && response.message.includes('Se procesaron')) {
+            // Intentar extraer el número de la cadena
+            const match = response.message.match(/Se procesaron (\d+)/);
+            if (match && match[1]) {
+              processedCount = match[1];
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error("Error al procesar la respuesta", parseError);
+      }
       
       toast({
         title: "Reparación completada",
-        description: `Se han procesado ${repairResults.processed} facturas y creado ${repairResults.created} transacciones.`,
+        description: `Se han procesado facturas pagadas y generado las transacciones faltantes.`,
         variant: "default"
       });
     } catch (error: any) {
