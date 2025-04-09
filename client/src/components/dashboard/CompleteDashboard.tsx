@@ -367,18 +367,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 {formatCurrency(baseImponibleIngresos)}
               </div>
               <div className="stat-label mt-1">
-                Base imponible (sin IVA)
+                Ingresos totales (sin IVA)
               </div>
             </div>
             
             <div className="space-y-3 mb-5 p-4 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible:</span>
-                <span className="font-medium text-gray-800">{formatCurrency(baseImponibleIngresos)}</span>
+                <span className="text-sm text-gray-600">IVA repercutido:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(ivaRepercutido)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">IVA repercutido (21%):</span>
-                <span className="font-medium text-gray-800">{formatCurrency(ivaRepercutido)}</span>
+                <span className="text-sm text-gray-600">IRPF adelantado:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(retencionesIrpf)}</span>
               </div>
             </div>
             
@@ -408,7 +408,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 {formatCurrency(baseImponibleGastos)}
               </div>
               <div className="stat-label mt-1">
-                Base imponible (sin IVA)
+                Gastos totales (sin IVA)
               </div>
             </div>
             
