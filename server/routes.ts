@@ -2679,6 +2679,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stats and reports
+  // Endpoint de diagnóstico para transacciones automáticas
+  app.get("/api/debug/transaction-creation", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId;
+      
+      // Intentaremos crear una transacción de prueba y ver si funciona
+      console.log("[DEBUG] Intentando crear transacción de prueba para diagnóstico");
+      
+      const testTransactionData = {
+        userId,
+        title: "Transacción de diagnóstico",
+        description: "Prueba automática para verificar la creación de transacciones",
+        amount: "100.00",
+        date: new Date(),
+        type: "income",
+        paymentMethod: "transfer",
+        notes: "Generado por el endpoint de diagnóstico",
+        categoryId: null,
+        attachments: []
+      };
+      
+      console.log("[DEBUG] Datos de prueba:", JSON.stringify(testTransactionData, null, 2));
+      
+      // Validar la transacción
+      const transactionResult = transactionFlexibleSchema.safeParse(testTransactionData);
+      
+      if (!transactionResult.success) {
+        console.log("[DEBUG] Error de validación en transacción de prueba:", 
+          JSON.stringify(transactionResult.error.errors, null, 2));
+        return res.status(400).json({
+          success: false,
+          message: "La transacción no pasó la validación",
+          errors: transactionResult.error.errors
+        });
+      }
+      
+      // Crear la transacción
+      const createdTransaction = await storage.createTransaction(transactionResult.data);
+      
+      console.log("[DEBUG] Transacción de diagnóstico creada:", 
+        JSON.stringify({
+          id: createdTransaction.id,
+          type: createdTransaction.type,
+          amount: createdTransaction.amount
+        }, null, 2));
+      
+      // Obtener todas las transacciones para verificar
+      const allTransactions = await storage.getTransactionsByUserId(userId);
+      
+      return res.status(200).json({
+        success: true,
+        message: "Transacción de diagnóstico creada correctamente",
+        createdTransaction,
+        transactionCount: allTransactions.length,
+        // Enviamos las últimas 5 transacciones para verificar
+        recentTransactions: allTransactions.slice(0, 5)
+      });
+    } catch (error) {
+      console.error("[DEBUG] Error en endpoint de diagnóstico:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error al ejecutar el diagnóstico",
+        error: String(error)
+      });
+    }
+  });
+
   app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
     try {
       // Configurar encabezados para evitar almacenamiento en caché de datos financieros
