@@ -203,6 +203,9 @@ const ExpensesByCategory: React.FC<{
 
   // Efecto para procesar el período seleccionado
   useEffect(() => {
+    // Si selectedPeriod es 'temp-reset', no hagas nada, es un valor temporal
+    if (selectedPeriod === 'temp-reset') return;
+
     const periodData = formatPeriodAndGetDates(selectedPeriod);
     setPeriodLabel(periodData.label);
     
@@ -213,8 +216,13 @@ const ExpensesByCategory: React.FC<{
         const txDate = new Date(t.date);
         return txDate >= periodData.startDate! && txDate <= periodData.endDate!;
       });
+      
+      // Log para depuración
+      console.log(`Filtrando por período: ${selectedPeriod}, encontradas ${filtered.length} transacciones`);
+      
       setFilteredTransactions(filtered);
     } else {
+      console.log(`Usando todas las transacciones para: ${selectedPeriod}`);
       setFilteredTransactions(transactions);
     }
   }, [selectedPeriod, transactions]);
@@ -464,9 +472,14 @@ const ExpensesByCategory: React.FC<{
                 <Button
                   size="sm"
                   onClick={() => {
-                    // Aplicar los filtros (ya han sido guardados en el estado)
-                    // Solo necesitamos cerrar el popover
-                    document.dispatchEvent(new MouseEvent('click'));
+                    // Forzar la actualización estableciendo de nuevo el período seleccionado
+                    const currentPeriod = selectedPeriod;
+                    setSelectedPeriod("temp-reset");
+                    setTimeout(() => {
+                      setSelectedPeriod(currentPeriod);
+                      // Cerrar el popover
+                      document.dispatchEvent(new MouseEvent('click'));
+                    }, 50);
                   }}
                   className="text-xs h-7 bg-red-600 hover:bg-red-700 text-white"
                 >
