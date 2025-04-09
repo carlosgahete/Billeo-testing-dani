@@ -81,7 +81,8 @@ const BasicExpenseForm: React.FC<BasicExpenseFormProps> = ({ onSuccess }) => {
         type: 'expense',
         amount: numericAmount.toString(),
         date: new Date().toISOString(),
-        attachments: [filePath]
+        attachments: [filePath],
+        additionalTaxes: null // Explícitamente enviamos null para evitar problemas
       };
       
       console.log('Enviando datos al servidor:', transactionData);
