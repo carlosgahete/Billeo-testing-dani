@@ -18,7 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import ExpensesByCategory from "@/components/dashboard/ExpensesByCategoryNew";
+import ExpensesByCategory from "@/components/dashboard/NewExpensesByCategory";
 
 interface CompleteDashboardProps {
   className?: string;
