@@ -53,59 +53,88 @@ const ExpensesByCategory: React.FC<{
   useEffect(() => {
     const currentYear = new Date().getFullYear();
     
-    if (period) {
-      // Formato: year-quarter o year-month o 'all'
-      const parts = period.split('-');
-      const year = parts[0];
-      
-      if (parts.length > 1) {
-        const timePeriod = parts[1];
+    try {
+      if (period) {
+        // Formato: year-quarter o year-month o 'all'
+        const parts = period.split('-');
+        const year = parts[0];
         
-        if (timePeriod.startsWith('Q')) {
-          // Período trimestral
-          const quarter = parseInt(timePeriod.substring(1));
-          const startMonth = (quarter - 1) * 3;
-          const endMonth = startMonth + 2;
+        // Verificar que el año es un número válido
+        if (year === 'all') {
+          setPeriodLabel("Todos los períodos");
+          return;
+        }
+        
+        const yearNum = parseInt(year);
+        if (isNaN(yearNum)) {
+          setPeriodLabel(`Período actual`);
+          return;
+        }
+        
+        if (parts.length > 1) {
+          const timePeriod = parts[1];
           
-          const startDate = new Date(parseInt(year), startMonth, 1);
-          const endDate = new Date(parseInt(year), endMonth + 1, 0);
-          
-          const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
-          const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
-          
-          setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          if (timePeriod.startsWith('q') || timePeriod.startsWith('Q')) {
+            // Período trimestral - 'q1', 'Q1', etc.
+            const quarterStr = timePeriod.substring(1);
+            const quarter = parseInt(quarterStr);
+            
+            if (isNaN(quarter) || quarter < 1 || quarter > 4) {
+              setPeriodLabel(`Año ${yearNum}`);
+              return;
+            }
+            
+            const startMonth = (quarter - 1) * 3;
+            const endMonth = startMonth + 2;
+            
+            const startDate = new Date(yearNum, startMonth, 1);
+            const endDate = new Date(yearNum, endMonth + 1, 0);
+            
+            const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+            const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+            
+            setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          } else {
+            // Período mensual - asumimos que es un número del 1-12
+            const monthNum = parseInt(timePeriod);
+            
+            if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+              setPeriodLabel(`Año ${yearNum}`);
+              return;
+            }
+            
+            const month = monthNum - 1; // Ajustar a índice 0-11
+            const startDate = new Date(yearNum, month, 1);
+            const endDate = new Date(yearNum, month + 1, 0);
+            
+            const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+            const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+            
+            setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          }
         } else {
-          // Período mensual
-          const month = parseInt(timePeriod) - 1;
-          const startDate = new Date(parseInt(year), month, 1);
-          const endDate = new Date(parseInt(year), month + 1, 0);
+          // Año completo
+          const startDate = new Date(yearNum, 0, 1);
+          const endDate = new Date(yearNum, 11, 31);
           
           const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
           const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
           
           setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
         }
-      } else if (year === 'all') {
-        setPeriodLabel("Todos los períodos");
       } else {
-        // Año completo
-        const startDate = new Date(parseInt(year), 0, 1);
-        const endDate = new Date(parseInt(year), 11, 31);
+        // Sin período especificado, mostrar año actual
+        const startDate = new Date(currentYear, 0, 1);
+        const endDate = new Date(currentYear, 11, 31);
         
         const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
         const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
         
         setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
       }
-    } else {
-      // Sin período especificado, mostrar año actual
-      const startDate = new Date(currentYear, 0, 1);
-      const endDate = new Date(currentYear, 11, 31);
-      
-      const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
-      const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
-      
-      setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+    } catch (error) {
+      console.error("Error al formatear el período:", error);
+      setPeriodLabel("Período actual");
     }
   }, [period]);
 
