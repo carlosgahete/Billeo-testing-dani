@@ -1,0 +1,115 @@
+Perfecto, aquí te dejo la versión desarrollada para tu IA, ya incluyendo que los archivos aceptados deben ser PDF, PNG o JPG (o cualquier imagen válida).
+
+⸻
+
+Instrucción completa para corregir la creación de gastos, incluyendo validación de archivos
+
+Actualmente, al intentar crear un gasto, aparece el error:
+
+SyntaxError: The string did not match the expected pattern.
+Archivo: MiniExpenseForm.tsx
+Línea: 90
+
+Este error sucede porque alguno de los datos enviados no tiene el formato correcto. Necesitamos corregir la validación antes de crear el gasto.
+
+Puntos a revisar y corregir:
+
+⸻
+
+1. Validar los datos antes de crear el gasto
+
+Antes de enviar los datos al servidor, debes asegurarte de que cumplen las siguientes condiciones:
+	•	Importe (amount):
+	•	Debe ser un número positivo, máximo dos decimales.
+	•	Validación recomendada:
+
+const amountPattern = /^\d+(\.\d{1,2})?$/;
+if (!amountPattern.test(amount)) {
+  alert("El importe no es válido. Debe ser un número con máximo dos decimales.");
+  return;
+}
+
+
+	•	Fecha (date):
+	•	Debe ser una fecha válida en formato YYYY-MM-DD.
+	•	Validación recomendada:
+
+if (isNaN(new Date(date).getTime())) {
+  alert("La fecha introducida no es válida.");
+  return;
+}
+
+
+	•	Archivo adjunto (attachment):
+	•	Debe ser uno de los siguientes formatos:
+	•	PDF (application/pdf)
+	•	PNG (image/png)
+	•	JPG o JPEG (image/jpeg)
+	•	Validación recomendada:
+
+const allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+if (attachment && !allowedMimeTypes.includes(attachment.type)) {
+  alert("El archivo debe ser un PDF, PNG o JPG.");
+  return;
+}
+
+
+	•	Descripción (description):
+	•	Puede ser texto libre, pero se recomienda sanitizarlo para evitar caracteres extraños.
+
+⸻
+
+2. Guardar los archivos originales
+
+Cuando el gasto se registre:
+	•	El archivo adjunto debe almacenarse de forma segura.
+	•	Es importante guardar el archivo original (no solo su nombre o enlace) en el sistema.
+	•	El sistema debe permitir descargar posteriormente el archivo original para posibles inspecciones de Hacienda o auditorías.
+
+Recomendaciones técnicas:
+	•	Almacenar los archivos en una carpeta segura o en un servicio tipo S3, Firebase Storage, etc.
+	•	Guardar en la base de datos:
+	•	La URL del archivo
+	•	El nombre original del archivo
+	•	El tipo MIME del archivo
+	•	Implementar un botón en la interfaz donde el usuario pueda:
+	•	Ver el archivo subido
+	•	Descargar el archivo original si lo necesita
+
+Ejemplo de botón de descarga:
+
+<a href={attachmentUrl} download target="_blank" rel="noopener noreferrer">
+  Descargar archivo
+</a>
+
+
+
+⸻
+
+3. Añadir logs de control para depuración
+
+Antes de enviar el gasto, añade un console.log para ver todo lo que se está mandando:
+
+console.log("Datos enviados al crear gasto:", { amount, date, description, attachment });
+
+Así podrás identificar rápidamente si hay algún valor mal formado.
+
+⸻
+
+4. ¿Por qué es tan importante guardar correctamente los archivos?
+	•	Obligación legal: Hacienda puede solicitar los justificantes de los gastos. Necesitamos conservar los documentos originales (facturas o tickets) tal como se subieron.
+	•	Seguridad: El sistema debe garantizar que los documentos no se pierden ni se modifican.
+	•	Accesibilidad: Desde el panel de control, el usuario debe poder consultar y descargar los documentos sin complicaciones.
+
+⸻
+
+Resumen de pasos para tu IA:
+	•	Validar importe, fecha y tipo de archivo antes de enviar el gasto.
+	•	Almacenar los archivos subidos, conservando el original.
+	•	Implementar un botón para ver y descargar el documento asociado a cada gasto.
+	•	Añadir logs para verificar los datos en desarrollo.
+
+⸻
+
+¿Quieres que también te prepare un pequeño ejemplo de todo el handleSubmit corregido (listo para pegar en MiniExpenseForm.tsx)?
+Puedo incluir la validación de importe, fecha y archivo todo en uno. ¿Te lo paso?
