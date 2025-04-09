@@ -785,7 +785,20 @@ const TransactionList = () => {
             </div>
             
             <p className="text-3xl font-semibold text-[#0070F3] mb-5 pl-1">
-              {formatCurrency(balance, balance >= 0 ? "income" : "expense")}
+              {balance < 0 
+                ? `-${Math.abs(balance).toLocaleString('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`
+                : balance.toLocaleString('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+              }
             </p>
             
             <div className="p-3 bg-[#0070F3]/5 border border-[#0070F3]/10 hover:bg-[#0070F3]/10 rounded-xl flex items-center justify-center transition-all">
