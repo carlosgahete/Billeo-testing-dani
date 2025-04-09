@@ -939,19 +939,9 @@ const TransactionList = () => {
               </>
             ) : currentTab === 'income' ? (
               <>
-                {/* Nuevo ingreso */}
-                <button 
-                  className="button-apple-primary button-apple-sm flex items-center"
-                  onClick={() => navigate("/transactions/new?type=income")}
-                >
-                  <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden sm:inline">Nuevo ingreso</span>
-                  <span className="sm:hidden">Ingreso</span>
-                </button>
-
                 {/* Crear factura */}
                 <button 
-                  className="button-apple button-apple-sm flex items-center"
+                  className="button-apple-primary button-apple-sm flex items-center"
                   onClick={() => navigate("/invoices/create")}
                 >
                   <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
