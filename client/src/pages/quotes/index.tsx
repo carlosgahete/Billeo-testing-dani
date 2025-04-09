@@ -25,7 +25,8 @@ import {
   Plus,
   ArrowUpRight,
   Banknote,
-  BarChart3
+  BarChart3,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -192,7 +193,7 @@ export default function QuotesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {/* Tarjeta 1: Resumen de presupuestos - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-[460px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#F0F1FF] p-3 rounded-full mr-3">
                   <FileText className="h-5 w-5 text-[#5856D6]" />
@@ -241,6 +242,18 @@ export default function QuotesPage() {
                   </span>
                   <span className="font-medium text-gray-800">{rejectedQuotes}</span>
                 </div>
+              </div>
+              
+              <div className="mt-auto">
+                <button
+                  className="h-10 rounded-full bg-[#5856D6] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#4645ab] transition-colors"
+                  onClick={() => {
+                    // Aquí se implementaría la descarga del resumen
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar resumen
+                </button>
               </div>
             </div>
           </div>
