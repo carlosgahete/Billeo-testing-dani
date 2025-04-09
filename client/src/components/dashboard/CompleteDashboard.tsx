@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
@@ -29,6 +29,52 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [period, setPeriod] = useState("all");
   const [graphView, setGraphView] = useState<"barras" | "area">("barras");
   const [_, navigate] = useLocation();
+  
+  // Efecto para cerrar los menus al hacer clic fuera de ellos
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Cerrar el dropdown de año si el clic es fuera
+      const yearButton = document.querySelector('button[aria-controls="year-dropdown"]');
+      const yearDropdown = document.getElementById('year-dropdown');
+      
+      if (yearDropdown && 
+          !yearDropdown.contains(event.target as Node) && 
+          yearButton && 
+          !yearButton.contains(event.target as Node)) {
+        yearDropdown.classList.add('hidden');
+      }
+      
+      // Cerrar el dropdown de período si el clic es fuera
+      const periodButton = document.querySelector('button[aria-controls="period-dropdown"]');
+      const periodDropdown = document.getElementById('period-dropdown');
+      
+      if (periodDropdown && 
+          !periodDropdown.contains(event.target as Node) && 
+          periodButton && 
+          !periodButton.contains(event.target as Node)) {
+        periodDropdown.classList.add('hidden');
+      }
+      
+      // Cerrar el dropdown de vista comparativa si el clic es fuera
+      const viewButton = document.querySelector('button[aria-controls="view-dropdown"]');
+      const viewDropdown = document.getElementById('view-dropdown');
+      
+      if (viewDropdown && 
+          !viewDropdown.contains(event.target as Node) && 
+          viewButton && 
+          !viewButton.contains(event.target as Node)) {
+        viewDropdown.classList.add('hidden');
+      }
+    };
+    
+    // Agregar el listener al documento
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Limpiar el listener cuando el componente se desmonte
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   // Función para refrescar los datos del dashboard
   const { refetch } = useQuery<DashboardStats>({
@@ -160,12 +206,120 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-gray-600 text-sm font-medium bg-white/80 px-4 py-1.5 rounded-md shadow-sm border border-gray-100">
-            Datos financieros {year} - {period === "all" ? "Todo el año" : 
-            period === "q1" ? "Trimestre 1" : 
-            period === "q2" ? "Trimestre 2" : 
-            period === "q3" ? "Trimestre 3" : 
-            period === "q4" ? "Trimestre 4" : ""}
+          {/* Botón de Año */}
+          <div className="relative">
+            <button 
+              type="button"
+              onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
+              className="inline-flex items-center gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              aria-controls="year-dropdown"
+            >
+              <span>{year}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Dropdown años */}
+            <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-24 py-1 border border-gray-200 focus:outline-none">
+              <button
+                onClick={() => {
+                  setYear("2025");
+                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${year === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                2025
+              </button>
+              <button
+                onClick={() => {
+                  setYear("2024");
+                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${year === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                2024
+              </button>
+              <button
+                onClick={() => {
+                  setYear("2023");
+                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${year === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                2023
+              </button>
+            </div>
+          </div>
+          
+          {/* Botón de Periodo */}
+          <div className="relative">
+            <button 
+              type="button"
+              onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
+              className="inline-flex items-center gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              aria-controls="period-dropdown"
+            >
+              <span>
+                {period === "all" ? "Todo el año" : 
+                period === "q1" ? "Trimestre 1" : 
+                period === "q2" ? "Trimestre 2" : 
+                period === "q3" ? "Trimestre 3" : 
+                period === "q4" ? "Trimestre 4" : ""}
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Dropdown periodos */}
+            <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-40 py-1 border border-gray-200 focus:outline-none">
+              <button
+                onClick={() => {
+                  setPeriod("all");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                Todo el año
+              </button>
+              <button
+                onClick={() => {
+                  setPeriod("q1");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                Trimestre 1
+              </button>
+              <button
+                onClick={() => {
+                  setPeriod("q2");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                Trimestre 2
+              </button>
+              <button
+                onClick={() => {
+                  setPeriod("q3");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                Trimestre 3
+              </button>
+              <button
+                onClick={() => {
+                  setPeriod("q4");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+              >
+                Trimestre 4
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -316,15 +470,40 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Select value="trimestral">
-                  <SelectTrigger className="select-apple text-xs h-7 min-h-0 py-1 px-2">
-                    <SelectValue placeholder="Trimestral" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="trimestral">Trimestral</SelectItem>
-                    <SelectItem value="mensual">Mensual</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <button 
+                    type="button"
+                    onClick={() => document.getElementById('view-dropdown')?.classList.toggle('hidden')}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-md border border-gray-200 shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                    aria-controls="view-dropdown"
+                  >
+                    <span>{graphView === "barras" ? "Trimestral" : "Mensual"}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  <div id="view-dropdown" className="hidden absolute z-10 right-0 mt-1 bg-white rounded-md shadow-lg w-28 py-1 border border-gray-200 focus:outline-none">
+                    <button
+                      onClick={() => {
+                        setGraphView("barras");
+                        document.getElementById('view-dropdown')?.classList.add('hidden');
+                      }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 ${graphView === "barras" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                    >
+                      Trimestral
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGraphView("area");
+                        document.getElementById('view-dropdown')?.classList.add('hidden');
+                      }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 ${graphView === "area" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                    >
+                      Mensual
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
