@@ -2750,6 +2750,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stats and reports
+  // Endpoint para reparar transacciones de facturas pagadas
+  app.get("/api/repair/invoice-transactions", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId;
+      console.log("[REPAIR] Iniciando proceso de reparación de transacciones para facturas pagadas");
+      
+      // Obtener todas las facturas pagadas del usuario
+      const invoices = await storage.getInvoicesByUserId(userId);
+      const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+      
+      console.log(`[REPAIR] Encontradas ${paidInvoices.length} facturas pagadas para reparar`);
+      
+      // Obtener todas las transacciones existentes
+      const existingTransactions = await storage.getTransactionsByUserId(userId);
+      
+      // Transacciones creadas durante la reparación
+      const createdTransactions = [];
+      
+      // Procesar cada factura pagada
+      for (const invoice of paidInvoices) {
+        // Verificar si ya existe una transacción para esta factura
+        const existingTransaction = existingTransactions.find(t => 
+          t.invoiceId === invoice.id || 
+          (t.description && t.description.includes(`Factura ${invoice.invoiceNumber} cobrada`))
+        );
+        
+        if (existingTransaction) {
+          console.log(`[REPAIR] La factura ${invoice.invoiceNumber} ya tiene una transacción asociada (ID: ${existingTransaction.id})`);
+          continue;
+        }
+        
+        // Si llegamos aquí, necesitamos crear una transacción para esta factura
+        console.log(`[REPAIR] Creando transacción para factura ${invoice.invoiceNumber}`);
+        
+        // Obtener info del cliente
+        let clientName = 'Cliente';
+        if (invoice.clientId) {
+          try {
+            const client = await storage.getClient(invoice.clientId);
+            if (client) {
+              clientName = client.name;
+            }
+          } catch (error) {
+            console.error("[REPAIR] Error al obtener información del cliente:", error);
+          }
+        }
+        
+        // Crear datos para la transacción
+        const total = typeof invoice.total === 'number' ? 
+          invoice.total.toString() : invoice.total;
+          
+        const transactionData = {
+          userId,
+          title: clientName,
+          description: `Factura ${invoice.invoiceNumber} cobrada`,
+          amount: total,
+          date: new Date(),
+          type: 'income',
+          paymentMethod: 'transfer',
+          invoiceId: invoice.id,
+          notes: `Generado automáticamente por proceso de reparación para la factura ${invoice.invoiceNumber}`,
+          categoryId: null,
+          attachments: []
+        };
+        
+        // Intentar crear la transacción
+        try {
+          const createdTransaction = await storage.createTransaction(transactionData);
+          console.log(`[REPAIR] Transacción creada correctamente para factura ${invoice.invoiceNumber} (ID: ${createdTransaction.id})`);
+          createdTransactions.push({
+            invoiceNumber: invoice.invoiceNumber,
+            transactionId: createdTransaction.id,
+            amount: createdTransaction.amount
+          });
+        } catch (error) {
+          console.error(`[REPAIR] Error al crear transacción para factura ${invoice.invoiceNumber}:`, error);
+        }
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: `Proceso de reparación completado. Se procesaron ${paidInvoices.length} facturas pagadas.`,
+        createdTransactions,
+        totalCreated: createdTransactions.length
+      });
+    } catch (error) {
+      console.error("[REPAIR] Error en proceso de reparación:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error al ejecutar el proceso de reparación",
+        error: String(error)
+      });
+    }
+  });
+
   // Endpoint de diagnóstico para transacciones automáticas
   app.get("/api/debug/transaction-creation", requireAuth, async (req: Request, res: Response) => {
     try {
