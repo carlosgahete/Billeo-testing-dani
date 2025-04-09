@@ -300,84 +300,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Segunda fila: Widgets de Resumen Fiscal y Comparativa - Estilo Apple */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        {/* Widget de Resumen Fiscal - Estilo Apple */}
-        <div className="dashboard-card fade-in">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center">
-                <div className="bg-[#EEF2FF] p-3 rounded-full mr-3">
-                  <FileText className="h-5 w-5 text-[#5856D6]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800">Resumen Fiscal</h3>
-                  <p className="text-sm text-gray-500">Impuestos y retenciones</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
-                    <SelectValue placeholder="Año" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2025">2025</SelectItem>
-                    <SelectItem value="2024">2024</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
-                    <SelectValue placeholder="Periodo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todo el año</SelectItem>
-                    <SelectItem value="q1">Trimestre 1</SelectItem>
-                    <SelectItem value="q2">Trimestre 2</SelectItem>
-                    <SelectItem value="q3">Trimestre 3</SelectItem>
-                    <SelectItem value="q4">Trimestre 4</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* IVA a liquidar - Estilo Apple */}
-            <div className="bg-[#F8FBFF] rounded-xl p-5 mb-4 border border-[#E6F0FD]">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">IVA a liquidar (Todo el año, 2025)</span>
-                <span className="bg-blue-50 text-xs py-1 px-2 rounded-full text-blue-700 font-medium">21% IVA</span>
-              </div>
-              <div className="text-3xl font-medium text-[#007AFF]">
-                {formatCurrency(ivaALiquidar)}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Resumen anual de IVA (modelo 390)
-              </div>
-            </div>
-
-            {/* IRPF - Estilo Apple */}
-            <div className="bg-[#FFF9F5] rounded-xl p-5 mb-4 border border-[#FEECD2]">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Retenciones IRPF (Todo el año, 2025)</span>
-                <span className="bg-amber-50 text-xs py-1 px-2 rounded-full text-amber-600 font-medium">15% IRPF</span>
-              </div>
-              <div className="text-3xl font-medium text-[#FF9500]">
-                {formatCurrency(dashboardStats.taxes?.incomeTax || 0)}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Retenciones acumuladas en el año (modelo 190)
-              </div>
-            </div>
-
-            {/* Botón de Informes - Estilo Apple */}
-            <div className="mt-6">
-              <button className="button-apple w-full">
-                Ver informes fiscales
-              </button>
-            </div>
-          </div>
-        </div>
-
+      {/* Segunda fila: Widget de Comparativa Financiera - Estilo Apple */}
+      <div className="grid grid-cols-1 gap-8 mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in">
           <div className="p-6">
