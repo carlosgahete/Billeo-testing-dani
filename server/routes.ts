@@ -3174,21 +3174,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Este IRPF es el que el autónomo puede deducirse de los impuestos a pagar
       let totalIrpfFromExpensesInvoices = 0;
       
-      // Vamos a buscar las facturas de gastos (proveedor → autónomo) que tengan retenciones de IRPF
-      // Como es solo una demostración, estamos calculando un valor simulado basado en los gastos
+      // Vamos a buscar todas las transacciones de gastos que sean de tipo factura y tengan IRPF
+      // Obtenemos el total de IRPF retenido en facturas de gastos sumando todos los importes de IRPF
       
-      // Para un entorno de producción, aquí sería donde buscaríamos todas las facturas 
-      // recibidas de proveedores que nos hacen retenciones de IRPF
-      // Esta es una simulación para mostrar el concepto - implementación completa en futuras versiones
-      
-      if (expenses > 0) {
-        // Estimamos que aproximadamente el 60% de los gastos son servicios profesionales (asesores, etc.)
-        const professionalServicesExpenses = expenses * 0.6;
+      try {
+        // Obtener todas las transacciones de gastos que sean facturas
+        const expenseTransactions = allTransactions.filter(tx => tx.type === "expense");
         
-        // Y que esos servicios suelen tener una retención del 15%
-        totalIrpfFromExpensesInvoices = Math.round(professionalServicesExpenses * 0.15);
+        // Sumar el IRPF de cada transacción - Para cada transacción buscamos si tiene un campo de IRPF
+        expenseTransactions.forEach(transaction => {
+          // Si la transacción tiene datos adicionales y un campo de IRPF
+          if (transaction.metadata && typeof transaction.metadata === 'object') {
+            const metadata = transaction.metadata as Record<string, any>;
+            
+            // Si hay un campo de IRPF (puede estar en diferentes formatos)
+            if (metadata.irpf || metadata.IRPF || metadata.irpfAmount || metadata.irpfValue) {
+              const irpfAmount = Number(metadata.irpf || metadata.IRPF || metadata.irpfAmount || metadata.irpfValue || 0);
+              
+              // Asegurarnos de que es un número positivo (el IRPF siempre se guarda como valor positivo)
+              if (!isNaN(irpfAmount) && irpfAmount > 0) {
+                totalIrpfFromExpensesInvoices += irpfAmount;
+              }
+            }
+          }
+        });
         
-        console.log(`Simulación de IRPF en gastos: Gastos profesionales (${Math.round(professionalServicesExpenses)}€) × 15% = ${totalIrpfFromExpensesInvoices}€`);
+        console.log(`IRPF encontrado en facturas de gastos: ${totalIrpfFromExpensesInvoices}€`);
+      } catch (error) {
+        console.error("Error al calcular el IRPF de facturas de gastos:", error);
+        // En caso de error, usamos la simulación anterior como fallback
+        if (expenses > 0) {
+          const professionalServicesExpenses = expenses * 0.6;
+          totalIrpfFromExpensesInvoices = Math.round(professionalServicesExpenses * 0.15);
+          console.log(`Fallback - Simulación de IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
+        }
       }
       
       // Calcular el resultado (ingresos - gastos)

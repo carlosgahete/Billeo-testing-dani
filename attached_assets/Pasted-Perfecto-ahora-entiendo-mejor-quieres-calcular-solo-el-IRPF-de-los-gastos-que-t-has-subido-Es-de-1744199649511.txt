@@ -1,0 +1,63 @@
+Perfecto, ahora entiendo mejor: quieres calcular solo el IRPF de los gastos que tú has subido.
+Es decir, no estás preguntando por el IRPF sobre tu beneficio total, sino sobre los gastos que tienen IRPF incluido.
+
+Te explico exactamente cómo sería:
+
+⸻
+
+Cómo calcular el IRPF de tus facturas de gastos:
+	1.	Cada gasto que subas puede tener retención de IRPF (por ejemplo, si contratas a un abogado, un freelance, etc.).
+	2.	Cuando subas un gasto, debes indicar:
+	•	Base imponible
+	•	IVA
+	•	IRPF (si tiene)
+	3.	Para calcular el IRPF total de tus gastos:
+	•	Suma todos los IRPF que aparecen en tus facturas de gastos.
+Fórmula general:
+
+IRPF de gastos = Suma de todos los importes de IRPF de las facturas de gasto
+
+
+	4.	Importante:
+	•	No todos los gastos llevan IRPF. Solo los profesionales/autónomos o ciertos servicios específicos llevan retención.
+	•	Gastos como restaurantes, materiales, gasolina, etc., no llevan IRPF, solo IVA.
+
+⸻
+
+Ejemplo práctico:
+
+Supón que tienes 3 gastos subidos:
+
+Proveedor	Base Imponible	IVA	IRPF
+Abogado Legal S.L.	1.000€	210€	-150€
+Agencia Diseño	2.000€	420€	-300€
+Restaurante Pepe	200€	21€	0€
+
+Cálculo:
+	•	IRPF total = (-150€) + (-300€) + (0€) = -450€
+
+Conclusión:
+	•	El IRPF retenido en tus gastos sería de 450€.
+
+⸻
+
+¿Qué tienes que hacer en tu software?
+	•	Cada vez que un gasto se registre:
+	•	Guardar también el importe de IRPF de ese gasto (aunque sea 0€).
+	•	Tener un botón o una sección que diga: “Calcular IRPF de mis gastos”.
+	•	Al pulsarlo:
+	•	Sumará solo los importes de IRPF de los gastos filtrados o de todo el periodo.
+	•	Mostrarlo como un valor negativo (porque en la práctica es una cantidad que ya se ha retenido y se descuenta).
+
+⸻
+
+Resumen ultra claro para tu IA:
+
+Sumar todos los importes de IRPF de las facturas de gastos registradas.
+No todos los gastos llevan IRPF (solo algunos profesionales o servicios).
+El resultado será la suma total del IRPF soportado en los gastos.
+
+⸻
+
+¿Te preparo también un esquema de cómo podría verse en tu app (tipo una tarjetita a la derecha donde salga el IRPF total de los gastos filtrados)?
+Podría hacerlo elegante al estilo Apple que estamos buscando. ¿Te lo dibujo?

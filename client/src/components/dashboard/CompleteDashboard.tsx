@@ -145,6 +145,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const ivaSoportado = dashboardStats.ivaSoportado || dashboardStats.expenses - baseImponibleGastos;
   const ivaALiquidar = dashboardStats.taxes?.ivaALiquidar || (ivaRepercutido - ivaSoportado);
   const retencionesIrpf = dashboardStats.irpfRetenidoIngresos || 0;
+  // Obtener el IRPF retenido en facturas de gastos
+  const irpfRetenciones = dashboardStats.totalWithholdings || 0;
   
   // Comprobar signos y valores para colores
   const isPositiveResult = finalResult >= 0;
@@ -422,8 +424,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <span className="font-medium text-gray-800">{formatCurrency(ivaSoportado)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">IRPF a pagar:</span>
-                <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
+                <span className="text-sm text-gray-600">IRPF retenido en gastos:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(irpfRetenciones)}</span>
               </div>
             </div>
             
