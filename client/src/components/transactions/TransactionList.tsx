@@ -544,6 +544,9 @@ const TransactionList = () => {
         // Solo mostrar botón de descarga si es un gasto y tiene archivos adjuntos
         const showDownloadButton = transaction.type === 'expense' && hasAttachments;
         
+        // Depuración para ver el estado de los attachments
+        console.log('TransactionID:', transaction.id, 'Type:', transaction.type, 'Attachments:', transaction.attachments);
+        
         return (
           <div className="flex justify-end space-x-1">
             {/* Mostrar botón de visualización de archivo si tiene adjuntos */}
