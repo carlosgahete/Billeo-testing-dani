@@ -155,8 +155,8 @@ const ExpensesByCategory: React.FC<{
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={80}
-                  outerRadius={140}
+                  innerRadius={65}
+                  outerRadius={110}
                   paddingAngle={1}
                   dataKey="value"
                 >
@@ -179,8 +179,8 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Lista de categorías */}
-          <div className="p-2 overflow-y-auto h-[360px]">
-            <div className="space-y-4">
+          <div className="p-2 overflow-y-auto h-[360px] flex items-center">
+            <div className="space-y-4 w-full">
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
