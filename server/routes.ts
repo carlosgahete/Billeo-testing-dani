@@ -2474,6 +2474,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Internal server error" });
     }
   });
+  
+  // Endpoint simplificado para crear gastos básicos
+  app.post("/api/expenses/basic", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "No autenticado" });
+      }
+      
+      console.log("ENDPOINT BÁSICO DE GASTOS - Datos recibidos:", JSON.stringify(req.body, null, 2));
+      
+      // Validación manual de campos obligatorios
+      if (!req.body.description) {
+        return res.status(400).json({ message: "Se requiere una descripción" });
+      }
+      
+      if (!req.body.amount) {
+        return res.status(400).json({ message: "Se requiere un importe" });
+      }
+      
+      if (!req.body.attachments || !Array.isArray(req.body.attachments) || req.body.attachments.length === 0) {
+        return res.status(400).json({ message: "Se requiere al menos un documento adjunto" });
+      }
+      
+      // Crear el objeto de transacción
+      const expense = {
+        userId: req.session.userId,
+        title: `Gasto: ${req.body.description.substring(0, 30)}`,
+        description: req.body.description,
+        amount: req.body.amount.toString(),
+        date: new Date(),
+        type: "expense",
+        additionalTaxes: null,
+        notes: null,
+        categoryId: null,
+        paymentMethod: null,
+        invoiceId: null,
+        attachments: req.body.attachments
+      };
+      
+      console.log("Objeto de gasto a guardar:", JSON.stringify(expense, null, 2));
+      
+      // Intentar guardar directamente en el storage
+      try {
+        const newExpense = await storage.createTransaction(expense);
+        console.log("Gasto guardado con éxito:", JSON.stringify(newExpense, null, 2));
+        return res.status(201).json(newExpense);
+      } catch (storageError) {
+        console.error("Error al guardar en storage:", storageError);
+        return res.status(500).json({
+          message: "Error al guardar el gasto en la base de datos",
+          error: String(storageError)
+        });
+      }
+    } catch (error) {
+      console.error("Error general en el endpoint /api/expenses/basic:", error);
+      return res.status(500).json({
+        message: "Error interno del servidor",
+        error: String(error)
+      });
+    }
+  });
 
   app.get("/api/transactions/:id", async (req: Request, res: Response) => {
     try {
