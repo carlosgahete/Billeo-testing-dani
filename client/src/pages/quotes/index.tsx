@@ -37,7 +37,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 // Interfaces para los datos
 interface Quote {
@@ -227,7 +227,7 @@ export default function QuotesPage() {
       ["Pendientes por aceptar", formatCurrency(totalValue - acceptedValue)],
     ];
     
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 50,
       head: [["Métrica", "Valor"]],
       body: statsData,
@@ -263,7 +263,7 @@ export default function QuotesPage() {
       ["Rechazados", `${rejectedQuotes}`, `${rejectedPercentage}%`],
     ];
     
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 130,
       head: [["Estado", "Cantidad", "Porcentaje"]],
       body: pieChartData,
