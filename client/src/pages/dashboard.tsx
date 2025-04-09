@@ -274,7 +274,6 @@ const Dashboard = () => {
                 <PopoverTrigger asChild>
                   <button className="apple-button flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0">
                     <span className="text-white text-sm font-medium">{year}</span>
-                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[100px] p-0 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden" align="end">
@@ -312,7 +311,6 @@ const Dashboard = () => {
                        period === "m10" ? "Octubre" :
                        period === "m11" ? "Noviembre" : "Diciembre"}
                     </span>
-                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[170px] p-0 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden" align="end">
