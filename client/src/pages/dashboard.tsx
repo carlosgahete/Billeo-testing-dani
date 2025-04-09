@@ -267,6 +267,7 @@ const Dashboard = () => {
               <Select value={year} onValueChange={setYear}>
                 <SelectTrigger className="bg-white/10 hover:bg-white/20 transition-colors duration-150 rounded-full border-0 w-[80px] h-8 min-h-0">
                   <span className="text-white text-sm font-semibold">{year}</span>
+                  <ChevronDown className="h-4 w-4 text-white opacity-50" strokeWidth={1.5} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2023">2023</SelectItem>
@@ -294,6 +295,7 @@ const Dashboard = () => {
                      period === "m10" ? "Octubre" :
                      period === "m11" ? "Noviembre" : "Diciembre"}
                   </span>
+                  <ChevronDown className="h-4 w-4 text-white opacity-50" strokeWidth={1.5} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todo el año</SelectItem>

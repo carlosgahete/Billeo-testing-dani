@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -163,6 +163,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="select-apple w-[100px]">
               <SelectValue placeholder="Año" />
+              <ChevronDown className="h-4 w-4 opacity-50" strokeWidth={1.5} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="2025">2025</SelectItem>
@@ -174,6 +175,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="select-apple w-[150px]">
               <SelectValue placeholder="Periodo" />
+              <ChevronDown className="h-4 w-4 opacity-50" strokeWidth={1.5} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todo el año</SelectItem>
@@ -335,6 +337,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <Select value="trimestral">
                   <SelectTrigger className="select-apple text-xs h-7 min-h-0 py-1 px-2">
                     <SelectValue placeholder="Trimestral" />
+                    <ChevronDown className="h-3 w-3 opacity-50" strokeWidth={1.5} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="trimestral">Trimestral</SelectItem>
