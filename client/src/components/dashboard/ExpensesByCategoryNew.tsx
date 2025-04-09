@@ -249,16 +249,16 @@ const ExpensesByCategory: React.FC<{
         {/* Layout en dos columnas como antes pero con elementos centrados */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Columna izquierda: Gráfico de donut */}
-          <div className="flex justify-center items-center p-2 h-[360px]">
-            <div className="h-full flex items-center">
-              <ResponsiveContainer width={240} height={240}>
+          <div className="flex justify-center p-2 h-[280px]">
+            <div className="flex items-start pt-2">
+              <ResponsiveContainer width={220} height={220}>
                 <PieChart>
                   <Pie
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
-                    outerRadius={110}
+                    innerRadius={60}
+                    outerRadius={105}
                     paddingAngle={1}
                     dataKey="value"
                   >
@@ -283,7 +283,7 @@ const ExpensesByCategory: React.FC<{
           
           {/* Columna derecha: Lista de categorías */}
           <div 
-            className="flex justify-center p-2 pr-3 overflow-y-auto h-[360px]"
+            className="flex justify-center p-2 pr-3 overflow-y-auto h-[280px]"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
@@ -293,12 +293,12 @@ const ExpensesByCategory: React.FC<{
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
                     style={{ 
                       backgroundColor: `${item.color}15`, // Color con 15% de opacidad
                       color: item.color
                     }}>
-                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-lg">{item.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
