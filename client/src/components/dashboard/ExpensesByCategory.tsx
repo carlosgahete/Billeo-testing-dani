@@ -148,15 +148,15 @@ const ExpensesByCategory: React.FC<{
       <CardContent className="p-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Gráfico de donut */}
-          <div className="p-2 flex items-center justify-center h-[240px]">
+          <div className="p-2 flex items-center justify-center h-[360px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
+                  innerRadius={80}
+                  outerRadius={140}
                   paddingAngle={1}
                   dataKey="value"
                 >
@@ -179,24 +179,24 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Lista de categorías */}
-          <div className="p-2 overflow-y-auto h-[240px]">
-            <div className="space-y-3">
+          <div className="p-2 overflow-y-auto h-[360px]">
+            <div className="space-y-4">
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" 
                     style={{ 
                       backgroundColor: `${item.color}15`, // Color con 15% de opacidad
                       color: item.color
                     }}>
-                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-3xl">{item.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                      <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
+                      <h4 className="font-medium text-gray-900 text-base">{item.name}</h4>
+                      <span className="font-medium text-gray-900 text-base">{formatCurrency(item.value)}</span>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500">
+                    <div className="flex justify-between text-sm text-gray-500">
                       <span>{item.count} transacciones</span>
                       <span>{item.percentage.toFixed(2)}%</span>
                     </div>
