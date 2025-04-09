@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Loader2, 
   ChevronDown, 
@@ -257,6 +257,36 @@ const Dashboard = () => {
     ? ((balanceTotal / incomeTotal) * 100).toFixed(1) 
     : "0.0";
   const isPositiveMargin = balanceTotal > 0;
+  
+  // Efecto para cerrar menús al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const yearMenu = document.getElementById('yearMenu');
+      const periodMenu = document.getElementById('periodMenu');
+      const yearButton = document.getElementById('yearButton');
+      const periodButton = document.getElementById('periodButton');
+      
+      // Cerrar el menú de año si el clic no fue en él o en su botón asociado
+      if (yearMenu && !yearMenu.contains(event.target as Node) && 
+          yearButton && !yearButton.contains(event.target as Node)) {
+        yearMenu.classList.add('hidden');
+      }
+      
+      // Cerrar el menú de período si el clic no fue en él o en su botón asociado
+      if (periodMenu && !periodMenu.contains(event.target as Node) && 
+          periodButton && !periodButton.contains(event.target as Node)) {
+        periodMenu.classList.add('hidden');
+      }
+    };
+    
+    // Agregar el event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Limpiar el event listener al desmontar el componente
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="space-y-2">
@@ -269,59 +299,75 @@ const Dashboard = () => {
         >
           <div className="flex justify-end items-center mt-1">
             <div className="flex gap-3">
-              {/* Botón de año - Estilo Apple */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="apple-button flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0">
-                    <span className="text-white text-sm font-medium">{year}</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[100px] p-0 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden" align="end">
-                  <div className="py-1">
-                    {["2023", "2024", "2025"].map((yearOption) => (
-                      <button
-                        key={yearOption}
-                        className={`w-full px-4 py-1.5 text-left text-sm transition-colors
-                          ${year === yearOption ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
-                        onClick={() => setYear(yearOption)}
-                      >
-                        {yearOption}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              {/* Nuevo botón de año completamente personalizado - Estilo Apple */}
+              <div className="relative">
+                <button
+                  id="yearButton"
+                  onClick={() => document.getElementById('yearMenu')?.classList.toggle('hidden')}
+                  className="flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
+                >
+                  <span className="text-white text-sm font-medium">{year}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                </button>
+                <div 
+                  id="yearMenu"
+                  className="hidden absolute right-0 mt-2 w-[100px] py-1 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden z-50"
+                >
+                  {["2023", "2024", "2025"].map((yearOption) => (
+                    <button
+                      key={yearOption}
+                      className={`w-full px-4 py-1.5 text-left text-sm transition-colors
+                        ${year === yearOption ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
+                      onClick={() => {
+                        setYear(yearOption);
+                        document.getElementById('yearMenu')?.classList.add('hidden');
+                      }}
+                    >
+                      {yearOption}
+                    </button>
+                  ))}
+                </div>
+              </div>
               
-              {/* Botón de período - Estilo Apple */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="apple-button flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0">
-                    <span className="text-white text-sm font-medium">
-                      {period === "all" ? "Todo el año" : 
-                       period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                       period === "m1" ? "Enero" :
-                       period === "m2" ? "Febrero" :
-                       period === "m3" ? "Marzo" :
-                       period === "m4" ? "Abril" :
-                       period === "m5" ? "Mayo" :
-                       period === "m6" ? "Junio" :
-                       period === "m7" ? "Julio" :
-                       period === "m8" ? "Agosto" :
-                       period === "m9" ? "Septiembre" :
-                       period === "m10" ? "Octubre" :
-                       period === "m11" ? "Noviembre" : "Diciembre"}
-                    </span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[170px] p-0 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden" align="end">
-                  <div className="py-1 max-h-[300px] overflow-y-auto">
+              {/* Nuevo botón de período completamente personalizado - Estilo Apple */}
+              <div className="relative">
+                <button
+                  id="periodButton"
+                  onClick={() => document.getElementById('periodMenu')?.classList.toggle('hidden')}
+                  className="flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
+                >
+                  <span className="text-white text-sm font-medium">
+                    {period === "all" ? "Todo el año" : 
+                     period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                     period === "m1" ? "Enero" :
+                     period === "m2" ? "Febrero" :
+                     period === "m3" ? "Marzo" :
+                     period === "m4" ? "Abril" :
+                     period === "m5" ? "Mayo" :
+                     period === "m6" ? "Junio" :
+                     period === "m7" ? "Julio" :
+                     period === "m8" ? "Agosto" :
+                     period === "m9" ? "Septiembre" :
+                     period === "m10" ? "Octubre" :
+                     period === "m11" ? "Noviembre" : "Diciembre"}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                </button>
+                <div 
+                  id="periodMenu"
+                  className="hidden absolute right-0 mt-2 w-[170px] py-1 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden z-50"
+                >
+                  <div className="max-h-[300px] overflow-y-auto">
                     <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 border-b border-gray-100">
                       Períodos
                     </div>
                     <button
                       className={`w-full px-4 py-1.5 text-left text-sm transition-colors
                         ${period === "all" ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
-                      onClick={() => setPeriod("all")}
+                      onClick={() => {
+                        setPeriod("all");
+                        document.getElementById('periodMenu')?.classList.add('hidden');
+                      }}
                     >
                       Todo el año
                     </button>
@@ -333,7 +379,10 @@ const Dashboard = () => {
                         key={quarter}
                         className={`w-full px-4 py-1.5 text-left text-sm transition-colors
                           ${period === quarter ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
-                        onClick={() => setPeriod(quarter)}
+                        onClick={() => {
+                          setPeriod(quarter);
+                          document.getElementById('periodMenu')?.classList.add('hidden');
+                        }}
                       >
                         {quarter === "q1" ? "1er trimestre" : 
                          quarter === "q2" ? "2º trimestre" : 
@@ -362,14 +411,17 @@ const Dashboard = () => {
                         key={month.id}
                         className={`w-full px-4 py-1.5 text-left text-sm transition-colors
                           ${period === month.id ? 'bg-[#0066FF] text-white font-medium' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'}`}
-                        onClick={() => setPeriod(month.id)}
+                        onClick={() => {
+                          setPeriod(month.id);
+                          document.getElementById('periodMenu')?.classList.add('hidden');
+                        }}
                       >
                         {month.name}
                       </button>
                     ))}
                   </div>
-                </PopoverContent>
-              </Popover>
+                </div>
+              </div>
             </div>
           </div>
         </PageTitle>
