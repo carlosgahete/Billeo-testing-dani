@@ -20,7 +20,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import billeoLogo from '../../assets/billeo-logo.png';
+import billeoLogo from '/src/assets/billeo-logo.png';
+// Importamos también el logo con espacio en caso de que sea necesario
+import billeoLogoAlt from '/src/assets/billeo logo.png';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -177,9 +179,13 @@ const Sidebar = ({
         <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
           <div className="flex items-center">
             <img 
-              src={billeoLogo} 
+              src={billeoLogoAlt} 
               alt="Billeo Logo" 
               className="h-6"
+              onError={(e) => {
+                // Si hay error al cargar la imagen, intentamos con la otra versión
+                e.currentTarget.src = billeoLogo;
+              }}
             />
           </div>
           
@@ -265,9 +271,13 @@ const Sidebar = ({
         <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
           <div className="flex items-center">
             <img 
-              src={billeoLogo} 
+              src={billeoLogoAlt} 
               alt="Billeo Logo" 
               className="h-6"
+              onError={(e) => {
+                // Si hay error al cargar la imagen, intentamos con la otra versión
+                e.currentTarget.src = billeoLogo;
+              }}
             />
           </div>
           <button
