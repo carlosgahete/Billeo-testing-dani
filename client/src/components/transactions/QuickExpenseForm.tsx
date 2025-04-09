@@ -118,10 +118,13 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
     
     try {
+      console.log("Iniciando creación de gasto");
+      
       // Primero, subimos el archivo
       const formData = new FormData();
       formData.append('file', selectedFile);
       
+      console.log("Subiendo archivo...");
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
         body: formData,
@@ -133,6 +136,7 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
       
       const uploadResult = await uploadResponse.json();
       const filePath = uploadResult.path;
+      console.log("Archivo subido correctamente:", filePath);
       
       // Preparar los impuestos adicionales
       let additionalTaxes = [];
@@ -158,7 +162,7 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
       const vatRate = data.hasVat ? parseInt(data.vatRate, 10) / 100 : 0;
       const baseAmount = data.hasVat ? (amount / (1 + vatRate)).toFixed(2) : amount.toFixed(2);
 
-      // Formatear los datos para la API
+      // Formatear los datos para la API - Usar método alternativo con fetch directo
       const transactionData = {
         type: 'expense',
         title: `Gasto: ${data.description.substring(0, 30)}${data.description.length > 30 ? '...' : ''}`,
@@ -167,16 +171,27 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
         date: new Date().toISOString(),
         categoryId: data.categoryId && data.categoryId !== "0" ? parseInt(data.categoryId, 10) : null,
         attachments: [filePath], // Adjuntar el documento
-        additionalTaxes: additionalTaxes // Incluir los impuestos directamente como array
+        additionalTaxes: JSON.stringify(additionalTaxes) // Convertimos a JSON string para evitar problemas
       };
 
-      // Enviar a la API
-      const apiResponse = await apiRequest('POST', '/api/transactions', transactionData);
+      console.log("Enviando datos de transacción:", JSON.stringify(transactionData));
       
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
+      // Usar fetch directamente en lugar de apiRequest para tener más control
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(transactionData),
+        credentials: 'include'
+      });
+      
+      console.log(`Respuesta API: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
         console.error("Error respuesta API:", errorText);
-        throw new Error(`Error al crear gasto: ${apiResponse.status} ${apiResponse.statusText}`);
+        throw new Error(`Error al crear gasto: ${response.status} ${response.statusText}`);
       }
 
       // Mostrar mensaje de éxito
