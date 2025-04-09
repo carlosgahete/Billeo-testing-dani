@@ -18,6 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import ExpensesByCategory from "@/components/dashboard/ExpensesByCategory";
 
 interface CompleteDashboardProps {
   className?: string;
@@ -39,7 +40,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   };
 
   // Obtener los datos de las estadísticas
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard", { year, period }],
     queryFn: async () => {
       const timestamp = Date.now();
@@ -59,6 +60,26 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     refetchInterval: 3000, // Refrescar cada 3 segundos automáticamente
     staleTime: 0, // Sin tiempo de caducidad - siempre considerar los datos obsoletos
     gcTime: 0, // Sin tiempo de recolección de basura - limpiar inmediatamente
+  });
+  
+  // Obtener las transacciones para el análisis de gastos por categoría
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/transactions", { year }],
+    queryFn: async () => {
+      const res = await fetch(`/api/transactions?year=${year}`);
+      if (!res.ok) throw new Error("Error al cargar transacciones");
+      return res.json();
+    }
+  });
+  
+  // Obtener las categorías
+  const { data: categories, isLoading: categoriesLoading } = useQuery<any[]>({
+    queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const res = await fetch("/api/categories");
+      if (!res.ok) throw new Error("Error al cargar categorías");
+      return res.json();
+    }
   });
 
   // Definir datos predeterminados si no hay datos
@@ -119,6 +140,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     }
   ];
 
+  const isLoading = statsLoading || transactionsLoading || categoriesLoading;
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
@@ -436,6 +459,15 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Tercera fila: Widget de Gastos por Categoría */}
+      <div className="grid grid-cols-1 gap-8 mt-8">
+        {/* Widget de Gastos por Categoría */}
+        <ExpensesByCategory 
+          transactions={transactions || []} 
+          categories={categories || []} 
+        />
       </div>
     </div>
   );
