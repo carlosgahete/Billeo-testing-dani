@@ -23,12 +23,30 @@ export function configureBetterExpenseRoutes(app: express.Express) {
       // Validaciones mínimas
       const { description, amount, attachments = [] } = req.body;
       
-      if (!description || description.trim().length < 3) {
+      console.log('Datos de gasto recibidos:', { description, amount, attachments });
+      
+      if (!description || typeof description !== 'string' || description.trim().length < 3) {
         return res.status(400).json({ error: 'La descripción es requerida y debe tener al menos 3 caracteres' });
       }
       
-      if (!amount || isNaN(parseFloat(amount))) {
-        return res.status(400).json({ error: 'El importe es requerido y debe ser un número válido' });
+      // Validación estricta del formato del importe
+      if (!amount || typeof amount !== 'string') {
+        return res.status(400).json({ error: 'El importe es requerido y debe ser una cadena de texto' });
+      }
+      
+      // Comprobar que el importe tiene el formato correcto (número con dos decimales)
+      const amountRegex = /^\d+\.\d{2}$/;
+      if (!amountRegex.test(amount)) {
+        return res.status(400).json({ 
+          error: 'El importe debe tener un formato válido con dos decimales (por ejemplo, "123.45")',
+          format: 'formato esperado: "123.45"',
+          received: amount
+        });
+      }
+      
+      // Verificar que attachments es un array
+      if (!Array.isArray(attachments)) {
+        return res.status(400).json({ error: 'El campo attachments debe ser un array' });
       }
       
       // Preparar los datos completos de la transacción

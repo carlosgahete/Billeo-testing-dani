@@ -82,12 +82,26 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
       console.log('6. Archivo subido correctamente. Ruta:', filePath);
       
       // 2. Crear el gasto usando el endpoint especializado
-      const numericAmount = parseFloat(amount.replace(',', '.'));
+      let numericAmount = 0;
+      try {
+        // Asegurarnos de que el formato del número es correcto
+        numericAmount = parseFloat(amount.replace(',', '.'));
+        if (isNaN(numericAmount)) {
+          throw new Error('El importe no es un número válido');
+        }
+      } catch (error) {
+        console.error('Error al convertir el importe a número:', error);
+        setError('El importe debe ser un número válido');
+        throw error;
+      }
+      
+      // Redondear a 2 decimales para evitar problemas de precisión
+      numericAmount = Math.round(numericAmount * 100) / 100;
       
       const expenseData = {
-        description,
-        amount: numericAmount.toString(),
-        attachments: [filePath]
+        description: description.trim(),
+        amount: numericAmount.toFixed(2), // Asegurar formato con 2 decimales
+        attachments: filePath ? [filePath] : []
       };
       
       console.log('7. Enviando datos al servidor:', JSON.stringify(expenseData));
