@@ -20,7 +20,11 @@ import {
   FileCheck,
   Filter,
   Calendar,
-  Tag
+  Tag,
+  WrenchIcon,
+  ToolIcon,
+  CircleDollarSign,
+  RefreshCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoicePDFBlob, generateInvoicePDF } from "@/lib/pdf";
@@ -60,6 +64,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
+import RepairInvoiceButton from "./RepairInvoiceButton";
 
 // Función de utilidad para forzar la actualización de datos
 const forceDataRefresh = () => {

@@ -1009,9 +1009,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
+                                  // Calcular totales inmediatamente al cambiar el valor
+                                  setTimeout(() => calculateInvoiceTotals(form), 0);
                                 }}
                                 onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                  // Calcular totales al salir del campo
+                                  calculateInvoiceTotals(form);
                                 }}
                               />
                             </FormControl>
@@ -1038,9 +1041,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
+                                  // Calcular totales inmediatamente al cambiar el valor
+                                  setTimeout(() => calculateInvoiceTotals(form), 0);
                                 }}
                                 onBlur={(e) => {
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                  // Calcular totales al salir del campo
+                                  calculateInvoiceTotals(form);
                                 }}
                               />
                             </FormControl>
@@ -1068,7 +1074,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(parseFloat(e.target.value));
-                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                  // Calcular totales inmediatamente al cambiar el valor
+                                  setTimeout(() => calculateInvoiceTotals(form), 0);
                                 }}
                               />
                             </FormControl>
@@ -1111,7 +1118,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         size="icon"
                         onClick={() => {
                           remove(index);
-                          // Función calculateInvoiceTotals(form) reemplazada con código inline
+                          // Calcular totales inmediatamente al eliminar un ítem
+                          setTimeout(() => calculateInvoiceTotals(form), 0);
                         }}
                         disabled={fields.length === 1}
                         className="h-10 w-10"
@@ -1138,6 +1146,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           taxRate: 21,
                           subtotal: 0,
                         });
+                        // Calcular totales inmediatamente después de añadir un nuevo ítem
+                        setTimeout(() => calculateInvoiceTotals(form), 0);
                       }}
                     >
                       <Plus className="h-4 w-4 mr-2" />
@@ -1222,7 +1232,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                       {...field} 
                                       onChange={(e) => {
                                         field.onChange(parseFloat(e.target.value));
-                                        // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                        // Calcular totales inmediatamente al cambiar el valor
+                                        setTimeout(() => calculateInvoiceTotals(form), 0);
                                       }}
                                       className="h-8 text-sm"
                                     />
@@ -1242,7 +1253,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                                 size="sm"
                                                 onClick={() => {
                                                   field.onChange(!field.value);
-                                                  // Función calculateInvoiceTotals(form) reemplazada con código inline
+                                                  // Calcular totales inmediatamente al cambiar el valor
+                                                  setTimeout(() => calculateInvoiceTotals(form), 0);
                                                 }}
                                                 className="h-8 px-2 text-xs font-normal"
                                               >
@@ -1268,7 +1280,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             size="sm"
                             onClick={() => {
                               removeTax(index);
-                              // Función calculateInvoiceTotals(form) reemplazada con código inline
+                              // Calcular totales inmediatamente al eliminar un impuesto
+                              setTimeout(() => calculateInvoiceTotals(form), 0);
                             }}
                             className="h-6 w-6 p-0"
                           >
