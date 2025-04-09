@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2, Plus, X, Calendar as CalendarIcon } from 'lucide-react';
-import { 
+} from "@/components/ui/select";
+import { CalendarIcon, Loader2, Plus, X } from "lucide-react";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -23,7 +23,6 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-// No necesitamos QuoteHeader ya que la cabecera está en la página
 
 // Interfaz mínima para las props
 interface QuoteFormProps {
@@ -475,310 +474,325 @@ const QuoteFormApple: React.FC<QuoteFormProps> = ({ quoteId }) => {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="fade-in">
-        {/* No necesitamos QuoteHeader ya que la cabecera está en la página */}
-        
-        {/* Contenido del formulario con estilo Apple */}
-        <div className="dashboard-card mb-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quoteNumber">Número de presupuesto</Label>
-              <Input
-                id="quoteNumber"
-                value={quoteNumber}
-                onChange={(e) => setQuoteNumber(e.target.value)}
-                placeholder="P-001"
-              />
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="clientId">Cliente</Label>
-              <Select
-                value={clientId}
-                onValueChange={setClientId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client: any) => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Estado</Label>
-              <Select
-                value={status}
-                onValueChange={setStatus}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Borrador</SelectItem>
-                  <SelectItem value="sent">Enviado</SelectItem>
-                  <SelectItem value="accepted">Aceptado</SelectItem>
-                  <SelectItem value="rejected">Rechazado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Fecha de validez */}
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="validUntil">Fecha de validez</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
+        <div className="rounded-lg bg-white shadow-sm border border-slate-200 mb-6">
+          <div className="p-6">
+            <div className="flex flex-wrap gap-6 mb-6 items-center">
+              <div className="flex-1 min-w-[250px]">
+                <div className="text-sm font-medium mb-1.5 text-gray-500">Logo</div>
+                <div className="flex items-center gap-3">
+                  {logoPreview ? (
+                    <div className="relative h-14 w-14 rounded-md overflow-hidden border shadow-sm">
+                      <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain bg-white" />
+                    </div>
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50">
+                      <span className="text-xs text-gray-500">Sin logo</span>
+                    </div>
+                  )}
+                  <Button 
+                    type="button"
                     variant="outline"
-                    id="validUntil"
-                    className={`w-full justify-start text-left font-normal`}
+                    size="sm"
+                    onClick={handleSelectFile}
+                    disabled={isUploading}
+                    className="h-9"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {validUntil ? format(validUntil, "d 'de' MMMM 'de' yyyy", { locale: es }) : <span>Selecciona una fecha</span>}
+                    {isUploading ? 'Subiendo...' : (logoPreview ? 'Cambiar' : 'Subir logo')}
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={validUntil}
-                    onSelect={(date) => date && setValidUntil(date)}
-                    initialFocus
-                    locale={es}
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-muted-foreground">Este presupuesto será válido hasta esta fecha</p>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="space-y-2 mt-4">
-            <Label htmlFor="description">Descripción del servicio</Label>
-            <Input
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ej: Servicios de consultoría"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Importe (sin impuestos)</Label>
-              <Input
-                id="amount"
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9.]/g, '');
-                  setAmount(value);
-                }}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-          
-          {/* Sección de impuestos */}
-          <div className="border p-4 rounded-md bg-gray-50/50 mt-6">
-            <h3 className="text-base font-medium mb-3">Impuestos aplicables</h3>
             
-            {/* Lista de impuestos actuales */}
-            {taxes.length > 0 && (
-              <div className="space-y-3 mb-4">
-                {taxes.map(tax => (
-                  <div key={tax.id} className="flex items-center space-x-2 p-2 border rounded-md bg-gray-50">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <div>
-                        <Label htmlFor={`tax-name-${tax.id}`} className="text-xs">Nombre</Label>
-                        <Input 
-                          id={`tax-name-${tax.id}`}
-                          value={tax.name}
-                          onChange={(e) => updateTax(tax.id, 'name', e.target.value)}
-                          placeholder="Nombre"
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`tax-amount-${tax.id}`} className="text-xs">Importe</Label>
-                        <Input 
-                          id={`tax-amount-${tax.id}`}
-                          value={tax.amount}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9.-]/g, '');
-                            updateTax(tax.id, 'amount', value);
-                          }}
-                          placeholder="Importe"
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <div className="flex items-center h-8">
-                          <input
-                            id={`tax-percentage-${tax.id}`}
-                            type="checkbox"
-                            checked={tax.isPercentage}
-                            onChange={(e) => updateTax(tax.id, 'isPercentage', e.target.checked)}
-                            className="mr-2"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="quoteNumber">Número de presupuesto</Label>
+                <Input
+                  id="quoteNumber"
+                  value={quoteNumber}
+                  onChange={(e) => setQuoteNumber(e.target.value)}
+                  placeholder="P-001"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="clientId">Cliente</Label>
+                <Select
+                  value={clientId}
+                  onValueChange={setClientId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((client: any) => (
+                      <SelectItem key={client.id} value={client.id.toString()}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Estado</Label>
+                <Select
+                  value={status}
+                  onValueChange={setStatus}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Borrador</SelectItem>
+                    <SelectItem value="sent">Enviado</SelectItem>
+                    <SelectItem value="accepted">Aceptado</SelectItem>
+                    <SelectItem value="rejected">Rechazado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Fecha de validez */}
+              <div className="space-y-2">
+                <Label htmlFor="validUntil">Fecha de validez</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      id="validUntil"
+                      className={`w-full justify-start text-left font-normal`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {validUntil ? format(validUntil, "d 'de' MMMM 'de' yyyy", { locale: es }) : <span>Selecciona una fecha</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={validUntil}
+                      onSelect={(date) => date && setValidUntil(date)}
+                      initialFocus
+                      locale={es}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">Este presupuesto será válido hasta esta fecha</p>
+              </div>
+            
+              <div className="space-y-2">
+                <Label htmlFor="description">Descripción del servicio</Label>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Ej: Servicios de consultoría"
+                />
+              </div>
+            
+              <div className="space-y-2">
+                <Label htmlFor="amount">Importe (sin impuestos)</Label>
+                <Input
+                  id="amount"
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                    setAmount(value);
+                  }}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            
+            {/* Sección de impuestos */}
+            <div className="border p-4 rounded-md bg-gray-50/50 mt-6">
+              <h3 className="text-base font-medium mb-3">Impuestos aplicables</h3>
+              
+              {/* Lista de impuestos actuales */}
+              {taxes.length > 0 && (
+                <div className="space-y-3 mb-4">
+                  {taxes.map(tax => (
+                    <div key={tax.id} className="flex items-center space-x-2 p-2 border rounded-md bg-gray-50">
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div>
+                          <Label htmlFor={`tax-name-${tax.id}`} className="text-xs">Nombre</Label>
+                          <Input 
+                            id={`tax-name-${tax.id}`}
+                            value={tax.name}
+                            onChange={(e) => updateTax(tax.id, 'name', e.target.value)}
+                            placeholder="Nombre"
+                            className="h-8 text-sm"
                           />
-                          <Label htmlFor={`tax-percentage-${tax.id}`} className="text-xs">
-                            Porcentaje
-                          </Label>
+                        </div>
+                        <div>
+                          <Label htmlFor={`tax-amount-${tax.id}`} className="text-xs">Importe</Label>
+                          <Input 
+                            id={`tax-amount-${tax.id}`}
+                            value={tax.amount}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9.-]/g, '');
+                              updateTax(tax.id, 'amount', value);
+                            }}
+                            placeholder="Importe"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <div className="flex items-center h-8">
+                            <input
+                              id={`tax-percentage-${tax.id}`}
+                              type="checkbox"
+                              checked={tax.isPercentage}
+                              onChange={(e) => updateTax(tax.id, 'isPercentage', e.target.checked)}
+                              className="mr-2"
+                            />
+                            <Label htmlFor={`tax-percentage-${tax.id}`} className="text-xs">
+                              Porcentaje
+                            </Label>
+                          </div>
                         </div>
                       </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeTax(tax.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeTax(tax.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {/* Formulario para añadir nuevo impuesto */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
-              <div>
-                <Label htmlFor="new-tax-name" className="text-xs">Nombre</Label>
-                <Input
-                  id="new-tax-name"
-                  value={newTaxName}
-                  onChange={(e) => setNewTaxName(e.target.value)}
-                  placeholder="Ej: IVA, IRPF"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new-tax-amount" className="text-xs">Importe</Label>
-                <Input
-                  id="new-tax-amount"
-                  value={newTaxAmount}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9.-]/g, '');
-                    setNewTaxAmount(value);
-                  }}
-                  placeholder="Ej: 21, -15"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="flex space-x-2">
-                <div className="flex items-center">
-                  <input
-                    id="new-tax-percentage"
-                    type="checkbox"
-                    checked={newTaxIsPercentage}
-                    onChange={(e) => setNewTaxIsPercentage(e.target.checked)}
-                    className="mr-2"
-                  />
-                  <Label htmlFor="new-tax-percentage" className="text-xs">
-                    Porcentaje
-                  </Label>
+                  ))}
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addTax}
-                  className="h-8"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Añadir
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-2 mt-6">
-            <Label htmlFor="notes">Notas adicionales</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Condiciones, plazos, etc."
-              className="min-h-[80px]"
-            />
-          </div>
-          
-          <div className="border-t pt-4 mt-6">
-            <div className="space-y-2">
-              <div className="flex justify-between text-lg">
-                <span>Subtotal:</span>
-                <span className="font-medium">
-                  {(isNaN(subtotal) ? 0 : subtotal).toFixed(2)} €
-                </span>
-              </div>
-              
-              {taxes.map(tax => {
-                try {
-                  // Asegurarse de que los cálculos son con números válidos
-                  const taxAmountValue = parseFloat(tax.amount || '0') || 0;
-                  const safeSubtotal = isNaN(subtotal) ? 0 : subtotal;
-                  const taxValue = tax.isPercentage 
-                    ? (safeSubtotal * taxAmountValue / 100)
-                    : taxAmountValue;
-                  
-                  return (
-                    <div className="flex justify-between" key={tax.id}>
-                      <span>
-                        {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:
-                      </span>
-                      <span>
-                        {(isNaN(taxValue) ? 0 : taxValue).toFixed(2)} €
-                      </span>
-                    </div>
-                  );
-                } catch (err) {
-                  console.error('Error al renderizar impuesto:', err);
-                  // En caso de error, mostrar 0
-                  return (
-                    <div className="flex justify-between" key={tax.id}>
-                      <span>{tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:</span>
-                      <span>0.00 €</span>
-                    </div>
-                  );
-                }
-              })}
-              
-              <div className="flex justify-between border-t pt-2 mt-2 text-xl font-bold">
-                <span>Total:</span>
-                <span>{(isNaN(total) ? 0 : total).toFixed(2)} €</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Input oculto para el logo */}
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileInputChange}
-          />
-          
-          <div className="flex justify-end space-x-4 mt-6">
-            <Button type="button" variant="outline" onClick={() => navigate('/quotes')}>
-              Cancelar
-            </Button>
-            <Button type="submit" className="button-apple" disabled={isSubmitting || isUploading}>
-              {isSubmitting || isUploading ? (
-                <span className="flex items-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isUploading ? 'Subiendo logo...' : 'Guardando...'}
-                </span>
-              ) : quoteId ? (
-                'Actualizar presupuesto'
-              ) : (
-                'Crear presupuesto'
               )}
-            </Button>
+              
+              {/* Formulario para añadir nuevo impuesto */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
+                <div>
+                  <Label htmlFor="new-tax-name" className="text-xs">Nombre</Label>
+                  <Input
+                    id="new-tax-name"
+                    value={newTaxName}
+                    onChange={(e) => setNewTaxName(e.target.value)}
+                    placeholder="Ej: IVA, IRPF"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-tax-amount" className="text-xs">Importe</Label>
+                  <Input
+                    id="new-tax-amount"
+                    value={newTaxAmount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.-]/g, '');
+                      setNewTaxAmount(value);
+                    }}
+                    placeholder="Ej: 21, -15"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <div className="flex items-center">
+                    <input
+                      id="new-tax-percentage"
+                      type="checkbox"
+                      checked={newTaxIsPercentage}
+                      onChange={(e) => setNewTaxIsPercentage(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <Label htmlFor="new-tax-percentage" className="text-xs">
+                      Porcentaje
+                    </Label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addTax}
+                    className="h-8"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Añadir
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2 mt-6">
+              <Label htmlFor="notes">Notas adicionales</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Condiciones, plazos, etc."
+                className="min-h-[80px]"
+              />
+            </div>
+            
+            <div className="border-t pt-4 mt-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-lg">
+                  <span>Subtotal:</span>
+                  <span className="font-medium">
+                    {(isNaN(subtotal) ? 0 : subtotal).toFixed(2)} €
+                  </span>
+                </div>
+                
+                {taxes.map(tax => {
+                  try {
+                    // Asegurarse de que los cálculos son con números válidos
+                    const taxAmountValue = parseFloat(tax.amount || '0') || 0;
+                    const safeSubtotal = isNaN(subtotal) ? 0 : subtotal;
+                    const taxValue = tax.isPercentage 
+                      ? (safeSubtotal * taxAmountValue / 100)
+                      : taxAmountValue;
+                    
+                    return (
+                      <div className="flex justify-between" key={tax.id}>
+                        <span>
+                          {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:
+                        </span>
+                        <span>
+                          {(isNaN(taxValue) ? 0 : taxValue).toFixed(2)} €
+                        </span>
+                      </div>
+                    );
+                  } catch (err) {
+                    console.error('Error al renderizar impuesto:', err);
+                    // En caso de error, mostrar 0
+                    return (
+                      <div className="flex justify-between" key={tax.id}>
+                        <span>{tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}:</span>
+                        <span>0.00 €</span>
+                      </div>
+                    );
+                  }
+                })}
+                
+                <div className="flex justify-between border-t pt-2 mt-2 text-xl font-bold">
+                  <span>Total:</span>
+                  <span>{(isNaN(total) ? 0 : total).toFixed(2)} €</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-4 mt-6">
+              <Button type="button" variant="outline" onClick={() => navigate('/quotes')}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="button-apple" disabled={isSubmitting || isUploading}>
+                {isSubmitting || isUploading ? (
+                  <span className="flex items-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isUploading ? 'Subiendo logo...' : 'Guardando...'}
+                  </span>
+                ) : quoteId ? (
+                  'Actualizar presupuesto'
+                ) : (
+                  'Crear presupuesto'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </form>
