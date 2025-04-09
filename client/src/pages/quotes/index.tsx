@@ -36,6 +36,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 // Interfaces para los datos
 interface Quote {
@@ -166,6 +168,174 @@ export default function QuotesPage() {
       useGrouping: true
     }).format(amount);
   };
+  
+  // Función para generar y descargar el PDF de resumen
+  const generateQuotesSummaryPDF = () => {
+    // Crear nuevo documento PDF
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+    
+    // Añadir título y fecha
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('es-ES', { 
+      year: 'numeric', month: 'long', day: 'numeric' 
+    });
+    
+    // Configurar fuentes y estilos
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(88, 86, 214); // Color morado principal
+    doc.text("Resumen de Presupuestos", 105, 20, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado el ${formattedDate}`, 105, 28, { align: "center" });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(60, 60, 60);
+    
+    // Logo o ícono (simulado con un rectángulo morado)
+    doc.setFillColor(88, 86, 214);
+    doc.rect(20, 15, 10, 10, "F");
+    
+    // Línea separadora
+    doc.setDrawColor(200, 200, 220);
+    doc.line(20, 35, 190, 35);
+    
+    // Sección 1: Resumen de estadísticas
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Estadísticas Generales", 20, 45);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    
+    // Tabla de estadísticas generales
+    const statsData = [
+      ["Total de presupuestos", totalQuotes.toString()],
+      ["Presupuestos en borrador", draftQuotes.toString()],
+      ["Presupuestos enviados", sentQuotes.toString()],
+      ["Presupuestos aceptados", acceptedQuotes.toString()],
+      ["Presupuestos rechazados", rejectedQuotes.toString()],
+      ["Tasa de conversión", `${conversionRate}%`],
+      ["Valor total", formatCurrency(totalValue)],
+      ["Valor de presupuestos aceptados", formatCurrency(acceptedValue)],
+      ["Pendientes por aceptar", formatCurrency(totalValue - acceptedValue)],
+    ];
+    
+    (doc as any).autoTable({
+      startY: 50,
+      head: [["Métrica", "Valor"]],
+      body: statsData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [88, 86, 214],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [240, 241, 255],
+      },
+      margin: { left: 20, right: 20 },
+    });
+    
+    // Sección 2: Gráfica de estado de presupuestos (simulada como tabla visual)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Distribución de Presupuestos", 20, 125);
+    
+    // Representación visual de los porcentajes (simulación de gráfico)
+    const totalForPercentage = totalQuotes > 0 ? totalQuotes : 1;
+    const draftPercentage = ((draftQuotes / totalForPercentage) * 100).toFixed(1);
+    const sentPercentage = ((sentQuotes / totalForPercentage) * 100).toFixed(1);
+    const acceptedPercentage = ((acceptedQuotes / totalForPercentage) * 100).toFixed(1);
+    const rejectedPercentage = ((rejectedQuotes / totalForPercentage) * 100).toFixed(1);
+    
+    // Crear datos para el "gráfico" visual en forma de tabla
+    const pieChartData = [
+      ["Borradores", `${draftQuotes}`, `${draftPercentage}%`],
+      ["Enviados", `${sentQuotes}`, `${sentPercentage}%`],
+      ["Aceptados", `${acceptedQuotes}`, `${acceptedPercentage}%`],
+      ["Rechazados", `${rejectedQuotes}`, `${rejectedPercentage}%`],
+    ];
+    
+    (doc as any).autoTable({
+      startY: 130,
+      head: [["Estado", "Cantidad", "Porcentaje"]],
+      body: pieChartData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [0, 122, 255],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      bodyStyles: {
+        textColor: [60, 60, 60],
+      },
+      styles: {
+        cellPadding: 5,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'center' },
+        2: { halign: 'center' },
+      },
+      alternateRowStyles: {
+        fillColor: [240, 246, 255],
+      },
+      margin: { left: 20, right: 20 },
+    });
+    
+    // Simulación visual de barras para tasa de conversión
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Tasa de Conversión", 20, 180);
+    
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Porcentaje de presupuestos aceptados sobre el total:", 20, 188);
+    
+    // Dibujar barra de progreso
+    const barWidth = 150;
+    const barHeight = 10;
+    const barX = 20;
+    const barY = 195;
+    
+    // Fondo de la barra
+    doc.setFillColor(240, 240, 240);
+    doc.rect(barX, barY, barWidth, barHeight, "F");
+    
+    // Progreso de la barra
+    const conversionRateNum = parseFloat(conversionRate);
+    const progressWidth = (conversionRateNum / 100) * barWidth;
+    doc.setFillColor(52, 199, 89); // Verde para la tasa de conversión
+    doc.rect(barX, barY, progressWidth, barHeight, "F");
+    
+    // Valor de la tasa
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${conversionRate}%`, barX + barWidth + 5, barY + 7);
+    
+    // Pie de página con información adicional
+    const bottomY = 270;
+    
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(120, 120, 120);
+    doc.text("Este informe muestra un resumen de los presupuestos generados en la plataforma.", 105, bottomY, {align: "center"});
+    doc.text("Para más detalles, consulte la sección de presupuestos en la aplicación.", 105, bottomY + 5, {align: "center"});
+    
+    // Añadir fecha y hora de generación en el pie de página
+    const timestamp = today.toLocaleTimeString('es-ES');
+    doc.text(`${formattedDate} - ${timestamp}`, 105, bottomY + 12, {align: "center"});
+    
+    // Guardar el PDF
+    doc.save("resumen_presupuestos.pdf");
+  };
 
   return (
     <Layout>
@@ -247,9 +417,7 @@ export default function QuotesPage() {
               <div className="mt-auto">
                 <button
                   className="h-10 rounded-full bg-[#5856D6] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#4645ab] transition-colors"
-                  onClick={() => {
-                    // Aquí se implementaría la descarga del resumen
-                  }}
+                  onClick={generateQuotesSummaryPDF}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Descargar resumen
