@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { QuoteList } from "@/components/quotes/QuoteList";
 import { PageTitle } from "@/components/ui/page-title";
@@ -62,11 +63,17 @@ interface Client {
 export default function QuotesPage() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
+  const [filter, setFilter] = useState<string | null>(null);
 
   // Obtener estadísticas de presupuestos
   const { data: quotes = [], isLoading: quotesLoading } = useQuery<Quote[]>({
     queryKey: ["/api/quotes"],
   });
+  
+  // Efecto para limpiar el filtro al cargar la página
+  useEffect(() => {
+    return () => setFilter(null);
+  }, []);
 
   // Obtener estadísticas de clientes
   const { data: clients = [], isLoading: clientsLoading } = useQuery<Client[]>({
@@ -509,7 +516,7 @@ export default function QuotesPage() {
                 <button
                   className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
                   onClick={() => {
-                    // Aquí se podría implementar un filtro para ver solo los aceptados
+                    setFilter("accepted");
                   }}
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
@@ -562,7 +569,7 @@ export default function QuotesPage() {
                 <button
                   className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
                   onClick={() => {
-                    // Aquí se podría implementar un filtro para ver solo los pendientes
+                    setFilter("pending");
                   }}
                 >
                   <Send className="h-4 w-4 mr-2" />
@@ -587,7 +594,8 @@ export default function QuotesPage() {
               </div>
             </div>
             
-            <QuoteList userId={user.id} showActions={true} />
+            {/* Filtramos las citas según el filtro seleccionado */}
+            <QuoteList userId={user.id} showActions={true} filter={filter} />
           </div>
         </div>
       </div>

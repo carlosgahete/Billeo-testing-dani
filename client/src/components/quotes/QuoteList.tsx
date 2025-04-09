@@ -72,9 +72,10 @@ interface QuoteListProps {
   userId: number;
   showActions?: boolean;
   limit?: number;
+  filter?: string | null;
 }
 
-export function QuoteList({ userId, showActions = true, limit }: QuoteListProps) {
+export function QuoteList({ userId, showActions = true, limit, filter }: QuoteListProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
@@ -467,15 +468,36 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
     );
   }
 
-  const displayQuotes = limit && typeof limit === 'number' ? quotes.slice(0, limit) : quotes;
+  // Aplicar filtros a los presupuestos si se especifica
+  let filteredQuotes = quotes;
+  
+  if (filter === "accepted") {
+    filteredQuotes = quotes.filter(q => q.status === "accepted");
+  } else if (filter === "pending") {
+    filteredQuotes = quotes.filter(q => q.status === "draft" || q.status === "sent");
+  }
+  
+  const displayQuotes = limit && typeof limit === 'number' ? filteredQuotes.slice(0, limit) : filteredQuotes;
 
   if (displayQuotes.length === 0) {
+    let emptyMessage = "No has creado ningún presupuesto todavía. Presupuesta tus servicios antes de facturar.";
+    let emptyTitle = "Sin presupuestos";
+    
+    // Mensaje personalizado según el filtro
+    if (filter === "accepted") {
+      emptyTitle = "Sin presupuestos aceptados";
+      emptyMessage = "No tienes presupuestos que hayan sido aceptados por tus clientes.";
+    } else if (filter === "pending") {
+      emptyTitle = "Sin presupuestos pendientes";
+      emptyMessage = "No tienes presupuestos en borrador o pendientes de respuesta.";
+    }
+    
     return (
       <Card className="w-full border-none shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle>Tus presupuestos</CardTitle>
           <CardDescription>
-            Empieza a crear presupuestos profesionales para tus clientes
+            {filter ? "Filtros aplicados" : "Empieza a crear presupuestos profesionales para tus clientes"}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-8">
@@ -483,9 +505,9 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
             <div className="bg-primary-50 p-4 rounded-full inline-block mb-4">
               <FileText className="h-12 w-12 text-primary-600" />
             </div>
-            <h3 className="text-lg font-medium mb-2">Sin presupuestos</h3>
+            <h3 className="text-lg font-medium mb-2">{emptyTitle}</h3>
             <p className="text-muted-foreground mb-4 max-w-md">
-              No has creado ningún presupuesto todavía. Presupuesta tus servicios antes de facturar.
+              {emptyMessage}
             </p>
             <Link href="/quotes/create">
               <Button className="px-8 shadow-sm">Crear presupuesto</Button>
@@ -504,9 +526,17 @@ export function QuoteList({ userId, showActions = true, limit }: QuoteListProps)
         <CardHeader className="pb-3 border-b px-2 sm:px-6">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-primary-700">Tus presupuestos</CardTitle>
+              <CardTitle className="text-primary-700">
+                {filter === "accepted" 
+                  ? "Presupuestos aceptados" 
+                  : filter === "pending" 
+                    ? "Presupuestos pendientes" 
+                    : "Tus presupuestos"}
+              </CardTitle>
               <CardDescription>
-                Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades.
+                {filter 
+                  ? `Mostrando presupuestos ${filter === "accepted" ? "aceptados" : "pendientes"}` 
+                  : "Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades."}
               </CardDescription>
             </div>
             <div className="hidden md:block">
