@@ -40,6 +40,7 @@ import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExpenseFilters from "@/components/transactions/ExpenseFilters";
 import IncomeFilters from "@/components/transactions/IncomeFilters";
+import QuickExpenseForm from "@/components/transactions/QuickExpenseForm";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
@@ -678,28 +679,37 @@ const TransactionList = () => {
           </div>
         </div>
         
-        {/* Botón para reparar transacciones de facturas */}
+        {/* Botón para registro rápido de gastos */}
         <div className="mr-6">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 text-sm bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200"
-                  onClick={handleRepairInvoiceTransactions}
-                  disabled={isRepairing}
-                >
-                  {isRepairing ? (
-                    <RefreshCcw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Wrench className="h-4 w-4" />
-                  )}
-                  <span className="hidden md:inline">Reparar transacciones</span>
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-800 border-red-200"
+                    >
+                      <TrendingDown className="h-4 w-4" />
+                      <span className="hidden md:inline">Registro rápido de gastos</span>
+                      <span className="md:hidden">Gasto rápido</span>
+                    </Button>
+                  </DialogTrigger>
+                  
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Registro rápido de gastos</DialogTitle>
+                    </DialogHeader>
+                    <QuickExpenseForm onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                    }} />
+                  </DialogContent>
+                </Dialog>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-xs">Genera las transacciones que faltan para facturas marcadas como pagadas</p>
+                <p className="text-xs">Registra rápidamente un gasto sin tener que rellenar todos los detalles</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
