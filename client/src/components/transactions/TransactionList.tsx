@@ -964,13 +964,13 @@ const TransactionList = () => {
                 {/* Registro rápido de gastos */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button
-                      className="bg-[#FF3B30] hover:bg-red-600 text-white button-apple-sm flex items-center"
+                    <button 
+                      className="button-apple-danger button-apple-sm flex items-center"
                     >
                       <TrendingDown className="h-4 w-4 mr-1.5 sm:mr-2" />
                       <span className="hidden sm:inline">Registro rápido de gastos</span>
                       <span className="sm:hidden">Gasto rápido</span>
-                    </Button>
+                    </button>
                   </DialogTrigger>
                   
                   <DialogContent className="sm:max-w-md">
