@@ -32,6 +32,15 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
   const baseImponible = data?.baseImponible || Math.round(income / 1.21);
   const ivaRepercutido = data?.ivaRepercutido || data?.taxStats?.ivaRepercutido || income - baseImponible;
   const irpfRetenido = data?.irpfRetenidoIngresos || data?.taxStats?.irpfRetenido || 0;
+  
+  // Imprimir los datos para debug
+  console.log("IncomeSummary rendering with data:", {
+    rawData: data,
+    income,
+    pendingAmount,
+    baseImponible,
+    ivaRepercutido
+  });
 
   // Formatear valores monetarios con el formato español
   const formatCurrency = (amount: number) => {
