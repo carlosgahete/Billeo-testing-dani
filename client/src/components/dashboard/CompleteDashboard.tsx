@@ -360,8 +360,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <ArrowUp className="h-5 w-5 text-[#34C759]" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-800">Ingresos</h3>
-                <p className="text-sm text-gray-500">Entradas totales</p>
+                <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Entradas totales</p>
               </div>
             </div>
             
@@ -401,8 +401,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <ArrowDown className="h-5 w-5 text-[#FF3B30]" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-800">Gastos</h3>
-                <p className="text-sm text-gray-500">Salidas totales</p>
+                <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Gastos</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Salidas totales</p>
               </div>
             </div>
             
@@ -446,8 +446,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <PiggyBank className="h-5 w-5 text-[#007AFF]" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-800">Resultado Final</h3>
-                <p className="text-sm text-gray-500">Ingresos - Gastos</p>
+                <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Resultado Final</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Ingresos - Gastos</p>
               </div>
             </div>
             
@@ -491,8 +491,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                   <BarChart3 className="h-4 w-4 text-[#5856D6]" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h3 className="text-base font-medium text-gray-800">Comparativa Financiera</h3>
-                  <p className="text-xs text-gray-500">Evolución por período</p>
+                  <h3 className="text-base font-medium text-gray-800 mb-0 leading-tight">Comparativa Financiera</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Evolución por período</p>
                 </div>
               </div>
               <div className="text-xs text-gray-500 flex items-center gap-1">

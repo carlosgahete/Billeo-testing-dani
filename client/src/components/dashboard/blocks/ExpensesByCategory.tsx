@@ -292,7 +292,10 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: da
     <div className="border rounded-lg overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-gray-50">
         <div className="flex items-center mb-2 md:mb-0">
-          <h3 className="text-lg font-medium">Pagos</h3>
+          <div>
+            <h3 className="text-lg font-medium mb-0 leading-tight">Pagos</h3>
+            <p className="text-sm text-gray-500 mt-0.5">Por categoría</p>
+          </div>
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-2">
