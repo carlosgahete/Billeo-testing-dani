@@ -456,33 +456,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
               <div className="stat-label mt-1">
-                {isPositiveResult ? 'Beneficio neto (base imponible)' : 'Pérdida neta (base imponible)'}
+                {isPositiveResult ? 'Beneficio neto' : 'Pérdida neta'}
               </div>
             </div>
             
-            <div className="space-y-3 mb-5 p-4 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
+            <div className="space-y-4 mb-5 p-4 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible ingresos:</span>
-                <span className="font-medium text-gray-800">{formatCurrency(baseImponibleIngresos)}</span>
+                <span className="text-sm font-medium text-blue-600">IVA a pagar:</span>
+                <span className="font-medium text-blue-700">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible gastos:</span>
-                <span className="font-medium text-gray-800">-{formatCurrency(baseImponibleGastos)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-1 border-t border-gray-100 mt-1">
-                <span className="text-gray-800 font-medium">Resultado:</span>
-                <span className="font-bold text-gray-800">{formatCurrency(baseImponibleIngresos - baseImponibleGastos)}</span>
-              </div>
-              
-              <div className="pt-2 mt-1 border-t border-gray-100">
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-sm text-blue-600">IVA a pagar:</span>
-                  <span className="font-medium text-blue-700">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-amber-600">IRPF a pagar:</span>
-                  <span className="font-medium text-amber-700">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
-                </div>
+                <span className="text-sm font-medium text-amber-600">IRPF a pagar:</span>
+                <span className="font-medium text-amber-700">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
               </div>
             </div>
             
