@@ -179,24 +179,30 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Lista de categorías */}
-          <div className="p-2 pr-5 overflow-y-auto h-[360px] flex items-center">
-            <div className="space-y-4 w-full">
+          <div 
+            className="p-2 pr-3 overflow-y-auto h-[360px] relative"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#d1d5db #f3f4f6',
+            }}
+          >
+            <div className="space-y-2 w-full">
               {data.map((item, index) => (
-                <div key={index} className="flex items-start gap-4">
+                <div key={index} className="flex items-start gap-2">
                   <div 
-                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" 
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
                     style={{ 
                       backgroundColor: `${item.color}15`, // Color con 15% de opacidad
                       color: item.color
                     }}>
-                    <span className="text-3xl">{item.icon}</span>
+                    <span className="text-xl">{item.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <h4 className="font-medium text-gray-900 text-base">{item.name}</h4>
-                      <span className="font-medium text-gray-900 text-base">{formatCurrency(item.value)}</span>
+                      <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
+                      <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-gray-500">
+                    <div className="flex justify-between text-xs text-gray-500">
                       <span>{item.count} transacciones</span>
                       <span>{item.percentage.toFixed(2)}%</span>
                     </div>
