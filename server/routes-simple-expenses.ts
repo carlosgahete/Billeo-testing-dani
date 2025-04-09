@@ -32,13 +32,43 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
         description = "Gasto sin descripción";
       }
       
-      // Normalizar el formato del importe (asegurar que sea string)
-      if (typeof amount !== 'string') {
+      // Normalizar el formato del importe (convertir a número)
+      if (typeof amount === 'string') {
+        // Reemplazar coma por punto si existe
+        amount = amount.replace(',', '.');
         try {
-          amount = amount.toString();
+          // Convertir a número y luego formatear con 2 decimales
+          const numericAmount = parseFloat(amount);
+          if (isNaN(numericAmount)) {
+            amount = "0.00";
+          } else {
+            amount = numericAmount.toFixed(2);
+          }
         } catch (e) {
           amount = "0.00";
         }
+      } else if (typeof amount === 'number') {
+        amount = amount.toFixed(2);
+      } else {
+        amount = "0.00";
+      }
+      
+      console.log('Importe normalizado:', amount);
+      
+      // Comprobar si envió una fecha personalizada
+      let transactionDate;
+      if (req.body.date) {
+        try {
+          transactionDate = new Date(req.body.date);
+          // Verificar que sea una fecha válida
+          if (isNaN(transactionDate.getTime())) {
+            transactionDate = new Date(); // Si no es válida, usar fecha actual
+          }
+        } catch (e) {
+          transactionDate = new Date();
+        }
+      } else {
+        transactionDate = new Date();
       }
       
       // Crear la transacción
@@ -47,7 +77,7 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
         description,
         type: 'expense',
         amount,
-        date: new Date(),
+        date: transactionDate,
         attachments,
         userId,
         categoryId: null,

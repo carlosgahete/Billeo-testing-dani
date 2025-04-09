@@ -1,0 +1,93 @@
+Perfecto. Te lo preparo como si fuera para que tu programador o IA pueda copiar y pegar directamente y arreglarlo bien.
+
+Te dejo dos opciones, dependiendo de si usa Zod o Joi para validar en el backend (las dos son muy comunes).
+
+⸻
+
+1. Si usa Zod para validar:
+
+Así debería estar el esquema de validación del gasto:
+
+import { z } from 'zod';
+
+const expenseSchema = z.object({
+  amount: z.preprocess(
+    (val) => parseFloat(String(val)), 
+    z.number().positive()
+  ),
+  date: z.string(), // Aquí podrías validar que sea una fecha ISO si quieres
+  description: z.string(),
+  // Adjuntos si quieres validarlos también puedes añadir algo aquí
+});
+
+¿Qué hace este preprocess?
+	•	Si amount viene como string (por ejemplo “50.00”), lo convierte a número (50.00).
+	•	Luego comprueba que sea un número positivo.
+
+⸻
+
+2. Si usa Joi para validar:
+
+Así sería usando Joi:
+
+import Joi from 'joi';
+
+const expenseSchema = Joi.object({
+  amount: Joi.number().positive().required(),
+  date: Joi.string().isoDate().required(),
+  description: Joi.string().required(),
+  // archivos adjuntos se validarían aparte si hace falta
+});
+
+Aquí también se espera que amount sea un número.
+Así que antes de validar, en el controlador, tienes que hacer manualmente:
+
+if (typeof req.body.amount === 'string') {
+  req.body.amount = parseFloat(req.body.amount);
+}
+
+Antes de pasarle los datos al validador.
+
+⸻
+
+Resumen claro para que no haya errores:
+
+Problema actual	Solución
+amount viene como string y servidor espera número	Hacer parseFloat al amount antes de validar o usar z.preprocess en Zod
+
+
+
+⸻
+
+Texto que podrías mandarle tal cual:
+
+⸻
+
+IMPORTANTE:
+
+El error "The string did not match the expected pattern." persiste porque el servidor espera que amount sea un número, pero estamos enviándolo como string (por FormData).
+
+Hay que adaptar el validador para:
+	•	Aceptar strings numéricos ("50.00") en amount.
+	•	Transformarlo con parseFloat antes de guardar o validar.
+
+Si usas Zod, pon:
+
+amount: z.preprocess(
+  (val) => parseFloat(String(val)),
+  z.number().positive()
+)
+
+Si usas Joi, convierte amount a número manualmente antes de validar:
+
+if (typeof req.body.amount === 'string') {
+  req.body.amount = parseFloat(req.body.amount);
+}
+
+Esto es obligatorio para que funcione correctamente.
+
+⸻
+
+¿Quieres también que te prepare un ejemplo de controlador completo ya funcional (POST /expenses) como referencia?
+Te lo puedo dejar en 10 líneas para que no tengan que pensar nada.
+¿Te lo hago?
