@@ -163,7 +163,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="select-apple w-[100px]">
               <SelectValue placeholder="Año" />
-              <ChevronDown className="h-4 w-4 opacity-50" strokeWidth={1.5} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="2025">2025</SelectItem>
@@ -175,7 +174,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="select-apple w-[150px]">
               <SelectValue placeholder="Periodo" />
-              <ChevronDown className="h-4 w-4 opacity-50" strokeWidth={1.5} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todo el año</SelectItem>
@@ -337,7 +335,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <Select value="trimestral">
                   <SelectTrigger className="select-apple text-xs h-7 min-h-0 py-1 px-2">
                     <SelectValue placeholder="Trimestral" />
-                    <ChevronDown className="h-3 w-3 opacity-50" strokeWidth={1.5} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="trimestral">Trimestral</SelectItem>
