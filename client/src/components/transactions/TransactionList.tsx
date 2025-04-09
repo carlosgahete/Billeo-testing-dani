@@ -965,7 +965,7 @@ const TransactionList = () => {
                 <Dialog>
                   <DialogTrigger asChild>
                     <button 
-                      className="button-apple-danger button-apple-sm flex items-center"
+                      className="bg-red-500/70 hover:bg-red-600/90 text-white button-apple-sm flex items-center"
                     >
                       <TrendingDown className="h-4 w-4 mr-1.5 sm:mr-2" />
                       <span className="hidden sm:inline">Registro rápido de gastos</span>
