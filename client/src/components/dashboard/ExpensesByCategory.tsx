@@ -105,7 +105,7 @@ const ExpensesByCategory: React.FC<{
             name: data.name,
             value: data.amount,
             count: data.count,
-            color: id === 'uncategorized' ? '#000000' : COLORS[index % COLORS.length],
+            color: id === 'uncategorized' ? '#000000' : category?.color || COLORS[index % COLORS.length],
             percentage: (data.amount / totalExpenses) * 100,
             icon: category?.icon || '📊', // Emoji por defecto si no se encuentra
             categoryId: id
