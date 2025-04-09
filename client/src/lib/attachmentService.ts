@@ -97,6 +97,33 @@ export const downloadExpenseOriginal = (
   }
 };
 
+// Función para ver un documento original en el navegador
+export const viewExpenseOriginal = (
+  filename: string,
+  expense: Expense,
+  category?: Category
+): void => {
+  try {
+    if (!filename) {
+      throw new Error('Nombre de archivo no válido');
+    }
+    
+    // Obtener solo el nombre del archivo sin la ruta
+    const filenameOnly = filename.split('/').pop() || filename;
+    
+    // Crear URL para visualizar
+    window.open(`/api/view-file/${filenameOnly}`, '_blank');
+    
+  } catch (error) {
+    console.error('Error al visualizar documento original del gasto:', error);
+    toast({
+      title: "Error al visualizar documento",
+      description: "No se pudo abrir el documento original del gasto.",
+      variant: "destructive"
+    });
+  }
+};
+
 // Función para descargar múltiples documentos originales de gastos
 export const downloadExpenseOriginalsAsZip = async (
   expenses: Expense[],
@@ -123,34 +150,71 @@ export const downloadExpenseOriginalsAsZip = async (
     
     console.log(`Procesando ${expensesWithAttachments.length} gastos con documentos originales...`);
     
-    // Como primera implementación, descargamos uno por uno
-    // En un futuro, podríamos implementar una función de servidor para crear un ZIP
-    let totalFiles = 0;
-    
+    // Recopilar todos los archivos adjuntos
+    const allAttachments: string[] = [];
     for (const expense of expensesWithAttachments) {
       if (expense.attachments && expense.attachments.length > 0) {
-        const category = categories.find(c => c.id === expense.categoryId);
-        
-        for (const attachment of expense.attachments) {
-          setTimeout(() => {
-            downloadExpenseOriginal(attachment, expense, category);
-            totalFiles++;
-          }, totalFiles * 500); // Añadimos un retraso de 500ms entre descargas
-        }
+        // Extraer solo el nombre del archivo sin la ruta
+        const cleanAttachments = expense.attachments.map(a => a.split('/').pop() || a);
+        allAttachments.push(...cleanAttachments);
       }
     }
     
-    // Mensaje de éxito
-    toast({
-      title: "Descarga iniciada",
-      description: `Se están descargando ${totalFiles} documentos originales de gastos.`,
-      variant: "default"
+    // Determinar el período para los nombres de archivo
+    const today = new Date();
+    const period = `${today.getFullYear()}_${String(today.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Obtener enlaces de descarga del servidor
+    const response = await fetch('/api/batch-download-links', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filenames: allAttachments,
+        period: period
+      }),
     });
+    
+    if (!response.ok) {
+      throw new Error('Error al obtener enlaces de descarga');
+    }
+    
+    const result = await response.json();
+    
+    if (result.downloadLinks && result.downloadLinks.length > 0) {
+      const { downloadLinks } = result;
+      
+      // Mostrar mensaje de inicio de descarga
+      toast({
+        title: "Preparando descarga",
+        description: `Se van a descargar ${downloadLinks.length} documentos originales.`,
+        variant: "default"
+      });
+      
+      // Descargar los archivos uno por uno con un pequeño retraso entre ellos
+      downloadLinks.forEach((link: any, index: number) => {
+        setTimeout(() => {
+          window.open(link.downloadUrl, '_blank');
+        }, index * 800); // Retraso de 800ms entre descargas
+      });
+      
+      // Mensaje final
+      setTimeout(() => {
+        toast({
+          title: "Descarga completada",
+          description: `Se han descargado ${downloadLinks.length} documentos originales.`,
+          variant: "default"
+        });
+      }, downloadLinks.length * 800 + 1000);
+    } else {
+      throw new Error('No se encontraron archivos para descargar');
+    }
     
   } catch (error) {
     console.error('Error al descargar documentos originales de gastos:', error);
     toast({
-      title: "Error al descargar",
+      title: "Error al descargar documentos",
       description: "No se pudieron descargar los documentos originales de gastos.",
       variant: "destructive"
     });

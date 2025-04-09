@@ -83,14 +83,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error("Error al inicializar la base de datos:", error);
   }
   
-  // Servir archivos estáticos de la carpeta uploads
-  app.use('/uploads', express.static(uploadDir));
+  // Servir archivos estáticos de la carpeta uploads solo para usuarios autenticados
+  app.use('/uploads', (req, res, next) => {
+    // Verificar autenticación para acceder a los archivos
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ message: "No autorizado: debe iniciar sesión para acceder a los archivos" });
+    }
+    // Si está autenticado, permitir acceso
+    next();
+  }, express.static(uploadDir));
   
-  // Ruta para descargar archivos adjuntos con su nombre original
-  app.get('/api/download/:filename', (req: Request, res: Response) => {
+  // Función auxiliar para manejar archivos
+  const handleFile = (req: Request, res: Response, forceDownload: boolean = true) => {
     try {
       if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+        return res.status(401).json({ message: "No autorizado" });
       }
       
       const filename = req.params.filename;
@@ -98,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar que el archivo existe
       if (!fs.existsSync(filepath)) {
-        return res.status(404).json({ message: "File not found" });
+        return res.status(404).json({ message: "Archivo no encontrado" });
       }
       
       // Extraer extensión para determinar tipo de contenido
@@ -122,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentType = contentTypeMap[ext];
       }
       
-      // Crear nombre de descarga amigable
+      // Crear nombre de archivo amigable
       let downloadName = filename;
       
       // Si hay información de transacción en la consulta, la usamos para el nombre del archivo
@@ -143,19 +150,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
         downloadName = `documento_${dateFormatted || 'descargado'}${ext}`;
       }
       
-      // Configurar cabeceras para descarga
+      // Configurar cabeceras
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+      
+      // Si es para descarga, agregar cabecera Content-Disposition
+      if (forceDownload) {
+        res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+      } else {
+        // Para visualización, usar inline para abrir en el navegador si es posible
+        res.setHeader('Content-Disposition', `inline; filename="${downloadName}"`);
+      }
       
       // Enviar archivo
       const filestream = fs.createReadStream(filepath);
       filestream.pipe(res);
       
     } catch (error) {
-      console.error('Error downloading file:', error);
-      return res.status(500).json({ message: "Error al descargar el archivo" });
+      console.error('Error accessing file:', error);
+      return res.status(500).json({ message: "Error al acceder al archivo" });
+    }
+  };
+  
+  // Ruta para descargar archivos adjuntos (forzar descarga)
+  app.get('/api/download/:filename', (req: Request, res: Response) => {
+    handleFile(req, res, true);
+  });
+  
+  // Ruta para visualizar archivos adjuntos en el navegador (cuando sea posible)
+  app.get('/api/view-file/:filename', (req: Request, res: Response) => {
+    handleFile(req, res, false);
+  });
+  
+  // Endpoint para obtener enlaces de descarga para múltiples archivos
+  app.post('/api/batch-download-links', async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "No autorizado" });
+      }
+      
+      const { filenames, period } = req.body;
+      
+      if (!filenames || !Array.isArray(filenames) || filenames.length === 0) {
+        return res.status(400).json({ message: "No se proporcionaron archivos para descargar" });
+      }
+      
+      // Comprobar que todos los archivos existen y generar enlaces de descarga
+      const downloadLinks = [];
+      for (const filename of filenames) {
+        const filepath = path.join(uploadDir, filename);
+        if (fs.existsSync(filepath)) {
+          // Generar URL de descarga
+          const downloadUrl = `/api/download/${filename}`;
+          downloadLinks.push({
+            filename,
+            downloadUrl,
+            originalName: filename.split('/').pop(),
+            formattedName: `documento_${period || ''}_${downloadLinks.length + 1}${path.extname(filename)}`,
+            mimeType: getMimeType(path.extname(filename).toLowerCase())
+          });
+        }
+      }
+      
+      if (downloadLinks.length === 0) {
+        return res.status(404).json({ message: "No se encontraron archivos válidos para descargar" });
+      }
+      
+      // Devolver los enlaces de descarga
+      return res.status(200).json({
+        message: `${downloadLinks.length} archivos listos para descargar`,
+        downloadLinks,
+        totalFiles: downloadLinks.length
+      });
+      
+    } catch (error) {
+      console.error('Error processing batch download:', error);
+      return res.status(500).json({ message: "Error al procesar la descarga por lotes" });
     }
   });
+  
+  // Función auxiliar para obtener el tipo MIME basado en la extensión
+  function getMimeType(ext: string): string {
+    const mimeTypes: Record<string, string> = {
+      '.pdf': 'application/pdf',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.txt': 'text/plain',
+      '.csv': 'text/csv',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    };
+    
+    return mimeTypes[ext] || 'application/octet-stream';
+  }
   
   // Setup authentication
   setupAuth(app);

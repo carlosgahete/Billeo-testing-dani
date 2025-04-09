@@ -1,0 +1,45 @@
+Perfecto, te lo desarrollo más a fondo para que quede clarísimo para tu guía:
+
+⸻
+
+Instrucciones detalladas para el manejo de archivos de gastos
+
+Cuando subo un gasto, estoy subiendo también un documento justificativo que puede ser un JPG, PDF o PNG (una foto o escaneo del ticket o factura).
+Estos documentos tienen un valor legal y fiscal, ya que Hacienda puede requerirlos en cualquier inspección o auditoría. Por eso, es fundamental que los archivos originales se guarden y permanezcan accesibles de manera segura.
+
+Qué es necesario hacer:
+	1.	Guardar los archivos originales sin modificaciones:
+	•	Cuando suba un archivo, debe almacenarse tal cual, sin compresión extra, sin alterar el formato ni la resolución.
+	•	No debe haber procesos automáticos que cambien el archivo (por ejemplo, reducir su calidad o convertirlo a otro formato).
+	2.	Asociar el archivo a su gasto correspondiente:
+	•	Cada gasto que registro debe quedar vinculado directamente con su archivo justificativo.
+	•	El sistema debe permitir ver claramente qué archivo está adjunto a cada gasto.
+	3.	Mostrar un botón o enlace de visualización y descarga:
+	•	Al visualizar un gasto, debe haber siempre un botón o un enlace para:
+	•	Ver el archivo adjunto (abrirlo en el navegador o visor interno).
+	•	Descargar el archivo original (tal como fue subido).
+	•	Esto facilita revisar la documentación y extraer los documentos si alguna vez son necesarios.
+	4.	Permitir la descarga masiva (opcional pero muy recomendable):
+	•	A nivel avanzado, sería ideal poder descargar todos los documentos de un periodo (por ejemplo, todos los gastos de 2025) de una vez en un ZIP o carpeta comprimida. Esto simplifica mucho la preparación de documentación para Hacienda si alguna vez hace falta.
+	5.	Garantizar la permanencia del archivo:
+	•	Aunque edite otros campos del gasto (importe, fecha, descripción…), el archivo original debe permanecer intacto.
+	•	Solo debería poder actualizarse si explícitamente subo un nuevo archivo manualmente para sustituirlo.
+	6.	Backup y seguridad:
+	•	Es recomendable que estos archivos estén incluidos en las copias de seguridad regulares del sistema, ya que su pérdida podría acarrear problemas legales.
+
+⸻
+
+Resumen de lo que necesita ver en el sistema:
+	•	Cada gasto tiene su archivo justificativo asociado.
+	•	Siempre hay un botón visible para ver o descargar el archivo.
+	•	Los archivos se guardan sin alteraciones.
+	•	Nunca se pierde un justificante salvo que yo lo elimine conscientemente.
+	•	(Opcional) Poder descargar muchos archivos juntos para mayor comodidad.
+
+⸻
+
+¿Quieres también que te prepare un pequeño esquema de cómo podría verse la interfaz para el botón de ver/descargar archivo?
+Podría ser un ejemplo tipo:
+	•	[Nombre del gasto] – [Importe] – [Fecha] – [Botón: “Ver archivo”] [Botón: “Descargar archivo”]
+
+Si quieres, te lo dibujo o lo describo rápido. ¿Te gustaría?

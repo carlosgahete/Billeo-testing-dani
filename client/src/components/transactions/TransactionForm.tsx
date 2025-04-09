@@ -945,23 +945,95 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                 {attachments.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {attachments.map((attachment, index) => (
-                      <div key={index} className="flex items-center space-x-2 text-sm">
+                      <div key={index} className="flex items-center space-x-2 text-sm bg-gray-50 p-2 rounded-md border border-gray-100">
                         <FileText className="h-4 w-4 mr-1 text-blue-500" />
                         <span className="flex-1 truncate">
                           {attachment.split('/').pop()}
                         </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const newAttachments = [...attachments];
-                            newAttachments.splice(index, 1);
-                            setAttachments(newAttachments);
-                          }}
-                        >
-                          Eliminar
-                        </Button>
+                        <div className="flex space-x-1">
+                          {/* Botón para ver el archivo */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs px-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+                            onClick={() => {
+                              // Importar dinámicamente para evitar dependencias cíclicas
+                              import('@/lib/attachmentService').then(({ viewExpenseOriginal }) => {
+                                // Preparar los datos mínimos necesarios del gasto para la función
+                                const expense = {
+                                  id: transactionId || 0,
+                                  userId: 0,
+                                  description: form.getValues().description || '',
+                                  amount: parseFloat(String(form.getValues().amount || 0)),
+                                  date: form.getValues().date?.toISOString() || new Date().toISOString(),
+                                  type: 'expense',
+                                  categoryId: form.getValues().categoryId ? parseInt(String(form.getValues().categoryId)) : null,
+                                  paymentMethod: form.getValues().paymentMethod || '',
+                                  title: form.getValues().title || '',
+                                  attachments: [attachment]
+                                };
+                                
+                                // Buscar la categoría si existe
+                                const category = categories?.find(c => c.id === (expense.categoryId || 0));
+                                
+                                // Llamar a la función para ver el archivo
+                                viewExpenseOriginal(attachment, expense, category);
+                              });
+                            }}
+                          >
+                            Ver archivo
+                          </Button>
+                          
+                          {/* Botón para descargar el archivo */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs px-2 text-green-700 hover:text-green-800 hover:bg-green-50"
+                            onClick={() => {
+                              // Importar dinámicamente para evitar dependencias cíclicas
+                              import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
+                                // Preparar los datos mínimos necesarios del gasto para la función
+                                const expense = {
+                                  id: transactionId || 0,
+                                  userId: 0,
+                                  description: form.getValues().description || '',
+                                  amount: parseFloat(String(form.getValues().amount || 0)),
+                                  date: form.getValues().date?.toISOString() || new Date().toISOString(),
+                                  type: 'expense',
+                                  categoryId: form.getValues().categoryId ? parseInt(String(form.getValues().categoryId)) : null,
+                                  paymentMethod: form.getValues().paymentMethod || '',
+                                  title: form.getValues().title || '',
+                                  attachments: [attachment]
+                                };
+                                
+                                // Buscar la categoría si existe
+                                const category = categories?.find(c => c.id === (expense.categoryId || 0));
+                                
+                                // Llamar a la función para descargar el archivo
+                                downloadExpenseOriginal(attachment, expense, category);
+                              });
+                            }}
+                          >
+                            Descargar
+                          </Button>
+                          
+                          {/* Botón para eliminar el archivo */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs px-2 text-red-700 hover:text-red-800 hover:bg-red-50"
+                            onClick={() => {
+                              const newAttachments = [...attachments];
+                              newAttachments.splice(index, 1);
+                              setAttachments(newAttachments);
+                            }}
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
