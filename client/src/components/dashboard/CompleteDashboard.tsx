@@ -414,12 +414,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             
             <div className="space-y-3 mb-5 p-4 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Base imponible:</span>
+                <span className="text-sm text-gray-600">Gastos (sin IVA):</span>
                 <span className="font-medium text-gray-800">{formatCurrency(baseImponibleGastos)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">IVA soportado (21%):</span>
                 <span className="font-medium text-gray-800">{formatCurrency(ivaSoportado)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">IRPF a pagar:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
               </div>
             </div>
             
