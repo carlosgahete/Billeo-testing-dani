@@ -2751,7 +2751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stats and reports
   // Endpoint para reparar transacciones de facturas pagadas
-  app.get("/api/repair/invoice-transactions", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/repair/invoice-transactions", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = req.session.userId;
       console.log("[REPAIR] Iniciando proceso de reparación de transacciones para facturas pagadas");

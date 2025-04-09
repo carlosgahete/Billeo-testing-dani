@@ -12,7 +12,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, ArrowUp, ScanText, Receipt, FileDown } from "lucide-react";
+import { 
+  Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, 
+  ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -40,6 +43,7 @@ import IncomeFilters from "@/components/transactions/IncomeFilters";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Mantenemos la definición Invoice propia de este componente
 interface Invoice {
@@ -611,10 +615,43 @@ const TransactionList = () => {
     
   const balance = incomeTotal - expenseTotal;
 
+  // Función para reparar las transacciones de facturas pagadas
+  const [isRepairing, setIsRepairing] = useState(false);
+  
+  const handleRepairInvoiceTransactions = async () => {
+    if (isRepairing) return;
+    
+    setIsRepairing(true);
+    try {
+      const response = await apiRequest('POST', '/api/repair/invoice-transactions');
+      
+      // Obtener los resultados
+      const repairResults = await response.json();
+      
+      // Refrescar los datos
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      toast({
+        title: "Reparación completada",
+        description: `Se han procesado ${repairResults.processed} facturas y creado ${repairResults.created} transacciones.`,
+        variant: "default"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al reparar transacciones",
+        description: error.message || "No se pudieron reparar las transacciones de facturas pagadas.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
   return (
     <div className="space-y-6 fade-in">
       {/* Cabecera estilo Apple alineada con menú hamburguesa */}
-      <div className="section-header fade-in mb-3 mt-0 pt-0 flex items-center">
+      <div className="section-header fade-in mb-3 mt-0 pt-0 flex items-center justify-between">
         <div className="flex items-center ml-16 md:ml-12">
           <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -627,6 +664,33 @@ const TransactionList = () => {
             <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5">Ingresos y Gastos</h2>
             <p className="text-sm text-gray-500 mt-0 leading-tight">Visualiza y gestiona todos tus movimientos económicos</p>
           </div>
+        </div>
+        
+        {/* Botón para reparar transacciones de facturas */}
+        <div className="mr-6">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-sm bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200"
+                  onClick={handleRepairInvoiceTransactions}
+                  disabled={isRepairing}
+                >
+                  {isRepairing ? (
+                    <RefreshCcw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wrench className="h-4 w-4" />
+                  )}
+                  <span className="hidden md:inline">Reparar transacciones</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Genera las transacciones que faltan para facturas marcadas como pagadas</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
