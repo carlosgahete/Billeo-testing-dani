@@ -113,7 +113,8 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
       const sendExpenseXHR = () => {
         return new Promise<{success: boolean, transaction?: any}>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', '/api/expenses/better', true);
+          // Usamos el endpoint simple que hemos creado
+          xhr.open('POST', '/api/expenses/simple', true);
           xhr.setRequestHeader('Content-Type', 'application/json');
           xhr.setRequestHeader('Accept', 'application/json');
           
@@ -139,9 +140,17 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
             reject(new Error('Error de red al enviar la solicitud'));
           };
           
-          // Convertir y enviar los datos
-          const jsonData = JSON.stringify(expenseData);
-          console.log('Enviando datos JSON:', jsonData);
+          // Datos ultra simples - formato extremadamente básico
+          const ultraSimpleData = {
+            description: description.trim(),
+            amount: numericAmount.toFixed(2),
+            // Asegurarse de que attachments sea un array válido
+            attachments: filePath ? [filePath] : []
+          };
+          
+          // Convertir y enviar los datos simplificados
+          const jsonData = JSON.stringify(ultraSimpleData);
+          console.log('Enviando datos ultra simplificados a endpoint simple:', jsonData);
           xhr.send(jsonData);
         });
       };
