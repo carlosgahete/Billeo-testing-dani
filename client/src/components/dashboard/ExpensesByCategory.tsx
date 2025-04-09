@@ -127,25 +127,25 @@ const ExpensesByCategory: React.FC<{
   }
 
   return (
-    <Card className="h-full overflow-hidden">
-      <CardHeader className="bg-red-50 p-4">
-        <CardTitle className="text-lg text-red-700 flex items-center">
-          <TrendingDown className="mr-2 h-5 w-5" />
+    <Card className="h-full overflow-hidden fade-in dashboard-card">
+      <CardHeader className="bg-red-50 p-3">
+        <CardTitle className="text-base text-red-700 flex items-center">
+          <TrendingDown className="mr-2 h-4 w-4" />
           Gastos por Categoría
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Gráfico de donut */}
-          <div className="p-4 flex items-center justify-center h-[350px]">
+          <div className="p-3 flex items-center justify-center h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
+                  innerRadius={40}
+                  outerRadius={60}
                   paddingAngle={1}
                   dataKey="value"
                 >
@@ -156,11 +156,11 @@ const ExpensesByCategory: React.FC<{
                 <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
                   contentStyle={{ 
-                    borderRadius: '10px',
+                    borderRadius: '8px',
                     boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
                     border: 'none',
-                    padding: '8px',
-                    fontSize: '12px'
+                    padding: '6px',
+                    fontSize: '10px'
                   }}
                 />
               </PieChart>
@@ -168,19 +168,19 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Lista de categorías */}
-          <div className="p-4 overflow-y-auto h-[350px]">
-            <div className="space-y-3">
+          <div className="p-3 overflow-y-auto h-[200px]">
+            <div className="space-y-2">
               {data.map((item, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                <div key={index} className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
-                      <span className="font-medium text-gray-900">{formatCurrency(item.value)}</span>
+                      <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
+                      <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-gray-500">
+                    <div className="flex justify-between text-xs text-gray-500">
                       <span>{item.count} transacciones</span>
                       <span>{item.percentage.toFixed(2)}%</span>
                     </div>

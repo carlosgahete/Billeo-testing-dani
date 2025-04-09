@@ -323,24 +323,24 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Segunda fila: Widget de Comparativa Financiera - Estilo Apple */}
-      <div className="grid grid-cols-1 gap-8 mt-8">
+      {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-5">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
-                <div className="bg-[#F0EDFF] p-3 rounded-full mr-3">
-                  <BarChart3 className="h-5 w-5 text-[#5856D6]" />
+                <div className="bg-[#F0EDFF] p-2 rounded-full mr-2">
+                  <BarChart3 className="h-4 w-4 text-[#5856D6]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-800">Comparativa Financiera</h3>
-                  <p className="text-sm text-gray-500">Evolución por período</p>
+                  <h3 className="text-base font-medium text-gray-800">Comparativa Financiera</h3>
+                  <p className="text-xs text-gray-500">Evolución por período</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Select value="trimestral">
-                  <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
+                  <SelectTrigger className="select-apple text-xs h-7 min-h-0 py-1 px-2">
                     <SelectValue placeholder="Trimestral" />
                   </SelectTrigger>
                   <SelectContent>
@@ -348,75 +348,41 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                     <SelectItem value="mensual">Mensual</SelectItem>
                   </SelectContent>
                 </Select>
-                
-                <Select value="2025">
-                  <SelectTrigger className="select-apple text-sm h-8 min-h-0 py-1 px-2">
-                    <SelectValue placeholder="2025" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2025">2025</SelectItem>
-                    <SelectItem value="2024">2024</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
-            {/* Selector de vista de gráfico - Estilo Apple */}
-            <div className="flex justify-center bg-[#F9F9F9] p-1.5 rounded-full gap-1 mb-4 max-w-[180px] mx-auto border border-gray-100">
-              <button
-                className={`text-xs font-medium rounded-full px-3 py-1 transition-all ${
-                  graphView === "barras" 
-                  ? "bg-white text-gray-800 shadow-sm" 
-                  : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setGraphView("barras")}
-              >
-                Barras
-              </button>
-              <button
-                className={`text-xs font-medium rounded-full px-3 py-1 transition-all ${
-                  graphView === "area" 
-                  ? "bg-white text-gray-800 shadow-sm" 
-                  : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setGraphView("area")}
-              >
-                Área
-              </button>
-            </div>
-
             {/* Comparativa financiera - Estilo Apple */}
-            <div className="bg-white rounded-xl border border-gray-100 p-4 glass-panel">
+            <div className="bg-white rounded-xl border border-gray-100 p-3 glass-panel">
               {/* Mostrar el resultado en grande */}
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                <div className="bg-[#F5FFF7] p-3 rounded-lg border border-[#DCFFE5]">
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-[#F5FFF7] p-2 rounded-lg border border-[#DCFFE5]">
                   <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
-                  <div className="text-xl font-semibold text-[#34C759] tracking-tight">
+                  <div className="text-sm font-semibold text-[#34C759] tracking-tight">
                     {formatCurrency(baseImponibleIngresos)}
                   </div>
                 </div>
-                <div className="bg-[#FFF5F5] p-3 rounded-lg border border-[#FFDFDF]">
+                <div className="bg-[#FFF5F5] p-2 rounded-lg border border-[#FFDFDF]">
                   <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
-                  <div className="text-xl font-semibold text-[#FF3B30] tracking-tight">
+                  <div className="text-sm font-semibold text-[#FF3B30] tracking-tight">
                     {formatCurrency(baseImponibleGastos)}
                   </div>
                 </div>
-                <div className="bg-[#F0F7FF] p-3 rounded-lg border border-[#DAE8FF]">
+                <div className="bg-[#F0F7FF] p-2 rounded-lg border border-[#DAE8FF]">
                   <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
-                  <div className="text-xl font-semibold text-[#007AFF] tracking-tight">
+                  <div className="text-sm font-semibold text-[#007AFF] tracking-tight">
                     {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
                   </div>
                 </div>
               </div>
               
               {/* Gráfico */}
-              <div className="h-[240px]">
+              <div className="h-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={financialComparisonData}
                     margin={{
-                      top: 10,
-                      right: 10,
+                      top: 5,
+                      right: 5,
                       left: 5,
                       bottom: 5,
                     }}
@@ -426,14 +392,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                       dataKey="quarter" 
                       axisLine={false} 
                       tickLine={false}
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                     />
                     <YAxis 
                       tickFormatter={(value) => `${value}€`}
-                      width={45}
+                      width={30}
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 11 }}
+                      tick={{ fontSize: 10 }}
                     />
                     <Tooltip 
                       formatter={(value: number) => [`${value}€`, undefined]}
@@ -441,28 +407,25 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                         borderRadius: '10px',
                         boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
                         border: 'none',
-                        padding: '8px',
-                        fontSize: '12px'
+                        padding: '6px',
+                        fontSize: '10px'
                       }}
                     />
                     <Legend 
                       iconType="circle" 
-                      iconSize={6}
-                      wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+                      iconSize={5}
+                      wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }}
                     />
-                    <Bar dataKey="Ingresos" fill="#34C759" radius={[6, 6, 0, 0]} barSize={24} />
-                    <Bar dataKey="Gastos" fill="#FF3B30" radius={[6, 6, 0, 0]} barSize={24} />
-                    <Bar dataKey="Resultado" fill="#007AFF" radius={[6, 6, 0, 0]} barSize={24} />
+                    <Bar dataKey="Ingresos" fill="#34C759" radius={[4, 4, 0, 0]} barSize={16} />
+                    <Bar dataKey="Gastos" fill="#FF3B30" radius={[4, 4, 0, 0]} barSize={16} />
+                    <Bar dataKey="Resultado" fill="#007AFF" radius={[4, 4, 0, 0]} barSize={16} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Tercera fila: Widget de Gastos por Categoría */}
-      <div className="grid grid-cols-1 gap-8 mt-8">
         {/* Widget de Gastos por Categoría */}
         <ExpensesByCategory 
           transactions={transactions || []} 
