@@ -2754,6 +2754,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/repair/invoice-transactions", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = req.session.userId;
+      
+      // Verificar que el userId esté definido
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado correctamente"
+        });
+      }
+      
       console.log("[REPAIR] Iniciando proceso de reparación de transacciones para facturas pagadas");
       
       // Obtener todas las facturas pagadas del usuario
@@ -2801,7 +2810,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const total = typeof invoice.total === 'number' ? 
           invoice.total.toString() : invoice.total;
           
-        const transactionData = {
+        // Validar y convertir los datos usando el esquema flexible
+        const rawTransactionData = {
           userId,
           title: clientName,
           description: `Factura ${invoice.invoiceNumber} cobrada`,
@@ -2814,6 +2824,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           categoryId: null,
           attachments: []
         };
+        
+        // Validar los datos con nuestro esquema flexible
+        const validationResult = transactionFlexibleSchema.safeParse(rawTransactionData);
+        
+        if (!validationResult.success) {
+          console.error(`[REPAIR] Error de validación para la factura ${invoice.invoiceNumber}:`, 
+            JSON.stringify(validationResult.error.errors, null, 2));
+          continue;
+        }
+        
+        const transactionData = validationResult.data;
         
         // Intentar crear la transacción
         try {
