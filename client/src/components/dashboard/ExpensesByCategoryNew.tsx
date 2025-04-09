@@ -239,54 +239,57 @@ const ExpensesByCategory: React.FC<{
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Mostrar período encima de todo el contenido */}
+        {/* Mostrar período centrado */}
         {periodLabel && (
           <div className="text-center text-sm text-gray-500 pt-3 pb-1">
             {periodLabel}
           </div>
         )}
         
-        {/* Contenedor centrado para toda la información */}
-        <div className="flex flex-col items-center">
-          {/* Gráfico circular centrado */}
-          <div className="w-full max-w-[280px] h-[280px] mx-auto mb-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={110}
-                  paddingAngle={1}
-                  dataKey="value"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
-                  contentStyle={{ 
-                    borderRadius: '8px',
-                    boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                    border: 'none',
-                    padding: '6px',
-                    fontSize: '10px'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+        {/* Layout en dos columnas como antes pero con elementos centrados */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {/* Columna izquierda: Gráfico de donut */}
+          <div className="flex justify-center items-center p-2 h-[360px]">
+            <div className="h-full flex items-center">
+              <ResponsiveContainer width={240} height={240}>
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={110}
+                    paddingAngle={1}
+                    dataKey="value"
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => formatCurrency(value)}
+                    contentStyle={{ 
+                      borderRadius: '8px',
+                      boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
+                      border: 'none',
+                      padding: '6px',
+                      fontSize: '10px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
           
-          {/* Lista de categorías centrada */}
-          <div className="w-full max-w-[500px] mx-auto px-4 pb-4 overflow-y-auto max-h-[220px]"
+          {/* Columna derecha: Lista de categorías */}
+          <div 
+            className="flex justify-center p-2 pr-3 overflow-y-auto h-[360px]"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
             }}
           >
-            <div className="space-y-2 w-full">
+            <div className="space-y-2 w-full max-w-[350px]">
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
