@@ -183,13 +183,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <SelectItem value="q4">Trimestre 4</SelectItem>
             </SelectContent>
           </Select>
-          
-          <button 
-            onClick={() => refreshDashboard()}
-            className="button-apple button-apple-icon"
-          >
-            <span>Actualizar</span>
-          </button>
         </div>
       </div>
 
@@ -200,7 +193,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="p-6">
             <div className="flex items-center mb-5">
               <div className="bg-[#E2F6ED] p-3 rounded-full mr-3">
-                <ArrowUp className="h-5 w-5 text-[#34C759]" />
+                <ArrowUp className="h-5 w-5 text-[#34C759]" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-800">Ingresos</h3>
@@ -241,7 +234,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="p-6">
             <div className="flex items-center mb-5">
               <div className="bg-[#FEECEB] p-3 rounded-full mr-3">
-                <ArrowDown className="h-5 w-5 text-[#FF3B30]" />
+                <ArrowDown className="h-5 w-5 text-[#FF3B30]" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-800">Gastos</h3>
@@ -282,7 +275,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="p-6">
             <div className="flex items-center mb-5">
               <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
-                <PiggyBank className="h-5 w-5 text-[#007AFF]" />
+                <PiggyBank className="h-5 w-5 text-[#007AFF]" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-800">Resultado Final</h3>
@@ -331,7 +324,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
                 <div className="bg-[#F0EDFF] p-2 rounded-full mr-2">
-                  <BarChart3 className="h-4 w-4 text-[#5856D6]" />
+                  <BarChart3 className="h-4 w-4 text-[#5856D6]" strokeWidth={1.5} />
                 </div>
                 <div>
                   <h3 className="text-base font-medium text-gray-800">Comparativa Financiera</h3>
