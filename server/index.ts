@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { configureBetterExpenseRoutes } from "./routes-expenses-basic";
+import { configureDirectExpenseRoutes } from "./routes-direct-expenses";
 import { configureOptionsRoutes } from "./routes-options";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -72,6 +73,9 @@ app.use((req, res, next) => {
   
   // Configurar las rutas para gastos básicos
   configureBetterExpenseRoutes(app);
+  
+  // Configurar las rutas directas para gastos (sin validaciones)
+  configureDirectExpenseRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

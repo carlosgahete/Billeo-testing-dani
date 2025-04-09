@@ -106,41 +106,48 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
       
       console.log('7. Enviando datos al servidor:', JSON.stringify(expenseData));
       
-      // 3. Enviar la solicitud a la API especializada
-      console.log('8. Iniciando petición POST a /api/expenses/better');
-      const response = await fetch('/api/expenses/better', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(expenseData)
-      });
+      // 3. Enviar la solicitud a la API especializada utilizando XMLHttpRequest
+      console.log('8. Iniciando petición POST a /api/expenses/better con XMLHttpRequest');
       
-      console.log('9. Respuesta del servidor:', response.status, response.statusText);
+      // Creamos una promesa para manejar XMLHttpRequest de forma asíncrona
+      const sendExpenseXHR = () => {
+        return new Promise<{success: boolean, transaction?: any}>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/expenses/better', true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.setRequestHeader('Accept', 'application/json');
+          
+          xhr.onload = function() {
+            console.log('9. Respuesta del servidor XHR:', xhr.status, xhr.statusText);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const jsonData = JSON.parse(xhr.responseText);
+                console.log('Respuesta JSON:', jsonData);
+                resolve(jsonData);
+              } catch (e) {
+                console.log('La respuesta no es JSON válido, considerando éxito:', xhr.responseText);
+                resolve({ success: true });
+              }
+            } else {
+              console.error('ERROR: Respuesta negativa del servidor XHR:', xhr.status, xhr.responseText);
+              reject(new Error(`Error al crear el gasto: ${xhr.status}`));
+            }
+          };
+          
+          xhr.onerror = function() {
+            console.error('Error de red en la solicitud XHR');
+            reject(new Error('Error de red al enviar la solicitud'));
+          };
+          
+          // Convertir y enviar los datos
+          const jsonData = JSON.stringify(expenseData);
+          console.log('Enviando datos JSON:', jsonData);
+          xhr.send(jsonData);
+        });
+      };
       
-      // Verificamos primero si la respuesta es OK
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'No se pudo leer el mensaje de error');
-        console.error('ERROR: Respuesta negativa del servidor:', errorText);
-        throw new Error(`Error al crear el gasto: ${response.status}`);
-      }
-      
-      // Intentamos convertir la respuesta a JSON con manejo de errores
-      let jsonResponse;
-      try {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          jsonResponse = await response.json();
-          console.log('Respuesta JSON:', jsonResponse);
-        } else {
-          console.log('La respuesta no es JSON, tipo de contenido:', contentType);
-          jsonResponse = { success: true };
-        }
-      } catch (error) {
-        console.warn('No se pudo convertir la respuesta a JSON:', error);
-        jsonResponse = { success: true };
-      }
+      // Ejecutar la promesa XHR
+      const jsonResponse = await sendExpenseXHR();
       
       // 4. Notificar éxito
       toast({
