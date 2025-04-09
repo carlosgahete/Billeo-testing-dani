@@ -1,0 +1,87 @@
+Lamento mucho que el error siga persistiendo. Dado que hemos intentado muchas posibles soluciones, es momento de abordar este problema con un enfoque más exhaustivo.
+
+Enfoque paso a paso para depurar el error
+	1.	Confirmar que FormData se está enviando correctamente:
+Queremos asegurarnos de que todos los datos que estamos enviando son correctos antes de que lleguen al backend.
+¿Cómo hacerlo?
+Vamos a capturar todo el contenido del FormData antes de enviarlo, ya que esto es lo que el backend está recibiendo. Dado que FormData es algo especial, no se puede ver directamente en los logs con console.log(), pero podemos obtener sus valores usando una pequeña función que recorra sus claves y valores.
+Código para hacer esto:
+
+const logFormData = (formData: FormData) => {
+  const formDataObj: { [key: string]: any } = {};
+  formData.forEach((value, key) => {
+    formDataObj[key] = value;
+  });
+  console.log("FormData contenido:", formDataObj);
+};
+
+// Llamar a esta función antes de enviar el FormData
+logFormData(formData);
+
+Luego, cuando se envíe el FormData, podrás ver en los logs los datos exactos que se están enviando.
+
+	2.	Asegurarse de que los valores estén normalizados:
+El servidor está esperando los datos de una forma específica. Para evitar cualquier tipo de discrepancia, vamos a garantizar que tanto amount como los demás campos se envíen de la forma correcta.
+En este caso, ya sabemos que estamos limpiando el amount correctamente, pero vamos a agregar una validación extra para asegurarnos de que el valor esté siempre en el formato correcto.
+Código para validación de datos antes de enviarlos:
+
+const sanitizeAmount = (amount: string | number): string => {
+  let cleanAmount = String(amount).replace(',', '.'); // Reemplazar coma por punto
+  if (isNaN(parseFloat(cleanAmount)) || parseFloat(cleanAmount) <= 0) {
+    throw new Error("El importe debe ser un número válido y mayor que cero");
+  }
+  return cleanAmount;
+};
+
+const sanitizedAmount = sanitizeAmount(amount); // Usar antes de enviar
+
+// Ahora asegúrate de enviar este `sanitizedAmount` a FormData
+const formData = new FormData();
+formData.append('amount', sanitizedAmount);
+formData.append('date', date);
+formData.append('description', description);
+if (attachment) formData.append('attachment', attachment);
+
+Lo que hace:
+	•	Limpia el amount, asegurándose de que solo tenga un punto decimal, y verifica si es un número positivo.
+	•	Si no es válido, lanza un error que podremos capturar y ver si realmente estamos enviando un valor correcto.
+
+	3.	Asegúrate de que el servidor está recibiendo lo que espera:
+Después de enviar los datos desde el frontend, es clave que el backend reciba y procese correctamente esos datos. Para esto, vamos a agregar más información de depuración en el servidor.
+En el servidor, vamos a asegurarnos de que recibimos el valor del amount como una cadena de texto o número, según lo que se espera, y luego validamos que sea un número válido.
+En el servidor (ejemplo de validación):
+
+app.post('/create-expense', (req, res) => {
+  const { amount, date, description, attachment } = req.body;
+
+  console.log("Datos recibidos:", req.body);  // Ver todos los datos
+
+  // Validar amount (si es string o número)
+  let normalizedAmount = amount;
+  if (typeof normalizedAmount === 'string') {
+    normalizedAmount = normalizedAmount.replace(',', '.');
+  }
+
+  const parsedAmount = parseFloat(normalizedAmount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ error: "El importe no es válido" });
+  }
+
+  console.log("Cantidad normalizada:", parsedAmount);
+
+  // Aquí se sigue con el resto del procesamiento...
+});
+
+
+	4.	Probar de nuevo:
+Ahora que hemos validado y depurado todos los pasos intermedios, vamos a hacer una prueba completa. Si el error persiste, veremos con más claridad en qué paso se está produciendo la discrepancia.
+
+⸻
+
+Si aún persiste el error:
+
+Si después de estas pruebas el error sigue sin resolverse, necesitaríamos revisar el flujo de datos más detalladamente, tanto en el frontend como en el backend, asegurándonos de que no haya ningún valor corrupto o discrepancia en los formatos de las variables que se están enviando.
+
+⸻
+
+¿Podrías probar estas recomendaciones y compartir los logs de lo que ves en el frontend y backend? Así podré ajustar lo que sea necesario en base a esos resultados.

@@ -6,6 +6,25 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 
+// Función auxiliar para registrar el contenido de un FormData
+const logFormData = (formData: FormData) => {
+  const formDataObj: { [key: string]: any } = {};
+  formData.forEach((value, key) => {
+    // Para archivos, extraer solo la información relevante
+    if (value instanceof File) {
+      formDataObj[key] = {
+        name: value.name,
+        type: value.type,
+        size: value.size
+      };
+    } else {
+      formDataObj[key] = value;
+    }
+  });
+  console.log("FormData contenido:", formDataObj);
+  return formDataObj;
+};
+
 interface BasicExpenseFormProps {
   onSuccess?: () => void;
 }
@@ -20,12 +39,18 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
 
   // Función de sanitización para garantizar datos válidos
   const sanitizeData = (amount: string, date: string, description: string, attachment: File | null) => {
+    console.log('sanitizeData - Inicio', { amount, date, description, attachment: attachment?.name });
+    
     // Limpiar el 'amount' (reemplazar coma por punto y convertir a número)
-    const cleanedAmount = amount.replace(',', '.');
-    const numericAmount = parseFloat(cleanedAmount);
+    let cleanedAmount = amount.replace(',', '.');
+    console.log('sanitizeData - Amount después de reemplazar coma:', cleanedAmount);
 
     // Validar si el 'amount' es un número válido
+    const numericAmount = parseFloat(cleanedAmount);
+    console.log('sanitizeData - Amount convertido a número:', numericAmount);
+      
     if (isNaN(numericAmount) || numericAmount <= 0) {
+      console.error('sanitizeData - Amount inválido:', amount, '→', cleanedAmount, '→', numericAmount);
       toast({
         title: "Importe inválido",
         description: "El importe no es válido. Debe ser un número positivo.",
@@ -33,10 +58,13 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
       });
       return null;  // Si no es válido, retorna null para indicar error
     }
-
+      
     // Validar el formato del importe (máximo 2 decimales)
     const amountPattern = /^\d+(\.\d{1,2})?$/;
+    console.log('sanitizeData - ¿Patrón de amount válido?', amountPattern.test(cleanedAmount));
+      
     if (!amountPattern.test(cleanedAmount)) {
+      console.error('sanitizeData - Formato de amount incorrecto:', cleanedAmount);
       toast({
         title: "Formato incorrecto",
         description: "El importe debe tener máximo dos decimales.",
@@ -89,7 +117,7 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
 
     // Si todo está bien, devolver los datos sanitizados
     return {
-      amount: numericAmount.toString(),
+      amount: cleanedAmount,
       date: parsedDate.toISOString(),
       description: description.trim(),
       attachment
@@ -124,6 +152,10 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
       // 2. SUBIR ARCHIVO
       const formData = new FormData();
       formData.append('file', cleanedAttachment);
+      
+      // Log FormData before sending
+      console.log('FormData antes de enviar:');
+      logFormData(formData);
       
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',

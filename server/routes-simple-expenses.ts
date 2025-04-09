@@ -89,6 +89,9 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
       }
       
       // Crear la transacción
+      console.log('Creando transacción con amount:', amount, 'tipo:', typeof amount, 'después de todo el procesamiento');
+      console.log('Objetos transformados a formato JSON:', JSON.stringify({ amount, description, transactionDate, attachments }));
+      
       const transaction = await storage.createTransaction({
         title: `Gasto: ${description.substring(0, 30)}`,
         description,
