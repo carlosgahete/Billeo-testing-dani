@@ -214,7 +214,30 @@ const ExpensesByCategory: React.FC<{
     if (periodData.startDate && periodData.endDate) {
       const filtered = transactions.filter(t => {
         if (!t.date) return false;
+        
         const txDate = new Date(t.date);
+        
+        // Log para depuración extendida
+        console.log(`Comparando fecha: ${txDate.toISOString()}`);
+        console.log(`Con periodo: ${periodData.startDate?.toISOString()} - ${periodData.endDate?.toISOString()}`);
+        console.log(`Resultado: ${txDate >= periodData.startDate! && txDate <= periodData.endDate!}`);
+        
+        // Formato año/mes para comparación más simple
+        const txYearMonth = txDate.getFullYear() + '-' + (txDate.getMonth() + 1);
+        const startYearMonth = periodData.startDate!.getFullYear() + '-' + (periodData.startDate!.getMonth() + 1);
+        const endYearMonth = periodData.endDate!.getFullYear() + '-' + (periodData.endDate!.getMonth() + 1);
+        
+        // Para filtros de mes específico, solo comparamos año-mes
+        if (selectedPeriod.split('-').length === 2 && !selectedPeriod.includes('q')) {
+          const month = parseInt(selectedPeriod.split('-')[1]);
+          if (!isNaN(month) && month >= 1 && month <= 12) {
+            const targetYearMonth = selectedPeriod.split('-')[0] + '-' + month;
+            console.log(`Comparando año-mes: ${txYearMonth} con ${targetYearMonth}`);
+            return txYearMonth === targetYearMonth;
+          }
+        }
+        
+        // Para otros filtros (trimestres, año completo) usamos comparación de fechas normal
         return txDate >= periodData.startDate! && txDate <= periodData.endDate!;
       });
       
@@ -489,7 +512,20 @@ const ExpensesByCategory: React.FC<{
                     if (periodData.startDate && periodData.endDate) {
                       const filtered = transactions.filter(t => {
                         if (!t.date) return false;
+                        
                         const txDate = new Date(t.date);
+                        
+                        // Para filtros de mes específico, solo comparamos año-mes
+                        if (selectedPeriod.split('-').length === 2 && !selectedPeriod.includes('q')) {
+                          const month = parseInt(selectedPeriod.split('-')[1]);
+                          if (!isNaN(month) && month >= 1 && month <= 12) {
+                            console.log(`Filtrando mes ${month} para fecha ${txDate.toISOString()}`);
+                            return txDate.getFullYear() === parseInt(selectedPeriod.split('-')[0]) && 
+                                  (txDate.getMonth() + 1) === month;
+                          }
+                        }
+                        
+                        // Para otros filtros (trimestres, año completo) usamos comparación de fechas normal
                         return txDate >= periodData.startDate! && txDate <= periodData.endDate!;
                       });
                       console.log(`Aplicando filtro: ${selectedPeriod}, encontradas ${filtered.length} transacciones`);
