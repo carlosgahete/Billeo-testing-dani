@@ -184,12 +184,12 @@ const ExpensesByCategory: React.FC<{
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
                     style={{ 
                       backgroundColor: `${item.color}15`, // Color con 15% de opacidad
                       color: item.color
                     }}>
-                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-2xl">{item.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
