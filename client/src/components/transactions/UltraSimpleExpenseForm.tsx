@@ -97,21 +97,36 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
       const response = await fetch('/api/expenses/better', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(expenseData)
       });
       
       console.log('9. Respuesta del servidor:', response.status, response.statusText);
       
+      // Verificamos primero si la respuesta es OK
       if (!response.ok) {
-        const errorText = await response.text();
+        const errorText = await response.text().catch(() => 'No se pudo leer el mensaje de error');
         console.error('ERROR: Respuesta negativa del servidor:', errorText);
         throw new Error(`Error al crear el gasto: ${response.status}`);
       }
       
-      const jsonResponse = await response.json();
-      console.log('Respuesta JSON:', jsonResponse);
+      // Intentamos convertir la respuesta a JSON con manejo de errores
+      let jsonResponse;
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          jsonResponse = await response.json();
+          console.log('Respuesta JSON:', jsonResponse);
+        } else {
+          console.log('La respuesta no es JSON, tipo de contenido:', contentType);
+          jsonResponse = { success: true };
+        }
+      } catch (error) {
+        console.warn('No se pudo convertir la respuesta a JSON:', error);
+        jsonResponse = { success: true };
+      }
       
       // 4. Notificar éxito
       toast({

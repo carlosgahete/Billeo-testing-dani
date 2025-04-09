@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { configureBetterExpenseRoutes } from "./routes-expenses-basic";
+import { configureOptionsRoutes } from "./routes-options";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -64,6 +65,9 @@ app.use((req, res, next) => {
     console.error('Error al inicializar el servicio de email, continuando sin él:', error);
   }
   
+  // Configurar middleware para CORS y opciones comunes
+  configureOptionsRoutes(app);
+
   const server = await registerRoutes(app);
   
   // Configurar las rutas para gastos básicos

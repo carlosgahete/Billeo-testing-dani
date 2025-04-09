@@ -7,6 +7,15 @@ import { storage } from './storage';
 export function configureBetterExpenseRoutes(app: express.Express) {
   // Ruta para crear un gasto básico - SIN autenticación para pruebas
   app.post('/api/expenses/better', async (req: express.Request, res: express.Response) => {
+    // Configura los encabezados CORS manualmente
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Para solicitudes OPTIONS, responder inmediatamente con OK
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
     // Hardcodeamos un ID de usuario para pruebas
     const userId = 1; // Asumimos que existe un usuario con ID 1
     console.log('Recibida solicitud de creación de gasto básico:', req.body);
@@ -45,6 +54,10 @@ export function configureBetterExpenseRoutes(app: express.Express) {
       const transaction = await storage.createTransaction(transactionData);
       console.log('Transacción creada correctamente:', transaction);
       
+      // Configurar encabezado Content-Type explícitamente
+      res.setHeader('Content-Type', 'application/json');
+      
+      // Devolver respuesta exitosa
       res.status(201).json({ success: true, transaction });
     } catch (error) {
       console.error('Error al crear gasto básico:', error);
