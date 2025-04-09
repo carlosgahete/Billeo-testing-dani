@@ -304,10 +304,14 @@ const Dashboard = () => {
                 <button
                   id="yearButton"
                   onClick={() => document.getElementById('yearMenu')?.classList.toggle('hidden')}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
+                  className="relative flex items-center bg-white/10 hover:bg-white/20 transition-all duration-150 px-6 py-1.5 rounded-full backdrop-blur-md border-0"
                 >
-                  <span className="text-white text-sm font-medium mr-1">{year}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                  <div className="flex-grow text-center">
+                    <span className="text-white text-sm font-medium">{year}</span>
+                  </div>
+                  <div className="absolute right-2">
+                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                  </div>
                 </button>
                 <div 
                   id="yearMenu"
@@ -334,24 +338,28 @@ const Dashboard = () => {
                 <button
                   id="periodButton"
                   onClick={() => document.getElementById('periodMenu')?.classList.toggle('hidden')}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
+                  className="relative flex items-center bg-white/10 hover:bg-white/20 transition-all duration-150 px-6 py-1.5 rounded-full backdrop-blur-md border-0"
                 >
-                  <span className="text-white text-sm font-medium mr-1">
-                    {period === "all" ? "Todo el año" : 
-                     period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                     period === "m1" ? "Enero" :
-                     period === "m2" ? "Febrero" :
-                     period === "m3" ? "Marzo" :
-                     period === "m4" ? "Abril" :
-                     period === "m5" ? "Mayo" :
-                     period === "m6" ? "Junio" :
-                     period === "m7" ? "Julio" :
-                     period === "m8" ? "Agosto" :
-                     period === "m9" ? "Septiembre" :
-                     period === "m10" ? "Octubre" :
-                     period === "m11" ? "Noviembre" : "Diciembre"}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                  <div className="flex-grow text-center">
+                    <span className="text-white text-sm font-medium">
+                      {period === "all" ? "Todo el año" : 
+                       period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                       period === "m1" ? "Enero" :
+                       period === "m2" ? "Febrero" :
+                       period === "m3" ? "Marzo" :
+                       period === "m4" ? "Abril" :
+                       period === "m5" ? "Mayo" :
+                       period === "m6" ? "Junio" :
+                       period === "m7" ? "Julio" :
+                       period === "m8" ? "Agosto" :
+                       period === "m9" ? "Septiembre" :
+                       period === "m10" ? "Octubre" :
+                       period === "m11" ? "Noviembre" : "Diciembre"}
+                    </span>
+                  </div>
+                  <div className="absolute right-2">
+                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
+                  </div>
                 </button>
                 <div 
                   id="periodMenu"
