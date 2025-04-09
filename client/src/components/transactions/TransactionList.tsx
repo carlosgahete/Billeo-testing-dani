@@ -903,15 +903,29 @@ const TransactionList = () => {
             actionButtons={currentTab === 'expense' ? (
               <>
 
-                {/* Nuevo gasto */}
-                <button 
-                  className="button-apple-primary button-apple-sm flex items-center"
-                  onClick={() => navigate("/transactions/new?type=expense")}
-                >
-                  <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden sm:inline">Nuevo gasto</span>
-                  <span className="sm:hidden">Gasto</span>
-                </button>
+                {/* Registro rápido de gastos */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="default"
+                      className="button-apple-primary button-apple-sm flex items-center"
+                    >
+                      <TrendingDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                      <span className="hidden sm:inline">Registro rápido de gastos</span>
+                      <span className="sm:hidden">Gasto rápido</span>
+                    </Button>
+                  </DialogTrigger>
+                  
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Registro rápido de gastos</DialogTitle>
+                    </DialogHeader>
+                    <QuickExpenseForm onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                    }} />
+                  </DialogContent>
+                </Dialog>
                 
                 {/* Escanear gasto */}
                 <button 
