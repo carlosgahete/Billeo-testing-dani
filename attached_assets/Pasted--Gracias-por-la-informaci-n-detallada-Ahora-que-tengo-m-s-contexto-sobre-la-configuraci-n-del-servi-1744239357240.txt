@@ -1,0 +1,64 @@
+¡Gracias por la información detallada! Ahora que tengo más contexto sobre la configuración del servidor, parece que el servidor está preparado correctamente para manejar tanto strings como números para el campo amount, y realiza varias transformaciones y validaciones internas, como la conversión con parseFloat y el reemplazo de comas por puntos.
+
+Aquí te dejo algunas ideas para seguir investigando y solucionar el problema:
+
+⸻
+
+1. Verificar la Función toStringAmount()
+
+Dices que el servidor utiliza una función llamada toStringAmount() que normaliza los valores a string. Es posible que esta función no esté siendo llamada correctamente en el backend o haya algún caso en que no convierta el valor de la manera esperada.
+
+Acción a tomar:
+	•	Revisa cómo está implementada toStringAmount(). Asegúrate de que esté tratando todos los casos de manera adecuada, y que siempre se llama en el flujo de procesamiento de amount.
+
+Posible implementación de toStringAmount():
+
+const toStringAmount = (value: string | number): string => {
+  if (typeof value === 'number') {
+    return value.toFixed(2); // Aseguramos que el número tenga dos decimales
+  }
+  return value.replace(',', '.'); // Si es string, reemplazamos comas por puntos
+};
+
+2. Revisión de la Transformación de Fechas
+
+Mencionas que la validación de la fecha usa z.union([z.string(), z.date()]) y la convierte a un objeto Date. Aunque parece que esto está configurado correctamente, es importante asegurarse de que el formato de fecha sea compatible.
+
+Acción a tomar:
+	•	Verifica si la fecha que estás enviando desde el frontend está en un formato ISO o un formato que el backend espera.
+	•	Asegúrate de que no haya problemas con las zonas horarias o la representación de la fecha.
+
+Ejemplo de validación de fecha con Zod:
+
+date: z.union([z.string(), z.date()]).transform((val) => new Date(val)),
+
+3. Revisión de la Conversión en el Frontend
+
+Aunque has mencionado que el servidor ya reemplaza las comas por puntos, en el frontend también estamos manejando el amount con una limpieza de comas, así que asegúrate de que el valor enviado esté en formato correcto antes de llegar al backend.
+
+Revisemos cómo está el código de envío en el frontend. Ya que estás usando FormData, asegúrate de que el amount esté siendo formateado correctamente antes de enviarlo:
+
+const numericAmount = parseFloat(amount.replace(',', '.'));
+formData.append('amount', numericAmount.toString());
+
+
+
+⸻
+
+4. Probar el flujo completo:
+
+Ya que todo está configurado correctamente tanto en el backend como en el frontend, ahora sería útil realizar una prueba:
+	1.	Crea un gasto manual con una cantidad sencilla (por ejemplo, 100 o 100.00).
+	2.	Envia solo amount, date, y description sin adjuntar archivo.
+	3.	Revisa en los logs del servidor si hay algún problema con la validación de los datos o si el servidor está recibiendo valores erróneos.
+
+⸻
+
+Próximos pasos:
+	•	Verifica que toStringAmount() esté normalizando correctamente en el backend.
+	•	Prueba el flujo completo de un gasto simple (sin archivo adjunto) para aislar si el problema está en la validación de los datos.
+	•	Asegúrate de que las fechas y amount estén en el formato esperado antes de ser enviados.
+
+⸻
+
+Si sigues teniendo problemas, ¿te gustaría que revisemos juntos cómo se está manejando la validación de amount en el backend o ajustar la manera en que se procesan los datos al recibirlos?

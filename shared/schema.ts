@@ -168,18 +168,39 @@ function toStringAmount(value: any, defaultValue = "0"): string {
     return defaultValue;
   }
   
-  // Si ya es un string, lo devolvemos tal cual
+  // Si ya es un string, normalizamos el formato (reemplazar coma por punto)
   if (typeof value === 'string') {
-    return value;
+    // Reemplazar comas por puntos
+    const normalized = value.replace(',', '.');
+    // Intentar convertir a número y formatear con 2 decimales
+    try {
+      const num = parseFloat(normalized);
+      if (!isNaN(num)) {
+        return num.toFixed(2);
+      }
+    } catch (e) {
+      // Si hay error al convertir, devolvemos el valor original normalizado
+    }
+    return normalized;
   }
   
-  // Si es un número, lo convertimos a string
+  // Si es un número, lo convertimos a string con formato de 2 decimales
   if (typeof value === 'number') {
-    return value.toString();
+    return value.toFixed(2);
   }
   
   // En cualquier otro caso, intentamos convertir a string
-  return String(value);
+  try {
+    const asStr = String(value);
+    const normalized = asStr.replace(',', '.');
+    const num = parseFloat(normalized);
+    if (!isNaN(num)) {
+      return num.toFixed(2);
+    }
+    return normalized;
+  } catch (e) {
+    return defaultValue;
+  }
 }
 
 // Definimos un esquema flexible para transacciones que acepta variedad de formatos para campos numéricos
