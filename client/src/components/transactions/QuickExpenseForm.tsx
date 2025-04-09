@@ -78,12 +78,11 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
         description: data.description,
         amount: data.amount.replace(',', '.'), // Asegurar formato correcto
         date: new Date().toISOString(),
-        categoryId: data.categoryId ? parseInt(data.categoryId, 10) : null,
+        categoryId: data.categoryId && data.categoryId !== "0" ? parseInt(data.categoryId, 10) : null,
       };
 
       // Enviar a la API
-      await apiRequest('/api/transactions', {
-        method: 'POST',
+      await apiRequest('POST', '/api/transactions', {
         body: JSON.stringify(transactionData),
       });
 
@@ -163,7 +162,7 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
               <SelectValue placeholder="Seleccionar categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin categoría</SelectItem>
+              <SelectItem value="0">Sin categoría</SelectItem>
               {expenseCategories.map((category) => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
