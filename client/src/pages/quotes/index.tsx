@@ -280,7 +280,7 @@ export default function QuotesPage() {
               
               <div className="mt-6">
                 <button
-                  className="button-apple w-full"
+                  className="h-10 rounded-full bg-[#34C759] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#2baa4e] transition-colors"
                   onClick={() => navigate("/quotes/create")}
                 >
                   <FilePlus className="h-4 w-4 mr-2" />
@@ -329,7 +329,7 @@ export default function QuotesPage() {
               
               <div className="mt-6">
                 <button
-                  className="button-apple-secondary w-full"
+                  className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
                   onClick={() => {
                     // Aquí se podría implementar un filtro para ver solo los aceptados
                   }}
@@ -382,7 +382,7 @@ export default function QuotesPage() {
               
               <div className="mt-6">
                 <button
-                  className="button-apple-secondary w-full"
+                  className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
                   onClick={() => {
                     // Aquí se podría implementar un filtro para ver solo los pendientes
                   }}
