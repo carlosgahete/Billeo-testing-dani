@@ -267,7 +267,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="space-y-3 p-4 bg-[#F7FFF9] rounded-xl border border-[#E3FFE9] mb-5">
+              <div className="space-y-3 p-4 bg-[#F7FFF9] rounded-xl border border-[#E3FFE9]">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Presupuestos aceptados:</span>
                   <span className="font-medium text-gray-800">{formatCurrency(acceptedValue)}</span>
@@ -278,11 +278,9 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="flex-grow"></div>
-              
-              <div>
+              <div className="mt-6">
                 <button
-                  className="h-10 mt-14 rounded-full bg-[#34C759] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#2baa4e] transition-colors"
+                  className="h-10 rounded-full bg-[#34C759] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#2baa4e] transition-colors"
                   onClick={() => navigate("/quotes/create")}
                 >
                   <FilePlus className="h-4 w-4 mr-2" />
@@ -314,7 +312,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="space-y-3 p-4 bg-[#F5F9FF] rounded-xl border border-[#E0EDFF] mb-2">
+              <div className="space-y-3 p-4 bg-[#F5F9FF] rounded-xl border border-[#E0EDFF]">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Presupuestos enviados:</span>
                   <span className="font-medium text-gray-800">{sentQuotes + acceptedQuotes + rejectedQuotes}</span>
@@ -329,11 +327,9 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="flex-grow"></div>
-              
-              <div>
+              <div className="mt-6">
                 <button
-                  className="h-10 mt-14 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
+                  className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
                   onClick={() => {
                     // Aquí se podría implementar un filtro para ver solo los aceptados
                   }}
@@ -367,7 +363,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="space-y-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#FFEECA] mb-0">
+              <div className="space-y-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#FFEECA]">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 flex items-center">
                     <span className="w-2.5 h-2.5 bg-neutral-300 rounded-full mr-2"></span>
@@ -384,11 +380,9 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="flex-grow"></div>
-              
-              <div>
+              <div className="mt-6">
                 <button
-                  className="h-10 mt-14 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
+                  className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
                   onClick={() => {
                     // Aquí se podría implementar un filtro para ver solo los pendientes
                   }}
