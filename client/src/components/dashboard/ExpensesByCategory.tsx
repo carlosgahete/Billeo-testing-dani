@@ -6,23 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { 
-  FileDown, 
-  Receipt, 
-  TrendingDown, 
-  ShoppingBag,
-  Home, 
-  Car, 
-  Coffee, 
-  Utensils,
-  PieChart as PieChartIcon,
-  Briefcase,
-  LightbulbIcon,
-  Wifi,
-  Globe,
-  Monitor,
-  Smartphone
-} from 'lucide-react';
+import { TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 // Tipo para los datos de gastos por categoría
@@ -54,41 +38,6 @@ const COLORS = [
   '#AF52DE', // Morado
   '#A2845E', // Marrón
 ];
-
-// Función para obtener el icono según el nombre de la categoría
-const getCategoryIcon = (categoryName: string) => {
-  const normalizedName = categoryName.toLowerCase();
-  
-  // Mapeo de nombres de categorías a iconos
-  if (normalizedName.includes('alimentación') || normalizedName.includes('comida') || normalizedName.includes('restaurante')) {
-    return <Utensils size={14} />;
-  } else if (normalizedName.includes('transporte') || normalizedName.includes('coche') || normalizedName.includes('vehículo')) {
-    return <Car size={14} />;
-  } else if (normalizedName.includes('hogar') || normalizedName.includes('casa') || normalizedName.includes('alquiler')) {
-    return <Home size={14} />;
-  } else if (normalizedName.includes('compras') || normalizedName.includes('ropa')) {
-    return <ShoppingBag size={14} />;
-  } else if (normalizedName.includes('café') || normalizedName.includes('bebida')) {
-    return <Coffee size={14} />;
-  } else if (normalizedName.includes('internet') || normalizedName.includes('wifi') || normalizedName.includes('datos')) {
-    return <Wifi size={14} />;
-  } else if (normalizedName.includes('web') || normalizedName.includes('website') || normalizedName.includes('online')) {
-    return <Globe size={14} />;
-  } else if (normalizedName.includes('luz') || normalizedName.includes('electricidad') || normalizedName.includes('energía')) {
-    return <LightbulbIcon size={14} />;
-  } else if (normalizedName.includes('trabajo') || normalizedName.includes('negocio')) {
-    return <Briefcase size={14} />;
-  } else if (normalizedName.includes('móvil') || normalizedName.includes('teléfono') || normalizedName.includes('celular')) {
-    return <Smartphone size={14} />;
-  } else if (normalizedName.includes('software') || normalizedName.includes('ordenador') || normalizedName.includes('computadora')) {
-    return <Monitor size={14} />;
-  } else if (normalizedName === 'sin categoría' || normalizedName === 'otros') {
-    return <PieChartIcon size={14} />;
-  }
-  
-  // Icono por defecto
-  return <Receipt size={14} />;
-};
 
 const ExpensesByCategory: React.FC<{
   transactions: any[];  // Transacciones
@@ -146,13 +95,22 @@ const ExpensesByCategory: React.FC<{
       
       // Convertir a array y ordenar por monto (de mayor a menor)
       const sortedData = Object.entries(expensesByCategory)
-        .map(([id, data], index) => ({
-          name: data.name,
-          value: data.amount,
-          count: data.count,
-          color: id === 'uncategorized' ? '#000000' : COLORS[index % COLORS.length],
-          percentage: (data.amount / totalExpenses) * 100
-        }))
+        .map(([id, data], index) => {
+          // Buscar la categoría para obtener el icono
+          const category = id !== 'uncategorized'
+            ? categories.find(c => c.id.toString() === id.toString())
+            : null;
+          
+          return {
+            name: data.name,
+            value: data.amount,
+            count: data.count,
+            color: id === 'uncategorized' ? '#000000' : COLORS[index % COLORS.length],
+            percentage: (data.amount / totalExpenses) * 100,
+            icon: category?.icon || '📊', // Emoji por defecto si no se encuentra
+            categoryId: id
+          };
+        })
         .filter(item => item.value > 0) // Eliminar categorías sin gastos
         .sort((a, b) => b.value - a.value); // Ordenar de mayor a menor
       
@@ -231,7 +189,7 @@ const ExpensesByCategory: React.FC<{
                       backgroundColor: `${item.color}15`, // Color con 15% de opacidad
                       color: item.color
                     }}>
-                    {getCategoryIcon(item.name)}
+                    <span className="text-lg">{item.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
