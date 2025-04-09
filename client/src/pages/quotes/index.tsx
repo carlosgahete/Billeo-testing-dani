@@ -193,7 +193,7 @@ export default function QuotesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {/* Tarjeta 1: Resumen de presupuestos - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[400px]">
+            <div className="p-6 flex flex-col h-[430px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#F0F1FF] p-3 rounded-full mr-3">
                   <FileText className="h-5 w-5 text-[#5856D6]" />
@@ -260,7 +260,7 @@ export default function QuotesPage() {
           
           {/* Tarjeta 2: Valor económico - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[400px]">
+            <div className="p-6 flex flex-col h-[430px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#E8F5EE] p-3 rounded-full mr-3">
                   <Banknote className="h-5 w-5 text-[#34C759]" />
@@ -305,7 +305,7 @@ export default function QuotesPage() {
           
           {/* Tarjeta 3: Tasa de conversión - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[400px]">
+            <div className="p-6 flex flex-col h-[430px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#EEF6FF] p-3 rounded-full mr-3">
                   <BarChart3 className="h-5 w-5 text-[#007AFF]" />
@@ -356,7 +356,7 @@ export default function QuotesPage() {
           
           {/* Tarjeta 4: Presupuestos pendientes - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[400px]">
+            <div className="p-6 flex flex-col h-[430px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#FFF8E7] p-3 rounded-full mr-3">
                   <FileClock className="h-5 w-5 text-[#FF9500]" />
