@@ -64,7 +64,8 @@ const ExpensesByCategory: React.FC<{
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filteredData, setFilteredData] = useState<ExpenseByCategoryData[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period || "2025-all");
-  const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<any[]>(transactions || []);
+  const [forceUpdate, setForceUpdate] = useState<number>(0); // Contador para forzar la actualización
   
   // Efecto para generar la etiqueta del período seleccionado
   // Función para formatear el período y obtener las fechas de inicio y fin
@@ -229,6 +230,9 @@ const ExpensesByCategory: React.FC<{
 
   // Modificación para utilizar las transacciones filtradas por período
   useEffect(() => {
+    // Forzar la actualización cuando cambie el contador
+    console.log(`Actualizando datos con forceUpdate=${forceUpdate}`);
+
     if (filteredTransactions && categories && filteredTransactions.length > 0) {
       // Filtrar solo los gastos
       const expenses = filteredTransactions.filter(t => t.type === 'expense');
@@ -299,7 +303,7 @@ const ExpensesByCategory: React.FC<{
       
       setData(sortedData);
     }
-  }, [filteredTransactions, categories]);
+  }, [filteredTransactions, categories, forceUpdate]);
 
   // Efecto para filtrar los datos según las categorías seleccionadas
   useEffect(() => {
@@ -362,6 +366,11 @@ const ExpensesByCategory: React.FC<{
     // También resetear el período si es diferente al período por defecto
     if (selectedPeriod !== (period || '2025-all')) {
       setSelectedPeriod(period || '2025-all');
+      
+      // Forzar el reseteo de las transacciones
+      setFilteredTransactions(transactions);
+      // Incrementar contador para forzar actualización
+      setForceUpdate(prev => prev + 1);
     }
   };
 
@@ -472,14 +481,23 @@ const ExpensesByCategory: React.FC<{
                 <Button
                   size="sm"
                   onClick={() => {
-                    // Forzar la actualización estableciendo de nuevo el período seleccionado
-                    const currentPeriod = selectedPeriod;
-                    setSelectedPeriod("temp-reset");
-                    setTimeout(() => {
-                      setSelectedPeriod(currentPeriod);
-                      // Cerrar el popover
-                      document.dispatchEvent(new MouseEvent('click'));
-                    }, 50);
+                    // Incrementar el contador para forzar la actualización
+                    setForceUpdate(prev => prev + 1);
+                    // Forzar directamente la filtración de transacciones
+                    const periodData = formatPeriodAndGetDates(selectedPeriod);
+                    
+                    if (periodData.startDate && periodData.endDate) {
+                      const filtered = transactions.filter(t => {
+                        if (!t.date) return false;
+                        const txDate = new Date(t.date);
+                        return txDate >= periodData.startDate! && txDate <= periodData.endDate!;
+                      });
+                      console.log(`Aplicando filtro: ${selectedPeriod}, encontradas ${filtered.length} transacciones`);
+                      setFilteredTransactions(filtered);
+                    }
+                    
+                    // Cerrar el popover
+                    document.dispatchEvent(new MouseEvent('click'));
                   }}
                   className="text-xs h-7 bg-red-600 hover:bg-red-700 text-white"
                 >
