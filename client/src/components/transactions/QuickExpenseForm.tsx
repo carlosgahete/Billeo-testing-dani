@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, FileType, Info, Receipt } from 'lucide-react';
 import {
@@ -53,6 +53,26 @@ type FormValues = z.infer<typeof formSchema>;
 interface QuickExpenseFormProps {
   onSuccess?: () => void;
 }
+
+// Crear un gasto simplificado
+const simpleCreateExpense = async (data: any) => {
+  const response = await fetch('/api/transactions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data),
+    credentials: 'include'
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Error API:", errorText);
+    throw new Error(`Error: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+};
 
 const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
   const { toast } = useToast();
@@ -107,6 +127,36 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
     }
   };
 
+  // Usamos useMutation para gestionar la creación del gasto
+  const createExpenseMutation = useMutation({
+    mutationFn: simpleCreateExpense,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] });
+      toast({
+        title: 'Gasto registrado correctamente',
+        description: 'Se ha registrado el gasto con su documento adjunto',
+        variant: 'default',
+      });
+      form.reset();
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      if (onSuccess) {
+        onSuccess();
+      }
+    },
+    onError: (error) => {
+      console.error('Error al crear el gasto:', error);
+      toast({
+        title: 'Error al registrar el gasto',
+        description: 'Hubo un problema al guardar el gasto. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+    }
+  });
+
   // Manejar el envío del formulario
   const handleSubmit = async (data: FormValues) => {
     // Validar que se haya seleccionado un archivo
@@ -118,13 +168,10 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
     
     try {
-      console.log("Iniciando creación de gasto");
-      
       // Primero, subimos el archivo
       const formData = new FormData();
       formData.append('file', selectedFile);
       
-      console.log("Subiendo archivo...");
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
         body: formData,
@@ -136,91 +183,49 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
       
       const uploadResult = await uploadResponse.json();
       const filePath = uploadResult.path;
-      console.log("Archivo subido correctamente:", filePath);
       
-      // Preparar los impuestos adicionales
-      let additionalTaxes = [];
-      
+      // Preparar los datos del gasto de la forma más simple posible
+      let taxArray = [];
       if (data.hasVat) {
-        additionalTaxes.push({
+        taxArray.push({
           name: 'IVA',
           amount: parseInt(data.vatRate, 10),
           isPercentage: true
         });
       }
-      
       if (data.hasIRPF) {
-        additionalTaxes.push({
+        taxArray.push({
           name: 'IRPF',
-          amount: -parseInt(data.irpfRate, 10), // Negativo porque reduce el importe
+          amount: -parseInt(data.irpfRate, 10),
           isPercentage: true
         });
       }
-
+      
       // Calcular la base imponible (sin IVA)
       const amount = parseFloat(data.amount.replace(',', '.'));
       const vatRate = data.hasVat ? parseInt(data.vatRate, 10) / 100 : 0;
       const baseAmount = data.hasVat ? (amount / (1 + vatRate)).toFixed(2) : amount.toFixed(2);
-
-      // Formatear los datos para la API - Usar método alternativo con fetch directo
-      const transactionData = {
-        type: 'expense',
-        title: `Gasto: ${data.description.substring(0, 30)}${data.description.length > 30 ? '...' : ''}`,
+      
+      // Crear un objeto simple para la API
+      const expenseData = {
         description: data.description,
-        amount: baseAmount, // Base imponible (sin IVA)
+        title: `Gasto: ${data.description.substring(0, 30)}${data.description.length > 30 ? '...' : ''}`,
+        type: 'expense',
+        amount: baseAmount,
         date: new Date().toISOString(),
         categoryId: data.categoryId && data.categoryId !== "0" ? parseInt(data.categoryId, 10) : null,
-        attachments: [filePath], // Adjuntar el documento
-        additionalTaxes: JSON.stringify(additionalTaxes) // Convertimos a JSON string para evitar problemas
+        attachments: [filePath],
+        additionalTaxes: JSON.stringify(taxArray)
       };
-
-      console.log("Enviando datos de transacción:", JSON.stringify(transactionData));
       
-      // Usar fetch directamente en lugar de apiRequest para tener más control
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(transactionData),
-        credentials: 'include'
-      });
+      // Usar la mutación para crear el gasto
+      createExpenseMutation.mutate(expenseData);
       
-      console.log(`Respuesta API: ${response.status} ${response.statusText}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error respuesta API:", errorText);
-        throw new Error(`Error al crear gasto: ${response.status} ${response.statusText}`);
-      }
-
-      // Mostrar mensaje de éxito
-      toast({
-        title: 'Gasto registrado correctamente',
-        description: `Se ha registrado un gasto de ${data.amount}€ con su documento adjunto`,
-        variant: 'default',
-      });
-
-      // Resetear el formulario
-      form.reset();
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
-      // Invalidar consultas para actualizar los datos
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] });
-
-      // Llamar al callback de éxito si está definido
-      if (onSuccess) {
-        onSuccess();
-      }
     } catch (error) {
-      console.error('Error al crear el gasto:', error);
+      console.error('Error en el proceso:', error);
       toast({
-        title: 'Error al registrar el gasto',
-        description: 'Hubo un problema al guardar el gasto. Intenta de nuevo.',
+        title: 'Error al procesar el gasto',
+        description: 'Hubo un problema al procesar los datos. Intenta de nuevo.',
         variant: 'destructive',
       });
     } finally {
