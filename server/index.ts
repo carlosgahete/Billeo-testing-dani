@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
+import { configureBetterExpenseRoutes } from "./routes-expenses-basic";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -64,6 +65,9 @@ app.use((req, res, next) => {
   }
   
   const server = await registerRoutes(app);
+  
+  // Configurar las rutas para gastos básicos
+  configureBetterExpenseRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
