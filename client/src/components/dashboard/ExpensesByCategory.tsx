@@ -148,15 +148,15 @@ const ExpensesByCategory: React.FC<{
       <CardContent className="p-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Gráfico de donut */}
-          <div className="p-3 flex items-center justify-center h-[200px]">
+          <div className="p-2 flex items-center justify-center h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={40}
-                  outerRadius={60}
+                  innerRadius={60}
+                  outerRadius={90}
                   paddingAngle={1}
                   dataKey="value"
                 >
@@ -179,8 +179,8 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Lista de categorías */}
-          <div className="p-3 overflow-y-auto h-[200px]">
-            <div className="space-y-2">
+          <div className="p-2 overflow-y-auto h-[240px]">
+            <div className="space-y-3">
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
