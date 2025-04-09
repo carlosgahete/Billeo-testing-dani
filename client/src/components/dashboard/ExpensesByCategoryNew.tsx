@@ -291,7 +291,7 @@ const ExpensesByCategory: React.FC<{
       
       setData(sortedData);
     }
-  }, [transactions, categories]);
+  }, [filteredTransactions, categories]);
 
   // Efecto para filtrar los datos según las categorías seleccionadas
   useEffect(() => {
@@ -351,6 +351,10 @@ const ExpensesByCategory: React.FC<{
   // Función para limpiar todos los filtros
   const clearFilters = () => {
     setSelectedCategories([]);
+    // También resetear el período si es diferente al período por defecto
+    if (selectedPeriod !== (period || '2025-all')) {
+      setSelectedPeriod(period || '2025-all');
+    }
   };
 
   // Datos a mostrar (filtrados o todos)
@@ -373,9 +377,9 @@ const ExpensesByCategory: React.FC<{
             >
               <Filter className="h-3.5 w-3.5 mr-1" />
               Filtrar
-              {selectedCategories.length > 0 && (
+              {(selectedCategories.length > 0 || selectedPeriod !== (period || '2025-all')) && (
                 <span className="ml-1 bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
-                  {selectedCategories.length}
+                  {selectedCategories.length + (selectedPeriod !== (period || '2025-all') ? 1 : 0)}
                 </span>
               )}
             </Button>
@@ -453,13 +457,17 @@ const ExpensesByCategory: React.FC<{
                   size="sm"
                   onClick={clearFilters}
                   className="text-xs h-7"
-                  disabled={selectedCategories.length === 0}
+                  disabled={selectedCategories.length === 0 && selectedPeriod === (period || '2025-all')}
                 >
                   Limpiar filtros
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => document.dispatchEvent(new MouseEvent('click'))}
+                  onClick={() => {
+                    // Aplicar los filtros (ya han sido guardados en el estado)
+                    // Solo necesitamos cerrar el popover
+                    document.dispatchEvent(new MouseEvent('click'));
+                  }}
                   className="text-xs h-7 bg-red-600 hover:bg-red-700 text-white"
                 >
                   Aplicar
