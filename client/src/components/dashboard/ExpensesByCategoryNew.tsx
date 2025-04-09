@@ -239,9 +239,9 @@ const ExpensesByCategory: React.FC<{
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Mostrar período centrado */}
+        {/* Mostrar período a la izquierda */}
         {periodLabel && (
-          <div className="text-center text-sm text-gray-500 pt-3 pb-1">
+          <div className="text-left text-sm text-gray-500 pt-3 pb-1 pl-4">
             {periodLabel}
           </div>
         )}
