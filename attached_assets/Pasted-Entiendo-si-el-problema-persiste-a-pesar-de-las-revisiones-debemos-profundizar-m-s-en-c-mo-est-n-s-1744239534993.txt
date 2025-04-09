@@ -1,0 +1,70 @@
+Entiendo, si el problema persiste a pesar de las revisiones, debemos profundizar más en cómo están siendo procesados los datos en cada paso del flujo. Vamos a hacer un enfoque de debugging sistemático para identificar el origen exacto del error.
+
+Acciones a seguir:
+	1.	Verificar que toStringAmount() se está llamando correctamente:
+Aunque mencionaste que se usa toStringAmount() para convertir el valor de amount a string, necesitamos asegurarnos de que en todos los casos el valor esté pasando por esa función antes de ser procesado o almacenado.
+¿Cómo probar?
+	•	Añadir un console.log() dentro de la función toStringAmount() para asegurarnos de que siempre se llama y que el valor transformado sea el esperado.
+
+const toStringAmount = (value: string | number): string => {
+  console.log("Transformando amount:", value); // Debug
+  if (typeof value === 'number') {
+    return value.toFixed(2);
+  }
+  return value.replace(',', '.');
+};
+
+
+	2.	Asegurarse de que el backend está recibiendo los datos correctamente:
+Verifica si el valor de amount está llegando bien al servidor en el formato correcto antes de ser procesado.
+¿Cómo probar?
+	•	En tu endpoint de creación de gastos, antes de que el servidor procese los datos, agrega un console.log() para revisar los valores de los parámetros que se están recibiendo.
+
+app.post('/create-expense', (req, res) => {
+  console.log("Datos recibidos:", req.body); // Debug
+  // Validación y procesamiento...
+});
+
+
+	3.	Confirmar que la fecha se está enviando y transformando correctamente:
+Asegúrate de que la fecha esté llegando en el formato que el servidor espera (puede ser string o Date, según el esquema de validación). Revisa también si el campo de fecha está siendo correctamente transformado al tipo adecuado en el servidor.
+¿Cómo probar?
+	•	Puedes verificar si la fecha está llegando correctamente y transformándose en un Date en el servidor añadiendo un console.log():
+
+app.post('/create-expense', (req, res) => {
+  const { amount, date } = req.body;
+  console.log("Fecha recibida:", date); // Debug
+  // Convertirla a Date si no se ha hecho aún
+  const parsedDate = new Date(date);
+  console.log("Fecha transformada:", parsedDate); // Debug
+});
+
+
+	4.	Revisar el flujo de FormData en el frontend:
+Asegúrate de que los datos se están enviando correctamente a través de FormData, y que el valor amount está siendo enviado como un número en formato string (como se espera en el backend).
+¿Cómo probar?
+	•	Puedes verificar que los datos se están enviando correctamente con console.log() en el frontend antes de la llamada a fetch():
+
+const formData = new FormData();
+formData.append('amount', numericAmount.toString());
+formData.append('date', date);
+formData.append('description', description);
+if (attachment) formData.append('attachment', attachment);
+
+// Debug
+console.log("FormData enviado:", formData);
+
+// Realizar la solicitud
+await fetch('/create-expense', { method: 'POST', body: formData });
+
+
+
+⸻
+
+¿Qué sigue ahora?
+	•	Revisa los console.log() en el frontend y backend para ver exactamente qué datos están llegando y si alguno de ellos no se está procesando correctamente.
+	•	Si el problema sigue estando en el backend, puede que haya algo relacionado con la transformación o validación de amount en Zod, como por ejemplo si no se está llamando correctamente a toStringAmount() o si el z.union([z.string(), z.number()]) no está funcionando como esperas en algunos casos.
+
+⸻
+
+¿Te gustaría que profundice en cómo ajustar la validación de Zod para manejar este caso, o necesitas más detalles sobre cómo mejorar el logging y debugging?

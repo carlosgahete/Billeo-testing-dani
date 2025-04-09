@@ -4,6 +4,9 @@ import { storage } from './storage';
 export function configureSimpleExpensesRoutes(app: express.Express) {
   app.post('/api/expenses/simple', async (req: express.Request, res: express.Response) => {
     console.log('Recibida solicitud para gastos simple con body:', req.body);
+    console.log('Content-Type:', req.get('Content-Type'));
+    console.log('Tipo de datos recibidos amount:', typeof req.body.amount);
+    console.log('Valor literal de amount:', req.body.amount);
     
     try {
       // ID de usuario fijo para pruebas
@@ -26,6 +29,7 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
       }
       
       console.log('Datos extraídos y normalizados:', { description, amount, attachments });
+      console.log('Tipo de amount después de extraer:', typeof amount);
       
       // Validaciones mínimas
       if (!description) {
@@ -33,27 +37,40 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
       }
       
       // Normalizar el formato del importe (convertir a número)
+      console.log('ANTES DE NORMALIZAR - Tipo de amount:', typeof amount, 'Valor:', amount);
+      
       if (typeof amount === 'string') {
+        console.log('Procesando amount como string');
         // Reemplazar coma por punto si existe
-        amount = amount.replace(',', '.');
+        let normalizedAmount = amount.replace(',', '.');
+        console.log('Amount después de reemplazar coma por punto:', normalizedAmount);
+        
         try {
           // Convertir a número y luego formatear con 2 decimales
-          const numericAmount = parseFloat(amount);
+          const numericAmount = parseFloat(normalizedAmount);
+          console.log('Amount convertido a número:', numericAmount, 'Es NaN?', isNaN(numericAmount));
+          
           if (isNaN(numericAmount)) {
             amount = "0.00";
+            console.log('Amount es NaN, usando default:', amount);
           } else {
             amount = numericAmount.toFixed(2);
+            console.log('Amount formateado con 2 decimales:', amount);
           }
         } catch (e) {
+          console.error('Error al convertir amount a número:', e);
           amount = "0.00";
         }
       } else if (typeof amount === 'number') {
+        console.log('Procesando amount como número:', amount);
         amount = amount.toFixed(2);
+        console.log('Amount formateado con 2 decimales:', amount);
       } else {
+        console.log('Tipo de amount desconocido, usando default');
         amount = "0.00";
       }
       
-      console.log('Importe normalizado:', amount);
+      console.log('DESPUÉS DE NORMALIZAR - Tipo de amount:', typeof amount, 'Valor final:', amount);
       
       // Comprobar si envió una fecha personalizada
       let transactionDate;

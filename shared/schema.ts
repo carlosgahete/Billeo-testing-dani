@@ -164,21 +164,30 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 
 // Helper function to convert string or number to string
 function toStringAmount(value: any, defaultValue = "0"): string {
+  console.log("toStringAmount - Valor original recibido:", value, "tipo:", typeof value);
+  
   if (value === undefined || value === null) {
+    console.log("toStringAmount - Valor undefined/null, usando default:", defaultValue);
     return defaultValue;
   }
   
   // Si ya es un string, normalizamos el formato (reemplazar coma por punto)
   if (typeof value === 'string') {
+    console.log("toStringAmount - Procesando string:", value);
     // Reemplazar comas por puntos
     const normalized = value.replace(',', '.');
+    console.log("toStringAmount - String normalizado:", normalized);
+    
     // Intentar convertir a número y formatear con 2 decimales
     try {
       const num = parseFloat(normalized);
       if (!isNaN(num)) {
-        return num.toFixed(2);
+        const result = num.toFixed(2);
+        console.log("toStringAmount - Convertido a número y formateado:", result);
+        return result;
       }
     } catch (e) {
+      console.log("toStringAmount - Error al convertir string a número:", e);
       // Si hay error al convertir, devolvemos el valor original normalizado
     }
     return normalized;
@@ -186,19 +195,28 @@ function toStringAmount(value: any, defaultValue = "0"): string {
   
   // Si es un número, lo convertimos a string con formato de 2 decimales
   if (typeof value === 'number') {
-    return value.toFixed(2);
+    console.log("toStringAmount - Procesando número:", value);
+    const result = value.toFixed(2);
+    console.log("toStringAmount - Número formateado:", result);
+    return result;
   }
   
   // En cualquier otro caso, intentamos convertir a string
   try {
+    console.log("toStringAmount - Procesando tipo desconocido, intentando convertir a string");
     const asStr = String(value);
     const normalized = asStr.replace(',', '.');
+    console.log("toStringAmount - Convertido a string y normalizado:", normalized);
+    
     const num = parseFloat(normalized);
     if (!isNaN(num)) {
-      return num.toFixed(2);
+      const result = num.toFixed(2);
+      console.log("toStringAmount - Convertido a número y formateado:", result);
+      return result;
     }
     return normalized;
   } catch (e) {
+    console.log("toStringAmount - Error al procesar tipo desconocido:", e);
     return defaultValue;
   }
 }

@@ -140,12 +140,13 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
       // 3. CREAR GASTO
       const expenseData = {
         description: cleanedDescription,
-        amount: parseFloat(cleanedAmount),
+        amount: cleanedAmount, // Enviar como string, sin parseFloat
         date: cleanedDate,
         attachments: [filePath]
       };
       
       console.log('Enviando datos del gasto:', expenseData);
+      console.log('Tipo de amount antes de enviar:', typeof expenseData.amount);
       
       const expenseResponse = await fetch('/api/expenses/simple', {
         method: 'POST',
