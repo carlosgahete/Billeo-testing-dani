@@ -247,7 +247,7 @@ export default function QuotesPage() {
           
           {/* Tarjeta 2: Valor económico - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-[460px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#E8F5EE] p-3 rounded-full mr-3">
                   <Banknote className="h-5 w-5 text-[#34C759]" />
@@ -278,7 +278,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="mt-6">
+              <div className="mt-auto">
                 <button
                   className="h-10 rounded-full bg-[#34C759] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#2baa4e] transition-colors"
                   onClick={() => navigate("/quotes/create")}
@@ -292,7 +292,7 @@ export default function QuotesPage() {
           
           {/* Tarjeta 3: Tasa de conversión - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-[460px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#EEF6FF] p-3 rounded-full mr-3">
                   <BarChart3 className="h-5 w-5 text-[#007AFF]" />
@@ -327,7 +327,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="mt-6">
+              <div className="mt-auto">
                 <button
                   className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
                   onClick={() => {
@@ -343,7 +343,7 @@ export default function QuotesPage() {
           
           {/* Tarjeta 4: Presupuestos pendientes - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-[460px]">
               <div className="flex items-center mb-5">
                 <div className="bg-[#FFF8E7] p-3 rounded-full mr-3">
                   <FileClock className="h-5 w-5 text-[#FF9500]" />
@@ -380,7 +380,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="mt-6">
+              <div className="mt-auto">
                 <button
                   className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
                   onClick={() => {
