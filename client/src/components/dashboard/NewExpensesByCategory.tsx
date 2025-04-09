@@ -364,16 +364,106 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
   // Renderizado condicional si no hay datos
   if (!data.length) {
     return (
-      <Card className="h-full">
-        <CardHeader className="bg-red-50 p-4">
-          <CardTitle className="text-lg text-red-700 flex items-center">
-            <TrendingDown className="mr-2 h-5 w-5" />
+      <Card className="h-full overflow-hidden fade-in dashboard-card">
+        <CardHeader className="bg-red-50 p-3 flex flex-row justify-between items-center">
+          <CardTitle className="text-base text-red-700 flex items-center">
+            <TrendingDown className="mr-2 h-4 w-4" />
             Gastos por Categoría
           </CardTitle>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 px-2 text-xs bg-white border-gray-200 hover:bg-gray-50"
+              >
+                <Filter className="h-3.5 w-3.5 mr-1" />
+                Filtrar
+                {(selectedCategories.length > 0 || selectedPeriod !== period) && (
+                  <span className="ml-1 bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
+                    {selectedCategories.length + (selectedPeriod !== period ? 1 : 0)}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="end">
+              <div className="space-y-2">
+                <div className="tabs w-full mb-2">
+                  <div className="tab active">
+                    <div className="text-sm font-semibold">Período</div>
+                    <div className="mt-2 space-y-2">
+                      <Select 
+                        value={selectedPeriod}
+                        onValueChange={(value) => setSelectedPeriod(value)}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs">
+                          <SelectValue placeholder="Seleccionar período" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2025-all">Año 2025 completo</SelectItem>
+                          <SelectItem value="2025-q1">Q1 2025 (Ene-Mar)</SelectItem>
+                          <SelectItem value="2025-q2">Q2 2025 (Abr-Jun)</SelectItem>
+                          <SelectItem value="2025-q3">Q3 2025 (Jul-Sep)</SelectItem>
+                          <SelectItem value="2025-q4">Q4 2025 (Oct-Dic)</SelectItem>
+                          <SelectItem value="2025-1">Enero 2025</SelectItem>
+                          <SelectItem value="2025-2">Febrero 2025</SelectItem>
+                          <SelectItem value="2025-3">Marzo 2025</SelectItem>
+                          <SelectItem value="2025-4">Abril 2025</SelectItem>
+                          <SelectItem value="2025-5">Mayo 2025</SelectItem>
+                          <SelectItem value="2025-6">Junio 2025</SelectItem>
+                          <SelectItem value="2025-7">Julio 2025</SelectItem>
+                          <SelectItem value="2025-8">Agosto 2025</SelectItem>
+                          <SelectItem value="2025-9">Septiembre 2025</SelectItem>
+                          <SelectItem value="2025-10">Octubre 2025</SelectItem>
+                          <SelectItem value="2025-11">Noviembre 2025</SelectItem>
+                          <SelectItem value="2025-12">Diciembre 2025</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-2 flex justify-between mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-xs h-7"
+                      disabled={selectedCategories.length === 0 && selectedPeriod === period}
+                    >
+                      Limpiar filtros
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        applyPeriodFilter();
+                        
+                        // Cerrar el popover
+                        document.dispatchEvent(new MouseEvent('click'));
+                      }}
+                      className="text-xs h-7 bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Aplicar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </CardHeader>
-        <CardContent className="p-6 flex items-center justify-center h-[300px]">
-          <div className="text-center text-gray-500">
-            <p>No hay gastos registrados</p>
+        
+        <CardContent className="p-0">
+          {/* Mostrar período a la izquierda */}
+          {periodLabel && (
+            <div className="text-left text-sm text-gray-500 pt-3 pb-1 pl-4">
+              {periodLabel}
+            </div>
+          )}
+          
+          <div className="flex items-center justify-center h-[280px]">
+            <div className="text-center text-gray-500">
+              <p>No hay gastos registrados</p>
+            </div>
           </div>
         </CardContent>
       </Card>
