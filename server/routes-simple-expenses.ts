@@ -10,23 +10,32 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
       const userId = 1;
       
       // Extraer datos básicos
-      const { description, amount, attachments = [] } = req.body;
+      let { description, amount, attachments = [] } = req.body;
+      
+      // Si es un formulario tradicional, los attachments vendrán como string
+      if (typeof attachments === 'string') {
+        attachments = [attachments];
+      }
       
       console.log('Datos extraídos:', { description, amount, attachments });
       
-      // Validaciones mínimas
-      if (!description || typeof description !== 'string') {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'La descripción es requerida y debe ser texto' 
-        });
+      // Validaciones mínimas - si no hay descripción, usar valor por defecto
+      if (!description) {
+        description = "Gasto manual";
       }
       
-      if (!amount || typeof amount !== 'string') {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'El importe es requerido y debe ser texto' 
-        });
+      // Si el importe no es válido, usar valor por defecto
+      if (!amount) {
+        amount = "0.00";
+      }
+      
+      // Intentar hacer un parsing del amount por si acaso
+      try {
+        if (typeof amount !== 'string') {
+          amount = amount.toString();
+        }
+      } catch (e) {
+        amount = "0.00";
       }
       
       // Crear la transacción
@@ -47,18 +56,52 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
       
       console.log('Transacción simple creada correctamente:', transaction);
       
-      // Enviar respuesta
-      res.status(201).json({
-        success: true,
-        transaction
-      });
+      // Determinar el tipo de respuesta que espera el cliente
+      const acceptHeader = req.headers.accept;
+      if (acceptHeader && acceptHeader.includes('text/html')) {
+        // El cliente espera HTML (probablemente un formulario tradicional)
+        res.status(200).send(`
+          <html>
+            <body>
+              <h1>Gasto registrado correctamente</h1>
+              <p>Se ha registrado un gasto de ${amount}€</p>
+              <script>
+                window.parent.postMessage({ success: true, transaction: ${JSON.stringify(transaction)} }, '*');
+              </script>
+            </body>
+          </html>
+        `);
+      } else {
+        // El cliente espera JSON
+        res.status(201).json({
+          success: true,
+          transaction
+        });
+      }
       
     } catch (error) {
       console.error('Error en endpoint simple de gastos:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Error interno del servidor' 
-      });
+      
+      // Determinar el tipo de respuesta
+      const acceptHeader = req.headers.accept;
+      if (acceptHeader && acceptHeader.includes('text/html')) {
+        res.status(500).send(`
+          <html>
+            <body>
+              <h1>Error al registrar el gasto</h1>
+              <p>Hubo un problema al guardar el gasto.</p>
+              <script>
+                window.parent.postMessage({ success: false, error: 'Error interno del servidor' }, '*');
+              </script>
+            </body>
+          </html>
+        `);
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          error: 'Error interno del servidor' 
+        });
+      }
     }
   });
 }
