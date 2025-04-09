@@ -422,48 +422,13 @@ const IncomeExpenseReport = () => {
     isLoadingTransactions || 
     isLoadingCategories;
 
-  // Estado local para formulario de registro rápido
-  const [expenseDescription, setExpenseDescription] = useState("");
-  const [expenseAmount, setExpenseAmount] = useState("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAttachment, setShowAttachment] = useState(false);
-  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+  // Se eliminaron todas las variables de estado relacionadas con el registro rápido de gastos
   
   // Estado para el modal de creación de categoría
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedEmoji, setSelectedEmoji] = useState("💼"); // Emoji predeterminado
   
-  // Mutación para crear transacción (gasto rápido)
-  const createTransactionMutation = useMutation({
-    mutationFn: async (transactionData: any) => {
-      const res = await apiRequest("POST", "/api/transactions", transactionData);
-      return await res.json();
-    },
-    onSuccess: () => {
-      // Limpiar formulario
-      setExpenseDescription("");
-      setExpenseAmount("");
-      setCategoryId(null);
-      setAttachmentPath(null);
-      setShowAttachment(false);
-      
-      // Actualizar datos
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
-      toast({
-        title: "Gasto registrado",
-        description: "El gasto se ha registrado correctamente.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error al registrar gasto",
-        description: error.message || "No se pudo registrar el gasto. Intente nuevamente.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Se eliminó la mutación relacionada con el registro rápido de gastos
   
   // Mutación para crear categorías
   const createCategoryMutation = useMutation({
@@ -474,9 +439,6 @@ const IncomeExpenseReport = () => {
     onSuccess: (data) => {
       // Actualizar lista de categorías
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      
-      // Seleccionar la nueva categoría en el formulario
-      setCategoryId(data.id);
       
       // Cerrar el modal
       setShowCategoryModal(false);
@@ -496,57 +458,7 @@ const IncomeExpenseReport = () => {
     },
   });
   
-  // Manejar registro rápido de gasto
-  const handleQuickExpense = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!expenseDescription || !expenseAmount) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor ingrese descripción e importe del gasto.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Ya no obligamos a tener un comprobante adjunto
-    // El gasto puede registrarse sin comprobante
-    
-    const amount = parseFloat(expenseAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Importe inválido",
-        description: "Por favor ingrese un importe válido mayor que cero.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Crear nueva transacción de tipo gasto
-    createTransactionMutation.mutate({
-      description: expenseDescription,
-      amount: amount.toString(), // Convertir a string como espera el schema
-      date: new Date(), // Enviar como Date en lugar de string
-      type: "expense",
-      categoryId: categoryId, // Agregar la categoría (etiqueta) seleccionada
-      paymentMethod: "efectivo", // Valor por defecto
-      notes: "Registro rápido",
-      attachments: attachmentPath ? [attachmentPath] : []
-    });
-    
-    setIsSubmitting(false);
-  };
-  
-  // Manejar carga de archivo
-  const handleFileUpload = (filePath: string) => {
-    setAttachmentPath(filePath);
-    toast({
-      title: "Archivo adjuntado",
-      description: "El archivo se ha adjuntado correctamente",
-    });
-  };
+  // Se eliminaron funciones relacionadas con el registro rápido de gastos
   
   // Función para exportar facturas a PDF
   const handleExportInvoicePDF = async (invoice: Invoice) => {
@@ -1059,119 +971,7 @@ const IncomeExpenseReport = () => {
                 </Button>
               </div>
               
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-red-600 to-red-400 p-3 text-white">
-                  <h3 className="text-sm font-medium flex items-center">
-                    <Receipt className="mr-2 h-4 w-4" />
-                    Registro rápido de gastos
-                  </h3>
-                </div>
-                <CardContent className="p-3">
-                  <form onSubmit={handleQuickExpense} className="flex flex-wrap items-end gap-2 mb-0">
-                    <div className="flex-1 min-w-[180px]">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Descripción
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Ej: Material de oficina"
-                        value={expenseDescription}
-                        onChange={(e) => setExpenseDescription(e.target.value)}
-                        required
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                    
-                    <div className="w-[120px]">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Importe (€)
-                      </label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={expenseAmount}
-                        onChange={(e) => setExpenseAmount(e.target.value)}
-                        required
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                    
-                    <div className="flex-1 min-w-[180px]">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Categoría
-                      </label>
-                      <div className="flex gap-1">
-                        <Select 
-                          onValueChange={(value) => setCategoryId(value !== "null" ? Number(value) : null)}
-                          defaultValue={categoryId ? categoryId.toString() : "null"}
-                        >
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue placeholder="Categoría" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="null">Sin categoría</SelectItem>
-                            {categories && categories
-                              .filter((cat) => cat.hasOwnProperty('type') ? cat.type === "expense" : true)
-                              .map((category) => (
-                                <SelectItem 
-                                  key={category.id} 
-                                  value={category.id.toString()}
-                                >
-                                  {category.icon || "💼"} {category.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Button 
-                          type="button" 
-                          size="icon"
-                          variant="outline" 
-                          className="h-8 w-8"
-                          onClick={() => setShowCategoryModal(true)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1">
-                      <div className="flex-shrink-0">
-                        {!attachmentPath ? (
-                          <FileUpload onUpload={handleFileUpload} compact={true} />
-                        ) : (
-                          <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 flex items-center gap-1 h-7 px-2">
-                            <FileText className="h-3 w-3" />
-                            <span className="text-xs">Adjunto</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-4 w-4 p-0 ml-1" 
-                              onClick={() => setAttachmentPath(null)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="bg-red-600 hover:bg-red-700 whitespace-nowrap h-8"
-                        size="sm"
-                      >
-                        {isSubmitting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <PlusCircle className="h-4 w-4 mr-1" />
-                        )}
-                        <span>Registrar</span>
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+              {/* Se eliminó el componente de registro rápido de gastos */}
               
               <Card className="shadow-md border-0 overflow-hidden">
                 <div className="bg-gradient-to-r from-red-600 to-red-400 p-4 text-white">
@@ -1435,7 +1235,7 @@ const IncomeExpenseReport = () => {
                     </div>
                     <h3 className="text-lg font-medium text-gray-700 mb-2">No hay gastos registrados</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Comienza registrando gastos usando el formulario de arriba o escaneando documentos
+                      Comienza registrando gastos a través del botón de escanear documentos
                     </p>
                     <Button 
                       onClick={() => navigate("/documents/scan")} 
