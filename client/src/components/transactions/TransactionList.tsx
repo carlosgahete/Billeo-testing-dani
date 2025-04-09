@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, 
+  Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, FileText,
   ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -546,16 +546,29 @@ const TransactionList = () => {
         
         return (
           <div className="flex justify-end space-x-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
-              title="Editar"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            {/* Mostrar botón de visualización de archivo si tiene adjuntos */}
+            {showDownloadButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  // Importamos dinámicamente para evitar problemas de dependencias cíclicas
+                  import('@/lib/attachmentService').then(({ viewExpenseOriginal }) => {
+                    const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
+                    // Para simplificar, visualizamos el primer adjunto
+                    if (transaction.attachments && transaction.attachments.length > 0) {
+                      viewExpenseOriginal(transaction.attachments[0], transaction as any, category);
+                    }
+                  });
+                }}
+                title="Ver documento"
+                className="text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            )}
             
-            {/* Mostrar botón de descarga inmediatamente después del botón de editar */}
+            {/* Mostrar botón de descarga si tiene adjuntos */}
             {showDownloadButton && (
               <Button
                 variant="ghost"
@@ -565,17 +578,26 @@ const TransactionList = () => {
                   import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
                     const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
                     // Para simplificar, descargamos el primer adjunto
-                    // En una mejora futura podríamos mostrar un menú desplegable si hay varios
                     if (transaction.attachments && transaction.attachments.length > 0) {
                       downloadExpenseOriginal(transaction.attachments[0], transaction as any, category);
                     }
                   });
                 }}
                 title="Descargar original"
+                className="text-green-700 hover:text-green-800 hover:bg-green-50"
               >
                 <Download className="h-4 w-4" />
               </Button>
             )}
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
+              title="Editar"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
             
             <DeleteTransactionDialog
               transactionId={transaction.id}
