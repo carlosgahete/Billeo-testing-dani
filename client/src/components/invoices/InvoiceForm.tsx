@@ -229,6 +229,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     queryKey: ["/api/clients"],
   });
 
+  // Fetch company data to get bank account info
+  const { data: companyData, isLoading: companyLoading } = useQuery<any>({
+    queryKey: ["/api/company"],
+  });
+
   // Fetch invoice data if in edit mode with minimal options
   const { data: invoiceData, isLoading: invoiceLoading } = useQuery({
     queryKey: ["/api/invoices", invoiceId],
@@ -266,6 +271,20 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     resolver: zodResolver(invoiceSchema),
     defaultValues: defaultFormValues,
   });
+
+  // Efecto para añadir automáticamente el número de cuenta en las notas
+  useEffect(() => {
+    // Solo aplicar cuando obtengamos los datos de la empresa y no estemos en modo edición
+    if (companyData && !isEditMode) {
+      const bankAccount = companyData.bankAccount;
+      
+      if (bankAccount) {
+        const defaultNotes = `Pago mediante transferencia bancaria a ${bankAccount}`;
+        form.setValue("notes", defaultNotes);
+        console.log("✅ Número de cuenta añadido a notas:", defaultNotes);
+      }
+    }
+  }, [companyData, form, isEditMode]);
 
   // Initialize form with invoice data when loaded - either from API or passed in
   useEffect(() => {
@@ -623,6 +642,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     // vamos a calcular los valores directamente para el envío
     const items = form.getValues("items") || [];
     const additionalTaxes = form.getValues("additionalTaxes") || [];
+    
+    // Si las notas están vacías y tenemos número de cuenta, añadirlo automáticamente
+    if ((!data.notes || data.notes.trim() === "") && companyData?.bankAccount) {
+      data.notes = `Pago mediante transferencia bancaria a ${companyData.bankAccount}`;
+      form.setValue("notes", data.notes);
+    }
     
     // Calculamos subtotales
     const updatedItems = items.map((item: any) => {
@@ -1007,13 +1032,22 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Información adicional para la factura..."
+                            placeholder={
+                              companyData?.bankAccount 
+                                ? `Pago mediante transferencia bancaria a ${companyData.bankAccount}` 
+                                : "Información adicional para la factura..."
+                            }
                             {...field}
                             value={field.value || ""}
                             className="border-gray-200 focus-visible:ring-green-500 focus-visible:ring-opacity-30 min-h-[100px]"
                           />
                         </FormControl>
                         <FormMessage />
+                        {companyData?.bankAccount && 
+                          <p className="text-sm text-gray-500 mt-1.5 italic">
+                            *Se incluirá automáticamente el número de cuenta bancaria si el campo está vacío
+                          </p>
+                        }
                       </FormItem>
                     )}
                   />
