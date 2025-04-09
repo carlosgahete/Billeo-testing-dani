@@ -903,6 +903,24 @@ const TransactionList = () => {
             actionButtons={currentTab === 'expense' ? (
               <>
 
+                {/* Exportar todos los gastos */}
+                <button 
+                  className="button-apple-secondary button-apple-sm flex items-center"
+                  onClick={() => handleExportFilteredExpenses()}
+                  disabled={transactions?.filter(t => t.type === 'expense').length === 0}
+                  title={filteredExpenseTransactions.length > 0 ? 
+                    `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
+                    `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
+                >
+                  <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    {filteredExpenseTransactions.length > 0 ? 
+                      `Exportar ${filteredExpenseTransactions.length} filtrados` : 
+                      "Exportar todos los gastos"}
+                  </span>
+                  <span className="sm:hidden">Exportar</span>
+                </button>
+
                 {/* Registro rápido de gastos */}
                 <Dialog>
                   <DialogTrigger asChild>
@@ -965,24 +983,6 @@ const TransactionList = () => {
                   <Download className="h-4 w-4 mr-1.5 sm:mr-2" />
                   <span className="hidden sm:inline">Descargar originales</span>
                   <span className="sm:hidden">Originales</span>
-                </button>
-                
-                {/* Exportar todos los gastos */}
-                <button 
-                  className="button-apple-secondary button-apple-sm flex items-center"
-                  onClick={() => handleExportFilteredExpenses()}
-                  disabled={transactions?.filter(t => t.type === 'expense').length === 0}
-                  title={filteredExpenseTransactions.length > 0 ? 
-                    `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
-                    `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
-                >
-                  <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden sm:inline">
-                    {filteredExpenseTransactions.length > 0 ? 
-                      `Exportar ${filteredExpenseTransactions.length} filtrados` : 
-                      "Exportar todos los gastos"}
-                  </span>
-                  <span className="sm:hidden">Exportar</span>
                 </button>
               </>
             ) : currentTab === 'income' ? (
