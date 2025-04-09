@@ -467,29 +467,35 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         }
       };
       
+      // Asegurarnos que los valores numéricos son strings con 2 decimales
+      const formatNumber = (num: number): string => {
+        if (typeof num !== 'number') return '0.00';
+        return num.toFixed(2);
+      };
+      
       // Transformamos las fechas y aseguramos valores correctos
       const formattedData = {
         invoiceNumber: data.invoiceNumber,
         clientId: data.clientId,
         issueDate: formatDate(data.issueDate),
         dueDate: formatDate(data.dueDate),
-        // Convertimos los números a strings para que coincidan con lo que espera el servidor
-        subtotal: data.subtotal.toString(),
-        tax: data.tax.toString(),
-        total: data.total.toString(),
+        // Convertimos los números a strings con formato correcto para que coincidan con lo que espera el servidor
+        subtotal: formatNumber(data.subtotal),
+        tax: formatNumber(data.tax),
+        total: formatNumber(data.total),
         additionalTaxes: data.additionalTaxes || [],
         status: data.status,
         notes: data.notes || null,
         attachments: attachments.length > 0 ? attachments : null,
       };
       
-      // Transformamos los items de la factura
+      // Transformamos los items de la factura con formato correcto
       const formattedItems = data.items.map(item => ({
         description: item.description,
-        quantity: item.quantity.toString(),
-        unitPrice: item.unitPrice.toString(),
-        taxRate: item.taxRate.toString(),
-        subtotal: (item.subtotal || 0).toString(),
+        quantity: formatNumber(item.quantity),
+        unitPrice: formatNumber(item.unitPrice),
+        taxRate: formatNumber(item.taxRate),
+        subtotal: formatNumber(item.subtotal || 0),
       }));
       
       console.log("🔄 Datos formateados para API:", { 
@@ -515,6 +521,17 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         // Si es un array vacío, asegurarnos de que siga siendo un array
         if (Array.isArray(processedAdditionalTaxes) && processedAdditionalTaxes.length === 0) {
           processedAdditionalTaxes = [];
+        } else if (Array.isArray(processedAdditionalTaxes)) {
+          // Formatear los valores numéricos en los impuestos adicionales
+          processedAdditionalTaxes = processedAdditionalTaxes.map(tax => {
+            if (typeof tax === 'object' && tax !== null) {
+              return {
+                ...tax,
+                amount: typeof tax.amount === 'number' ? formatNumber(tax.amount) : tax.amount
+              };
+            }
+            return tax;
+          });
         }
         
         // Mantener los campos originales si no se proporcionan nuevos valores
@@ -586,12 +603,57 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Ya tenemos calculateInvoiceTotals definida globalmente
 
   const handleSubmit = (data: InvoiceFormValues) => {
-    // Recalculate totals before submission
-    const { subtotal, tax, additionalTaxesTotal, total } = calculateInvoiceTotals(form);
+    // En lugar de confiar en la función calculateInvoiceTotals que ahora usa setTimeout,
+    // vamos a calcular los valores directamente para el envío
+    const items = form.getValues("items") || [];
+    const additionalTaxes = form.getValues("additionalTaxes") || [];
+    
+    // Calculamos subtotales
+    const updatedItems = items.map((item: any) => {
+      const quantity = toNumber(item.quantity, 0);
+      const unitPrice = toNumber(item.unitPrice, 0);
+      const subtotal = quantity * unitPrice;
+      return {
+        ...item,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        subtotal: subtotal
+      };
+    });
+    
+    // Calculamos totales de factura
+    const subtotal = updatedItems.reduce((sum: number, item: any) => sum + toNumber(item.subtotal, 0), 0);
+    const tax = updatedItems.reduce((sum: number, item: any) => {
+      const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
+      return sum + itemTax;
+    }, 0);
+    
+    // Calculamos impuestos adicionales
+    let additionalTaxesTotal = 0;
+    additionalTaxes.forEach((taxItem: any) => {
+      if (taxItem.isPercentage) {
+        const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
+        additionalTaxesTotal += percentageTax;
+      } else {
+        additionalTaxesTotal += toNumber(taxItem.amount, 0);
+      }
+    });
+    
+    const total = subtotal + tax + additionalTaxesTotal;
+    const safeTotal = Math.max(0, total);
+    
+    // Actualizamos los datos antes de enviar
     data.subtotal = subtotal;
     data.tax = tax;
-    data.total = total;
+    data.total = safeTotal;
     
+    console.log("🚀 Enviando factura con totales calculados:", {
+      subtotal: data.subtotal,
+      tax: data.tax,
+      total: data.total
+    });
+    
+    // Enviamos los datos
     mutation.mutate(data);
   };
 
