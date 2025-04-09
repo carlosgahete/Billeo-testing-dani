@@ -38,6 +38,7 @@ import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
 import TestFormat from "@/test-format";
+import SimpleExpensePage from "@/pages/SimpleExpensePage";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -179,6 +180,11 @@ function Router() {
       <Route path="/profile">
         <Layout>
           <ProtectedRoute path="/profile" component={ProfilePage} />
+        </Layout>
+      </Route>
+      <Route path="/simple-expense">
+        <Layout>
+          <ProtectedRoute path="/simple-expense" component={SimpleExpensePage} />
         </Layout>
       </Route>
       <Route path="*" component={NotFound} />

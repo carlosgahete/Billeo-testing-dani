@@ -5,6 +5,7 @@ import { configureBetterExpenseRoutes } from "./routes-expenses-basic";
 import { configureDirectExpenseRoutes } from "./routes-direct-expenses";
 import { configureOptionsRoutes } from "./routes-options";
 import { configureSimpleExpensesRoutes } from "./routes-simple-expenses";
+import { configureExpensesRoutes } from "./routes-expenses";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -80,6 +81,9 @@ app.use((req, res, next) => {
   
   // Configurar rutas ultra simples para gastos (mínimas validaciones)
   configureSimpleExpensesRoutes(app);
+  
+  // Configurar ruta principal para el nuevo formulario de gastos con FormData
+  configureExpensesRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
