@@ -895,8 +895,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
-    const result = await db.insert(transactions).values(transaction).returning();
-    return result[0];
+    console.log("[STORAGE] Creando transacción con datos:", JSON.stringify(transaction, null, 2));
+    
+    try {
+      // Asegurarnos de que amount sea un string para mantener la precisión decimal
+      const processedTransaction = {
+        ...transaction,
+        // Convertir el amount a string si es necesario
+        amount: typeof transaction.amount === 'number' 
+          ? transaction.amount.toString() 
+          : transaction.amount
+      };
+      
+      console.log("[STORAGE] Datos procesados para transacción:", JSON.stringify(processedTransaction, null, 2));
+      
+      const result = await db.insert(transactions).values(processedTransaction).returning();
+      console.log("[STORAGE] Transacción creada con ID:", result[0]?.id);
+      return result[0];
+    } catch (error) {
+      console.error("[STORAGE] Error al crear transacción:", error);
+      throw error;
+    }
   }
 
   async updateTransaction(id: number, transactionData: Partial<InsertTransaction>): Promise<Transaction | undefined> {

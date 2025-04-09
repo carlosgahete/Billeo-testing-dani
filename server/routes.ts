@@ -1309,6 +1309,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Si la factura se crea con estado "pagada", crear automáticamente una transacción de ingreso
+      if (newInvoice.status === 'paid') {
+        try {
+          console.log("[SERVER] Factura creada como pagada. Creando transacción de ingreso automática");
+          
+          // Obtener información del cliente si es necesario
+          let clientName = 'Cliente';
+          if (newInvoice.clientId) {
+            try {
+              const client = await storage.getClient(newInvoice.clientId);
+              if (client) {
+                clientName = client.name;
+              }
+            } catch (error) {
+              console.error("[SERVER] Error al obtener información del cliente:", error);
+            }
+          }
+          
+          console.log("[SERVER] Información de factura para transacción:", {
+            invoiceId: newInvoice.id,
+            invoiceNumber: newInvoice.invoiceNumber,
+            status: newInvoice.status,
+            clientId: newInvoice.clientId,
+            total: newInvoice.total,
+            userId: req.session.userId
+          });
+          
+          // Crear datos para la transacción de ingreso
+          const transactionData = {
+            userId: req.session.userId,
+            title: clientName,
+            description: `Factura ${newInvoice.invoiceNumber} cobrada`,
+            amount: newInvoice.total,
+            date: new Date(),
+            type: 'income',
+            paymentMethod: 'transfer',
+            notes: `Generado automáticamente al crear la factura ${newInvoice.invoiceNumber} como pagada`,
+            categoryId: null,
+            attachments: []
+          };
+          
+          console.log("[SERVER] Datos de transacción a crear:", JSON.stringify(transactionData, null, 2));
+          
+          // Validar y crear la transacción
+          const transactionResult = transactionFlexibleSchema.safeParse(transactionData);
+          
+          if (transactionResult.success) {
+            console.log("[SERVER] Validación exitosa, creando transacción...");
+            const createdTransaction = await storage.createTransaction(transactionResult.data);
+            console.log("[SERVER] Transacción de ingreso creada automáticamente:", {
+              transactionId: createdTransaction.id,
+              type: createdTransaction.type,
+              amount: createdTransaction.amount
+            });
+          } else {
+            console.log("[SERVER] Error al validar datos de transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
+          }
+        } catch (transactionError) {
+          console.error("[SERVER] Error al crear transacción de ingreso automática:", transactionError);
+          // No bloqueamos la creación de la factura si falla la creación de la transacción
+        }
+      }
+      
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(newInvoice.id);
       
       return res.status(201).json({ invoice: newInvoice, items: invoiceItems });
@@ -1364,11 +1427,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Verificar si el estado está cambiando a "pagado"
+      const statusChangingToPaid = invoice.status !== 'paid' && invoiceResult.data.status === 'paid';
+      
       // Actualizar la factura
       const updatedInvoice = await storage.updateInvoice(invoiceId, invoiceResult.data);
       
       if (!updatedInvoice) {
         return res.status(404).json({ message: "Failed to update invoice" });
+      }
+      
+      // Si la factura se marcó como pagada, crear una transacción de ingreso automáticamente
+      if (statusChangingToPaid) {
+        try {
+          console.log("[SERVER] Factura marcada como pagada. Creando transacción de ingreso automática");
+          
+          // Obtener información del cliente si es necesario
+          let clientName = 'Cliente';
+          if (invoice.clientId) {
+            try {
+              const client = await storage.getClient(invoice.clientId);
+              if (client) {
+                clientName = client.name;
+              }
+            } catch (error) {
+              console.error("[SERVER] Error al obtener información del cliente:", error);
+            }
+          }
+          
+          console.log("[SERVER] Información de factura actualizada para transacción:", {
+            invoiceId: updatedInvoice.id,
+            invoiceNumber: updatedInvoice.invoiceNumber,
+            status: updatedInvoice.status,
+            clientId: updatedInvoice.clientId,
+            total: updatedInvoice.total,
+            userId: req.session.userId
+          });
+          
+          // Crear datos para la transacción de ingreso
+          const transactionData = {
+            userId: req.session.userId,
+            title: clientName,
+            description: `Factura ${updatedInvoice.invoiceNumber} cobrada`,
+            amount: updatedInvoice.total,
+            date: new Date(),
+            type: 'income',
+            paymentMethod: 'transfer',
+            notes: `Generado automáticamente al marcar la factura ${updatedInvoice.invoiceNumber} como pagada`,
+            categoryId: null,
+            attachments: []
+          };
+          
+          console.log("[SERVER] Datos de transacción a crear:", JSON.stringify(transactionData, null, 2));
+          
+          // Validar y crear la transacción
+          const transactionResult = transactionFlexibleSchema.safeParse(transactionData);
+          
+          if (transactionResult.success) {
+            console.log("[SERVER] Validación exitosa, creando transacción por actualización de factura...");
+            const createdTransaction = await storage.createTransaction(transactionResult.data);
+            console.log("[SERVER] Transacción de ingreso creada automáticamente:", {
+              transactionId: createdTransaction.id,
+              type: createdTransaction.type,
+              amount: createdTransaction.amount
+            });
+          } else {
+            console.log("[SERVER] Error al validar datos de transacción:", JSON.stringify(transactionResult.error.errors, null, 2));
+          }
+        } catch (transactionError) {
+          console.error("[SERVER] Error al crear transacción de ingreso automática:", transactionError);
+          // No bloqueamos la actualización de la factura si falla la creación de la transacción
+        }
       }
       
       // Procesar los items solo si se proporcionan
