@@ -3,39 +3,42 @@ import { storage } from './storage';
 
 export function configureSimpleExpensesRoutes(app: express.Express) {
   app.post('/api/expenses/simple', async (req: express.Request, res: express.Response) => {
-    console.log('Recibida solicitud para gastos simple con body:', JSON.stringify(req.body));
+    console.log('Recibida solicitud para gastos simple con body:', req.body);
     
     try {
       // ID de usuario fijo para pruebas
       const userId = 1;
       
-      // Extraer datos básicos
-      let { description, amount, attachments = [] } = req.body;
+      // Extraer datos básicos - soporta tanto JSON como FormData
+      let description = req.body.description || "";
+      let amount = req.body.amount || "0.00";
+      let attachments: string[] = [];
       
-      // Si es un formulario tradicional, los attachments vendrán como string
-      if (typeof attachments === 'string') {
-        attachments = [attachments];
-      }
-      
-      console.log('Datos extraídos:', { description, amount, attachments });
-      
-      // Validaciones mínimas - si no hay descripción, usar valor por defecto
-      if (!description) {
-        description = "Gasto manual";
-      }
-      
-      // Si el importe no es válido, usar valor por defecto
-      if (!amount) {
-        amount = "0.00";
-      }
-      
-      // Intentar hacer un parsing del amount por si acaso
-      try {
-        if (typeof amount !== 'string') {
-          amount = amount.toString();
+      // Normalizar attachments según el tipo de entrada
+      if (req.body.attachments) {
+        if (typeof req.body.attachments === 'string') {
+          // Es un único string (FormData o JSON simple)
+          attachments = [req.body.attachments];
+        } else if (Array.isArray(req.body.attachments)) {
+          // Es un array (JSON normal)
+          attachments = req.body.attachments;
         }
-      } catch (e) {
-        amount = "0.00";
+      }
+      
+      console.log('Datos extraídos y normalizados:', { description, amount, attachments });
+      
+      // Validaciones mínimas
+      if (!description) {
+        description = "Gasto sin descripción";
+      }
+      
+      // Normalizar el formato del importe (asegurar que sea string)
+      if (typeof amount !== 'string') {
+        try {
+          amount = amount.toString();
+        } catch (e) {
+          amount = "0.00";
+        }
       }
       
       // Crear la transacción
@@ -56,11 +59,13 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
       
       console.log('Transacción simple creada correctamente:', transaction);
       
-      // Determinar el tipo de respuesta que espera el cliente
-      const acceptHeader = req.headers.accept;
-      if (acceptHeader && acceptHeader.includes('text/html')) {
-        // El cliente espera HTML (probablemente un formulario tradicional)
-        res.status(200).send(`
+      // Determinar el tipo de respuesta según headers
+      const contentType = req.get('Content-Type') || '';
+      
+      // Si es multipart (FormData) o el cliente espera HTML
+      if (contentType.includes('multipart/form-data') || 
+          (req.headers.accept && req.headers.accept.includes('text/html'))) {
+        res.status(201).send(`
           <html>
             <body>
               <h1>Gasto registrado correctamente</h1>
@@ -72,7 +77,7 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
           </html>
         `);
       } else {
-        // El cliente espera JSON
+        // Por defecto enviar JSON
         res.status(201).json({
           success: true,
           transaction
@@ -82,9 +87,11 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
     } catch (error) {
       console.error('Error en endpoint simple de gastos:', error);
       
-      // Determinar el tipo de respuesta
-      const acceptHeader = req.headers.accept;
-      if (acceptHeader && acceptHeader.includes('text/html')) {
+      // Determinar el tipo de respuesta según el Content-Type
+      const contentType = req.get('Content-Type') || '';
+      
+      if (contentType.includes('multipart/form-data') || 
+          (req.headers.accept && req.headers.accept.includes('text/html'))) {
         res.status(500).send(`
           <html>
             <body>

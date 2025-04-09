@@ -59,17 +59,17 @@ const MiniExpenseForm: React.FC<MiniExpenseFormProps> = ({ onSuccess }) => {
       const uploadResult = await uploadResponse.json();
       const filePath = uploadResult.filePath;
       
-      // 2. Crear el gasto con el archivo subido
+      // 2. Crear el gasto con el archivo subido - usando un enfoque más directo
+      // Crear un nuevo FormData para mayor compatibilidad
+      const expenseFormData = new FormData();
+      expenseFormData.append('description', description.trim());
+      expenseFormData.append('amount', numericAmount.toFixed(2));
+      expenseFormData.append('attachments', filePath);
+      
+      // Enviar usando FormData
       const expenseResponse = await fetch('/api/expenses/simple', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          description: description.trim(),
-          amount: numericAmount.toFixed(2),
-          attachments: [filePath]
-        })
+        body: expenseFormData
       });
       
       if (!expenseResponse.ok) {
