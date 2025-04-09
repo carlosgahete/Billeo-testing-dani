@@ -604,10 +604,15 @@ const TransactionList = () => {
         .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0)
     : 0;
   
-  // IMPORTANTE: No sumamos los ingresos para evitar duplicación. 
-  // Las facturas pagadas ya generan transacciones de ingreso automáticamente,
-  // así que solo usamos el valor de las transacciones para el total
-  const incomeTotal = transactionIncomeTotal;
+  // Si las transacciones están vacías (0), usamos el total de facturas pagadas
+  // Este cambio es necesario porque las facturas pagadas deberían generar transacciones automáticamente,
+  // pero parece que esto no está ocurriendo correctamente
+  console.log("Cálculo de ingresos totales:", {
+    transactionIncomeTotal,
+    invoiceIncomeTotal
+  });
+  
+  const incomeTotal = transactionIncomeTotal > 0 ? transactionIncomeTotal : invoiceIncomeTotal;
     
   const expenseTotal = !isLoading && Array.isArray(transactions)
     ? transactions
@@ -716,6 +721,12 @@ const TransactionList = () => {
             <p className="text-3xl font-semibold text-[#1D1D1F] mb-5 pl-1">
               {formatCurrency(incomeTotal, "income")}
             </p>
+            {/* Debug message to show the source of the income amount */}
+            {transactionIncomeTotal === 0 && invoiceIncomeTotal > 0 && (
+              <p className="text-xs text-green-700 mb-2">
+                Usando totales de facturas pagadas como ingresos
+              </p>
+            )}
             
             <div className="grid grid-cols-2 gap-3 mt-auto">
               <div className="flex flex-col p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl transition-all hover:bg-[#34C759]/10">
