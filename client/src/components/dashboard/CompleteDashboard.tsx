@@ -77,10 +77,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   };
 
   // Obtener los datos de las estadísticas
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+  const { data: stats, isLoading: statsLoading, refetch: refetchDashboardStats } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard", { year, period }],
     queryFn: async () => {
-      const timestamp = Date.now();
+      const timestamp = Date.now(); // Timestamp para evitar cache
+      console.log("Fetching dashboard stats with timestamp:", timestamp);
       const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}&nocache=${timestamp}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -89,7 +90,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         }
       });
       if (!res.ok) throw new Error("Error al cargar estadísticas");
-      return res.json();
+      const data = await res.json();
+      console.log("Dashboard stats received:", data);
+      return data;
     },
     refetchOnWindowFocus: true,
     refetchOnMount: "always",
@@ -98,6 +101,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     staleTime: 0, // Sin tiempo de caducidad - siempre considerar los datos obsoletos
     gcTime: 0, // Sin tiempo de recolección de basura - limpiar inmediatamente
   });
+  
+  // Forzar un refresco al cargar el componente
+  useEffect(() => {
+    console.log("Forzando refresco de datos del dashboard");
+    refetchDashboardStats();
+  }, []);
   
   // Obtener las transacciones para el análisis de gastos por categoría
   const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
@@ -148,6 +157,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const retencionesIrpf = dashboardStats.irpfRetenidoIngresos || 0;
   // Obtener el IRPF retenido en facturas de gastos
   const irpfRetenciones = dashboardStats.totalWithholdings || 0;
+  
+  // Imprimir los datos para debug
+  console.log("Dashboard stats", {
+    income: dashboardStats.income,
+    expenses: dashboardStats.expenses,
+    baseImponible: baseImponibleIngresos,
+    result: finalResult
+  });
   
   // Comprobar signos y valores para colores
   const isPositiveResult = finalResult >= 0;
