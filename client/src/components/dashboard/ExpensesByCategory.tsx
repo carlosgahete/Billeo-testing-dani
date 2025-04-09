@@ -179,10 +179,10 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Lista de categorías */}
-          <div className="p-2 overflow-y-auto h-[360px] flex items-center">
+          <div className="p-2 pr-5 overflow-y-auto h-[360px] flex items-center">
             <div className="space-y-4 w-full">
               {data.map((item, index) => (
-                <div key={index} className="flex items-start gap-2">
+                <div key={index} className="flex items-start gap-4">
                   <div 
                     className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" 
                     style={{ 
