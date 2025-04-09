@@ -40,12 +40,8 @@ import FileUpload from "@/components/common/FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExpenseFilters from "@/components/transactions/ExpenseFilters";
 import IncomeFilters from "@/components/transactions/IncomeFilters";
-import QuickExpenseForm from "@/components/transactions/QuickExpenseForm";
 import SimpleExpenseForm from "@/components/transactions/SimpleExpenseForm";
-import BasicExpenseForm from "@/components/transactions/BasicExpenseForm";
-import UltraBasicExpenseForm from "@/components/transactions/UltraBasicExpenseForm";
-import HardcodedExpenseForm from "@/components/transactions/HardcodedExpenseForm";
-import UltraSimpleExpenseForm from "@/components/transactions/UltraSimpleExpenseForm";
+// Se eliminaron las importaciones de los formularios de gasto rápido obsoletos
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
@@ -949,28 +945,7 @@ const TransactionList = () => {
                   <span className="sm:hidden">Originales</span>
                 </button>
                 
-                {/* Registro rápido de gastos */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button 
-                      className="button-apple-danger button-apple-sm flex items-center"
-                    >
-                      <TrendingDown className="h-4 w-4 mr-1.5 sm:mr-2" />
-                      <span className="hidden sm:inline">Registro rápido de gastos</span>
-                      <span className="sm:hidden">Gasto rápido</span>
-                    </button>
-                  </DialogTrigger>
-                  
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Registro rápido de gastos</DialogTitle>
-                    </DialogHeader>
-                    <BasicExpenseForm onSuccess={() => {
-                      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-                    }} />
-                  </DialogContent>
-                </Dialog>
+                {/* Se eliminó el registro rápido de gastos */}
               </>
             ) : currentTab === 'income' ? (
               <>
