@@ -167,13 +167,17 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
         date: new Date().toISOString(),
         categoryId: data.categoryId && data.categoryId !== "0" ? parseInt(data.categoryId, 10) : null,
         attachments: [filePath], // Adjuntar el documento
-        additionalTaxes: JSON.stringify(additionalTaxes) // Incluir los impuestos
+        additionalTaxes: additionalTaxes // Incluir los impuestos directamente como array
       };
 
       // Enviar a la API
-      await apiRequest('POST', '/api/transactions', {
-        body: JSON.stringify(transactionData),
-      });
+      const apiResponse = await apiRequest('POST', '/api/transactions', transactionData);
+      
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        console.error("Error respuesta API:", errorText);
+        throw new Error(`Error al crear gasto: ${apiResponse.status} ${apiResponse.statusText}`);
+      }
 
       // Mostrar mensaje de éxito
       toast({

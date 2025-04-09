@@ -14,10 +14,23 @@ export async function apiRequest<T = any>(
 ): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
   
+  // Preparar los headers siempre con el mismo formato para evitar errores de tipo
+  const headers: Record<string, string> = {};
+  
+  // Si hay datos, añadir Content-Type
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Si data ya es un objeto, lo convertimos a JSON string
+  const bodyData = data ? 
+    (typeof data === 'string' ? data : JSON.stringify(data)) 
+    : undefined;
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body: bodyData,
     credentials: "include",
   });
   
