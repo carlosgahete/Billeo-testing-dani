@@ -287,19 +287,48 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
     processTransactions(filtered);
   };
   
+  // Extraer los años disponibles de las transacciones
+  const getAvailableYears = (txs: any[]): number[] => {
+    const yearsSet = new Set<number>();
+    
+    txs.forEach(tx => {
+      if (tx.date) {
+        const txDate = new Date(tx.date);
+        yearsSet.add(txDate.getFullYear());
+      }
+    });
+    
+    // Convertir a array y ordenar
+    return Array.from(yearsSet).sort((a, b) => b - a); // Ordenar de más reciente a más antiguo
+  };
+  
+  // Obtener los años disponibles
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  
   // Inicialización
   useEffect(() => {
+    console.log("Inicializando componente ExpensesByCategory");
+    
+    // Detectar años disponibles
+    const years = getAvailableYears(transactions);
+    console.log("Años disponibles:", years);
+    setAvailableYears(years);
+    
+    // Usar el año más reciente si no se especifica uno
+    const defaultYear = years.length > 0 ? years[0] : new Date().getFullYear();
+    const initialPeriod = period || `${defaultYear}-all`;
+    
     // Configurar período y etiqueta inicial
-    setSelectedPeriod(period || '2025-all');
-    setPeriodLabel(getPeriodLabel(period || '2025-all'));
+    setSelectedPeriod(initialPeriod);
+    setPeriodLabel(getPeriodLabel(initialPeriod));
     
     // Filtrar transacciones iniciales por período
-    const filtered = filterTransactionsByPeriod(period || '2025-all', transactions);
+    const filtered = filterTransactionsByPeriod(initialPeriod, transactions);
     setFilteredTransactions(filtered);
     
     // Procesar las transacciones iniciales
     processTransactions(filtered);
-  }, []);
+  }, [transactions]);
   
   // Efecto para filtrar los datos según las categorías seleccionadas
   useEffect(() => {
@@ -401,23 +430,34 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
                           <SelectValue placeholder="Seleccionar período" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="2025-all">Año 2025 completo</SelectItem>
-                          <SelectItem value="2025-q1">Q1 2025 (Ene-Mar)</SelectItem>
-                          <SelectItem value="2025-q2">Q2 2025 (Abr-Jun)</SelectItem>
-                          <SelectItem value="2025-q3">Q3 2025 (Jul-Sep)</SelectItem>
-                          <SelectItem value="2025-q4">Q4 2025 (Oct-Dic)</SelectItem>
-                          <SelectItem value="2025-1">Enero 2025</SelectItem>
-                          <SelectItem value="2025-2">Febrero 2025</SelectItem>
-                          <SelectItem value="2025-3">Marzo 2025</SelectItem>
-                          <SelectItem value="2025-4">Abril 2025</SelectItem>
-                          <SelectItem value="2025-5">Mayo 2025</SelectItem>
-                          <SelectItem value="2025-6">Junio 2025</SelectItem>
-                          <SelectItem value="2025-7">Julio 2025</SelectItem>
-                          <SelectItem value="2025-8">Agosto 2025</SelectItem>
-                          <SelectItem value="2025-9">Septiembre 2025</SelectItem>
-                          <SelectItem value="2025-10">Octubre 2025</SelectItem>
-                          <SelectItem value="2025-11">Noviembre 2025</SelectItem>
-                          <SelectItem value="2025-12">Diciembre 2025</SelectItem>
+                          {/* Generar opciones para cada año disponible */}
+                          {availableYears.map(year => (
+                            <React.Fragment key={year}>
+                              <SelectItem value={`${year}-all`}>Año {year} completo</SelectItem>
+                              <SelectItem value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>
+                              <SelectItem value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>
+                              <SelectItem value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>
+                              <SelectItem value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>
+                              <SelectItem value={`${year}-1`}>Enero {year}</SelectItem>
+                              <SelectItem value={`${year}-2`}>Febrero {year}</SelectItem>
+                              <SelectItem value={`${year}-3`}>Marzo {year}</SelectItem>
+                              <SelectItem value={`${year}-4`}>Abril {year}</SelectItem>
+                              <SelectItem value={`${year}-5`}>Mayo {year}</SelectItem>
+                              <SelectItem value={`${year}-6`}>Junio {year}</SelectItem>
+                              <SelectItem value={`${year}-7`}>Julio {year}</SelectItem>
+                              <SelectItem value={`${year}-8`}>Agosto {year}</SelectItem>
+                              <SelectItem value={`${year}-9`}>Septiembre {year}</SelectItem>
+                              <SelectItem value={`${year}-10`}>Octubre {year}</SelectItem>
+                              <SelectItem value={`${year}-11`}>Noviembre {year}</SelectItem>
+                              <SelectItem value={`${year}-12`}>Diciembre {year}</SelectItem>
+                            </React.Fragment>
+                          ))}
+                          {/* Si no hay años disponibles, mostrar el año actual */}
+                          {availableYears.length === 0 && (
+                            <React.Fragment>
+                              <SelectItem value={`${new Date().getFullYear()}-all`}>Año {new Date().getFullYear()} completo</SelectItem>
+                            </React.Fragment>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -511,23 +551,34 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
                         <SelectValue placeholder="Seleccionar período" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="2025-all">Año 2025 completo</SelectItem>
-                        <SelectItem value="2025-q1">Q1 2025 (Ene-Mar)</SelectItem>
-                        <SelectItem value="2025-q2">Q2 2025 (Abr-Jun)</SelectItem>
-                        <SelectItem value="2025-q3">Q3 2025 (Jul-Sep)</SelectItem>
-                        <SelectItem value="2025-q4">Q4 2025 (Oct-Dic)</SelectItem>
-                        <SelectItem value="2025-1">Enero 2025</SelectItem>
-                        <SelectItem value="2025-2">Febrero 2025</SelectItem>
-                        <SelectItem value="2025-3">Marzo 2025</SelectItem>
-                        <SelectItem value="2025-4">Abril 2025</SelectItem>
-                        <SelectItem value="2025-5">Mayo 2025</SelectItem>
-                        <SelectItem value="2025-6">Junio 2025</SelectItem>
-                        <SelectItem value="2025-7">Julio 2025</SelectItem>
-                        <SelectItem value="2025-8">Agosto 2025</SelectItem>
-                        <SelectItem value="2025-9">Septiembre 2025</SelectItem>
-                        <SelectItem value="2025-10">Octubre 2025</SelectItem>
-                        <SelectItem value="2025-11">Noviembre 2025</SelectItem>
-                        <SelectItem value="2025-12">Diciembre 2025</SelectItem>
+                        {/* Generar opciones para cada año disponible */}
+                        {availableYears.map(year => (
+                          <React.Fragment key={year}>
+                            <SelectItem value={`${year}-all`}>Año {year} completo</SelectItem>
+                            <SelectItem value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>
+                            <SelectItem value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>
+                            <SelectItem value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>
+                            <SelectItem value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>
+                            <SelectItem value={`${year}-1`}>Enero {year}</SelectItem>
+                            <SelectItem value={`${year}-2`}>Febrero {year}</SelectItem>
+                            <SelectItem value={`${year}-3`}>Marzo {year}</SelectItem>
+                            <SelectItem value={`${year}-4`}>Abril {year}</SelectItem>
+                            <SelectItem value={`${year}-5`}>Mayo {year}</SelectItem>
+                            <SelectItem value={`${year}-6`}>Junio {year}</SelectItem>
+                            <SelectItem value={`${year}-7`}>Julio {year}</SelectItem>
+                            <SelectItem value={`${year}-8`}>Agosto {year}</SelectItem>
+                            <SelectItem value={`${year}-9`}>Septiembre {year}</SelectItem>
+                            <SelectItem value={`${year}-10`}>Octubre {year}</SelectItem>
+                            <SelectItem value={`${year}-11`}>Noviembre {year}</SelectItem>
+                            <SelectItem value={`${year}-12`}>Diciembre {year}</SelectItem>
+                          </React.Fragment>
+                        ))}
+                        {/* Si no hay años disponibles, mostrar el año actual */}
+                        {availableYears.length === 0 && (
+                          <React.Fragment>
+                            <SelectItem value={`${new Date().getFullYear()}-all`}>Año {new Date().getFullYear()} completo</SelectItem>
+                          </React.Fragment>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
