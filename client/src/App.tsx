@@ -37,6 +37,7 @@ import SelectUserPage from "@/pages/admin/select-user";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
+import TestFormat from "@/test-format";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
