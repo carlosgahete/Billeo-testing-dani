@@ -1,68 +1,96 @@
-import React, { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
 
 interface BasicExpenseFormProps {
   onSuccess?: () => void;
 }
 
-const BasicExpenseForm: React.FC<BasicExpenseFormProps> = ({ onSuccess }) => {
+export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [description, setDescription] = useState('');
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validación básica del formulario
-  const isFormValid = () => {
-    if (!description || description.length < 3) {
-      setError('La descripción debe tener al menos 3 caracteres');
-      return false;
-    }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     
-    if (!amount || isNaN(parseFloat(amount.replace(',', '.')))) {
-      setError('Debes introducir un importe válido');
-      return false;
-    }
-    
-    if (!selectedFile) {
-      setError('Debes adjuntar un documento del gasto');
-      return false;
-    }
-    
-    setError(null);
-    return true;
-  };
-
-  // Manejador para cambios en el archivo
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setSelectedFile(file);
-  };
-
-  // Envío del formulario
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    
-    if (!isFormValid()) {
+    // 1. VALIDACIÓN
+    const amountClean = amount.replace(',', '.');
+    const amountPattern = /^\d+(\.\d{1,2})?$/;
+    if (!amountPattern.test(amountClean)) {
+      toast({
+        title: "Formato incorrecto",
+        description: "El importe no es válido. Debe ser un número con máximo dos decimales.",
+        variant: "destructive"
+      });
       return;
     }
-    
+
+    if (isNaN(new Date(date).getTime())) {
+      toast({
+        title: "Fecha inválida",
+        description: "La fecha introducida no es válida.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!description || description.trim().length < 3) {
+      toast({
+        title: "Descripción requerida",
+        description: "Debes incluir una descripción con al menos 3 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!attachment) {
+      toast({
+        title: "Archivo requerido",
+        description: "Debes adjuntar un documento para el gasto.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+    if (attachment && !allowedMimeTypes.includes(attachment.type)) {
+      toast({
+        title: "Formato no soportado",
+        description: "El archivo debe ser un PDF, PNG o JPG.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('Gasto a enviar:', { 
+      amount: amountClean, 
+      date, 
+      description, 
+      attachment: {
+        name: attachment.name,
+        type: attachment.type,
+        size: attachment.size
+      }
+    });
+
     setIsSubmitting(true);
-    
+
     try {
-      // 1. Subir el archivo
+      // 2. SUBIR ARCHIVO
       const formData = new FormData();
-      formData.append('file', selectedFile!);
+      formData.append('file', attachment);
       
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
       
       if (!uploadResponse.ok) {
@@ -70,67 +98,60 @@ const BasicExpenseForm: React.FC<BasicExpenseFormProps> = ({ onSuccess }) => {
       }
       
       const uploadResult = await uploadResponse.json();
-      const filePath = uploadResult.path;
+      const filePath = uploadResult.filePath;
       
-      // 2. Crear la transacción con los datos mínimos
-      const numericAmount = parseFloat(amount.replace(',', '.'));
-      
-      const transactionData = {
-        description,
-        title: `Gasto: ${description.substring(0, 30)}`,
-        type: 'expense',
-        amount: numericAmount.toString(),
-        date: new Date().toISOString(),
-        attachments: [filePath],
-        additionalTaxes: null // Explícitamente enviamos null para evitar problemas
+      // 3. CREAR GASTO
+      const expenseData = {
+        description: description.trim(),
+        amount: parseFloat(amountClean),
+        date: new Date(date).toISOString(),
+        attachments: [filePath]
       };
       
-      console.log('Enviando datos al servidor:', transactionData);
+      console.log('Enviando datos del gasto:', expenseData);
       
-      // 3. Enviar la transacción al servidor
-      const response = await fetch('/api/transactions', {
+      const expenseResponse = await fetch('/api/expenses/simple', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(transactionData),
-        credentials: 'include'
+        body: JSON.stringify(expenseData)
       });
       
-      console.log('Respuesta del servidor:', response.status, response.statusText);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error del servidor:', errorText);
-        throw new Error(`Error al crear el gasto: ${response.status}`);
+      if (!expenseResponse.ok) {
+        const errorText = await expenseResponse.text();
+        throw new Error(`Error al crear el gasto: ${errorText}`);
       }
       
-      // 4. Notificar éxito
+      const result = await expenseResponse.json();
+      console.log('Respuesta de creación de gasto:', result);
+      
+      // 4. ÉXITO
       toast({
-        title: 'Gasto registrado correctamente',
-        description: `Se ha registrado un gasto de ${amount}€`,
-        variant: 'default',
+        title: "Gasto creado",
+        description: `Se ha registrado un gasto de ${parseFloat(amountClean).toFixed(2)}€`,
       });
       
-      // 5. Resetear formulario
-      setDescription('');
+      // 5. RESETEAR FORMULARIO
       setAmount('');
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      setDescription('');
+      setAttachment(null);
       
-      // 6. Llamar al callback de éxito
+      // 6. ACTUALIZAR DATOS
       if (onSuccess) {
         onSuccess();
+      } else {
+        // Actualizar las consultas si no hay callback
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       }
       
-    } catch (error) {
-      console.error('Error al crear el gasto:', error);
+    } catch (error: any) {
+      console.error('Error detallado:', error);
       toast({
-        title: 'Error al registrar el gasto',
-        description: 'Hubo un problema al guardar el gasto. Por favor, intenta de nuevo.',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Ocurrió un error al crear el gasto",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -140,7 +161,36 @@ const BasicExpenseForm: React.FC<BasicExpenseFormProps> = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-2">
       <div>
-        <Label htmlFor="description">Descripción del gasto</Label>
+        <Label htmlFor="amount">Importe (€)</Label>
+        <Input
+          id="amount"
+          value={amount}
+          onChange={(e) => {
+            // Solo permitir números, coma y punto
+            const value = e.target.value.replace(/[^0-9.,]/g, '');
+            // Reemplazar múltiples comas o puntos
+            const cleaned = value.replace(/[.,](?=.*[.,])/g, '');
+            setAmount(cleaned);
+          }}
+          placeholder="0,00"
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">Formato: 123,45 o 123.45</p>
+      </div>
+
+      <div>
+        <Label htmlFor="date">Fecha</Label>
+        <Input
+          id="date"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="description">Descripción</Label>
         <Input
           id="description"
           value={description}
@@ -150,38 +200,26 @@ const BasicExpenseForm: React.FC<BasicExpenseFormProps> = ({ onSuccess }) => {
           minLength={3}
         />
       </div>
-      
+
       <div>
-        <Label htmlFor="amount">Importe total (€)</Label>
-        <Input
-          id="amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0,00"
-          required
-          inputMode="decimal"
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="file">Documento del gasto <span className="text-red-500">*</span></Label>
+        <Label htmlFor="file">Documento del gasto</Label>
         <Input
           id="file"
           type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          required
           accept=".pdf,.jpg,.jpeg,.png"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              setAttachment(e.target.files[0]);
+            }
+          }}
+          required
         />
+        <p className="text-xs text-gray-500 mt-1">Formatos: PDF, PNG o JPG</p>
       </div>
-      
-      {error && (
-        <div className="text-red-500 text-sm">{error}</div>
-      )}
-      
+
       <div className="flex justify-end pt-2">
         <Button 
-          type="submit"
+          type="submit" 
           disabled={isSubmitting}
           className="bg-[#FF3B30] hover:bg-red-600 text-white"
         >
@@ -197,6 +235,4 @@ const BasicExpenseForm: React.FC<BasicExpenseFormProps> = ({ onSuccess }) => {
       </div>
     </form>
   );
-};
-
-export default BasicExpenseForm;
+}
