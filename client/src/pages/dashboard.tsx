@@ -304,9 +304,9 @@ const Dashboard = () => {
                 <button
                   id="yearButton"
                   onClick={() => document.getElementById('yearMenu')?.classList.toggle('hidden')}
-                  className="flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
                 >
-                  <span className="text-white text-sm font-medium">{year}</span>
+                  <span className="text-white text-sm font-medium mr-1">{year}</span>
                   <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
                 </button>
                 <div 
@@ -334,9 +334,9 @@ const Dashboard = () => {
                 <button
                   id="periodButton"
                   onClick={() => document.getElementById('periodMenu')?.classList.toggle('hidden')}
-                  className="flex items-center gap-1 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-150 px-4 py-1.5 rounded-full backdrop-blur-md border-0"
                 >
-                  <span className="text-white text-sm font-medium">
+                  <span className="text-white text-sm font-medium mr-1">
                     {period === "all" ? "Todo el año" : 
                      period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
                      period === "m1" ? "Enero" :
