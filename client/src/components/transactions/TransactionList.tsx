@@ -597,15 +597,17 @@ const TransactionList = () => {
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
   
-  // Ingresos de facturas pagadas  
+  // Ingresos de facturas pagadas - para mostrar en el panel de facturas, pero no para el total
   const invoiceIncomeTotal = !isLoading && Array.isArray(invoices)
     ? invoices
         .filter((inv: Invoice) => inv.status === "paid")
         .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0)
     : 0;
   
-  // Total combinado de ingresos (transacciones + facturas)
-  const incomeTotal = transactionIncomeTotal + invoiceIncomeTotal;
+  // IMPORTANTE: No sumamos los ingresos para evitar duplicación. 
+  // Las facturas pagadas ya generan transacciones de ingreso automáticamente,
+  // así que solo usamos el valor de las transacciones para el total
+  const incomeTotal = transactionIncomeTotal;
     
   const expenseTotal = !isLoading && Array.isArray(transactions)
     ? transactions

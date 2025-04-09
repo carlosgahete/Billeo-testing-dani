@@ -3142,9 +3142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
         
-      // Calculate total income - consideramos ingresos de facturas Y de transacciones
-      // Sumamos ambos para tener un cálculo completo
-      const income = invoiceIncome + transactionIncome;
+      // Corrección: NO sumamos ingresos de facturas y transacciones para evitar duplicación
+      // Las facturas pagadas generan transacciones de ingreso automáticamente
+      // Por lo tanto, usamos solo el ingreso de transacciones que ya incluye las facturas pagadas
+      const income = transactionIncome;
       
       // Calcular el total de gastos incluyendo todas las transacciones
       let expenses = transactionExpenses;
