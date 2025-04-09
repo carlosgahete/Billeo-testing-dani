@@ -299,16 +299,15 @@ const Dashboard = () => {
         >
           <div className="flex justify-end items-center mt-1">
             <div className="flex gap-3">
-              {/* Botón de año completamente nuevo */}
+              {/* Botón de año COMPLETAMENTE rediseñado - sin flechas */}
               <div className="relative">
-                <button
+                <div
                   id="yearButton"
                   onClick={() => document.getElementById('yearMenu')?.classList.toggle('hidden')}
-                  className="bg-white/10 hover:bg-white/20 transition-all duration-150 py-1.5 px-4 rounded-full backdrop-blur-md border-0"
+                  className="cursor-pointer bg-blue-500/80 hover:bg-blue-600/80 py-2 px-5 rounded-md text-center border border-blue-300/30"
                 >
-                  <span className="text-white text-sm font-semibold mr-2">{year}</span>
-                  <span className="inline-block text-white text-xs">▼</span>
-                </button>
+                  <div className="font-medium text-white">{year}</div>
+                </div>
                 <div 
                   id="yearMenu"
                   className="hidden absolute right-0 mt-2 w-[100px] py-1 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden z-50"
@@ -329,14 +328,14 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {/* Botón de período completamente nuevo */}
+              {/* Botón de período COMPLETAMENTE rediseñado - sin flechas */}
               <div className="relative">
-                <button
+                <div
                   id="periodButton"
                   onClick={() => document.getElementById('periodMenu')?.classList.toggle('hidden')}
-                  className="bg-white/10 hover:bg-white/20 transition-all duration-150 py-1.5 px-4 rounded-full backdrop-blur-md border-0"
+                  className="cursor-pointer bg-blue-500/80 hover:bg-blue-600/80 py-2 px-5 rounded-md text-center border border-blue-300/30"
                 >
-                  <span className="text-white text-sm font-semibold mr-2">
+                  <div className="font-medium text-white">
                     {period === "all" ? "Todo el año" : 
                      period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
                      period === "m1" ? "Enero" :
@@ -350,9 +349,8 @@ const Dashboard = () => {
                      period === "m9" ? "Septiembre" :
                      period === "m10" ? "Octubre" :
                      period === "m11" ? "Noviembre" : "Diciembre"}
-                  </span>
-                  <span className="inline-block text-white text-xs">▼</span>
-                </button>
+                  </div>
+                </div>
                 <div 
                   id="periodMenu"
                   className="hidden absolute right-0 mt-2 w-[170px] py-1 bg-white/90 backdrop-blur-xl rounded-xl border-0 shadow-lg overflow-hidden z-50"
