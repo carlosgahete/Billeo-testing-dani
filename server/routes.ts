@@ -3142,10 +3142,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
         
-      // Corrección: NO sumamos ingresos de facturas y transacciones para evitar duplicación
-      // Las facturas pagadas generan transacciones de ingreso automáticamente
-      // Por lo tanto, usamos solo el ingreso de transacciones que ya incluye las facturas pagadas
-      const income = transactionIncome;
+      // Calculamos los ingresos totales.
+      // Idealmente, las facturas pagadas deberían generar transacciones de ingreso automáticamente,
+      // pero parece que en este caso no está ocurriendo, así que usamos el ingreso de facturas
+      // si las transacciones de ingreso son 0.
+      const income = transactionIncome > 0 ? transactionIncome : invoiceIncome;
       
       // Calcular el total de gastos incluyendo todas las transacciones
       let expenses = transactionExpenses;
