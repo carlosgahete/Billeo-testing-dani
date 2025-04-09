@@ -1328,6 +1328,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
+          // Determinar la categoría adecuada (buscar una categoría de tipo ingreso)
+          let incomeCategory = null;
+          try {
+            const categories = await storage.getCategoriesByUserId(req.session.userId);
+            const defaultCategory = categories.find(cat => cat.type === 'income');
+            if (defaultCategory) {
+              incomeCategory = defaultCategory.id;
+              console.log(`[SERVER] Usando categoría de ingreso: ${defaultCategory.name} (ID: ${defaultCategory.id})`);
+            }
+          } catch (error) {
+            console.error("[SERVER] Error al buscar categoría de ingreso:", error);
+          }
+          
           console.log("[SERVER] ⭐⭐⭐ Información de factura para transacción:", JSON.stringify({
             invoiceId: newInvoice.id,
             invoiceNumber: newInvoice.invoiceNumber,
@@ -1350,7 +1363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'income',
             paymentMethod: 'transfer',
             notes: `Generado automáticamente al crear la factura ${newInvoice.invoiceNumber} como pagada`,
-            categoryId: null,
+            categoryId: incomeCategory,
             attachments: []
           };
           
@@ -1491,6 +1504,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
+          // Determinar la categoría adecuada (buscar una categoría de tipo ingreso)
+          let incomeCategory = null;
+          try {
+            const categories = await storage.getCategoriesByUserId(req.session.userId);
+            const defaultCategory = categories.find(cat => cat.type === 'income');
+            if (defaultCategory) {
+              incomeCategory = defaultCategory.id;
+              console.log(`[SERVER] Usando categoría de ingreso: ${defaultCategory.name} (ID: ${defaultCategory.id})`);
+            }
+          } catch (error) {
+            console.error("[SERVER] Error al buscar categoría de ingreso:", error);
+          }
+          
           console.log("[SERVER] ⭐⭐⭐ Información de factura actualizada para transacción:", JSON.stringify({
             invoiceId: updatedInvoice.id,
             invoiceNumber: updatedInvoice.invoiceNumber,
@@ -1513,7 +1539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'income',
             paymentMethod: 'transfer',
             notes: `Generado automáticamente al marcar la factura ${updatedInvoice.invoiceNumber} como pagada`,
-            categoryId: null,
+            categoryId: incomeCategory,
             attachments: []
           };
           
@@ -2791,7 +2817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Si llegamos aquí, necesitamos crear una transacción para esta factura
-        console.log(`[REPAIR] Creando transacción para factura ${invoice.invoiceNumber}`);
+        console.log(`[REPAIR] Creando transacción para factura ${invoice.invoiceNumber} (ID: ${invoice.id})`);
         
         // Obtener info del cliente
         let clientName = 'Cliente';
@@ -2804,6 +2830,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (error) {
             console.error("[REPAIR] Error al obtener información del cliente:", error);
           }
+        }
+        
+        // Determinar la categoría adecuada (buscar una categoría de tipo ingreso)
+        let incomeCategory = null;
+        try {
+          const categories = await storage.getCategoriesByUserId(userId);
+          const defaultCategory = categories.find(cat => cat.type === 'income');
+          if (defaultCategory) {
+            incomeCategory = defaultCategory.id;
+            console.log(`[REPAIR] Usando categoría de ingreso: ${defaultCategory.name} (ID: ${defaultCategory.id})`);
+          }
+        } catch (error) {
+          console.error("[REPAIR] Error al buscar categoría de ingreso:", error);
         }
         
         // Crear datos para la transacción
@@ -2821,7 +2860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentMethod: 'transfer',
           invoiceId: invoice.id,
           notes: `Generado automáticamente por proceso de reparación para la factura ${invoice.invoiceNumber}`,
-          categoryId: null,
+          categoryId: incomeCategory,
           attachments: []
         };
         
