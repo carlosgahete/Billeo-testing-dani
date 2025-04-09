@@ -952,7 +952,7 @@ const TransactionList = () => {
                 {/* Crear factura */}
                 <button 
                   className="button-apple button-apple-sm flex items-center"
-                  onClick={() => navigate("/invoices/new")}
+                  onClick={() => navigate("/invoices/create")}
                 >
                   <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
                   <span className="hidden sm:inline">Crear factura</span>
