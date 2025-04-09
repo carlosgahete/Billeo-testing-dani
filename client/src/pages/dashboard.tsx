@@ -299,19 +299,15 @@ const Dashboard = () => {
         >
           <div className="flex justify-end items-center mt-1">
             <div className="flex gap-3">
-              {/* Nuevo botón de año completamente personalizado - Estilo Apple */}
+              {/* Botón de año completamente nuevo */}
               <div className="relative">
                 <button
                   id="yearButton"
                   onClick={() => document.getElementById('yearMenu')?.classList.toggle('hidden')}
-                  className="relative flex items-center bg-white/10 hover:bg-white/20 transition-all duration-150 px-6 py-1.5 rounded-full backdrop-blur-md border-0"
+                  className="bg-white/10 hover:bg-white/20 transition-all duration-150 py-1.5 px-4 rounded-full backdrop-blur-md border-0"
                 >
-                  <div className="flex-grow text-center">
-                    <span className="text-white text-sm font-medium">{year}</span>
-                  </div>
-                  <div className="absolute right-2">
-                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
-                  </div>
+                  <span className="text-white text-sm font-semibold mr-2">{year}</span>
+                  <span className="inline-block text-white text-xs">▼</span>
                 </button>
                 <div 
                   id="yearMenu"
@@ -333,33 +329,29 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {/* Nuevo botón de período completamente personalizado - Estilo Apple */}
+              {/* Botón de período completamente nuevo */}
               <div className="relative">
                 <button
                   id="periodButton"
                   onClick={() => document.getElementById('periodMenu')?.classList.toggle('hidden')}
-                  className="relative flex items-center bg-white/10 hover:bg-white/20 transition-all duration-150 px-6 py-1.5 rounded-full backdrop-blur-md border-0"
+                  className="bg-white/10 hover:bg-white/20 transition-all duration-150 py-1.5 px-4 rounded-full backdrop-blur-md border-0"
                 >
-                  <div className="flex-grow text-center">
-                    <span className="text-white text-sm font-medium">
-                      {period === "all" ? "Todo el año" : 
-                       period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
-                       period === "m1" ? "Enero" :
-                       period === "m2" ? "Febrero" :
-                       period === "m3" ? "Marzo" :
-                       period === "m4" ? "Abril" :
-                       period === "m5" ? "Mayo" :
-                       period === "m6" ? "Junio" :
-                       period === "m7" ? "Julio" :
-                       period === "m8" ? "Agosto" :
-                       period === "m9" ? "Septiembre" :
-                       period === "m10" ? "Octubre" :
-                       period === "m11" ? "Noviembre" : "Diciembre"}
-                    </span>
-                  </div>
-                  <div className="absolute right-2">
-                    <ChevronDown className="h-3.5 w-3.5 text-white opacity-70" strokeWidth={2} />
-                  </div>
+                  <span className="text-white text-sm font-semibold mr-2">
+                    {period === "all" ? "Todo el año" : 
+                     period.startsWith("q") ? `${period.replace("q", "")}º trimestre` : 
+                     period === "m1" ? "Enero" :
+                     period === "m2" ? "Febrero" :
+                     period === "m3" ? "Marzo" :
+                     period === "m4" ? "Abril" :
+                     period === "m5" ? "Mayo" :
+                     period === "m6" ? "Junio" :
+                     period === "m7" ? "Julio" :
+                     period === "m8" ? "Agosto" :
+                     period === "m9" ? "Septiembre" :
+                     period === "m10" ? "Octubre" :
+                     period === "m11" ? "Noviembre" : "Diciembre"}
+                  </span>
+                  <span className="inline-block text-white text-xs">▼</span>
                 </button>
                 <div 
                   id="periodMenu"
