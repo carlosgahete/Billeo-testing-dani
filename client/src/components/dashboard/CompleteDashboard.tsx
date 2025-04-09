@@ -27,7 +27,7 @@ interface CompleteDashboardProps {
 const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
-  const [graphView, setGraphView] = useState<"barras" | "area">("barras");
+  // Ya no necesitamos el estado graphView, usamos una visualización fija trimestral
   const [_, navigate] = useLocation();
   
   // Efecto para cerrar los menus al hacer clic fuera de ellos
@@ -55,16 +55,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         periodDropdown.classList.add('hidden');
       }
       
-      // Cerrar el dropdown de vista comparativa si el clic es fuera
-      const viewButton = document.querySelector('button[aria-controls="view-dropdown"]');
-      const viewDropdown = document.getElementById('view-dropdown');
-      
-      if (viewDropdown && 
-          !viewDropdown.contains(event.target as Node) && 
-          viewButton && 
-          !viewButton.contains(event.target as Node)) {
-        viewDropdown.classList.add('hidden');
-      }
+      // Ya no necesitamos esta parte para cerrar el dropdown de vista
     };
     
     // Agregar el listener al documento
@@ -167,11 +158,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     return "Q4";
   };
 
-  // Preparar datos reales para el gráfico de comparativa financiera
+  // Preparar datos reales para el gráfico de comparativa financiera por trimestres
   const prepareFinancialComparisonData = () => {
     if (!transactions) return [];
 
-    // Inicializar estructura de datos para los trimestres
+    // Vista por trimestres - Única opción disponible
     const quarterlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
       "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
       "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
@@ -501,41 +492,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                   <p className="text-xs text-gray-500">Evolución por período</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <div className="relative">
-                  <button 
-                    type="button"
-                    onClick={() => document.getElementById('view-dropdown')?.classList.toggle('hidden')}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-md border border-gray-200 shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                    aria-controls="view-dropdown"
-                  >
-                    <span>{graphView === "barras" ? "Trimestral" : "Mensual"}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  <div id="view-dropdown" className="hidden absolute z-10 right-0 mt-1 bg-white rounded-md shadow-lg w-28 py-1 border border-gray-200 focus:outline-none">
-                    <button
-                      onClick={() => {
-                        setGraphView("barras");
-                        document.getElementById('view-dropdown')?.classList.add('hidden');
-                      }}
-                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 ${graphView === "barras" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-                    >
-                      Trimestral
-                    </button>
-                    <button
-                      onClick={() => {
-                        setGraphView("area");
-                        document.getElementById('view-dropdown')?.classList.add('hidden');
-                      }}
-                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 ${graphView === "area" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-                    >
-                      Mensual
-                    </button>
-                  </div>
-                </div>
+              <div className="text-xs text-gray-500 flex items-center gap-1">
+                <BarChart3 className="h-3 w-3" strokeWidth={1.5} />
+                <span>Trimestral</span>
               </div>
             </div>
 
@@ -565,7 +524,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               
               {/* Gráfico o mensaje de datos insuficientes */}
               <div className="h-[180px]">
-                {financialComparisonData.some(item => item.Ingresos > 0 || item.Gastos > 0) ? (
+                {financialComparisonData && financialComparisonData.length > 0 && 
+                  financialComparisonData.some(item => item.Ingresos > 0 || item.Gastos > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={financialComparisonData}
