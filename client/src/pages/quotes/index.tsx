@@ -65,6 +65,11 @@ export default function QuotesPage() {
   const [location, navigate] = useLocation();
   const [filter, setFilter] = useState<string | null>(null);
 
+  // Efecto para refrescar la lista cuando cambia el filtro
+  useEffect(() => {
+    console.log("Filtro aplicado:", filter);
+  }, [filter]);
+
   // Obtener estadísticas de presupuestos
   const { data: quotes = [], isLoading: quotesLoading } = useQuery<Quote[]>({
     queryKey: ["/api/quotes"],
@@ -516,11 +521,12 @@ export default function QuotesPage() {
                 <button
                   className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
                   onClick={() => {
-                    setFilter("accepted");
+                    const newFilter = filter === "accepted" ? null : "accepted";
+                    setFilter(newFilter);
                   }}
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
-                  Ver aceptados
+                  {filter === "accepted" ? "Ver todos" : "Ver aceptados"}
                 </button>
               </div>
             </div>
@@ -569,11 +575,12 @@ export default function QuotesPage() {
                 <button
                   className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
                   onClick={() => {
-                    setFilter("pending");
+                    const newFilter = filter === "pending" ? null : "pending";
+                    setFilter(newFilter);
                   }}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Ver pendientes
+                  {filter === "pending" ? "Ver todos" : "Ver pendientes"}
                 </button>
               </div>
             </div>
