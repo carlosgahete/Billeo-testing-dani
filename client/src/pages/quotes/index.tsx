@@ -267,7 +267,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="space-y-3 p-4 bg-[#F7FFF9] rounded-xl border border-[#E3FFE9]">
+              <div className="space-y-3 p-4 bg-[#F7FFF9] rounded-xl border border-[#E3FFE9] mb-14">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Presupuestos aceptados:</span>
                   <span className="font-medium text-gray-800">{formatCurrency(acceptedValue)}</span>
@@ -312,7 +312,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="space-y-3 p-4 bg-[#F5F9FF] rounded-xl border border-[#E0EDFF]">
+              <div className="space-y-3 p-4 bg-[#F5F9FF] rounded-xl border border-[#E0EDFF] mb-14">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Presupuestos enviados:</span>
                   <span className="font-medium text-gray-800">{sentQuotes + acceptedQuotes + rejectedQuotes}</span>
@@ -363,7 +363,7 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <div className="space-y-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#FFEECA]">
+              <div className="space-y-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#FFEECA] mb-14">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 flex items-center">
                     <span className="w-2.5 h-2.5 bg-neutral-300 rounded-full mr-2"></span>
