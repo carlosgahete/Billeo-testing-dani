@@ -5,11 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface SimplestExpenseFormProps {
+interface UltraSimpleExpenseFormProps {
   onSuccess?: () => void;
 }
 
-const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) => {
+const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSuccess }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [description, setDescription] = useState('');
@@ -62,8 +62,7 @@ const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) 
       
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
-        body: formData,
-        credentials: 'include'
+        body: formData
       });
       
       if (!uploadResponse.ok) {
@@ -90,8 +89,7 @@ const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) 
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(expenseData),
-        credentials: 'include'
+        body: JSON.stringify(expenseData)
       });
       
       console.log('Respuesta del servidor:', response.status, response.statusText);
@@ -99,7 +97,7 @@ const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error del servidor:', errorText);
-        throw new Error(`Error al crear el gasto: ${response.status} - ${errorText}`);
+        throw new Error(`Error al crear el gasto: ${response.status}`);
       }
       
       const jsonResponse = await response.json();
@@ -199,4 +197,4 @@ const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) 
   );
 };
 
-export default SimplestExpenseForm;
+export default UltraSimpleExpenseForm;
