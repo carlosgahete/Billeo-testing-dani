@@ -18,48 +18,65 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // 1. VALIDACIÓN
+  // Función de sanitización para garantizar datos válidos
+  const sanitizeData = (amount: string, date: string, description: string, attachment: File | null) => {
+    // Limpiar el 'amount' (reemplazar coma por punto y convertir a número)
     const cleanedAmount = amount.replace(',', '.');
+    const numericAmount = parseFloat(cleanedAmount);
+
+    // Validar si el 'amount' es un número válido
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      toast({
+        title: "Importe inválido",
+        description: "El importe no es válido. Debe ser un número positivo.",
+        variant: "destructive"
+      });
+      return null;  // Si no es válido, retorna null para indicar error
+    }
+
+    // Validar el formato del importe (máximo 2 decimales)
     const amountPattern = /^\d+(\.\d{1,2})?$/;
     if (!amountPattern.test(cleanedAmount)) {
       toast({
         title: "Formato incorrecto",
-        description: "El importe no es válido. Debe ser un número con máximo dos decimales.",
+        description: "El importe debe tener máximo dos decimales.",
         variant: "destructive"
       });
-      return;
+      return null;
     }
 
-    if (isNaN(new Date(date).getTime())) {
+    // Validar la fecha (asegurarse de que sea una fecha válida)
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
       toast({
         title: "Fecha inválida",
         description: "La fecha introducida no es válida.",
         variant: "destructive"
       });
-      return;
+      return null;  // Si no es válida, retorna null para indicar error
     }
 
-    if (!description || description.trim().length < 3) {
+    // Validar la descripción (asegúrate que no esté vacía)
+    if (!description.trim() || description.trim().length < 3) {
       toast({
         title: "Descripción requerida",
         description: "Debes incluir una descripción con al menos 3 caracteres.",
         variant: "destructive"
       });
-      return;
+      return null;  // Si no es válida, retorna null para indicar error
     }
 
+    // Validar archivo adjunto (asegurarse de que existe)
     if (!attachment) {
       toast({
         title: "Archivo requerido",
         description: "Debes adjuntar un documento para el gasto.",
         variant: "destructive"
       });
-      return;
+      return null;
     }
 
+    // Validar el tipo de archivo
     const allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg'];
     if (attachment && !allowedMimeTypes.includes(attachment.type)) {
       toast({
@@ -67,18 +84,38 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
         description: "El archivo debe ser un PDF, PNG o JPG.",
         variant: "destructive"
       });
-      return;
+      return null;  // Si no es válido, retorna null para indicar error
     }
+
+    // Si todo está bien, devolver los datos sanitizados
+    return {
+      amount: numericAmount.toString(),
+      date: parsedDate.toISOString(),
+      description: description.trim(),
+      attachment
+    };
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Utilizamos la función de sanitización
+    const sanitizedData = sanitizeData(amount, date, description, attachment);
+    if (!sanitizedData) {
+      return; // Si algún dato no es válido, detenemos la ejecución
+    }
+    
+    const { amount: cleanedAmount, date: cleanedDate, description: cleanedDescription, attachment: cleanedAttachment } = sanitizedData;
 
     console.log('Gasto a enviar:', { 
       amount: cleanedAmount, 
-      date, 
-      description, 
-      attachment: {
-        name: attachment.name,
-        type: attachment.type,
-        size: attachment.size
-      }
+      date: cleanedDate, 
+      description: cleanedDescription, 
+      attachment: cleanedAttachment ? {
+        name: cleanedAttachment.name,
+        type: cleanedAttachment.type,
+        size: cleanedAttachment.size
+      } : null
     });
 
     setIsSubmitting(true);
@@ -86,7 +123,7 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
     try {
       // 2. SUBIR ARCHIVO
       const formData = new FormData();
-      formData.append('file', attachment);
+      formData.append('file', cleanedAttachment);
       
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
@@ -102,9 +139,9 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
       
       // 3. CREAR GASTO
       const expenseData = {
-        description: description.trim(),
+        description: cleanedDescription,
         amount: parseFloat(cleanedAmount),
-        date: new Date(date).toISOString(),
+        date: cleanedDate,
         attachments: [filePath]
       };
       

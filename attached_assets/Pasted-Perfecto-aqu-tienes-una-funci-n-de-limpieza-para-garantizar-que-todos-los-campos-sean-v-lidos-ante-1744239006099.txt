@@ -1,0 +1,103 @@
+Perfecto, aquí tienes una función de limpieza para garantizar que todos los campos sean válidos antes de enviarlos. Esto evitará que el error siga apareciendo y asegurará que todos los datos se envíen en el formato correcto.
+
+Función de limpieza completa antes de enviar los datos
+
+Esta función se encarga de:
+	1.	Limpiar y convertir el amount a formato adecuado (número en string sin comas).
+	2.	Validar la fecha.
+	3.	Validar la descripción.
+	4.	Asegurar que el archivo adjunto sea válido.
+
+Aquí tienes la función sanitizeData():
+
+const sanitizeData = (amount: string, date: string, description: string, attachment: File | null) => {
+  // Limpiar el 'amount' (reemplazar coma por punto y convertir a número)
+  const cleanedAmount = amount.replace(',', '.');
+  const numericAmount = parseFloat(cleanedAmount);
+
+  // Validar si el 'amount' es un número válido
+  if (isNaN(numericAmount) || numericAmount <= 0) {
+    alert("El importe no es válido. Debe ser un número positivo.");
+    return null;  // Si no es válido, retorna null para indicar error
+  }
+
+  // Validar la fecha (asegurarse de que sea una fecha válida)
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) {
+    alert("La fecha introducida no es válida.");
+    return null;  // Si no es válida, retorna null para indicar error
+  }
+
+  // Validar la descripción (asegúrate que no esté vacía)
+  if (!description.trim()) {
+    alert("La descripción no puede estar vacía.");
+    return null;  // Si no es válida, retorna null para indicar error
+  }
+
+  // Validar archivo adjunto (asegurarse de que sea uno de los tipos permitidos)
+  const allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+  if (attachment && !allowedMimeTypes.includes(attachment.type)) {
+    alert("El archivo debe ser un PDF, PNG o JPG.");
+    return null;  // Si no es válido, retorna null para indicar error
+  }
+
+  // Si todo está bien, devolver los datos sanitizados
+  return {
+    amount: numericAmount.toString(),
+    date,
+    description,
+    attachment
+  };
+};
+
+¿Cómo usar esta función?
+
+Dentro de tu handleSubmit, simplemente llamas a sanitizeData para asegurarte de que todos los datos estén validados y limpios antes de enviarlos:
+
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  // Llamamos a la función de limpieza
+  const sanitizedData = sanitizeData(amount, date, description, attachment);
+  if (!sanitizedData) {
+    return;  // Si alguno de los datos no es válido, salimos de la función
+  }
+
+  const { amount: cleanedAmount, date: cleanedDate, description: cleanedDescription, attachment: cleanedAttachment } = sanitizedData;
+
+  // Crear FormData con los datos validados
+  const formData = new FormData();
+  formData.append('amount', cleanedAmount);
+  formData.append('date', cleanedDate);
+  formData.append('description', cleanedDescription);
+  if (cleanedAttachment) {
+    formData.append('attachment', cleanedAttachment);
+  }
+
+  // Aquí puedes hacer el fetch o la llamada a la API
+};
+
+¿Qué hace esta función?
+	•	Sanitiza el amount: Reemplaza cualquier coma por punto, lo convierte en número y verifica que sea positivo.
+	•	Valida la fecha: Asegura que la fecha es válida.
+	•	Valida la descripción: Verifica que la descripción no esté vacía.
+	•	Valida el archivo adjunto: Asegura que el archivo es un PDF, PNG o JPG.
+
+⸻
+
+Beneficios de esta función
+	•	Validación en un solo lugar: Todas las validaciones están centralizadas en una función, lo que facilita el mantenimiento.
+	•	Evita enviar datos incorrectos: Solo se envían datos que han pasado todas las validaciones.
+	•	Reduce el código repetido: No tendrás que hacer las mismas validaciones en varios lugares.
+
+⸻
+
+Resumen final:
+	•	Con esta función, garantizamos que los datos enviados están en el formato correcto.
+	•	Si hay algún error, se muestra un mensaje de alerta y no se envía nada al backend.
+	•	Asegúrate de que el backend también esté configurado para aceptar estos datos.
+
+⸻
+
+¿Te gustaría que además te ayude a verificar o mejorar el lado del servidor para que acepte estos datos?
+Si necesitas ayuda con eso, te puedo ayudar a escribir código del backend también.
