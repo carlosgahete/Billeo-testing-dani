@@ -539,58 +539,47 @@ const TransactionList = () => {
       id: "actions",
       cell: ({ row }) => {
         const transaction = row.original;
-        const hasAttachments = transaction.attachments && transaction.attachments.length > 0;
-        
-        // Solo mostrar botón de descarga si es un gasto y tiene archivos adjuntos
-        const showDownloadButton = transaction.type === 'expense' && hasAttachments;
         
         // Depuración para ver el estado de los attachments
-        console.log('TransactionID:', transaction.id, 'Type:', transaction.type, 'Attachments:', transaction.attachments);
+        console.log('TransactionID:', transaction.id, 'Type:', transaction.type, 'Tiene attachments:', !!transaction.attachments, transaction.attachments);
         
         return (
           <div className="flex justify-end space-x-1">
-            {/* Mostrar botón de visualización de archivo si tiene adjuntos */}
-            {showDownloadButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  // Importamos dinámicamente para evitar problemas de dependencias cíclicas
-                  import('@/lib/attachmentService').then(({ viewExpenseOriginal }) => {
-                    const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
-                    // Para simplificar, visualizamos el primer adjunto
-                    if (transaction.attachments && transaction.attachments.length > 0) {
+            {/* Botones de visualización y descarga para gastos con adjuntos */}
+            {transaction.type === 'expense' && transaction.attachments && transaction.attachments.length > 0 && (
+              <>
+                {/* Botón de visualización */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    import('@/lib/attachmentService').then(({ viewExpenseOriginal }) => {
+                      const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
                       viewExpenseOriginal(transaction.attachments[0], transaction as any, category);
-                    }
-                  });
-                }}
-                title="Ver documento"
-                className="text-blue-700 hover:text-blue-800 hover:bg-blue-50"
-              >
-                <FileText className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Mostrar botón de descarga si tiene adjuntos */}
-            {showDownloadButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  // Importamos dinámicamente para evitar problemas de dependencias cíclicas
-                  import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
-                    const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
-                    // Para simplificar, descargamos el primer adjunto
-                    if (transaction.attachments && transaction.attachments.length > 0) {
+                    });
+                  }}
+                  title="Ver documento"
+                  className="text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+                >
+                  <FileText className="h-4 w-4" />
+                </Button>
+                
+                {/* Botón de descarga */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
+                      const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
                       downloadExpenseOriginal(transaction.attachments[0], transaction as any, category);
-                    }
-                  });
-                }}
-                title="Descargar original"
-                className="text-green-700 hover:text-green-800 hover:bg-green-50"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+                    });
+                  }}
+                  title="Descargar original"
+                  className="text-green-700 hover:text-green-800 hover:bg-green-50"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </>
             )}
             
             <Button
