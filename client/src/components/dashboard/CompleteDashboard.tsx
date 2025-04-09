@@ -160,29 +160,13 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="select-apple w-[100px]">
-              <SelectValue placeholder="Año" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2023">2023</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="select-apple w-[150px]">
-              <SelectValue placeholder="Periodo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todo el año</SelectItem>
-              <SelectItem value="q1">Trimestre 1</SelectItem>
-              <SelectItem value="q2">Trimestre 2</SelectItem>
-              <SelectItem value="q3">Trimestre 3</SelectItem>
-              <SelectItem value="q4">Trimestre 4</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="text-gray-600 text-sm font-medium bg-white/80 px-4 py-1.5 rounded-md shadow-sm border border-gray-100">
+            Datos financieros {year} - {period === "all" ? "Todo el año" : 
+            period === "q1" ? "Trimestre 1" : 
+            period === "q2" ? "Trimestre 2" : 
+            period === "q3" ? "Trimestre 3" : 
+            period === "q4" ? "Trimestre 4" : ""}
+          </div>
         </div>
       </div>
 
