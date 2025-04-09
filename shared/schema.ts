@@ -203,6 +203,25 @@ export const transactionFlexibleSchema = insertTransactionSchema.extend({
     if (val instanceof Date) return val;
     return new Date(val);
   }),
+  // Manejar additionalTaxes como string o array
+  additionalTaxes: z.union([
+    z.string(),
+    z.array(additionalTaxSchema),
+    z.null(), 
+    z.undefined()
+  ]).transform(val => {
+    if (val === null || val === undefined) {
+      return null;
+    }
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        return null;
+      }
+    }
+    return val;
+  }).nullable(),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

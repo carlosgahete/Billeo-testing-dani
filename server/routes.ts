@@ -2516,6 +2516,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attachments: Array.isArray(req.body.attachments) ? req.body.attachments : []
       };
       
+      console.log("Datos de transacción recibidos:", JSON.stringify(req.body, null, 2));
+      
+      // Si additionalTaxes es un array, convertirlo a string
+      if (transactionData.additionalTaxes && Array.isArray(transactionData.additionalTaxes)) {
+        transactionData.additionalTaxes = JSON.stringify(transactionData.additionalTaxes);
+      }
+      
       const transactionResult = transactionFlexibleSchema.safeParse(transactionData);
       
       if (!transactionResult.success) {
@@ -2528,10 +2535,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      console.log("Transacción validada correctamente:", JSON.stringify(transactionResult.data, null, 2));
+      
       const newTransaction = await storage.createTransaction(transactionResult.data);
+      console.log("Transacción creada exitosamente:", JSON.stringify(newTransaction, null, 2));
+      
       return res.status(201).json(newTransaction);
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Error al crear transacción:", error);
+      return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
   });
 
