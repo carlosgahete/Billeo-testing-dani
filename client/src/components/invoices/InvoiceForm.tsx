@@ -573,14 +573,30 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     onSuccess: (data) => {
       console.log("✅ Factura guardada:", data);
       
-      // Invalidar la lista de facturas para que se actualice automáticamente
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      // Eliminar completamente las consultas relevantes para forzar una recarga completa 
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      queryClient.removeQueries({ queryKey: ["/api/invoices/recent"] });
       
-      // Invalidar también las estadísticas del dashboard
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      
-      // Invalidar las facturas recientes (si existe esa consulta)
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] });
+      // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
+      fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+      })
+      .then(() => {
+        console.log("⚡ Forzando recarga de datos para dashboard");
+        
+        // Refrescar explícitamente todas las consultas 
+        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+        queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
+        
+        // Realizar una segunda actualización después de un breve retraso
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+          console.log("🔄 Segunda actualización del dashboard completada");
+        }, 500);
+      })
+      .catch(err => console.error("Error al recargar dashboard:", err));
       
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
