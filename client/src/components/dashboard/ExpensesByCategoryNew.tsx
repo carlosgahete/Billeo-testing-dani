@@ -6,10 +6,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingDown } from 'lucide-react';
+import { Filter, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
 
 // Tipo para los datos de gastos por categoría
 interface ExpenseByCategoryData {
@@ -48,6 +61,8 @@ const ExpensesByCategory: React.FC<{
 }> = ({ transactions, categories, period }) => {
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [filteredData, setFilteredData] = useState<ExpenseByCategoryData[]>([]);
   
   // Efecto para generar la etiqueta del período seleccionado
   useEffect(() => {
@@ -211,6 +226,31 @@ const ExpensesByCategory: React.FC<{
     }
   }, [transactions, categories]);
 
+  // Efecto para filtrar los datos según las categorías seleccionadas
+  useEffect(() => {
+    if (data.length > 0) {
+      // Si no hay filtros, mostrar todos los datos
+      if (selectedCategories.length === 0) {
+        setFilteredData(data);
+        return;
+      }
+      
+      // Filtrar los datos según las categorías seleccionadas
+      const filtered = data.filter(item => 
+        selectedCategories.includes(item.categoryId?.toString() || '')
+      );
+      
+      // Recalcular los porcentajes
+      const totalValue = filtered.reduce((sum, item) => sum + item.value, 0);
+      const recalculated = filtered.map(item => ({
+        ...item,
+        percentage: (item.value / totalValue) * 100
+      }));
+      
+      setFilteredData(recalculated);
+    }
+  }, [data, selectedCategories]);
+
   // Renderizado condicional si no hay datos
   if (!data.length) {
     return (
@@ -230,13 +270,100 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
+  // Función para manejar la selección/deselección de categorías
+  const handleCategoryToggle = (categoryId: string) => {
+    if (selectedCategories.includes(categoryId)) {
+      // Si ya está seleccionada, la quitamos
+      setSelectedCategories(selectedCategories.filter(id => id !== categoryId));
+    } else {
+      // Si no está seleccionada, la añadimos
+      setSelectedCategories([...selectedCategories, categoryId]);
+    }
+  };
+
+  // Función para limpiar todos los filtros
+  const clearFilters = () => {
+    setSelectedCategories([]);
+  };
+
+  // Datos a mostrar (filtrados o todos)
+  const displayData = selectedCategories.length > 0 ? filteredData : data;
+
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
-      <CardHeader className="bg-red-50 p-3">
+      <CardHeader className="bg-red-50 p-3 flex flex-row justify-between items-center">
         <CardTitle className="text-base text-red-700 flex items-center">
           <TrendingDown className="mr-2 h-4 w-4" />
           Gastos por Categoría
         </CardTitle>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 px-2 text-xs bg-white border-gray-200 hover:bg-gray-50"
+            >
+              <Filter className="h-3.5 w-3.5 mr-1" />
+              Filtrar
+              {selectedCategories.length > 0 && (
+                <span className="ml-1 bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
+                  {selectedCategories.length}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-2" align="end">
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Filtrar por categoría</div>
+              <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                {data.map((category) => (
+                  <div 
+                    key={category.categoryId?.toString()} 
+                    className="flex items-center space-x-2"
+                  >
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <label 
+                      htmlFor={`category-${category.categoryId}`}
+                      className="text-sm flex-1 cursor-pointer"
+                    >
+                      {category.name}
+                    </label>
+                    <input
+                      type="checkbox"
+                      id={`category-${category.categoryId}`}
+                      checked={selectedCategories.includes(category.categoryId?.toString() || '')}
+                      onChange={() => handleCategoryToggle(category.categoryId?.toString() || '')}
+                      className="rounded border-gray-300"
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="border-t pt-2 flex justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-xs h-7"
+                  disabled={selectedCategories.length === 0}
+                >
+                  Limpiar filtros
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => document.dispatchEvent(new MouseEvent('click'))}
+                  className="text-xs h-7 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </CardHeader>
       <CardContent className="p-0">
         {/* Mostrar período a la izquierda */}
@@ -254,7 +381,7 @@ const ExpensesByCategory: React.FC<{
               <ResponsiveContainer width={220} height={220}>
                 <PieChart>
                   <Pie
-                    data={data}
+                    data={displayData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -262,7 +389,7 @@ const ExpensesByCategory: React.FC<{
                     paddingAngle={1}
                     dataKey="value"
                   >
-                    {data.map((entry, index) => (
+                    {displayData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -290,7 +417,7 @@ const ExpensesByCategory: React.FC<{
             }}
           >
             <div className="space-y-2 w-full max-w-[350px]">
-              {data.map((item, index) => (
+              {displayData.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
