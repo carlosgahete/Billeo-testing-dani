@@ -53,8 +53,17 @@ function toNumber(value: any, defaultValue = 0): number {
   return isNaN(numericValue) ? defaultValue : numericValue;
 }
 
+// Variable para controlar el debounce sin perder el foco
+let lastCalculationTimeout: NodeJS.Timeout | null = null;
+
 // Función auxiliar para calcular totales (definida globalmente para evitar referencias circulares)
 function calculateInvoiceTotals(form: any) {
+  // Limpiamos el timeout anterior si existe
+  if (lastCalculationTimeout) {
+    clearTimeout(lastCalculationTimeout);
+  }
+  
+  // Obtenemos los datos actuales
   const items = form.getValues("items") || [];
   const additionalTaxes = form.getValues("additionalTaxes") || [];
   
@@ -71,8 +80,6 @@ function calculateInvoiceTotals(form: any) {
       subtotal: subtotal
     };
   });
-  
-  form.setValue("items", updatedItems);
   
   // Calculate invoice totals
   const subtotal = updatedItems.reduce((sum: number, item: any) => sum + toNumber(item.subtotal, 0), 0);
@@ -96,23 +103,32 @@ function calculateInvoiceTotals(form: any) {
   const total = subtotal + tax + additionalTaxesTotal;
   const safeTotal = Math.max(0, total);
   
-  form.setValue("subtotal", subtotal);
-  form.setValue("tax", tax);
-  form.setValue("total", safeTotal);
+  // Actualizamos con un pequeño retraso para evitar pérdida de foco durante edición
+  lastCalculationTimeout = setTimeout(() => {
+    // Actualizamos los items con los nuevos subtotales calculados
+    form.setValue("items", updatedItems, { shouldValidate: false });
+    
+    // Actualizamos los totales de la factura sin validar para evitar pérdida de foco
+    form.setValue("subtotal", subtotal, { shouldValidate: false });
+    form.setValue("tax", tax, { shouldValidate: false });
+    form.setValue("total", safeTotal, { shouldValidate: false });
+    
+    // Log para debug
+    console.log("💰 Cálculo de totales:", {
+      subtotal,
+      tax,
+      additionalTaxesTotal,
+      total: safeTotal,
+      desglose: additionalTaxes.map((tax: any) => ({
+        nombre: tax.name,
+        valor: tax.isPercentage ? 
+          `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
+          `${tax.amount}€`
+      }))
+    });
+  }, 5); // Retraso mínimo para evitar perder el foco
   
-  console.log("💰 Cálculo de totales:", {
-    subtotal,
-    tax,
-    additionalTaxesTotal,
-    total: safeTotal,
-    desglose: additionalTaxes.map((tax: any) => ({
-      nombre: tax.name,
-      valor: tax.isPercentage ? 
-        `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
-        `${tax.amount}€`
-    }))
-  });
-  
+  // Devolvemos los valores calculados para uso inmediato si es necesario
   return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
 }
 
@@ -1041,8 +1057,6 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
-                                  // Calcular totales inmediatamente al cambiar el valor
-                                  setTimeout(() => calculateInvoiceTotals(form), 0);
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
@@ -1074,9 +1088,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(parseFloat(e.target.value));
-                                  // Calcular totales inmediatamente al cambiar el valor
-                                  setTimeout(() => calculateInvoiceTotals(form), 0);
                                 }}
+                                onBlur={() => calculateInvoiceTotals(form)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1232,9 +1245,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                       {...field} 
                                       onChange={(e) => {
                                         field.onChange(parseFloat(e.target.value));
-                                        // Calcular totales inmediatamente al cambiar el valor
-                                        setTimeout(() => calculateInvoiceTotals(form), 0);
                                       }}
+                                      onBlur={() => calculateInvoiceTotals(form)}
                                       className="h-8 text-sm"
                                     />
                                     
@@ -1253,8 +1265,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                                 size="sm"
                                                 onClick={() => {
                                                   field.onChange(!field.value);
-                                                  // Calcular totales inmediatamente al cambiar el valor
-                                                  setTimeout(() => calculateInvoiceTotals(form), 0);
+                                                  calculateInvoiceTotals(form);
                                                 }}
                                                 className="h-8 px-2 text-xs font-normal"
                                               >
@@ -1280,8 +1291,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             size="sm"
                             onClick={() => {
                               removeTax(index);
-                              // Calcular totales inmediatamente al eliminar un impuesto
-                              setTimeout(() => calculateInvoiceTotals(form), 0);
+                              calculateInvoiceTotals(form);
                             }}
                             className="h-6 w-6 p-0"
                           >
