@@ -429,7 +429,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         {/* Widget de Gastos por Categoría */}
         <ExpensesByCategory 
           transactions={transactions || []} 
-          categories={categories || []} 
+          categories={categories || []}
+          period={`${year}-${period}`}
         />
       </div>
     </div>

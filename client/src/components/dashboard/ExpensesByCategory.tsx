@@ -8,6 +8,8 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 // Tipo para los datos de gastos por categoría
 interface ExpenseByCategoryData {
@@ -42,9 +44,71 @@ const COLORS = [
 const ExpensesByCategory: React.FC<{
   transactions: any[];  // Transacciones
   categories: any[];    // Categorías
-}> = ({ transactions, categories }) => {
+  period?: string;      // Período seleccionado
+}> = ({ transactions, categories, period }) => {
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
+  const [periodLabel, setPeriodLabel] = useState<string>("");
   
+  // Efecto para generar la etiqueta del período seleccionado
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    
+    if (period) {
+      // Formato: year-quarter o year-month o 'all'
+      const parts = period.split('-');
+      const year = parts[0];
+      
+      if (parts.length > 1) {
+        const timePeriod = parts[1];
+        
+        if (timePeriod.startsWith('Q')) {
+          // Período trimestral
+          const quarter = parseInt(timePeriod.substring(1));
+          const startMonth = (quarter - 1) * 3;
+          const endMonth = startMonth + 2;
+          
+          const startDate = new Date(parseInt(year), startMonth, 1);
+          const endDate = new Date(parseInt(year), endMonth + 1, 0);
+          
+          const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+          const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+          
+          setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+        } else {
+          // Período mensual
+          const month = parseInt(timePeriod) - 1;
+          const startDate = new Date(parseInt(year), month, 1);
+          const endDate = new Date(parseInt(year), month + 1, 0);
+          
+          const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+          const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+          
+          setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+        }
+      } else if (year === 'all') {
+        setPeriodLabel("Todos los períodos");
+      } else {
+        // Año completo
+        const startDate = new Date(parseInt(year), 0, 1);
+        const endDate = new Date(parseInt(year), 11, 31);
+        
+        const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+        const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+        
+        setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+      }
+    } else {
+      // Sin período especificado, mostrar año actual
+      const startDate = new Date(currentYear, 0, 1);
+      const endDate = new Date(currentYear, 11, 31);
+      
+      const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+      const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+      
+      setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+    }
+  }, [period]);
+
   useEffect(() => {
     if (transactions && categories && transactions.length > 0) {
       // Filtrar solo los gastos
@@ -186,7 +250,14 @@ const ExpensesByCategory: React.FC<{
               scrollbarColor: '#d1d5db #f3f4f6',
             }}
           >
-            <div className="space-y-2 w-full mt-4">
+            {/* Mostrar período */}
+            {periodLabel && (
+              <div className="text-center text-sm text-gray-500 mb-2">
+                {periodLabel}
+              </div>
+            )}
+            
+            <div className="space-y-2 w-full">
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
