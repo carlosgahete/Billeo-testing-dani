@@ -48,29 +48,38 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
   // Envío del formulario
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    console.log('1. Formulario enviado - Iniciando validación');
     
     if (!isFormValid()) {
+      console.log('2. ERROR: Validación fallida');
       return;
     }
     
+    console.log('2. Validación exitosa');
     setIsSubmitting(true);
     
     try {
       // 1. Subir el archivo
+      console.log('3. Preparando subida de archivo:', selectedFile?.name);
       const formData = new FormData();
       formData.append('file', selectedFile!);
       
+      console.log('4. Enviando archivo al servidor');
       const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
         body: formData
       });
       
+      console.log('5. Respuesta de subida:', uploadResponse.status, uploadResponse.statusText);
+      
       if (!uploadResponse.ok) {
+        console.error('ERROR: Fallo al subir archivo');
         throw new Error('Error al subir el archivo');
       }
       
       const uploadResult = await uploadResponse.json();
       const filePath = uploadResult.filePath;
+      console.log('6. Archivo subido correctamente. Ruta:', filePath);
       
       // 2. Crear el gasto usando el endpoint especializado
       const numericAmount = parseFloat(amount.replace(',', '.'));
@@ -81,9 +90,10 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
         attachments: [filePath]
       };
       
-      console.log('Enviando datos al servidor:', expenseData);
+      console.log('7. Enviando datos al servidor:', JSON.stringify(expenseData));
       
       // 3. Enviar la solicitud a la API especializada
+      console.log('8. Iniciando petición POST a /api/expenses/better');
       const response = await fetch('/api/expenses/better', {
         method: 'POST',
         headers: {
@@ -92,11 +102,11 @@ const UltraSimpleExpenseForm: React.FC<UltraSimpleExpenseFormProps> = ({ onSucce
         body: JSON.stringify(expenseData)
       });
       
-      console.log('Respuesta del servidor:', response.status, response.statusText);
+      console.log('9. Respuesta del servidor:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error del servidor:', errorText);
+        console.error('ERROR: Respuesta negativa del servidor:', errorText);
         throw new Error(`Error al crear el gasto: ${response.status}`);
       }
       
