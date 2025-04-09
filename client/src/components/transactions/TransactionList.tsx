@@ -679,40 +679,9 @@ const TransactionList = () => {
           </div>
         </div>
         
-        {/* Botón para registro rápido de gastos */}
+        {/* Espacio para mantener la alineación */}
         <div className="mr-6">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-800 border-red-200"
-                    >
-                      <TrendingDown className="h-4 w-4" />
-                      <span className="hidden md:inline">Registro rápido de gastos</span>
-                      <span className="md:hidden">Gasto rápido</span>
-                    </Button>
-                  </DialogTrigger>
-                  
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Registro rápido de gastos</DialogTitle>
-                    </DialogHeader>
-                    <QuickExpenseForm onSuccess={() => {
-                      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-                    }} />
-                  </DialogContent>
-                </Dialog>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">Registra rápidamente un gasto sin tener que rellenar todos los detalles</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {/* Botón eliminado */}
         </div>
       </div>
 
