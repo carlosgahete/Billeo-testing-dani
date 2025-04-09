@@ -22,9 +22,9 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
     e.preventDefault();
     
     // 1. VALIDACIÓN
-    const amountClean = amount.replace(',', '.');
+    const cleanedAmount = amount.replace(',', '.');
     const amountPattern = /^\d+(\.\d{1,2})?$/;
-    if (!amountPattern.test(amountClean)) {
+    if (!amountPattern.test(cleanedAmount)) {
       toast({
         title: "Formato incorrecto",
         description: "El importe no es válido. Debe ser un número con máximo dos decimales.",
@@ -71,7 +71,7 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
     }
 
     console.log('Gasto a enviar:', { 
-      amount: amountClean, 
+      amount: cleanedAmount, 
       date, 
       description, 
       attachment: {
@@ -103,7 +103,7 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
       // 3. CREAR GASTO
       const expenseData = {
         description: description.trim(),
-        amount: parseFloat(amountClean),
+        amount: parseFloat(cleanedAmount),
         date: new Date(date).toISOString(),
         attachments: [filePath]
       };
@@ -129,7 +129,7 @@ export default function BasicExpenseForm({ onSuccess }: BasicExpenseFormProps) {
       // 4. ÉXITO
       toast({
         title: "Gasto creado",
-        description: `Se ha registrado un gasto de ${parseFloat(amountClean).toFixed(2)}€`,
+        description: `Se ha registrado un gasto de ${parseFloat(cleanedAmount).toFixed(2)}€`,
       });
       
       // 5. RESETEAR FORMULARIO

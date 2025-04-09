@@ -1,0 +1,122 @@
+Perfecto, te preparo un mensaje bien explicado como si fuera directamente para tu programador/IA, aquí va:
+
+⸻
+
+Explicación clara para corregir el error The string did not match the expected pattern
+
+Actualmente sigue apareciendo este error porque el campo amount que se envía no tiene el formato correcto.
+El sistema espera un número con punto como separador decimal, no coma.
+
+Ejemplos válidos:
+	•	50
+	•	50.00
+	•	1234.5
+	•	0.99
+
+Ejemplos inválidos (causan error):
+	•	50,00
+	•	50,00€
+	•	abc
+	•	-50 (en caso de que no aceptemos negativos)
+
+⸻
+
+Solución paso a paso
+
+1. Antes de enviar los datos, transformar el amount:
+
+Si el usuario mete un número con coma (por ejemplo 50,00), debemos reemplazar la coma por un punto.
+
+Añade este pequeño tratamiento:
+
+const cleanedAmount = amount.replace(',', '.');
+
+Así, aunque el usuario ponga 50,00, nosotros lo corregimos automáticamente a 50.00.
+
+⸻
+
+2. Validar el cleanedAmount y no el amount original:
+
+En la validación del importe, debes comprobar el formato usando cleanedAmount:
+
+const amountPattern = /^\d+(\.\d{1,2})?$/;
+if (!amountPattern.test(cleanedAmount)) {
+  alert("El importe no es válido. Debe ser un número con máximo dos decimales.");
+  return;
+}
+
+
+
+⸻
+
+3. Enviar el cleanedAmount en el FormData:
+
+Cuando construyas el FormData para enviar los datos al backend, asegúrate de que subes el importe corregido:
+
+formData.append('amount', cleanedAmount);
+
+
+
+⸻
+
+Código Final en handleSubmit
+
+Todo junto:
+
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const cleanedAmount = amount.replace(',', '.');
+
+  const amountPattern = /^\d+(\.\d{1,2})?$/;
+  if (!amountPattern.test(cleanedAmount)) {
+    alert("El importe no es válido. Debe ser un número con máximo dos decimales.");
+    return;
+  }
+
+  if (isNaN(new Date(date).getTime())) {
+    alert("La fecha introducida no es válida.");
+    return;
+  }
+
+  const allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+  if (attachment && !allowedMimeTypes.includes(attachment.type)) {
+    alert("El archivo debe ser un PDF, PNG o JPG.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('amount', cleanedAmount);
+  formData.append('date', date);
+  formData.append('description', description);
+  if (attachment) {
+    formData.append('attachment', attachment);
+  }
+
+  // Luego ya haces el fetch/post
+};
+
+
+
+⸻
+
+Nota importante:
+	•	Asegúrate que en el servidor también se esté esperando un número con punto (formato inglés).
+	•	Los archivos permitidos son sólo: PDF, PNG o JPG. (por su MIME type)
+
+⸻
+
+Resumen rápido
+
+Error actual	Solución propuesta
+amount no cumple el patrón	Reemplazar , por . automáticamente antes de enviar
+Validación incorrecta	Validar sobre cleanedAmount
+Envío incorrecto	Enviar cleanedAmount en FormData
+
+
+
+⸻
+
+¿Quieres que también le prepare el input de cantidad para que mientras escriba ya reemplace comas por puntos automáticamente?
+Se lo podría hacer aún más cómodo si quieres.
+¡Me dices!
