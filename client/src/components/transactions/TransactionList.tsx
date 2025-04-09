@@ -46,7 +46,7 @@ import BasicExpenseForm from "@/components/transactions/BasicExpenseForm";
 import UltraBasicExpenseForm from "@/components/transactions/UltraBasicExpenseForm";
 import HardcodedExpenseForm from "@/components/transactions/HardcodedExpenseForm";
 import UltraSimpleExpenseForm from "@/components/transactions/UltraSimpleExpenseForm";
-import SuperSimpleExpenseForm from "@/components/transactions/SuperSimpleExpenseForm";
+import MiniExpenseForm from "@/components/transactions/MiniExpenseForm";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
@@ -966,7 +966,7 @@ const TransactionList = () => {
                     <DialogHeader>
                       <DialogTitle>Registro rápido de gastos</DialogTitle>
                     </DialogHeader>
-                    <SuperSimpleExpenseForm onSuccess={() => {
+                    <MiniExpenseForm onSuccess={() => {
                       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
                       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
                     }} />
