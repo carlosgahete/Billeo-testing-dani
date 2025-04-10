@@ -154,11 +154,24 @@ const TransactionList = () => {
   const handleDeleteSelectedTransactions = async (transactions: Transaction[]) => {
     if (transactions.length === 0) return;
     
+    // Mostrar mensaje de carga
+    toast({
+      title: "Eliminando transacciones",
+      description: `Eliminando ${transactions.length} transacciones...`,
+    });
+    
     try {
-      // Eliminar cada transacción seleccionada
-      for (const transaction of transactions) {
-        await apiRequest("DELETE", `/api/transactions/${transaction.id}`);
-      }
+      // Crear un array de promesas para eliminar todas las transacciones en paralelo
+      const deletePromises = transactions.map(transaction => 
+        apiRequest("DELETE", `/api/transactions/${transaction.id}`)
+          .catch(error => {
+            console.error(`Error al eliminar transacción ${transaction.id}:`, error);
+            return null; // Continuar con las demás transacciones aunque alguna falle
+          })
+      );
+      
+      // Esperar a que todas las eliminaciones se completen
+      await Promise.all(deletePromises);
       
       // Notificar al usuario
       toast({
@@ -166,14 +179,17 @@ const TransactionList = () => {
         description: `Se han eliminado ${transactions.length} transacciones con éxito`,
       });
       
-      // Actualizar datos
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      // Actualizar datos inmediatamente
+      await Promise.all([
+        refetchTransactions(),
+        refetchInvoices(),
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] })
+      ]);
       
     } catch (error: any) {
       toast({
         title: "Error",
-        description: `No se pudieron eliminar las transacciones: ${error.message}`,
+        description: `No se pudieron eliminar algunas transacciones: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -311,16 +327,19 @@ const TransactionList = () => {
   }, []);
 
   // Estados de las consultas
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions, isLoading, refetch: refetchTransactions } = useQuery({
     queryKey: ["/api/transactions"],
+    refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
+    staleTime: 0, // Considerar datos obsoletos inmediatamente
   });
 
   const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
   });
 
-  const { data: invoices } = useQuery({
+  const { data: invoices, refetch: refetchInvoices } = useQuery({
     queryKey: ["/api/invoices"],
+    refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
   });
 
   // Función para determinar qué datos mostrar según los filtros activos
