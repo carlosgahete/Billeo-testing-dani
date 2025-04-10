@@ -408,8 +408,17 @@ const ExpensesByCategoryNew: React.FC<{
               </div>
               
               {/* Construcción del donut con segmentos circulares */}
-              <svg className="w-full h-full" viewBox="0 0 100 100">
+              <svg className="w-full h-full" viewBox="0 0 100 100" style={{ zIndex: 10 }}>
                 <desc>Gráfico de distribución de gastos</desc>
+                {/* Círculo base (gris claro) */}
+                <circle 
+                  cx="50" 
+                  cy="50" 
+                  r="40" 
+                  fill="transparent" 
+                  stroke="#f1f1f1"
+                  strokeWidth="20"
+                />
                 {data.slice(0, Math.min(10, data.length)).map((item, idx) => {
                   // Calcular el desplazamiento y el dasharray para este segmento
                   const percentages = data.slice(0, Math.min(10, data.length)).map(c => c.percentage);
@@ -431,31 +440,57 @@ const ExpensesByCategoryNew: React.FC<{
                         strokeDasharray={`${item.percentage * 2.51} ${100 * 2.51}`}
                         strokeDashoffset={`${-offset * 2.51}`}
                         transform="rotate(-90 50 50)"
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                        style={{ cursor: 'pointer' }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.opacity = '0.8';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.opacity = '1';
+                        }}
+                        onClick={() => {
+                          console.log(`Clic en segmento ${idx}, categoría ${item.name}`);
+                          setActiveIndex(idx === activeIndex ? null : idx);
+                        }}
                       />
                     </g>
                   );
                 })}
               </svg>
               
-              {/* Información tooltip en el centro */}
-              {activeIndex !== null && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-white p-2 rounded-md shadow-sm text-center w-28">
-                    <p className="font-semibold text-sm truncate">{data[activeIndex].name}</p>
-                    <p className="text-red-600 text-sm">{formatCurrency(data[activeIndex].value * -1)}</p>
-                    <p className="text-gray-500 text-xs">{data[activeIndex].percentage.toFixed(2)}%</p>
-                  </div>
+              {/* Información en el centro - Siempre visible pero cambia dependiendo del segmento seleccionado */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-white p-2 rounded-md shadow-sm text-center w-28">
+                  {activeIndex !== null ? (
+                    <>
+                      <p className="font-semibold text-sm truncate">{data[activeIndex].name}</p>
+                      <p className="text-red-600 text-sm">{formatCurrency(data[activeIndex].value * -1)}</p>
+                      <p className="text-gray-500 text-xs">{data[activeIndex].percentage.toFixed(2)}%</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-sm truncate">Total gastos</p>
+                      <p className="text-red-600 text-sm">{formatCurrency(data.reduce((acc, item) => acc + item.value, 0) * -1)}</p>
+                      <p className="text-gray-500 text-xs">{data.length} categorías</p>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
           
           {/* Lado derecho: Lista de categorías exactamente como en la imagen */}
           <div className="w-[55%] flex flex-col h-full pl-0 -ml-3 max-h-[300px] overflow-y-auto">
-            {data.map((item) => (
-              <div key={item.categoryId} className="flex items-center py-1">
+            {data.map((item, idx) => (
+              <div 
+                key={item.categoryId} 
+                className={`flex items-center py-1 cursor-pointer transition-colors ${idx < 10 && idx === activeIndex ? 'bg-gray-100 rounded' : ''}`}
+                onClick={() => {
+                  // Solo permitir clic en elementos que están en el gráfico (primeros 10)
+                  if (idx < 10) {
+                    setActiveIndex(idx === activeIndex ? null : idx);
+                  }
+                }}
+              >
                 {/* Círculo con icono */}
                 <div className="relative mr-3">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
