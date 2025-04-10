@@ -17,6 +17,46 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 
+// Función para calcular un arco para el gráfico de donut
+function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+  const angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number) {
+  // Asegurarse de que el ángulo de inicio y fin estén en el rango [0, 360]
+  startAngle = startAngle % 360;
+  if (startAngle < 0) startAngle += 360;
+  
+  endAngle = endAngle % 360;
+  if (endAngle < 0) endAngle += 360;
+  
+  // Si el ángulo inicial es mayor que el final, ajustar para que sea continuo
+  if (startAngle > endAngle) {
+    endAngle += 360;
+  }
+  
+  // Limitar a un círculo completo como máximo
+  if (endAngle - startAngle > 360) {
+    endAngle = startAngle + 360;
+  }
+  
+  const start = polarToCartesian(x, y, radius, endAngle);
+  const end = polarToCartesian(x, y, radius, startAngle);
+  
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  
+  const d = [
+    "M", start.x, start.y, 
+    "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+  ].join(" ");
+  
+  return d;
+}
+
 interface ExpenseByCategoryData {
   name: string;
   value: number;
@@ -431,6 +471,7 @@ const ExpensesByCategoryNew: React.FC<{
                   
                   return (
                     <g key={item.categoryId}>
+                      {/* Usamos una combinación de circle y eventos internos en g */}
                       <circle 
                         cx="50" 
                         cy="50" 
@@ -441,13 +482,20 @@ const ExpensesByCategoryNew: React.FC<{
                         strokeDasharray={`${item.percentage * 2.51} ${100 * 2.51}`}
                         strokeDashoffset={`${-offset * 2.51}`}
                         transform="rotate(-90 50 50)"
+                      />
+                      
+                      {/* Área sensible para eventos sobrepuesta en el segmento */}
+                      <path 
+                        d={`M 50 50 L ${50 + 45*Math.cos((-90+offset*3.6)*Math.PI/180)} ${50 + 45*Math.sin((-90+offset*3.6)*Math.PI/180)} A 45 45 0 ${item.percentage > 50 ? 1 : 0} 1 ${50 + 45*Math.cos((-90+(offset+item.percentage)*3.6)*Math.PI/180)} ${50 + 45*Math.sin((-90+(offset+item.percentage)*3.6)*Math.PI/180)} Z`}
+                        fill="transparent"
+                        stroke="transparent"
                         style={{ cursor: 'pointer' }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.opacity = '0.8';
+                        onMouseEnter={() => {
+                          console.log(`Mouse enter en segmento ${idx}, categoría ${item.name}`);
                           setHoverIndex(idx);
                         }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.opacity = '1';
+                        onMouseLeave={() => {
+                          console.log(`Mouse leave en segmento ${idx}`);
                           setHoverIndex(null);
                         }}
                         onClick={() => {
