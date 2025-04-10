@@ -232,9 +232,15 @@ const ExpensesByCategoryNew: React.FC<{
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
       
       expenses.forEach((transaction) => {
-        const category = categories.find(c => c.id === transaction.categoryId);
-        const categoryId = transaction.categoryId || 'uncategorized';
-        const categoryName = category?.name || 'Sin categoría';
+        // Intentamos encontrar la categoría por id primero, luego por comparación con el nombre
+        const category = categories.find(c => c.id === transaction.categoryId) || 
+                         categories.find(c => c.name === transaction.category);
+        
+        // Si tenemos un categoryId en la transacción, usarlo; si no, usar el id de la categoría encontrada o 'uncategorized'
+        const categoryId = transaction.categoryId || (category ? category.id : 'uncategorized');
+        
+        // Nombre de la categoría: del objeto categoría, del campo category de la transacción, o 'Sin categoría'
+        const categoryName = category?.name || transaction.category || 'Sin categoría';
         
         if (expensesByCategory[categoryId]) {
           expensesByCategory[categoryId].amount += Number(transaction.amount);
