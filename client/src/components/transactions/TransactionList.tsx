@@ -147,6 +147,159 @@ const TransactionList = () => {
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
   const [filteredIncomeTransactions, setFilteredIncomeTransactions] = useState<Transaction[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedTransactions, setSelectedTransactions] = useState<Transaction[]>([]);
+  const [isRepairing, setIsRepairing] = useState(false);
+  
+  // Eliminar múltiples transacciones
+  const handleDeleteSelectedTransactions = async (transactions: Transaction[]) => {
+    if (transactions.length === 0) return;
+    
+    try {
+      // Eliminar cada transacción seleccionada
+      for (const transaction of transactions) {
+        await apiRequest("DELETE", `/api/transactions/${transaction.id}`);
+      }
+      
+      // Notificar al usuario
+      toast({
+        title: "Transacciones eliminadas",
+        description: `Se han eliminado ${transactions.length} transacciones con éxito`,
+      });
+      
+      // Actualizar datos
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `No se pudieron eliminar las transacciones: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Exportar múltiples transacciones
+  const handleExportSelectedTransactions = async (transactions: Transaction[]) => {
+    if (transactions.length === 0 || isExporting) return;
+    setIsExporting(true);
+    
+    try {
+      // Determinar el tipo predominante para el título
+      const expenseCount = transactions.filter(t => t.type === 'expense').length;
+      const incomeCount = transactions.filter(t => t.type === 'income').length;
+      const documentTitle = expenseCount > incomeCount ? 'Informe de Gastos' : 'Informe de Ingresos';
+      const colorScheme = expenseCount > incomeCount ? [0, 122, 255] : [52, 199, 89];
+      
+      // Crear nuevo documento PDF
+      const pdf = new jsPDF();
+      
+      // Añadir título y metadata
+      pdf.setProperties({
+        title: `${documentTitle} - ${new Date().toLocaleDateString('es-ES')}`,
+        author: 'Billeo App',
+        subject: documentTitle,
+        keywords: 'finanzas, autónomos',
+      });
+      
+      // Añadir cabecera al documento
+      pdf.setFontSize(22);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text(documentTitle, 14, 22);
+      
+      // Añadir fecha de generación
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 14, 28);
+      pdf.text(`Total de elementos: ${transactions.length}`, 14, 33);
+      pdf.text(`Gastos: ${expenseCount} | Ingresos: ${incomeCount}`, 14, 38);
+      
+      // Calcular totales
+      const totalExpenses = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+        
+      const totalIncome = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      pdf.text(`Total gastos: ${formatCurrency(totalExpenses, 'expense')} | Total ingresos: ${formatCurrency(totalIncome, 'income')}`, 14, 43);
+      
+      // Preparar datos para la tabla
+      const tableData = transactions.map((t: Transaction) => {
+        const category = getCategory(t.categoryId);
+        return [
+          formatDate(t.date),
+          t.title,
+          t.type === 'expense' ? 'Gasto' : 'Ingreso',
+          t.description,
+          category ? category.name : 'Sin categoría',
+          formatCurrency(Number(t.amount), t.type)
+        ];
+      });
+      
+      // Añadir tabla al PDF
+      autoTable(pdf, {
+        head: [['Fecha', 'Concepto', 'Tipo', 'Descripción', 'Categoría', 'Importe']],
+        body: tableData,
+        startY: 50,
+        theme: 'grid',
+        headStyles: {
+          fillColor: colorScheme,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        margin: { top: 50 },
+        styles: {
+          overflow: 'linebreak',
+          cellPadding: 3,
+          fontSize: 9
+        },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Fecha
+          1: { cellWidth: 30 }, // Concepto
+          2: { cellWidth: 20 }, // Tipo
+          3: { cellWidth: 'auto' }, // Descripción
+          4: { cellWidth: 30 }, // Categoría
+          5: { cellWidth: 30, halign: 'right' } // Importe
+        }
+      });
+      
+      // Añadir pie de página
+      const pageCount = pdf.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Página ${i} de ${pageCount} | Generado por Billeo App`,
+          pdf.internal.pageSize.getWidth() / 2,
+          pdf.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      }
+      
+      // Guardar PDF
+      pdf.save(`Informe_Seleccionados_${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      toast({
+        title: "Informe generado correctamente",
+        description: `Se han exportado ${transactions.length} elementos al PDF.`,
+        variant: "default"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al generar el informe",
+        description: error.message || "Ocurrió un error al intentar generar el PDF.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Obtener parámetros de la URL
   useEffect(() => {
@@ -640,7 +793,6 @@ const TransactionList = () => {
   const balance = incomeTotal - expenseTotal;
 
   // Función para reparar las transacciones de facturas pagadas
-  const [isRepairing, setIsRepairing] = useState(false);
   
   const handleRepairInvoiceTransactions = async () => {
     if (isRepairing) return;
@@ -895,6 +1047,10 @@ const TransactionList = () => {
           <DataTable
             columns={columns}
             data={filteredTransactions || []}
+            selectable={true}
+            onRowSelectionChange={(selectedRows) => setSelectedTransactions(selectedRows)}
+            onDeleteSelected={handleDeleteSelectedTransactions}
+            onExportSelected={handleExportSelectedTransactions}
             searchPlaceholder="Buscar movimientos por descripción, importe o fecha..."
             actionButtons={currentTab === 'expense' ? (
               <>

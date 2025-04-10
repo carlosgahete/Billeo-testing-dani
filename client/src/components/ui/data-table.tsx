@@ -65,23 +65,33 @@ export function DataTable<TData, TValue>({
         {
           id: 'select',
           header: ({ table }: any) => (
-            <Checkbox
-              checked={
-                table.getIsAllPageRowsSelected() ||
-                (table.getIsSomePageRowsSelected() && "indeterminate")
-              }
-              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-              aria-label="Seleccionar todo"
-              className="rounded-full data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]"
-            />
+            <div className="flex items-center justify-center">
+              <div className="relative flex items-center justify-center h-5 w-5">
+                <Checkbox
+                  checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && "indeterminate")
+                  }
+                  onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                  aria-label="Seleccionar todo"
+                  className="rounded-full h-[18px] w-[18px] border-[1.5px] border-gray-300 
+                            data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]"
+                />
+              </div>
+            </div>
           ),
           cell: ({ row }: any) => (
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Seleccionar fila"
-              className="rounded-full data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]"
-            />
+            <div className="flex items-center justify-center">
+              <div className="relative flex items-center justify-center h-5 w-5">
+                <Checkbox
+                  checked={row.getIsSelected()}
+                  onCheckedChange={(value) => row.toggleSelected(!!value)}
+                  aria-label="Seleccionar fila"
+                  className="rounded-full h-[18px] w-[18px] border-[1.5px] border-gray-300 
+                            data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]"
+                />
+              </div>
+            </div>
           ),
           enableSorting: false,
           enableHiding: false,
