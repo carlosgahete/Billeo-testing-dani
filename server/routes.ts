@@ -2965,6 +2965,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Asegurarnos de que estamos trabajando con los datos correctos
       const processedData = extractedData.extractedData ? extractedData.extractedData : extractedData;
       
+      // Corregir valores numéricos de IRPF si son anormales (cuando el porcentaje viene como importe)
+      if (processedData && typeof processedData === 'object') {
+        // Corregir valor del porcentaje de IRPF si es anormal
+        if (processedData.irpf && processedData.irpf > 100) {
+          console.log(`⚠️ Corrigiendo valor anormal de IRPF: ${processedData.irpf} -> 15`);
+          // Guardar el importe original antes de ajustar
+          const originalIrpfValue = processedData.irpf;
+          // Establecer el porcentaje de IRPF a un valor razonable (15%)
+          processedData.irpf = 15;
+          
+          // Si irpfAmount no está establecido o es igual al porcentaje, calcularlo usando la base imponible
+          if (!processedData.irpfAmount || processedData.irpfAmount === originalIrpfValue) {
+            if (processedData.baseAmount) {
+              // Calcular el importe de IRPF como porcentaje de la base
+              processedData.irpfAmount = -(processedData.baseAmount * 0.15);
+              console.log(`⚠️ Recalculando importe IRPF basado en porcentaje: ${processedData.irpfAmount}`);
+            }
+          }
+        }
+        
+        // Asegurar que el importe de IRPF es negativo (retención)
+        if (processedData.irpfAmount && processedData.irpfAmount > 0) {
+          console.log(`⚠️ Corrigiendo signo de importe IRPF: ${processedData.irpfAmount} -> ${-processedData.irpfAmount}`);
+          processedData.irpfAmount = -processedData.irpfAmount;
+        }
+      }
+      
       const transactionData = visionService.mapToTransaction(
         processedData, 
         req.session.userId,
