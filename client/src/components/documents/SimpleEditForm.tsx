@@ -246,38 +246,38 @@ Proveedor: ${formData.provider || ""}`
   };
   
   return (
-    <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="space-y-6">
-      <div className="space-y-2">
+    <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="space-y-3">
+      <div className="space-y-1">
         <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
         <Input
           id="transaction-description"
           value={transaction.description || ''}
           disabled
-          className="w-full"
+          className="w-full h-9"
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
           <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
           <Input
             id="transaction-amount"
             ref={amountRef}
             type="text"
             inputMode="decimal"
-            className="w-full"
+            className="w-full h-9"
             onChange={() => {}} // Formulario no controlado
           />
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
           <Input
             id="transaction-base"
             ref={baseAmountRef}
             type="text"
             inputMode="decimal"
-            className="w-full"
+            className="w-full h-9"
             onChange={() => {
               updateTaxDisplay();
               updateIrpfDisplay();
@@ -287,8 +287,8 @@ Proveedor: ${formData.provider || ""}`
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
           <Label htmlFor="transaction-iva" className="text-sm">IVA (%):</Label>
           <div className="flex items-center space-x-2">
             <Input
@@ -296,7 +296,7 @@ Proveedor: ${formData.provider || ""}`
               ref={taxRef}
               type="text"
               inputMode="numeric"
-              className="w-full"
+              className="w-full h-9"
               onChange={() => {
                 updateTaxDisplay();
                 updateTotal();
@@ -306,7 +306,7 @@ Proveedor: ${formData.provider || ""}`
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%):</Label>
           <div className="flex items-center space-x-2">
             <Input
@@ -314,7 +314,7 @@ Proveedor: ${formData.provider || ""}`
               ref={irpfRef}
               type="text"
               inputMode="numeric"
-              className="w-full"
+              className="w-full h-9"
               onChange={() => {
                 updateIrpfDisplay();
                 updateTotal();
@@ -325,76 +325,79 @@ Proveedor: ${formData.provider || ""}`
         </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="transaction-date" className="text-sm">Fecha:</Label>
-        <Input
-          id="transaction-date"
-          ref={dateRef}
-          type="date"
-          className="w-full"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="transaction-date" className="text-sm">Fecha:</Label>
+          <Input
+            id="transaction-date"
+            ref={dateRef}
+            type="date"
+            className="w-full h-9"
+          />
+        </div>
+        
+        <div className="space-y-1">
+          <Label htmlFor="transaction-provider" className="text-sm">Proveedor:</Label>
+          <Input
+            id="transaction-provider"
+            ref={providerRef}
+            className="w-full h-9"
+          />
+        </div>
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
-        <Select
-          value={String(transaction.categoryId || "null")}
-          onValueChange={(value) => onUpdateCategory(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Seleccionar categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="null">Sin categoría</SelectItem>
-            {categories
-              .filter(cat => cat.type === 'expense')
-              .map(category => (
-                <SelectItem key={category.id} value={String(category.id)}>
-                  <div className="flex items-center">
-                    <span 
-                      className="w-3 h-3 rounded-full mr-2" 
-                      style={{ backgroundColor: category.color }}
-                    ></span>
-                    {category.icon && <span className="mr-1">{category.icon}</span>}
-                    {category.name}
-                  </div>
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
-        
-        <div className="flex justify-end mt-1">
+        <div className="flex items-center space-x-2">
+          <Select
+            value={String(transaction.categoryId || "null")}
+            onValueChange={(value) => onUpdateCategory(value)}
+          >
+            <SelectTrigger className="w-full h-9">
+              <SelectValue placeholder="Seleccionar categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="null">Sin categoría</SelectItem>
+              {categories
+                .filter(cat => cat.type === 'expense')
+                .map(category => (
+                  <SelectItem key={category.id} value={String(category.id)}>
+                    <div className="flex items-center">
+                      <span 
+                        className="w-3 h-3 rounded-full mr-2" 
+                        style={{ backgroundColor: category.color }}
+                      ></span>
+                      {category.icon && <span className="mr-1">{category.icon}</span>}
+                      {category.name}
+                    </div>
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+          
           <Button 
             type="button" 
             variant="ghost" 
             size="sm" 
             onClick={onCreateCategory}
-            className="h-7 text-xs"
+            className="whitespace-nowrap h-9"
           >
             <Plus className="h-3 w-3 mr-1" />
-            Nueva categoría
+            Nueva
           </Button>
         </div>
       </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="transaction-provider" className="text-sm">Proveedor:</Label>
-        <Input
-          id="transaction-provider"
-          ref={providerRef}
-          className="w-full"
-        />
-      </div>
 
-      <div className="flex justify-end space-x-2 mt-6 pt-4 border-t">
+      <div className="flex justify-end space-x-2 mt-4 pt-3 border-t">
         <Button
           type="button"
           variant="secondary"
           onClick={handleSave}
+          className="h-9"
         >
           <Check className="h-4 w-4 mr-2" />
-          Guardar cambios
+          Guardar
         </Button>
         <Button
           type="button"
@@ -402,7 +405,7 @@ Proveedor: ${formData.provider || ""}`
             handleSave()
               .then(() => onSaveAndNavigate());
           }}
-          className="bg-[#34C759] hover:bg-[#2fb350] text-white"
+          className="bg-[#34C759] hover:bg-[#2fb350] text-white h-9"
         >
           Guardar y volver
         </Button>

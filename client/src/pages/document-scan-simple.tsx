@@ -407,53 +407,50 @@ const DocumentScanPage = () => {
               </div>
             ) : (
               // Formulario de edición mostrado directamente sin diálogo de confirmación
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {/* Imagen del documento escaneado */}
                 {documentImage && (
-                  <div className="mb-6">
-                    <h3 className="font-medium text-xl text-gray-800 mb-3 flex items-center">
-                      <FileText className="h-5 w-5 mr-2 text-[#007AFF]" />
-                      Documento escaneado
-                    </h3>
-                    <div className="border border-gray-200 rounded-2xl p-3 bg-gray-50/50 shadow-sm">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm font-medium text-gray-600">Vista previa del documento:</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setIsResultZoomed(!isResultZoomed)}
-                          className="h-8 px-3 rounded-full border-gray-200 hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
-                        >
-                          {isResultZoomed ? (
-                            <>
-                              <ZoomOut className="h-4 w-4 mr-1.5" />
-                              Reducir
-                            </>
-                          ) : (
-                            <>
-                              <ZoomIn className="h-4 w-4 mr-1.5" />
-                              Ampliar
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      <div className="relative">
-                        <img 
-                          src={documentImage} 
-                          alt="Documento escaneado" 
-                          className="w-full h-40 object-contain rounded-lg cursor-pointer" 
-                          onClick={() => setIsResultZoomed(true)}
-                        />
-                      </div>
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="font-medium text-sm text-gray-800 flex items-center">
+                        <FileText className="h-4 w-4 mr-1 text-[#007AFF]" />
+                        Documento escaneado
+                      </h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setIsResultZoomed(!isResultZoomed)}
+                        className="h-7 px-2 text-xs rounded-full hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
+                      >
+                        {isResultZoomed ? (
+                          <>
+                            <ZoomOut className="h-3 w-3 mr-1" />
+                            Reducir
+                          </>
+                        ) : (
+                          <>
+                            <ZoomIn className="h-3 w-3 mr-1" />
+                            Ampliar
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="border border-gray-200 rounded-lg bg-gray-50/50 shadow-sm overflow-hidden">
+                      <img 
+                        src={documentImage} 
+                        alt="Documento escaneado" 
+                        className="w-full h-28 object-contain cursor-pointer" 
+                        onClick={() => setIsResultZoomed(true)}
+                      />
                     </div>
                   </div>
                 )}
                 
                 {/* Formulario de edición usando SimpleEditForm */}
                 {transaction && (
-                  <div className="space-y-6">
-                    <h3 className="font-medium text-xl text-gray-800 mb-4 flex items-center">
-                      <Receipt className="h-5 w-5 mr-2 text-[#34C759]" />
+                  <div className="space-y-3">
+                    <h3 className="font-medium text-base text-gray-800 mb-2 flex items-center">
+                      <Receipt className="h-4 w-4 mr-1.5 text-[#34C759]" />
                       Detalles del gasto
                     </h3>
                     
