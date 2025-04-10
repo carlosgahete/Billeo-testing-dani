@@ -2911,15 +2911,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extraer información del documento según el tipo de archivo
       let extractedData;
       
-      if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
-        extractedData = await visionService.processReceiptImage(filePath);
-      } else if (fileExtension === '.pdf') {
-        extractedData = await visionService.processReceiptPDF(filePath);
+      try {
+        console.log(`Procesando archivo: ${filePath} con extensión: ${fileExtension}. Servicio mockup: ${useMockService ? 'Sí' : 'No'}`);
+        
+        if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
+          extractedData = await visionService.processReceiptImage(filePath);
+        } else if (fileExtension === '.pdf') {
+          extractedData = await visionService.processReceiptPDF(filePath);
+        }
+        
+        console.log("Datos extraídos del documento:", JSON.stringify(extractedData, null, 2));
+      } catch (processError) {
+        console.error("Error al procesar el documento:", processError);
+        return res.status(500).json({ 
+          message: "Error al procesar el documento", 
+          error: String(processError),
+          path: filePath,
+          extension: fileExtension
+        });
+      }
+      
+      if (!extractedData) {
+        console.error("No se pudieron extraer datos del documento");
+        return res.status(500).json({ 
+          message: "No se pudieron extraer datos del documento", 
+          path: filePath,
+          extension: fileExtension
+        });
       }
       
       // Buscar una categoría que coincida con la sugerencia de categoría
       // Si no hay categoryHint, intentamos asignar "Servicios" como categoría por defecto
-      const categoryHint = extractedData.categoryHint || "Servicios";
+      const categoryHint = extractedData?.categoryHint || (extractedData?.extractedData ? extractedData.extractedData.categoryHint : null) || "Servicios";
       const allCategories = await storage.getCategoriesByUserId(req.session.userId);
       
       // Buscar categoría por nombre similar (sin distinguir mayúsculas/minúsculas)
@@ -2934,22 +2957,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (allCategories.find(cat => cat.type === 'expense')?.id || null);
       
       // Convertir los datos extraídos a un objeto de transacción
+      console.log("Mapeando datos para transacción con userId:", req.session.userId, "y categoryId:", categoryId);
+      
+      // Asegurarnos de que estamos trabajando con los datos correctos
+      const processedData = extractedData.extractedData ? extractedData.extractedData : extractedData;
+      
       const transactionData = visionService.mapToTransaction(
-        extractedData, 
+        processedData, 
         req.session.userId,
         categoryId
       );
       
+      console.log("Datos de transacción generados:", JSON.stringify(transactionData, null, 2));
+      
       // Crear la transacción en la base de datos
       // Asegurarnos de que todos los campos requeridos estén presentes
+      // Convertir userId a número si es un string
+      const userIdNumeric = typeof transactionData.userId === 'string' 
+        ? parseInt(transactionData.userId) 
+        : transactionData.userId;
+        
+      // Convertir categoryId a número o null
+      let categoryIdNumeric = null;
+      if (transactionData.categoryId !== null) {
+        categoryIdNumeric = typeof transactionData.categoryId === 'string' 
+          ? parseInt(transactionData.categoryId) 
+          : transactionData.categoryId;
+      }
+      
+      // Crear la transacción con los tipos correctos
       const transactionToCreate = {
-        userId: transactionData.userId,
+        userId: userIdNumeric,
         title: transactionData.title, // Añadimos el título
         description: transactionData.description,
         amount: transactionData.amount,
         date: transactionData.date,
         type: transactionData.type,
-        categoryId: transactionData.categoryId,
+        categoryId: categoryIdNumeric,
         paymentMethod: transactionData.paymentMethod || 'other',
         notes: transactionData.notes,
         additionalTaxes: transactionData.additionalTaxes

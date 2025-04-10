@@ -22,13 +22,13 @@ interface ExtractedData {
 
 // Estructura de la transacción que espera el sistema
 interface TransactionData {
-  userId: string;
+  userId: string | number;
   title?: string;
   description: string;
   amount: string; // Debe ser string según el esquema esperado
   date: Date;
   type: 'income' | 'expense';
-  categoryId: string | null;
+  categoryId: string | number | null;
   paymentMethod?: string;
   notes?: string;
   additionalTaxes?: any;
@@ -118,9 +118,11 @@ export async function verifyExpenseWithAI(data: { description: string, amount: n
  */
 export function mapToTransaction(
   extractedData: ExtractedData, 
-  userId: string,
-  categoryId: string | null
+  userId: string | number,
+  categoryId: string | number | null
 ): TransactionData {
+  console.log("Datos recibidos en mapToTransaction:", JSON.stringify(extractedData, null, 2));
+  
   // Crear un objeto de impuestos adicionales basado en los datos extraídos
   const additionalTaxes = [];
   
@@ -152,12 +154,17 @@ export function mapToTransaction(
   // Convertir la fecha extraída a un objeto Date
   const dateObj = new Date(extractedData.date);
   
+  // Asegurarnos de que el monto esté en formato string
+  const amountStr = typeof extractedData.amount === 'number' 
+    ? extractedData.amount.toString() 
+    : extractedData.amount;
+  
   // Crear el objeto de transacción
-  return {
+  const result = {
     userId,
     title: `${extractedData.provider || 'Proveedor'} - ${extractedData.description}`,
     description: extractedData.description,
-    amount: extractedData.amount.toString(),
+    amount: amountStr,
     date: dateObj,
     type: 'expense', // Asumimos que los documentos escaneados son gastos
     categoryId,
@@ -165,4 +172,8 @@ export function mapToTransaction(
     notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}.\nImporte base: ${extractedData.baseAmount}€.\nIVA (${extractedData.tax}%): +${extractedData.taxAmount}€${extractedData.irpf > 0 ? `.\nIRPF (${extractedData.irpf}%): ${extractedData.irpfAmount}€` : ''}\nTotal: ${extractedData.amount}€`,
     additionalTaxes: additionalTaxes.length > 0 ? additionalTaxes : null
   };
+  
+  console.log("Transacción mapeada:", JSON.stringify(result, null, 2));
+  
+  return result;
 }
