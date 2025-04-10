@@ -212,7 +212,7 @@ const ExpensesByCategory: React.FC<{
       <CardContent className="p-0 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Columna izquierda: Gráfico de donut */}
-          <div className="p-2 flex flex-col h-[360px]">
+          <div className="p-2 flex flex-col h-[290px]">
             {/* Mostrar período encima del gráfico */}
             {periodLabel && (
               <div className="text-left text-sm text-gray-500 mb-2 pl-2">
@@ -256,6 +256,8 @@ const ExpensesByCategory: React.FC<{
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
+              height: '290px',
+              width: '100%'
             }}
           >
             <div className="space-y-2 w-full py-2 flex-1 mb-8">
