@@ -716,7 +716,7 @@ const TransactionList = () => {
               {formatCurrency(incomeTotal, "income")}
             </p>
             
-            <div className="p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl flex items-center justify-between hover:bg-[#34C759]/10 transition-all">
+            <div className="p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl flex items-center justify-between hover:bg-[#34C759]/10 transition-all mb-2">
               <div className="flex items-center">
                 <Receipt className="h-4 w-4 text-[#34C759] mr-2" />
                 <span className="text-sm text-[#1D1D1F]">
@@ -730,6 +730,24 @@ const TransactionList = () => {
                 Ver
               </button>
             </div>
+
+            {transactions?.filter(t => t.type === 'income').length === 0 && (
+              <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between hover:bg-amber-100 transition-all">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 mr-2" />
+                  <span className="text-sm text-amber-700">
+                    Faltan ingresos por facturas cobradas
+                  </span>
+                </div>
+                <button 
+                  className="text-xs px-2 py-1 bg-amber-100 text-amber-600 rounded-full"
+                  onClick={handleRepairTransactions}
+                  disabled={isRepairing}
+                >
+                  {isRepairing ? 'Reparando...' : 'Reparar'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
         
