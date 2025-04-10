@@ -461,14 +461,14 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
   };
 
   return (
-    <div className="container max-w-5xl py-8">
+    <div className="container max-w-5xl py-8 px-4 sm:px-6 space-y-6">
       {/* Diálogo de confirmación y edición */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg rounded-3xl bg-white/90 backdrop-blur-sm border border-gray-100 shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Revisar transacción</DialogTitle>
-            <DialogDescription>
-              Revisa y edita la información antes de guardar definitivamente:
+            <DialogTitle className="text-2xl font-medium text-gray-900">Revisar gasto</DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              Revisa y personaliza la información detectada automáticamente:
             </DialogDescription>
           </DialogHeader>
           
