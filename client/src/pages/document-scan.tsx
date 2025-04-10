@@ -34,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+// Importar el componente SimpleEditForm
+import SimpleEditForm from "@/components/documents/SimpleEditForm";
 import {
   Form,
   FormControl,
@@ -825,214 +827,24 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                   </div>
                 )}
                 
-                {/* Campos para editar la información extraída */}
-                {transaction && editedData && (
+                {/* Campos para editar la información extraída usando el formulario simple */}
+                {transaction && (
                   <div className="space-y-6">
                     <h3 className="font-medium text-xl text-gray-800 mb-4 flex items-center">
                       <Receipt className="h-5 w-5 mr-2 text-[#34C759]" />
                       Detalles del gasto
                     </h3>
                     
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
-                        <Input
-                          id="transaction-description"
-                          value={editedData.description || transaction.description || ""}
-                          onChange={(e) => handleFieldChange('description', e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
-                          <Input
-                            id="transaction-amount"
-                            type="text"
-                            inputMode="decimal"
-                            value={editedData.amount !== null ? editedData.amount : transaction.amount || ""}
-                            onChange={(e) => {
-                              // Admitir tanto punto como coma como separador decimal
-                              const inputValue = e.target.value;
-                              // Permitir strings vacías directamente
-                              if (inputValue === "" || inputValue === "." || inputValue === ",") {
-                                handleFieldChange('amount', "");
-                              } else if (!isNaN(parseFloat(inputValue.replace(",", ".")))) {
-                                // Solo convertir a número si es un valor numérico válido
-                                handleFieldChange('amount', parseFloat(inputValue.replace(",", ".")));
-                              }
-                            }}
-                            className="w-full"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
-                          <Input
-                            id="transaction-base"
-                            type="text"
-                            inputMode="decimal"
-                            value={editedData.baseAmount !== null ? editedData.baseAmount : extractedData?.baseAmount || ""}
-                            onChange={(e) => {
-                              // Admitir tanto punto como coma como separador decimal
-                              const inputValue = e.target.value;
-                              // Permitir strings vacías directamente
-                              if (inputValue === "" || inputValue === "." || inputValue === ",") {
-                                handleFieldChange('baseAmount', "");
-                              } else if (!isNaN(parseFloat(inputValue.replace(",", ".")))) {
-                                // Solo convertir a número si es un valor numérico válido
-                                handleFieldChange('baseAmount', parseFloat(inputValue.replace(",", ".")));
-                              }
-                            }}
-                            className="w-full"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="transaction-iva" className="text-sm">IVA (%):</Label>
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              id="transaction-iva"
-                              type="text"
-                              inputMode="numeric"
-                              value={editedData.tax !== null ? editedData.tax : extractedData?.tax || ""}
-                              onChange={(e) => {
-                                // Admitir tanto punto como coma como separador decimal
-                                const inputValue = e.target.value;
-                                // Permitir strings vacías directamente
-                                if (inputValue === "" || inputValue === "." || inputValue === ",") {
-                                  handleFieldChange('tax', "");
-                                } else if (!isNaN(parseInt(inputValue))) {
-                                  // Solo convertir a número si es un valor numérico válido
-                                  handleFieldChange('tax', parseInt(inputValue));
-                                }
-                              }}
-                              className="w-full"
-                            />
-                            <div className="w-1/2 text-sm text-muted-foreground">
-                              {editedData.taxAmount || extractedData?.taxAmount ? 
-                                `${editedData.taxAmount || extractedData?.taxAmount}€` : ""}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%):</Label>
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              id="transaction-irpf"
-                              type="text"
-                              inputMode="numeric"
-                              value={editedData.irpf !== null ? editedData.irpf : extractedData?.irpf || ""}
-                              onChange={(e) => {
-                                // Admitir tanto punto como coma como separador decimal
-                                const inputValue = e.target.value;
-                                // Permitir strings vacías directamente
-                                if (inputValue === "" || inputValue === "." || inputValue === ",") {
-                                  handleFieldChange('irpf', "");
-                                } else if (!isNaN(parseInt(inputValue))) {
-                                  // Solo convertir a número si es un valor numérico válido
-                                  handleFieldChange('irpf', parseInt(inputValue));
-                                }
-                              }}
-                              className="w-full"
-                            />
-                            <div className="w-1/2 text-sm text-muted-foreground">
-                              {editedData.irpfAmount || extractedData?.irpfAmount ? 
-                                `${editedData.irpfAmount || extractedData?.irpfAmount}€` : ""}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="transaction-date" className="text-sm">Fecha:</Label>
-                        <Input
-                          id="transaction-date"
-                          type="date"
-                          value={format(new Date(transaction.date), "yyyy-MM-dd")}
-                          onChange={(e) => {
-                            const newDate = new Date(e.target.value);
-                            handleFieldChange('date', newDate);
-                          }}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
-                        <Select
-                          value={String(transaction.categoryId || "null")}
-                          onValueChange={(value) => handleUpdateCategory(value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Seleccionar categoría" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="null">Sin categoría</SelectItem>
-                            {categories
-                              .filter(cat => cat.type === 'expense')
-                              .map(category => (
-                                <SelectItem key={category.id} value={String(category.id)}>
-                                  <div className="flex items-center">
-                                    <span 
-                                      className="w-3 h-3 rounded-full mr-2" 
-                                      style={{ backgroundColor: category.color }}
-                                    ></span>
-                                    {category.icon && <span className="mr-1">{category.icon}</span>}
-                                    {category.name}
-                                  </div>
-                                </SelectItem>
-                              ))
-                            }
-                          </SelectContent>
-                        </Select>
-                        
-                        <div className="flex justify-end mt-1">
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setNewCategoryDialogOpen(true)}
-                            className="h-7 text-xs"
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            Nueva categoría
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="transaction-provider" className="text-sm">Proveedor:</Label>
-                        <Input
-                          id="transaction-provider"
-                          value={editedData.provider || extractedData?.provider || ""}
-                          onChange={(e) => handleFieldChange('provider', e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
-
-                      <div className="flex justify-end space-x-2 mt-6 pt-4 border-t">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={handleSaveChanges}
-                        >
-                          <Check className="h-4 w-4 mr-2" />
-                          Guardar cambios
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={handleGoToTransactions}
-                          className="bg-[#34C759] hover:bg-[#2fb350] text-white"
-                        >
-                          Guardar y volver
-                        </Button>
-                      </div>
-                    </div>
+                    {/* Importar nuestro nuevo componente SimpleEditForm */}
+                    <SimpleEditForm 
+                      transaction={transaction}
+                      extractedData={extractedData || {}}
+                      categories={categories}
+                      onCreateCategory={() => setNewCategoryDialogOpen(true)}
+                      onSave={handleSaveChanges}
+                      onSaveAndNavigate={handleGoToTransactions}
+                      onUpdateCategory={handleUpdateCategory}
+                    />
                   </div>
                 )}
               </div>

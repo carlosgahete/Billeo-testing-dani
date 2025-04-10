@@ -26,7 +26,7 @@ import QuoteDetailPage from "@/pages/quotes/[id]";
 import TransactionsPage from "@/pages/transactions/index";
 import CreateTransactionPage from "@/pages/transactions/create";
 import EditTransactionPage from "@/pages/transactions/edit/[id]";
-import DocumentScanPage from "@/pages/document-scan";
+import DocumentScanPage from "@/pages/document-scan-simple";
 import ReportsPage from "@/pages/reports/index";
 import CompanyPage from "@/pages/company/index";
 import SettingsPage from "@/pages/settings";
