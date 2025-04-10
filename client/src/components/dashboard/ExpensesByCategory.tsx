@@ -210,9 +210,12 @@ const ExpensesByCategory: React.FC<{
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="flex flex-col md:flex-row justify-between gap-2">
           {/* Columna izquierda: Gráfico de donut */}
-          <div className="p-2 flex flex-col h-[290px]">
+          <div className="p-2 flex flex-col justify-center" style={{
+            height: '330px',
+            flex: '1'
+          }}>
             {/* Mostrar período encima del gráfico */}
             {periodLabel && (
               <div className="text-left text-sm text-gray-500 mb-2 pl-2">
@@ -252,15 +255,18 @@ const ExpensesByCategory: React.FC<{
           
           {/* Columna derecha: Lista de categorías */}
           <div 
-            className="p-2 pr-3 relative flex flex-col"
+            className="p-0 relative flex flex-col justify-center items-center bg-white rounded-md shadow-sm"
             style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#d1d5db #f3f4f6',
-              height: '290px',
-              width: '100%'
+              scrollbarWidth: 'none', /* Ocultar scrollbar */
+              height: '330px',
+              width: '330px',
+              minWidth: '330px',
+              minHeight: '330px',
+              maxHeight: '330px',
+              overflow: 'hidden' /* Ocultar cualquier contenido que sobresalga */
             }}
           >
-            <div className="space-y-2 w-full py-2 flex-1 mb-8">
+            <div className="space-y-2 w-full p-4 flex-1">
               {/* Mostrar las categorías hasta encontrar Comida o máximo 5 */}
               {(() => {
                 // Buscar el índice de "Comida"
