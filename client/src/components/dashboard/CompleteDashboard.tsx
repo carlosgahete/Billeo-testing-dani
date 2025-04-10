@@ -498,14 +498,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="mb-5 p-4 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-medium text-blue-600">IVA a pagar:</span>
-                <span className="text-lg font-medium text-blue-700">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
+            <div className="space-y-3 mb-5 p-4 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">IVA a pagar:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-lg font-medium text-amber-600">IRPF a pagar:</span>
-                <span className="text-lg font-medium text-amber-700">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
+                <span className="text-sm text-gray-600">IRPF a pagar:</span>
+                <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
               </div>
             </div>
             
