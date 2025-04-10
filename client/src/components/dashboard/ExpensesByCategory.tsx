@@ -206,22 +206,22 @@ const ExpensesByCategory: React.FC<{
           </div>
         )}
         
-        {/* Contenedor principal con distribución simétrica */}
-        <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-4 mx-auto">
-          {/* Mitad izquierda: Gráfico de donut con tamaño fijo */}
-          <div className="flex justify-center items-center">
-            <div className="flex items-center justify-center" style={{ 
-              width: '280px',
-              height: '280px'
-            }}>
+        {/* Contenedor principal único */}
+        <div className="flex justify-center mb-4 mx-auto">
+          <div className="bg-white rounded-md shadow-sm" style={{ 
+            width: '280px', 
+            height: '400px'
+          }}>
+            {/* Parte superior: Gráfico de donut */}
+            <div className="flex justify-center items-center px-4 pt-4" style={{height: '120px'}}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={95}
+                    innerRadius={32}
+                    outerRadius={55}
                     paddingAngle={1}
                     dataKey="value"
                   >
@@ -242,61 +242,46 @@ const ExpensesByCategory: React.FC<{
                 </PieChart>
               </ResponsiveContainer>
             </div>
-          </div>
-          
-          {/* Mitad derecha: Lista de categorías con misma altura que el gráfico */}
-          <div className="flex justify-center items-center">
-            <div className="bg-white rounded-md shadow-sm" style={{ 
-              width: '280px', 
-              height: '280px' 
-            }}>
-              {/* Contenedor para centrado vertical perfecto con altura fija */}
-              <div className="relative w-full h-full overflow-hidden">
-                {/* SOLUCIÓN DEFINITIVA: Contenedor que oculta explícitamente el sexto elemento */}
-                <style>
-                  {`
-                    /* Esconder específicamente el sexto elemento (Sin categoría) */
-                    .category-item:nth-child(6) {
-                      display: none !important;
-                    }
-                  `}
-                </style>
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-2" style={{
-                  /* Esconder cualquier overflow como seguridad adicional */
-                  overflow: 'hidden',
-                  /* Tamaño adecuado para 5 elementos en espacio reducido */
-                  maxHeight: '260px'
-                }}>
-                  {/* Datos ya filtrados y ordenados en el useEffect */}
-                  {categoryItems.map((item, index, array) => (
-                    <div 
-                      key={index} 
-                      className="flex items-start gap-2 category-item"
-                      style={{ marginBottom: index < array.length - 1 ? '12px' : '0' }}
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
-                        style={{ 
-                          backgroundColor: `${item.color}15`,
-                          color: item.color
-                        }}
-                      >
-                        <span className="text-lg">{item.icon}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                          <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>{item.count} transacciones</span>
-                          <span>{item.percentage.toFixed(2)}%</span>
-                        </div>
-                      </div>
+            
+            {/* Parte inferior: Lista de categorías */}
+            <div className="px-4 py-3" style={{height: '280px'}}>
+              <style>
+                {`
+                  /* Esconder específicamente el sexto elemento (Sin categoría) */
+                  .category-item:nth-child(6) {
+                    display: none !important;
+                  }
+                `}
+              </style>
+              {/* Datos ya filtrados y ordenados en el useEffect */}
+              {categoryItems.map((item, index, array) => (
+                <div 
+                  key={index} 
+                  className="flex items-start gap-2 category-item mb-3"
+                >
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
+                    style={{ 
+                      backgroundColor: `${item.color}15`,
+                      color: item.color
+                    }}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex">
+                      <h4 className="font-medium text-gray-900 text-sm mr-1">{item.name}</h4>
+                      <div className="flex-1"></div>
+                      <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
                     </div>
-                  ))}
+                    <div className="flex text-xs text-gray-500">
+                      <span>{item.count} transacciones</span>
+                      <div className="flex-1"></div>
+                      <span>{item.percentage.toFixed(2)}%</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
