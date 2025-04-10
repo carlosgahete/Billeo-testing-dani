@@ -14,7 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { 
   Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, FileText,
-  ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw 
+  ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -741,7 +742,7 @@ const TransactionList = () => {
                 </div>
                 <button 
                   className="text-xs px-2 py-1 bg-amber-100 text-amber-600 rounded-full"
-                  onClick={handleRepairTransactions}
+                  onClick={handleRepairInvoiceTransactions}
                   disabled={isRepairing}
                 >
                   {isRepairing ? 'Reparando...' : 'Reparar'}
