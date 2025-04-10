@@ -255,33 +255,37 @@ const ExpensesByCategory: React.FC<{
           
           {/* Columna derecha: Lista de categorías */}
           <div 
-            className="p-0 relative flex flex-col justify-center items-center bg-white rounded-md shadow-sm"
+            className="p-0 relative bg-white rounded-md shadow-sm"
             style={{
-              scrollbarWidth: 'none', /* Ocultar scrollbar */
-              height: '380px',
               width: '330px',
-              minWidth: '330px',
-              minHeight: '380px',
-              maxHeight: '380px',
-              overflow: 'hidden' /* Ocultar cualquier contenido que sobresalga */
+              height: '380px',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
             }}
           >
-            <div className="space-y-3 w-full p-5 pt-3 flex-1">
-              {/* Mostrar las primeras 6 categorías incluyendo "Sin categoría" */}
+            <div className="w-full p-4 py-4" style={{ height: '380px', overflowY: 'auto' }}>
+              {/* Preparar datos asegurándonos de incluir "Sin categoría" */}
               {(() => {
-                // Buscar si existe "Sin categoría"
-                const sinCategoriaItem = data.find(item => item.name === "Sin categoría");
-                // Crear una lista de 5 primeras categorías
-                const displayItems = data.slice(0, 6);
+                // Tomar las 5 primeras categorías
+                const mainCategories = data.slice(0, 5);
                 
-                // Si "Sin categoría" existe pero no está en las primeras 6, reemplazar la última
-                if (sinCategoriaItem && !displayItems.includes(sinCategoriaItem)) {
-                  displayItems[5] = sinCategoriaItem;
+                // Buscar la categoría "Sin categoría"
+                const sinCategoria = data.find(item => item.name === "Sin categoría");
+                
+                // Si "Sin categoría" existe y no está ya incluida, añadirla al final
+                const displayCategories = [...mainCategories];
+                if (sinCategoria && !mainCategories.some(cat => cat.name === "Sin categoría")) {
+                  displayCategories.push(sinCategoria);
                 }
                 
-                return displayItems;
+                return displayCategories;
               })().map((item, index) => (
-                <div key={index} className="flex items-start gap-2">
+                <div 
+                  key={index} 
+                  className="flex items-start gap-2 mb-4"
+                  style={{ marginTop: index === 0 ? '0' : '8px' }}
+                >
                   <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
                     style={{ 
