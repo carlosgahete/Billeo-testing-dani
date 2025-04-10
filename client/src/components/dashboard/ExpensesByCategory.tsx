@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Label } from 'recharts';
 import { TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -22,9 +22,8 @@ interface ExpenseByCategoryData {
 }
 
 const COLORS = [
-  '#000000', '#5E5CE6', '#007AFF', '#64D2FF', '#5AC8FA',
-  '#00C7BE', '#30C48D', '#34C759', '#BFD641', '#FFD60A',
-  '#FF9500', '#FF3B30', '#FF2D55', '#AF52DE', '#A2845E',
+  '#5AC8FA', '#AF52DE', '#FF3B30', '#30C48D', '#FFCC00', 
+  '#FF9500', '#5E5CE6', '#007AFF', '#34C759', '#FF2D55',
 ];
 
 const ExpensesByCategory: React.FC<{
@@ -68,24 +67,12 @@ const ExpensesByCategory: React.FC<{
           setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
         }
       } else if (year === 'all') {
-        setPeriodLabel("Todos los períodos");
+        setPeriodLabel(`Año ${currentYear} completo`);
       } else {
-        const startDate = new Date(parseInt(year), 0, 1);
-        const endDate = new Date(parseInt(year), 11, 31);
-        
-        const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
-        const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
-        
-        setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+        setPeriodLabel(`Año ${year} completo`);
       }
     } else {
-      const startDate = new Date(currentYear, 0, 1);
-      const endDate = new Date(currentYear, 11, 31);
-      
-      const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
-      const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
-      
-      setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+      setPeriodLabel(`Año ${currentYear} completo`);
     }
   }, [period]);
 
@@ -96,30 +83,21 @@ const ExpensesByCategory: React.FC<{
       
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
       
-      // Ignoramos completamente la categoría "Sin categoría" aquí
-      // No la creamos para que no aparezca en absoluto
-      
       expenses.forEach((transaction) => {
-        if (!transaction.categoryId) {
-          // Ignoramos transacciones sin categoría
-          return;
-        }
-        
         const category = categories.find(c => c.id === transaction.categoryId);
+        const categoryId = transaction.categoryId || 'uncategorized';
+        const categoryName = category?.name || 'Sin categoría';
         
-        if (category) {
-          if (expensesByCategory[category.id]) {
-            expensesByCategory[category.id].amount += Number(transaction.amount);
-            expensesByCategory[category.id].count += 1;
-          } else {
-            expensesByCategory[category.id] = {
-              amount: Number(transaction.amount),
-              count: 1,
-              name: category.name
-            };
-          }
+        if (expensesByCategory[categoryId]) {
+          expensesByCategory[categoryId].amount += Number(transaction.amount);
+          expensesByCategory[categoryId].count += 1;
+        } else {
+          expensesByCategory[categoryId] = {
+            amount: Number(transaction.amount),
+            count: 1,
+            name: categoryName
+          };
         }
-        // Ignoramos cualquier transacción sin categoría válida
       });
       
       // Extraer datos y procesar
@@ -161,9 +139,6 @@ const ExpensesByCategory: React.FC<{
         processedData = processedData.slice(0, 5);
       }
       
-      // Verificar que tenemos exactamente 5 categorías
-      console.log("TOTAL CATEGORÍAS PROCESADAS:", processedData.length);
-      
       setData(processedData);
     }
   }, [transactions, categories]);
@@ -186,10 +161,6 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // Los datos ya vienen preparados directamente del useEffect
-  // No es necesario procesarlos de nuevo aquí
-  const categoryItems = data;
-
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
       <CardHeader className="bg-red-50 p-3">
@@ -198,92 +169,46 @@ const ExpensesByCategory: React.FC<{
           Gastos por Categoría
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 pb-4">
-        {/* Título del periodo centrado arriba */}
-        {periodLabel && (
-          <div className="text-center text-sm text-gray-500 mb-4 mt-2">
-            <strong>{periodLabel}</strong>
-          </div>
-        )}
+      
+      <CardContent className="p-5">
+        {/* Título del periodo */}
+        <div className="mb-2 text-gray-700 text-sm font-medium">
+          {periodLabel}
+        </div>
         
-        {/* Contenedor principal único */}
-        <div className="flex justify-center mb-4 mx-auto">
-          <div className="bg-white rounded-md shadow-sm" style={{ 
-            width: '280px', 
-            height: '400px'
-          }}>
-            {/* Parte superior: Gráfico de donut */}
-            <div className="flex justify-center items-center px-4 pt-4" style={{height: '120px'}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={32}
-                    outerRadius={55}
-                    paddingAngle={1}
-                    dataKey="value"
-                  >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{ 
-                      borderRadius: '8px',
-                      boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                      border: 'none',
-                      padding: '6px',
-                      fontSize: '10px'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            
-            {/* Parte inferior: Lista de categorías */}
-            <div className="px-4 py-3" style={{height: '280px'}}>
-              <style>
-                {`
-                  /* Esconder específicamente el sexto elemento (Sin categoría) */
-                  .category-item:nth-child(6) {
-                    display: none !important;
-                  }
-                `}
-              </style>
-              {/* Datos ya filtrados y ordenados en el useEffect */}
-              {categoryItems.map((item, index, array) => (
+        {/* Nuevo diseño con tarjetas para cada categoría */}
+        <div className="space-y-2">
+          {data.map((item, index) => (
+            <div 
+              key={item.categoryId} 
+              className="rounded-lg p-3 transition-colors"
+              style={{ backgroundColor: `${item.color}10` }}
+            >
+              <div className="flex items-center gap-3">
                 <div 
-                  key={index} 
-                  className="flex items-start gap-2 category-item mb-3"
+                  className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" 
+                  style={{ backgroundColor: `${item.color}20`, color: item.color }}
                 >
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
-                    style={{ 
-                      backgroundColor: `${item.color}15`,
-                      color: item.color
-                    }}
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex">
-                      <h4 className="font-medium text-gray-900 text-sm mr-1">{item.name}</h4>
-                      <div className="flex-1"></div>
-                      <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
+                  <span className="text-xl">{item.icon}</span>
+                </div>
+                
+                <div className="flex-grow">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-base font-medium">{item.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
+                      </div>
                     </div>
-                    <div className="flex text-xs text-gray-500">
-                      <span>{item.count} transacciones</span>
-                      <div className="flex-1"></div>
-                      <span>{item.percentage.toFixed(2)}%</span>
+                    <div className="text-right">
+                      <div className="text-base font-semibold">{formatCurrency(item.value)}</div>
+                      <div className="text-xs text-gray-500">{item.percentage.toFixed(2)}%</div>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </CardContent>
     </Card>
