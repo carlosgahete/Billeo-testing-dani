@@ -16,8 +16,13 @@ interface ExtractedData {
   taxAmount: number;
   irpf: number;
   irpfAmount: number;
-  provider: string;
+  provider?: string;
+  vendor?: string;
+  client?: string;
   categoryHint: string;
+  subtotal?: number; // Alias para baseAmount en algunos contextos
+  ivaRate?: number;  // Alias para tax en algunos contextos
+  irpfRate?: number; // Alias para irpf en algunos contextos
 }
 
 // Estructura de la transacción que espera el sistema
@@ -306,14 +311,21 @@ export function mapToTransaction(
   }
   
   // Verificar coherencia en el total
-  const calculatedTotal = baseAmount + taxAmount - irpfAmount;
+  // El usuario quiere mantener el total tal como está en el documento
   const declaredTotal = typeof extractedData.amount === 'number' ? 
     extractedData.amount : 
     parseFloat(String(extractedData.amount || '0'));
   
+  // Calcular solo para fines de verificación pero usaremos el declarado
+  const calculatedTotal = baseAmount + taxAmount - irpfAmount;
+  
+  console.log(`Total declarado en el documento: ${declaredTotal}€`);
+  console.log(`Total calculado: Base (${baseAmount}) + IVA (${taxAmount}) - IRPF (${irpfAmount}) = ${calculatedTotal}€`);
+  
+  // Verificar si hay diferencia significativa
   if (Math.abs(calculatedTotal - declaredTotal) > 0.5) {
-    console.log(`⚠️ Advertencia: El total (${declaredTotal}€) no coincide con Base + IVA - IRPF (${calculatedTotal}€)`);
-    console.log(`⚠️ Ajustando total para mantener coherencia fiscal`);
+    console.log(`⚠️ Nota: El total declarado (${declaredTotal}€) no coincide con el calculado (${calculatedTotal}€)`);
+    console.log(`⚠️ Respetando el total declarado en el documento: ${declaredTotal}€`);
   }
   
   // Búsqueda de proveedor y cliente
@@ -387,7 +399,7 @@ export function mapToTransaction(
   }
 
   // Añadir total
-  notesText += `\n💵 Total a pagar: ${calculatedTotal.toFixed(2)}€
+  notesText += `\n💵 Total a pagar: ${declaredTotal.toFixed(2)}€
 
 Extraído automáticamente mediante reconocimiento de texto.`;
   
@@ -396,7 +408,7 @@ Extraído automáticamente mediante reconocimiento de texto.`;
     userId,
     title: provider,
     description: description,
-    amount: calculatedTotal.toString(),
+    amount: declaredTotal.toString(), // Usar el importe declarado en el documento
     date: dateObj,
     type: 'expense' as const,
     categoryId,
