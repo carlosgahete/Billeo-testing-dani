@@ -136,8 +136,12 @@ export function mapToTransaction(
     });
   }
   
-  // Si hay IRPF, lo añadimos (asegurándonos de que el importe sea negativo)
+  // Si hay IRPF, lo añadimos (asegurándonos de que el importe sea negativo y el porcentaje correcto)
   if (extractedData.irpf > 0) {
+    // Verificar que el porcentaje de IRPF es un valor razonable (normalmente entre 1-21%)
+    // Si es mayor que 100, asumimos que es el importe y no el porcentaje
+    const irpfRate = extractedData.irpf > 100 ? 15 : extractedData.irpf;
+    
     // Asegurarnos de que el importe del IRPF sea negativo
     const irpfAmount = extractedData.irpfAmount <= 0 
       ? extractedData.irpfAmount  // Ya es negativo, lo mantenemos
@@ -145,7 +149,7 @@ export function mapToTransaction(
     
     additionalTaxes.push({
       name: "IRPF",
-      rate: extractedData.irpf,
+      rate: irpfRate,
       amount: irpfAmount,
       baseAmount: extractedData.baseAmount
     });
@@ -169,7 +173,7 @@ export function mapToTransaction(
     type: 'expense', // Asumimos que los documentos escaneados son gastos
     categoryId,
     paymentMethod: 'other',
-    notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}.\nImporte base: ${extractedData.baseAmount}€.\nIVA (${extractedData.tax}%): +${extractedData.taxAmount}€${extractedData.irpf > 0 ? `.\nIRPF (${extractedData.irpf}%): ${extractedData.irpfAmount}€` : ''}\nTotal: ${extractedData.amount}€`,
+    notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}.\nImporte base: ${extractedData.baseAmount}€.\nIVA (${extractedData.tax}%): +${extractedData.taxAmount}€${extractedData.irpf > 0 ? `.\nIRPF (${extractedData.irpf > 100 ? 15 : extractedData.irpf}%): ${extractedData.irpfAmount}€` : ''}\nTotal: ${extractedData.amount}€`,
     additionalTaxes: additionalTaxes.length > 0 ? additionalTaxes : null
   };
   
