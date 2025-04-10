@@ -211,8 +211,8 @@ const ExpensesByCategory: React.FC<{
           {/* Mitad izquierda: Gráfico de donut con tamaño fijo */}
           <div className="flex justify-center items-center">
             <div className="flex items-center justify-center" style={{ 
-              width: '320px',
-              height: '310px'
+              width: '280px',
+              height: '280px'
             }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -220,8 +220,8 @@ const ExpensesByCategory: React.FC<{
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
-                    outerRadius={110}
+                    innerRadius={55}
+                    outerRadius={95}
                     paddingAngle={1}
                     dataKey="value"
                   >
@@ -247,8 +247,8 @@ const ExpensesByCategory: React.FC<{
           {/* Mitad derecha: Lista de categorías con misma altura que el gráfico */}
           <div className="flex justify-center items-center">
             <div className="bg-white rounded-md shadow-sm" style={{ 
-              width: '320px', 
-              height: '310px' 
+              width: '280px', 
+              height: '280px' 
             }}>
               {/* Contenedor para centrado vertical perfecto con altura fija */}
               <div className="relative w-full h-full overflow-hidden">
@@ -261,27 +261,27 @@ const ExpensesByCategory: React.FC<{
                     }
                   `}
                 </style>
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-3" style={{
+                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-2" style={{
                   /* Esconder cualquier overflow como seguridad adicional */
                   overflow: 'hidden',
-                  /* Tamaño adecuado para 5 elementos */
-                  maxHeight: '290px'
+                  /* Tamaño adecuado para 5 elementos en espacio reducido */
+                  maxHeight: '260px'
                 }}>
                   {/* Datos ya filtrados y ordenados en el useEffect */}
                   {categoryItems.map((item, index, array) => (
                     <div 
                       key={index} 
                       className="flex items-start gap-2 category-item"
-                      style={{ marginBottom: index < array.length - 1 ? '16px' : '0' }}
+                      style={{ marginBottom: index < array.length - 1 ? '12px' : '0' }}
                     >
                       <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
                         style={{ 
                           backgroundColor: `${item.color}15`,
                           color: item.color
                         }}
                       >
-                        <span className="text-xl">{item.icon}</span>
+                        <span className="text-lg">{item.icon}</span>
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between">
