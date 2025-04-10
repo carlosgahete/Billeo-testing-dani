@@ -265,27 +265,10 @@ const ExpensesByCategoryNew: React.FC<{
         })
         .filter(item => item.value > 0);
       
-      // Encontrar la categoría "Comida"
-      const comidaIndex = processedData.findIndex(item => item.name === "Comida");
+      // Ordenar categorías por valor (de mayor a menor)
+      processedData.sort((a, b) => b.value - a.value);
       
-      // Si existe "Comida", moverla al final
-      if (comidaIndex !== -1) {
-        const comida = processedData[comidaIndex];
-        processedData.splice(comidaIndex, 1); // Eliminarla de su posición actual
-        
-        // Ordenar el resto por valor
-        processedData.sort((a, b) => b.value - a.value);
-        
-        // Limitar a 4 elementos para dejar espacio para "Comida"
-        processedData = processedData.slice(0, 4);
-        
-        // Añadir "Comida" al final
-        processedData.push(comida);
-      } else {
-        // Si no existe "Comida", simplemente ordenar y limitar a 5
-        processedData.sort((a, b) => b.value - a.value);
-        processedData = processedData.slice(0, 5);
-      }
+      // No limitamos la cantidad de categorías para mostrar todas
       
       setData(processedData);
     }
@@ -412,9 +395,9 @@ const ExpensesByCategoryNew: React.FC<{
               {/* Construcción del donut con segmentos circulares */}
               <svg className="w-full h-full" viewBox="0 0 100 100">
                 <desc>Gráfico de distribución de gastos</desc>
-                {data.slice(0, 5).map((item, idx) => {
+                {data.slice(0, Math.min(10, data.length)).map((item, idx) => {
                   // Calcular el desplazamiento y el dasharray para este segmento
-                  const percentages = data.slice(0, 5).map(c => c.percentage);
+                  const percentages = data.slice(0, Math.min(10, data.length)).map(c => c.percentage);
                   let offset = 0;
                   
                   for (let i = 0; i < idx; i++) {
@@ -455,8 +438,8 @@ const ExpensesByCategoryNew: React.FC<{
           </div>
           
           {/* Lado derecho: Lista de categorías exactamente como en la imagen */}
-          <div className="w-[55%] flex flex-col justify-between h-full pl-0 -ml-3">
-            {data.slice(0, 4).map((item) => (
+          <div className="w-[55%] flex flex-col h-full pl-0 -ml-3 max-h-[300px] overflow-y-auto">
+            {data.map((item) => (
               <div key={item.categoryId} className="flex items-center py-1">
                 {/* Círculo con icono */}
                 <div className="relative mr-3">
