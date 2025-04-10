@@ -715,27 +715,13 @@ const TransactionList = () => {
             <p className="text-3xl font-semibold text-[#1D1D1F] mb-5 pl-1">
               {formatCurrency(incomeTotal, "income")}
             </p>
-            {/* Debug message to show the source of the income amount */}
-            {transactionIncomeTotal === 0 && invoiceIncomeTotal > 0 && (
-              <p className="text-xs text-green-700 mb-2">
-                Usando totales de facturas pagadas como ingresos
-              </p>
-            )}
             
-            <div className="grid grid-cols-2 gap-3 mt-auto">
-              <div className="flex flex-col p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl transition-all hover:bg-[#34C759]/10">
-                <div className="flex items-center mb-1">
-                  <Receipt className="h-3.5 w-3.5 text-[#34C759] mr-1.5" />
-                  <span className="text-xs text-[#34C759]">Facturas</span>
-                </div>
-                <span className="text-sm font-medium text-[#1D1D1F]">{formatCurrency(invoiceIncomeTotal, "income")}</span>
-              </div>
-              <div className="flex flex-col p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl transition-all hover:bg-[#34C759]/10">
-                <div className="flex items-center mb-1">
-                  <Download className="h-3.5 w-3.5 text-[#34C759] mr-1.5" />
-                  <span className="text-xs text-[#34C759]">Transacciones</span>
-                </div>
-                <span className="text-sm font-medium text-[#1D1D1F]">{formatCurrency(transactionIncomeTotal, "income")}</span>
+            <div className="mt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-[#8E8E93]">Facturas cobradas:</span>
+                <span className="text-sm font-medium text-[#1D1D1F]">
+                  {invoices?.filter(inv => inv.status === 'paid').length || 0}
+                </span>
               </div>
             </div>
           </div>
