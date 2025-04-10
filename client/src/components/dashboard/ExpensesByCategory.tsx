@@ -213,7 +213,7 @@ const ExpensesByCategory: React.FC<{
         <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
           {/* Columna izquierda: Gráfico de donut */}
           <div className="p-2 flex flex-col justify-center" style={{
-            height: '330px',
+            height: '380px',
             flex: '1'
           }}>
             {/* Mostrar período encima del gráfico */}
@@ -258,27 +258,28 @@ const ExpensesByCategory: React.FC<{
             className="p-0 relative flex flex-col justify-center items-center bg-white rounded-md shadow-sm"
             style={{
               scrollbarWidth: 'none', /* Ocultar scrollbar */
-              height: '330px',
+              height: '380px',
               width: '330px',
               minWidth: '330px',
-              minHeight: '330px',
-              maxHeight: '330px',
+              minHeight: '380px',
+              maxHeight: '380px',
               overflow: 'hidden' /* Ocultar cualquier contenido que sobresalga */
             }}
           >
-            <div className="space-y-2 w-full p-4 flex-1">
-              {/* Mostrar las categorías hasta encontrar Comida o máximo 5 */}
+            <div className="space-y-3 w-full p-5 pt-3 flex-1">
+              {/* Mostrar las primeras 6 categorías incluyendo "Sin categoría" */}
               {(() => {
-                // Buscar el índice de "Comida"
-                const comidaIndex = data.findIndex(item => item.name === "Comida");
+                // Buscar si existe "Sin categoría"
+                const sinCategoriaItem = data.find(item => item.name === "Sin categoría");
+                // Crear una lista de 5 primeras categorías
+                const displayItems = data.slice(0, 6);
                 
-                // Si "Comida" está entre las primeras 5 categorías, mostrar hasta ahí
-                if (comidaIndex >= 0 && comidaIndex < 5) {
-                  return data.slice(0, comidaIndex + 1);
-                } else {
-                  // Si no, mostrar las primeras 5 categorías
-                  return data.slice(0, 5);
+                // Si "Sin categoría" existe pero no está en las primeras 6, reemplazar la última
+                if (sinCategoriaItem && !displayItems.includes(sinCategoriaItem)) {
+                  displayItems[5] = sinCategoriaItem;
                 }
+                
+                return displayItems;
               })().map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
