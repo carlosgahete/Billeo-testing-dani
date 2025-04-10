@@ -428,15 +428,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 {formatCurrency(baseImponibleGastos)}
               </div>
               <div className="stat-label mt-1">
-                Gastos totales (sin IVA)
+                Gastos totales
               </div>
             </div>
             
             <div className="space-y-3 mb-5 p-4 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Gastos (sin IVA):</span>
-                <span className="font-medium text-gray-800">{formatCurrency(baseImponibleGastos)}</span>
-              </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">IVA soportado (21%):</span>
                 <span className="font-medium text-gray-800">{formatCurrency(ivaSoportado)}</span>
