@@ -463,28 +463,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
 
   return (
     <div className="container max-w-5xl py-8 px-4 sm:px-6 space-y-6">
-      {/* Diálogo de confirmación y edición */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-lg rounded-3xl bg-white/90 backdrop-blur-sm border border-gray-100 shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-medium text-gray-900">Revisar gasto</DialogTitle>
-            <DialogDescription className="text-sm text-gray-500">
-              Revisa y personaliza la información detectada automáticamente:
-            </DialogDescription>
-          </DialogHeader>
-          
-          {transaction && editedData && (
-            <div className="py-4">
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
-                    <Input
-                      id="transaction-description"
-                      value={editedData.description || transaction.description || ""}
-                      onChange={(e) => handleFieldChange('description', e.target.value)}
-                      className="w-full"
-                    />
+      {/* Removido el diálogo de confirmación, la edición se muestra directamente en la página */}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
