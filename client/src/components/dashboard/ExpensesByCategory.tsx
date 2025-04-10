@@ -190,16 +190,22 @@ const ExpensesByCategory: React.FC<{
           Gastos por Categoría
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 pb-8">
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-          {/* Columna izquierda: Gráfico de donut */}
-          <div className="p-2 flex flex-col justify-center" style={{ height: '380px', flex: '1' }}>
-            {periodLabel && (
-              <div className="text-left text-sm text-gray-500 mb-2 pl-2">
-                {periodLabel}
-              </div>
-            )}
-            <div className="flex-1 flex items-center justify-center">
+      <CardContent className="p-0 pb-4">
+        {/* Título del periodo centrado arriba */}
+        {periodLabel && (
+          <div className="text-center text-sm text-gray-500 mb-4 mt-2">
+            <strong>{periodLabel}</strong>
+          </div>
+        )}
+        
+        {/* Contenedor principal con distribución simétrica */}
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 mx-auto max-w-4xl">
+          {/* Mitad izquierda: Gráfico de donut con tamaño fijo */}
+          <div className="md:w-1/2 flex justify-center">
+            <div className="flex items-center justify-center" style={{ 
+              width: '330px',
+              height: '330px'
+            }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -230,28 +236,14 @@ const ExpensesByCategory: React.FC<{
             </div>
           </div>
           
-          {/* Columna derecha: Lista de categorías - CONTENEDOR EXCLUSIVO */}
-          <div className="flex justify-center">
-            {/* Contenedor blanco principal - 100% independiente del título y del gráfico */}
-            <div className="bg-white rounded-md shadow-sm" style={{ width: '330px', height: '190px' }}>
-              {/*
-                IMPORTANTE: 
-                - Creamos un CONTENEDOR EXCLUSIVO que contiene SOLO el listado de categorías
-                - El listado está completamente INDEPENDIENTE del título y del gráfico
-                - El espacio vacío se reparte EQUITATIVAMENTE arriba y abajo
-                
-                REGLA FINAL:
-                - El espacio vacío entre el borde superior y la primera categoría
-                  debe ser EXACTAMENTE IGUAL al espacio entre la última categoría y el borde inferior
-              */}
+          {/* Mitad derecha: Lista de categorías con misma altura que el gráfico */}
+          <div className="md:w-1/2 flex justify-center">
+            <div className="bg-white rounded-md shadow-sm" style={{ 
+              width: '330px', 
+              height: '330px' 
+            }}>
+              {/* Contenedor para centrado vertical perfecto */}
               <div className="relative w-full h-full">
-                {/* 
-                  Método técnico:
-                  - Usamos position: absolute para que el contenedor flote libremente
-                  - Combinamos top: 50% con transform: translateY(-50%) para centrado vertical perfecto
-                  - De esta forma, el espacio libre arriba y abajo será EXACTAMENTE IGUAL
-                  - No importa cuántos elementos haya, siempre quedará equilibrado
-                */}
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4">
                   {/* Listado de categorías */}
                   {categoryItems.map((item, index) => (
