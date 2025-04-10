@@ -732,7 +732,8 @@ const TransactionList = () => {
               </button>
             </div>
 
-            {transactions?.filter(t => t.type === 'income').length === 0 && (
+            {/* Mostrar botón de reparación solo cuando hay facturas pagadas pero faltan ingresos */}
+            {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 && (
               <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between hover:bg-amber-100 transition-all">
                 <div className="flex items-center">
                   <AlertTriangle className="h-4 w-4 text-amber-500 mr-2" />
