@@ -220,36 +220,76 @@ const DocumentScanPage = () => {
   // Función para actualizar un campo editable y recalcular valores dependientes
   const handleFieldChange = (field: string, value: any) => {
     setEditedData((prev: any) => {
+      // Si el valor es una cadena vacía o undefined, establecerlo como null
+      // para permitir borrar completamente el campo
+      const fieldValue = value === "" ? null : value;
+
       const updatedData = {
         ...prev,
-        [field]: value
+        [field]: fieldValue
       };
       
       // Si es un cambio que afecta al cálculo del IVA, recalcular
       if (field === 'baseAmount' || field === 'tax') {
-        const baseAmount = field === 'baseAmount' ? value : (prev?.baseAmount || 0);
-        const taxRate = field === 'tax' ? value : (prev?.tax || 0);
-        const taxAmount = (baseAmount * taxRate / 100).toFixed(2);
-        updatedData.taxAmount = taxAmount;
+        const baseAmount = field === 'baseAmount' 
+          ? (fieldValue === null ? 0 : parseFloat(fieldValue)) 
+          : (prev?.baseAmount === null ? 0 : parseFloat(prev?.baseAmount || 0));
+          
+        const taxRate = field === 'tax' 
+          ? (fieldValue === null ? 0 : parseFloat(fieldValue)) 
+          : (prev?.tax === null ? 0 : parseFloat(prev?.tax || 0));
+          
+        // Solo calcular si ambos valores son válidos
+        if (!isNaN(baseAmount) && !isNaN(taxRate)) {
+          const taxAmount = (baseAmount * taxRate / 100).toFixed(2);
+          updatedData.taxAmount = parseFloat(taxAmount);
+        } else {
+          updatedData.taxAmount = null;
+        }
       }
       
       // Si es un cambio que afecta al cálculo del IRPF, recalcular
       if (field === 'baseAmount' || field === 'irpf') {
-        const baseAmount = field === 'baseAmount' ? value : (prev?.baseAmount || 0);
-        const irpfRate = field === 'irpf' ? value : (prev?.irpf || 0);
-        const irpfAmount = (baseAmount * irpfRate / 100).toFixed(2);
-        updatedData.irpfAmount = irpfAmount;
+        const baseAmount = field === 'baseAmount' 
+          ? (fieldValue === null ? 0 : parseFloat(fieldValue)) 
+          : (prev?.baseAmount === null ? 0 : parseFloat(prev?.baseAmount || 0));
+          
+        const irpfRate = field === 'irpf' 
+          ? (fieldValue === null ? 0 : parseFloat(fieldValue)) 
+          : (prev?.irpf === null ? 0 : parseFloat(prev?.irpf || 0));
+          
+        // Solo calcular si ambos valores son válidos
+        if (!isNaN(baseAmount) && !isNaN(irpfRate)) {
+          const irpfAmount = (baseAmount * irpfRate / 100).toFixed(2);
+          updatedData.irpfAmount = parseFloat(irpfAmount);
+        } else {
+          updatedData.irpfAmount = null;
+        }
       }
       
       // Actualizamos el monto total si cambia la base imponible, IVA o IRPF
       if (['baseAmount', 'tax', 'irpf'].includes(field)) {
-        const baseAmount = parseFloat(updatedData.baseAmount || prev?.baseAmount || 0);
-        const taxAmount = parseFloat(updatedData.taxAmount || prev?.taxAmount || 0);
-        const irpfAmount = parseFloat(updatedData.irpfAmount || prev?.irpfAmount || 0);
+        const baseAmount = updatedData.baseAmount === null 
+          ? 0 
+          : parseFloat(updatedData.baseAmount || prev?.baseAmount || 0);
+          
+        const taxAmount = updatedData.taxAmount === null 
+          ? 0 
+          : parseFloat(updatedData.taxAmount || prev?.taxAmount || 0);
+          
+        const irpfAmount = updatedData.irpfAmount === null 
+          ? 0 
+          : parseFloat(updatedData.irpfAmount || prev?.irpfAmount || 0);
         
-        // El total es la base más IVA menos IRPF
-        const totalAmount = (baseAmount + taxAmount - irpfAmount).toFixed(2);
-        updatedData.amount = parseFloat(totalAmount);
+        // Solo calcular si todos los valores son válidos
+        if (!isNaN(baseAmount) && !isNaN(taxAmount) && !isNaN(irpfAmount)) {
+          // El total es la base más IVA menos IRPF
+          const totalAmount = (baseAmount + taxAmount - irpfAmount).toFixed(2);
+          updatedData.amount = parseFloat(totalAmount);
+        } else if (field === 'amount') {
+          // Si estamos editando directamente el monto, no lo recalculemos
+          updatedData.amount = fieldValue === null ? null : parseFloat(fieldValue);
+        }
       }
       
       return updatedData;
@@ -809,17 +849,19 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
                           <Input
                             id="transaction-amount"
-                            // Cambiamos a tipo texto para permitir borrar
                             type="text"
                             inputMode="decimal"
-                            value={editedData.amount || transaction.amount || ""}
+                            value={editedData.amount !== null ? editedData.amount : transaction.amount || ""}
                             onChange={(e) => {
-                              // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                              // Admitir tanto punto como coma como separador decimal
                               const inputValue = e.target.value;
-                              const value = inputValue === "" || inputValue === "." || inputValue === "," 
-                                ? "" 
-                                : parseFloat(inputValue.replace(",", "."));
-                              handleFieldChange('amount', value);
+                              // Permitir strings vacías directamente
+                              if (inputValue === "" || inputValue === "." || inputValue === ",") {
+                                handleFieldChange('amount', "");
+                              } else if (!isNaN(parseFloat(inputValue.replace(",", ".")))) {
+                                // Solo convertir a número si es un valor numérico válido
+                                handleFieldChange('amount', parseFloat(inputValue.replace(",", ".")));
+                              }
                             }}
                             className="w-full"
                           />
@@ -829,17 +871,19 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
                           <Input
                             id="transaction-base"
-                            // Cambiamos a tipo texto para permitir borrar
                             type="text"
                             inputMode="decimal"
-                            value={editedData.baseAmount || extractedData?.baseAmount || ""}
+                            value={editedData.baseAmount !== null ? editedData.baseAmount : extractedData?.baseAmount || ""}
                             onChange={(e) => {
-                              // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                              // Admitir tanto punto como coma como separador decimal
                               const inputValue = e.target.value;
-                              const value = inputValue === "" || inputValue === "." || inputValue === "," 
-                                ? "" 
-                                : parseFloat(inputValue.replace(",", "."));
-                              handleFieldChange('baseAmount', value);
+                              // Permitir strings vacías directamente
+                              if (inputValue === "" || inputValue === "." || inputValue === ",") {
+                                handleFieldChange('baseAmount', "");
+                              } else if (!isNaN(parseFloat(inputValue.replace(",", ".")))) {
+                                // Solo convertir a número si es un valor numérico válido
+                                handleFieldChange('baseAmount', parseFloat(inputValue.replace(",", ".")));
+                              }
                             }}
                             className="w-full"
                           />
@@ -852,17 +896,19 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <div className="flex items-center space-x-2">
                             <Input
                               id="transaction-iva"
-                              // Cambiamos a tipo texto para permitir borrar
                               type="text"
                               inputMode="numeric"
-                              value={editedData.tax || extractedData?.tax || ""}
+                              value={editedData.tax !== null ? editedData.tax : extractedData?.tax || ""}
                               onChange={(e) => {
-                                // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                                // Admitir tanto punto como coma como separador decimal
                                 const inputValue = e.target.value;
-                                const value = inputValue === "" || inputValue === "." || inputValue === "," 
-                                  ? "" 
-                                  : parseInt(inputValue);
-                                handleFieldChange('tax', value);
+                                // Permitir strings vacías directamente
+                                if (inputValue === "" || inputValue === "." || inputValue === ",") {
+                                  handleFieldChange('tax', "");
+                                } else if (!isNaN(parseInt(inputValue))) {
+                                  // Solo convertir a número si es un valor numérico válido
+                                  handleFieldChange('tax', parseInt(inputValue));
+                                }
                               }}
                               className="w-full"
                             />
@@ -878,17 +924,19 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <div className="flex items-center space-x-2">
                             <Input
                               id="transaction-irpf"
-                              // Cambiamos a tipo texto para permitir borrar
                               type="text"
                               inputMode="numeric"
-                              value={editedData.irpf || extractedData?.irpf || ""}
+                              value={editedData.irpf !== null ? editedData.irpf : extractedData?.irpf || ""}
                               onChange={(e) => {
-                                // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                                // Admitir tanto punto como coma como separador decimal
                                 const inputValue = e.target.value;
-                                const value = inputValue === "" || inputValue === "." || inputValue === "," 
-                                  ? "" 
-                                  : parseInt(inputValue);
-                                handleFieldChange('irpf', value);
+                                // Permitir strings vacías directamente
+                                if (inputValue === "" || inputValue === "." || inputValue === ",") {
+                                  handleFieldChange('irpf', "");
+                                } else if (!isNaN(parseInt(inputValue))) {
+                                  // Solo convertir a número si es un valor numérico válido
+                                  handleFieldChange('irpf', parseInt(inputValue));
+                                }
                               }}
                               className="w-full"
                             />
