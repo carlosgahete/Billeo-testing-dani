@@ -716,13 +716,19 @@ const TransactionList = () => {
               {formatCurrency(incomeTotal, "income")}
             </p>
             
-            <div className="mt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-[#8E8E93]">Facturas cobradas:</span>
-                <span className="text-sm font-medium text-[#1D1D1F]">
-                  {invoices?.filter(inv => inv.status === 'paid').length || 0}
+            <div className="p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl flex items-center justify-between hover:bg-[#34C759]/10 transition-all">
+              <div className="flex items-center">
+                <Receipt className="h-4 w-4 text-[#34C759] mr-2" />
+                <span className="text-sm text-[#1D1D1F]">
+                  {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
                 </span>
               </div>
+              <button 
+                className="text-xs px-2 py-1 bg-[#34C759]/10 text-[#34C759] rounded-full"
+                onClick={() => navigate("/invoices")}
+              >
+                Ver
+              </button>
             </div>
           </div>
         </div>
