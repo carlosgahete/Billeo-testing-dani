@@ -200,10 +200,10 @@ const ExpensesByCategoryNew: React.FC<{
           {/* Lado izquierdo: Gráfico donut como en la imagen de referencia */}
           <div className="w-[45%] flex items-center justify-center">
             {/* Gráfico de donut (anillo) */}
-            <div className="relative w-36 h-36">
+            <div className="relative w-44 h-44">
               {/* Círculo base (agujero blanco del centro) */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-white rounded-full"></div>
+                <div className="w-20 h-20 bg-white rounded-full"></div>
               </div>
               
               {/* Construcción del donut con segmentos circulares */}
