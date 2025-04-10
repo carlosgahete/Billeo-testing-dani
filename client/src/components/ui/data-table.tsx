@@ -8,6 +8,8 @@ import {
   getSortedRowModel,
   FilterFn,
   getFilteredRowModel,
+  RowSelectionState,
+  OnChangeFn
 } from "@tanstack/react-table";
 
 import {
@@ -20,8 +22,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { Search, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState, useRef, useEffect } from "react";
+import { Search, ChevronLeft, ChevronRight, Filter, Trash2, FileDown, Check } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -31,7 +34,11 @@ interface DataTableProps<TData, TValue> {
   pagination?: boolean;
   filterButton?: React.ReactNode;
   showSearch?: boolean;
-  actionButtons?: React.ReactNode; // Añadido para los botones de acción
+  actionButtons?: React.ReactNode; // Botones de acción habituales
+  selectable?: boolean; // Habilitar selección múltiple
+  onRowSelectionChange?: (selectedRows: TData[]) => void; // Callback cuando cambia la selección
+  onDeleteSelected?: (selectedRows: TData[]) => void; // Callback para eliminar seleccionados
+  onExportSelected?: (selectedRows: TData[]) => void; // Callback para exportar seleccionados
 }
 
 export function DataTable<TData, TValue>({
@@ -43,24 +50,90 @@ export function DataTable<TData, TValue>({
   filterButton,
   showSearch = true,
   actionButtons,
+  selectable = false,
+  onRowSelectionChange,
+  onDeleteSelected,
+  onExportSelected
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  // Preparar columnas con checkbox de selección si es necesario
+  const allColumns = selectable 
+    ? [
+        {
+          id: 'select',
+          header: ({ table }: any) => (
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label="Seleccionar todo"
+              className="rounded-full data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]"
+            />
+          ),
+          cell: ({ row }: any) => (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Seleccionar fila"
+              className="rounded-full data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]"
+            />
+          ),
+          enableSorting: false,
+          enableHiding: false,
+        } as ColumnDef<TData, any>,
+        ...columns
+      ]
+    : columns;
+  
+  // Referencia para almacenar la tabla
+  const tableRef = useRef<any>(null);
+  
+  // Controlar cambios en la selección
+  const handleRowSelectionChange = (updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState)) => {
+    // Actualizamos el estado de selección
+    setRowSelection(updaterOrValue);
+    
+    // Notificamos al componente padre del cambio después de que se aplique la actualización
+    if (onRowSelectionChange) {
+      // Usamos setTimeout para asegurar que rowSelection se haya actualizado
+      setTimeout(() => {
+        if (tableRef.current) {
+          const selectedRows = tableRef.current.getFilteredSelectedRowModel().rows.map(
+            (row: any) => row.original
+          );
+          onRowSelectionChange(selectedRows);
+        }
+      }, 0);
+    }
+  };
 
   const table = useReactTable({
     data,
-    columns,
+    columns: allColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: handleRowSelectionChange,
+    enableRowSelection: selectable,
     state: {
       sorting,
       globalFilter,
+      rowSelection,
     },
   });
+  
+  // Asignar la tabla a la referencia
+  useEffect(() => {
+    tableRef.current = table;
+  }, [table]);
 
   // Implementación sencilla pero efectiva de búsqueda
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,8 +156,80 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  // Número de filas seleccionadas
+  const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+  
+  // Obtenemos las filas seleccionadas para acciones en lote
+  const getSelectedRows = () => {
+    return table.getFilteredSelectedRowModel().rows.map(row => row.original);
+  };
+  
+  // Manejadores para las acciones en lote
+  const handleDeleteSelected = () => {
+    if (onDeleteSelected) {
+      const selectedRows = getSelectedRows();
+      onDeleteSelected(selectedRows);
+    }
+  };
+  
+  const handleExportSelected = () => {
+    if (onExportSelected) {
+      const selectedRows = getSelectedRows();
+      onExportSelected(selectedRows);
+    }
+  };
+  
   return (
-    <div>
+    <div className="relative">
+      {/* Barra de acción flotante - aparece cuando hay elementos seleccionados */}
+      {selectable && selectedRowCount > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 
+                        flex items-center space-x-2 px-4 py-3 
+                        bg-[#007AFF] rounded-full shadow-lg
+                        text-white text-sm animate-in fade-in slide-in-from-bottom-5">
+          <span>
+            {selectedRowCount} {selectedRowCount === 1 ? 'elemento' : 'elementos'} seleccionado{selectedRowCount !== 1 ? 's' : ''}
+          </span>
+          
+          <div className="h-4 border-l border-white/30 mx-2"></div>
+          
+          {/* Botones de acción en lote */}
+          <div className="flex items-center space-x-3">
+            {onExportSelected && (
+              <button
+                onClick={handleExportSelected}
+                className="flex items-center hover:bg-white/10 px-2 py-1 rounded-full"
+              >
+                <FileDown className="h-4 w-4 mr-1" />
+                <span>Exportar</span>
+              </button>
+            )}
+            
+            {onDeleteSelected && (
+              <button
+                onClick={handleDeleteSelected}
+                className="flex items-center hover:bg-white/10 px-2 py-1 rounded-full"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                <span>Eliminar</span>
+              </button>
+            )}
+          </div>
+          
+          {/* Botón para cancelar la selección */}
+          <button
+            onClick={() => table.resetRowSelection()}
+            className="ml-2 hover:bg-white/10 p-1 rounded-full"
+            title="Cancelar selección"
+          >
+            <span className="sr-only">Cancelar selección</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
       {/* Search input con estilo Apple, botones de acción y botón de filtro */}
       {showSearch && (
         <div className="flex items-center justify-between py-4 px-4">
@@ -98,7 +243,7 @@ export function DataTable<TData, TValue>({
             />
           </div>
           
-          {/* Botones de acción */}
+          {/* Botones de acción habituales */}
           {actionButtons && (
             <div className="flex items-center space-x-2 ml-4">
               {actionButtons}
