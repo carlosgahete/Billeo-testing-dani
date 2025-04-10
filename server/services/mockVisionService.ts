@@ -41,19 +41,27 @@ export async function processReceiptImage(imagePath: string) {
   const documentUrl = imagePath.replace(/\\/g, '/');
   const publicUrl = documentUrl.replace('uploads/', '/uploads/');
   
-  // Crear datos simulados para el recibo
+  // Calcular valores fiscales correctos para ejemplo
+  const baseAmount = 103.64;
+  const taxRate = 21;
+  const taxAmount = baseAmount * (taxRate / 100);
+  const irpfRate = 15; // Retención típica para autónomos
+  const irpfAmount = -(baseAmount * (irpfRate / 100)); // Valor NEGATIVO para IRPF
+  const total = baseAmount + taxAmount + irpfAmount;
+  
+  // Crear datos simulados para el recibo con IRPF correcto
   return {
     success: true,
     documentUrl: publicUrl,
     extractedData: {
       date: new Date().toISOString().split('T')[0],
       description: "Gastos profesionales",
-      amount: 125.40,
-      baseAmount: 103.64,
-      tax: 21,
-      taxAmount: 21.76,
-      irpf: 0,
-      irpfAmount: 0,
+      amount: parseFloat(total.toFixed(2)), // Redondeamos a 2 decimales
+      baseAmount: baseAmount,
+      tax: taxRate,
+      taxAmount: parseFloat(taxAmount.toFixed(2)),
+      irpf: irpfRate, // Porcentaje como valor positivo
+      irpfAmount: parseFloat(irpfAmount.toFixed(2)), // Cantidad como valor negativo
       provider: "Proveedor de servicios",
       categoryHint: "Servicios profesionales"
     }
@@ -67,19 +75,27 @@ export async function processReceiptPDF(pdfPath: string) {
   const documentUrl = pdfPath.replace(/\\/g, '/');
   const publicUrl = documentUrl.replace('uploads/', '/uploads/');
   
-  // Crear datos simulados para el recibo
+  // Calcular valores fiscales correctos para ejemplo
+  const baseAmount = 200.00;
+  const taxRate = 21;
+  const taxAmount = baseAmount * (taxRate / 100);
+  const irpfRate = 15; // Retención típica para autónomos
+  const irpfAmount = -(baseAmount * (irpfRate / 100)); // Valor NEGATIVO para IRPF
+  const total = baseAmount + taxAmount + irpfAmount;
+  
+  // Crear datos simulados para el recibo con IRPF correcto
   return {
     success: true,
     documentUrl: publicUrl,
     extractedData: {
       date: new Date().toISOString().split('T')[0],
       description: "Factura de servicios",
-      amount: 242.00,
-      baseAmount: 200.00,
-      tax: 21,
-      taxAmount: 42.00,
-      irpf: 0,
-      irpfAmount: 0,
+      amount: parseFloat(total.toFixed(2)), // Redondeamos a 2 decimales
+      baseAmount: baseAmount,
+      tax: taxRate,
+      taxAmount: parseFloat(taxAmount.toFixed(2)),
+      irpf: irpfRate, // Porcentaje como valor positivo
+      irpfAmount: parseFloat(irpfAmount.toFixed(2)), // Cantidad como valor negativo
       provider: "Empresa de servicios",
       categoryHint: "Servicios generales"
     }
@@ -118,12 +134,17 @@ export function mapToTransaction(
     });
   }
   
-  // Si hay IRPF, lo añadimos
+  // Si hay IRPF, lo añadimos (asegurándonos de que el importe sea negativo)
   if (extractedData.irpf > 0) {
+    // Asegurarnos de que el importe del IRPF sea negativo
+    const irpfAmount = extractedData.irpfAmount <= 0 
+      ? extractedData.irpfAmount  // Ya es negativo, lo mantenemos
+      : -extractedData.irpfAmount; // Si es positivo, lo convertimos a negativo
+    
     additionalTaxes.push({
       name: "IRPF",
       rate: extractedData.irpf,
-      amount: extractedData.irpfAmount,
+      amount: irpfAmount,
       baseAmount: extractedData.baseAmount
     });
   }
@@ -136,12 +157,12 @@ export function mapToTransaction(
     userId,
     title: `${extractedData.provider || 'Proveedor'} - ${extractedData.description}`,
     description: extractedData.description,
-    amount: extractedData.amount,
+    amount: extractedData.amount.toString(),
     date: dateObj,
     type: 'expense', // Asumimos que los documentos escaneados son gastos
     categoryId,
     paymentMethod: 'other',
-    notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}. Importe base: ${extractedData.baseAmount}€. IVA (${extractedData.tax}%): ${extractedData.taxAmount}€.`,
+    notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}.\nImporte base: ${extractedData.baseAmount}€.\nIVA (${extractedData.tax}%): +${extractedData.taxAmount}€${extractedData.irpf > 0 ? `.\nIRPF (${extractedData.irpf}%): ${extractedData.irpfAmount}€` : ''}\nTotal: ${extractedData.amount}€`,
     additionalTaxes: additionalTaxes.length > 0 ? additionalTaxes : null
   };
 }
