@@ -230,29 +230,27 @@ const ExpensesByCategory: React.FC<{
             </div>
           </div>
           
-          {/* Columna derecha: Lista de categorías */}
+          {/* Columna derecha: Lista de categorías - CONTENEDOR EXCLUSIVO */}
           <div className="flex justify-center">
-            {/* Contenedor blanco principal */}
+            {/* Contenedor blanco principal - 100% independiente del título y del gráfico */}
             <div className="bg-white rounded-md shadow-sm" style={{ width: '330px', height: '380px' }}>
               {/*
-                Aquí está la clave: Usamos un contenedor con posición relativa para posicionar el listado
-                Y un segundo contenedor interno para manejar el espacio libre equitativamente.
+                IMPORTANTE: 
+                - Creamos un CONTENEDOR EXCLUSIVO que contiene SOLO el listado de categorías
+                - El listado está completamente INDEPENDIENTE del título y del gráfico
+                - El espacio vacío se reparte EQUITATIVAMENTE arriba y abajo
                 
-                NOTA IMPORTANTE: 
-                - No estamos centrando respecto al título
-                - Ignoramos todo lo que no sea el listado de categorías
-                - Repartimos exactamente igual el espacio libre arriba y abajo del listado
-                - Mantenemos el espacio entre elementos (16px) como está
+                REGLA FINAL:
+                - El espacio vacío entre el borde superior y la primera categoría
+                  debe ser EXACTAMENTE IGUAL al espacio entre la última categoría y el borde inferior
               */}
               <div className="relative w-full h-full">
                 {/* 
-                  Contenedor del listado de categorías:
-                  - Posición absoluta para posicionarlo independientemente de otros elementos
-                  - top: 50% lo coloca en el centro vertical
-                  - transform: translateY(-50%) ajusta para que el centro esté en el punto medio,
-                    no solo el borde superior
-                  
-                  Resultado: Distribución perfectamente igual del espacio libre arriba y abajo
+                  Método técnico:
+                  - Usamos position: absolute para que el contenedor flote libremente
+                  - Combinamos top: 50% con transform: translateY(-50%) para centrado vertical perfecto
+                  - De esta forma, el espacio libre arriba y abajo será EXACTAMENTE IGUAL
+                  - No importa cuántos elementos haya, siempre quedará equilibrado
                 */}
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4">
                   {/* Listado de categorías */}

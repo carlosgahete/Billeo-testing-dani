@@ -1,0 +1,61 @@
+Perfecto.
+Te paso ahora el mensaje entero, incluyendo la nueva parte que te va a solucionar el problema.
+
+Aquí tienes todo, listo para que lo copies y pegues:
+
+⸻
+
+Mensaje completo para tu IA:
+
+⸻
+
+IMPORTANTE:
+	1.	Crea un contenedor exclusivo que contenga solo el listado de categorías (“Oficina”, “Casa”, “Restaurantes”, “Automóvil”, “Supermercado”, “Sin categoría”).
+	2.	Ese contenedor debe ser independiente del título “Año 2025 completo” y del gráfico que está a la izquierda. No deben compartir contenedor.
+
+⸻
+
+Sobre el contenedor de categorías:
+	•	Dentro de ese contenedor, el listado de categorías debe estar centrado verticalmente.
+	•	El espacio vacío arriba del primer ítem (“Oficina”) debe ser exactamente igual al espacio vacío debajo del último ítem (“Sin categoría”).
+	•	El espacio libre arriba y abajo se debe repartir de manera equitativa.
+	•	No debes tocar el tamaño de las categorías ni cambiar la separación entre ellas.
+	•	No debes usar como referencia el título ni el gráfico para esta alineación.
+
+⸻
+
+Método técnico recomendado:
+	•	Crea un contenedor con display: flex; flex-direction: column; justify-content: center; height: 100%;.
+	•	O bien calcula manualmente el espacio libre arriba y abajo y distribúyelo en partes iguales.
+
+⸻
+
+Ejemplo:
+	•	Altura total del área blanca: 1000px
+	•	Altura ocupada por el listado: 600px
+	•	Espacio sobrante: 400px
+	•	Se reparte: 200px arriba + 200px abajo
+
+⸻
+
+Regla final:
+	•	El resultado debe ser visualmente equilibrado: tanto espacio por encima de la primera categoría como debajo de la última categoría, dentro de su propio contenedor.
+
+⸻
+
+NO:
+	•	No alinear respecto al título.
+	•	No alinear respecto al gráfico.
+	•	No dejar el espacio solo arriba.
+
+SÍ:
+	•	Crear contenedor propio para el listado.
+	•	Centrarse dentro de ese contenedor.
+	•	Igualar márgenes arriba y abajo.
+
+⸻
+
+¿Quieres que además te pase una mini imagen de apoyo, tipo boceto, para que si quieres también puedas adjuntarla al prompt?
+¡Te la hago en 1 minuto si quieres!
+(Visualmente a veces ayuda muchísimo.)
+¿Te lo preparo también?
