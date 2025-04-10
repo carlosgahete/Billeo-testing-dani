@@ -179,7 +179,7 @@ const ExpensesByCategoryNew: React.FC<{
     );
   }
 
-  // Nuevo diseño basado en la imagen de referencia que aprovecha todo el espacio
+  // Diseño exactamente como la imagen de referencia
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
       <CardHeader className="bg-red-50 p-3">
@@ -195,82 +195,79 @@ const ExpensesByCategoryNew: React.FC<{
           {periodLabel}
         </div>
         
-        {/* Contenido principal en formato horizontal para aprovechar todo el espacio */}
+        {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
-          {/* Lado izquierdo: Gráfico y "Total gastos" similar a la imagen de referencia */}
-          <div className="w-[38%] relative">
-            {/* Círculos representativos posicionados alrededor - como en la imagen de referencia */}
-            {data.map((item, index) => {
-              // Posicionamiento basado en la imagen de referencia
-              const positions = [
-                { x: 50, y: 105, size: 54 }, // Rojo grande (54%)
-                { x: 90, y: 70, size: 41 },  // Naranja medio (41%)
-                { x: 135, y: 265, size: 3 },  // Azul pequeño (3%)
-                { x: 30, y: 165, size: 1 }, // Morado pequeño (1%) arriba
-                { x: 75, y: 225, size: 1 }, // Morado pequeño (1%) abajo
-              ];
+          {/* Lado izquierdo: Gráfico donut como en la imagen de referencia */}
+          <div className="w-[45%] flex items-center justify-center">
+            {/* Gráfico de donut (anillo) */}
+            <div className="relative w-36 h-36">
+              {/* Círculo base (agujero blanco del centro) */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-white rounded-full"></div>
+              </div>
               
-              // Si tenemos menos datos que posiciones, usar solo los primeros
-              if (index >= positions.length) return null;
-              
-              const pos = positions[index];
-              // Tamaño fijo basado en la imagen de referencia
-              const size = Math.max(24, pos.size * 1.2);
-              
-              return (
-                <div 
-                  key={item.categoryId} 
-                  className="absolute rounded-full flex items-center justify-center shadow-sm"
-                  style={{
-                    backgroundColor: item.color,
-                    width: `${size}px`,
-                    height: `${size}px`,
-                    left: `${pos.x}px`,
-                    top: `${pos.y / 2.3}px`,
-                    zIndex: 5
-                  }}
-                >
-                  <span className="text-white text-[11px] font-medium">{item.percentage.toFixed(0)}%</span>
-                </div>
-              );
-            })}
-            
-            {/* Texto "Total gastos" posicionado como en la imagen */}
-            <div className="absolute text-gray-600 text-sm" style={{ left: '75px', top: '85px' }}>
-              Total gastos
+              {/* Construcción del donut con segmentos circulares */}
+              <svg className="w-full h-full" viewBox="0 0 100 100">
+                {data.slice(0, 5).map((item, idx) => {
+                  // Calcular el desplazamiento y el dasharray para este segmento
+                  const percentages = data.slice(0, 5).map(c => c.percentage);
+                  let offset = 0;
+                  
+                  for (let i = 0; i < idx; i++) {
+                    offset += percentages[i];
+                  }
+                  
+                  return (
+                    <circle 
+                      key={item.categoryId}
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      fill="transparent" 
+                      stroke={item.color} 
+                      strokeWidth="20"
+                      strokeDasharray={`${item.percentage * 2.51} ${100 * 2.51}`}
+                      strokeDashoffset={`${-offset * 2.51}`}
+                      transform="rotate(-90 50 50)"
+                    />
+                  );
+                })}
+              </svg>
             </div>
           </div>
           
-          {/* Lado derecho: Lista de categorías distribuida uniformemente */}
-          <div className="w-[62%] flex flex-col justify-between pl-2 h-full">
+          {/* Lado derecho: Lista de categorías exactamente como en la imagen */}
+          <div className="w-[55%] flex flex-col justify-between h-full pl-1">
             {data.slice(0, 4).map((item) => (
-              <div key={item.categoryId} className="flex items-center">
-                {/* Icono con fondo coloreado */}
-                <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center mr-3 relative" 
-                  style={{ backgroundColor: `${item.color}15` }}>
-                  <span className="text-sm">{item.icon}</span>
-                  {/* Punto indicador */}
-                  <div 
-                    className="absolute top-0 left-0 w-2 h-2 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
+              <div key={item.categoryId} className="flex items-center py-1">
+                {/* Círculo con icono */}
+                <div className="relative mr-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    {/* Indicador de color */}
+                    <div 
+                      className="absolute left-0 top-0 w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: item.color }}
+                    ></div>
+                    {/* Icono */}
+                    <span className="text-xl">{item.icon}</span>
+                  </div>
                 </div>
                 
-                {/* Nombre de categoría y transacciones */}
+                {/* Información de la categoría */}
                 <div className="flex-grow">
-                  <div className="text-[13px] font-medium text-gray-900">{item.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {item.count} tx
+                  <div className="text-base font-medium text-gray-900">{item.name}</div>
+                  <div className="text-sm text-gray-500">
+                    {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
                   </div>
                 </div>
                 
                 {/* Valores y porcentajes */}
                 <div className="text-right">
-                  <div className="text-sm font-medium text-red-600">
+                  <div className="text-base font-medium text-red-600">
                     {formatCurrency(item.value * -1)}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {item.percentage.toFixed(1)}%
+                  <div className="text-sm text-gray-500">
+                    {item.percentage.toFixed(2)}%
                   </div>
                 </div>
               </div>
