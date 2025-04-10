@@ -5,10 +5,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TrendingDown } from 'lucide-react';
+import { TrendingDown, CalendarIcon } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface ExpenseByCategoryData {
   name: string;
@@ -29,10 +36,13 @@ const ExpensesByCategoryNew: React.FC<{
   transactions: any[];
   categories: any[];
   period?: string;
-}> = ({ transactions, categories, period }) => {
+  onPeriodChange?: (period: string) => void;
+}> = ({ transactions, categories, period, onPeriodChange }) => {
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(period || "2025-all");
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   
   useEffect(() => {
     const currentYear = new Date().getFullYear();
@@ -94,6 +104,39 @@ const ExpensesByCategoryNew: React.FC<{
       setPeriodLabel(`Año ${currentYear} completo`);
     }
   }, [period]);
+
+  // Extraer los años disponibles de las transacciones
+  useEffect(() => {
+    if (transactions && transactions.length > 0) {
+      // Crear un objeto para almacenar años únicos
+      const yearsSet: {[key: number]: boolean} = {};
+      
+      // Recopilar años únicos
+      transactions.forEach(t => {
+        const date = new Date(t.date);
+        const year = date.getFullYear();
+        yearsSet[year] = true;
+      });
+      
+      // Convertir a array y ordenar
+      const uniqueYears = Object.keys(yearsSet)
+        .map(year => parseInt(year))
+        .sort((a, b) => b - a); // Ordenar de más reciente a más antiguo
+      
+      setAvailableYears(uniqueYears);
+    } else {
+      // Si no hay transacciones, usar el año actual
+      setAvailableYears([new Date().getFullYear()]);
+    }
+  }, [transactions]);
+  
+  // Manejar el cambio de período
+  const handlePeriodChange = (newPeriod: string) => {
+    setSelectedPeriod(newPeriod);
+    if (onPeriodChange) {
+      onPeriodChange(newPeriod);
+    }
+  };
 
   useEffect(() => {
     if (transactions && categories && transactions.length > 0) {
@@ -184,10 +227,46 @@ const ExpensesByCategoryNew: React.FC<{
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
       <CardHeader className="bg-red-50 p-3">
-        <CardTitle className="text-base text-red-700 flex items-center">
-          <TrendingDown className="mr-2 h-4 w-4" />
-          Gastos por Categoría
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base text-red-700 flex items-center">
+            <TrendingDown className="mr-2 h-4 w-4" />
+            Gastos por Categoría
+          </CardTitle>
+          
+          {/* Selector de período */}
+          <Select 
+            value={selectedPeriod}
+            onValueChange={handlePeriodChange}
+          >
+            <SelectTrigger className="w-32 h-7 text-xs bg-white/80">
+              <SelectValue placeholder="Seleccionar período" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* Generar opciones para cada año disponible */}
+              {availableYears.map(year => (
+                <React.Fragment key={year}>
+                  <SelectItem value={`${year}-all`}>Año {year} completo</SelectItem>
+                  <SelectItem value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>
+                  <SelectItem value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>
+                  <SelectItem value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>
+                  <SelectItem value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>
+                  <SelectItem value={`${year}-1`}>Enero {year}</SelectItem>
+                  <SelectItem value={`${year}-2`}>Febrero {year}</SelectItem>
+                  <SelectItem value={`${year}-3`}>Marzo {year}</SelectItem>
+                  <SelectItem value={`${year}-4`}>Abril {year}</SelectItem>
+                  <SelectItem value={`${year}-5`}>Mayo {year}</SelectItem>
+                  <SelectItem value={`${year}-6`}>Junio {year}</SelectItem>
+                  <SelectItem value={`${year}-7`}>Julio {year}</SelectItem>
+                  <SelectItem value={`${year}-8`}>Agosto {year}</SelectItem>
+                  <SelectItem value={`${year}-9`}>Septiembre {year}</SelectItem>
+                  <SelectItem value={`${year}-10`}>Octubre {year}</SelectItem>
+                  <SelectItem value={`${year}-11`}>Noviembre {year}</SelectItem>
+                  <SelectItem value={`${year}-12`}>Diciembre {year}</SelectItem>
+                </React.Fragment>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       
       <CardContent className="p-3">
