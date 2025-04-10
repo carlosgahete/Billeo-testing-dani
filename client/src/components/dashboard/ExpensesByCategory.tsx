@@ -209,7 +209,7 @@ const ExpensesByCategory: React.FC<{
           Gastos por Categoría
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {/* Columna izquierda: Gráfico de donut */}
           <div className="p-2 flex flex-col h-[360px]">
@@ -252,13 +252,13 @@ const ExpensesByCategory: React.FC<{
           
           {/* Columna derecha: Lista de categorías */}
           <div 
-            className="p-2 pr-3 overflow-y-auto h-[360px] relative"
+            className="p-2 pr-3 overflow-y-auto h-[360px] relative flex flex-col"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
             }}
           >
-            <div className="space-y-2 w-full py-2">
+            <div className="space-y-2 w-full py-2 flex-1 mb-8">
               {data.map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
