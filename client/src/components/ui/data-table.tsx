@@ -132,7 +132,7 @@ export function DataTable<TData, TValue>({
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: handleRowSelectionChange,
-    enableRowSelection: selectable,
+    enableRowSelection: true, // Forzamos que siempre sea true para habilitar la selección
     state: {
       sorting,
       globalFilter,
@@ -169,6 +169,16 @@ export function DataTable<TData, TValue>({
   // Número de filas seleccionadas
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
   
+  // Log para depuración
+  useEffect(() => {
+    if (selectedRowCount > 0) {
+      console.log(`DataTable: ${selectedRowCount} filas seleccionadas`);
+      console.log("Selectable:", selectable);
+      console.log("onExportSelected:", !!onExportSelected);
+      console.log("onDeleteSelected:", !!onDeleteSelected);
+    }
+  }, [selectedRowCount]);
+  
   // Obtenemos las filas seleccionadas para acciones en lote
   const getSelectedRows = () => {
     return table.getFilteredSelectedRowModel().rows.map(row => row.original);
@@ -192,7 +202,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="relative">
       {/* Barra de acción flotante - aparece cuando hay elementos seleccionados */}
-      {selectable && selectedRowCount > 0 && (
+      {selectedRowCount > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 
                         flex items-center space-x-2 px-4 py-3 
                         bg-[#007AFF] rounded-full shadow-lg
