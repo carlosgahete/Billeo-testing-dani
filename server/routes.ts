@@ -2959,6 +2959,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convertir los datos extraídos a un objeto de transacción
       console.log("Mapeando datos para transacción con userId:", req.session.userId, "y categoryId:", categoryId);
       
+      // Convertir la ruta del archivo a una URL relativa
+      const fileUrl = filePath.replace(/^.*\/uploads\//, '/uploads/');
+      
       // Asegurarnos de que estamos trabajando con los datos correctos
       const processedData = extractedData.extractedData ? extractedData.extractedData : extractedData;
       
@@ -2999,17 +3002,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         additionalTaxes: transactionData.additionalTaxes
       };
       
-      const transaction = await storage.createTransaction(transactionToCreate);
-      
-      // Convertir la ruta del archivo a una URL relativa
-      const fileUrl = filePath.replace(/^.*\/uploads\//, '/uploads/');
-      
-      return res.status(201).json({
-        message: "Documento procesado con éxito",
-        extractedData,
-        transaction,
-        documentUrl: fileUrl
-      });
+      try {
+        console.log("Enviando a createTransaction:", JSON.stringify(transactionToCreate, null, 2));
+        const transaction = await storage.createTransaction(transactionToCreate);
+        console.log("Transacción creada con éxito, ID:", transaction.id);
+        return res.status(201).json({
+          message: "Documento procesado con éxito",
+          extractedData,
+          transaction,
+          documentUrl: fileUrl
+        });
+      } catch (createError) {
+        console.error("Error creando la transacción:", createError);
+        return res.status(500).json({
+          message: "Error al crear la transacción",
+          error: createError instanceof Error ? createError.message : String(createError),
+          transactionData: transactionToCreate
+        });
+      }
       
     } catch (error) {
       console.error("Error procesando documento:", error);

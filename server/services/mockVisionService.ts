@@ -27,7 +27,7 @@ interface TransactionData {
   description: string;
   amount: string; // Debe ser string según el esquema esperado
   date: Date;
-  type: 'income' | 'expense';
+  type: string; // 'income' | 'expense' pero aceptamos string para mayor flexibilidad
   categoryId: string | number | null;
   paymentMethod?: string;
   notes?: string;
