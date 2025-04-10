@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -9,6 +9,15 @@ import { TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+interface TooltipState {
+  visible: boolean;
+  x: number;
+  y: number;
+  categoryName: string;
+  amount: string;
+  percentage: string;
+}
 
 interface ExpenseByCategoryData {
   name: string;
@@ -32,6 +41,14 @@ const ExpensesByCategoryNew: React.FC<{
 }> = ({ transactions, categories, period }) => {
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
+  const [tooltip, setTooltip] = useState<TooltipState>({
+    visible: false,
+    x: 0,
+    y: 0, 
+    categoryName: "",
+    amount: "",
+    percentage: ""
+  });
   
   useEffect(() => {
     const currentYear = new Date().getFullYear();
@@ -206,9 +223,20 @@ const ExpensesByCategoryNew: React.FC<{
                 <div className="w-20 h-20 bg-white rounded-full"></div>
               </div>
               
+              {/* Tooltip personalizado */}
+              {tooltip.visible && (
+                <div 
+                  className="absolute bg-white shadow-lg rounded-md p-2 z-10 pointer-events-none border border-gray-200"
+                  style={{ left: tooltip.x + 'px', top: tooltip.y + 'px', transform: 'translate(-50%, -100%)' }}
+                >
+                  <div className="font-semibold">{tooltip.categoryName}</div>
+                  <div className="text-red-600">{tooltip.amount}</div>
+                  <div className="text-sm text-gray-500">{tooltip.percentage}</div>
+                </div>
+              )}
+              
               {/* Construcción del donut con segmentos circulares */}
               <svg className="w-full h-full" viewBox="0 0 100 100">
-                <title>Gastos por categoría</title>
                 <desc>Gráfico de distribución de gastos</desc>
                 {data.slice(0, 5).map((item, idx) => {
                   // Calcular el desplazamiento y el dasharray para este segmento
@@ -232,8 +260,21 @@ const ExpensesByCategoryNew: React.FC<{
                         strokeDashoffset={`${-offset * 2.51}`}
                         transform="rotate(-90 50 50)"
                         className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setTooltip({
+                            visible: true,
+                            x: e.clientX - rect.left,
+                            y: e.clientY - rect.top,
+                            categoryName: item.name,
+                            amount: formatCurrency(item.value * -1),
+                            percentage: `${item.percentage.toFixed(2)}%`
+                          });
+                        }}
+                        onMouseLeave={() => {
+                          setTooltip(prev => ({...prev, visible: false}));
+                        }}
                       />
-                      <title>{`${item.name}: ${formatCurrency(item.value * -1)} (${item.percentage.toFixed(2)}%)`}</title>
                     </g>
                   );
                 })}
