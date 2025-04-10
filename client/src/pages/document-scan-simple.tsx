@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ZoomIn, ZoomOut, X, Plus, Check } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ZoomIn, ZoomOut, X, Plus, Check, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -38,7 +38,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 
 // Importar nuestro componente para la edición de documentos
-import { SimpleEditForm } from "@/components/documents/SimpleEditForm";
+import SimpleEditForm from "@/components/documents/SimpleEditForm";
 
 // Esquema para validar la categoría
 const categorySchema = z.object({
@@ -53,6 +53,7 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 // Tipo para categorías
 interface Category {
   id: number;
+  userId: number;
   name: string;
   type: "income" | "expense";
   color: string;
@@ -303,14 +304,24 @@ const DocumentScanPage = () => {
   
   return (
     <div className="container mx-auto py-6 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
-          <Receipt className="h-7 w-7 mr-3 text-[#007AFF]" />
-          Escanear documento
-        </h1>
-        <p className="text-muted-foreground">
-          Sube una factura o documento para procesarlo automáticamente.
-        </p>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+            <Receipt className="h-7 w-7 mr-3 text-[#007AFF]" />
+            Escanear documento
+          </h1>
+          <p className="text-muted-foreground">
+            Sube una factura o documento para procesarlo automáticamente.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/transactions")}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver a transacciones
+        </Button>
       </div>
       
       <div className="grid gap-6">

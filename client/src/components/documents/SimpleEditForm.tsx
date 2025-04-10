@@ -247,6 +247,16 @@ Proveedor: ${formData.provider || ""}`
   
   return (
     <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
+        <Input
+          id="transaction-description"
+          value={transaction.description || ''}
+          disabled
+          className="w-full"
+        />
+      </div>
+      
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
@@ -271,6 +281,7 @@ Proveedor: ${formData.provider || ""}`
             onChange={() => {
               updateTaxDisplay();
               updateIrpfDisplay();
+              updateTotal();
             }}
           />
         </div>
@@ -286,7 +297,10 @@ Proveedor: ${formData.provider || ""}`
               type="text"
               inputMode="numeric"
               className="w-full"
-              onChange={updateTaxDisplay}
+              onChange={() => {
+                updateTaxDisplay();
+                updateTotal();
+              }}
             />
             <div ref={taxAmountRef} className="w-1/2 text-sm text-muted-foreground"></div>
           </div>
@@ -301,7 +315,10 @@ Proveedor: ${formData.provider || ""}`
               type="text"
               inputMode="numeric"
               className="w-full"
-              onChange={updateIrpfDisplay}
+              onChange={() => {
+                updateIrpfDisplay();
+                updateTotal();
+              }}
             />
             <div ref={irpfAmountRef} className="w-1/2 text-sm text-muted-foreground"></div>
           </div>
