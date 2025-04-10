@@ -169,17 +169,23 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // Seleccionar las categorías a mostrar (max 5 + Sin categoría)
+  // Seleccionar exactamente 5 categorías para mantener simetría perfecta
   const categoryItems = (() => {
-    const mainCategories = data.slice(0, 5);
+    // Si hay una categoría "Sin categoría", asegurarse de incluirla entre las top 5
     const sinCategoria = data.find(item => item.name === "Sin categoría");
     
-    const displayCategories = [...mainCategories];
-    if (sinCategoria && !mainCategories.some(cat => cat.name === "Sin categoría")) {
-      displayCategories.push(sinCategoria);
+    if (sinCategoria) {
+      // Filtramos las que no son "Sin categoría" y tomamos las top 4
+      const otherCategories = data
+        .filter(item => item.name !== "Sin categoría")
+        .slice(0, 4);
+      
+      // Añadimos "Sin categoría" al final para tener exactamente 5
+      return [...otherCategories, sinCategoria];
+    } else {
+      // Si no hay "Sin categoría", tomamos exactamente las top 5
+      return data.slice(0, 5);
     }
-    
-    return displayCategories;
   })();
 
   return (
