@@ -196,53 +196,55 @@ const ExpensesByCategoryNew: React.FC<{
         </div>
         
         {/* Contenido principal en formato horizontal para aprovechar todo el espacio */}
-        <div className="flex">
-          {/* Lado izquierdo: Gráfico y "Total gastos" */}
-          <div className="w-1/3 relative h-[160px]">
-            {/* Texto "Total gastos" en el centro */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-600 text-sm">
-              Total gastos
-            </div>
-
-            {/* Círculos representativos posicionados alrededor */}
+        <div className="flex h-full">
+          {/* Lado izquierdo: Gráfico y "Total gastos" similar a la imagen de referencia */}
+          <div className="w-[38%] relative">
+            {/* Círculos representativos posicionados alrededor - como en la imagen de referencia */}
             {data.map((item, index) => {
-              // Posicionamiento estratégico en vez de circular
-              // Crear posiciones más dispersas y visualmente atractivas
+              // Posicionamiento basado en la imagen de referencia
               const positions = [
-                { x: 30, y: 40 },  // Superior izquierda
-                { x: 140, y: 20 }, // Superior derecha
-                { x: 20, y: 120 }, // Inferior izquierda 
-                { x: 120, y: 140 }, // Inferior derecha
-                { x: 70, y: 80 },  // Centro (si hay 5)
+                { x: 50, y: 105, size: 54 }, // Rojo grande (54%)
+                { x: 90, y: 70, size: 41 },  // Naranja medio (41%)
+                { x: 135, y: 265, size: 3 },  // Azul pequeño (3%)
+                { x: 30, y: 165, size: 1 }, // Morado pequeño (1%) arriba
+                { x: 75, y: 225, size: 1 }, // Morado pequeño (1%) abajo
               ];
               
-              const pos = positions[index % positions.length];
-              // Tamaño basado en porcentaje, proporcionalmente ajustado
-              const size = 24 + Math.min(16, (item.percentage / 100) * 40);
+              // Si tenemos menos datos que posiciones, usar solo los primeros
+              if (index >= positions.length) return null;
+              
+              const pos = positions[index];
+              // Tamaño fijo basado en la imagen de referencia
+              const size = Math.max(24, pos.size * 1.2);
               
               return (
                 <div 
                   key={item.categoryId} 
-                  className="absolute rounded-full flex items-center justify-center"
+                  className="absolute rounded-full flex items-center justify-center shadow-sm"
                   style={{
                     backgroundColor: item.color,
                     width: `${size}px`,
                     height: `${size}px`,
                     left: `${pos.x}px`,
-                    top: `${pos.y}px`,
+                    top: `${pos.y / 2.3}px`,
                     zIndex: 5
                   }}
                 >
-                  <span className="text-white text-[8px] font-medium">{item.percentage.toFixed(0)}%</span>
+                  <span className="text-white text-[11px] font-medium">{item.percentage.toFixed(0)}%</span>
                 </div>
               );
             })}
+            
+            {/* Texto "Total gastos" posicionado como en la imagen */}
+            <div className="absolute text-gray-600 text-sm" style={{ left: '75px', top: '85px' }}>
+              Total gastos
+            </div>
           </div>
           
-          {/* Lado derecho: Lista de categorías */}
-          <div className="w-2/3 space-y-2 pl-2">
+          {/* Lado derecho: Lista de categorías distribuida uniformemente */}
+          <div className="w-[62%] flex flex-col justify-between pl-2 h-full">
             {data.slice(0, 4).map((item) => (
-              <div key={item.categoryId} className="flex items-center mb-1.5">
+              <div key={item.categoryId} className="flex items-center">
                 {/* Icono con fondo coloreado */}
                 <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center mr-3 relative" 
                   style={{ backgroundColor: `${item.color}15` }}>
