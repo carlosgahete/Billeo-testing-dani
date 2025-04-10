@@ -811,8 +811,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                             id="transaction-amount"
                             type="number"
                             step="0.01"
-                            value={editedData.amount || transaction.amount || 0}
-                            onChange={(e) => handleFieldChange('amount', parseFloat(e.target.value))}
+                            value={editedData.amount || transaction.amount || ""}
+                            onChange={(e) => {
+                              // Permitir valores vacíos
+                              const value = e.target.value === "" ? "" : parseFloat(e.target.value);
+                              handleFieldChange('amount', value);
+                            }}
                             className="w-full"
                           />
                         </div>
@@ -823,8 +827,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                             id="transaction-base"
                             type="number"
                             step="0.01"
-                            value={editedData.baseAmount || extractedData?.baseAmount || 0}
-                            onChange={(e) => handleFieldChange('baseAmount', parseFloat(e.target.value))}
+                            value={editedData.baseAmount || extractedData?.baseAmount || ""}
+                            onChange={(e) => {
+                              // Permitir valores vacíos
+                              const value = e.target.value === "" ? "" : parseFloat(e.target.value);
+                              handleFieldChange('baseAmount', value);
+                            }}
                             className="w-full"
                           />
                         </div>
@@ -838,8 +846,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                               id="transaction-iva"
                               type="number"
                               step="1"
-                              value={editedData.tax || extractedData?.tax || 21}
-                              onChange={(e) => handleFieldChange('tax', parseInt(e.target.value))}
+                              value={editedData.tax || extractedData?.tax || ""}
+                              onChange={(e) => {
+                                // Permitir valores vacíos
+                                const value = e.target.value === "" ? "" : parseInt(e.target.value);
+                                handleFieldChange('tax', value);
+                              }}
                               className="w-full"
                             />
                             <div className="w-1/2 text-sm text-muted-foreground">
@@ -856,8 +868,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                               id="transaction-irpf"
                               type="number"
                               step="1"
-                              value={editedData.irpf || extractedData?.irpf || 0}
-                              onChange={(e) => handleFieldChange('irpf', parseInt(e.target.value))}
+                              value={editedData.irpf || extractedData?.irpf || ""}
+                              onChange={(e) => {
+                                // Permitir valores vacíos
+                                const value = e.target.value === "" ? "" : parseInt(e.target.value);
+                                handleFieldChange('irpf', value);
+                              }}
                               className="w-full"
                             />
                             <div className="w-1/2 text-sm text-muted-foreground">
