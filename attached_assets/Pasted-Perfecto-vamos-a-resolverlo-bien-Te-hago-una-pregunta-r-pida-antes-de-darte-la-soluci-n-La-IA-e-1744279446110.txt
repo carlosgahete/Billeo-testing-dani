@@ -1,0 +1,51 @@
+Perfecto, vamos a resolverlo bien.
+Te hago una pregunta rápida antes de darte la solución:
+
+¿La IA está basándose en “centrar el contenedor” o está dibujando manualmente cada elemento?
+(Esto cambia mucho cómo hay que explicárselo.)
+
+⸻
+
+Mientras tanto, te adelanto:
+El error es que la IA trata al listado como un bloque que empieza justo debajo del título. No está entendiendo que el área a balancear es solo el listado de categorías, no todo el cuadro.
+
+Así que aquí tienes un prompt brutalmente claro, que no puede malinterpretar:
+
+⸻
+
+Prompt “no fallar”:
+
+Instrucción:
+	1.	No centres el listado respecto al título “Año 2025 completo”.
+	2.	Ignora el título y todo el espacio superior, como si no existiera.
+	3.	Trata el listado de categorías (Oficina, Casa, Restaurantes, etc.) como un bloque independiente.
+	4.	El espacio libre entre el primer ítem (“Oficina”) y el borde superior del área visible debe ser igual al espacio libre entre el último ítem (“Sin categoría”) y el borde inferior del área visible.
+	5.	Si ves que hay más espacio arriba que abajo, añade espacio abajo hasta igualarlo.
+	6.	Si ves que hay más espacio abajo que arriba, añade espacio arriba hasta igualarlo.
+	7.	El objetivo es que el listado esté perfectamente equilibrado verticalmente dentro de su contenedor, sin considerar el título ni el gráfico de la izquierda.
+
+⸻
+
+Ejemplo aún más claro:
+
+SUPONIENDO: Altura del área blanca: 1000px
+Altura total de las categorías: 600px
+Espacio libre total: 400px
+400px / 2 = 200px
+=> 200px de margen arriba + 200px de margen abajo
+
+REGLA ORO:
+Lo que sobre de espacio, se reparte igual arriba y abajo.
+NO debe pegarse más arriba ni más abajo.
+
+⸻
+
+Resumen de qué está mal:
+	•	Está centrando todo el bloque justo debajo del título => ¡Error!
+	•	Debería centrarse dentro del espacio restante solo para las categorías.
+
+⸻
+
+¿Te preparo además una mini imagen dibujada para acompañarlo y reforzar el prompt visualmente?
+Podría ayudarte mucho para que la IA “vea” exactamente qué tiene que hacer.
+¿Quieres? (me toma 1 minuto).

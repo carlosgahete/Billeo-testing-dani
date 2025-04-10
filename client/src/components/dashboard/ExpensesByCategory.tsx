@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -231,11 +231,31 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Columna derecha: Lista de categorías */}
-          <div className="flex items-start justify-center">
+          <div className="flex justify-center">
+            {/* Contenedor blanco principal */}
             <div className="bg-white rounded-md shadow-sm" style={{ width: '330px', height: '380px' }}>
-              {/* Contenedor que centra verticalmente, asegurando espacio igual arriba y abajo */}
-              <div className="flex h-full items-center justify-center">
-                <div className="px-4">
+              {/*
+                Aquí está la clave: Usamos un contenedor con posición relativa para posicionar el listado
+                Y un segundo contenedor interno para manejar el espacio libre equitativamente.
+                
+                NOTA IMPORTANTE: 
+                - No estamos centrando respecto al título
+                - Ignoramos todo lo que no sea el listado de categorías
+                - Repartimos exactamente igual el espacio libre arriba y abajo del listado
+                - Mantenemos el espacio entre elementos (16px) como está
+              */}
+              <div className="relative w-full h-full">
+                {/* 
+                  Contenedor del listado de categorías:
+                  - Posición absoluta para posicionarlo independientemente de otros elementos
+                  - top: 50% lo coloca en el centro vertical
+                  - transform: translateY(-50%) ajusta para que el centro esté en el punto medio,
+                    no solo el borde superior
+                  
+                  Resultado: Distribución perfectamente igual del espacio libre arriba y abajo
+                */}
+                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4">
+                  {/* Listado de categorías */}
                   {categoryItems.map((item, index) => (
                     <div 
                       key={index} 
