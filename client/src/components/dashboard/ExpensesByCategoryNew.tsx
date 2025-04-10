@@ -237,7 +237,7 @@ const ExpensesByCategoryNew: React.FC<{
           </div>
           
           {/* Lado derecho: Lista de categorías exactamente como en la imagen */}
-          <div className="w-[55%] flex flex-col justify-between h-full pl-0 -ml-1">
+          <div className="w-[55%] flex flex-col justify-between h-full pl-0 -ml-3">
             {data.slice(0, 4).map((item) => (
               <div key={item.categoryId} className="flex items-center py-1">
                 {/* Círculo con icono */}
