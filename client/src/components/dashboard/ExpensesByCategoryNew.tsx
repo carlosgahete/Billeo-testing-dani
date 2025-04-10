@@ -179,7 +179,7 @@ const ExpensesByCategoryNew: React.FC<{
     );
   }
 
-  // Nuevo diseño basado en la imagen de referencia (con gráfico circular)
+  // Nuevo diseño basado en la imagen de referencia que aprovecha todo el espacio
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
       <CardHeader className="bg-red-50 p-3">
@@ -195,63 +195,58 @@ const ExpensesByCategoryNew: React.FC<{
           {periodLabel}
         </div>
         
-        {/* Contenedor principal con gráfico y lista */}
-        <div className="flex flex-col md:flex-row">
-          {/* Gráfico circular (donut) - Versión simplificada sin chart */}
-          <div className="md:w-1/2 mb-2 md:mb-0 flex items-center justify-center">
-            <div className="h-[180px] w-[180px] relative">
-              {/* Círculo central vacío */}
-              <div className="w-[90px] h-[90px] rounded-full bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
-                <span className="text-gray-500 text-xs">Total gastos</span>
-              </div>
-              
-              {/* Círculos representativos para cada categoría */}
-              {data.map((item, index) => {
-                // Posicionar cada círculo en un ángulo diferente
-                const angle = (index / data.length) * 360;
-                const radians = (angle * Math.PI) / 180;
-                const radius = 60; // Distancia del centro
-                
-                // Calcular posición x,y
-                const x = 90 + radius * Math.cos(radians);
-                const y = 90 + radius * Math.sin(radians);
-                
-                // Tamaño basado en porcentaje (mínimo 25px, máximo 40px)
-                const size = 25 + Math.min(15, (item.percentage / 100) * 40);
-                
-                return (
-                  <div 
-                    key={item.categoryId} 
-                    className="absolute rounded-full flex items-center justify-center shadow-sm"
-                    style={{
-                      backgroundColor: item.color,
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      left: `${x - size/2}px`,
-                      top: `${y - size/2}px`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 5
-                    }}
-                  >
-                    <span className="text-white text-[8px]">{item.percentage.toFixed(0)}%</span>
-                  </div>
-                );
-              })}
+        {/* Contenido principal en formato horizontal para aprovechar todo el espacio */}
+        <div className="flex">
+          {/* Lado izquierdo: Gráfico y "Total gastos" */}
+          <div className="w-1/3 relative h-[160px]">
+            {/* Texto "Total gastos" en el centro */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-600 text-sm">
+              Total gastos
             </div>
+
+            {/* Círculos representativos posicionados alrededor */}
+            {data.map((item, index) => {
+              // Posicionamiento estratégico en vez de circular
+              // Crear posiciones más dispersas y visualmente atractivas
+              const positions = [
+                { x: 30, y: 40 },  // Superior izquierda
+                { x: 140, y: 20 }, // Superior derecha
+                { x: 20, y: 120 }, // Inferior izquierda 
+                { x: 120, y: 140 }, // Inferior derecha
+                { x: 70, y: 80 },  // Centro (si hay 5)
+              ];
+              
+              const pos = positions[index % positions.length];
+              // Tamaño basado en porcentaje, proporcionalmente ajustado
+              const size = 24 + Math.min(16, (item.percentage / 100) * 40);
+              
+              return (
+                <div 
+                  key={item.categoryId} 
+                  className="absolute rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: item.color,
+                    width: `${size}px`,
+                    height: `${size}px`,
+                    left: `${pos.x}px`,
+                    top: `${pos.y}px`,
+                    zIndex: 5
+                  }}
+                >
+                  <span className="text-white text-[8px] font-medium">{item.percentage.toFixed(0)}%</span>
+                </div>
+              );
+            })}
           </div>
           
-          {/* Lista de categorías similar a la imagen de referencia */}
-          <div className="md:w-1/2 space-y-3">
+          {/* Lado derecho: Lista de categorías */}
+          <div className="w-2/3 space-y-2 pl-2">
             {data.slice(0, 4).map((item) => (
-              <div key={item.categoryId} className="flex items-start">
-                {/* Círculo con color de la categoría e icono */}
-                <div className="relative mr-2">
-                  <div 
-                    className="w-[36px] h-[36px] rounded-full flex-shrink-0 flex items-center justify-center"
-                    style={{ backgroundColor: `${item.color}20` }}
-                  >
-                    <span className="text-sm">{item.icon}</span>
-                  </div>
+              <div key={item.categoryId} className="flex items-center mb-1.5">
+                {/* Icono con fondo coloreado */}
+                <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center mr-3 relative" 
+                  style={{ backgroundColor: `${item.color}15` }}>
+                  <span className="text-sm">{item.icon}</span>
                   {/* Punto indicador */}
                   <div 
                     className="absolute top-0 left-0 w-2 h-2 rounded-full"
@@ -259,23 +254,19 @@ const ExpensesByCategoryNew: React.FC<{
                   ></div>
                 </div>
                 
-                {/* Información central */}
+                {/* Nombre de categoría y transacciones */}
                 <div className="flex-grow">
-                  {/* Nombre de la categoría */}
                   <div className="text-[13px] font-medium text-gray-900">{item.name}</div>
-                  {/* Número de transacciones */}
                   <div className="text-xs text-gray-500">
-                    {item.count} {item.count === 1 ? 'tx' : 'tx'}
+                    {item.count} tx
                   </div>
                 </div>
                 
-                {/* Valores y porcentajes a la derecha */}
-                <div className="text-right flex flex-col items-end">
-                  {/* Monto con color negativo (gastos) */}
+                {/* Valores y porcentajes */}
+                <div className="text-right">
                   <div className="text-sm font-medium text-red-600">
                     {formatCurrency(item.value * -1)}
                   </div>
-                  {/* Porcentaje */}
                   <div className="text-xs text-gray-500">
                     {item.percentage.toFixed(1)}%
                   </div>
