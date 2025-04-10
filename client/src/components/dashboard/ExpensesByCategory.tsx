@@ -199,9 +199,9 @@ const ExpensesByCategory: React.FC<{
         )}
         
         {/* Contenedor principal con distribución simétrica */}
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 mx-auto max-w-4xl">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-4 mx-auto">
           {/* Mitad izquierda: Gráfico de donut con tamaño fijo */}
-          <div className="md:w-1/2 flex justify-center">
+          <div className="flex justify-center items-center">
             <div className="flex items-center justify-center" style={{ 
               width: '330px',
               height: '330px'
@@ -237,7 +237,7 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Mitad derecha: Lista de categorías con misma altura que el gráfico */}
-          <div className="md:w-1/2 flex justify-center">
+          <div className="flex justify-center items-center">
             <div className="bg-white rounded-md shadow-sm" style={{ 
               width: '330px', 
               height: '330px' 
