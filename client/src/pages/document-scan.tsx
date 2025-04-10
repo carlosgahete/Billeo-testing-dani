@@ -1069,32 +1069,48 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
           </CardHeader>
           <CardContent>
             {!extractedData && !transaction ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Receipt className="h-12 w-12 mx-auto mb-3 text-neutral-300" />
-                <p>Los datos extraídos aparecerán aquí al procesar un documento</p>
+              <div className="text-center py-10 px-4">
+                <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                  <div className="h-20 w-20 bg-[#34C759]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Receipt className="h-10 w-10 text-[#34C759]" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">
+                    Sin datos procesados
+                  </h3>
+                  <p className="text-gray-500 max-w-sm mx-auto">
+                    Los datos extraídos de tu factura aparecerán automáticamente aquí después de procesarla con IA
+                  </p>
+                  <div className="flex justify-center mt-4">
+                    <ArrowLeft className="h-5 w-5 text-[#007AFF] animate-pulse mr-2" />
+                    <p className="text-sm text-[#007AFF]">Sube un documento para comenzar</p>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
                 {documentImage && (
-                  <div className="mb-5">
-                    <h3 className="font-medium text-lg mb-3">Documento escaneado</h3>
-                    <div className="border rounded-md p-2 bg-gray-50">
+                  <div className="mb-6">
+                    <h3 className="font-medium text-xl text-gray-800 mb-3 flex items-center">
+                      <FileText className="h-5 w-5 mr-2 text-[#007AFF]" />
+                      Documento escaneado
+                    </h3>
+                    <div className="border border-gray-200 rounded-2xl p-3 bg-gray-50/50 shadow-sm">
                       <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm text-muted-foreground">Documento original:</p>
+                        <p className="text-sm font-medium text-gray-600">Vista previa del documento:</p>
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => setIsResultZoomed(!isResultZoomed)}
-                          className="h-8 px-2"
+                          className="h-8 px-3 rounded-full border-gray-200 hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
                         >
                           {isResultZoomed ? (
                             <>
-                              <ZoomOut className="h-4 w-4 mr-1" />
+                              <ZoomOut className="h-4 w-4 mr-1.5" />
                               Reducir
                             </>
                           ) : (
                             <>
-                              <ZoomIn className="h-4 w-4 mr-1" />
+                              <ZoomIn className="h-4 w-4 mr-1.5" />
                               Ampliar
                             </>
                           )}
@@ -1227,8 +1243,11 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                 )}
                 
                 <div>
-                  <h3 className="font-medium text-lg mb-3">Datos extraídos</h3>
-                  <div className="space-y-2 text-sm">
+                  <h3 className="font-medium text-xl text-gray-800 mb-3 flex items-center">
+                    <Receipt className="h-5 w-5 mr-2 text-[#34C759]" />
+                    Datos extraídos por IA
+                  </h3>
+                  <div className="space-y-2 text-sm bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
                     <div className="flex justify-between border-b pb-2">
                       <span className="text-muted-foreground">Fecha:</span>
                       <span>{new Date(extractedData.date).toLocaleDateString('es-ES')}</span>
@@ -1420,9 +1439,9 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                                 setNewCategoryDialogOpen(true);
                               } else {
                                 // Actualizar la transacción con la categoría seleccionada
-                                const categoryId = value !== "null" ? parseInt(value) : null;
-                                // Actualizar categoría (puede ser null o un número)
-                                handleUpdateCategory(categoryId);
+                                // Actualizamos directamente con el value, que ya es una string
+                                // value puede ser "null" (como string) o "1", "2", etc.
+                                handleUpdateCategory(value === "null" ? null : value);
                               }
                             }}
                           >
@@ -1489,9 +1508,12 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                 <Separator />
 
                 <div>
-                  <h3 className="font-medium text-lg mb-3">Transacción creada</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Se ha creado automáticamente la siguiente transacción:
+                  <h3 className="font-medium text-xl text-gray-800 mb-3 flex items-center">
+                    <Building className="h-5 w-5 mr-2 text-[#FF3B30]" />
+                    Transacción registrada
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    La factura ha sido convertida automáticamente en una transacción:
                   </p>
                   
                   {/* Mostrar la imagen de la factura procesada */}
@@ -1552,22 +1574,39 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                     </div>
                   )}
                   
-                  <div className="bg-neutral-50 rounded-md p-3 text-sm">
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Descripción:</span>
-                      <span>{transaction.description}</span>
+                  <div className="bg-gray-50/80 rounded-2xl p-4 text-sm border border-gray-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-[#FF3B30]/10 flex items-center justify-center text-[#FF3B30] mr-3">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-base text-gray-800">{transaction.description}</p>
+                          <p className="text-xs text-gray-500">Registrado el {new Date().toLocaleDateString('es-ES')}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg text-[#FF3B30]">{Number(transaction.amount).toFixed(2)} €</p>
+                        <p className="text-xs font-medium bg-[#FF3B30]/10 text-[#FF3B30] px-2 py-0.5 rounded-full inline-block">Gasto</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Importe:</span>
-                      <span className="font-semibold">{Number(transaction.amount).toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Tipo:</span>
-                      <span>Gasto</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Fecha:</span>
-                      <span>{new Date(transaction.date).toLocaleDateString('es-ES')}</span>
+                    
+                    <div className="grid grid-cols-2 gap-3 mt-3 mb-2">
+                      <div className="bg-white rounded-xl p-3 border border-gray-100">
+                        <p className="text-xs text-gray-500 mb-1">Fecha de la factura</p>
+                        <p className="font-medium flex items-center">
+                          <CalendarDays className="h-3.5 w-3.5 mr-1 text-gray-400" />
+                          {new Date(transaction.date).toLocaleDateString('es-ES')}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-white rounded-xl p-3 border border-gray-100">
+                        <p className="text-xs text-gray-500 mb-1">Base imponible</p>
+                        <p className="font-medium flex items-center">
+                          <Euro className="h-3.5 w-3.5 mr-1 text-gray-400" />
+                          {Number(transaction.subtotal || 0).toFixed(2)} €
+                        </p>
+                      </div>
                     </div>
                     
                     {/* Mostrar impuestos si están presentes en la transacción */}
@@ -1601,10 +1640,10 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                   
                   <Button 
                     onClick={handleGoToTransactions}
-                    className="w-full mt-4"
-                    variant="outline"
+                    className="w-full mt-4 h-11 rounded-full bg-gradient-to-r from-[#FF3B30]/90 to-[#FF3B30] hover:from-[#FF3B30] hover:to-[#E73729] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300"
                   >
-                    Ver en Ingresos y Gastos
+                    <ArrowRight className="h-5 w-5 mr-2" />
+                    Ver todos los gastos
                   </Button>
                 </div>
               </div>
