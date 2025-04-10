@@ -839,27 +839,43 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Subir documento</CardTitle>
-            <CardDescription>
-              Sube un documento para extraer automáticamente sus datos
+        <Card className="overflow-hidden border rounded-3xl shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
+          <CardHeader className="pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
+            <CardTitle className="text-2xl font-medium text-gray-900 flex items-center">
+              <Receipt className="h-5 w-5 mr-2 text-[#007AFF]" />
+              Escanear gasto
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-500">
+              Sube una factura para procesarla automáticamente con IA
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-6">
             <div className="space-y-6">
-              <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="document-upload">Documento</Label>
-                <Input
-                  id="document-upload"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  onChange={handleFileChange}
-                  className="cursor-pointer"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Formatos soportados: PDF, JPG, PNG
-                </p>
+              <div 
+                className="rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#007AFF] transition-colors p-6 bg-gray-50/50 hover:bg-blue-50/20"
+                onClick={() => document.getElementById('document-upload')?.click()}
+              >
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center shadow-sm">
+                    <Upload className="h-8 w-8 text-[#007AFF]" />
+                  </div>
+                  <Label 
+                    htmlFor="document-upload" 
+                    className="text-base font-medium text-gray-800 cursor-pointer text-center hover:text-[#007AFF] transition-colors mt-2"
+                  >
+                    Arrastra tu factura o haz clic para subir
+                  </Label>
+                  <p className="text-sm text-gray-500 text-center">
+                    Formatos soportados: PDF, JPG, PNG
+                  </p>
+                  <Input
+                    id="document-upload"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
               </div>
 
               {previewUrl && (
@@ -1023,16 +1039,16 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
               <Button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className="w-full"
+                className="w-full h-11 rounded-full bg-gradient-to-r from-[#007AFF] to-[#0063CC] hover:from-[#0063CC] hover:to-[#004C99] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300"
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Procesando...
                   </>
                 ) : (
                   <>
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="mr-2 h-5 w-5" />
                     Procesar documento
                   </>
                 )}
@@ -1041,11 +1057,14 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Resultados</CardTitle>
-            <CardDescription>
-              Datos extraídos del documento
+        <Card className="overflow-hidden border rounded-3xl shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
+          <CardHeader className="pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
+            <CardTitle className="text-2xl font-medium text-gray-900 flex items-center">
+              <Receipt className="h-5 w-5 mr-2 text-[#34C759]" />
+              Resultados
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-500">
+              Datos extraídos automáticamente por IA
             </CardDescription>
           </CardHeader>
           <CardContent>
