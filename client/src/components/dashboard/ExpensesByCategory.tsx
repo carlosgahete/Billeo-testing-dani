@@ -255,16 +255,30 @@ const ExpensesByCategory: React.FC<{
             }}>
               {/* Contenedor para centrado vertical perfecto con altura fija */}
               <div className="relative w-full h-full overflow-hidden">
-                {/* SOLUCIÓN FINAL: Máximo 5 categorías visibles, sin incluir "Sin categoría" */}
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4" style={{ maxHeight: '310px' }}>
-                  {/* Filtrar "Sin categoría" y limitar a exactamente 5 */}
+                {/* SOLUCIÓN DEFINITIVA: Contenedor que oculta explícitamente el sexto elemento */}
+                <style>
+                  {`
+                    /* Esconder específicamente el sexto elemento (Sin categoría) */
+                    .category-item:nth-child(6) {
+                      display: none !important;
+                    }
+                  `}
+                </style>
+                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4" style={{
+                  /* Esconder cualquier overflow como seguridad adicional */
+                  overflow: 'hidden',
+                  /* Tamaño adecuado para 5 elementos */
+                  maxHeight: '310px'
+                }}>
+                  {/* ORDENAR: Primero todo menos Sin categoría y Comida. Luego Comida al final */}
                   {categoryItems
                     .filter(item => item.name !== "Sin categoría")
+                    .sort((a, b) => a.name === "Comida" ? 1 : b.name === "Comida" ? -1 : b.value - a.value)
                     .slice(0, 5)
                     .map((item, index, filteredArray) => (
                     <div 
                       key={index} 
-                      className="flex items-start gap-2"
+                      className="flex items-start gap-2 category-item"
                       style={{ marginBottom: index < filteredArray.length - 1 ? '16px' : '0' }}
                     >
                       <div 
