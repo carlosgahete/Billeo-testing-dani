@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -9,15 +9,6 @@ import { TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-interface TooltipState {
-  visible: boolean;
-  x: number;
-  y: number;
-  categoryName: string;
-  amount: string;
-  percentage: string;
-}
 
 interface ExpenseByCategoryData {
   name: string;
@@ -41,14 +32,7 @@ const ExpensesByCategoryNew: React.FC<{
 }> = ({ transactions, categories, period }) => {
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
-  const [tooltip, setTooltip] = useState<TooltipState>({
-    visible: false,
-    x: 0,
-    y: 0, 
-    categoryName: "",
-    amount: "",
-    percentage: ""
-  });
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   
   useEffect(() => {
     const currentYear = new Date().getFullYear();
@@ -223,18 +207,6 @@ const ExpensesByCategoryNew: React.FC<{
                 <div className="w-20 h-20 bg-white rounded-full"></div>
               </div>
               
-              {/* Tooltip personalizado */}
-              {tooltip.visible && (
-                <div 
-                  className="absolute bg-white shadow-lg rounded-md p-2 z-10 pointer-events-none border border-gray-200"
-                  style={{ left: tooltip.x + 'px', top: tooltip.y + 'px', transform: 'translate(-50%, -100%)' }}
-                >
-                  <div className="font-semibold">{tooltip.categoryName}</div>
-                  <div className="text-red-600">{tooltip.amount}</div>
-                  <div className="text-sm text-gray-500">{tooltip.percentage}</div>
-                </div>
-              )}
-              
               {/* Construcción del donut con segmentos circulares */}
               <svg className="w-full h-full" viewBox="0 0 100 100">
                 <desc>Gráfico de distribución de gastos</desc>
@@ -260,25 +232,23 @@ const ExpensesByCategoryNew: React.FC<{
                         strokeDashoffset={`${-offset * 2.51}`}
                         transform="rotate(-90 50 50)"
                         className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onMouseMove={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setTooltip({
-                            visible: true,
-                            x: e.clientX - rect.left,
-                            y: e.clientY - rect.top,
-                            categoryName: item.name,
-                            amount: formatCurrency(item.value * -1),
-                            percentage: `${item.percentage.toFixed(2)}%`
-                          });
-                        }}
-                        onMouseLeave={() => {
-                          setTooltip(prev => ({...prev, visible: false}));
-                        }}
+                        onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
                       />
                     </g>
                   );
                 })}
               </svg>
+              
+              {/* Información tooltip en el centro */}
+              {activeIndex !== null && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-white p-2 rounded-md shadow-sm text-center w-28">
+                    <p className="font-semibold text-sm truncate">{data[activeIndex].name}</p>
+                    <p className="text-red-600 text-sm">{formatCurrency(data[activeIndex].value * -1)}</p>
+                    <p className="text-gray-500 text-xs">{data[activeIndex].percentage.toFixed(2)}%</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
