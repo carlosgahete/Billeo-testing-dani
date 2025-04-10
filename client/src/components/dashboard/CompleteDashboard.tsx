@@ -211,6 +211,32 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       }
     });
 
+    // Si no hay ingresos en las transacciones pero el total de ingresos es mayor que 0,
+    // vamos a distribuir uniformemente los ingresos en los trimestres actuales
+    if (dashboardStats.income > 0 && 
+        Object.values(quarterlyData).every(data => data.Ingresos === 0)) {
+      
+      // Determinar en qué trimestre estamos actualmente para distribuir los ingresos
+      const currentQuarter = getQuarterFromDate(new Date());
+      
+      // Distribuir los ingresos uniformemente en los trimestres hasta el actual
+      const availableQuarters = ["Q1", "Q2", "Q3", "Q4"].filter(q => {
+        if (q === "Q1") return true; // Q1 siempre disponible
+        if (q === "Q2") return currentQuarter === "Q2" || currentQuarter === "Q3" || currentQuarter === "Q4";
+        if (q === "Q3") return currentQuarter === "Q3" || currentQuarter === "Q4";
+        if (q === "Q4") return currentQuarter === "Q4";
+        return false;
+      });
+      
+      // Calculamos cuánto ingreso va a cada trimestre
+      const incomePerQuarter = Math.round(baseImponibleIngresos / availableQuarters.length);
+      
+      // Asignamos los ingresos a cada trimestre disponible
+      availableQuarters.forEach(quarter => {
+        quarterlyData[quarter].Ingresos = incomePerQuarter;
+      });
+    }
+
     // Calcular el resultado para cada trimestre
     Object.keys(quarterlyData).forEach(quarter => {
       quarterlyData[quarter].Resultado = 
