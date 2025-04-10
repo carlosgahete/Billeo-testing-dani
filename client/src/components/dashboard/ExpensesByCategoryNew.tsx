@@ -521,8 +521,8 @@ const ExpensesByCategoryNew: React.FC<{
             </div>
           </div>
           
-          {/* Lado derecho: Lista de categorías exactamente como en la imagen */}
-          <div className="w-[55%] flex flex-col h-full pl-0 -ml-3 max-h-[300px] overflow-y-auto">
+          {/* Lado derecho: Lista de categorías con scroll cuando es necesario */}
+          <div className="w-[55%] flex flex-col h-full pl-0 -ml-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-3">
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
