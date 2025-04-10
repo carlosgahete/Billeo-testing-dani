@@ -2886,13 +2886,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let useMockService = false;
       
       try {
+        console.log("Intentando cargar el servicio de visión real...");
         // Intentar importar el servicio real de visión
         visionService = await import("./services/visionService");
+        console.log("Servicio de visión real cargado correctamente");
       } catch (importError) {
         // Si hay un error al cargar el servicio real, usar el servicio simulado
         console.log("Error al cargar el servicio de visión real, usando servicio simulado:", importError);
-        visionService = await import("./services/mockVisionService");
-        useMockService = true;
+        
+        try {
+          console.log("Cargando servicio de visión simulado...");
+          visionService = await import("./services/mockVisionService");
+          console.log("Servicio de visión simulado cargado correctamente");
+          useMockService = true;
+        } catch (mockError) {
+          console.error("Error crítico al cargar el servicio simulado:", mockError);
+          return res.status(500).json({ 
+            message: "Error al cargar los servicios de procesamiento de documentos",
+            error: String(mockError)
+          });
+        }
       }
       
       // Extraer información del documento según el tipo de archivo

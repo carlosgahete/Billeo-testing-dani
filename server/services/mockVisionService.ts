@@ -25,7 +25,7 @@ interface TransactionData {
   userId: string;
   title?: string;
   description: string;
-  amount: number;
+  amount: string; // Debe ser string según el esquema esperado
   date: Date;
   type: 'income' | 'expense';
   categoryId: string | null;
