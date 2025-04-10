@@ -169,26 +169,28 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // FORZAR exactamente 5 categorías con Comida al final
+  // GARANTIZAR EXACTAMENTE 5 CATEGORÍAS Y COMIDA SIEMPRE AL FINAL
   const categoryItems = (() => {
+    // Filtrar todas las categorías excepto "Sin categoría"
+    const categoriasFiltradas = data
+      .filter(item => item.name !== "Sin categoría");
+    
     // Buscar específicamente la categoría Comida
-    const comida = data.find(item => item.name === "Comida");
+    const comida = categoriasFiltradas.find(item => item.name === "Comida");
     
-    // Filtrar todas las categorías que no son "Comida" o "Sin categoría"
-    const otherCategories = data
-      .filter(item => item.name !== "Comida" && item.name !== "Sin categoría")
-      .slice(0, 4); // Limitar a 4 para dejar espacio para Comida
-    
-    // Las 4 categorías principales seguidas de Comida como última
+    // Si tenemos la categoría Comida
     if (comida) {
-      console.log("CATEGORÍAS ORDENADAS CON COMIDA AL FINAL");
-      return [...otherCategories, comida]; // Exactamente 5 categorías con Comida al final
-    } 
+      // Obtener todas las categorías excepto Comida
+      const noComida = categoriasFiltradas
+        .filter(item => item.name !== "Comida")
+        .slice(0, 4);  // Tomar máximo 4 (para luego añadir Comida como 5ª)
+      
+      console.log("CATEGORÍAS CON COMIDA FORZADA AL FINAL");
+      return [...noComida, comida];  // Comida será siempre la última
+    }
     
-    // Si no hay Comida, mostrar exactamente 5 categorías sin "Sin categoría"
-    return data
-      .filter(item => item.name !== "Sin categoría")
-      .slice(0, 5);
+    // Si no existe la categoría Comida, simplemente tomar las primeras 5
+    return categoriasFiltradas.slice(0, 5);
   })();
 
   return (
@@ -253,14 +255,17 @@ const ExpensesByCategory: React.FC<{
             }}>
               {/* Contenedor para centrado vertical perfecto con altura fija */}
               <div className="relative w-full h-full overflow-hidden">
-                {/* Mostramos exactamente 5 categorías - Modificamos la altura para asegurar visibilidad */}
+                {/* SOLUCIÓN FINAL: Máximo 5 categorías visibles, sin incluir "Sin categoría" */}
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4" style={{ maxHeight: '310px' }}>
-                  {/* Listado de categorías - limitado a exactamente 5 */}
-                  {categoryItems.slice(0, 5).map((item, index) => (
+                  {/* Filtrar "Sin categoría" y limitar a exactamente 5 */}
+                  {categoryItems
+                    .filter(item => item.name !== "Sin categoría")
+                    .slice(0, 5)
+                    .map((item, index, filteredArray) => (
                     <div 
                       key={index} 
                       className="flex items-start gap-2"
-                      style={{ marginBottom: index < Math.min(categoryItems.length, 5) - 1 ? '16px' : '0' }}
+                      style={{ marginBottom: index < filteredArray.length - 1 ? '16px' : '0' }}
                     >
                       <div 
                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
