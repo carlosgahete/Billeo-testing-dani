@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ArrowLeft, ZoomIn, ZoomOut, X, Plus, Check, Calendar, User, Building, Search, MousePointer } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ArrowLeft, ArrowRight, ZoomIn, ZoomOut, X, Plus, Check, Calendar, CalendarDays, User, Building, Search, MousePointer, Euro } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -80,6 +80,7 @@ const DocumentScanPage = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showEditMode, setShowEditMode] = useState(false);
   const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
   const [showMagnifier, setShowMagnifier] = useState(false);
   
@@ -148,8 +149,8 @@ const DocumentScanPage = () => {
       setTransaction(data.transaction);
       setDocumentImage(data.documentUrl || null);
       
-      // Mostrar el diálogo de confirmación en lugar de procesar automáticamente
-      setShowConfirmDialog(true);
+      // Ir directamente a edición sin mostrar el diálogo de confirmación
+      setShowEditMode(true);
       
       toast({
         title: "Documento procesado",
