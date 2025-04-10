@@ -2969,11 +2969,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (processedData && typeof processedData === 'object') {
         // Corregir valor del porcentaje de IRPF si es anormal
         if (processedData.irpf && processedData.irpf > 100) {
-          console.log(`⚠️ Corrigiendo valor anormal de IRPF: ${processedData.irpf} -> 15`);
+          console.log(`⚠️ Corrigiendo valor anormal de IRPF: ${processedData.irpf} -> -15`);
           // Guardar el importe original antes de ajustar
           const originalIrpfValue = processedData.irpf;
-          // Establecer el porcentaje de IRPF a un valor razonable (15%)
-          processedData.irpf = 15;
+          // Establecer el porcentaje de IRPF a un valor razonable (-15%)
+          processedData.irpf = -15;
           
           // Si irpfAmount no está establecido o es igual al porcentaje, calcularlo usando la base imponible
           if (!processedData.irpfAmount || processedData.irpfAmount === originalIrpfValue) {
@@ -2983,6 +2983,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`⚠️ Recalculando importe IRPF basado en porcentaje: ${processedData.irpfAmount}`);
             }
           }
+        } else if (processedData.irpf && processedData.irpf > 0) {
+          // Si el IRPF es positivo pero razonable, lo convertimos a negativo
+          console.log(`⚠️ Corrigiendo signo de porcentaje IRPF: ${processedData.irpf} -> ${-processedData.irpf}`);
+          processedData.irpf = -Math.abs(processedData.irpf);
         }
         
         // Asegurar que el importe de IRPF es negativo (retención)

@@ -149,8 +149,8 @@ export function mapToTransaction(
     
     additionalTaxes.push({
       name: "IRPF",
-      rate: irpfRate,
-      amount: irpfAmount,
+      rate: -Math.abs(irpfRate), // Aseguramos que el porcentaje también sea negativo
+      amount: irpfAmount,        // El importe ya es negativo
       baseAmount: extractedData.baseAmount
     });
   }
@@ -173,7 +173,7 @@ export function mapToTransaction(
     type: 'expense', // Asumimos que los documentos escaneados son gastos
     categoryId,
     paymentMethod: 'other',
-    notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}.\nImporte base: ${extractedData.baseAmount}€.\nIVA (${extractedData.tax}%): +${extractedData.taxAmount}€${extractedData.irpf > 0 ? `.\nIRPF (${extractedData.irpf > 100 ? 15 : extractedData.irpf}%): ${extractedData.irpfAmount}€` : ''}\nTotal: ${extractedData.amount}€`,
+    notes: `Documento escaneado de ${extractedData.provider || 'proveedor'}.\nImporte base: ${extractedData.baseAmount}€.\nIVA (${extractedData.tax}%): +${extractedData.taxAmount}€${extractedData.irpf > 0 ? `.\nIRPF (-${extractedData.irpf > 100 ? 15 : extractedData.irpf}%): ${extractedData.irpfAmount}€` : ''}\nTotal: ${extractedData.amount}€`,
     additionalTaxes: additionalTaxes.length > 0 ? additionalTaxes : null
   };
   
