@@ -169,20 +169,26 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // FORZAR exactamente 5 categorías - ni una más ni una menos
+  // FORZAR exactamente 5 categorías con Comida al final
   const categoryItems = (() => {
-    // Mostramos solo las top 5 categorías, independientemente de cuáles sean
-    const top5 = data.slice(0, 5);
+    // Buscar específicamente la categoría Comida
+    const comida = data.find(item => item.name === "Comida");
     
-    console.log("CATEGORÍAS ANTES DEL CORTE:", data.length);
-    console.log("CATEGORÍAS DESPUÉS DEL CORTE:", top5.length);
+    // Filtrar todas las categorías que no son "Comida" o "Sin categoría"
+    const otherCategories = data
+      .filter(item => item.name !== "Comida" && item.name !== "Sin categoría")
+      .slice(0, 4); // Limitar a 4 para dejar espacio para Comida
     
-    // Asegurarse de que siempre tengamos exactamente 5 categorías
-    if (top5.length > 5) {
-      return top5.slice(0, 5); // Cortar a 5 si hay más
-    }
+    // Las 4 categorías principales seguidas de Comida como última
+    if (comida) {
+      console.log("CATEGORÍAS ORDENADAS CON COMIDA AL FINAL");
+      return [...otherCategories, comida]; // Exactamente 5 categorías con Comida al final
+    } 
     
-    return top5;
+    // Si no hay Comida, mostrar exactamente 5 categorías sin "Sin categoría"
+    return data
+      .filter(item => item.name !== "Sin categoría")
+      .slice(0, 5);
   })();
 
   return (
