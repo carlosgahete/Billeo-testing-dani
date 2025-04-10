@@ -179,7 +179,7 @@ const ExpensesByCategoryNew: React.FC<{
     );
   }
 
-  // Nuevo diseño basado en la imagen de referencia
+  // Nuevo diseño basado en la imagen de referencia (con gráfico circular)
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
       <CardHeader className="bg-red-50 p-3">
@@ -195,48 +195,78 @@ const ExpensesByCategoryNew: React.FC<{
           {periodLabel}
         </div>
         
-        {/* Lista de categorías similar a la imagen de referencia */}
-        <div className="space-y-6">
-          {data.map((item) => (
-            <div key={item.categoryId} className="flex items-start">
-              {/* Círculo con color de la categoría e icono */}
-              <div className="relative mr-3">
-                <div 
-                  className="w-[50px] h-[50px] rounded-full flex-shrink-0 flex items-center justify-center"
-                  style={{ backgroundColor: `${item.color}20` }}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                </div>
-                {/* Punto indicador */}
-                <div 
-                  className="absolute top-0 left-0 w-3 h-3 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                ></div>
-              </div>
-              
-              {/* Información central */}
-              <div className="flex-grow">
-                {/* Nombre de la categoría */}
-                <div className="text-[15px] font-medium text-gray-900">{item.name}</div>
-                {/* Número de transacciones */}
-                <div className="text-sm text-gray-500">
-                  {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
-                </div>
-              </div>
-              
-              {/* Valores y porcentajes a la derecha */}
-              <div className="text-right flex flex-col items-end">
-                {/* Monto con color negativo (gastos) */}
-                <div className="text-base font-medium text-red-600">
-                  {formatCurrency(item.value * -1)}
-                </div>
-                {/* Porcentaje */}
-                <div className="text-sm text-gray-500">
-                  {item.percentage.toFixed(2)}%
-                </div>
-              </div>
+        {/* Contenedor principal con gráfico y lista */}
+        <div className="flex flex-col md:flex-row">
+          {/* Gráfico circular (donut) */}
+          <div className="md:w-1/2 mb-4 md:mb-0">
+            <div className="h-[250px] flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {data.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.color} 
+                        stroke="none"
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-          ))}
+          </div>
+          
+          {/* Lista de categorías similar a la imagen de referencia */}
+          <div className="md:w-1/2 space-y-5">
+            {data.map((item) => (
+              <div key={item.categoryId} className="flex items-start">
+                {/* Círculo con color de la categoría e icono */}
+                <div className="relative mr-3">
+                  <div 
+                    className="w-[50px] h-[50px] rounded-full flex-shrink-0 flex items-center justify-center"
+                    style={{ backgroundColor: `${item.color}20` }}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                  </div>
+                  {/* Punto indicador */}
+                  <div 
+                    className="absolute top-0 left-0 w-3 h-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  ></div>
+                </div>
+                
+                {/* Información central */}
+                <div className="flex-grow">
+                  {/* Nombre de la categoría */}
+                  <div className="text-[15px] font-medium text-gray-900">{item.name}</div>
+                  {/* Número de transacciones */}
+                  <div className="text-sm text-gray-500">
+                    {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
+                  </div>
+                </div>
+                
+                {/* Valores y porcentajes a la derecha */}
+                <div className="text-right flex flex-col items-end">
+                  {/* Monto con color negativo (gastos) */}
+                  <div className="text-base font-medium text-red-600">
+                    {formatCurrency(item.value * -1)}
+                  </div>
+                  {/* Porcentaje */}
+                  <div className="text-sm text-gray-500">
+                    {item.percentage.toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
