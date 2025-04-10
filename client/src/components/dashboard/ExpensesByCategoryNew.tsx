@@ -36,41 +36,60 @@ const ExpensesByCategoryNew: React.FC<{
   useEffect(() => {
     const currentYear = new Date().getFullYear();
     
-    if (period) {
-      const parts = period.split('-');
-      const year = parts[0];
-      
-      if (parts.length > 1) {
-        const timePeriod = parts[1];
+    try {
+      if (period) {
+        const parts = period.split('-');
+        const year = parts[0];
         
-        if (timePeriod.startsWith('Q')) {
-          const quarter = parseInt(timePeriod.substring(1));
-          const startMonth = (quarter - 1) * 3;
-          const endMonth = startMonth + 2;
+        if (parts.length > 1) {
+          const timePeriod = parts[1];
           
-          const startDate = new Date(parseInt(year), startMonth, 1);
-          const endDate = new Date(parseInt(year), endMonth + 1, 0);
-          
-          const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
-          const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
-          
-          setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          if (timePeriod.startsWith('q')) {
+            // Es un trimestre (q1, q2, q3, q4)
+            const quarterNum = parseInt(timePeriod.substring(1));
+            if (isNaN(quarterNum) || quarterNum < 1 || quarterNum > 4) {
+              throw new Error(`Trimestre inválido: ${timePeriod}`);
+            }
+            
+            const startMonth = (quarterNum - 1) * 3;
+            const endMonth = startMonth + 2;
+            
+            const startDate = new Date(parseInt(year), startMonth, 1);
+            const endDate = new Date(parseInt(year), endMonth + 1, 0);
+            
+            const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+            const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+            
+            setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          } else {
+            // Es un mes específico
+            const month = parseInt(timePeriod) - 1;
+            if (isNaN(month) || month < 0 || month > 11) {
+              throw new Error(`Mes inválido: ${timePeriod}`);
+            }
+            
+            const startDate = new Date(parseInt(year), month, 1);
+            const endDate = new Date(parseInt(year), month + 1, 0);
+            
+            const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
+            const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
+            
+            setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          }
+        } else if (year === 'all') {
+          setPeriodLabel(`Año ${currentYear} completo`);
         } else {
-          const month = parseInt(timePeriod) - 1;
-          const startDate = new Date(parseInt(year), month, 1);
-          const endDate = new Date(parseInt(year), month + 1, 0);
-          
-          const formattedStart = format(startDate, "d MMM yyyy", { locale: es });
-          const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
-          
-          setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          const yearNum = parseInt(year);
+          if (isNaN(yearNum)) {
+            throw new Error(`Año inválido: ${year}`);
+          }
+          setPeriodLabel(`Año ${year} completo`);
         }
-      } else if (year === 'all') {
-        setPeriodLabel(`Año ${currentYear} completo`);
       } else {
-        setPeriodLabel(`Año ${year} completo`);
+        setPeriodLabel(`Año ${currentYear} completo`);
       }
-    } else {
+    } catch (error) {
+      console.error("Error procesando periodo:", error);
       setPeriodLabel(`Año ${currentYear} completo`);
     }
   }, [period]);
