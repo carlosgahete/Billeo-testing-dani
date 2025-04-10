@@ -231,6 +231,10 @@ const ExpensesByCategoryNew: React.FC<{
       
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
       
+      // Mostrar información de categorías para depuración
+      console.log("Categorías disponibles:", categories.map(c => ({id: c.id, name: c.name})));
+      console.log("Transacciones de gastos:", expenses.map(t => ({id: t.id, description: t.description, categoryId: t.categoryId, category: t.category})));
+      
       expenses.forEach((transaction) => {
         // Intentamos encontrar la categoría por id primero, luego por comparación con el nombre
         const category = categories.find(c => c.id === transaction.categoryId) || 
@@ -257,7 +261,12 @@ const ExpensesByCategoryNew: React.FC<{
       // Extraer datos y procesar
       let processedData = Object.entries(expensesByCategory)
         .map(([id, data], index) => {
-          const category = categories.find(c => c.id.toString() === id.toString());
+          // Buscar la categoría por id o por nombre para obtener el color e icono
+          const category = categories.find(c => c.id.toString() === id.toString()) || 
+                          categories.find(c => c.name === data.name);
+          
+          // Para debugging
+          console.log(`Procesando categoría: id=${id}, nombre=${data.name}, encontrada=${category ? 'sí' : 'no'}`);
           
           return {
             name: data.name,
