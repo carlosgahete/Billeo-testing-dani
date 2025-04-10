@@ -169,8 +169,8 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // Seleccionar las categorías a mostrar
-  const prepareCategories = () => {
+  // Seleccionar las categorías a mostrar (max 5 + Sin categoría)
+  const categoryItems = (() => {
     const mainCategories = data.slice(0, 5);
     const sinCategoria = data.find(item => item.name === "Sin categoría");
     
@@ -180,9 +180,7 @@ const ExpensesByCategory: React.FC<{
     }
     
     return displayCategories;
-  };
-
-  const categoryItems = prepareCategories();
+  })();
 
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
@@ -194,11 +192,8 @@ const ExpensesByCategory: React.FC<{
       </CardHeader>
       <CardContent className="p-0 pb-8">
         <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-          {/* Gráfico de donut */}
-          <div className="p-2 flex flex-col justify-center" style={{
-            height: '380px',
-            flex: '1'
-          }}>
+          {/* Columna izquierda: Gráfico de donut */}
+          <div className="p-2 flex flex-col justify-center" style={{ height: '380px', flex: '1' }}>
             {periodLabel && (
               <div className="text-left text-sm text-gray-500 mb-2 pl-2">
                 {periodLabel}
@@ -235,46 +230,40 @@ const ExpensesByCategory: React.FC<{
             </div>
           </div>
           
-          {/* Lista de categorías */}
+          {/* Columna derecha: Lista de categorías */}
           <div className="flex items-start justify-center">
-            <div 
-              className="bg-white rounded-md shadow-sm"
-              style={{
-                width: '330px',
-                height: '380px'
-              }}
-            >
-              {/* Contenedor flex para distribución equitativa del espacio */}
-              <div className="h-full w-full flex flex-col justify-center px-4">
-                {categoryItems.map((item, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-start gap-2"
-                    style={{
-                      marginBottom: index < categoryItems.length - 1 ? '16px' : '0'
-                    }}
-                  >
+            <div className="bg-white rounded-md shadow-sm" style={{ width: '330px', height: '380px' }}>
+              {/* Contenedor que centra verticalmente, asegurando espacio igual arriba y abajo */}
+              <div className="flex h-full items-center justify-center">
+                <div className="px-4">
+                  {categoryItems.map((item, index) => (
                     <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
-                      style={{ 
-                        backgroundColor: `${item.color}15`,
-                        color: item.color
-                      }}
+                      key={index} 
+                      className="flex items-start gap-2"
+                      style={{ marginBottom: index < categoryItems.length - 1 ? '16px' : '0' }}
                     >
-                      <span className="text-xl">{item.icon}</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                        <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+                        style={{ 
+                          backgroundColor: `${item.color}15`,
+                          color: item.color
+                        }}
+                      >
+                        <span className="text-xl">{item.icon}</span>
                       </div>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>{item.count} transacciones</span>
-                        <span>{item.percentage.toFixed(2)}%</span>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
+                          <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{item.count} transacciones</span>
+                          <span>{item.percentage.toFixed(2)}%</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
