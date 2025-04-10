@@ -48,8 +48,8 @@ const ExpensesByCategoryNew: React.FC<{
     const currentYear = new Date().getFullYear();
     
     try {
-      if (period) {
-        const parts = period.split('-');
+      if (selectedPeriod) {
+        const parts = selectedPeriod.split('-');
         const year = parts[0];
         
         if (parts.length > 1) {
@@ -72,6 +72,8 @@ const ExpensesByCategoryNew: React.FC<{
             const formattedEnd = format(endDate, "d MMM yyyy", { locale: es });
             
             setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
+          } else if (timePeriod === 'all') {
+            setPeriodLabel(`Año ${year} completo`);
           } else {
             // Es un mes específico
             const month = parseInt(timePeriod) - 1;
@@ -103,7 +105,7 @@ const ExpensesByCategoryNew: React.FC<{
       console.error("Error procesando periodo:", error);
       setPeriodLabel(`Año ${currentYear} completo`);
     }
-  }, [period]);
+  }, [selectedPeriod]);
 
   // Extraer los años disponibles de las transacciones
   useEffect(() => {
@@ -291,16 +293,53 @@ const ExpensesByCategoryNew: React.FC<{
 
   if (!data.length) {
     return (
-      <Card className="h-full">
-        <CardHeader className="bg-red-50 p-4">
-          <CardTitle className="text-lg text-red-700 flex items-center">
-            <TrendingDown className="mr-2 h-5 w-5" />
-            Gastos por Categoría
-          </CardTitle>
+      <Card className="h-full overflow-hidden fade-in dashboard-card">
+        <CardHeader className="bg-red-50 p-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base text-red-700 flex items-center">
+              <TrendingDown className="mr-2 h-4 w-4" />
+              Gastos por Categoría
+            </CardTitle>
+            
+            {/* Selector de período - Siempre visible incluso sin datos */}
+            <Select 
+              value={selectedPeriod}
+              onValueChange={handlePeriodChange}
+            >
+              <SelectTrigger className="w-32 h-7 text-xs bg-white/80">
+                <SelectValue placeholder="Seleccionar período" />
+              </SelectTrigger>
+              <SelectContent>
+                {/* Generar opciones para cada año disponible */}
+                {availableYears.map(year => (
+                  <React.Fragment key={year}>
+                    <SelectItem value={`${year}-all`}>Año {year} completo</SelectItem>
+                    <SelectItem value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>
+                    <SelectItem value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>
+                    <SelectItem value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>
+                    <SelectItem value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>
+                    <SelectItem value={`${year}-1`}>Enero {year}</SelectItem>
+                    <SelectItem value={`${year}-2`}>Febrero {year}</SelectItem>
+                    <SelectItem value={`${year}-3`}>Marzo {year}</SelectItem>
+                    <SelectItem value={`${year}-4`}>Abril {year}</SelectItem>
+                    <SelectItem value={`${year}-5`}>Mayo {year}</SelectItem>
+                    <SelectItem value={`${year}-6`}>Junio {year}</SelectItem>
+                    <SelectItem value={`${year}-7`}>Julio {year}</SelectItem>
+                    <SelectItem value={`${year}-8`}>Agosto {year}</SelectItem>
+                    <SelectItem value={`${year}-9`}>Septiembre {year}</SelectItem>
+                    <SelectItem value={`${year}-10`}>Octubre {year}</SelectItem>
+                    <SelectItem value={`${year}-11`}>Noviembre {year}</SelectItem>
+                    <SelectItem value={`${year}-12`}>Diciembre {year}</SelectItem>
+                  </React.Fragment>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
-        <CardContent className="p-6 flex items-center justify-center h-[300px]">
+        <CardContent className="p-6 flex items-center justify-center h-[260px]">
           <div className="text-center text-gray-500">
-            <p>No hay gastos registrados</p>
+            <p>No hay gastos registrados para este período</p>
+            <p className="text-sm mt-2">Selecciona otro período o añade gastos</p>
           </div>
         </CardContent>
       </Card>
