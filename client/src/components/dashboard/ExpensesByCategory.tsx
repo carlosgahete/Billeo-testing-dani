@@ -211,8 +211,8 @@ const ExpensesByCategory: React.FC<{
           {/* Mitad izquierda: Gráfico de donut con tamaño fijo */}
           <div className="flex justify-center items-center">
             <div className="flex items-center justify-center" style={{ 
-              width: '330px',
-              height: '330px'
+              width: '320px',
+              height: '310px'
             }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -247,8 +247,8 @@ const ExpensesByCategory: React.FC<{
           {/* Mitad derecha: Lista de categorías con misma altura que el gráfico */}
           <div className="flex justify-center items-center">
             <div className="bg-white rounded-md shadow-sm" style={{ 
-              width: '330px', 
-              height: '330px' 
+              width: '320px', 
+              height: '310px' 
             }}>
               {/* Contenedor para centrado vertical perfecto con altura fija */}
               <div className="relative w-full h-full overflow-hidden">
@@ -261,11 +261,11 @@ const ExpensesByCategory: React.FC<{
                     }
                   `}
                 </style>
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4" style={{
+                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-3" style={{
                   /* Esconder cualquier overflow como seguridad adicional */
                   overflow: 'hidden',
                   /* Tamaño adecuado para 5 elementos */
-                  maxHeight: '310px'
+                  maxHeight: '290px'
                 }}>
                   {/* Datos ya filtrados y ordenados en el useEffect */}
                   {categoryItems.map((item, index, array) => (
