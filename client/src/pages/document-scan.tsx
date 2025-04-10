@@ -809,12 +809,16 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <Label htmlFor="transaction-amount" className="text-sm">Importe total:</Label>
                           <Input
                             id="transaction-amount"
-                            type="number"
-                            step="0.01"
+                            // Cambiamos a tipo texto para permitir borrar
+                            type="text"
+                            inputMode="decimal"
                             value={editedData.amount || transaction.amount || ""}
                             onChange={(e) => {
-                              // Permitir valores vacíos
-                              const value = e.target.value === "" ? "" : parseFloat(e.target.value);
+                              // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                              const inputValue = e.target.value;
+                              const value = inputValue === "" || inputValue === "." || inputValue === "," 
+                                ? "" 
+                                : parseFloat(inputValue.replace(",", "."));
                               handleFieldChange('amount', value);
                             }}
                             className="w-full"
@@ -825,12 +829,16 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <Label htmlFor="transaction-base" className="text-sm">Base imponible:</Label>
                           <Input
                             id="transaction-base"
-                            type="number"
-                            step="0.01"
+                            // Cambiamos a tipo texto para permitir borrar
+                            type="text"
+                            inputMode="decimal"
                             value={editedData.baseAmount || extractedData?.baseAmount || ""}
                             onChange={(e) => {
-                              // Permitir valores vacíos
-                              const value = e.target.value === "" ? "" : parseFloat(e.target.value);
+                              // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                              const inputValue = e.target.value;
+                              const value = inputValue === "" || inputValue === "." || inputValue === "," 
+                                ? "" 
+                                : parseFloat(inputValue.replace(",", "."));
                               handleFieldChange('baseAmount', value);
                             }}
                             className="w-full"
@@ -844,12 +852,16 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <div className="flex items-center space-x-2">
                             <Input
                               id="transaction-iva"
-                              type="number"
-                              step="1"
+                              // Cambiamos a tipo texto para permitir borrar
+                              type="text"
+                              inputMode="numeric"
                               value={editedData.tax || extractedData?.tax || ""}
                               onChange={(e) => {
-                                // Permitir valores vacíos
-                                const value = e.target.value === "" ? "" : parseInt(e.target.value);
+                                // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                                const inputValue = e.target.value;
+                                const value = inputValue === "" || inputValue === "." || inputValue === "," 
+                                  ? "" 
+                                  : parseInt(inputValue);
                                 handleFieldChange('tax', value);
                               }}
                               className="w-full"
@@ -866,12 +878,16 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                           <div className="flex items-center space-x-2">
                             <Input
                               id="transaction-irpf"
-                              type="number"
-                              step="1"
+                              // Cambiamos a tipo texto para permitir borrar
+                              type="text"
+                              inputMode="numeric"
                               value={editedData.irpf || extractedData?.irpf || ""}
                               onChange={(e) => {
-                                // Permitir valores vacíos
-                                const value = e.target.value === "" ? "" : parseInt(e.target.value);
+                                // Si es vacío o solo contiene un punto/coma, permitimos el valor vacío
+                                const inputValue = e.target.value;
+                                const value = inputValue === "" || inputValue === "." || inputValue === "," 
+                                  ? "" 
+                                  : parseInt(inputValue);
                                 handleFieldChange('irpf', value);
                               }}
                               className="w-full"
