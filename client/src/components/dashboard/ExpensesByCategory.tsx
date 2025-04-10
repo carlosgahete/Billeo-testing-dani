@@ -169,23 +169,20 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // Seleccionar exactamente 5 categorías para mantener simetría perfecta
+  // FORZAR exactamente 5 categorías - ni una más ni una menos
   const categoryItems = (() => {
-    // Si hay una categoría "Sin categoría", asegurarse de incluirla entre las top 5
-    const sinCategoria = data.find(item => item.name === "Sin categoría");
+    // Mostramos solo las top 5 categorías, independientemente de cuáles sean
+    const top5 = data.slice(0, 5);
     
-    if (sinCategoria) {
-      // Filtramos las que no son "Sin categoría" y tomamos las top 4
-      const otherCategories = data
-        .filter(item => item.name !== "Sin categoría")
-        .slice(0, 4);
-      
-      // Añadimos "Sin categoría" al final para tener exactamente 5
-      return [...otherCategories, sinCategoria];
-    } else {
-      // Si no hay "Sin categoría", tomamos exactamente las top 5
-      return data.slice(0, 5);
+    console.log("CATEGORÍAS ANTES DEL CORTE:", data.length);
+    console.log("CATEGORÍAS DESPUÉS DEL CORTE:", top5.length);
+    
+    // Asegurarse de que siempre tengamos exactamente 5 categorías
+    if (top5.length > 5) {
+      return top5.slice(0, 5); // Cortar a 5 si hay más
     }
+    
+    return top5;
   })();
 
   return (
@@ -248,15 +245,16 @@ const ExpensesByCategory: React.FC<{
               width: '330px', 
               height: '330px' 
             }}>
-              {/* Contenedor para centrado vertical perfecto */}
-              <div className="relative w-full h-full">
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4">
-                  {/* Listado de categorías */}
-                  {categoryItems.map((item, index) => (
+              {/* Contenedor para centrado vertical perfecto con altura fija */}
+              <div className="relative w-full h-full overflow-hidden">
+                {/* Mostramos exactamente 5 categorías - Modificamos la altura para asegurar visibilidad */}
+                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-4" style={{ maxHeight: '310px' }}>
+                  {/* Listado de categorías - limitado a exactamente 5 */}
+                  {categoryItems.slice(0, 5).map((item, index) => (
                     <div 
                       key={index} 
                       className="flex items-start gap-2"
-                      style={{ marginBottom: index < categoryItems.length - 1 ? '16px' : '0' }}
+                      style={{ marginBottom: index < Math.min(categoryItems.length, 5) - 1 ? '16px' : '0' }}
                     >
                       <div 
                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
