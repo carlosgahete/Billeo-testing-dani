@@ -233,7 +233,7 @@ const ExpensesByCategory: React.FC<{
           {/* Columna derecha: Lista de categorías - CONTENEDOR EXCLUSIVO */}
           <div className="flex justify-center">
             {/* Contenedor blanco principal - 100% independiente del título y del gráfico */}
-            <div className="bg-white rounded-md shadow-sm" style={{ width: '330px', height: '380px' }}>
+            <div className="bg-white rounded-md shadow-sm" style={{ width: '330px', height: '190px' }}>
               {/*
                 IMPORTANTE: 
                 - Creamos un CONTENEDOR EXCLUSIVO que contiene SOLO el listado de categorías
