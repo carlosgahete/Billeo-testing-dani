@@ -124,11 +124,31 @@ const ExpensesByCategoryNew: React.FC<{
         .sort((a, b) => b - a); // Ordenar de más reciente a más antiguo
       
       setAvailableYears(uniqueYears);
+      
+      // Si no se ha seleccionado un período, usar el año más reciente
+      if (!selectedPeriod && uniqueYears.length > 0) {
+        const mostRecentYear = uniqueYears[0];
+        const newPeriod = `${mostRecentYear}-all`;
+        setSelectedPeriod(newPeriod);
+        if (onPeriodChange) {
+          onPeriodChange(newPeriod);
+        }
+      }
     } else {
       // Si no hay transacciones, usar el año actual
-      setAvailableYears([new Date().getFullYear()]);
+      const currentYear = new Date().getFullYear();
+      setAvailableYears([currentYear]);
+      
+      // Si no se ha seleccionado un período, usar el año actual
+      if (!selectedPeriod) {
+        const newPeriod = `${currentYear}-all`;
+        setSelectedPeriod(newPeriod);
+        if (onPeriodChange) {
+          onPeriodChange(newPeriod);
+        }
+      }
     }
-  }, [transactions]);
+  }, [transactions, onPeriodChange, selectedPeriod]);
   
   // Manejar el cambio de período
   const handlePeriodChange = (newPeriod: string) => {
@@ -138,9 +158,73 @@ const ExpensesByCategoryNew: React.FC<{
     }
   };
 
+  // Función para filtrar transacciones por período
+  const filterTransactionsByPeriod = (periodValue: string, allTransactions: any[]) => {
+    if (!periodValue || !allTransactions || allTransactions.length === 0) {
+      return allTransactions;
+    }
+    
+    try {
+      const parts = periodValue.split('-');
+      if (parts.length < 2) return allTransactions;
+      
+      const year = parseInt(parts[0]);
+      const period = parts[1];
+      
+      if (isNaN(year)) return allTransactions;
+      
+      return allTransactions.filter((t) => {
+        const date = new Date(t.date);
+        const transactionYear = date.getFullYear();
+        
+        // Si el año no coincide, filtrar
+        if (transactionYear !== year) return false;
+        
+        // Si es "all", incluir todas las transacciones del año
+        if (period === 'all') return true;
+        
+        const month = date.getMonth() + 1; // JavaScript usa meses 0-11
+        
+        // Filtro por mes específico (1-12)
+        if (!isNaN(parseInt(period)) && parseInt(period) > 0 && parseInt(period) <= 12) {
+          return month === parseInt(period);
+        }
+        
+        // Filtro por trimestre (q1, q2, q3, q4)
+        if (period.startsWith('q')) {
+          const quarter = parseInt(period.substring(1));
+          if (!isNaN(quarter) && quarter >= 1 && quarter <= 4) {
+            const quarterStart = (quarter - 1) * 3 + 1; // Mes de inicio del trimestre (1-indexed)
+            const quarterEnd = quarter * 3; // Mes de fin del trimestre (1-indexed)
+            return month >= quarterStart && month <= quarterEnd;
+          }
+        }
+        
+        return true;
+      });
+    } catch (error) {
+      console.error("Error filtrando transacciones por período:", error);
+      return allTransactions;
+    }
+  };
+
+  // Actualizar los datos cuando cambie el período seleccionado o cuando cambien las transacciones
   useEffect(() => {
     if (transactions && categories && transactions.length > 0) {
-      const expenses = transactions.filter(t => t.type === 'expense');
+      console.log("Actualizando datos con período:", selectedPeriod);
+      
+      // Filtrar transacciones por el período seleccionado
+      const filteredTransactions = filterTransactionsByPeriod(selectedPeriod, transactions);
+      console.log("Transacciones filtradas:", filteredTransactions.length);
+      
+      const expenses = filteredTransactions.filter(t => t.type === 'expense');
+      console.log("Gastos filtrados:", expenses.length);
+      
+      if (expenses.length === 0) {
+        setData([]);
+        return;
+      }
+      
       const totalExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
       
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
@@ -203,7 +287,7 @@ const ExpensesByCategoryNew: React.FC<{
       
       setData(processedData);
     }
-  }, [transactions, categories]);
+  }, [transactions, categories, selectedPeriod]);
 
   if (!data.length) {
     return (
