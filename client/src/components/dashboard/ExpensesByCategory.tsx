@@ -5,13 +5,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-// Tipo para los datos de gastos por categoría
 interface ExpenseByCategoryData {
   name: string;
   value: number;
@@ -22,39 +21,24 @@ interface ExpenseByCategoryData {
   categoryId?: number | string;
 }
 
-// Colores para el gráfico - Estilo Apple
 const COLORS = [
-  '#000000', // Negro
-  '#5E5CE6', // Violeta
-  '#007AFF', // Azul
-  '#64D2FF', // Azul claro
-  '#5AC8FA', // Cyan
-  '#00C7BE', // Turquesa
-  '#30C48D', // Verde turquesa
-  '#34C759', // Verde
-  '#BFD641', // Verde lima
-  '#FFD60A', // Amarillo
-  '#FF9500', // Naranja
-  '#FF3B30', // Rojo
-  '#FF2D55', // Rosa
-  '#AF52DE', // Morado
-  '#A2845E', // Marrón
+  '#000000', '#5E5CE6', '#007AFF', '#64D2FF', '#5AC8FA',
+  '#00C7BE', '#30C48D', '#34C759', '#BFD641', '#FFD60A',
+  '#FF9500', '#FF3B30', '#FF2D55', '#AF52DE', '#A2845E',
 ];
 
 const ExpensesByCategory: React.FC<{
-  transactions: any[];  // Transacciones
-  categories: any[];    // Categorías
-  period?: string;      // Período seleccionado
+  transactions: any[];
+  categories: any[];
+  period?: string;
 }> = ({ transactions, categories, period }) => {
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
   
-  // Efecto para generar la etiqueta del período seleccionado
   useEffect(() => {
     const currentYear = new Date().getFullYear();
     
     if (period) {
-      // Formato: year-quarter o year-month o 'all'
       const parts = period.split('-');
       const year = parts[0];
       
@@ -62,7 +46,6 @@ const ExpensesByCategory: React.FC<{
         const timePeriod = parts[1];
         
         if (timePeriod.startsWith('Q')) {
-          // Período trimestral
           const quarter = parseInt(timePeriod.substring(1));
           const startMonth = (quarter - 1) * 3;
           const endMonth = startMonth + 2;
@@ -75,7 +58,6 @@ const ExpensesByCategory: React.FC<{
           
           setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
         } else {
-          // Período mensual
           const month = parseInt(timePeriod) - 1;
           const startDate = new Date(parseInt(year), month, 1);
           const endDate = new Date(parseInt(year), month + 1, 0);
@@ -88,7 +70,6 @@ const ExpensesByCategory: React.FC<{
       } else if (year === 'all') {
         setPeriodLabel("Todos los períodos");
       } else {
-        // Año completo
         const startDate = new Date(parseInt(year), 0, 1);
         const endDate = new Date(parseInt(year), 11, 31);
         
@@ -98,7 +79,6 @@ const ExpensesByCategory: React.FC<{
         setPeriodLabel(`${formattedStart} - ${formattedEnd}`);
       }
     } else {
-      // Sin período especificado, mostrar año actual
       const startDate = new Date(currentYear, 0, 1);
       const endDate = new Date(currentYear, 11, 31);
       
@@ -111,39 +91,31 @@ const ExpensesByCategory: React.FC<{
 
   useEffect(() => {
     if (transactions && categories && transactions.length > 0) {
-      // Filtrar solo los gastos
       const expenses = transactions.filter(t => t.type === 'expense');
       const totalExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
       
-      // Agrupar gastos por categoría
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
       
-      // Añadir categoría "Sin categoría"
       expensesByCategory['uncategorized'] = { 
         amount: 0, 
         count: 0,
         name: 'Sin categoría'
       };
       
-      // Procesar todas las transacciones de gasto
       expenses.forEach((transaction) => {
-        // Si no tiene categoría, añadir a "Sin categoría"
         if (!transaction.categoryId) {
           expensesByCategory['uncategorized'].amount += Number(transaction.amount);
           expensesByCategory['uncategorized'].count += 1;
           return;
         }
         
-        // Buscar la categoría
         const category = categories.find(c => c.id === transaction.categoryId);
         
         if (category) {
-          // Si la categoría existe en nuestro agrupamiento, actualizar
           if (expensesByCategory[category.id]) {
             expensesByCategory[category.id].amount += Number(transaction.amount);
             expensesByCategory[category.id].count += 1;
           } else {
-            // Si no existe, crear nueva entrada
             expensesByCategory[category.id] = {
               amount: Number(transaction.amount),
               count: 1,
@@ -151,16 +123,13 @@ const ExpensesByCategory: React.FC<{
             };
           }
         } else {
-          // Si no se encuentra la categoría, añadir a "Sin categoría"
           expensesByCategory['uncategorized'].amount += Number(transaction.amount);
           expensesByCategory['uncategorized'].count += 1;
         }
       });
       
-      // Convertir a array y ordenar por monto (de mayor a menor)
       const sortedData = Object.entries(expensesByCategory)
         .map(([id, data], index) => {
-          // Buscar la categoría para obtener el icono
           const category = id !== 'uncategorized'
             ? categories.find(c => c.id.toString() === id.toString())
             : null;
@@ -171,18 +140,17 @@ const ExpensesByCategory: React.FC<{
             count: data.count,
             color: id === 'uncategorized' ? '#000000' : category?.color || COLORS[index % COLORS.length],
             percentage: (data.amount / totalExpenses) * 100,
-            icon: category?.icon || '📊', // Emoji por defecto si no se encuentra
+            icon: category?.icon || '📊',
             categoryId: id
           };
         })
-        .filter(item => item.value > 0) // Eliminar categorías sin gastos
-        .sort((a, b) => b.value - a.value); // Ordenar de mayor a menor
+        .filter(item => item.value > 0)
+        .sort((a, b) => b.value - a.value);
       
       setData(sortedData);
     }
   }, [transactions, categories]);
 
-  // Renderizado condicional si no hay datos
   if (!data.length) {
     return (
       <Card className="h-full">
@@ -201,6 +169,21 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
+  // Seleccionar las categorías a mostrar
+  const prepareCategories = () => {
+    const mainCategories = data.slice(0, 5);
+    const sinCategoria = data.find(item => item.name === "Sin categoría");
+    
+    const displayCategories = [...mainCategories];
+    if (sinCategoria && !mainCategories.some(cat => cat.name === "Sin categoría")) {
+      displayCategories.push(sinCategoria);
+    }
+    
+    return displayCategories;
+  };
+
+  const categoryItems = prepareCategories();
+
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
       <CardHeader className="bg-red-50 p-3">
@@ -211,12 +194,11 @@ const ExpensesByCategory: React.FC<{
       </CardHeader>
       <CardContent className="p-0 pb-8">
         <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-          {/* Columna izquierda: Gráfico de donut */}
+          {/* Gráfico de donut */}
           <div className="p-2 flex flex-col justify-center" style={{
             height: '380px',
             flex: '1'
           }}>
-            {/* Mostrar período encima del gráfico */}
             {periodLabel && (
               <div className="text-left text-sm text-gray-500 mb-2 pl-2">
                 {periodLabel}
@@ -253,74 +235,47 @@ const ExpensesByCategory: React.FC<{
             </div>
           </div>
           
-          {/* Columna derecha: Lista de categorías */}
+          {/* Lista de categorías */}
           <div className="flex items-start justify-center">
             <div 
               className="bg-white rounded-md shadow-sm"
               style={{
                 width: '330px',
-                height: '380px',
-                position: 'relative',
-                overflow: 'hidden'
+                height: '380px'
               }}
             >
-              {/* Bloque de categorías centrado verticalmente */}
-              {(() => {
-                // Tomar las 5 primeras categorías
-                const mainCategories = data.slice(0, 5);
-                
-                // Buscar la categoría "Sin categoría"
-                const sinCategoria = data.find(item => item.name === "Sin categoría");
-                
-                // Si "Sin categoría" existe y no está ya incluida, añadirla al final
-                const displayCategories = [...mainCategories];
-                if (sinCategoria && !mainCategories.some(cat => cat.name === "Sin categoría")) {
-                  displayCategories.push(sinCategoria);
-                }
-                
-                return (
+              {/* Contenedor flex para distribución equitativa del espacio */}
+              <div className="h-full w-full flex flex-col justify-center px-4">
+                {categoryItems.map((item, index) => (
                   <div 
-                    style={{ 
-                      position: 'absolute',
-                      top: '50%',
-                      left: '0',
-                      right: '0',
-                      transform: 'translateY(-50%)',
-                      padding: '0 16px',
+                    key={index} 
+                    className="flex items-start gap-2"
+                    style={{
+                      marginBottom: index < categoryItems.length - 1 ? '16px' : '0'
                     }}
                   >
-                    {displayCategories.map((item, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-start gap-2"
-                        style={{
-                          marginBottom: index < displayCategories.length - 1 ? '16px' : '0'
-                        }}
-                      >
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
-                          style={{ 
-                            backgroundColor: `${item.color}15`, // Color con 15% de opacidad
-                            color: item.color
-                          }}
-                        >
-                          <span className="text-xl">{item.icon}</span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between">
-                            <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                            <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>{item.count} transacciones</span>
-                            <span>{item.percentage.toFixed(2)}%</span>
-                          </div>
-                        </div>
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+                      style={{ 
+                        backgroundColor: `${item.color}15`,
+                        color: item.color
+                      }}
+                    >
+                      <span className="text-xl">{item.icon}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
+                        <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
                       </div>
-                    ))}
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>{item.count} transacciones</span>
+                        <span>{item.percentage.toFixed(2)}%</span>
+                      </div>
+                    </div>
                   </div>
-                );
-              })()}
+                ))}
+              </div>
             </div>
           </div>
         </div>

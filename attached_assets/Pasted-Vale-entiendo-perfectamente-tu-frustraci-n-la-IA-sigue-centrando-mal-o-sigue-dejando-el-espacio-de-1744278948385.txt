@@ -1,0 +1,73 @@
+Vale, entiendo perfectamente tu frustración:
+la IA sigue centrando mal o sigue dejando el espacio de arriba mucho mayor que el de abajo, ¿verdad?
+
+Esto pasa porque muchas IA —sobre todo si no están bien guiadas— entienden “centrar” como “empezar bien arriba” y luego meter el contenido, pero no miran cómo queda el último elemento.
+
+Aquí lo que tienes que pedir no es solo “centrar”, sino:
+
+Distribuir el espacio libre sobrante arriba y abajo de manera igual.
+Es decir: tratar el espacio exterior como algo que también se reparte, no solo alinear el contenido.
+
+⸻
+
+Te reformulo el prompt definitivo, mucho más directo y forzando la forma en la que debe pensar:
+
+⸻
+
+Prompt definitivo:
+
+El listado de categorías de la derecha debe estar equilibrado verticalmente.
+
+Esto significa que:
+	•	El espacio vacío entre el borde superior del área blanca y el primer elemento (“Oficina”) debe ser exactamente igual al espacio vacío entre el borde inferior del área blanca y el último elemento (“Sin categoría”).
+
+No se debe centrar el contenido como un bloque compacto.
+No se debe solo alinear desde el título superior.
+
+Lo que tienes que hacer es:
+	1.	Tomar TODO el espacio vertical disponible en el área de la derecha.
+	2.	Colocar el listado de categorías en el centro vertical de ese espacio.
+	3.	Asegurar que el espacio vacío que queda arriba del listado y el espacio vacío que queda abajo del listado son IGUALES.
+	4.	Si no puedes calcular automáticamente, entonces mide manualmente los márgenes y ajusta hasta que sean iguales.
+
+Importante:
+	•	No cambiar la distancia entre las categorías internas (ni su tamaño).
+	•	No mover el título (“Año 2025 completo”).
+	•	No comprimir ni expandir el listado.
+
+Solución técnica recomendada:
+	•	Encierra todo el listado de categorías en un contenedor.
+	•	Usa display: flex; flex-direction: column; justify-content: center; en ese contenedor.
+	•	O si prefieres, calcula y aplica manualmente el mismo padding-top y padding-bottom para lograr simetría perfecta.
+
+Ejemplo visual:
+
+|   [Espacio arriba igual]   |
+| [Oficina]                  |
+| [Casa]                     |
+| [Restaurantes]             |
+| [Automóvil]                |
+| [Supermercado]             |
+| [Sin categoría]            |
+|   [Espacio abajo igual]    |
+
+
+
+⸻
+
+¿Por qué aún lo hace mal tu IA?
+
+Porque seguramente interpreta “centrar” como “empezar desde arriba” y “llenar hacia abajo”.
+Aquí no se trata de centrar el primer elemento, sino de equilibrar el vacío arriba y abajo respecto al contenido que ocupa.
+
+⸻
+
+Si quieres, también podemos forzar la instrucción aún más diciendo:
+
+“Ignora el espacio arriba del gráfico o el título, y solo mira el espacio arriba y abajo del listado.”
+
+⸻
+
+¿Quieres que ahora también te prepare un pequeño pseudo-código que puedes copiar-pegar como guía para tu IA?
+Podría ser aún más práctico si te está costando que lo entienda…
+¿Te lo paso?
