@@ -209,8 +209,8 @@ const ExpensesByCategory: React.FC<{
           Gastos por Categoría
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 pb-4">
-        <div className="flex flex-col md:flex-row justify-between gap-2">
+      <CardContent className="p-0 pb-8">
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
           {/* Columna izquierda: Gráfico de donut */}
           <div className="p-2 flex flex-col justify-center" style={{
             height: '330px',
