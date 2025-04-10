@@ -258,8 +258,8 @@ const ExpensesByCategory: React.FC<{
               scrollbarColor: '#d1d5db #f3f4f6',
             }}
           >
-            <div className="space-y-2 w-full py-2 flex-1 mb-8 overflow-y-auto max-h-[250px]">
-              {data.map((item, index) => (
+            <div className="space-y-2 w-full py-2 flex-1 mb-8">
+              {data.slice(0, 4).map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
