@@ -208,6 +208,8 @@ const ExpensesByCategoryNew: React.FC<{
               
               {/* Construcción del donut con segmentos circulares */}
               <svg className="w-full h-full" viewBox="0 0 100 100">
+                <title>Gastos por categoría</title>
+                <desc>Gráfico de distribución de gastos</desc>
                 {data.slice(0, 5).map((item, idx) => {
                   // Calcular el desplazamiento y el dasharray para este segmento
                   const percentages = data.slice(0, 5).map(c => c.percentage);
@@ -218,18 +220,21 @@ const ExpensesByCategoryNew: React.FC<{
                   }
                   
                   return (
-                    <circle 
-                      key={item.categoryId}
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
-                      fill="transparent" 
-                      stroke={item.color} 
-                      strokeWidth="20"
-                      strokeDasharray={`${item.percentage * 2.51} ${100 * 2.51}`}
-                      strokeDashoffset={`${-offset * 2.51}`}
-                      transform="rotate(-90 50 50)"
-                    />
+                    <g key={item.categoryId}>
+                      <circle 
+                        cx="50" 
+                        cy="50" 
+                        r="40" 
+                        fill="transparent" 
+                        stroke={item.color} 
+                        strokeWidth="20"
+                        strokeDasharray={`${item.percentage * 2.51} ${100 * 2.51}`}
+                        strokeDashoffset={`${-offset * 2.51}`}
+                        transform="rotate(-90 50 50)"
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      />
+                      <title>{`${item.name}: ${formatCurrency(item.value * -1)} (${item.percentage.toFixed(2)}%)`}</title>
+                    </g>
                   );
                 })}
               </svg>
