@@ -189,20 +189,20 @@ const ExpensesByCategoryNew: React.FC<{
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         {/* Título del periodo */}
-        <div className="mb-3 text-gray-700 text-sm">
+        <div className="mb-2 text-gray-700 text-xs">
           {periodLabel}
         </div>
         
         {/* Contenedor principal con gráfico y lista */}
         <div className="flex flex-col md:flex-row">
           {/* Gráfico circular (donut) - Versión simplificada sin chart */}
-          <div className="md:w-1/2 mb-4 md:mb-0 flex items-center justify-center">
-            <div className="h-[250px] w-[250px] relative">
+          <div className="md:w-1/2 mb-2 md:mb-0 flex items-center justify-center">
+            <div className="h-[180px] w-[180px] relative">
               {/* Círculo central vacío */}
-              <div className="w-[120px] h-[120px] rounded-full bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
-                <span className="text-gray-500 text-sm">Total gastos</span>
+              <div className="w-[90px] h-[90px] rounded-full bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
+                <span className="text-gray-500 text-xs">Total gastos</span>
               </div>
               
               {/* Círculos representativos para cada categoría */}
@@ -210,14 +210,14 @@ const ExpensesByCategoryNew: React.FC<{
                 // Posicionar cada círculo en un ángulo diferente
                 const angle = (index / data.length) * 360;
                 const radians = (angle * Math.PI) / 180;
-                const radius = 80; // Distancia del centro
+                const radius = 60; // Distancia del centro
                 
                 // Calcular posición x,y
-                const x = 125 + radius * Math.cos(radians);
-                const y = 125 + radius * Math.sin(radians);
+                const x = 90 + radius * Math.cos(radians);
+                const y = 90 + radius * Math.sin(radians);
                 
-                // Tamaño basado en porcentaje (mínimo 30px, máximo 50px)
-                const size = 30 + Math.min(20, (item.percentage / 100) * 50);
+                // Tamaño basado en porcentaje (mínimo 25px, máximo 40px)
+                const size = 25 + Math.min(15, (item.percentage / 100) * 40);
                 
                 return (
                   <div 
@@ -233,7 +233,7 @@ const ExpensesByCategoryNew: React.FC<{
                       zIndex: 5
                     }}
                   >
-                    <span className="text-white text-[10px]">{item.percentage.toFixed(0)}%</span>
+                    <span className="text-white text-[8px]">{item.percentage.toFixed(0)}%</span>
                   </div>
                 );
               })}
@@ -241,20 +241,20 @@ const ExpensesByCategoryNew: React.FC<{
           </div>
           
           {/* Lista de categorías similar a la imagen de referencia */}
-          <div className="md:w-1/2 space-y-5">
-            {data.map((item) => (
+          <div className="md:w-1/2 space-y-3">
+            {data.slice(0, 4).map((item) => (
               <div key={item.categoryId} className="flex items-start">
                 {/* Círculo con color de la categoría e icono */}
-                <div className="relative mr-3">
+                <div className="relative mr-2">
                   <div 
-                    className="w-[50px] h-[50px] rounded-full flex-shrink-0 flex items-center justify-center"
+                    className="w-[36px] h-[36px] rounded-full flex-shrink-0 flex items-center justify-center"
                     style={{ backgroundColor: `${item.color}20` }}
                   >
-                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-sm">{item.icon}</span>
                   </div>
                   {/* Punto indicador */}
                   <div 
-                    className="absolute top-0 left-0 w-3 h-3 rounded-full"
+                    className="absolute top-0 left-0 w-2 h-2 rounded-full"
                     style={{ backgroundColor: item.color }}
                   ></div>
                 </div>
@@ -262,22 +262,22 @@ const ExpensesByCategoryNew: React.FC<{
                 {/* Información central */}
                 <div className="flex-grow">
                   {/* Nombre de la categoría */}
-                  <div className="text-[15px] font-medium text-gray-900">{item.name}</div>
+                  <div className="text-[13px] font-medium text-gray-900">{item.name}</div>
                   {/* Número de transacciones */}
-                  <div className="text-sm text-gray-500">
-                    {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
+                  <div className="text-xs text-gray-500">
+                    {item.count} {item.count === 1 ? 'tx' : 'tx'}
                   </div>
                 </div>
                 
                 {/* Valores y porcentajes a la derecha */}
                 <div className="text-right flex flex-col items-end">
                   {/* Monto con color negativo (gastos) */}
-                  <div className="text-base font-medium text-red-600">
+                  <div className="text-sm font-medium text-red-600">
                     {formatCurrency(item.value * -1)}
                   </div>
                   {/* Porcentaje */}
-                  <div className="text-sm text-gray-500">
-                    {item.percentage.toFixed(2)}%
+                  <div className="text-xs text-gray-500">
+                    {item.percentage.toFixed(1)}%
                   </div>
                 </div>
               </div>
