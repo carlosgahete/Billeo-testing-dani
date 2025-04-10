@@ -259,7 +259,19 @@ const ExpensesByCategory: React.FC<{
             }}
           >
             <div className="space-y-2 w-full py-2 flex-1 mb-8">
-              {data.slice(0, 4).map((item, index) => (
+              {/* Mostrar las categorías hasta encontrar Comida o máximo 5 */}
+              {(() => {
+                // Buscar el índice de "Comida"
+                const comidaIndex = data.findIndex(item => item.name === "Comida");
+                
+                // Si "Comida" está entre las primeras 5 categorías, mostrar hasta ahí
+                if (comidaIndex >= 0 && comidaIndex < 5) {
+                  return data.slice(0, comidaIndex + 1);
+                } else {
+                  // Si no, mostrar las primeras 5 categorías
+                  return data.slice(0, 5);
+                }
+              })().map((item, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
