@@ -2874,9 +2874,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Procesando documento: ${filePath}, extensión: ${fileExtension}`);
       
-      // Cargar las funciones de procesamiento bajo demanda
-      // para mejorar el tiempo de inicio del servidor
-      const visionService = await import("./services/visionService");
+      // Comprobar si el formato de archivo es válido
+      if (!['.jpg', '.jpeg', '.png', '.pdf'].includes(fileExtension)) {
+        return res.status(400).json({ 
+          message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG) o un PDF" 
+        });
+      }
+      
+      // Intentar cargar el servicio real de visión
+      let visionService;
+      let useMockService = false;
+      
+      try {
+        // Intentar importar el servicio real de visión
+        visionService = await import("./services/visionService");
+      } catch (importError) {
+        // Si hay un error al cargar el servicio real, usar el servicio simulado
+        console.log("Error al cargar el servicio de visión real, usando servicio simulado:", importError);
+        visionService = await import("./services/mockVisionService");
+        useMockService = true;
+      }
       
       // Extraer información del documento según el tipo de archivo
       let extractedData;
@@ -2885,10 +2902,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         extractedData = await visionService.processReceiptImage(filePath);
       } else if (fileExtension === '.pdf') {
         extractedData = await visionService.processReceiptPDF(filePath);
-      } else {
-        return res.status(400).json({ 
-          message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG) o un PDF" 
-        });
       }
       
       // Buscar una categoría que coincida con la sugerencia de categoría
