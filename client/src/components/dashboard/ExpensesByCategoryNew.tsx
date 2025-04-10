@@ -262,7 +262,7 @@ const ExpensesByCategoryNew: React.FC<{
                 </div>
                 
                 {/* Valores y porcentajes */}
-                <div className="text-right -mr-6 -ml-10">
+                <div className="text-right mr-8">
                   <div className="text-base font-medium text-red-600">
                     {formatCurrency(item.value * -1)}
                   </div>
