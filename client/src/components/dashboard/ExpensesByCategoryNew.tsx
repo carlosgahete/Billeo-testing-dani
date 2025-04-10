@@ -41,6 +41,7 @@ const ExpensesByCategoryNew: React.FC<{
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period || "2025-all");
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   
@@ -443,9 +444,11 @@ const ExpensesByCategoryNew: React.FC<{
                         style={{ cursor: 'pointer' }}
                         onMouseOver={(e) => {
                           e.currentTarget.style.opacity = '0.8';
+                          setHoverIndex(idx);
                         }}
                         onMouseOut={(e) => {
                           e.currentTarget.style.opacity = '1';
+                          setHoverIndex(null);
                         }}
                         onClick={() => {
                           console.log(`Clic en segmento ${idx}, categoría ${item.name}`);
@@ -457,24 +460,16 @@ const ExpensesByCategoryNew: React.FC<{
                 })}
               </svg>
               
-              {/* Información en el centro - Siempre visible pero cambia dependiendo del segmento seleccionado */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-white p-2 rounded-md shadow-sm text-center w-28">
-                  {activeIndex !== null ? (
-                    <>
-                      <p className="font-semibold text-sm truncate">{data[activeIndex].name}</p>
-                      <p className="text-red-600 text-sm">{formatCurrency(data[activeIndex].value * -1)}</p>
-                      <p className="text-gray-500 text-xs">{data[activeIndex].percentage.toFixed(2)}%</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold text-sm truncate">Total gastos</p>
-                      <p className="text-red-600 text-sm">{formatCurrency(data.reduce((acc, item) => acc + item.value, 0) * -1)}</p>
-                      <p className="text-gray-500 text-xs">{data.length} categorías</p>
-                    </>
-                  )}
+              {/* Información en el centro solo cuando hay mouse hover sobre un segmento */}
+              {hoverIndex !== null && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-white p-2 rounded-md shadow-sm text-center w-28">
+                    <p className="font-semibold text-sm truncate">{data[hoverIndex].name}</p>
+                    <p className="text-red-600 text-sm">{formatCurrency(data[hoverIndex].value * -1)}</p>
+                    <p className="text-gray-500 text-xs">{data[hoverIndex].percentage.toFixed(2)}%</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
           
@@ -483,7 +478,13 @@ const ExpensesByCategoryNew: React.FC<{
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
-                className={`flex items-center py-1 cursor-pointer transition-colors ${idx < 10 && idx === activeIndex ? 'bg-gray-100 rounded' : ''}`}
+                className={`flex items-center py-1 cursor-pointer transition-colors ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-100 rounded' : ''}`}
+                onMouseOver={() => {
+                  if (idx < 10) {
+                    setHoverIndex(idx);
+                  }
+                }}
+                onMouseOut={() => setHoverIndex(null)}
                 onClick={() => {
                   // Solo permitir clic en elementos que están en el gráfico (primeros 10)
                   if (idx < 10) {
