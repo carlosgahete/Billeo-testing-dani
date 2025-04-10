@@ -403,7 +403,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <Link href="/invoices" className="block">
-              <button className="button-apple-secondary w-full">
+              <button className="w-full px-4 py-2 rounded-md font-medium text-[#34C759] border border-[#34C759] hover:bg-[#34C759]/10 transition-colors">
                 Ver facturas
               </button>
             </Link>
@@ -444,7 +444,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <Link href="/transactions" className="block">
-              <button className="button-apple-secondary w-full">
+              <button className="w-full px-4 py-2 rounded-md font-medium text-[#FF3B30] border border-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors">
                 Ver gastos
               </button>
             </Link>
@@ -485,7 +485,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <Link href="/reports" className="block">
-              <button className="button-apple-secondary w-full">
+              <button className="w-full px-4 py-2 rounded-md font-medium text-[#007AFF] border border-[#007AFF] hover:bg-[#007AFF]/10 transition-colors">
                 Ver informes
               </button>
             </Link>
