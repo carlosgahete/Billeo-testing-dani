@@ -96,16 +96,12 @@ const ExpensesByCategory: React.FC<{
       
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
       
-      expensesByCategory['uncategorized'] = { 
-        amount: 0, 
-        count: 0,
-        name: 'Sin categoría'
-      };
+      // Ignoramos completamente la categoría "Sin categoría" aquí
+      // No la creamos para que no aparezca en absoluto
       
       expenses.forEach((transaction) => {
         if (!transaction.categoryId) {
-          expensesByCategory['uncategorized'].amount += Number(transaction.amount);
-          expensesByCategory['uncategorized'].count += 1;
+          // Ignoramos transacciones sin categoría
           return;
         }
         
@@ -122,32 +118,53 @@ const ExpensesByCategory: React.FC<{
               name: category.name
             };
           }
-        } else {
-          expensesByCategory['uncategorized'].amount += Number(transaction.amount);
-          expensesByCategory['uncategorized'].count += 1;
         }
+        // Ignoramos cualquier transacción sin categoría válida
       });
       
-      const sortedData = Object.entries(expensesByCategory)
+      // Extraer datos y procesar
+      let processedData = Object.entries(expensesByCategory)
         .map(([id, data], index) => {
-          const category = id !== 'uncategorized'
-            ? categories.find(c => c.id.toString() === id.toString())
-            : null;
+          const category = categories.find(c => c.id.toString() === id.toString());
           
           return {
             name: data.name,
             value: data.amount,
             count: data.count,
-            color: id === 'uncategorized' ? '#000000' : category?.color || COLORS[index % COLORS.length],
+            color: category?.color || COLORS[index % COLORS.length],
             percentage: (data.amount / totalExpenses) * 100,
             icon: category?.icon || '📊',
             categoryId: id
           };
         })
-        .filter(item => item.value > 0)
-        .sort((a, b) => b.value - a.value);
+        .filter(item => item.value > 0);
       
-      setData(sortedData);
+      // Encontrar la categoría "Comida"
+      const comidaIndex = processedData.findIndex(item => item.name === "Comida");
+      
+      // Si existe "Comida", moverla al final
+      if (comidaIndex !== -1) {
+        const comida = processedData[comidaIndex];
+        processedData.splice(comidaIndex, 1); // Eliminarla de su posición actual
+        
+        // Ordenar el resto por valor
+        processedData.sort((a, b) => b.value - a.value);
+        
+        // Limitar a 4 elementos para dejar espacio para "Comida"
+        processedData = processedData.slice(0, 4);
+        
+        // Añadir "Comida" al final
+        processedData.push(comida);
+      } else {
+        // Si no existe "Comida", simplemente ordenar y limitar a 5
+        processedData.sort((a, b) => b.value - a.value);
+        processedData = processedData.slice(0, 5);
+      }
+      
+      // Verificar que tenemos exactamente 5 categorías
+      console.log("TOTAL CATEGORÍAS PROCESADAS:", processedData.length);
+      
+      setData(processedData);
     }
   }, [transactions, categories]);
 
@@ -169,29 +186,9 @@ const ExpensesByCategory: React.FC<{
     );
   }
 
-  // GARANTIZAR EXACTAMENTE 5 CATEGORÍAS Y COMIDA SIEMPRE AL FINAL
-  const categoryItems = (() => {
-    // Filtrar todas las categorías excepto "Sin categoría"
-    const categoriasFiltradas = data
-      .filter(item => item.name !== "Sin categoría");
-    
-    // Buscar específicamente la categoría Comida
-    const comida = categoriasFiltradas.find(item => item.name === "Comida");
-    
-    // Si tenemos la categoría Comida
-    if (comida) {
-      // Obtener todas las categorías excepto Comida
-      const noComida = categoriasFiltradas
-        .filter(item => item.name !== "Comida")
-        .slice(0, 4);  // Tomar máximo 4 (para luego añadir Comida como 5ª)
-      
-      console.log("CATEGORÍAS CON COMIDA FORZADA AL FINAL");
-      return [...noComida, comida];  // Comida será siempre la última
-    }
-    
-    // Si no existe la categoría Comida, simplemente tomar las primeras 5
-    return categoriasFiltradas.slice(0, 5);
-  })();
+  // Los datos ya vienen preparados directamente del useEffect
+  // No es necesario procesarlos de nuevo aquí
+  const categoryItems = data;
 
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card">
@@ -270,16 +267,12 @@ const ExpensesByCategory: React.FC<{
                   /* Tamaño adecuado para 5 elementos */
                   maxHeight: '310px'
                 }}>
-                  {/* ORDENAR: Primero todo menos Sin categoría y Comida. Luego Comida al final */}
-                  {categoryItems
-                    .filter(item => item.name !== "Sin categoría")
-                    .sort((a, b) => a.name === "Comida" ? 1 : b.name === "Comida" ? -1 : b.value - a.value)
-                    .slice(0, 5)
-                    .map((item, index, filteredArray) => (
+                  {/* Datos ya filtrados y ordenados en el useEffect */}
+                  {categoryItems.map((item, index, array) => (
                     <div 
                       key={index} 
                       className="flex items-start gap-2 category-item"
-                      style={{ marginBottom: index < filteredArray.length - 1 ? '16px' : '0' }}
+                      style={{ marginBottom: index < array.length - 1 ? '16px' : '0' }}
                     >
                       <div 
                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
