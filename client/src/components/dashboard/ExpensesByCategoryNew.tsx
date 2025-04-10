@@ -197,30 +197,46 @@ const ExpensesByCategoryNew: React.FC<{
         
         {/* Contenedor principal con gráfico y lista */}
         <div className="flex flex-col md:flex-row">
-          {/* Gráfico circular (donut) */}
-          <div className="md:w-1/2 mb-4 md:mb-0">
-            <div className="h-[250px] flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
+          {/* Gráfico circular (donut) - Versión simplificada sin chart */}
+          <div className="md:w-1/2 mb-4 md:mb-0 flex items-center justify-center">
+            <div className="h-[250px] w-[250px] relative">
+              {/* Círculo central vacío */}
+              <div className="w-[120px] h-[120px] rounded-full bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
+                <span className="text-gray-500 text-sm">Total gastos</span>
+              </div>
+              
+              {/* Círculos representativos para cada categoría */}
+              {data.map((item, index) => {
+                // Posicionar cada círculo en un ángulo diferente
+                const angle = (index / data.length) * 360;
+                const radians = (angle * Math.PI) / 180;
+                const radius = 80; // Distancia del centro
+                
+                // Calcular posición x,y
+                const x = 125 + radius * Math.cos(radians);
+                const y = 125 + radius * Math.sin(radians);
+                
+                // Tamaño basado en porcentaje (mínimo 30px, máximo 50px)
+                const size = 30 + Math.min(20, (item.percentage / 100) * 50);
+                
+                return (
+                  <div 
+                    key={item.categoryId} 
+                    className="absolute rounded-full flex items-center justify-center shadow-sm"
+                    style={{
+                      backgroundColor: item.color,
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      left: `${x - size/2}px`,
+                      top: `${y - size/2}px`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 5
+                    }}
                   >
-                    {data.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.color} 
-                        stroke="none"
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+                    <span className="text-white text-[10px]">{item.percentage.toFixed(0)}%</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
           
