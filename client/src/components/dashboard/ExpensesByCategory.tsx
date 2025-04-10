@@ -254,74 +254,73 @@ const ExpensesByCategory: React.FC<{
           </div>
           
           {/* Columna derecha: Lista de categorías */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-start justify-center">
             <div 
-              className="bg-white rounded-md shadow-sm flex items-center justify-center"
+              className="bg-white rounded-md shadow-sm"
               style={{
                 width: '330px',
                 height: '380px',
+                position: 'relative',
+                overflow: 'hidden'
               }}
             >
-              {/* Contenedor interior centrado */}
-              <div style={{ paddingTop: '0px', paddingBottom: '0px' }}>
-                {(() => {
-                  // Tomar las 5 primeras categorías
-                  const mainCategories = data.slice(0, 5);
-                  
-                  // Buscar la categoría "Sin categoría"
-                  const sinCategoria = data.find(item => item.name === "Sin categoría");
-                  
-                  // Si "Sin categoría" existe y no está ya incluida, añadirla al final
-                  const displayCategories = [...mainCategories];
-                  if (sinCategoria && !mainCategories.some(cat => cat.name === "Sin categoría")) {
-                    displayCategories.push(sinCategoria);
-                  }
-                  
-                  // Calcular espaciado para centrado exacto
-                  const itemHeight = 50; // Altura aproximada por item 
-                  const totalItemsHeight = displayCategories.length * itemHeight;
-                  const containerHeight = 380;
-                  const verticalPadding = Math.max(0, (containerHeight - totalItemsHeight) / 2);
-                  
-                  return (
-                    <div style={{ 
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '16px',
-                      paddingTop: `${verticalPadding}px`,
-                      paddingBottom: `${verticalPadding}px`,
-                      paddingLeft: '16px',
-                      paddingRight: '16px',
-                    }}>
-                      {displayCategories.map((item, index) => (
+              {/* Bloque de categorías centrado verticalmente */}
+              {(() => {
+                // Tomar las 5 primeras categorías
+                const mainCategories = data.slice(0, 5);
+                
+                // Buscar la categoría "Sin categoría"
+                const sinCategoria = data.find(item => item.name === "Sin categoría");
+                
+                // Si "Sin categoría" existe y no está ya incluida, añadirla al final
+                const displayCategories = [...mainCategories];
+                if (sinCategoria && !mainCategories.some(cat => cat.name === "Sin categoría")) {
+                  displayCategories.push(sinCategoria);
+                }
+                
+                return (
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '50%',
+                      left: '0',
+                      right: '0',
+                      transform: 'translateY(-50%)',
+                      padding: '0 16px',
+                    }}
+                  >
+                    {displayCategories.map((item, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-start gap-2"
+                        style={{
+                          marginBottom: index < displayCategories.length - 1 ? '16px' : '0'
+                        }}
+                      >
                         <div 
-                          key={index} 
-                          className="flex items-start gap-2"
+                          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
+                          style={{ 
+                            backgroundColor: `${item.color}15`, // Color con 15% de opacidad
+                            color: item.color
+                          }}
                         >
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" 
-                            style={{ 
-                              backgroundColor: `${item.color}15`, // Color con 15% de opacidad
-                              color: item.color
-                            }}>
-                            <span className="text-xl">{item.icon}</span>
+                          <span className="text-xl">{item.icon}</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
+                            <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
                           </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between">
-                              <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                              <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-gray-500">
-                              <span>{item.count} transacciones</span>
-                              <span>{item.percentage.toFixed(2)}%</span>
-                            </div>
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>{item.count} transacciones</span>
+                            <span>{item.percentage.toFixed(2)}%</span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

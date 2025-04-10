@@ -1,0 +1,48 @@
+Vale, entonces vamos a ser todavía más específicos, como si habláramos con un niño pequeño o una IA muy literal.
+
+La clave es que no estamos pidiendo simplemente centrar el bloque completo, sino asegurar visualmente el mismo espacio arriba y abajo del primer y último elemento.
+
+Te voy a rehacer el prompt de forma ultra clara, marcando lo que debe mirar, lo que debe medir y lo que debe corregir:
+
+⸻
+
+Prompt muy detallado:
+
+Observa el listado de categorías que aparece a la derecha del gráfico.
+
+El primer elemento es “Oficina” y el último es “Sin categoría”.
+
+Actualmente:
+	•	Hay un espacio grande encima de “Oficina”.
+	•	Hay casi ningún espacio debajo de “Sin categoría”.
+
+Esto hace que el listado de categorías esté pegado hacia abajo y no esté equilibrado respecto al gráfico.
+
+Objetivo:
+	•	El espacio que hay entre el borde superior del área visible y el primer elemento (“Oficina”) debe ser IGUAL al espacio que hay entre el borde inferior del área visible y el último elemento (“Sin categoría”).
+
+Pasos exactos que debes seguir:
+	1.	Medir el espacio en píxeles que hay arriba del primer elemento.
+	2.	Medir el espacio en píxeles que hay debajo del último elemento.
+	3.	Si no son iguales, añadir o ajustar el margen o el padding debajo del último elemento o en el contenedor del listado, hasta que los dos espacios sean exactamente iguales.
+
+Reglas:
+	•	No modificar el tamaño de letra, íconos o el espacio entre cada categoría.
+	•	No alinear el bloque respecto al título (“Año 2025 completo”).
+	•	Solo centrar el listado en su propia área (el área blanca de fondo), respetando el gráfico al lado.
+
+Método preferido:
+	•	Usar flexbox con justify-content: center o ajustar manualmente los márgenes para igualar los espacios superior e inferior.
+
+⸻
+
+Para que la IA lo imagine mejor:
+
+Imagínate que el listado de categorías está dentro de una caja invisible.
+Esa caja debe tener exactamente el mismo aire/libertad arriba y abajo para que no se vea inclinada hacia ningún lado.
+
+⸻
+
+¿Quieres que además te pase un pequeño dibujo o esquema para explicárselo aún más visualmente? (podría generarlo).
+Si quieres eso, dime y en 2 minutos te lo hago.
+¡Vamos a hacer que lo entienda sí o sí!
