@@ -1,0 +1,261 @@
+Aquí tienes el mensaje completamente detallado, con énfasis en que no se debe cambiar nada de la estructura actual de la aplicación y solo se debe añadir la funcionalidad del Libro de Registros dentro del apartado Superadmin. Todo está explicado al detalle para que no haya dudas, con el código correspondiente.
+
+⸻
+
+Mensaje completo para el programador
+
+⸻
+
+Hola [Nombre del programador],
+
+Te voy a detallar de manera muy clara lo que necesito que hagas, y quiero que tengas mucho cuidado con lo siguiente: no debes cambiar nada de la estructura de la aplicación actual. Todo debe seguir funcionando exactamente igual que hasta ahora, con la única excepción de añadir un apartado en Superadmin que nos permita ver y gestionar el libro de registros (gastos, facturas, etc.) de los clientes de forma completa.
+
+Por favor, sigue estos pasos y el flujo que te voy a explicar, y asegúrate de no modificar nada de lo que ya está hecho:
+
+⸻
+
+1. No cambiar nada de la estructura existente
+	•	El flujo actual de trabajo debe permanecer tal cual está. El Superadmin debe seguir viendo la lista de clientes, acceder a cada uno de ellos y gestionar las cuentas como lo hacía anteriormente.
+	•	No cambies nada de la interfaz o estructura previa. Todo debe seguir funcionando igual que antes. Solo se añadirá una nueva opción en el sidebar del Superadmin, que es la opción para ver el Libro de Registros de un cliente cuando se le selecciona.
+
+⸻
+
+2. Nuevo apartado en Superadmin: “Libro de Registros”
+	•	Cuando seleccionas un cliente desde el Superadmin, lo único nuevo es que debe haber una opción en el sidebar de la página del cliente llamada “Libro de Registros”. Esta opción, al hacer clic, debe abrir la vista del libro de registros de ese cliente específico.
+
+⸻
+
+3. Funcionamiento del Libro de Registros
+
+El Libro de Registros debe mostrar una tabla donde el Superadmin puede ver, editar y gestionar los movimientos contables de ese cliente. Este flujo debe ser muy claro, y debe poder realizarse todo desde esa página. Te explico todo lo que tiene que hacer.
+
+Características del Libro de Registros:
+	•	Acciones disponibles:
+	•	Ver los registros de gastos, facturas, ingresos, etc.
+	•	Editar registros existentes.
+	•	Añadir nuevos registros.
+	•	Descargar el libro completo en formatos PDF o XLS (Excel).
+	•	Buscar registros por palabra clave.
+	•	Filtrar registros por fecha.
+
+Campos que debe tener cada registro:
+
+Cada movimiento contable debe mostrar:
+	•	Fecha del movimiento (editable).
+	•	Tipo de movimiento (Ingreso, Gasto, Factura, etc.) (editable).
+	•	Descripción (editable).
+	•	Importe (editable).
+	•	Categoría contable (editable).
+	•	Enlace al archivo de la factura o gasto (si está presente).
+
+Vista de la tabla:
+	•	En el libro de registros, debe haber una tabla que liste todos los movimientos contables del cliente. La tabla debe tener estos campos:
+
+Fecha	Tipo	Descripción	Importe	Categoría	Archivo	Acciones
+2025-04-01	Gasto	Compra de material	150 €	Material	[Ver archivo]	Editar, Eliminar
+2025-04-02	Factura	Venta al cliente	300 €	Ventas	[Ver archivo]	Editar, Eliminar
+
+	•	La tabla debe ser editable en cada una de las celdas (como la descripción, tipo de movimiento, importe y categoría).
+
+Formulario para añadir un nuevo registro:
+
+Debería haber un botón para añadir un nuevo registro, que abrirá un formulario modal con los siguientes campos:
+	•	Fecha
+	•	Tipo de movimiento (Ingreso, Gasto, Factura, etc.)
+	•	Descripción
+	•	Importe
+	•	Categoría contable
+	•	Archivo (opcional)
+
+Modal para editar el registro:
+
+Cada registro de la tabla debe tener un botón de editar. Cuando se haga clic en ese botón, debe abrirse un formulario modal con los datos del registro para ser editados.
+
+⸻
+
+4. Flujo de trabajo detallado
+	1.	Superadmin selecciona un cliente desde el panel de control.
+	2.	En el sidebar de la vista del cliente, aparece una opción llamada “Libro de Registros”.
+	3.	Al hacer clic en “Libro de Registros”, el Superadmin debe ver una tabla con todos los registros contables de ese cliente, donde podrá:
+	•	Ver, editar o eliminar los registros.
+	•	Añadir un nuevo registro mediante un formulario emergente.
+	•	Filtrar y buscar por palabra clave en la descripción o por fecha.
+	•	Descargar todo el libro en formato PDF o XLS.
+	4.	Al editar un registro, el Superadmin debe poder actualizar la descripción, importe, categoría, y tipo del movimiento. El archivo adjunto debe poder ser actualizado o removido.
+
+⸻
+
+5. Código para implementar el Libro de Registros
+
+Te dejo un ejemplo del código que necesitas implementar para la vista del libro de registros, asegurándote de no modificar nada de lo que ya está en la aplicación. Este código debe añadirse como una nueva sección en el Superadmin, sin alterar la funcionalidad ya existente.
+
+HTML (estructura del Libro de Registros)
+
+<!-- Sidebar con nuevo apartado: Libro de Registros -->
+<div id="sidebar">
+  <!-- Otros apartados -->
+  <div class="menu-item" id="libro-registros-menu">
+    <a href="#" onclick="mostrarLibroRegistros()">Libro de Registros</a>
+  </div>
+</div>
+
+<!-- Pantalla de Libro de Registros -->
+<div id="libro-registros" class="hidden">
+  <h2>Libro de Registros - Cliente: [Nombre Cliente]</h2>
+
+  <!-- Acciones -->
+  <div id="acciones-libro">
+    <button onclick="mostrarFormularioNuevoRegistro()">Añadir Registro</button>
+    <button onclick="exportarPDF()">Exportar PDF</button>
+    <button onclick="exportarXLS()">Exportar XLS</button>
+  </div>
+
+  <!-- Tabla de Registros -->
+  <table id="tabla-libro-registros">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Descripción</th>
+        <th>Importe</th>
+        <th>Categoría</th>
+        <th>Archivo</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Los registros se cargarán aquí dinámicamente -->
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal para añadir/editar registro -->
+<div id="modal-registro" class="modal hidden">
+  <form id="form-registro">
+    <h3 id="titulo-modal">Nuevo Registro</h3>
+    <input type="hidden" id="registro-id">
+    <label>Fecha:</label><input type="date" id="fecha">
+    <label>Tipo:</label><input type="text" id="tipo">
+    <label>Descripción:</label><input type="text" id="descripcion">
+    <label>Importe:</label><input type="number" id="importe">
+    <label>Categoría:</label><input type="text" id="categoria">
+    <label>Archivo:</label><input type="file" id="archivo">
+    <button type="submit">Guardar</button>
+    <button type="button" onclick="cerrarModal()">Cancelar</button>
+  </form>
+</div>
+
+CSS (estilos visuales del Libro de Registros)
+
+#libro-registros {
+  padding: 20px;
+  background: #fff;
+  margin: 20px;
+}
+
+#libro-registros h2 {
+  font-size: 1.5em;
+  margin-bottom: 20px;
+}
+
+#acciones-libro {
+  margin-bottom: 20px;
+}
+
+#tabla-libro-registros {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#tabla-libro-registros th, #tabla-libro-registros td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 500px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+JavaScript (funcionalidad del Libro de Registros)
+
+// Variables globales
+let registros = [];
+let clienteSeleccionado = 1; // Asume que el cliente ya está seleccionado desde fuera
+
+// Mostrar libro de registros
+function mostrarLibroRegistros() {
+  document.getElementById('libro-registros').classList.remove('hidden');
+  cargarRegistros();
+}
+
+// Cargar registros de la base de datos (simulación)
+function cargarRegistros() {
+  const tbody = document.getElementById('tabla-libro-registros').getElementsByTagName('tbody')[0];
+  tbody.innerHTML = ''; // Limpiar tabla antes de cargar nuevos registros
+
+  registros.forEach(reg => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${reg.fecha}</td>
+      <td>${reg.tipo}</td>
+      <td>${reg.descripcion}</td>
+      <td>${reg.importe}</td>
+      <td>${reg.categoria}</td>
+      <td><a href="${reg.archivo}" target="_blank">Ver archivo</a></td>
+      <td>
+        <button onclick="editarRegistro(${reg.id})">Editar</button>
+        <button onclick="eliminarRegistro(${reg.id})">Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Abrir modal para nuevo registro
+function mostrarFormularioNuevoRegistro() {
+  document.getElementById('modal-registro').classList.remove('hidden');
+  document.getElementById('titulo-modal').textContent = "Nuevo Registro";
+}
+
+// Guardar registro
+document.getElementById('form-registro').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const nuevoRegistro = {
+    id: Date.now(),
+    fecha: document.getElementById('fecha').value,
+    tipo: document.getElementById('tipo').value,
+    descripcion: document.getElementById('descripcion').value,
+    importe: document.getElementById('importe').value,
+    categoria: document.getElementById('categoria').value,
+    archivo: URL.createObjectURL(document.getElementById('archivo').files[0])
+  };
+
+  registros.push(nuevoRegistro);
+  cargarRegistros();
+  cerrarModal();
+});
+
+// Editar registro
+function editarRegistro(id) {
+  const registro = registros.find(r => r.id === id
