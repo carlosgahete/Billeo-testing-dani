@@ -20,6 +20,8 @@ import {
   InsertTransaction,
   Task,
   InsertTask,
+  LibroRegistro,
+  InsertLibroRegistro,
   users,
   companies,
   clients,
@@ -31,6 +33,7 @@ import {
   transactions,
   tasks,
   dashboardPreferences,
+  libroRegistros,
   DashboardPreferences,
   InsertDashboardPreferences,
   DashboardBlock
@@ -127,6 +130,13 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
+  
+  // Libro de Registros operations
+  getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]>;
+  getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]>;
+  createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro>;
+  updateLibroRegistro(id: number, registro: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined>;
+  deleteLibroRegistro(id: number): Promise<boolean>;
   
   // Session store
   sessionStore: session.Store;
@@ -954,6 +964,62 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTask(id: number): Promise<boolean> {
     const result = await db.delete(tasks).where(eq(tasks.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Implementación de los métodos de Libro de Registros
+  async getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]> {
+    return await db.select().from(libroRegistros).where(eq(libroRegistros.clienteId, clienteId)).orderBy(desc(libroRegistros.fecha));
+  }
+
+  async getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]> {
+    return await db.select()
+      .from(libroRegistros)
+      .where(eq(libroRegistros.clienteId, clienteId))
+      .where(eq(libroRegistros.tipo, tipo))
+      .orderBy(desc(libroRegistros.fecha));
+  }
+
+  async createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro> {
+    // Formato adecuado para números decimales
+    const formattedRegistro = {
+      ...registro,
+      baseImponible: registro.baseImponible?.toString() || "0",
+      ivaPorcentaje: registro.ivaPorcentaje?.toString() || "0",
+      cuotaIva: registro.cuotaIva?.toString() || "0",
+      totalFactura: registro.totalFactura?.toString() || "0"
+    };
+    
+    const result = await db.insert(libroRegistros).values(formattedRegistro).returning();
+    return result[0];
+  }
+
+  async updateLibroRegistro(id: number, registro: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined> {
+    // Formato adecuado para números decimales
+    const formattedRegistro = { ...registro };
+    
+    if (typeof formattedRegistro.baseImponible === 'number') {
+      formattedRegistro.baseImponible = formattedRegistro.baseImponible.toString();
+    }
+    
+    if (typeof formattedRegistro.ivaPorcentaje === 'number') {
+      formattedRegistro.ivaPorcentaje = formattedRegistro.ivaPorcentaje.toString();
+    }
+    
+    if (typeof formattedRegistro.cuotaIva === 'number') {
+      formattedRegistro.cuotaIva = formattedRegistro.cuotaIva.toString();
+    }
+    
+    if (typeof formattedRegistro.totalFactura === 'number') {
+      formattedRegistro.totalFactura = formattedRegistro.totalFactura.toString();
+    }
+    
+    const result = await db.update(libroRegistros).set(formattedRegistro).where(eq(libroRegistros.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteLibroRegistro(id: number): Promise<boolean> {
+    const result = await db.delete(libroRegistros).where(eq(libroRegistros.id, id)).returning();
     return result.length > 0;
   }
 }
