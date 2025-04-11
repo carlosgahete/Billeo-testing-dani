@@ -1,193 +1,116 @@
-import { useState, useEffect } from "react";
-import { useLocation, Redirect } from "wouter";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2, Search } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import billeoLogo from '../../assets/billeo-logo.png';
+import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
-interface User {
-  id: number;
-  username: string;
-  name: string;
-  email: string;
-  role: string;
-  profileImage: string | null;
-}
-
-export default function SelectUser() {
-  const { user, isLoading } = useAuth();
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+export default function SelectUserPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (user && user.role === "admin") {
-      fetchUsers();
-    }
-  }, [user]);
+  // Consulta para obtener los usuarios
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['/api/admin/users'],
+  });
 
-  useEffect(() => {
-    if (searchTerm) {
-      setFilteredUsers(
-        users.filter(
-          (user) =>
-            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredUsers(users);
-    }
-  }, [searchTerm, users]);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await apiRequest("GET", "/api/admin/users");
-      const data = await response.json();
-      setUsers(data);
-      setFilteredUsers(data);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los usuarios",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLoginAsUser = async (userId: number) => {
-    try {
-      setLoading(true);
-      const response = await apiRequest("POST", `/api/admin/login-as/${userId}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        toast({
-          title: "Éxito",
-          description: `Sesión iniciada como ${data.user.name}`,
-        });
-        
-        // Actualizar el usuario en la caché de react-query
-        queryClient.setQueryData(["/api/user"], data.user);
-        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        navigate("/");
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.message || "No se pudo iniciar sesión como usuario",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo iniciar sesión como usuario",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Verificar si es administrador
-  if (isLoading) {
+  // Filtrar usuarios según el término de búsqueda
+  const filteredUsers = users?.filter((user: any) => {
+    const searchTermLower = searchTerm.toLowerCase();
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      user.name.toLowerCase().includes(searchTermLower) ||
+      user.email.toLowerCase().includes(searchTermLower) ||
+      user.username.toLowerCase().includes(searchTermLower)
     );
-  }
+  });
 
-  if (!user || user.role !== "admin") {
-    return <Redirect to="/" />;
-  }
+  // Función para obtener las iniciales del nombre
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Función para seleccionar un usuario
+  const selectUser = (userId: number) => {
+    setLocation(`/admin/libro-registros/${userId}`);
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
-      <Card className="w-full max-w-lg shadow-xl">
-        <CardContent className="p-6">
-          <div className="text-center mb-6">
-            <img src={billeoLogo} alt="Billeo Logo" className="h-12 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Seleccione el usuario</h1>
-            <p className="text-neutral-500">Elija la cuenta a la que desea acceder</p>
-          </div>
-
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+    <div className="container mx-auto px-4 py-8">
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Seleccionar Cliente</CardTitle>
+          <CardDescription>
+            Selecciona un cliente para acceder a su Libro de Registros
+          </CardDescription>
+          
+          <div className="relative mt-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre, usuario o email"
-              className="pl-10"
+              type="text"
+              placeholder="Buscar por nombre, email o usuario..."
+              className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        </CardHeader>
 
-          {loading ? (
+        <CardContent>
+          {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((userItem) => (
-                  <Button
-                    key={userItem.id}
-                    variant="outline"
-                    className="w-full justify-start p-3 h-auto"
-                    onClick={() => handleLoginAsUser(userItem.id)}
-                  >
-                    <div className="flex items-center w-full">
-                      <Avatar className="h-10 w-10 mr-3">
-                        <AvatarImage src={userItem.profileImage || undefined} alt={userItem.name} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {userItem.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{userItem.name}</span>
-                        <span className="text-sm text-neutral-500">{userItem.email}</span>
-                      </div>
-                      <span 
-                        className={`ml-auto text-xs px-2 py-1 rounded-full ${
-                          userItem.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                        }`}
-                      >
-                        {userItem.role === 'admin' ? 'Admin' : 'Usuario'}
-                      </span>
-                    </div>
-                  </Button>
-                ))
+            <ScrollArea className="h-[400px] pr-4">
+              {filteredUsers?.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No se encontraron clientes.
+                </div>
               ) : (
-                <div className="text-center py-8 text-neutral-500">
-                  No se encontraron usuarios con ese criterio de búsqueda
+                <div className="space-y-2">
+                  {filteredUsers?.map((user: any) => (
+                    <div key={user.id} className="flex items-center justify-between p-3 rounded-md hover:bg-accent">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-semibold">{user.name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                      </div>
+                      
+                      <Button onClick={() => selectUser(user.id)}>
+                        Seleccionar
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
+            </ScrollArea>
           )}
-
-          <div className="mt-6 pt-4 border-t border-neutral-200">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate("/admin/users")}
-            >
-              Ir a Gestión de Usuarios
-            </Button>
-          </div>
         </CardContent>
+        
+        <CardFooter className="flex justify-between border-t pt-6">
+          <Button variant="outline" onClick={() => setLocation('/dashboard')}>
+            Cancelar
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            Se mostrarán todos los usuarios registrados en el sistema.
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

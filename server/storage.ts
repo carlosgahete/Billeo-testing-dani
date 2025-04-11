@@ -1049,6 +1049,7 @@ export class MemStorage implements IStorage {
   private categoryIdCounter: number;
   private transactionIdCounter: number;
   private taskIdCounter: number;
+  private libroRegistroIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -1061,6 +1062,7 @@ export class MemStorage implements IStorage {
     this.categories = new Map();
     this.transactions = new Map();
     this.tasks = new Map();
+    this.libroRegistros = new Map();
     
     // Usar MemoryStore para la sesión cuando se usa MemStorage
     const MemoryStore = require('memorystore')(session);
@@ -1078,6 +1080,7 @@ export class MemStorage implements IStorage {
     this.categoryIdCounter = 1;
     this.transactionIdCounter = 1;
     this.taskIdCounter = 1;
+    this.libroRegistroIdCounter = 1;
 
     // Initialize with default user for development
     this.createUser({
@@ -1548,6 +1551,48 @@ export class MemStorage implements IStorage {
 
   async deleteQuoteItem(id: number): Promise<boolean> {
     return this.quoteItems.delete(id);
+  }
+  
+  // Libro de Registros operations
+  async getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]> {
+    return Array.from(this.libroRegistros.values()).filter(
+      (registro) => registro.clienteId === clienteId
+    );
+  }
+  
+  async getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]> {
+    return Array.from(this.libroRegistros.values()).filter(
+      (registro) => registro.clienteId === clienteId && registro.tipo === tipo
+    );
+  }
+  
+  async createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro> {
+    const id = this.libroRegistroIdCounter++;
+    const newRegistro: LibroRegistro = { 
+      ...registro, 
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.libroRegistros.set(id, newRegistro);
+    return newRegistro;
+  }
+  
+  async updateLibroRegistro(id: number, registroData: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined> {
+    const registro = this.libroRegistros.get(id);
+    if (!registro) return undefined;
+
+    const updatedRegistro = { 
+      ...registro, 
+      ...registroData,
+      updatedAt: new Date() 
+    };
+    this.libroRegistros.set(id, updatedRegistro);
+    return updatedRegistro;
+  }
+  
+  async deleteLibroRegistro(id: number): Promise<boolean> {
+    return this.libroRegistros.delete(id);
   }
 }
 
