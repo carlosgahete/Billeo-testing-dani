@@ -38,7 +38,8 @@ import {
   insertCategorySchema,
   insertTransactionSchema,
   transactionFlexibleSchema,
-  insertTaskSchema
+  insertTaskSchema,
+  insertLibroRegistroSchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -3996,6 +3997,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error al guardar preferencias del dashboard:", error);
       return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // ====== RUTAS DEL LIBRO DE REGISTROS ======
+  // Obtener registros por cliente y tipo (ingresos, gastos, bienes_inversion)
+  app.get("/api/admin/libro-registros/:clienteId", requireAdmin, async (req, res) => {
+    try {
+      const clienteId = parseInt(req.params.clienteId);
+      const tipo = req.query.tipo as string || null;
+      
+      if (!clienteId) {
+        return res.status(400).json({ message: "ID de cliente requerido" });
+      }
+      
+      let registros;
+      if (tipo) {
+        registros = await storage.getLibroRegistrosByClienteIdAndTipo(clienteId, tipo);
+      } else {
+        registros = await storage.getLibroRegistrosByClienteId(clienteId);
+      }
+      
+      res.json(registros);
+    } catch (error) {
+      console.error("Error al obtener registros del libro:", error);
+      res.status(500).json({ message: "Error al obtener registros del libro" });
+    }
+  });
+  
+  // Crear un nuevo registro en el libro
+  app.post("/api/admin/libro-registros", requireAdmin, async (req, res) => {
+    try {
+      const validatedData = insertLibroRegistroSchema.parse(req.body);
+      const nuevoRegistro = await storage.createLibroRegistro(validatedData);
+      res.status(201).json(nuevoRegistro);
+    } catch (error) {
+      console.error("Error al crear registro en el libro:", error);
+      res.status(400).json({ 
+        message: "Error al crear registro en el libro", 
+        details: error instanceof Error ? error.message : "Error desconocido" 
+      });
+    }
+  });
+  
+  // Actualizar un registro del libro
+  app.put("/api/admin/libro-registros/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertLibroRegistroSchema.partial().parse(req.body);
+      
+      const registroActualizado = await storage.updateLibroRegistro(id, validatedData);
+      
+      if (!registroActualizado) {
+        return res.status(404).json({ message: "Registro no encontrado" });
+      }
+      
+      res.json(registroActualizado);
+    } catch (error) {
+      console.error("Error al actualizar registro del libro:", error);
+      res.status(400).json({ 
+        message: "Error al actualizar registro del libro", 
+        details: error instanceof Error ? error.message : "Error desconocido" 
+      });
+    }
+  });
+  
+  // Eliminar un registro del libro
+  app.delete("/api/admin/libro-registros/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const eliminado = await storage.deleteLibroRegistro(id);
+      
+      if (!eliminado) {
+        return res.status(404).json({ message: "Registro no encontrado" });
+      }
+      
+      res.json({ message: "Registro eliminado correctamente" });
+    } catch (error) {
+      console.error("Error al eliminar registro del libro:", error);
+      res.status(500).json({ message: "Error al eliminar registro del libro" });
     }
   });
 
