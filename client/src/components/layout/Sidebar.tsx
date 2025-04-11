@@ -163,9 +163,9 @@ const Sidebar = ({
   
   console.log("Current path:", currentPath);
   
-  // Nos aseguramos de que tengamos un usuario identificado y que sea administrador
-  const isAdmin = user?.role === 'admin';
-  console.log("Is admin:", isAdmin);
+  // Nos aseguramos de que tengamos un usuario identificado y que sea administrador o superadmin
+  const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+  console.log("Is admin o superadmin:", isAdmin);
   
   // Verificar si la URL contiene un patrón que indique que estamos viendo un usuario específico
   // Patrones posibles:
@@ -206,9 +206,9 @@ const Sidebar = ({
   
   console.log("Final viewedUserId:", viewedUserId);
   
-  // Verificar si el usuario tiene rol de administrador
-  const userIsAdmin = user && user.role === 'admin';
-  console.log("Usuario tiene rol admin:", userIsAdmin);
+  // Verificar si el usuario tiene rol de administrador o superadmin
+  const userIsAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+  console.log("Usuario tiene rol admin o superadmin:", userIsAdmin);
 
   // Agregar elementos de administración si el usuario es administrador
   const adminItems: NavItem[] = userIsAdmin ? [
