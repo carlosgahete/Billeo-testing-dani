@@ -236,12 +236,27 @@ const Sidebar = ({
     });
   }
   
-  // Solo mostramos el enlace al libro de registros para superadmin
+  // Añadimos varios enlaces al Libro de Registros para superadmin
   if (userIsSuperAdmin) {
+    // Libro de Registros Simple
     adminItems.push({
-      href: "/admin/libro-simple/1",  // Usa ID 1 donde están los datos de demo
+      href: "/admin/libro-registros-simple/1",  // ID 1 para datos de demo
       icon: <FileText size={20} />,
-      label: "Libro de Registros (Simple)",
+      label: "Libro Registros (Simple)",
+    });
+    
+    // Libro de Registros Enhanced
+    adminItems.push({
+      href: "/admin/libro-registros-enhanced/1",  // ID 1 para datos de demo
+      icon: <BarChart3 size={20} />,
+      label: "Libro Registros (Completo)",
+    });
+    
+    // Libro de Registros original
+    adminItems.push({
+      href: "/admin/libro-registros/1",  // ID 1 para datos de demo
+      icon: <PieChart size={20} />,
+      label: "Libro Registros (Original)",
     });
   }
   
