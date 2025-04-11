@@ -4033,10 +4033,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userId = parseInt(req.params.userId);
       
+      // Obtener información del usuario
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+      }
+      
+      // Aplicar filtros de fecha si existen
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
       // Consultas directas a la base de datos
-      const dbInvoices = await db.select().from(invoices).where(eq(invoices.userId, userId));
-      const dbTransactions = await db.select().from(transactions).where(eq(transactions.userId, userId));
-      const dbQuotes = await db.select().from(quotes).where(eq(quotes.userId, userId));
+      let invoicesQuery = db.select().from(invoices).where(eq(invoices.userId, userId));
+      let transactionsQuery = db.select().from(transactions).where(eq(transactions.userId, userId));
+      let quotesQuery = db.select().from(quotes).where(eq(quotes.userId, userId));
+      
+      // Aplicar filtros de fecha si existen
+      if (startDate) {
+        invoicesQuery = invoicesQuery.where(gte(invoices.issueDate, startDate));
+        transactionsQuery = transactionsQuery.where(gte(transactions.date, startDate));
+        quotesQuery = quotesQuery.where(gte(quotes.issueDate, startDate));
+      }
+      
+      if (endDate) {
+        const nextDay = new Date(endDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        invoicesQuery = invoicesQuery.where(lt(invoices.issueDate, nextDay));
+        transactionsQuery = transactionsQuery.where(lt(transactions.date, nextDay));
+        quotesQuery = quotesQuery.where(lt(quotes.issueDate, nextDay));
+      }
+      
+      // Ejecutar consultas
+      const dbInvoices = await invoicesQuery;
+      const dbTransactions = await transactionsQuery;
+      const dbQuotes = await quotesQuery;
+      
+      // Obtener nombres de categorías
+      const categoryIds = [...new Set(dbTransactions.map(t => t.categoryId).filter(id => id !== null))] as number[];
+      const dbCategories = categoryIds.length > 0 
+        ? await db.select().from(categories).where(inArray(categories.id, categoryIds))
+        : [];
+      
+      // Crear un mapa de categorías para fácil acceso
+      const categoryMap = new Map();
+      dbCategories.forEach(cat => categoryMap.set(cat.id, cat.name));
       
       // Transformar los datos para la respuesta
       const responseInvoices = dbInvoices.map(invoice => ({
@@ -4044,12 +4084,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         number: invoice.invoiceNumber,
         issueDate: invoice.issueDate,
         dueDate: invoice.dueDate,
-        client: "Cliente", // No tenemos acceso fácil al nombre del cliente, así que usamos un valor por defecto
+        client: invoice.clientName || "Cliente", 
         total: parseFloat(invoice.total.toString()),
         status: invoice.status,
         baseAmount: parseFloat(invoice.subtotal.toString()),
         vatAmount: parseFloat(invoice.tax.toString()),
-        vatRate: 21 // Valor por defecto
+        vatRate: invoice.vatRate ? parseFloat(invoice.vatRate.toString()) : 21,
+        irpf: invoice.irpf ? parseFloat(invoice.irpf.toString()) : 0,
+        notes: invoice.notes
       }));
       
       const responseTransactions = dbTransactions.map(transaction => ({
@@ -4058,18 +4100,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: transaction.description,
         amount: parseFloat(transaction.amount.toString()),
         type: transaction.type,
-        category: transaction.categoryId ? transaction.categoryId.toString() : 'Sin categoría',
+        category: transaction.categoryId && categoryMap.has(transaction.categoryId) 
+          ? categoryMap.get(transaction.categoryId) 
+          : 'Sin categoría',
+        categoryId: transaction.categoryId,
+        paymentMethod: transaction.paymentMethod,
         notes: transaction.notes
       }));
       
       const responseQuotes = dbQuotes.map(quote => ({
         id: quote.id,
-        number: quote.quoteNumber, // Corregido: usando la propiedad correcta
+        number: quote.quoteNumber,
         issueDate: quote.issueDate,
-        expiryDate: quote.validUntil, // Corregido: usando la propiedad correcta
-        clientName: "Cliente", // Valor por defecto
+        expiryDate: quote.validUntil,
+        clientName: quote.clientName || "Cliente",
         total: parseFloat(quote.total.toString()),
-        status: quote.status
+        baseAmount: parseFloat(quote.subtotal?.toString() || "0"),
+        vatAmount: parseFloat(quote.tax?.toString() || "0"),
+        status: quote.status,
+        notes: quote.notes
       }));
       
       // Calcular totales
@@ -4078,8 +4127,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
       
+      // Calcular totales de IVA para facturas emitidas
+      const totalVatCollected = responseInvoices.reduce((sum, invoice) => sum + (invoice.vatAmount || 0), 0);
+      
+      // Calcular totales de IVA para gastos (estimado)
+      const totalVatPaid = responseTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => {
+          // Estimación de IVA (21% por defecto si no hay información detallada)
+          const vatEstimate = t.amount * 0.21;
+          return sum + vatEstimate;
+        }, 0);
+      
+      // Calcular balance de IVA
+      const vatBalance = totalVatCollected - totalVatPaid;
+      
       // Crear objeto de respuesta
       const response = {
+        user: {
+          id: targetUser.id,
+          username: targetUser.username,
+          name: targetUser.name || targetUser.username,
+          email: targetUser.email
+        },
         invoices: responseInvoices,
         transactions: responseTransactions,
         quotes: responseQuotes,
@@ -4088,7 +4158,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalTransactions: responseTransactions.length,
           totalQuotes: responseQuotes.length,
           incomeTotal,
-          expenseTotal
+          expenseTotal,
+          balance: incomeTotal - expenseTotal,
+          vatCollected: totalVatCollected,
+          vatPaid: totalVatPaid,
+          vatBalance: vatBalance
         }
       };
       
