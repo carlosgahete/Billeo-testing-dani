@@ -238,11 +238,18 @@ const Sidebar = ({
   
   // Añadimos varios enlaces al Libro de Registros para superadmin
   if (userIsSuperAdmin) {
+    // Selector principal de Libro de Registros
+    adminItems.push({
+      href: "/libro-registros",
+      icon: <FileText size={20} />,
+      label: "Libro de Registros",
+    });
+    
     // Libro de Registros Simple
     adminItems.push({
       href: "/admin/libro-simple/1",  // ID 1 para datos de demo
       icon: <FileText size={20} />,
-      label: "Libro Registros (Simple)",
+      label: "Libro (Simple)",
     });
     
     // Libro de Registros Enhanced
