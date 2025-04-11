@@ -4024,10 +4024,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Obtener información del usuario actual para verificar su rol
       const currentUser = await storage.getUser(req.session.userId);
-      if (!currentUser || (currentUser.role !== 'superadmin' && currentUser.role !== 'SUPERADMIN')) {
+      
+      // Verificar si es un usuario autorizado (superadmin, SUPERADMIN, admin, o username "Superadmin")
+      if (!currentUser || (
+        currentUser.role !== 'superadmin' && 
+        currentUser.role !== 'SUPERADMIN' && 
+        currentUser.role !== 'admin' &&
+        currentUser.username !== 'Superadmin'
+      )) {
         return res.status(403).json({ 
           success: false, 
-          message: "Acceso denegado. Se requieren permisos de superadministrador" 
+          message: "Acceso denegado. Se requieren permisos de administrador" 
         });
       }
       
