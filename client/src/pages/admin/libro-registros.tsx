@@ -1,56 +1,51 @@
 import React, { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { format } from "date-fns";
+import { queryClient } from "@/lib/queryClient";
+import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger, 
+  DialogFooter, 
+  DialogClose 
+} from "@/components/ui/dialog";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, FileEdit, Trash2, ArrowLeft } from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, ArrowLeft, Plus, Edit2, Trash2 } from "lucide-react";
 
-// Tipo para los registros del libro
 interface LibroRegistro {
   id: number;
   clienteId: number;
@@ -74,516 +69,506 @@ interface Cliente {
 }
 
 export default function LibroRegistrosPage() {
-  const params = useParams();
+  const params = useParams<{ clienteId: string }>();
   const clienteId = parseInt(params.clienteId);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Estado para el formulario
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [currentRegistro, setCurrentRegistro] = useState<Partial<LibroRegistro> | null>(null);
-  const [activeTab, setActiveTab] = useState("emitidas");
-
-  // Estados para el formulario
-  const [fecha, setFecha] = useState<Date | undefined>(new Date());
-  const [numeroFactura, setNumeroFactura] = useState("");
-  const [clienteProveedor, setClienteProveedor] = useState("");
-  const [concepto, setConcepto] = useState("");
-  const [baseImponible, setBaseImponible] = useState("");
-  const [ivaPorcentaje, setIvaPorcentaje] = useState("21");
-  const [cuotaIva, setCuotaIva] = useState("");
-  const [totalFactura, setTotalFactura] = useState("");
-
-  // Consulta para obtener los datos del cliente
-  const { data: cliente, isLoading: clienteLoading } = useQuery({
-    queryKey: [`/api/clients/${clienteId}`],
-    enabled: !!clienteId,
+  
+  const [formData, setFormData] = useState<Partial<LibroRegistro>>({
+    clienteId,
+    tipo: "ingreso",
+    fecha: new Date(),
+    numeroFactura: "",
+    clienteProveedor: "",
+    concepto: "",
+    baseImponible: "",
+    ivaPorcentaje: "",
+    cuotaIva: "",
+    totalFactura: ""
   });
-
-  // Consulta para obtener los registros del libro
-  const { data: registros, isLoading: registrosLoading } = useQuery({
-    queryKey: [`/api/admin/libro-registros/${clienteId}`],
-    enabled: !!clienteId,
+  
+  const [editingRegistro, setEditingRegistro] = useState<LibroRegistro | null>(null);
+  const [registroToDelete, setRegistroToDelete] = useState<number | null>(null);
+  const [openAlertDialog, setOpenAlertDialog] = useState(false);
+  
+  // Obtener los registros del libro
+  const { data: registros, isLoading } = useQuery({
+    queryKey: ["/api/admin/libro-registros", clienteId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/libro-registros/${clienteId}`);
+      if (!response.ok) {
+        throw new Error("Error al obtener registros del libro");
+      }
+      return response.json();
+    },
   });
-
-  // Filtrar registros por tipo (emitidas/recibidas)
-  const filteredRegistros = registros?.filter((registro: LibroRegistro) => 
-    registro.tipo === activeTab
-  ) || [];
-
+  
+  // Obtener información del cliente
+  const { data: cliente, isLoading: isLoadingCliente } = useQuery({
+    queryKey: ["/api/admin/users", clienteId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/users/${clienteId}`);
+      if (!response.ok) {
+        throw new Error("Error al obtener información del cliente");
+      }
+      return response.json();
+    },
+  });
+  
   // Mutación para crear un nuevo registro
-  const createMutation = useMutation({
-    mutationFn: (registro: Partial<LibroRegistro>) => 
-      apiRequest(`/api/admin/libro-registros`, {
+  const createRegistro = useMutation({
+    mutationFn: async (data: Partial<LibroRegistro>) => {
+      const response = await fetch("/api/admin/libro-registros", {
         method: "POST",
-        data: registro,
-      }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Error al crear el registro");
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/libro-registros", clienteId] });
       toast({
         title: "Registro creado",
-        description: "El registro ha sido creado correctamente",
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/admin/libro-registros/${clienteId}`] 
+        description: "El registro se ha creado correctamente",
       });
       resetForm();
-      setFormDialogOpen(false);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Ha ocurrido un error al crear el registro",
+        description: `${error}`,
         variant: "destructive",
       });
-      console.error("Error al crear registro:", error);
     },
   });
-
+  
   // Mutación para actualizar un registro
-  const updateMutation = useMutation({
-    mutationFn: (registro: Partial<LibroRegistro>) => 
-      apiRequest(`/api/admin/libro-registros/${registro.id}`, {
-        method: "PATCH",
-        data: registro,
-      }),
+  const updateRegistro = useMutation({
+    mutationFn: async (data: Partial<LibroRegistro>) => {
+      const response = await fetch(`/api/admin/libro-registros/${data.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Error al actualizar el registro");
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/libro-registros", clienteId] });
       toast({
         title: "Registro actualizado",
-        description: "El registro ha sido actualizado correctamente",
+        description: "El registro se ha actualizado correctamente",
       });
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/admin/libro-registros/${clienteId}`] 
-      });
-      resetForm();
-      setFormDialogOpen(false);
+      setEditingRegistro(null);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Ha ocurrido un error al actualizar el registro",
+        description: `${error}`,
         variant: "destructive",
       });
-      console.error("Error al actualizar registro:", error);
     },
   });
-
+  
   // Mutación para eliminar un registro
-  const deleteMutation = useMutation({
-    mutationFn: (registroId: number) => 
-      apiRequest(`/api/admin/libro-registros/${registroId}`, {
+  const deleteRegistro = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/admin/libro-registros/${id}`, {
         method: "DELETE",
-      }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Error al eliminar el registro");
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/libro-registros", clienteId] });
       toast({
         title: "Registro eliminado",
-        description: "El registro ha sido eliminado correctamente",
+        description: "El registro se ha eliminado correctamente",
       });
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/admin/libro-registros/${clienteId}`] 
-      });
+      setRegistroToDelete(null);
+      setOpenAlertDialog(false);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Ha ocurrido un error al eliminar el registro",
+        description: `${error}`,
         variant: "destructive",
       });
-      console.error("Error al eliminar registro:", error);
     },
   });
-
-  // Efecto para actualizar la cuota IVA y el total
-  useEffect(() => {
-    if (baseImponible) {
-      const base = parseFloat(baseImponible.replace(',', '.'));
-      const porcentaje = parseFloat(ivaPorcentaje || "0");
+  
+  // Filtrar registros por tipo
+  const filteredRegistros = registros?.filter((registro: LibroRegistro) => 
+    true // En el futuro se puede implementar un filtro
+  );
+  
+  // Manejadores de eventos
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const newValue = name === "ivaPorcentaje" && value ? value.replace("%", "") + "%" : value;
+    
+    setFormData((prev) => ({
+      ...prev,
+      [name]: newValue,
+    }));
+    
+    // Calcular cuota IVA si tenemos base imponible y porcentaje de IVA
+    if ((name === "baseImponible" || name === "ivaPorcentaje") && 
+        formData.baseImponible && 
+        (name === "ivaPorcentaje" ? value : formData.ivaPorcentaje)) {
       
-      if (!isNaN(base) && !isNaN(porcentaje)) {
-        const cuota = (base * porcentaje / 100).toFixed(2).replace('.', ',');
-        const total = (base + (base * porcentaje / 100)).toFixed(2).replace('.', ',');
-        
-        setCuotaIva(cuota);
-        setTotalFactura(total);
-      }
+      const base = parseFloat(name === "baseImponible" ? value : formData.baseImponible || "0");
+      const ivaStr = name === "ivaPorcentaje" ? value : formData.ivaPorcentaje || "0";
+      const ivaPorcentaje = parseFloat(ivaStr.replace("%", "")) / 100;
+      
+      // Calculamos la cuota IVA
+      const cuotaIva = (base * ivaPorcentaje).toFixed(2);
+      // Calculamos el total
+      const total = (base + parseFloat(cuotaIva)).toFixed(2);
+      
+      setFormData((prev) => ({
+        ...prev,
+        cuotaIva,
+        totalFactura: total
+      }));
     }
-  }, [baseImponible, ivaPorcentaje]);
-
-  // Resetear el formulario
-  const resetForm = () => {
-    setCurrentRegistro(null);
-    setFecha(new Date());
-    setNumeroFactura("");
-    setClienteProveedor("");
-    setConcepto("");
-    setBaseImponible("");
-    setIvaPorcentaje("21");
-    setCuotaIva("");
-    setTotalFactura("");
   };
-
-  // Abrir el formulario para editar
-  const handleEdit = (registro: LibroRegistro) => {
-    setCurrentRegistro(registro);
-    setFecha(new Date(registro.fecha));
-    setNumeroFactura(registro.numeroFactura || "");
-    setClienteProveedor(registro.clienteProveedor || "");
-    setConcepto(registro.concepto || "");
-    setBaseImponible(registro.baseImponible || "");
-    setIvaPorcentaje(registro.ivaPorcentaje || "21");
-    setCuotaIva(registro.cuotaIva || "");
-    setTotalFactura(registro.totalFactura || "");
-    setFormDialogOpen(true);
-  };
-
-  // Abrir el formulario para crear
-  const handleCreate = () => {
-    resetForm();
-    setFormDialogOpen(true);
-  };
-
-  // Manejar el guardado del formulario
-  const handleSaveForm = () => {
-    if (!fecha) {
-      toast({
-        title: "Error",
-        description: "La fecha es obligatoria",
-        variant: "destructive",
-      });
-      return;
+  
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setFormData((prev) => ({
+        ...prev,
+        fecha: date,
+      }));
     }
-
-    const registro: Partial<LibroRegistro> = {
-      clienteId,
-      tipo: activeTab,
-      fecha: fecha,
-      numeroFactura: numeroFactura || null,
-      clienteProveedor: clienteProveedor || null,
-      concepto: concepto || null,
-      baseImponible: baseImponible || null,
-      ivaPorcentaje: ivaPorcentaje || null,
-      cuotaIva: cuotaIva || null,
-      totalFactura: totalFactura || null,
-    };
-
-    if (currentRegistro?.id) {
-      // Actualizar registro existente
-      updateMutation.mutate({
-        ...registro,
-        id: currentRegistro.id,
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingRegistro) {
+      updateRegistro.mutate({
+        ...formData,
+        id: editingRegistro.id
       });
     } else {
-      // Crear nuevo registro
-      createMutation.mutate(registro);
+      createRegistro.mutate(formData);
     }
   };
-
-  // Formatear la moneda para mostrarla en la tabla
-  const formatCurrency = (value: string | null) => {
-    if (!value) return "0,00 €";
-    return `${value} €`;
+  
+  const handleEdit = (registro: LibroRegistro) => {
+    setEditingRegistro(registro);
+    setFormData({
+      ...registro,
+      fecha: new Date(registro.fecha)
+    });
   };
-
-  if (clienteLoading) {
+  
+  const handleDelete = (id: number) => {
+    setRegistroToDelete(id);
+    setOpenAlertDialog(true);
+  };
+  
+  const confirmDelete = () => {
+    if (registroToDelete !== null) {
+      deleteRegistro.mutate(registroToDelete);
+    }
+  };
+  
+  const resetForm = () => {
+    setFormData({
+      clienteId,
+      tipo: "ingreso",
+      fecha: new Date(),
+      numeroFactura: "",
+      clienteProveedor: "",
+      concepto: "",
+      baseImponible: "",
+      ivaPorcentaje: "",
+      cuotaIva: "",
+      totalFactura: ""
+    });
+    setEditingRegistro(null);
+  };
+  
+  const goBackToSelection = () => {
+    setLocation("/admin/select-user");
+  };
+  
+  if (isLoading || isLoadingCliente) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
-
+  
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-4">
       <div className="flex items-center mb-6">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={() => setLocation('/admin/select-user')}
-          className="mr-4"
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goBackToSelection}
+          className="mr-3"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Libro de Registros</h1>
-          {cliente && (
-            <p className="text-muted-foreground">
-              Cliente: {cliente.name}
-            </p>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold">
+          Libro de Registros - {cliente?.name || "Cliente"}
+        </h1>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Registros</CardTitle>
-            <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Registro
-            </Button>
-          </div>
-          <CardDescription>
-            Gestiona las facturas emitidas y recibidas del cliente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="emitidas" onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="emitidas">Facturas Emitidas</TabsTrigger>
-              <TabsTrigger value="recibidas">Facturas Recibidas</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="emitidas" className="space-y-4">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Nº Factura</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Concepto</TableHead>
-                      <TableHead className="text-right">Base</TableHead>
-                      <TableHead className="text-right">% IVA</TableHead>
-                      <TableHead className="text-right">Cuota IVA</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {registrosLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-4">
-                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredRegistros.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
-                          No hay registros disponibles
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredRegistros.map((registro: LibroRegistro) => (
-                        <TableRow key={registro.id}>
-                          <TableCell>
-                            {format(new Date(registro.fecha), 'dd/MM/yyyy')}
-                          </TableCell>
-                          <TableCell>{registro.numeroFactura || '-'}</TableCell>
-                          <TableCell>{registro.clienteProveedor || '-'}</TableCell>
-                          <TableCell>{registro.concepto || '-'}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(registro.baseImponible)}</TableCell>
-                          <TableCell className="text-right">{registro.ivaPorcentaje || '0'}%</TableCell>
-                          <TableCell className="text-right">{formatCurrency(registro.cuotaIva)}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(registro.totalFactura)}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="icon"
-                                onClick={() => handleEdit(registro)}
-                              >
-                                <FileEdit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="icon"
-                                onClick={() => deleteMutation.mutate(registro.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Formulario */}
+        <Card className="lg:col-span-1 border border-gray-200 bg-white/70 backdrop-blur-sm shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-t-lg">
+            <CardTitle className="text-xl font-semibold">
+              {editingRegistro ? "Editar Registro" : "Nuevo Registro"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="tipo">Tipo</Label>
+                <Select
+                  name="tipo"
+                  value={formData.tipo}
+                  onValueChange={(value) => setFormData({...formData, tipo: value})}
+                  required
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ingreso">Ingreso</SelectItem>
+                    <SelectItem value="gasto">Gasto</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </TabsContent>
-
-            <TabsContent value="recibidas" className="space-y-4">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Nº Factura</TableHead>
-                      <TableHead>Proveedor</TableHead>
-                      <TableHead>Concepto</TableHead>
-                      <TableHead className="text-right">Base</TableHead>
-                      <TableHead className="text-right">% IVA</TableHead>
-                      <TableHead className="text-right">Cuota IVA</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {registrosLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-4">
-                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredRegistros.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
-                          No hay registros disponibles
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredRegistros.map((registro: LibroRegistro) => (
-                        <TableRow key={registro.id}>
-                          <TableCell>
-                            {format(new Date(registro.fecha), 'dd/MM/yyyy')}
-                          </TableCell>
-                          <TableCell>{registro.numeroFactura || '-'}</TableCell>
-                          <TableCell>{registro.clienteProveedor || '-'}</TableCell>
-                          <TableCell>{registro.concepto || '-'}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(registro.baseImponible)}</TableCell>
-                          <TableCell className="text-right">{registro.ivaPorcentaje || '0'}%</TableCell>
-                          <TableCell className="text-right">{formatCurrency(registro.cuotaIva)}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(registro.totalFactura)}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="icon"
-                                onClick={() => handleEdit(registro)}
-                              >
-                                <FileEdit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="icon"
-                                onClick={() => deleteMutation.mutate(registro.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Diálogo para crear/editar registros */}
-      <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {currentRegistro?.id ? "Editar Registro" : "Nuevo Registro"}
-            </DialogTitle>
-            <DialogDescription>
-              {activeTab === "emitidas" 
-                ? "Añade una nueva factura emitida al libro de registros."
-                : "Añade una nueva factura recibida al libro de registros."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-4">
+              
               <div className="space-y-2">
                 <Label htmlFor="fecha">Fecha</Label>
-                <DatePicker date={fecha} onSelect={setFecha} />
+                <DatePicker 
+                  date={formData.fecha ? new Date(formData.fecha) : undefined} 
+                  onSelect={handleDateChange} 
+                />
               </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="numeroFactura">Número de Factura</Label>
                 <Input
                   id="numeroFactura"
-                  value={numeroFactura}
-                  onChange={(e) => setNumeroFactura(e.target.value)}
+                  name="numeroFactura"
+                  value={formData.numeroFactura || ""}
+                  onChange={handleInputChange}
+                  placeholder="Ej: F-2025-001"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="clienteProveedor">
-                {activeTab === "emitidas" ? "Cliente" : "Proveedor"}
-              </Label>
-              <Input
-                id="clienteProveedor"
-                value={clienteProveedor}
-                onChange={(e) => setClienteProveedor(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="concepto">Concepto</Label>
-              <Input
-                id="concepto"
-                value={concepto}
-                onChange={(e) => setConcepto(e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
+              
               <div className="space-y-2">
-                <Label htmlFor="baseImponible">Base Imponible</Label>
+                <Label htmlFor="clienteProveedor">Cliente/Proveedor</Label>
+                <Input
+                  id="clienteProveedor"
+                  name="clienteProveedor"
+                  value={formData.clienteProveedor || ""}
+                  onChange={handleInputChange}
+                  placeholder="Nombre del cliente o proveedor"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="concepto">Concepto</Label>
+                <Input
+                  id="concepto"
+                  name="concepto"
+                  value={formData.concepto || ""}
+                  onChange={handleInputChange}
+                  placeholder="Descripción breve"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="baseImponible">Base Imponible (€)</Label>
                 <Input
                   id="baseImponible"
-                  value={baseImponible}
-                  onChange={(e) => setBaseImponible(e.target.value)}
+                  name="baseImponible"
+                  value={formData.baseImponible || ""}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  type="number"
+                  step="0.01"
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="ivaPorcentaje">% IVA</Label>
-                <Select 
-                  value={ivaPorcentaje} 
-                  onValueChange={setIvaPorcentaje}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona IVA" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0%</SelectItem>
-                    <SelectItem value="4">4%</SelectItem>
-                    <SelectItem value="10">10%</SelectItem>
-                    <SelectItem value="21">21%</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="ivaPorcentaje">IVA %</Label>
+                <Input
+                  id="ivaPorcentaje"
+                  name="ivaPorcentaje"
+                  value={formData.ivaPorcentaje || ""}
+                  onChange={handleInputChange}
+                  placeholder="21%"
+                />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="cuotaIva">Cuota IVA</Label>
+                <Label htmlFor="cuotaIva">Cuota IVA (€)</Label>
                 <Input
                   id="cuotaIva"
-                  value={cuotaIva}
-                  readOnly
+                  name="cuotaIva"
+                  value={formData.cuotaIva || ""}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  type="number"
+                  step="0.01"
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="totalFactura">Total Factura (€)</Label>
+                <Input
+                  id="totalFactura"
+                  name="totalFactura"
+                  value={formData.totalFactura || ""}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  type="number"
+                  step="0.01"
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                {editingRegistro && (
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancelar
+                  </Button>
+                )}
+                <Button type="submit" disabled={createRegistro.isPending || updateRegistro.isPending}>
+                  {createRegistro.isPending || updateRegistro.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  {editingRegistro ? "Actualizar" : "Guardar"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        
+        {/* Tabla de registros */}
+        <Card className="lg:col-span-2 border border-gray-200 bg-white/70 backdrop-blur-sm shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-t-lg">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl font-semibold">Registros</CardTitle>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="totalFactura">Total Factura</Label>
-              <Input
-                id="totalFactura"
-                value={totalFactura}
-                readOnly
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleSaveForm}
-              disabled={createMutation.isPending || updateMutation.isPending}
-            >
-              {(createMutation.isPending || updateMutation.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Guardar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardHeader>
+          <CardContent className="p-6">
+            {filteredRegistros?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Nº Factura</TableHead>
+                      <TableHead>Cliente/Proveedor</TableHead>
+                      <TableHead>Base Imp.</TableHead>
+                      <TableHead>IVA</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRegistros.map((registro: LibroRegistro) => (
+                      <TableRow key={registro.id}>
+                        <TableCell>
+                          {format(new Date(registro.fecha), "dd/MM/yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                            registro.tipo === "ingreso" 
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {registro.tipo.charAt(0).toUpperCase() + registro.tipo.slice(1)}
+                          </span>
+                        </TableCell>
+                        <TableCell>{registro.numeroFactura || "-"}</TableCell>
+                        <TableCell>{registro.clienteProveedor || "-"}</TableCell>
+                        <TableCell>{registro.baseImponible ? `${registro.baseImponible} €` : "-"}</TableCell>
+                        <TableCell>{registro.ivaPorcentaje || "-"}</TableCell>
+                        <TableCell>
+                          <span className={`font-medium ${
+                            registro.tipo === "ingreso" ? "text-green-600" : "text-red-600"
+                          }`}>
+                            {registro.totalFactura ? `${registro.totalFactura} €` : "-"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(registro)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(registro.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-10 text-gray-500">
+                No hay registros disponibles
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={openAlertDialog} onOpenChange={setOpenAlertDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el registro del libro.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
