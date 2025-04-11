@@ -639,7 +639,7 @@ export default function SimpleLibroRegistros() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {data?.quotes && data.quotes.length > 0 ? (
+              {filteredData?.quotes && filteredData.quotes.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="w-full">
                     <TableHeader>
@@ -652,7 +652,7 @@ export default function SimpleLibroRegistros() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.quotes.slice(0, 6).map((quote) => (
+                      {filteredData.quotes.slice(0, 6).map((quote) => (
                         <TableRow key={quote.id}>
                           <TableCell className="font-medium">{quote.number}</TableCell>
                           <TableCell>{formatDate(quote.issueDate)}</TableCell>
@@ -672,9 +672,9 @@ export default function SimpleLibroRegistros() {
                       ))}
                     </TableBody>
                   </Table>
-                  {data.quotes.length > 6 && (
+                  {filteredData.quotes.length > 6 && (
                     <div className="p-3 text-center text-sm text-gray-500">
-                      Mostrando 6 de {data.quotes.length} presupuestos
+                      Mostrando 6 de {filteredData.quotes.length} presupuestos
                     </div>
                   )}
                 </div>
@@ -697,7 +697,7 @@ export default function SimpleLibroRegistros() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {data?.transactions && data.transactions.length > 0 ? (
+              {filteredData?.transactions && filteredData.transactions.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="w-full">
                     <TableHeader>
@@ -710,7 +710,7 @@ export default function SimpleLibroRegistros() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.transactions.slice(0, 14).map((transaction) => (
+                      {filteredData.transactions.slice(0, 14).map((transaction) => (
                         <TableRow key={transaction.id}>
                           <TableCell>{formatDate(transaction.date)}</TableCell>
                           <TableCell className="font-medium truncate max-w-[150px]">{transaction.description}</TableCell>
@@ -730,9 +730,9 @@ export default function SimpleLibroRegistros() {
                       ))}
                     </TableBody>
                   </Table>
-                  {data.transactions.length > 14 && (
+                  {filteredData.transactions.length > 14 && (
                     <div className="p-3 text-center text-sm text-gray-500">
-                      Mostrando 14 de {data.transactions.length} transacciones
+                      Mostrando 14 de {filteredData.transactions.length} transacciones
                     </div>
                   )}
                 </div>
