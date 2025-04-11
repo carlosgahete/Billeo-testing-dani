@@ -3999,5 +3999,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================
+  // ENDPOINTS PÚBLICOS PARA PRUEBAS (SIN AUTENTICACIÓN)
+  // IMPORTANTE: Estos endpoints son solo para pruebas y desarrollo
+  // ============================================================
+  
+  // Endpoint público para obtener datos del libro de registros
+  app.get("/api/public/libro-registros/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Obtener todas las facturas del usuario (adaptado para evitar errores LSP)
+      const invoices = await db.select().from(invoicesTable).where(eq(invoicesTable.userId, userId));
+      
+      // Obtener todas las transacciones del usuario (adaptado para evitar errores LSP)
+      const transactions = await db.select().from(transactionsTable).where(eq(transactionsTable.userId, userId));
+      
+      // Obtener todos los presupuestos del usuario (adaptado para evitar errores LSP)
+      const quotes = await db.select().from(quotesTable).where(eq(quotesTable.userId, userId));
+      
+      // Crear respuesta con datos resumidos
+      const response = {
+        invoices: invoices.map(invoice => ({
+          id: invoice.id,
+          number: invoice.number,
+          issueDate: invoice.issueDate,
+          dueDate: invoice.dueDate,
+          client: invoice.clientName,
+          total: invoice.total,
+          status: invoice.status,
+          baseAmount: invoice.baseAmount,
+          vatAmount: invoice.vatAmount,
+          vatRate: invoice.vatRate
+        })),
+        transactions: transactions.map(transaction => ({
+          id: transaction.id,
+          date: transaction.date,
+          description: transaction.description,
+          amount: transaction.amount,
+          type: transaction.type,
+          category: transaction.category,
+          notes: transaction.notes
+        })),
+        quotes: quotes.map(quote => ({
+          id: quote.id,
+          number: quote.number,
+          issueDate: quote.issueDate,
+          expiryDate: quote.expiryDate,
+          clientName: quote.clientName,
+          total: quote.total,
+          status: quote.status
+        })),
+        summary: {
+          totalInvoices: invoices.length,
+          totalTransactions: transactions.length,
+          totalQuotes: quotes.length,
+          incomeTotal: invoices.reduce((sum, invoice) => sum + parseFloat(invoice.total.toString()), 0),
+          expenseTotal: transactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0)
+        }
+      };
+      
+      return res.status(200).json(response);
+    } catch (error) {
+      console.error("Error al obtener datos públicos del libro de registros:", error);
+      return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
   return httpServer;
 }
