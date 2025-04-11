@@ -206,8 +206,12 @@ const Sidebar = ({
   
   console.log("Final viewedUserId:", viewedUserId);
   
+  // Verificar si el usuario tiene rol de administrador
+  const userIsAdmin = user && user.role === 'admin';
+  console.log("Usuario tiene rol admin:", userIsAdmin);
+
   // Agregar elementos de administración si el usuario es administrador
-  const adminItems: NavItem[] = user?.role === 'admin' ? [
+  const adminItems: NavItem[] = userIsAdmin ? [
     { 
       href: "/admin/users", 
       icon: <Users size={20} />, 
@@ -223,6 +227,8 @@ const Sidebar = ({
       label: "Libro de Registros",
     }
   ] : [];
+  
+  console.log("Admin items:", adminItems);
   
   // Combinar todos los arrays
   const navigationItems: NavItem[] = [...baseNavigationItems, ...adminItems];
