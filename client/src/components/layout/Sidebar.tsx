@@ -236,13 +236,14 @@ const Sidebar = ({
     });
   }
   
-  // NOTA: Temporalmente mostramos el enlace para todos los usuarios hasta solucionar la autenticación
-  // Añadir siempre el enlace al libro de registros independientemente del rol, pero usando la versión simplificada
-  adminItems.push({
-    href: "/admin/libro-simple/1",  // Cambiado a ID 1 donde están los datos de demo
-    icon: <FileText size={20} />,
-    label: "Libro de Registros (Simple)",
-  });
+  // Solo mostramos el enlace al libro de registros para superadmin
+  if (userIsSuperAdmin) {
+    adminItems.push({
+      href: "/admin/libro-simple/1",  // Usa ID 1 donde están los datos de demo
+      icon: <FileText size={20} />,
+      label: "Libro de Registros (Simple)",
+    });
+  }
   
   console.log("Admin items:", adminItems);
   
