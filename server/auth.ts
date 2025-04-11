@@ -61,7 +61,17 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        // Comprobar si el usuario está iniciando sesión con correo electrónico
+        const isEmail = username.includes('@');
+        
+        // Buscar usuario según sea nombre de usuario o correo electrónico
+        let user;
+        if (isEmail) {
+          user = await storage.getUserByEmail(username);
+        } else {
+          user = await storage.getUserByUsername(username);
+        }
+        
         if (!user) {
           return done(null, false);
         }

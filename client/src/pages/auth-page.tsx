@@ -132,12 +132,12 @@ export default function AuthPage() {
               <form onSubmit={handleLoginSubmit} className="space-y-6">
                 <div>
                   <Label htmlFor="login-username" className="text-gray-700 font-medium text-sm block mb-2">
-                    Usuario
+                    Usuario o Email
                   </Label>
                   <Input
                     id="login-username"
                     name="username"
-                    placeholder="demo"
+                    placeholder="demo o usuario@ejemplo.com"
                     value={loginFormData.username}
                     onChange={handleLoginChange}
                     required
