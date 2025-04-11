@@ -120,8 +120,11 @@ const Sidebar = ({
     }
   };
 
+  // Definir el tipo de elemento de navegación
+  type NavItem = { href: string; icon: React.ReactNode; label: string };
+  
   // Crear items de navegación base
-  const baseNavigationItems = [
+  const baseNavigationItems: NavItem[] = [
     { 
       href: "/", 
       icon: <LayoutDashboard size={20} />, 
@@ -172,7 +175,7 @@ const Sidebar = ({
   // 4. /admin/users/123 - Ver cualquier página de usuario
   let viewedUserId = '';
   
-  if (isAdmin) {
+  try {
     // Extraer los componentes de la ruta
     const pathParts = currentPath.split('/').filter(part => part.length > 0);
     console.log("Path parts:", pathParts);
@@ -197,23 +200,21 @@ const Sidebar = ({
         console.log("Found user ID in admin/users path:", viewedUserId);
       }
     }
+  } catch (error) {
+    console.error("Error al procesar la URL:", error);
   }
   
   console.log("Final viewedUserId:", viewedUserId);
   
   // Agregar elementos de administración si el usuario es administrador
-  const adminItems = user?.role === 'admin' ? [
+  const adminItems: NavItem[] = user?.role === 'admin' ? [
     { 
       href: "/admin/users", 
       icon: <Users size={20} />, 
       label: "Gestión de Usuarios" 
-    }
-  ] : [];
-  
-  // Agregar elementos específicos para usuarios administrados
-  // Si somos administrador, añadimos un elemento para acceder al libro de registros
-  // Este siempre está presente, pero el link varía según si tenemos un ID de usuario o no
-  const adminUserItems = isAdmin ? [
+    },
+    // Añadimos el enlace al libro de registros directamente después de Gestión de Usuarios
+    // para que siempre esté visible para los administradores
     {
       href: viewedUserId 
         ? `/admin/libro-registros/${viewedUserId}` 
@@ -224,7 +225,7 @@ const Sidebar = ({
   ] : [];
   
   // Combinar todos los arrays
-  const navigationItems = [...baseNavigationItems, ...adminItems, ...adminUserItems];
+  const navigationItems: NavItem[] = [...baseNavigationItems, ...adminItems];
 
   // Desktop sidebar
   if (!isMobile) {
