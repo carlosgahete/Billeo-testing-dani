@@ -190,11 +190,11 @@ function Router() {
         )}
       </Route>
       
-      {/* Ruta simplificada del Libro de Registros que no usa ProtectedAdminRoute */}
+      {/* Ruta simplificada del Libro de Registros protegida SOLO para superadmins */}
       <Route path="/admin/libro-simple/:userId">
         {(params) => (
           <Layout>
-            <Route 
+            <ProtectedAdminRoute 
               path={`/admin/libro-simple/${params.userId}`} 
               component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
             />

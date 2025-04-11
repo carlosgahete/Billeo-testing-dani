@@ -52,12 +52,22 @@ interface Quote {
   status: string;
 }
 
+import { useAuth } from "@/hooks/use-auth";
+import { Redirect } from "wouter";
+
 export default function SimpleLibroRegistros() {
   const params = useParams<{ userId: string }>();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<LibroRegistrosData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const userId = params?.userId || '';
+  const { user } = useAuth();
+  
+  // Verificación adicional de seguridad: solo superadmin puede ver esto
+  // Esta es una protección redundante junto con la protección de ruta en App.tsx
+  if (!user || (user.role !== 'superadmin' && user.role !== 'SUPERADMIN')) {
+    return <Redirect to="/" />;
+  }
 
   useEffect(() => {
     const fetchData = async () => {
