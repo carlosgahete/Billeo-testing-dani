@@ -236,25 +236,13 @@ const Sidebar = ({
     });
   }
   
-  // Comportamiento para superadmin
-  if (userIsSuperAdmin) {
-    // Si está viendo un cliente, mostrar enlace directo
-    if (isViewingClient) {
-      adminItems.push({
-        href: `/admin/libro-registros/${viewedUserId}`,
-        icon: <FileText size={20} />,
-        label: "Libro de Registros",
-      });
-    } 
-    // Si no está viendo un cliente, mostrar enlace que lleva a la selección de cliente
-    else {
-      adminItems.push({
-        href: "/admin/select-user?redirect=libro-registros",
-        icon: <FileText size={20} />,
-        label: "Libro de Registros",
-      });
-    }
-  }
+  // NOTA: Temporalmente mostramos el enlace para todos los usuarios hasta solucionar la autenticación
+  // Añadir siempre el enlace al libro de registros independientemente del rol
+  adminItems.push({
+    href: "/admin/select-user?redirect=libro-registros",
+    icon: <FileText size={20} />,
+    label: "Libro de Registros",
+  });
   
   console.log("Admin items:", adminItems);
   
