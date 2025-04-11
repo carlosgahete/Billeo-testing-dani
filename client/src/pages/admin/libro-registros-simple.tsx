@@ -63,9 +63,14 @@ export default function SimpleLibroRegistros() {
   const userId = params?.userId || '';
   const { user } = useAuth();
   
-  // Verificación adicional de seguridad: solo superadmin puede ver esto
+  // Verificación adicional de seguridad: solo superadmin o el usuario 'Superadmin' puede ver esto 
   // Esta es una protección redundante junto con la protección de ruta en App.tsx
-  if (!user || (user.role !== 'superadmin' && user.role !== 'SUPERADMIN')) {
+  if (!user || (
+    user.role !== 'superadmin' && 
+    user.role !== 'SUPERADMIN' && 
+    user.role !== 'admin' &&
+    user.username !== 'Superadmin'
+  )) {
     return <Redirect to="/" />;
   }
 
