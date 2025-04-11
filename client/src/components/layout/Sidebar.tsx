@@ -240,14 +240,14 @@ const Sidebar = ({
   if (userIsSuperAdmin) {
     // Libro de Registros Simple
     adminItems.push({
-      href: "/admin/libro-registros-simple/1",  // ID 1 para datos de demo
+      href: "/admin/libro-simple/1",  // ID 1 para datos de demo
       icon: <FileText size={20} />,
       label: "Libro Registros (Simple)",
     });
     
     // Libro de Registros Enhanced
     adminItems.push({
-      href: "/admin/libro-registros-enhanced/1",  // ID 1 para datos de demo
+      href: "/admin/libro-enhanced/1",  // ID 1 para datos de demo
       icon: <BarChart3 size={20} />,
       label: "Libro Registros (Completo)",
     });
