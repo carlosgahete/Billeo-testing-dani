@@ -538,35 +538,58 @@ export default function SimpleLibroRegistros() {
       </div>
     `;
     
-    // Función para imprimir la ventana
-    const printWindow = window.open('', '_blank');
-    printWindow!.document.write(`
+    // En lugar de abrir una ventana de impresión, creamos un PDF para descargar
+    // Convertimos el HTML a Blob y lo descargamos
+    const htmlContent = `
       <html>
         <head>
           <title>Libro de Registros - Usuario ID: ${userId || 'Todos'}</title>
           <style>
-            @media print {
-              body { font-family: Arial, sans-serif; }
-              table { page-break-inside: auto; }
-              tr { page-break-inside: avoid; page-break-after: auto; }
-              thead { display: table-header-group; }
-            }
+            body { font-family: Arial, sans-serif; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            @page { size: auto; margin: 20mm; }
           </style>
         </head>
         <body>
           ${printableDiv.innerHTML}
         </body>
       </html>
-    `);
+    `;
     
-    printWindow!.document.close();
+    // Crear un Blob con el HTML
+    const blob = new Blob([htmlContent], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
     
-    // Esperamos a que el documento se cargue antes de imprimir
+    // Crear un enlace para descargar
+    const link = document.createElement('a');
+    
+    // Determinar nombre del archivo con período de tiempo
+    let fileName = `libro_registros_${userId || 'todos'}`;
+    if (selectedYear !== 'all') {
+      fileName += `_${selectedYear}`;
+      if (selectedQuarter !== 'all') {
+        fileName += `_T${selectedQuarter.replace('Q', '')}`;
+      } else if (selectedMonth !== 'all') {
+        fileName += `_mes${selectedMonth}`;
+      }
+    }
+    fileName += '.html'; // Usamos HTML que puede ser abierto y guardado como PDF
+    
+    link.href = url;
+    link.setAttribute('download', fileName);
+    link.setAttribute('target', '_blank');
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    // Limpieza
     setTimeout(() => {
-      printWindow!.print();
-      printWindow!.close();
+      document.body.removeChild(link);
       document.body.removeChild(printableDiv);
-    }, 500);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
   
   // Función para descargar como Excel con múltiples hojas (usando HTML)
@@ -849,16 +872,25 @@ export default function SimpleLibroRegistros() {
     `;
     
     // Crear un blob con el contenido HTML
-    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    // Usamos 'application/octet-stream' para forzar la descarga sin abrir
+    const blob = new Blob([html], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace y hacer clic para descargar
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', fileName);
+    // Añadimos target="_blank" para evitar que el navegador intente abrir el archivo
+    link.setAttribute('target', '_blank');
+    link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    
+    // Limpieza
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Liberar memoria
+    }, 100);
   };
 
   return (
