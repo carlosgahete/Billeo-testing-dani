@@ -26,7 +26,7 @@ import { setupAuth } from "./auth";
 import { sendInvoiceEmail, sendQuoteEmail } from "./services/emailService";
 import * as visionService from "./services/visionService";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, gte, lt, inArray } from "drizzle-orm";
 import { 
   insertUserSchema, 
   insertCompanySchema,

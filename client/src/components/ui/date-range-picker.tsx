@@ -1,5 +1,5 @@
 import * as React from "react";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -13,15 +13,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function DatePickerWithRange({
-  value,
-  onChange,
-  className,
-}: {
-  value: DateRange | undefined;
-  onChange: (date: DateRange | undefined) => void;
+interface DatePickerWithRangeProps {
   className?: string;
-}) {
+  date: DateRange;
+  onChange: (date: DateRange) => void;
+}
+
+export function DatePickerWithRange({
+  className,
+  date,
+  onChange,
+}: DatePickerWithRangeProps) {
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -31,21 +33,20 @@ export function DatePickerWithRange({
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !value && "text-muted-foreground"
+              !date && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {value?.from ? (
-              value.to ? (
+            {date?.from ? (
+              date.to ? (
                 <>
-                  {format(value.from, "dd/MM/yyyy", { locale: es })} -{" "}
-                  {format(value.to, "dd/MM/yyyy", { locale: es })}
+                  {format(date.from, "dd/MM/yyyy", { locale: es })} - {format(date.to, "dd/MM/yyyy", { locale: es })}
                 </>
               ) : (
-                format(value.from, "dd/MM/yyyy", { locale: es })
+                format(date.from, "dd/MM/yyyy", { locale: es })
               )
             ) : (
-              <span>Selecciona un rango de fechas</span>
+              <span>Seleccionar rango de fechas</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -53,47 +54,12 @@ export function DatePickerWithRange({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={value?.from}
-            selected={value}
+            defaultMonth={date?.from}
+            selected={date}
             onSelect={onChange}
             numberOfMonths={2}
             locale={es}
           />
-          <div className="p-3 border-t border-border flex justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const today = new Date();
-                onChange({
-                  from: new Date(today.getFullYear(), today.getMonth(), 1),
-                  to: new Date(today.getFullYear(), today.getMonth() + 1, 0),
-                });
-              }}
-            >
-              Mes actual
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const today = new Date();
-                onChange({
-                  from: new Date(today.getFullYear(), 0, 1),
-                  to: new Date(today.getFullYear(), 11, 31),
-                });
-              }}
-            >
-              Año actual
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onChange(undefined)}
-            >
-              Limpiar
-            </Button>
-          </div>
         </PopoverContent>
       </Popover>
     </div>
