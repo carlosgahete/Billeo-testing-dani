@@ -212,15 +212,15 @@ export default function SimpleLibroRegistros() {
   
   // Función para cambiar de usuario
   const handleUserChange = (newUserId: string) => {
-    if (newUserId) {
-      // Redirige a la versión simple con el ID de usuario seleccionado
-      setLocation(`/admin/libro-registros-simple/${newUserId}`);
-    } else {
-      // Si se selecciona "Mis registros" (valor vacío), mostramos los datos del admin
+    if (newUserId === 'self') {
+      // Si se selecciona "Mis registros", mostramos los datos del admin (ID: 6)
       if (user && user.username === 'billeo_admin') {
         // Redirige a la versión simple con el ID del admin (6)
         setLocation(`/admin/libro-registros-simple/6`);
       }
+    } else if (newUserId) {
+      // Redirige a la versión simple con el ID de usuario seleccionado
+      setLocation(`/admin/libro-registros-simple/${newUserId}`);
     }
   };
 
@@ -244,7 +244,7 @@ export default function SimpleLibroRegistros() {
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-gray-500" />
               <Select 
-                value={userId || ''} 
+                value={userId === '6' && user?.username === 'billeo_admin' ? 'self' : userId || ''} 
                 onValueChange={handleUserChange}
                 disabled={loadingUsers}
               >
@@ -254,7 +254,7 @@ export default function SimpleLibroRegistros() {
                 <SelectContent>
                   {/* Opción para ver datos propios del admin */}
                   {user.username === 'billeo_admin' && (
-                    <SelectItem value="">
+                    <SelectItem value="self">
                       Mis registros ({user.username})
                     </SelectItem>
                   )}
