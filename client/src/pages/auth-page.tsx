@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
