@@ -34,6 +34,7 @@ import CategoriesPage from "@/pages/settings/categories";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
+import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
@@ -176,6 +177,11 @@ function Router() {
       </Route>
       <Route path="/admin/select-user">
         <ProtectedAdminRoute path="/admin/select-user" component={SelectUserPage} />
+      </Route>
+      <Route path="/admin/libro-registros/:clienteId">
+        {(params) => (
+          <ProtectedAdminRoute path={`/admin/libro-registros/${params.clienteId}`} component={LibroRegistrosPage} />
+        )}
       </Route>
       <Route path="/profile">
         <Layout>
