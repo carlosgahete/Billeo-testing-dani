@@ -67,6 +67,10 @@ export default function SelectUser() {
     }
   };
 
+  // Extraer parámetros de URL para redirección
+  const params = new URLSearchParams(window.location.search);
+  const redirectTarget = params.get('redirect');
+
   const handleLoginAsUser = async (userId: number) => {
     try {
       setLoading(true);
@@ -82,7 +86,13 @@ export default function SelectUser() {
         // Actualizar el usuario en la caché de react-query
         queryClient.setQueryData(["/api/user"], data.user);
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        navigate("/");
+        
+        // Redireccionar según el parámetro
+        if (redirectTarget === 'libro-registros') {
+          navigate(`/admin/libro-registros/${userId}`);
+        } else {
+          navigate("/");
+        }
       } else {
         const errorData = await response.json();
         toast({
@@ -122,7 +132,11 @@ export default function SelectUser() {
           <div className="text-center mb-6">
             <img src={billeoLogo} alt="Billeo Logo" className="h-12 mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Seleccione el usuario</h1>
-            <p className="text-neutral-500">Elija la cuenta a la que desea acceder</p>
+            {redirectTarget === 'libro-registros' ? (
+              <p className="text-neutral-500">Elija el usuario para ver su libro de registros</p>
+            ) : (
+              <p className="text-neutral-500">Elija la cuenta a la que desea acceder</p>
+            )}
           </div>
 
           <div className="relative mb-6">

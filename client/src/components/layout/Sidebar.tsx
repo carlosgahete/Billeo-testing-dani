@@ -158,30 +158,48 @@ const Sidebar = ({
   // Detectar si estamos viendo un usuario específico como administrador
   const currentPath = location;
   
+  console.log("Current path:", currentPath);
+  
   // Nos aseguramos de que tengamos un usuario identificado y que sea administrador
   const isAdmin = user?.role === 'admin';
+  console.log("Is admin:", isAdmin);
   
   // Verificar si la URL contiene un patrón que indique que estamos viendo un usuario específico
-  // Dos patrones comunes:
+  // Patrones posibles:
   // 1. /admin/users/view/123 - Ver detalles de usuario
   // 2. /dashboard/123 - Ver dashboard de un usuario específico
+  // 3. /admin/user/123 - Ver cualquier página de usuario
+  // 4. /admin/users/123 - Ver cualquier página de usuario
   let viewedUserId = '';
   
-  // Buscar cualquier patrón de URL que pueda contener un ID de usuario
   if (isAdmin) {
-    const pathParts = currentPath.split('/');
-    const userId = pathParts[pathParts.length - 1];
+    // Extraer los componentes de la ruta
+    const pathParts = currentPath.split('/').filter(part => part.length > 0);
+    console.log("Path parts:", pathParts);
     
-    // Verificar si el último segmento de la URL es un número (potencialmente un ID)
-    if (/^\d+$/.test(userId)) {
-      viewedUserId = userId;
+    // Buscar cualquier segmento de la URL que sea un número (potencial ID de usuario)
+    for (let i = 0; i < pathParts.length; i++) {
+      if (/^\d+$/.test(pathParts[i])) {
+        viewedUserId = pathParts[i];
+        console.log("Found numeric ID in URL:", viewedUserId);
+        break;
+      }
     }
     
-    // Caso especial para /dashboard/{userId} cuando es admin
-    if (pathParts.length >= 3 && pathParts[1] === 'dashboard' && /^\d+$/.test(pathParts[2])) {
-      viewedUserId = pathParts[2];
+    // También detectamos patrones específicos de administración de usuarios
+    if (pathParts.length >= 2 && 
+        (pathParts[0] === 'admin' || pathParts[0] === 'a') && 
+        pathParts.includes('users')) {
+      // Si estamos en cualquier ruta admin que contenga "users"
+      const lastPart = pathParts[pathParts.length - 1];
+      if (/^\d+$/.test(lastPart)) {
+        viewedUserId = lastPart;
+        console.log("Found user ID in admin/users path:", viewedUserId);
+      }
     }
   }
+  
+  console.log("Final viewedUserId:", viewedUserId);
   
   // Agregar elementos de administración si el usuario es administrador
   const adminItems = user?.role === 'admin' ? [
@@ -193,11 +211,15 @@ const Sidebar = ({
   ] : [];
   
   // Agregar elementos específicos para usuarios administrados
-  const adminUserItems = (user?.role === 'admin' && viewedUserId) ? [
+  // Si somos administrador, añadimos un elemento para acceder al libro de registros
+  // Este siempre está presente, pero el link varía según si tenemos un ID de usuario o no
+  const adminUserItems = isAdmin ? [
     {
-      href: `/admin/libro-registros/${viewedUserId}`,
+      href: viewedUserId 
+        ? `/admin/libro-registros/${viewedUserId}` 
+        : "/admin/select-user?redirect=libro-registros",
       icon: <FileText size={20} />,
-      label: "Libro de Registros"
+      label: "Libro de Registros",
     }
   ] : [];
   
