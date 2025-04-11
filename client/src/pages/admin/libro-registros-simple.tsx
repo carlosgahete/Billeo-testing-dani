@@ -569,63 +569,11 @@ export default function SimpleLibroRegistros() {
     }, 500);
   };
   
-  // Función para descargar como Excel
+  // Función para descargar como Excel con múltiples hojas (usando HTML)
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
-    // Crear datos para el CSV
-    const invoiceRows = filteredData.invoices.map(invoice => ({
-      'Tipo': 'Factura',
-      'Número': invoice.number,
-      'Fecha': formatDate(invoice.issueDate),
-      'Cliente/Proveedor': invoice.client,
-      'Base Imponible': invoice.baseAmount.toFixed(2),
-      'IVA': invoice.vatAmount.toFixed(2),
-      'Total': invoice.total.toFixed(2),
-      'Estado': invoice.status === 'paid' ? 'Pagada' : 
-               invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
-    }));
-    
-    const transactionRows = filteredData.transactions.map(transaction => ({
-      'Tipo': transaction.type === 'income' ? 'Ingreso' : 'Gasto',
-      'Número': '-',
-      'Fecha': formatDate(transaction.date),
-      'Cliente/Proveedor': transaction.description,
-      'Categoría': transaction.category || 'Sin categoría',
-      'Total': transaction.amount.toFixed(2),
-      'Estado': '-'
-    }));
-    
-    const quoteRows = filteredData.quotes.map(quote => ({
-      'Tipo': 'Presupuesto',
-      'Número': quote.number,
-      'Fecha': formatDate(quote.issueDate),
-      'Cliente/Proveedor': quote.clientName,
-      'Total': quote.total.toFixed(2),
-      'Estado': quote.status === 'accepted' ? 'Aceptado' : 
-               quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
-    }));
-    
-    // Combinar todos los datos
-    const allRows = [...invoiceRows, ...transactionRows, ...quoteRows];
-    
-    // Convertir a CSV
-    const headers = Object.keys(allRows[0] || {}).join(',');
-    const csvRows = allRows.map(row => 
-      Object.values(row).map(value => 
-        typeof value === 'string' && value.includes(',') ? 
-        `"${value}"` : value
-      ).join(',')
-    );
-    
-    const csvContent = [headers, ...csvRows].join('\n');
-    
-    // Crear y descargar el archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    
-    // Determinar nombre del archivo con período de tiempo
+    // Nombre del archivo
     let fileName = `libro_registros_${userId || 'todos'}`;
     if (selectedYear !== 'all') {
       fileName += `_${selectedYear}`;
@@ -635,8 +583,277 @@ export default function SimpleLibroRegistros() {
         fileName += `_mes${selectedMonth}`;
       }
     }
-    fileName += '.csv';
+    fileName += '.xls'; // Extensión .xls para que Excel lo reconozca
     
+    // Generar datos para facturas
+    const invoicesData = filteredData.invoices.map(invoice => ({
+      'Número': invoice.number,
+      'Fecha_Emisión': formatDate(invoice.issueDate),
+      'Fecha_Vencimiento': formatDate(invoice.dueDate || invoice.issueDate),
+      'Cliente': invoice.client,
+      'Base_Imponible': invoice.baseAmount.toFixed(2),
+      'IVA': invoice.vatAmount.toFixed(2),
+      'Total': invoice.total.toFixed(2),
+      'Tipo_IVA': `${invoice.vatRate || 21}%`,
+      'Estado': invoice.status === 'paid' ? 'Pagada' : 
+               invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+    }));
+    
+    // Generar datos para ingresos
+    const incomesData = filteredData.transactions.filter(t => t.type === 'income').map(income => ({
+      'Fecha': formatDate(income.date),
+      'Descripción': income.description,
+      'Categoría': income.category || 'Sin categoría',
+      'Importe': income.amount.toFixed(2),
+      'Notas': income.notes || ''
+    }));
+    
+    // Generar datos para gastos
+    const expensesData = filteredData.transactions.filter(t => t.type === 'expense').map(expense => ({
+      'Fecha': formatDate(expense.date),
+      'Descripción': expense.description,
+      'Categoría': expense.category || 'Sin categoría',
+      'Importe': expense.amount.toFixed(2),
+      'Notas': expense.notes || ''
+    }));
+    
+    // Generar datos para presupuestos
+    const quotesData = filteredData.quotes.map(quote => ({
+      'Número': quote.number,
+      'Fecha_Emisión': formatDate(quote.issueDate),
+      'Fecha_Expiración': formatDate(quote.expiryDate || quote.issueDate),
+      'Cliente': quote.clientName,
+      'Total': quote.total.toFixed(2),
+      'Estado': quote.status === 'accepted' ? 'Aceptado' : 
+               quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
+    }));
+    
+    // Datos del resumen
+    const summaryData = [{
+      'Periodo': selectedYear !== 'all' ? 
+                (selectedQuarter !== 'all' ? `${selectedYear} - T${selectedQuarter.replace('Q', '')}` :
+                 selectedMonth !== 'all' ? `${selectedYear} - ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}` :
+                 selectedYear) : 'Todos',
+      'Total_Facturas': filteredData.summary.totalInvoices,
+      'Importe_Facturado': filteredData.summary.incomeTotal.toFixed(2),
+      'Total_Gastos': filteredData.summary.totalTransactions,
+      'Importe_Gastos': filteredData.summary.expenseTotal.toFixed(2),
+      'Total_Presupuestos': filteredData.summary.totalQuotes,
+      'Balance': (filteredData.summary.incomeTotal - filteredData.summary.expenseTotal).toFixed(2)
+    }];
+    
+    // Función para crear una tabla HTML a partir de datos
+    const createTable = (data: Record<string, any>[], title: string) => {
+      if (!data || data.length === 0) {
+        return `<h3>${title}</h3><p>No hay datos disponibles</p>`;
+      }
+      
+      const headers = Object.keys(data[0]);
+      
+      let table = `
+        <h3 style="margin-top: 20px; color: #333;">${title}</h3>
+        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr style="background-color: #f2f2f2; font-weight: bold;">
+            ${headers.map(header => `<th>${header.replace(/_/g, ' ')}</th>`).join('')}
+          </tr>
+          ${data.map((row: Record<string, any>) => `
+            <tr>
+              ${headers.map(header => {
+                const value = row[header];
+                // Formatear como moneda si es un número y contiene palabras clave financieras
+                if (!isNaN(Number(value)) && 
+                    (header.includes('Total') || 
+                     header.includes('Importe') || 
+                     header.includes('Base') || 
+                     header.includes('IVA'))) {
+                  return `<td align="right">${Number(value).toLocaleString('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  })}</td>`;
+                }
+                return `<td>${value}</td>`;
+              }).join('')}
+            </tr>
+          `).join('')}
+        </table>
+      `;
+      
+      return table;
+    };
+    
+    // Crear una hoja de estilo para el documento Excel
+    const style = `
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #2563eb; text-align: center; margin-bottom: 20px; }
+        h3 { color: #333; margin-top: 30px; margin-bottom: 10px; }
+        .sheet { display: none; }
+        .visible { display: block; }
+        .tab-buttons { margin-bottom: 20px; }
+        .tab-button {
+          padding: 8px 16px;
+          background-color: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px 4px 0 0;
+          cursor: pointer;
+          margin-right: 5px;
+        }
+        .tab-button.active {
+          background-color: #2563eb;
+          color: white;
+          border-color: #2563eb;
+        }
+        .info-header {
+          background-color: #f9f9f9;
+          padding: 10px;
+          border-radius: 5px;
+          margin-bottom: 20px;
+          border: 1px solid #ddd;
+        }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background-color: #f2f2f2; text-align: left; padding: 8px; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+      </style>
+    `;
+    
+    // Lógica para cambiar entre pestañas (para vista previa)
+    const script = `
+      <script>
+        function showSheet(sheetId) {
+          // Ocultar todas las hojas
+          var sheets = document.getElementsByClassName('sheet');
+          for (var i = 0; i < sheets.length; i++) {
+            sheets[i].classList.remove('visible');
+          }
+          
+          // Mostrar la hoja seleccionada
+          document.getElementById(sheetId).classList.add('visible');
+          
+          // Actualizar botones activos
+          var buttons = document.getElementsByClassName('tab-button');
+          for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
+          }
+          
+          document.getElementById('btn-' + sheetId).classList.add('active');
+        }
+      </script>
+    `;
+    
+    // Crear contenido HTML para el archivo Excel
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+            xmlns:x="urn:schemas-microsoft-com:office:excel" 
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="ProgId" content="Excel.Sheet">
+        <meta name="Generator" content="Microsoft Excel 15">
+        <title>Libro de Registros</title>
+        ${style}
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Resumen</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+              <x:ExcelWorksheet>
+                <x:Name>Facturas</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+              <x:ExcelWorksheet>
+                <x:Name>Ingresos</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+              <x:ExcelWorksheet>
+                <x:Name>Gastos</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+              <x:ExcelWorksheet>
+                <x:Name>Presupuestos</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+      </head>
+      <body>
+        <h1>Libro de Registros - Usuario ID: ${userId || 'Todos'}</h1>
+        
+        <div class="info-header">
+          <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+          <p><strong>Filtros aplicados:</strong> 
+            Año: ${selectedYear !== 'all' ? selectedYear : 'Todos'}, 
+            Trimestre: ${selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos'}, 
+            Mes: ${selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'}
+          </p>
+        </div>
+        
+        <!-- Botones para cambiar entre hojas (solo para vista previa) -->
+        <div class="tab-buttons">
+          <button id="btn-resumen" class="tab-button active" onclick="showSheet('resumen')">Resumen</button>
+          <button id="btn-facturas" class="tab-button" onclick="showSheet('facturas')">Facturas</button>
+          <button id="btn-ingresos" class="tab-button" onclick="showSheet('ingresos')">Ingresos</button>
+          <button id="btn-gastos" class="tab-button" onclick="showSheet('gastos')">Gastos</button>
+          <button id="btn-presupuestos" class="tab-button" onclick="showSheet('presupuestos')">Presupuestos</button>
+        </div>
+        
+        <!-- Hoja de Resumen -->
+        <div id="resumen" class="sheet visible">
+          ${createTable(summaryData, "Resumen General")}
+          <p style="margin-top: 30px; color: #666;">* Este informe contiene datos resumidos. Consulta las demás pestañas para ver información detallada.</p>
+        </div>
+        
+        <!-- Hoja de Facturas -->
+        <div id="facturas" class="sheet">
+          ${createTable(invoicesData, "Facturas Emitidas")}
+        </div>
+        
+        <!-- Hoja de Ingresos -->
+        <div id="ingresos" class="sheet">
+          ${createTable(incomesData, "Ingresos")}
+        </div>
+        
+        <!-- Hoja de Gastos -->
+        <div id="gastos" class="sheet">
+          ${createTable(expensesData, "Gastos")}
+        </div>
+        
+        <!-- Hoja de Presupuestos -->
+        <div id="presupuestos" class="sheet">
+          ${createTable(quotesData, "Presupuestos")}
+        </div>
+        
+        ${script}
+        
+        <p style="text-align: center; margin-top: 40px; color: #999; font-size: 12px;">
+          Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos<br>
+          ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}
+        </p>
+      </body>
+      </html>
+    `;
+    
+    // Crear un blob con el contenido HTML
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    
+    // Crear un enlace y hacer clic para descargar
+    const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', fileName);
     document.body.appendChild(link);
