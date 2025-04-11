@@ -604,10 +604,10 @@ export class DatabaseStorage implements IStorage {
   
   async loginAsUser(adminId: number, userId: number): Promise<{success: boolean, log?: any}> {
     try {
-      // Verificar que el usuario que solicita sea admin
+      // Verificar que el usuario que solicita sea admin o superadmin
       const admin = await this.getUser(adminId);
-      if (!admin || admin.role !== 'admin') {
-        return { success: false, log: { error: 'No autorizado. Se requiere privilegios de administrador.' } };
+      if (!admin || (admin.role !== 'admin' && admin.role !== 'superadmin' && admin.role !== 'SUPERADMIN')) {
+        return { success: false, log: { error: 'No autorizado. Se requiere privilegios de administrador o superadministrador.' } };
       }
       
       // Verificar que el usuario objetivo existe

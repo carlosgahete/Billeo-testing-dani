@@ -447,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Middleware para verificar si el usuario es administrador
+  // Middleware para verificar si el usuario es administrador o superadmin
   const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.isAuthenticated() || !req.user) {
@@ -455,8 +455,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = req.user as any;
-      if (user.role !== 'admin') {
-        return res.status(403).json({ message: "No autorizado. Se requiere rol de administrador." });
+      if (user.role !== 'admin' && user.role !== 'superadmin' && user.role !== 'SUPERADMIN') {
+        return res.status(403).json({ message: "No autorizado. Se requiere rol de administrador o superadministrador." });
       }
       
       next();
