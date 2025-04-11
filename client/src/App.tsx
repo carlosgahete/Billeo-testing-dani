@@ -35,6 +35,7 @@ import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
 import LibroRegistrosPage from "@/pages/admin/libro-registros";
+import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
@@ -184,6 +185,18 @@ function Router() {
             <ProtectedAdminRoute 
               path={`/admin/libro-registros/${params.userId}`} 
               component={(props: any) => <LibroRegistrosPage params={{userId: params.userId}} {...props} />} 
+            />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Ruta simplificada del Libro de Registros que no usa ProtectedAdminRoute */}
+      <Route path="/admin/libro-simple/:userId">
+        {(params) => (
+          <Layout>
+            <Route 
+              path={`/admin/libro-simple/${params.userId}`} 
+              component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
             />
           </Layout>
         )}

@@ -237,11 +237,11 @@ const Sidebar = ({
   }
   
   // NOTA: Temporalmente mostramos el enlace para todos los usuarios hasta solucionar la autenticación
-  // Añadir siempre el enlace al libro de registros independientemente del rol
+  // Añadir siempre el enlace al libro de registros independientemente del rol, pero usando la versión simplificada
   adminItems.push({
-    href: "/admin/select-user?redirect=libro-registros",
+    href: "/admin/libro-simple/2",  // ID de usuario fijo para pruebas
     icon: <FileText size={20} />,
-    label: "Libro de Registros",
+    label: "Libro de Registros (Simple)",
   });
   
   console.log("Admin items:", adminItems);
