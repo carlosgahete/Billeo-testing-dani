@@ -192,12 +192,24 @@ function Router() {
         )}
       </Route>
       
-      {/* Ruta simplificada del Libro de Registros protegida SOLO para superadmins */}
+      {/* Ruta simplificada del Libro de Registros protegida SOLO para superadmins (OBSOLETA) */}
       <Route path="/admin/libro-simple/:userId">
         {(params) => (
           <Layout>
             <ProtectedAdminRoute 
               path={`/admin/libro-simple/${params.userId}`} 
+              component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
+            />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Nueva ruta corregida del Libro de Registros Simple */}
+      <Route path="/admin/libro-registros-simple/:userId">
+        {(params) => (
+          <Layout>
+            <ProtectedAdminRoute 
+              path={`/admin/libro-registros-simple/${params.userId}`} 
               component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
             />
           </Layout>

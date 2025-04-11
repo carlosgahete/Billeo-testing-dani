@@ -29,7 +29,8 @@ export default function AuthPage() {
         // Si es billeo_admin o tiene rol de admin, redirigir a página de administración
         if (user.role === 'admin' || user.role === 'superadmin' || 
             user.username === 'Superadmin' || user.username === 'billeo_admin') {
-          navigate("/admin/libro-simple/1");
+          // Redirección actualizada a la ruta correcta
+          navigate("/admin/libro-registros-simple/1");
         } else {
           navigate("/");
         }

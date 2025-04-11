@@ -213,11 +213,13 @@ export default function SimpleLibroRegistros() {
   // Función para cambiar de usuario
   const handleUserChange = (newUserId: string) => {
     if (newUserId) {
-      setLocation(`/admin/libro-registros/${newUserId}`);
+      // Redirige a la versión simple con el ID de usuario seleccionado
+      setLocation(`/admin/libro-registros-simple/${newUserId}`);
     } else {
-      // Si se selecciona "Seleccionar usuario" (valor vacío), mostramos los datos del admin
+      // Si se selecciona "Mis registros" (valor vacío), mostramos los datos del admin
       if (user && user.username === 'billeo_admin') {
-        setLocation(`/admin/libro-registros`);
+        // Redirige a la versión simple con el ID del admin (6)
+        setLocation(`/admin/libro-registros-simple/6`);
       }
     }
   };
