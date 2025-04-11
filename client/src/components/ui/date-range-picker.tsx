@@ -13,22 +13,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-interface DatePickerWithRangeProps {
-  value: DateRange | undefined;
-  onChange: (date: DateRange | undefined) => void;
-  align?: "start" | "center" | "end";
-  className?: string;
-}
-
 export function DatePickerWithRange({
   value,
   onChange,
   className,
-  align = "start",
-  ...props
-}: DatePickerWithRangeProps) {
+}: {
+  value: DateRange | undefined;
+  onChange: (date: DateRange | undefined) => void;
+  className?: string;
+}) {
   return (
-    <div className={cn("grid gap-2", className)} {...props}>
+    <div className={cn("grid gap-2", className)}>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -43,18 +38,18 @@ export function DatePickerWithRange({
             {value?.from ? (
               value.to ? (
                 <>
-                  {format(value.from, "P", { locale: es })} -{" "}
-                  {format(value.to, "P", { locale: es })}
+                  {format(value.from, "dd/MM/yyyy", { locale: es })} -{" "}
+                  {format(value.to, "dd/MM/yyyy", { locale: es })}
                 </>
               ) : (
-                format(value.from, "P", { locale: es })
+                format(value.from, "dd/MM/yyyy", { locale: es })
               )
             ) : (
-              <span>Seleccionar fecha</span>
+              <span>Selecciona un rango de fechas</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align={align}>
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
@@ -64,6 +59,41 @@ export function DatePickerWithRange({
             numberOfMonths={2}
             locale={es}
           />
+          <div className="p-3 border-t border-border flex justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const today = new Date();
+                onChange({
+                  from: new Date(today.getFullYear(), today.getMonth(), 1),
+                  to: new Date(today.getFullYear(), today.getMonth() + 1, 0),
+                });
+              }}
+            >
+              Mes actual
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const today = new Date();
+                onChange({
+                  from: new Date(today.getFullYear(), 0, 1),
+                  to: new Date(today.getFullYear(), 11, 31),
+                });
+              }}
+            >
+              Año actual
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onChange(undefined)}
+            >
+              Limpiar
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
     </div>

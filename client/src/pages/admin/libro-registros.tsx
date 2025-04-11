@@ -55,7 +55,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange } from "../../components/ui/date-range-picker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -114,13 +114,16 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
         setLoading(true);
         
         // Cargar facturas
-        const invoicesResponse = await apiRequest<any[]>(`/api/invoices/user/${userId}`);
+        const invoicesRes = await apiRequest("GET", `/api/invoices/user/${userId}`);
+        const invoicesResponse = await invoicesRes.json();
         
         // Cargar transacciones
-        const transactionsResponse = await apiRequest<any[]>(`/api/transactions/user/${userId}`);
+        const transactionsRes = await apiRequest("GET", `/api/transactions/user/${userId}`);
+        const transactionsResponse = await transactionsRes.json();
         
         // Cargar presupuestos
-        const quotesResponse = await apiRequest<any[]>(`/api/quotes/user/${userId}`);
+        const quotesRes = await apiRequest("GET", `/api/quotes/user/${userId}`);
+        const quotesResponse = await quotesRes.json();
         
         // Convertir a formato unificado
         const allRecords: Record[] = [

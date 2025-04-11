@@ -157,15 +157,29 @@ const Sidebar = ({
   
   // Detectar si estamos viendo un usuario específico como administrador
   const currentPath = location;
-  const isViewingSpecificUser = currentPath.startsWith('/admin/') && currentPath !== '/admin/users' && currentPath !== '/admin/select-user';
   
-  // Extraer el ID del usuario si estamos viendo un usuario específico
+  // Nos aseguramos de que tengamos un usuario identificado y que sea administrador
+  const isAdmin = user?.role === 'admin';
+  
+  // Verificar si la URL contiene un patrón que indique que estamos viendo un usuario específico
+  // Dos patrones comunes:
+  // 1. /admin/users/view/123 - Ver detalles de usuario
+  // 2. /dashboard/123 - Ver dashboard de un usuario específico
   let viewedUserId = '';
-  if (isViewingSpecificUser) {
-    // Intentar extraer el ID del usuario de la URL
+  
+  // Buscar cualquier patrón de URL que pueda contener un ID de usuario
+  if (isAdmin) {
     const pathParts = currentPath.split('/');
-    if (pathParts.length > 2) {
-      viewedUserId = pathParts[pathParts.length - 1];
+    const userId = pathParts[pathParts.length - 1];
+    
+    // Verificar si el último segmento de la URL es un número (potencialmente un ID)
+    if (/^\d+$/.test(userId)) {
+      viewedUserId = userId;
+    }
+    
+    // Caso especial para /dashboard/{userId} cuando es admin
+    if (pathParts.length >= 3 && pathParts[1] === 'dashboard' && /^\d+$/.test(pathParts[2])) {
+      viewedUserId = pathParts[2];
     }
   }
   
