@@ -236,14 +236,13 @@ const Sidebar = ({
     });
   }
   
-  // Añadimos varios enlaces al Libro de Registros para superadmin
-  if (userIsSuperAdmin) {
-    // Selector principal de Libro de Registros
-    adminItems.push({
-      href: "/libro-registros",
-      icon: <FileText size={20} />,
-      label: "Libro de Registros",
-    });
+  // Añadimos enlaces al Libro de Registros para todos (temporalmente para pruebas)
+  // Selector principal de Libro de Registros
+  adminItems.push({
+    href: "/libro-registros",
+    icon: <FileText size={20} />,
+    label: "Libro de Registros",
+  });
     
     // Libro de Registros Simple
     adminItems.push({
@@ -265,7 +264,6 @@ const Sidebar = ({
       icon: <PieChart size={20} />,
       label: "Libro Registros (Original)",
     });
-  }
   
   console.log("Admin items:", adminItems);
   
