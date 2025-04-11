@@ -20,8 +20,6 @@ import {
   InsertTransaction,
   Task,
   InsertTask,
-  LibroRegistro,
-  InsertLibroRegistro,
   users,
   companies,
   clients,
@@ -33,7 +31,6 @@ import {
   transactions,
   tasks,
   dashboardPreferences,
-  libroRegistros,
   DashboardPreferences,
   InsertDashboardPreferences,
   DashboardBlock
@@ -67,13 +64,6 @@ export interface IStorage {
   // Dashboard preferences operations
   getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
   saveDashboardPreferences(userId: number, layout: { blocks: any[] }): Promise<DashboardPreferences>;
-  
-  // Libro de Registros operations
-  getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]>;
-  getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]>;
-  createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro>;
-  updateLibroRegistro(id: number, registro: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined>;
-  deleteLibroRegistro(id: number): Promise<boolean>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -966,62 +956,6 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(tasks).where(eq(tasks.id, id)).returning();
     return result.length > 0;
   }
-
-  // Implementación de los métodos de Libro de Registros
-  async getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]> {
-    return await db.select().from(libroRegistros).where(eq(libroRegistros.clienteId, clienteId)).orderBy(desc(libroRegistros.fecha));
-  }
-
-  async getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]> {
-    return await db.select()
-      .from(libroRegistros)
-      .where(eq(libroRegistros.clienteId, clienteId))
-      .where(eq(libroRegistros.tipo, tipo))
-      .orderBy(desc(libroRegistros.fecha));
-  }
-
-  async createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro> {
-    // Formato adecuado para números decimales
-    const formattedRegistro = {
-      ...registro,
-      baseImponible: registro.baseImponible?.toString() || "0",
-      ivaPorcentaje: registro.ivaPorcentaje?.toString() || "0",
-      cuotaIva: registro.cuotaIva?.toString() || "0",
-      totalFactura: registro.totalFactura?.toString() || "0"
-    };
-    
-    const result = await db.insert(libroRegistros).values(formattedRegistro).returning();
-    return result[0];
-  }
-
-  async updateLibroRegistro(id: number, registro: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined> {
-    // Formato adecuado para números decimales
-    const formattedRegistro = { ...registro };
-    
-    if (typeof formattedRegistro.baseImponible === 'number') {
-      formattedRegistro.baseImponible = formattedRegistro.baseImponible.toString();
-    }
-    
-    if (typeof formattedRegistro.ivaPorcentaje === 'number') {
-      formattedRegistro.ivaPorcentaje = formattedRegistro.ivaPorcentaje.toString();
-    }
-    
-    if (typeof formattedRegistro.cuotaIva === 'number') {
-      formattedRegistro.cuotaIva = formattedRegistro.cuotaIva.toString();
-    }
-    
-    if (typeof formattedRegistro.totalFactura === 'number') {
-      formattedRegistro.totalFactura = formattedRegistro.totalFactura.toString();
-    }
-    
-    const result = await db.update(libroRegistros).set(formattedRegistro).where(eq(libroRegistros.id, id)).returning();
-    return result[0];
-  }
-
-  async deleteLibroRegistro(id: number): Promise<boolean> {
-    const result = await db.delete(libroRegistros).where(eq(libroRegistros.id, id)).returning();
-    return result.length > 0;
-  }
 }
 
 // Clase MemStorage para uso temporal, mantenerla para compatibilidad
@@ -1036,7 +970,6 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private transactions: Map<number, Transaction>;
   private tasks: Map<number, Task>;
-  private libroRegistros: Map<number, LibroRegistro>;
   public sessionStore: session.Store;
 
   private userIdCounter: number;
@@ -1049,7 +982,6 @@ export class MemStorage implements IStorage {
   private categoryIdCounter: number;
   private transactionIdCounter: number;
   private taskIdCounter: number;
-  private libroRegistroIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -1062,7 +994,6 @@ export class MemStorage implements IStorage {
     this.categories = new Map();
     this.transactions = new Map();
     this.tasks = new Map();
-    this.libroRegistros = new Map();
     
     // Usar MemoryStore para la sesión cuando se usa MemStorage
     const MemoryStore = require('memorystore')(session);
@@ -1080,7 +1011,6 @@ export class MemStorage implements IStorage {
     this.categoryIdCounter = 1;
     this.transactionIdCounter = 1;
     this.taskIdCounter = 1;
-    this.libroRegistroIdCounter = 1;
 
     // Initialize with default user for development
     this.createUser({
@@ -1551,48 +1481,6 @@ export class MemStorage implements IStorage {
 
   async deleteQuoteItem(id: number): Promise<boolean> {
     return this.quoteItems.delete(id);
-  }
-  
-  // Libro de Registros operations
-  async getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]> {
-    return Array.from(this.libroRegistros.values()).filter(
-      (registro) => registro.clienteId === clienteId
-    );
-  }
-  
-  async getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]> {
-    return Array.from(this.libroRegistros.values()).filter(
-      (registro) => registro.clienteId === clienteId && registro.tipo === tipo
-    );
-  }
-  
-  async createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro> {
-    const id = this.libroRegistroIdCounter++;
-    const newRegistro: LibroRegistro = { 
-      ...registro, 
-      id,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.libroRegistros.set(id, newRegistro);
-    return newRegistro;
-  }
-  
-  async updateLibroRegistro(id: number, registroData: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined> {
-    const registro = this.libroRegistros.get(id);
-    if (!registro) return undefined;
-
-    const updatedRegistro = { 
-      ...registro, 
-      ...registroData,
-      updatedAt: new Date() 
-    };
-    this.libroRegistros.set(id, updatedRegistro);
-    return updatedRegistro;
-  }
-  
-  async deleteLibroRegistro(id: number): Promise<boolean> {
-    return this.libroRegistros.delete(id);
   }
 }
 

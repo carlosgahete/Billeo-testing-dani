@@ -388,29 +388,3 @@ export const dashboardBlockSchema = z.object({
 export type DashboardBlock = z.infer<typeof dashboardBlockSchema>;
 export type InsertDashboardPreferences = z.infer<typeof insertDashboardPreferencesSchema>;
 export type DashboardPreferences = typeof dashboardPreferences.$inferSelect;
-
-// Libro de Registros (Record Book)
-export const libroRegistros = pgTable("libro_registros", {
-  id: serial("id").primaryKey(),
-  clienteId: integer("cliente_id").notNull(), // ID del cliente
-  tipo: text("tipo").notNull(), // 'ingreso', 'gasto', 'bien_inversion'
-  fecha: timestamp("fecha").notNull(),
-  numeroFactura: text("numero_factura"),
-  clienteProveedor: text("cliente_proveedor"),
-  concepto: text("concepto"),
-  baseImponible: decimal("base_imponible", { precision: 10, scale: 2 }),
-  ivaPorcentaje: decimal("iva_porcentaje", { precision: 5, scale: 2 }),
-  cuotaIva: decimal("cuota_iva", { precision: 10, scale: 2 }),
-  totalFactura: decimal("total_factura", { precision: 10, scale: 2 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const insertLibroRegistroSchema = createInsertSchema(libroRegistros).omit({ 
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export type InsertLibroRegistro = z.infer<typeof insertLibroRegistroSchema>;
-export type LibroRegistro = typeof libroRegistros.$inferSelect;
