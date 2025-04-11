@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, ShoppingCart, File } from "lucide-react";
+import { Loader2, FileText, ShoppingCart, File, Users } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface LibroRegistrosData {
   invoices: Invoice[];
@@ -55,31 +62,82 @@ interface Quote {
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
 
+interface UserOption {
+  id: number;
+  username: string;
+  name: string;
+}
+
 export default function SimpleLibroRegistros() {
   const params = useParams<{ userId: string }>();
+  const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<LibroRegistrosData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const userId = params?.userId || '';
   const { user } = useAuth();
   
-  // Verificación adicional de seguridad: solo superadmin o el usuario 'Superadmin' puede ver esto 
+  // Verificación adicional de seguridad: solo superadmin, admin o usuarios específicos pueden ver esto 
   // Esta es una protección redundante junto con la protección de ruta en App.tsx
   if (!user || (
     user.role !== 'superadmin' && 
     user.role !== 'SUPERADMIN' && 
     user.role !== 'admin' &&
-    user.username !== 'Superadmin'
+    user.username !== 'Superadmin' &&
+    user.username !== 'billeo_admin'
   )) {
     return <Redirect to="/" />;
   }
 
   useEffect(() => {
+    // Cargar la lista de usuarios solo si el usuario actual tiene permisos de admin
+    const fetchUsersList = async () => {
+      if (!user || !(user.role === 'admin' || user.role === 'superadmin' || user.username === 'billeo_admin')) {
+        return;
+      }
+      
+      try {
+        setLoadingUsers(true);
+        const response = await fetch('/api/admin/users');
+        
+        if (!response.ok) {
+          console.error('Error al cargar la lista de usuarios:', response.statusText);
+          return;
+        }
+        
+        const usersList = await response.json();
+        setUsers(usersList.map((u: any) => ({
+          id: u.id,
+          username: u.username,
+          name: u.name || u.username
+        })));
+      } catch (err) {
+        console.error('Error al cargar usuarios:', err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    
+    fetchUsersList();
+  }, [user]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Si el usuario es billeo_admin y no se especifica userId (o es vacío),
+        // usamos su propio ID para mostrar sus registros
+        let idToUse = userId;
+        
+        if (user && user.username === 'billeo_admin' && (!userId || userId === '')) {
+          idToUse = user.id.toString();
+          console.log("Usuario billeo_admin, usando su propio ID:", idToUse);
+        }
+        
         // La ruta debe coincidir con la API en el backend
-        const apiUrl = `/api/public/libro-registros/${userId}`;
+        const apiUrl = `/api/public/libro-registros/${idToUse}`;
         console.log("Consultando datos del Libro de Registros desde:", apiUrl);
         const response = await fetch(apiUrl);
         
@@ -97,13 +155,13 @@ export default function SimpleLibroRegistros() {
       }
     };
     
-    if (userId) {
+    if (userId || (user && user.username === 'billeo_admin')) {
       fetchData();
     } else {
       setLoading(false);
       setError("ID de usuario no proporcionado");
     }
-  }, [userId]);
+  }, [userId, user]);
 
   if (loading) {
     return (
@@ -151,6 +209,18 @@ export default function SimpleLibroRegistros() {
       minimumFractionDigits: 2
     }).format(amount);
   };
+  
+  // Función para cambiar de usuario
+  const handleUserChange = (newUserId: string) => {
+    if (newUserId) {
+      setLocation(`/admin/libro-registros/${newUserId}`);
+    } else {
+      // Si se selecciona "Seleccionar usuario" (valor vacío), mostramos los datos del admin
+      if (user && user.username === 'billeo_admin') {
+        setLocation(`/admin/libro-registros`);
+      }
+    }
+  };
 
   return (
     <div className="container mx-auto py-6 max-w-7xl">
@@ -158,7 +228,11 @@ export default function SimpleLibroRegistros() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Libro de Registros</h1>
           <p className="text-sm text-gray-500">
-            Visualizando registros del usuario ID: {userId || 'No seleccionado'}
+            Visualizando registros del usuario ID: {
+              user && user.username === 'billeo_admin' && (!userId || userId === '') 
+                ? user.id 
+                : (userId || 'No seleccionado')
+            }
           </p>
         </div>
       </div>
