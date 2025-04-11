@@ -26,8 +26,9 @@ export default function AuthPage() {
     if (user) {
       // Use a minimal timeout to improve UX and avoid flicker
       const timer = setTimeout(() => {
-        // Si es Superadmin o tiene rol de admin, redirigir a página de administración
-        if (user.role === 'admin' || user.role === 'superadmin' || user.username === 'Superadmin') {
+        // Si es billeo_admin o tiene rol de admin, redirigir a página de administración
+        if (user.role === 'admin' || user.role === 'superadmin' || 
+            user.username === 'Superadmin' || user.username === 'billeo_admin') {
           navigate("/admin/libro-simple/1");
         } else {
           navigate("/");
@@ -206,7 +207,7 @@ export default function AuthPage() {
                 
                 <div className="text-center text-xs text-gray-500 mt-6 bg-blue-50/80 py-3 px-2 rounded-lg border border-blue-100/50 shadow-sm">
                   Prueba con: <span className="font-medium">demo</span> / <span className="font-medium">demo</span>
-                  <br />O para acceso admin: <span className="font-medium">Superadmin</span> / <span className="font-medium">superadmin</span>
+                  <br />O para acceso admin: <span className="font-medium">billeo_admin</span> / <span className="font-medium">superadmin</span>
                 </div>
               </form>
             </div>

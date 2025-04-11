@@ -77,11 +77,12 @@ export function ProtectedAdminRoute({
   }
   
   // Si el usuario no es administrador o superadmin, redirigir al dashboard
-  // También permitimos al usuario "Superadmin" independientemente de su rol
+  // También permitimos a los usuarios "Superadmin" o "billeo_admin" independientemente de su rol
   if (user.role !== 'admin' && 
       user.role !== 'superadmin' && 
       user.role !== 'SUPERADMIN' && 
-      user.username !== 'Superadmin') {
+      user.username !== 'Superadmin' &&
+      user.username !== 'billeo_admin') {
     return (
       <Route path={path}>
         <Redirect to="/" />
