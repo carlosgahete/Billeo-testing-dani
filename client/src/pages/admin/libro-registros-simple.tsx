@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, ShoppingCart, File, Users } from "lucide-react";
+import { Loader2, FileText, ShoppingCart, File, Users, FileSpreadsheet } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface LibroRegistrosData {
   invoices: Invoice[];
@@ -76,6 +78,9 @@ export default function SimpleLibroRegistros() {
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const userId = params?.userId || '';
   const { user } = useAuth();
   
@@ -223,6 +228,152 @@ export default function SimpleLibroRegistros() {
       setLocation(`/admin/libro-registros-simple/${newUserId}`);
     }
   };
+  
+  // Funciones para manejar los cambios en los filtros
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    // Si cambia el año, reseteamos el trimestre y mes para evitar combinaciones inválidas
+    if (selectedQuarter !== "all" || selectedMonth !== "all") {
+      setSelectedQuarter("all");
+      setSelectedMonth("all");
+    }
+  };
+  
+  const handleQuarterChange = (quarter: string) => {
+    setSelectedQuarter(quarter);
+    // Si seleccionamos un trimestre, reseteamos el mes para evitar combinaciones extrañas
+    if (selectedMonth !== "all") {
+      setSelectedMonth("all");
+    }
+  };
+  
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
+    // Si seleccionamos un mes específico, reseteamos el trimestre
+    if (selectedQuarter !== "all") {
+      setSelectedQuarter("all");
+    }
+  };
+  
+  // Función para filtrar los datos basado en los filtros seleccionados
+  const getFilteredData = () => {
+    if (!data) return null;
+    
+    // Clonar el objeto de datos para no modificar el original
+    const filteredData = {...data};
+    
+    // Filtrado de facturas
+    filteredData.invoices = data.invoices.filter(invoice => {
+      const invoiceDate = new Date(invoice.issueDate);
+      const invoiceYear = invoiceDate.getFullYear().toString();
+      const invoiceMonth = (invoiceDate.getMonth() + 1).toString();
+      const invoiceQuarter = Math.ceil((invoiceDate.getMonth() + 1) / 3);
+      
+      // Filtrar por año
+      if (selectedYear !== "all" && invoiceYear !== selectedYear) {
+        return false;
+      }
+      
+      // Filtrar por trimestre si está seleccionado
+      if (selectedQuarter !== "all") {
+        const quarter = selectedQuarter.replace("Q", "");
+        if (invoiceQuarter.toString() !== quarter) {
+          return false;
+        }
+      }
+      
+      // Filtrar por mes si está seleccionado
+      if (selectedMonth !== "all" && invoiceMonth !== selectedMonth) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // Filtrado de transacciones
+    filteredData.transactions = data.transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      const transactionYear = transactionDate.getFullYear().toString();
+      const transactionMonth = (transactionDate.getMonth() + 1).toString();
+      const transactionQuarter = Math.ceil((transactionDate.getMonth() + 1) / 3);
+      
+      // Filtrar por año
+      if (selectedYear !== "all" && transactionYear !== selectedYear) {
+        return false;
+      }
+      
+      // Filtrar por trimestre si está seleccionado
+      if (selectedQuarter !== "all") {
+        const quarter = selectedQuarter.replace("Q", "");
+        if (transactionQuarter.toString() !== quarter) {
+          return false;
+        }
+      }
+      
+      // Filtrar por mes si está seleccionado
+      if (selectedMonth !== "all" && transactionMonth !== selectedMonth) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // Filtrado de presupuestos
+    filteredData.quotes = data.quotes.filter(quote => {
+      const quoteDate = new Date(quote.issueDate);
+      const quoteYear = quoteDate.getFullYear().toString();
+      const quoteMonth = (quoteDate.getMonth() + 1).toString();
+      const quoteQuarter = Math.ceil((quoteDate.getMonth() + 1) / 3);
+      
+      // Filtrar por año
+      if (selectedYear !== "all" && quoteYear !== selectedYear) {
+        return false;
+      }
+      
+      // Filtrar por trimestre si está seleccionado
+      if (selectedQuarter !== "all") {
+        const quarter = selectedQuarter.replace("Q", "");
+        if (quoteQuarter.toString() !== quarter) {
+          return false;
+        }
+      }
+      
+      // Filtrar por mes si está seleccionado
+      if (selectedMonth !== "all" && quoteMonth !== selectedMonth) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // Recalcular los totales en el resumen
+    filteredData.summary = {
+      totalInvoices: filteredData.invoices.length,
+      totalTransactions: filteredData.transactions.length,
+      totalQuotes: filteredData.quotes.length,
+      incomeTotal: filteredData.invoices.reduce((sum, invoice) => sum + invoice.total, 0),
+      expenseTotal: filteredData.transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0)
+    };
+    
+    return filteredData;
+  };
+  
+  // Obtener los datos filtrados
+  const filteredData = data ? getFilteredData() : null;
+  
+  // Función para descargar como PDF
+  const handleDownloadPDF = () => {
+    // Aquí iría la lógica para generar y descargar el PDF con jsPDF
+    alert("Descargando PDF con los datos filtrados. Esta funcionalidad se implementará próximamente.");
+  };
+  
+  // Función para descargar como Excel
+  const handleDownloadExcel = () => {
+    // Aquí iría la lógica para generar y descargar el Excel
+    alert("Descargando Excel con los datos filtrados. Esta funcionalidad se implementará próximamente.");
+  };
 
   return (
     <div className="container-fluid px-4 py-6 w-full max-w-full">
@@ -272,6 +423,88 @@ export default function SimpleLibroRegistros() {
         )}
       </div>
       
+      {/* Filtros y opciones de descarga */}
+      <div className="bg-white rounded-lg shadow mb-6 p-4 border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* Filtro por año */}
+          <div>
+            <Label htmlFor="year-filter" className="text-sm font-medium mb-1 block">Año</Label>
+            <Select value={selectedYear} onValueChange={handleYearChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar año" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2026">2026</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Filtro por trimestre */}
+          <div>
+            <Label htmlFor="quarter-filter" className="text-sm font-medium mb-1 block">Trimestre</Label>
+            <Select value={selectedQuarter} onValueChange={handleQuarterChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar trimestre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="Q1">1T (Ene, Feb, Mar)</SelectItem>
+                <SelectItem value="Q2">2T (Abr, May, Jun)</SelectItem>
+                <SelectItem value="Q3">3T (Jul, Ago, Sep)</SelectItem>
+                <SelectItem value="Q4">4T (Oct, Nov, Dic)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Filtro por mes */}
+          <div>
+            <Label htmlFor="month-filter" className="text-sm font-medium mb-1 block">Mes</Label>
+            <Select value={selectedMonth} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar mes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="1">Enero</SelectItem>
+                <SelectItem value="2">Febrero</SelectItem>
+                <SelectItem value="3">Marzo</SelectItem>
+                <SelectItem value="4">Abril</SelectItem>
+                <SelectItem value="5">Mayo</SelectItem>
+                <SelectItem value="6">Junio</SelectItem>
+                <SelectItem value="7">Julio</SelectItem>
+                <SelectItem value="8">Agosto</SelectItem>
+                <SelectItem value="9">Septiembre</SelectItem>
+                <SelectItem value="10">Octubre</SelectItem>
+                <SelectItem value="11">Noviembre</SelectItem>
+                <SelectItem value="12">Diciembre</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Botones de descarga */}
+          <div className="flex items-end space-x-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700"
+              onClick={handleDownloadPDF}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Descargar PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+              onClick={handleDownloadExcel}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Descargar Excel
+            </Button>
+          </div>
+        </div>
+      </div>
+      
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <Card>
@@ -282,9 +515,9 @@ export default function SimpleLibroRegistros() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold">{data?.summary.totalInvoices || 0}</p>
+            <p className="text-3xl font-bold">{filteredData?.summary.totalInvoices || 0}</p>
             <p className="text-sm text-gray-500 mt-1">Total emitidas</p>
-            <p className="text-lg font-semibold mt-2">{formatCurrency(data?.summary.incomeTotal || 0)}</p>
+            <p className="text-lg font-semibold mt-2">{formatCurrency(filteredData?.summary.incomeTotal || 0)}</p>
             <p className="text-xs text-gray-500">Importe total facturado</p>
           </CardContent>
         </Card>
@@ -297,9 +530,9 @@ export default function SimpleLibroRegistros() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold">{data?.summary.totalTransactions || 0}</p>
+            <p className="text-3xl font-bold">{filteredData?.summary.totalTransactions || 0}</p>
             <p className="text-sm text-gray-500 mt-1">Transacciones</p>
-            <p className="text-lg font-semibold mt-2">{formatCurrency(data?.summary.expenseTotal || 0)}</p>
+            <p className="text-lg font-semibold mt-2">{formatCurrency(filteredData?.summary.expenseTotal || 0)}</p>
             <p className="text-xs text-gray-500">Importe total gastado</p>
           </CardContent>
         </Card>
@@ -312,7 +545,7 @@ export default function SimpleLibroRegistros() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold">{data?.summary.totalQuotes || 0}</p>
+            <p className="text-3xl font-bold">{filteredData?.summary.totalQuotes || 0}</p>
             <p className="text-sm text-gray-500 mt-1">Total presupuestos</p>
           </CardContent>
         </Card>
@@ -326,7 +559,7 @@ export default function SimpleLibroRegistros() {
           </CardHeader>
           <CardContent className="pt-4">
             <p className="text-3xl font-bold">
-              {formatCurrency((data?.summary.incomeTotal || 0) - (data?.summary.expenseTotal || 0))}
+              {formatCurrency((filteredData?.summary.incomeTotal || 0) - (filteredData?.summary.expenseTotal || 0))}
             </p>
             <p className="text-sm text-gray-500 mt-1">Resultado</p>
           </CardContent>
@@ -346,7 +579,7 @@ export default function SimpleLibroRegistros() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {data?.invoices && data.invoices.length > 0 ? (
+              {filteredData?.invoices && filteredData.invoices.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="w-full">
                     <TableHeader>
@@ -361,7 +594,7 @@ export default function SimpleLibroRegistros() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.invoices.slice(0, 6).map((invoice) => (
+                      {filteredData.invoices.slice(0, 6).map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell className="font-medium">{invoice.number}</TableCell>
                           <TableCell>{formatDate(invoice.issueDate)}</TableCell>
@@ -383,9 +616,9 @@ export default function SimpleLibroRegistros() {
                       ))}
                     </TableBody>
                   </Table>
-                  {data.invoices.length > 6 && (
+                  {filteredData.invoices.length > 6 && (
                     <div className="p-3 text-center text-sm text-gray-500">
-                      Mostrando 6 de {data.invoices.length} facturas
+                      Mostrando 6 de {filteredData.invoices.length} facturas
                     </div>
                   )}
                 </div>
