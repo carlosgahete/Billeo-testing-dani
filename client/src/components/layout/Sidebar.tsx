@@ -210,19 +210,21 @@ const Sidebar = ({
   console.log("Final viewedUserId:", viewedUserId);
   
   // Detectamos tanto superadmin como admin normal para el Libro de Registros
-  // El usuario con username "Superadmin" tiene acceso aunque su rol sea "admin"
+  // Los usuarios con username "Superadmin" o "billeo_admin" tienen acceso aunque su rol sea "admin"
   const userIsSuperAdmin = user && (
     user.role === 'superadmin' || 
     user.role === 'SUPERADMIN' || 
-    user.username === 'Superadmin'
+    user.username === 'Superadmin' ||
+    user.username === 'billeo_admin'
   );
   console.log("Usuario actual:", user);
   console.log("Rol del usuario:", user?.role);
   console.log("Username del usuario:", user?.username);
   console.log("Usuario es superadmin:", userIsSuperAdmin);
   
-  // Verificar si el usuario es admin normal (pero no el superadmin)
-  const userIsAdmin = user && (user.role === 'admin' || user.role === 'ADMIN') && user.username !== 'Superadmin';
+  // Verificar si el usuario es admin normal (pero no es superadmin ni billeo_admin)
+  const userIsAdmin = user && (user.role === 'admin' || user.role === 'ADMIN') && 
+                     user.username !== 'Superadmin' && user.username !== 'billeo_admin';
   console.log("Usuario es admin normal:", userIsAdmin);
   
   // Verificar si está impersonando o viendo un cliente
