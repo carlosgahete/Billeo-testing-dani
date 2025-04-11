@@ -209,16 +209,19 @@ const Sidebar = ({
   
   console.log("Final viewedUserId:", viewedUserId);
   
-  // Verificar si el usuario es superadmin
-  const userIsSuperAdmin = user && user.role === 'superadmin';
+  // Verificar si el usuario es superadmin o admin con más detalle
+  const userIsSuperAdmin = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN');
+  console.log("Usuario actual:", user);
+  console.log("Rol del usuario:", user?.role);
   console.log("Usuario es superadmin:", userIsSuperAdmin);
   
   // Verificar si el usuario es admin normal
-  const userIsAdmin = user && user.role === 'admin';
+  const userIsAdmin = user && (user.role === 'admin' || user.role === 'ADMIN');
   console.log("Usuario es admin normal:", userIsAdmin);
   
   // Verificar si está impersonando o viendo un cliente
   const isViewingClient = viewedUserId !== '';
+  console.log("ID de cliente siendo visto:", viewedUserId);
   console.log("Está viendo un cliente:", isViewingClient);
 
   // Elementos de administración
@@ -233,13 +236,24 @@ const Sidebar = ({
     });
   }
   
-  // Solo si es superadmin Y está viendo un cliente, mostrar Libro de Registros
-  if (userIsSuperAdmin && isViewingClient) {
-    adminItems.push({
-      href: `/admin/libro-registros/${viewedUserId}`,
-      icon: <FileText size={20} />,
-      label: "Libro de Registros",
-    });
+  // Comportamiento para superadmin
+  if (userIsSuperAdmin) {
+    // Si está viendo un cliente, mostrar enlace directo
+    if (isViewingClient) {
+      adminItems.push({
+        href: `/admin/libro-registros/${viewedUserId}`,
+        icon: <FileText size={20} />,
+        label: "Libro de Registros",
+      });
+    } 
+    // Si no está viendo un cliente, mostrar enlace que lleva a la selección de cliente
+    else {
+      adminItems.push({
+        href: "/admin/select-user?redirect=libro-registros",
+        icon: <FileText size={20} />,
+        label: "Libro de Registros",
+      });
+    }
   }
   
   console.log("Admin items:", adminItems);

@@ -102,8 +102,8 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
   const [sortColumn, setSortColumn] = useState<string>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
-  // Verificación de permisos
-  if (!user || user.role !== "admin") {
+  // Verificación de permisos - permitir acceso a superadmin y admin
+  if (!user || (user.role !== "admin" && user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
     return <Redirect to="/auth" />;
   }
   

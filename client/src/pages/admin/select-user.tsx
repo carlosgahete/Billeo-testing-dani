@@ -29,7 +29,7 @@ export default function SelectUser() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user && user.role === "admin") {
+    if (user && (user.role === "admin" || user.role === "superadmin" || user.role === "SUPERADMIN")) {
       fetchUsers();
     }
   }, [user]);
@@ -121,7 +121,8 @@ export default function SelectUser() {
     );
   }
 
-  if (!user || user.role !== "admin") {
+  // Permitir acceso a admin y superadmin  
+  if (!user || (user.role !== "admin" && user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
     return <Redirect to="/" />;
   }
 
