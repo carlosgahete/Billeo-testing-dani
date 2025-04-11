@@ -1,0 +1,158 @@
+Perfecto, ahora tengo todo claro al 100%.
+
+Aquí tienes toda la explicación completa y corregida para que se la puedas enviar a tu IA o programador en un solo mensaje:
+
+⸻
+
+Instrucciones completas para implementar el “Libro de Registros” correctamente:
+
+1. Concepto general
+	•	El SuperAdmin entra en su cuenta normal de SuperAdmin.
+	•	Desde su panel habitual, selecciona un cliente (como ya hacía hasta ahora).
+	•	Cuando accede a la cuenta del cliente (impersonación, “switch user”, o como esté implementado actualmente), debe verse el sistema normal del cliente con su sidebar tradicional.
+	•	Solo en ese caso, dentro del sidebar del cliente, debe aparecer una nueva opción llamada “Libro de Registros”.
+
+Muy importante:
+El cliente real, cuando entra con su cuenta normal (sin ser SuperAdmin), NO debe ver nunca el apartado “Libro de Registros” en su sidebar.
+
+⸻
+
+2. Cambios en la lógica actual
+
+Actualmente, lo que está mal es que:
+	•	Desde SuperAdmin, se quiere navegar directamente a “Libro de Registros” y luego seleccionar al cliente.
+Esto está mal.
+	•	Lo correcto es:
+	•	El SuperAdmin primero selecciona el cliente como siempre.
+	•	Se carga el sistema del cliente (cambiando el contexto).
+	•	Dentro de la cuenta del cliente, se muestra la opción “Libro de Registros” en el sidebar.
+
+⸻
+
+3. Implementación técnica (estructura y lógica):
+
+a) Añadir el menú “Libro de Registros” solo cuando sea SuperAdmin
+
+En el código que genera el sidebar de cada usuario, debes hacer una comprobación como esta:
+
+if (userRole === 'superadmin' && impersonatingClient) {
+    // Añadir la opción Libro de Registros al sidebar
+    sidebarItems.push({
+        name: "Libro de Registros",
+        route: "/libro-de-registros",
+        icon: "📚"
+    });
+}
+
+Notas importantes:
+	•	userRole debe ser 'superadmin'.
+	•	Debe estar impersonatingClient === true, es decir, debe estar en modo cliente.
+	•	Si es un cliente normal, NO debe aparecer en su menú.
+
+⸻
+
+b) Vista de “Libro de Registros”
+
+Crear una vista (ruta /libro-de-registros) donde:
+	•	Se muestren todos los gastos y facturas subidos por ese cliente.
+	•	Se pueda:
+	•	Crear nuevo registro (fecha, tipo, descripción, importe, categoría, archivo adjunto).
+	•	Editar registros existentes.
+	•	Eliminar registros.
+	•	Descargar los registros en:
+	•	PDF.
+	•	XLS (Excel).
+
+El esquema básico en el frontend sería algo tipo:
+
+<div class="libro-registros">
+  <h1>Libro de Registros</h1>
+  
+  <button onclick="nuevoRegistro()">Añadir Registro</button>
+  <button onclick="exportarPDF()">Exportar a PDF</button>
+  <button onclick="exportarXLS()">Exportar a XLS</button>
+
+  <table id="tabla-registros">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Descripción</th>
+        <th>Importe</th>
+        <th>Categoría</th>
+        <th>Archivo</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Datos cargados dinámicamente -->
+    </tbody>
+  </table>
+</div>
+
+El estilo visual debe ser minimalista, limpio, tipo Apple, usando bordes redondeados, espacios amplios y colores suaves.
+
+⸻
+
+c) Backend
+
+Las acciones de guardar, editar y eliminar registros deben operar sobre el ID real del cliente seleccionado (que debería estar en el contexto actual de la sesión).
+
+Ejemplo al crear un registro:
+
+POST /api/clientes/:clienteId/libro-registros
+{
+  fecha: '2025-04-10',
+  tipo: 'Gasto',
+  descripcion: 'Factura compra',
+  importe: 150.00,
+  categoria: 'Material de oficina',
+  archivo: 'ruta/archivo.pdf'
+}
+
+
+
+⸻
+
+d) Exportación
+	•	Para PDF puedes usar librerías como jspdf o pdfmake.
+	•	Para XLS puedes usar SheetJS (xlsx).
+
+Implementación básica en JavaScript:
+
+function exportarPDF() {
+  const registros = obtenerRegistros();
+  // Crear PDF bonito con encabezados
+}
+
+function exportarXLS() {
+  const registros = obtenerRegistros();
+  // Crear archivo XLS descargable
+}
+
+
+
+⸻
+
+4. Resumen de puntos clave:
+
+Tema	Requisito
+Contexto de cliente	Debe seleccionarse antes de acceder al Libro
+Visibilidad “Libro de Registros”	Solo SuperAdmin cuando actúa como cliente
+Diseño	Estilo Apple: limpio, moderno, minimalista
+Funciones	Crear, editar, borrar, descargar (PDF, XLS)
+No afectar estructura actual	Nada debe romperse en la app como está ahora
+
+
+
+⸻
+
+IMPORTANTE:
+
+NO debe cambiarse la forma en la que actualmente funciona el SuperAdmin ni la navegación de los clientes normales.
+Sólo se añade esta mejora dentro del flujo normal de SuperAdmin cuando accede a la cuenta de un cliente.
+
+⸻
+
+¿Quieres que también te prepare una segunda versión más corta (tipo resumen ejecutivo) para enviar si quieres que lo entienda más rápido aún?
+Te la preparo en 2 minutos si quieres.

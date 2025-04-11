@@ -163,9 +163,8 @@ const Sidebar = ({
   
   console.log("Current path:", currentPath);
   
-  // Nos aseguramos de que tengamos un usuario identificado y que sea administrador o superadmin
-  const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
-  console.log("Is admin o superadmin:", isAdmin);
+  // Nos aseguramos de que tengamos un usuario identificado
+  // No necesitamos esta comprobación aquí, porque se usa más abajo con userIsAdmin y userIsSuperAdmin
   
   // Verificar si la URL contiene un patrón que indique que estamos viendo un usuario específico
   // Patrones posibles:
@@ -180,53 +179,68 @@ const Sidebar = ({
     const pathParts = currentPath.split('/').filter(part => part.length > 0);
     console.log("Path parts:", pathParts);
     
-    // Buscar cualquier segmento de la URL que sea un número (potencial ID de usuario)
-    for (let i = 0; i < pathParts.length; i++) {
-      if (/^\d+$/.test(pathParts[i])) {
-        viewedUserId = pathParts[i];
-        console.log("Found numeric ID in URL:", viewedUserId);
-        break;
-      }
+    // Detectar si estamos impersonando a un cliente
+    // Esto puede ocurrir de varias formas según el flujo de la aplicación:
+    
+    // 1. Si estamos en "/dashboard/123" donde 123 es el ID del usuario
+    if (pathParts.length >= 2 && pathParts[0] === 'dashboard' && /^\d+$/.test(pathParts[1])) {
+      viewedUserId = pathParts[1];
+      console.log("Found client ID in dashboard path:", viewedUserId);
     }
     
-    // También detectamos patrones específicos de administración de usuarios
-    if (pathParts.length >= 2 && 
-        (pathParts[0] === 'admin' || pathParts[0] === 'a') && 
-        pathParts.includes('users')) {
-      // Si estamos en cualquier ruta admin que contenga "users"
+    // 2. Patrones de URLs de administración que contengan el ID de un usuario
+    else if (pathParts.length >= 3 && 
+             (pathParts[0] === 'admin' || pathParts[0] === 'a')) {
+      // Si estamos en /admin/users/123 o similares
       const lastPart = pathParts[pathParts.length - 1];
       if (/^\d+$/.test(lastPart)) {
         viewedUserId = lastPart;
-        console.log("Found user ID in admin/users path:", viewedUserId);
+        console.log("Found client ID in admin path:", viewedUserId);
       }
     }
+    
+    // 3. Si estamos en otras rutas pero impersonando a un usuario
+    // Aquí podríamos tener una variable en el contexto de la aplicación
+    // que indique si estamos impersonando a un usuario
+    // Por ahora, solo usamos la detección basada en URL
   } catch (error) {
     console.error("Error al procesar la URL:", error);
   }
   
   console.log("Final viewedUserId:", viewedUserId);
   
-  // Verificar si el usuario tiene rol de administrador o superadmin
-  const userIsAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
-  console.log("Usuario tiene rol admin o superadmin:", userIsAdmin);
+  // Verificar si el usuario es superadmin
+  const userIsSuperAdmin = user && user.role === 'superadmin';
+  console.log("Usuario es superadmin:", userIsSuperAdmin);
+  
+  // Verificar si el usuario es admin normal
+  const userIsAdmin = user && user.role === 'admin';
+  console.log("Usuario es admin normal:", userIsAdmin);
+  
+  // Verificar si está impersonando o viendo un cliente
+  const isViewingClient = viewedUserId !== '';
+  console.log("Está viendo un cliente:", isViewingClient);
 
-  // Agregar elementos de administración si el usuario es administrador
-  const adminItems: NavItem[] = userIsAdmin ? [
-    { 
+  // Elementos de administración
+  const adminItems: NavItem[] = [];
+  
+  // Si es admin o superadmin, mostrar Gestión de Usuarios
+  if (userIsAdmin || userIsSuperAdmin) {
+    adminItems.push({ 
       href: "/admin/users", 
       icon: <Users size={20} />, 
       label: "Gestión de Usuarios" 
-    },
-    // Añadimos el enlace al libro de registros directamente después de Gestión de Usuarios
-    // para que siempre esté visible para los administradores
-    {
-      href: viewedUserId 
-        ? `/admin/libro-registros/${viewedUserId}` 
-        : "/admin/select-user?redirect=libro-registros",
+    });
+  }
+  
+  // Solo si es superadmin Y está viendo un cliente, mostrar Libro de Registros
+  if (userIsSuperAdmin && isViewingClient) {
+    adminItems.push({
+      href: `/admin/libro-registros/${viewedUserId}`,
       icon: <FileText size={20} />,
       label: "Libro de Registros",
-    }
-  ] : [];
+    });
+  }
   
   console.log("Admin items:", adminItems);
   
