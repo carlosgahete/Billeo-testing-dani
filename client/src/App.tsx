@@ -36,6 +36,7 @@ import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
 import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
+import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
@@ -197,6 +198,18 @@ function Router() {
             <ProtectedAdminRoute 
               path={`/admin/libro-simple/${params.userId}`} 
               component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
+            />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Ruta mejorada del Libro de Registros protegida SOLO para superadmins */}
+      <Route path="/admin/libro-enhanced/:userId">
+        {(params) => (
+          <Layout>
+            <ProtectedAdminRoute 
+              path={`/admin/libro-enhanced/${params.userId}`} 
+              component={(props: any) => <EnhancedLibroRegistros {...props} />} 
             />
           </Layout>
         )}

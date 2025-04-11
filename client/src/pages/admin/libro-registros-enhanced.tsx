@@ -20,7 +20,6 @@ import {
   Euro, 
   ArrowUpDown, 
   AlertCircle,
-  Printer,
   FileDown,
   CheckSquare,
   RefreshCw
@@ -33,9 +32,6 @@ import { es } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 // Definir interfaces para los datos
 interface User {
@@ -286,167 +282,96 @@ export default function EnhancedLibroRegistros() {
     }
   };
   
-  // Funciones de exportación
-  const exportToExcel = () => {
+  // Función de exportación a CSV
+  const exportToCSV = () => {
     if (!data) return;
     
-    // Crear libro de Excel
-    const wb = XLSX.utils.book_new();
-    
-    // Hoja de resumen
-    const summaryData = [
-      ["Libro de Registros - Resumen", "", "", ""],
-      ["Usuario", data.user.name, "ID", data.user.id.toString()],
-      ["Email", data.user.email, "Username", data.user.username],
-      ["", "", "", ""],
-      ["Periodo", `${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`, "", ""],
-      ["", "", "", ""],
-      ["Concepto", "Cantidad", "Importe", ""],
-      ["Facturas emitidas", data.summary.totalInvoices, formatCurrency(data.summary.incomeTotal), ""],
-      ["Gastos", data.summary.totalTransactions, formatCurrency(data.summary.expenseTotal), ""],
-      ["Presupuestos", data.summary.totalQuotes, "", ""],
-      ["", "", "", ""],
-      ["Resultado", "", formatCurrency(data.summary.balance), ""],
-      ["", "", "", ""],
-      ["IVA Repercutido", "", formatCurrency(data.summary.vatCollected), ""],
-      ["IVA Soportado", "", formatCurrency(data.summary.vatPaid), ""],
-      ["Balance IVA", "", formatCurrency(data.summary.vatBalance), ""],
-    ];
-    
-    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, summaryWs, "Resumen");
-    
-    // Hoja de facturas
-    const invoiceHeaders = ["Número", "Fecha Emisión", "Fecha Vencimiento", "Cliente", "Base Imponible", "IVA", "IRPF", "Total", "Estado", "Notas"];
-    const invoiceData = data.invoices.map(invoice => [
-      invoice.number,
-      format(new Date(invoice.issueDate), "dd/MM/yyyy"),
-      format(new Date(invoice.dueDate), "dd/MM/yyyy"),
-      invoice.client,
-      invoice.baseAmount,
-      invoice.vatAmount,
-      invoice.irpf || 0,
-      invoice.total,
-      invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada',
-      invoice.notes || ""
-    ]);
-    
-    const invoiceWs = XLSX.utils.aoa_to_sheet([invoiceHeaders, ...invoiceData]);
-    XLSX.utils.book_append_sheet(wb, invoiceWs, "Facturas");
-    
-    // Hoja de transacciones
-    const transactionHeaders = ["Fecha", "Descripción", "Categoría", "Método de Pago", "Importe", "Tipo", "Notas"];
-    const transactionData = data.transactions.map(transaction => [
-      format(new Date(transaction.date), "dd/MM/yyyy"),
-      transaction.description,
-      transaction.category,
-      transaction.paymentMethod || "",
-      transaction.amount,
-      transaction.type === 'expense' ? 'Gasto' : 'Ingreso',
-      transaction.notes || ""
-    ]);
-    
-    const transactionWs = XLSX.utils.aoa_to_sheet([transactionHeaders, ...transactionData]);
-    XLSX.utils.book_append_sheet(wb, transactionWs, "Transacciones");
-    
-    // Exportar el archivo
-    XLSX.writeFile(wb, `libro-registros-${userId}-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-  };
-  
-  const exportToPDF = () => {
-    if (!data) return;
-    
-    const doc = new jsPDF();
-    
-    // Título y encabezado
-    doc.setFontSize(20);
-    doc.text("Libro de Registros", 105, 15, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.text(`Usuario: ${data.user.name} (ID: ${data.user.id})`, 105, 25, { align: 'center' });
-    doc.text(`Periodo: ${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`, 105, 32, { align: 'center' });
-    
-    // Resumen
-    doc.setFontSize(16);
-    doc.text("Resumen", 14, 45);
-    
-    const summaryData = [
-      ["Concepto", "Cantidad", "Importe"],
-      ["Facturas emitidas", data.summary.totalInvoices.toString(), formatCurrency(data.summary.incomeTotal)],
-      ["Gastos", data.summary.totalTransactions.toString(), formatCurrency(data.summary.expenseTotal)],
-      ["Presupuestos", data.summary.totalQuotes.toString(), ""],
-      ["Resultado", "", formatCurrency(data.summary.balance)],
-      ["IVA Repercutido", "", formatCurrency(data.summary.vatCollected)],
-      ["IVA Soportado", "", formatCurrency(data.summary.vatPaid)],
-      ["Balance IVA", "", formatCurrency(data.summary.vatBalance)],
-    ];
-    
-    (doc as any).autoTable({
-      startY: 50,
-      head: [summaryData[0]],
-      body: summaryData.slice(1),
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      styles: { halign: 'left' },
-      columnStyles: { 
-        2: { halign: 'right' } 
+    // Función para escapar valores para CSV
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      // Si contiene comas, comillas o saltos de línea, encierra en comillas y escapa las comillas internas
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
       }
-    });
+      return stringValue;
+    };
     
-    // Top Facturas
-    const topInvoices = [...data.invoices]
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+    // Función para crear una línea CSV
+    const createCSVLine = (values: any[]) => {
+      return values.map(escapeCSV).join(',') + '\n';
+    };
     
-    if (topInvoices.length > 0) {
-      doc.setFontSize(16);
-      doc.text("Top 5 Facturas", 14, (doc as any).lastAutoTable.finalY + 15);
-      
-      const invoiceData = topInvoices.map(invoice => [
+    // Crear CSV para resumen
+    let csv = createCSVLine(["Libro de Registros - Resumen"]);
+    csv += createCSVLine(["Usuario", data.user.name, "ID", data.user.id.toString()]);
+    csv += createCSVLine(["Email", data.user.email, "Username", data.user.username]);
+    csv += createCSVLine([]);
+    csv += createCSVLine(["Periodo", `${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`]);
+    csv += createCSVLine([]);
+    csv += createCSVLine(["Concepto", "Cantidad", "Importe"]);
+    csv += createCSVLine(["Facturas emitidas", data.summary.totalInvoices, formatCurrency(data.summary.incomeTotal)]);
+    csv += createCSVLine(["Gastos", data.summary.totalTransactions, formatCurrency(data.summary.expenseTotal)]);
+    csv += createCSVLine(["Presupuestos", data.summary.totalQuotes, ""]);
+    csv += createCSVLine([]);
+    csv += createCSVLine(["Resultado", "", formatCurrency(data.summary.balance)]);
+    csv += createCSVLine([]);
+    csv += createCSVLine(["IVA Repercutido", "", formatCurrency(data.summary.vatCollected)]);
+    csv += createCSVLine(["IVA Soportado", "", formatCurrency(data.summary.vatPaid)]);
+    csv += createCSVLine(["Balance IVA", "", formatCurrency(data.summary.vatBalance)]);
+    csv += createCSVLine([]);
+    csv += createCSVLine([]);
+    
+    // Añadir facturas
+    csv += createCSVLine(["FACTURAS"]);
+    const invoiceHeaders = ["Número", "Fecha Emisión", "Fecha Vencimiento", "Cliente", "Base Imponible", "IVA", "IRPF", "Total", "Estado", "Notas"];
+    csv += createCSVLine(invoiceHeaders);
+    
+    data.invoices.forEach(invoice => {
+      csv += createCSVLine([
         invoice.number,
         format(new Date(invoice.issueDate), "dd/MM/yyyy"),
+        format(new Date(invoice.dueDate), "dd/MM/yyyy"),
         invoice.client,
-        formatCurrency(invoice.baseAmount),
-        formatCurrency(invoice.total)
+        invoice.baseAmount,
+        invoice.vatAmount,
+        invoice.irpf || 0,
+        invoice.total,
+        invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada',
+        invoice.notes || ""
       ]);
-      
-      (doc as any).autoTable({
-        startY: (doc as any).lastAutoTable.finalY + 20,
-        head: [["Número", "Fecha", "Cliente", "Base", "Total"]],
-        body: invoiceData,
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: 255 }
-      });
-    }
+    });
     
-    // Top Gastos
-    const topExpenses = [...data.transactions]
-      .filter(t => t.type === 'expense')
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5);
+    csv += createCSVLine([]);
+    csv += createCSVLine([]);
     
-    if (topExpenses.length > 0) {
-      doc.setFontSize(16);
-      doc.text("Top 5 Gastos", 14, (doc as any).lastAutoTable.finalY + 15);
-      
-      const expenseData = topExpenses.map(expense => [
-        format(new Date(expense.date), "dd/MM/yyyy"),
-        expense.description,
-        expense.category,
-        formatCurrency(expense.amount)
+    // Añadir transacciones
+    csv += createCSVLine(["TRANSACCIONES"]);
+    const transactionHeaders = ["Fecha", "Descripción", "Categoría", "Método de Pago", "Importe", "Tipo", "Notas"];
+    csv += createCSVLine(transactionHeaders);
+    
+    data.transactions.forEach(transaction => {
+      csv += createCSVLine([
+        format(new Date(transaction.date), "dd/MM/yyyy"),
+        transaction.description,
+        transaction.category,
+        transaction.paymentMethod || "",
+        transaction.amount,
+        transaction.type === 'expense' ? 'Gasto' : 'Ingreso',
+        transaction.notes || ""
       ]);
-      
-      (doc as any).autoTable({
-        startY: (doc as any).lastAutoTable.finalY + 20,
-        head: [["Fecha", "Descripción", "Categoría", "Importe"]],
-        body: expenseData,
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: 255 }
-      });
-    }
+    });
     
-    // Guardamos el PDF
-    doc.save(`libro-registros-${userId}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    // Crear un objeto blob y descargar
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `libro-registros-${userId}-${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   // Utilidad para formatear moneda
@@ -535,20 +460,11 @@ export default function EnhancedLibroRegistros() {
           
           <Button 
             variant="outline" 
-            onClick={exportToExcel}
+            onClick={exportToCSV}
             className="flex items-center"
           >
             <FileDown className="mr-2 h-4 w-4" />
-            Excel
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={exportToPDF}
-            className="flex items-center"
-          >
-            <Printer className="mr-2 h-4 w-4" />
-            PDF
+            Exportar CSV
           </Button>
         </div>
       </div>
