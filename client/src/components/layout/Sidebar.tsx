@@ -155,6 +155,20 @@ const Sidebar = ({
     }
   ];
   
+  // Detectar si estamos viendo un usuario específico como administrador
+  const currentPath = location;
+  const isViewingSpecificUser = currentPath.startsWith('/admin/') && currentPath !== '/admin/users' && currentPath !== '/admin/select-user';
+  
+  // Extraer el ID del usuario si estamos viendo un usuario específico
+  let viewedUserId = '';
+  if (isViewingSpecificUser) {
+    // Intentar extraer el ID del usuario de la URL
+    const pathParts = currentPath.split('/');
+    if (pathParts.length > 2) {
+      viewedUserId = pathParts[pathParts.length - 1];
+    }
+  }
+  
   // Agregar elementos de administración si el usuario es administrador
   const adminItems = user?.role === 'admin' ? [
     { 
@@ -164,8 +178,17 @@ const Sidebar = ({
     }
   ] : [];
   
-  // Combinar ambos arrays
-  const navigationItems = [...baseNavigationItems, ...adminItems];
+  // Agregar elementos específicos para usuarios administrados
+  const adminUserItems = (user?.role === 'admin' && viewedUserId) ? [
+    {
+      href: `/admin/libro-registros/${viewedUserId}`,
+      icon: <FileText size={20} />,
+      label: "Libro de Registros"
+    }
+  ] : [];
+  
+  // Combinar todos los arrays
+  const navigationItems = [...baseNavigationItems, ...adminItems, ...adminUserItems];
 
   // Desktop sidebar
   if (!isMobile) {

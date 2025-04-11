@@ -181,7 +181,10 @@ function Router() {
       <Route path="/admin/libro-registros/:userId">
         {(params) => (
           <Layout>
-            <ProtectedAdminRoute path={`/admin/libro-registros/${params.userId}`} component={LibroRegistrosPage} />
+            <ProtectedAdminRoute 
+              path={`/admin/libro-registros/${params.userId}`} 
+              component={(props: any) => <LibroRegistrosPage params={{userId: params.userId}} {...props} />} 
+            />
           </Layout>
         )}
       </Route>
