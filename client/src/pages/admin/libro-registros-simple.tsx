@@ -225,7 +225,7 @@ export default function SimpleLibroRegistros() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="container-fluid px-4 py-6 w-full max-w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Libro de Registros</h1>
@@ -248,7 +248,7 @@ export default function SimpleLibroRegistros() {
                 onValueChange={handleUserChange}
                 disabled={loadingUsers}
               >
-                <SelectTrigger className="w-full md:w-[200px]">
+                <SelectTrigger className="w-full md:w-[240px]">
                   <SelectValue placeholder="Seleccionar usuario" />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,7 +273,7 @@ export default function SimpleLibroRegistros() {
       </div>
       
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2 bg-blue-50 rounded-t-lg border-b border-blue-100">
             <CardTitle className="text-lg flex items-center">
@@ -333,177 +333,185 @@ export default function SimpleLibroRegistros() {
         </Card>
       </div>
       
-      {/* Sección de facturas */}
-      <Card className="mb-8">
-        <CardHeader className="bg-blue-50 border-b border-blue-100">
-          <CardTitle className="flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-blue-500" />
-            Facturas emitidas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {data?.invoices && data.invoices.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Base Imponible</TableHead>
-                    <TableHead>IVA</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.invoices.slice(0, 5).map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">{invoice.number}</TableCell>
-                      <TableCell>{formatDate(invoice.issueDate)}</TableCell>
-                      <TableCell>{invoice.client}</TableCell>
-                      <TableCell>{formatCurrency(invoice.baseAmount)}</TableCell>
-                      <TableCell>{formatCurrency(invoice.vatAmount)}</TableCell>
-                      <TableCell className="text-right font-semibold">{formatCurrency(invoice.total)}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs 
-                          ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 
-                          invoice.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
-                          'bg-red-100 text-red-800'}`}>
-                          {invoice.status === 'paid' ? 'Pagada' : 
-                           invoice.status === 'pending' ? 'Pendiente' : 
-                           'Cancelada'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {data.invoices.length > 5 && (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  Mostrando 5 de {data.invoices.length} facturas
+      {/* Diseño de 2 columnas para las secciones principales en pantallas grandes */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Columna 1: Facturas y Presupuestos */}
+        <div className="space-y-6">
+          {/* Sección de facturas */}
+          <Card>
+            <CardHeader className="bg-blue-50 border-b border-blue-100 py-3">
+              <CardTitle className="flex items-center text-lg">
+                <FileText className="h-5 w-5 mr-2 text-blue-500" />
+                Facturas emitidas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {data?.invoices && data.invoices.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="py-2">Número</TableHead>
+                        <TableHead className="py-2">Fecha</TableHead>
+                        <TableHead className="py-2">Cliente</TableHead>
+                        <TableHead className="py-2 text-right">Base</TableHead>
+                        <TableHead className="py-2 text-right">IVA</TableHead>
+                        <TableHead className="py-2 text-right">Total</TableHead>
+                        <TableHead className="py-2">Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.invoices.slice(0, 6).map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-medium">{invoice.number}</TableCell>
+                          <TableCell>{formatDate(invoice.issueDate)}</TableCell>
+                          <TableCell className="truncate max-w-[100px]">{invoice.client}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(invoice.baseAmount)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(invoice.vatAmount)}</TableCell>
+                          <TableCell className="text-right font-semibold">{formatCurrency(invoice.total)}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs 
+                              ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 
+                              invoice.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
+                              'bg-red-100 text-red-800'}`}>
+                              {invoice.status === 'paid' ? 'Pagada' : 
+                               invoice.status === 'pending' ? 'Pendiente' : 
+                               'Cancelada'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {data.invoices.length > 6 && (
+                    <div className="p-3 text-center text-sm text-gray-500">
+                      Mostrando 6 de {data.invoices.length} facturas
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">No hay facturas disponibles</p>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="p-6 text-center">
-              <p className="text-gray-500">No hay facturas disponibles</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Sección de gastos */}
-      <Card className="mb-8">
-        <CardHeader className="bg-amber-50 border-b border-amber-100">
-          <CardTitle className="flex items-center">
-            <ShoppingCart className="h-5 w-5 mr-2 text-amber-500" />
-            Gastos y transacciones
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {data?.transactions && data.transactions.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Importe</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.transactions.slice(0, 5).map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{formatDate(transaction.date)}</TableCell>
-                      <TableCell className="font-medium">{transaction.description}</TableCell>
-                      <TableCell>{transaction.category || 'Sin categoría'}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs 
-                          ${transaction.type === 'income' ? 'bg-green-100 text-green-800' : 
-                           'bg-red-100 text-red-800'}`}>
-                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
-                        </span>
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold 
-                        ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(transaction.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {data.transactions.length > 5 && (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  Mostrando 5 de {data.transactions.length} transacciones
+            </CardContent>
+          </Card>
+          
+          {/* Sección de presupuestos */}
+          <Card>
+            <CardHeader className="bg-emerald-50 border-b border-emerald-100 py-3">
+              <CardTitle className="flex items-center text-lg">
+                <File className="h-5 w-5 mr-2 text-emerald-500" />
+                Presupuestos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {data?.quotes && data.quotes.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="py-2">Número</TableHead>
+                        <TableHead className="py-2">Fecha</TableHead>
+                        <TableHead className="py-2">Cliente</TableHead>
+                        <TableHead className="py-2 text-right">Total</TableHead>
+                        <TableHead className="py-2">Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.quotes.slice(0, 6).map((quote) => (
+                        <TableRow key={quote.id}>
+                          <TableCell className="font-medium">{quote.number}</TableCell>
+                          <TableCell>{formatDate(quote.issueDate)}</TableCell>
+                          <TableCell className="truncate max-w-[120px]">{quote.clientName}</TableCell>
+                          <TableCell className="text-right font-semibold">{formatCurrency(quote.total)}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs 
+                              ${quote.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                              quote.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
+                              'bg-red-100 text-red-800'}`}>
+                              {quote.status === 'accepted' ? 'Aceptado' : 
+                               quote.status === 'pending' ? 'Pendiente' : 
+                               'Rechazado'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {data.quotes.length > 6 && (
+                    <div className="p-3 text-center text-sm text-gray-500">
+                      Mostrando 6 de {data.quotes.length} presupuestos
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">No hay presupuestos disponibles</p>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="p-6 text-center">
-              <p className="text-gray-500">No hay transacciones disponibles</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Sección de presupuestos */}
-      <Card>
-        <CardHeader className="bg-emerald-50 border-b border-emerald-100">
-          <CardTitle className="flex items-center">
-            <File className="h-5 w-5 mr-2 text-emerald-500" />
-            Presupuestos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {data?.quotes && data.quotes.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.quotes.slice(0, 5).map((quote) => (
-                    <TableRow key={quote.id}>
-                      <TableCell className="font-medium">{quote.number}</TableCell>
-                      <TableCell>{formatDate(quote.issueDate)}</TableCell>
-                      <TableCell>{quote.clientName}</TableCell>
-                      <TableCell className="text-right font-semibold">{formatCurrency(quote.total)}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs 
-                          ${quote.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                          quote.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
-                          'bg-red-100 text-red-800'}`}>
-                          {quote.status === 'accepted' ? 'Aceptado' : 
-                           quote.status === 'pending' ? 'Pendiente' : 
-                           'Rechazado'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {data.quotes.length > 5 && (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  Mostrando 5 de {data.quotes.length} presupuestos
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Columna 2: Gastos y transacciones */}
+        <div>
+          <Card>
+            <CardHeader className="bg-amber-50 border-b border-amber-100 py-3">
+              <CardTitle className="flex items-center text-lg">
+                <ShoppingCart className="h-5 w-5 mr-2 text-amber-500" />
+                Gastos y transacciones
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {data?.transactions && data.transactions.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="py-2">Fecha</TableHead>
+                        <TableHead className="py-2">Descripción</TableHead>
+                        <TableHead className="py-2">Categoría</TableHead>
+                        <TableHead className="py-2">Tipo</TableHead>
+                        <TableHead className="py-2 text-right">Importe</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.transactions.slice(0, 14).map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell>{formatDate(transaction.date)}</TableCell>
+                          <TableCell className="font-medium truncate max-w-[150px]">{transaction.description}</TableCell>
+                          <TableCell className="truncate max-w-[100px]">{transaction.category || 'Sin categoría'}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs 
+                              ${transaction.type === 'income' ? 'bg-green-100 text-green-800' : 
+                               'bg-red-100 text-red-800'}`}>
+                              {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                            </span>
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold 
+                            ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(transaction.amount)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {data.transactions.length > 14 && (
+                    <div className="p-3 text-center text-sm text-gray-500">
+                      Mostrando 14 de {data.transactions.length} transacciones
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">No hay transacciones disponibles</p>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="p-6 text-center">
-              <p className="text-gray-500">No hay presupuestos disponibles</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
