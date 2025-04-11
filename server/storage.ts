@@ -67,6 +67,13 @@ export interface IStorage {
   // Dashboard preferences operations
   getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
   saveDashboardPreferences(userId: number, layout: { blocks: any[] }): Promise<DashboardPreferences>;
+  
+  // Libro de Registros operations
+  getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]>;
+  getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]>;
+  createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro>;
+  updateLibroRegistro(id: number, registro: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined>;
+  deleteLibroRegistro(id: number): Promise<boolean>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -130,13 +137,6 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
-  
-  // Libro de Registros operations
-  getLibroRegistrosByClienteId(clienteId: number): Promise<LibroRegistro[]>;
-  getLibroRegistrosByClienteIdAndTipo(clienteId: number, tipo: string): Promise<LibroRegistro[]>;
-  createLibroRegistro(registro: InsertLibroRegistro): Promise<LibroRegistro>;
-  updateLibroRegistro(id: number, registro: Partial<InsertLibroRegistro>): Promise<LibroRegistro | undefined>;
-  deleteLibroRegistro(id: number): Promise<boolean>;
   
   // Session store
   sessionStore: session.Store;
@@ -1036,6 +1036,7 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private transactions: Map<number, Transaction>;
   private tasks: Map<number, Task>;
+  private libroRegistros: Map<number, LibroRegistro>;
   public sessionStore: session.Store;
 
   private userIdCounter: number;
