@@ -16,8 +16,16 @@ export function configureBetterExpenseRoutes(app: express.Express) {
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
-    // Hardcodeamos un ID de usuario para pruebas
-    const userId = 1; // Asumimos que existe un usuario con ID 1
+    
+    // Verificar si el usuario está autenticado
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ 
+        error: 'Acceso no autorizado. Debe iniciar sesión para crear gastos' 
+      });
+    }
+    
+    // Usar el ID del usuario autenticado
+    const userId = req.session.userId;
     console.log('Recibida solicitud de creación de gasto básico:', req.body);
     try {
       // Validaciones mínimas

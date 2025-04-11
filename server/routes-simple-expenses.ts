@@ -9,8 +9,13 @@ export function configureSimpleExpensesRoutes(app: express.Express) {
     console.log('Valor literal de amount:', req.body.amount);
     
     try {
-      // ID de usuario fijo para pruebas
-      const userId = 1;
+      // Verificar que el usuario esté autenticado
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ success: false, message: "Usuario no autenticado" });
+      }
+      
+      // Usar el ID del usuario autenticado
+      const userId = req.session.userId;
       
       // Extraer datos básicos - soporta tanto JSON como FormData
       let description = req.body.description || "";

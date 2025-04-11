@@ -19,8 +19,16 @@ export function configureDirectExpenseRoutes(app: express.Express) {
     try {
       console.log('Recibida solicitud para crear gasto directo:', req.body);
       
-      // ID de usuario hardcodeado para pruebas
-      const userId = 1;
+      // Verificar que el usuario esté autenticado
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Se requiere autenticación para crear gastos" 
+        });
+      }
+      
+      // Usar el ID del usuario autenticado
+      const userId = req.session.userId;
       
       // Extraer datos del cuerpo de la solicitud (sin validaciones estrictas)
       const { description, amount, attachments = [] } = req.body;
