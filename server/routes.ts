@@ -4014,10 +4014,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // IMPORTANTE: Estos endpoints son solo para pruebas y desarrollo
   // ============================================================
   
-  // Endpoint público para obtener datos del libro de registros
-  // Endpoint público (sin autenticación) para pruebas
+  // Endpoint para obtener datos del libro de registros (requiere autenticación y permisos de superadmin)
   app.get("/api/public/libro-registros/:userId", async (req: Request, res: Response) => {
     try {
+      // Verificar que el usuario esté autenticado
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ success: false, message: "Usuario no autenticado" });
+      }
+      
+      // Obtener información del usuario actual para verificar su rol
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser || (currentUser.role !== 'superadmin' && currentUser.role !== 'SUPERADMIN')) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Acceso denegado. Se requieren permisos de superadministrador" 
+        });
+      }
+      
       const userId = parseInt(req.params.userId);
       
       // Consultas directas a la base de datos
