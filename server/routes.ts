@@ -4051,9 +4051,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const responseQuotes = dbQuotes.map(quote => ({
         id: quote.id,
-        number: quote.number,
+        number: quote.quoteNumber, // Corregido: usando la propiedad correcta
         issueDate: quote.issueDate,
-        expiryDate: quote.dueDate,
+        expiryDate: quote.validUntil, // Corregido: usando la propiedad correcta
         clientName: "Cliente", // Valor por defecto
         total: parseFloat(quote.total.toString()),
         status: quote.status
