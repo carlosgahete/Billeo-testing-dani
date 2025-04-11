@@ -73,7 +73,10 @@ export default function SimpleLibroRegistros() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/public/libro-registros/${userId}`);
+        // La ruta debe coincidir con la API en el backend
+        const apiUrl = `/api/public/libro-registros/${userId}`;
+        console.log("Consultando datos del Libro de Registros desde:", apiUrl);
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
           throw new Error(`Error al obtener datos: ${response.statusText}`);
