@@ -198,9 +198,12 @@ export default function EnhancedLibroRegistros() {
   
   // Función para aplicar filtros
   const applyFilters = (items: any[], type: 'invoice' | 'transaction' | 'quote') => {
-    if (!items) return [];
+    if (!items || !Array.isArray(items)) return [];
     
+    // Hacer una copia segura de los elementos
     let filtered = [...items];
+    
+    console.log(`Aplicando filtros a ${type}. Total inicial: ${filtered.length}`);
     
     // Filtrar por término de búsqueda
     if (searchTerm) {
@@ -208,21 +211,22 @@ export default function EnhancedLibroRegistros() {
       filtered = filtered.filter(item => {
         if (type === 'invoice') {
           const invoice = item as Invoice;
-          return invoice.number.toLowerCase().includes(search) || 
-                 invoice.client.toLowerCase().includes(search) ||
+          return invoice.number?.toLowerCase().includes(search) || 
+                 invoice.client?.toLowerCase().includes(search) ||
                  (invoice.notes && invoice.notes.toLowerCase().includes(search));
         } else if (type === 'transaction') {
           const transaction = item as Transaction;
-          return transaction.description.toLowerCase().includes(search) || 
-                 transaction.category.toLowerCase().includes(search) ||
+          return transaction.description?.toLowerCase().includes(search) || 
+                 transaction.category?.toLowerCase().includes(search) ||
                  (transaction.notes && transaction.notes.toLowerCase().includes(search));
         } else { // quote
           const quote = item as Quote;
-          return quote.number.toLowerCase().includes(search) || 
-                 quote.clientName.toLowerCase().includes(search) ||
+          return quote.number?.toLowerCase().includes(search) || 
+                 quote.clientName?.toLowerCase().includes(search) ||
                  (quote.notes && quote.notes.toLowerCase().includes(search));
         }
       });
+      console.log(`Después de filtrar por término "${searchTerm}": ${filtered.length}`);
     }
     
     // Filtrar por estado
@@ -236,6 +240,7 @@ export default function EnhancedLibroRegistros() {
           return (item as Quote).status === statusFilter;
         }
       });
+      console.log(`Después de filtrar por estado "${statusFilter}": ${filtered.length}`);
     }
     
     // Ordenar resultados
@@ -424,7 +429,13 @@ export default function EnhancedLibroRegistros() {
   }
 
   const filteredInvoices = applyFilters(data.invoices, 'invoice');
-  const filteredTransactions = applyFilters(data.transactions, 'transaction');
+  
+  // Filtrar transacciones considerando el tipo (gasto/ingreso) y la pestaña activa
+  const allFilteredTransactions = applyFilters(data.transactions, 'transaction');
+  const filteredTransactions = activeTab === "expenses" 
+    ? allFilteredTransactions.filter(t => t.type === 'expense')
+    : allFilteredTransactions;
+    
   const filteredQuotes = applyFilters(data.quotes, 'quote');
 
   // Calcular totales filtrados para mostrar en las tarjetas
@@ -854,10 +865,10 @@ export default function EnhancedLibroRegistros() {
             <CardHeader className="bg-amber-50 border-b border-amber-100">
               <CardTitle className="flex items-center">
                 <ShoppingCart className="h-5 w-5 mr-2 text-amber-500" />
-                Transacciones
+                Gastos
               </CardTitle>
               <CardDescription>
-                Mostrando {filteredTransactions.length} transacciones por un total de {formatCurrency(filteredExpenseTotal)} en gastos
+                Mostrando {filteredTransactions.length} gastos por un total de {formatCurrency(filteredExpenseTotal)}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -924,7 +935,8 @@ export default function EnhancedLibroRegistros() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTransactions.map((transaction) => (
+                    {filteredTransactions
+                    .map((transaction) => (
                       <TableRow key={transaction.id}>
                         <TableCell>{formatDate(transaction.date)}</TableCell>
                         <TableCell className="max-w-[200px] truncate font-medium" title={transaction.description}>
@@ -951,7 +963,7 @@ export default function EnhancedLibroRegistros() {
                     {filteredTransactions.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-6 text-gray-500">
-                          No hay transacciones que coincidan con los filtros seleccionados
+                          No hay gastos que coincidan con los filtros seleccionados
                         </TableCell>
                       </TableRow>
                     )}
