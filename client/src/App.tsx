@@ -178,6 +178,13 @@ function Router() {
       <Route path="/admin/select-user">
         <ProtectedAdminRoute path="/admin/select-user" component={SelectUserPage} />
       </Route>
+      <Route path="/admin/libro-registros/:userId">
+        {(params) => (
+          <Layout>
+            <ProtectedAdminRoute path={`/admin/libro-registros/${params.userId}`} component={LibroRegistrosPage} />
+          </Layout>
+        )}
+      </Route>
       <Route path="/profile">
         <Layout>
           <ProtectedRoute path="/profile" component={ProfilePage} />
