@@ -14,6 +14,13 @@ export async function apiRequest<T = any>(
 ): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
   
+  // Validar y normalizar el método HTTP
+  const validMethod = method.toUpperCase();
+  
+  if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(validMethod)) {
+    throw new Error(`Método HTTP no válido: ${method}`);
+  }
+  
   // Preparar los headers siempre con el mismo formato para evitar errores de tipo
   const headers: Record<string, string> = {};
   
@@ -28,7 +35,7 @@ export async function apiRequest<T = any>(
     : undefined;
   
   const res = await fetch(url, {
-    method,
+    method: validMethod,
     headers,
     body: bodyData,
     credentials: "include",
