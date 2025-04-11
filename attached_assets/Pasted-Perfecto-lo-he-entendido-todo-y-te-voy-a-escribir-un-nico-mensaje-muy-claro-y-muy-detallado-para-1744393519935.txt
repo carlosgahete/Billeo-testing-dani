@@ -1,0 +1,144 @@
+Perfecto, lo he entendido todo, y te voy a escribir un único mensaje muy claro y muy detallado, para que lo puedas enviar directamente a tu IA o programador. Aquí va:
+
+⸻
+
+Explicación detallada sobre la estructura Multiusuario para el Software
+
+Concepto General
+
+El software que estamos construyendo debe ser multiusuario.
+Esto significa que cada usuario que se registre o sea creado tendrá su propio perfil privado donde su información será única, individual y separada de la de los demás usuarios.
+
+Muy importante:
+	•	Cada cliente tendrá sus propios datos.
+	•	La información de un cliente no debe mezclarse nunca con la de otro cliente.
+	•	Cada vez que un cliente acceda a su perfil, sólo debe ver su información.
+
+⸻
+
+Ejemplo para que se entienda
+	•	Cliente Paco:
+	•	Sube 2 facturas de 10.000€ cada una.
+	•	En su dashboard debe aparecer “Total Facturas: 20.000€”.
+	•	Cliente Pepe:
+	•	Sube 2 facturas de 5.000€ cada una.
+	•	En su dashboard debe aparecer “Total Facturas: 10.000€”.
+
+Cuando Paco entre en su perfil, verá sólo sus facturas y sus totales (20.000€).
+Cuando Pepe entre en su perfil, verá sólo sus facturas y sus totales (10.000€).
+
+Nunca deben mezclarse ni verse los datos de otros clientes.
+
+⸻
+
+¿Qué está pasando mal ahora?
+
+Actualmente, cuando se entra o edita perfiles:
+	•	La información no se guarda correctamente asociada al cliente.
+	•	A veces los datos se mezclan entre usuarios o no se guardan en su perfil.
+
+⸻
+
+¿Cómo debe ser la estructura correcta?
+
+1. Base de Datos
+
+Cada usuario debe tener su propia colección o su propio registro donde se almacenen sus datos individuales.
+
+Ejemplo de esquema en MongoDB:
+
+Usuarios {
+  _id: ObjectId,
+  nombre: "Paco",
+  email: "paco@email.com",
+  contraseña: "*****",
+  facturas: [
+    { fecha: "2025-04-10", importe: 10000 },
+    { fecha: "2025-04-11", importe: 10000 }
+  ],
+  gastos: [...],
+  otrosDatos: {...}
+}
+
+Cada usuario tiene su propio array de facturas, gastos, etc.
+
+⸻
+
+2. Cuando el usuario sube datos
+
+Cuando un usuario suba una factura, gasto o cualquier dato:
+	•	Ese dato debe guardarse en su propio perfil de usuario.
+	•	El sistema debe identificar qué usuario está autenticado en ese momento.
+	•	Y guardar en su propia colección.
+
+Ejemplo en backend:
+
+POST /api/facturas
+headers: {
+  Authorization: "Bearer tokenDelUsuario"
+}
+body: {
+  importe: 10000,
+  fecha: "2025-04-10"
+}
+
+En el servidor:
+	•	Se verifica el token para identificar el usuario.
+	•	Se guarda la factura en su propio espacio en la base de datos.
+
+⸻
+
+3. Cuando el usuario entra a su dashboard
+	•	Se debe cargar sólo su información.
+	•	Se consulta la base de datos filtrando por su ID de usuario.
+
+Ejemplo en backend:
+
+GET /api/facturas
+headers: {
+  Authorization: "Bearer tokenDelUsuario"
+}
+
+Respuesta:
+
+[
+  { fecha: "2025-04-10", importe: 10000 },
+  { fecha: "2025-04-11", importe: 10000 }
+]
+
+Luego, en el frontend, se muestra solo esa información.
+
+⸻
+
+Resumen de lo que tiene que hacer
+
+Tarea	Explicación
+Al crear datos	Guardarlos ligados al usuario autenticado.
+Al cargar datos	Cargar sólo los datos del usuario autenticado.
+Al modificar datos	Modificar sólo los datos del usuario autenticado.
+No mezclar usuarios	Cada usuario ve sólo sus propios datos.
+Al cambiar de usuario (como SuperAdmin)	Cambiar correctamente el contexto al ID del cliente que se está viendo.
+
+
+
+⸻
+
+¡MUY IMPORTANTE!
+
+El sistema debe funcionar de forma que cada vez que se hace una operación de guardar, editar, borrar o ver datos, siempre se haga pensando en “este dato es de este usuario concreto”.
+
+Nunca debe cargarse información global o de otros usuarios.
+
+⸻
+
+Final
+
+Con esta estructura conseguiremos que:
+	•	Cada cliente vea su información privada.
+	•	Cada cliente pueda gestionar sus facturas y gastos de manera individual.
+	•	Los datos estén bien organizados y seguros.
+
+⸻
+
+¿Quieres que además te prepare un pequeño diagrama visual para mandarlo también si quieres que lo entienda todavía mejor?
+¡Me dices!
