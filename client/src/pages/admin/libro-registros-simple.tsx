@@ -235,6 +235,39 @@ export default function SimpleLibroRegistros() {
             }
           </p>
         </div>
+        
+        {/* Selector de usuarios para administradores */}
+        {user && (user.role === 'admin' || user.role === 'superadmin' || user.username === 'billeo_admin') && (
+          <div className="mt-4 md:mt-0 w-full md:w-auto">
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-gray-500" />
+              <Select 
+                value={userId || ''} 
+                onValueChange={handleUserChange}
+                disabled={loadingUsers}
+              >
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Seleccionar usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Opción para ver datos propios del admin */}
+                  {user.username === 'billeo_admin' && (
+                    <SelectItem value="">
+                      Mis registros ({user.username})
+                    </SelectItem>
+                  )}
+                  
+                  {/* Lista de todos los usuarios */}
+                  {users.map((userOption) => (
+                    <SelectItem key={userOption.id} value={userOption.id.toString()}>
+                      {userOption.name} ({userOption.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Tarjetas de resumen */}
