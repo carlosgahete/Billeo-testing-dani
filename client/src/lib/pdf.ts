@@ -142,7 +142,7 @@ export async function generateInvoicePDF(
   // Check if the invoice has a logo
   const logoPath = invoice.logo || null;
   
-  // Cargar el logo si existe
+  // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
   if (logoPath) {
     try {
       console.log("Preparando logo para PDF desde:", logoPath);
@@ -158,7 +158,7 @@ export async function generateInvoicePDF(
         tmpImg.src = logoDataUrl;
       });
       
-      // Calcular dimensiones manteniendo proporciones (50% más pequeño)
+      // Calcular dimensiones manteniendo proporciones para logo pequeño en la esquina
       const maxWidth = 25; // 50% más pequeño que el original de 50
       const maxHeight = 12.5; // 50% más pequeño que el original de 25
       
@@ -167,11 +167,23 @@ export async function generateInvoicePDF(
       const width = tmpImg.width * ratio;
       const height = tmpImg.height * ratio;
       
-      // Posición alineada con subtotal (195 - width para alineación a la derecha)
+      // Posición alineada a la derecha en la parte superior
       const xPosition = 195 - width;
       
       // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
       doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
+      
+      // También añadimos el logo más pequeño a la derecha del encabezado de la factura
+      // Hacerlo un 30% más pequeño para el encabezado
+      const headerMaxWidth = 15;
+      const headerMaxHeight = 7.5;
+      const headerRatio = Math.min(headerMaxWidth / tmpImg.width, headerMaxHeight / tmpImg.height);
+      const headerWidth = tmpImg.width * headerRatio;
+      const headerHeight = tmpImg.height * headerRatio;
+      
+      // Colocamos el logo a la derecha del texto "FACTURA Nº: xxx"
+      doc.addImage(logoDataUrl, 'PNG', 195, 14, headerWidth, headerHeight);
+      
       console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
     } catch (logoError) {
       console.error("Error añadiendo logo al PDF:", logoError);
@@ -366,7 +378,7 @@ export async function generateInvoicePDFAsBase64(
   // Check if the invoice has a logo
   const logoPath = invoice.logo || null;
   
-  // Cargar el logo si existe
+  // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
   if (logoPath) {
     try {
       console.log("Preparando logo para PDF email desde:", logoPath);
@@ -382,7 +394,7 @@ export async function generateInvoicePDFAsBase64(
         tmpImg.src = logoDataUrl;
       });
       
-      // Calcular dimensiones manteniendo proporciones (50% más pequeño)
+      // Calcular dimensiones manteniendo proporciones para logo pequeño en la esquina
       const maxWidth = 25; // 50% más pequeño que el original de 50
       const maxHeight = 12.5; // 50% más pequeño que el original de 25
       
@@ -391,11 +403,23 @@ export async function generateInvoicePDFAsBase64(
       const width = tmpImg.width * ratio;
       const height = tmpImg.height * ratio;
       
-      // Posición alineada con subtotal (195 - width para alineación a la derecha)
+      // Posición alineada a la derecha en la parte superior
       const xPosition = 195 - width;
       
       // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
       doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
+      
+      // También añadimos el logo más pequeño a la derecha del encabezado de la factura
+      // Hacerlo un 30% más pequeño para el encabezado
+      const headerMaxWidth = 15;
+      const headerMaxHeight = 7.5;
+      const headerRatio = Math.min(headerMaxWidth / tmpImg.width, headerMaxHeight / tmpImg.height);
+      const headerWidth = tmpImg.width * headerRatio;
+      const headerHeight = tmpImg.height * headerRatio;
+      
+      // Colocamos el logo a la derecha del texto "FACTURA Nº: xxx"
+      doc.addImage(logoDataUrl, 'PNG', 195, 14, headerWidth, headerHeight);
+      
       console.log("Logo añadido correctamente al PDF email con dimensiones proporcionales:", width, height);
     } catch (logoError) {
       console.error("Error añadiendo logo al PDF email:", logoError);
@@ -562,7 +586,7 @@ export async function generateQuotePDF(
     // Check if the quote has a logo
     const logoPath = quote.attachments && quote.attachments.length > 0 ? quote.attachments[0] : null;
     
-    // Cargar el logo si existe
+    // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
     if (logoPath) {
       try {
         console.log("Preparando logo para PDF desde:", logoPath);
@@ -578,7 +602,7 @@ export async function generateQuotePDF(
           tmpImg.src = logoDataUrl;
         });
         
-        // Calcular dimensiones manteniendo proporciones (50% más pequeño)
+        // Calcular dimensiones manteniendo proporciones para logo pequeño en la esquina
         const maxWidth = 25; // 50% más pequeño que el original de 50
         const maxHeight = 12.5; // 50% más pequeño que el original de 25
         
@@ -587,11 +611,23 @@ export async function generateQuotePDF(
         const width = tmpImg.width * ratio;
         const height = tmpImg.height * ratio;
         
-        // Posición alineada con subtotal (195 - width para alineación a la derecha)
+        // Posición alineada a la derecha en la parte superior
         const xPosition = 195 - width;
         
         // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
         doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
+        
+        // También añadimos el logo más pequeño a la derecha del encabezado del presupuesto
+        // Hacerlo un 30% más pequeño para el encabezado
+        const headerMaxWidth = 15;
+        const headerMaxHeight = 7.5;
+        const headerRatio = Math.min(headerMaxWidth / tmpImg.width, headerMaxHeight / tmpImg.height);
+        const headerWidth = tmpImg.width * headerRatio;
+        const headerHeight = tmpImg.height * headerRatio;
+        
+        // Colocamos el logo a la derecha del texto "PRESUPUESTO Nº: xxx"
+        doc.addImage(logoDataUrl, 'PNG', 195, 14, headerWidth, headerHeight);
+        
         console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
       } catch (logoError) {
         console.error("Error añadiendo logo al PDF:", logoError);
