@@ -319,7 +319,7 @@ export async function generateInvoicePDF(
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text(
-      "Eventos gaper - Sistema de gestión financiera para profesionales y pequeñas empresas",
+      "Billeo - Gestión financiera",
       105, 285, { align: "center" }
     );
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
@@ -836,7 +836,7 @@ export async function generateQuotePDF(
       doc.setFontSize(8);
       doc.setTextColor(100);
       doc.text(
-        "Eventos gaper - Sistema de gestión financiera para profesionales y pequeñas empresas",
+        "Billeo - Gestión financiera",
         105, 285, { align: "center" }
       );
       doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
@@ -915,7 +915,7 @@ export async function generateReportPDF(
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text(
-      "Eventos gaper - Sistema de gestión financiera para profesionales y pequeñas empresas",
+      "Billeo - Gestión financiera",
       105, 285, { align: "center" }
     );
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
