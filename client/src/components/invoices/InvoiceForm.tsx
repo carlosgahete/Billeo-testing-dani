@@ -56,16 +56,22 @@ function toNumber(value: any, defaultValue = 0): number {
 // Variable para controlar el debounce sin perder el foco
 let lastCalculationTimeout: NodeJS.Timeout | null = null;
 
-// Función auxiliar para calcular totales (definida globalmente para evitar referencias circulares)
-function calculateInvoiceTotals(form: any) {
-  // Limpiamos el timeout anterior si existe
+// Función segura para calcular totales sin causar renderizados infinitos
+function calculateInvoiceTotals(formInstance: any) {
+  // Prevenir múltiples cálculos seguidos
   if (lastCalculationTimeout) {
     clearTimeout(lastCalculationTimeout);
   }
   
-  // Obtenemos los datos actuales
-  const items = form.getValues("items") || [];
-  const additionalTaxes = form.getValues("additionalTaxes") || [];
+  // Verificar que tenemos una instancia de formulario válida
+  if (!formInstance || typeof formInstance.getValues !== 'function') {
+    console.warn("⚠️ Se intentó calcular totales sin una instancia de formulario válida");
+    return;
+  }
+  
+  // Obtenemos los datos actuales usando la instancia pasada como parámetro
+  const items = formInstance.getValues("items") || [];
+  const additionalTaxes = formInstance.getValues("additionalTaxes") || [];
   
   // Calculate subtotal for each item
   const updatedItems = items.map((item: any) => {
@@ -105,13 +111,19 @@ function calculateInvoiceTotals(form: any) {
   
   // Actualizamos con un pequeño retraso para evitar pérdida de foco durante edición
   lastCalculationTimeout = setTimeout(() => {
+    // Verificamos que la instancia del formulario sigue siendo válida
+    if (!formInstance || typeof formInstance.setValue !== 'function') {
+      console.warn("⚠️ Formulario no válido al actualizar valores");
+      return;
+    }
+    
     // Actualizamos los items con los nuevos subtotales calculados
-    form.setValue("items", updatedItems, { shouldValidate: false });
+    formInstance.setValue("items", updatedItems, { shouldValidate: false });
     
     // Actualizamos los totales de la factura sin validar para evitar pérdida de foco
-    form.setValue("subtotal", subtotal, { shouldValidate: false });
-    form.setValue("tax", tax, { shouldValidate: false });
-    form.setValue("total", safeTotal, { shouldValidate: false });
+    formInstance.setValue("subtotal", subtotal, { shouldValidate: false });
+    formInstance.setValue("tax", tax, { shouldValidate: false });
+    formInstance.setValue("total", safeTotal, { shouldValidate: false });
     
     // Log para debug
     console.log("💰 Cálculo de totales:", {
@@ -411,8 +423,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         
         // Recalcular totales después de que el formulario se haya actualizado completamente
         // Usamos un callback independiente para evitar renderizados infinitos
+        // Usamos setTimeout con una referencia segura al formulario
+        const formRef = form; // Capturamos la referencia en una constante estable
         window.setTimeout(() => {
-          if (form) calculateInvoiceTotals(form);
+          if (formRef) calculateInvoiceTotals(formRef);
         }, 200);
       }
     }
@@ -690,8 +704,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         amount: -15, 
         isPercentage: true 
       });
-      // Recalcular totales después de agregar impuesto
-      window.setTimeout(() => { if (form) calculateInvoiceTotals(form); }, 10);;
+      // Recalcular totales después de agregar impuesto usando referencia segura
+      const formRef = form; // Capturar en variable local
+      window.setTimeout(() => { 
+        if (formRef) calculateInvoiceTotals(formRef); 
+      }, 10);
     } else if (taxType === 'iva') {
       // IVA adicional (21%)
       appendTax({ 
@@ -699,8 +716,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         amount: 21, 
         isPercentage: true 
       });
-      // Recalcular totales después de agregar impuesto
-      setTimeout(() => calculateInvoiceTotals(form), 0);
+      // Recalcular totales después de agregar impuesto con referencia estable
+      const formRef = form; // Capturar referencia en variable local
+      window.setTimeout(() => { 
+        if (formRef) calculateInvoiceTotals(formRef); 
+      }, 10);
     } else {
       // Mostrar diálogo para impuesto personalizado
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
@@ -712,8 +732,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const handleAddTaxFromDialog = () => {
     appendTax(newTaxData);
     setShowTaxDialog(false);
-    // Recalcular totales después de agregar impuesto
-    setTimeout(() => calculateInvoiceTotals(form), 0);
+    // Recalcular totales después de agregar impuesto con referencia segura
+    const formRef = form; // Capturamos la referencia actual
+    window.setTimeout(() => { 
+      if (formRef) calculateInvoiceTotals(formRef); 
+    }, 10);
   };
 
   // Función que maneja la creación o actualización de un cliente
