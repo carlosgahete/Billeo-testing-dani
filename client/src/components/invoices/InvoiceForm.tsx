@@ -110,35 +110,42 @@ function calculateInvoiceTotals(formInstance: any) {
   const safeTotal = Math.max(0, total);
   
   // Actualizamos con un pequeño retraso para evitar pérdida de foco durante edición
-  lastCalculationTimeout = setTimeout(() => {
+  // Usamos una técnica más segura para evitar bucles de rerenderizado
+  const formRef = formInstance; // Capturamos la referencia actual en una variable local
+  
+  lastCalculationTimeout = window.setTimeout(() => {
     // Verificamos que la instancia del formulario sigue siendo válida
-    if (!formInstance || typeof formInstance.setValue !== 'function') {
+    if (!formRef || typeof formRef.setValue !== 'function') {
       console.warn("⚠️ Formulario no válido al actualizar valores");
       return;
     }
     
-    // Actualizamos los items con los nuevos subtotales calculados
-    formInstance.setValue("items", updatedItems, { shouldValidate: false });
-    
-    // Actualizamos los totales de la factura sin validar para evitar pérdida de foco
-    formInstance.setValue("subtotal", subtotal, { shouldValidate: false });
-    formInstance.setValue("tax", tax, { shouldValidate: false });
-    formInstance.setValue("total", safeTotal, { shouldValidate: false });
-    
-    // Log para debug
-    console.log("💰 Cálculo de totales:", {
-      subtotal,
-      tax,
-      additionalTaxesTotal,
-      total: safeTotal,
-      desglose: additionalTaxes.map((tax: any) => ({
-        nombre: tax.name,
-        valor: tax.isPercentage ? 
-          `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
-          `${tax.amount}€`
-      }))
-    });
-  }, 5); // Retraso mínimo para evitar perder el foco
+    try {
+      // Actualizamos los items con los nuevos subtotales calculados - con captura de errores
+      formRef.setValue("items", updatedItems, { shouldValidate: false });
+      
+      // Actualizamos los totales de la factura sin validar para evitar pérdida de foco
+      formRef.setValue("subtotal", subtotal, { shouldValidate: false });
+      formRef.setValue("tax", tax, { shouldValidate: false });
+      formRef.setValue("total", safeTotal, { shouldValidate: false });
+      
+      // Log para debug
+      console.log("💰 Cálculo de totales:", {
+        subtotal,
+        tax,
+        additionalTaxesTotal,
+        total: safeTotal,
+        desglose: additionalTaxes.map((tax: any) => ({
+          nombre: tax.name,
+          valor: tax.isPercentage ? 
+            `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
+            `${tax.amount}€`
+        }))
+      });
+    } catch (error) {
+      console.error("Error al actualizar valores del formulario:", error);
+    }
+  }, 10); // Aumentamos ligeramente el retraso para mayor seguridad
   
   // Devolvemos los valores calculados para uso inmediato si es necesario
   return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
@@ -1194,7 +1201,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 onChange={(e) => {
                                   field.onChange(parseFloat(e.target.value));
                                 }}
-                                onBlur={() => calculateInvoiceTotals(form)}
+                                onBlur={() => { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1357,7 +1364,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                       onChange={(e) => {
                                         field.onChange(parseFloat(e.target.value));
                                       }}
-                                      onBlur={() => calculateInvoiceTotals(form)}
+                                      onBlur={() => { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }}
                                       className="h-8 text-sm"
                                     />
                                     
