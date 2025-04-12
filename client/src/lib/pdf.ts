@@ -852,11 +852,30 @@ export async function generateQuotePDF(
     // Volver a configuración normal
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0);
-    doc.text("Para más información o consultas, no dude en contactarnos.", 14, finalY + 42);
     
+    // Variables para controlar la posición Y de cada elemento
+    let notesYPosition = finalY + 42;
+    
+    doc.text("Para más información o consultas, no dude en contactarnos.", 14, notesYPosition);
+    notesYPosition += 8;
+    
+    // Comprueba si las notas ya contienen información bancaria
+    const notesHaveBankInfo = quote.notes && 
+      (quote.notes.toLowerCase().includes("transferencia bancaria") || 
+       quote.notes.toLowerCase().includes("iban"));
+    
+    // Si las notas no contienen información bancaria, la añadimos
+    if (!notesHaveBankInfo) {
+      doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
+      notesYPosition += 6;
+      doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, notesYPosition);
+      notesYPosition += 10;
+    }
+    
+    // Añadimos las notas si existen
     if (quote.notes) {
-      doc.text("NOTAS:", 14, finalY + 46);
-      doc.text(quote.notes, 14, finalY + 52);
+      doc.text("NOTAS:", 14, notesYPosition);
+      doc.text(quote.notes, 14, notesYPosition + 6);
     }
     
     // Add footer
