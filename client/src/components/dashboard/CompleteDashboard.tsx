@@ -27,7 +27,7 @@ interface CompleteDashboardProps {
 const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
-  // Ya no necesitamos el estado graphView, usamos una visualización fija trimestral
+  const [comparisonViewType, setComparisonViewType] = useState<"quarterly" | "yearly">("quarterly");
   const [_, navigate] = useLocation();
   
   // Efecto para cerrar los menus al hacer clic fuera de ellos
@@ -178,77 +178,98 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     return "Q4";
   };
 
-  // Preparar datos reales para el gráfico de comparativa financiera por trimestres
+  // Preparar datos reales para el gráfico de comparativa financiera
   const prepareFinancialComparisonData = () => {
     if (!transactions) return [];
 
-    // Vista por trimestres - Única opción disponible
-    const quarterlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
-      "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
-      "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
-      "Q3": { Ingresos: 0, Gastos: 0, Resultado: 0 },
-      "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
-    };
+    // Si es vista trimestral
+    if (comparisonViewType === "quarterly") {
+      // Vista por trimestres
+      const quarterlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
+        "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        "Q3": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
+      };
 
-    // Procesar transacciones (gastos) y agruparlas por trimestre
-    transactions.forEach(tx => {
-      if (!tx.date) return;
-      
-      const txDate = new Date(tx.date);
-      if (txDate.getFullYear().toString() !== year) return;
-      
-      const quarter = getQuarterFromDate(txDate);
-      const amount = parseFloat(tx.amount);
+      // Procesar transacciones (gastos) y agruparlas por trimestre
+      transactions.forEach(tx => {
+        if (!tx.date) return;
+        
+        const txDate = new Date(tx.date);
+        if (txDate.getFullYear().toString() !== year) return;
+        
+        const quarter = getQuarterFromDate(txDate);
+        const amount = parseFloat(tx.amount);
 
-      if (tx.type === "income") {
-        // Para ingresos de transacciones directas (aunque no hay ninguna actualmente)
-        // Usamos la base imponible (sin IVA)
-        const baseAmount = Math.round(amount / 1.21);
-        quarterlyData[quarter].Ingresos += baseAmount;
-      } else {
-        // Para gastos
-        // Usamos la base imponible (sin IVA)
-        const baseAmount = Math.round(amount / 1.21);
-        quarterlyData[quarter].Gastos += baseAmount;
+        if (tx.type === "income") {
+          // Para ingresos de transacciones directas (aunque no hay ninguna actualmente)
+          // Usamos la base imponible (sin IVA)
+          const baseAmount = Math.round(amount / 1.21);
+          quarterlyData[quarter].Ingresos += baseAmount;
+        } else {
+          // Para gastos
+          // Usamos la base imponible (sin IVA)
+          const baseAmount = Math.round(amount / 1.21);
+          quarterlyData[quarter].Gastos += baseAmount;
+        }
+      });
+
+      // Agregamos los ingresos netos (sin IVA) si están disponibles en las estadísticas
+      if (baseImponibleIngresos > 0 && 
+          Object.values(quarterlyData).every(data => data.Ingresos === 0)) {
+        
+        // Sabemos que los ingresos están en Q2 (abril) según los logs
+        // Usamos directamente el valor de baseImponibleIngresos que ya está sin IVA
+        quarterlyData["Q2"].Ingresos = baseImponibleIngresos;
       }
-    });
 
-    // Agregamos los ingresos netos (sin IVA) si están disponibles en las estadísticas
-    if (baseImponibleIngresos > 0 && 
-        Object.values(quarterlyData).every(data => data.Ingresos === 0)) {
-      
-      // Sabemos que los ingresos están en Q2 (abril) según los logs
-      // Usamos directamente el valor de baseImponibleIngresos que ya está sin IVA
-      quarterlyData["Q2"].Ingresos = baseImponibleIngresos;
+      // Calculamos los gastos totales netos (sin IVA) si no hay transacciones
+      let totalGastosNetos = 0;
+      Object.values(quarterlyData).forEach(data => {
+        totalGastosNetos += data.Gastos;
+      });
+
+      // Si los gastos calculados no coinciden con el baseImponibleGastos, ajustamos
+      if (totalGastosNetos === 0 && baseImponibleGastos > 0) {
+        // Asignamos todos los gastos al Q2 (abril) según los logs
+        quarterlyData["Q2"].Gastos = baseImponibleGastos;
+      }
+
+      // Calcular el resultado para cada trimestre (neto)
+      Object.keys(quarterlyData).forEach(quarter => {
+        quarterlyData[quarter].Resultado = 
+          quarterlyData[quarter].Ingresos - quarterlyData[quarter].Gastos;
+      });
+
+      console.log("Quarterly data for financial comparison (net values):", quarterlyData);
+
+      // Convertir a array para el gráfico
+      return Object.entries(quarterlyData).map(([quarter, data]) => ({
+        quarter,
+        Ingresos: data.Ingresos,
+        Gastos: data.Gastos,
+        Resultado: data.Resultado
+      }));
+    } 
+    else {
+      // Vista por años
+      const yearlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
+        [year]: { Ingresos: baseImponibleIngresos, Gastos: baseImponibleGastos, Resultado: baseImponibleIngresos - baseImponibleGastos },
+        [(parseInt(year) - 1).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        [(parseInt(year) - 2).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 }
+      };
+
+      console.log("Yearly data for financial comparison:", yearlyData);
+
+      // Convertir a array para el gráfico
+      return Object.entries(yearlyData).map(([year, data]) => ({
+        quarter: year, // Reutilizamos el mismo campo para compatibilidad con el gráfico
+        Ingresos: data.Ingresos,
+        Gastos: data.Gastos,
+        Resultado: data.Resultado
+      })).reverse(); // Ordenamos de año más antiguo a más reciente
     }
-
-    // Calculamos los gastos totales netos (sin IVA) si no hay transacciones
-    let totalGastosNetos = 0;
-    Object.values(quarterlyData).forEach(data => {
-      totalGastosNetos += data.Gastos;
-    });
-
-    // Si los gastos calculados no coinciden con el baseImponibleGastos, ajustamos
-    if (totalGastosNetos === 0 && baseImponibleGastos > 0) {
-      // Asignamos todos los gastos al Q2 (abril) según los logs
-      quarterlyData["Q2"].Gastos = baseImponibleGastos;
-    }
-
-    // Calcular el resultado para cada trimestre (neto)
-    Object.keys(quarterlyData).forEach(quarter => {
-      quarterlyData[quarter].Resultado = 
-        quarterlyData[quarter].Ingresos - quarterlyData[quarter].Gastos;
-    });
-
-    console.log("Quarterly data for financial comparison (net values):", quarterlyData);
-
-    // Convertir a array para el gráfico
-    return Object.entries(quarterlyData).map(([quarter, data]) => ({
-      quarter,
-      Ingresos: data.Ingresos,
-      Gastos: data.Gastos,
-      Resultado: data.Resultado
-    }));
   };
 
   // Datos para el gráfico de comparativa financiera
@@ -533,9 +554,24 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                   <p className="text-xs text-gray-500 mt-0.5">Evolución por período</p>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 flex items-center gap-1">
-                <BarChart3 className="h-3 w-3" strokeWidth={1.5} />
-                <span>Trimestral</span>
+              <div className="flex items-center gap-2">
+                <Select 
+                  defaultValue="quarterly" 
+                  value={comparisonViewType}
+                  onValueChange={(value) => {
+                    setComparisonViewType(value as "quarterly" | "yearly");
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-28 text-xs bg-white focus:ring-0">
+                    <SelectValue>
+                      {comparisonViewType === "quarterly" ? "Trimestral" : "Anual"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quarterly" className="text-xs">Trimestral</SelectItem>
+                    <SelectItem value="yearly" className="text-xs">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
