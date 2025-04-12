@@ -570,59 +570,84 @@ export default function SimpleLibroRegistros() {
     doc.save(fileName);
   };
   
-  // Función para descargar como Excel
+  // Función para descargar como Excel (CSV mejorado)
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
-    // Crear datos para el CSV
-    const invoiceRows = filteredData.invoices.map(invoice => ({
-      'Tipo': 'Factura',
-      'Número': invoice.number,
-      'Fecha': formatDate(invoice.issueDate),
-      'Cliente/Proveedor': invoice.client,
-      'Base Imponible': invoice.baseAmount.toFixed(2),
-      'IVA': invoice.vatAmount.toFixed(2),
-      'Total': invoice.total.toFixed(2),
-      'Estado': invoice.status === 'paid' ? 'Pagada' : 
-               invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
-    }));
+    // Información del encabezado
+    const titleRow = [`LIBRO DE REGISTROS - Usuario: ${userId || 'Todos'}`];
+    const dateRow = [`Fecha de generación: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`];
     
-    const transactionRows = filteredData.transactions.map(transaction => ({
-      'Tipo': transaction.type === 'income' ? 'Ingreso' : 'Gasto',
-      'Número': '-',
-      'Fecha': formatDate(transaction.date),
-      'Cliente/Proveedor': transaction.description,
-      'Categoría': transaction.category || 'Sin categoría',
-      'Total': transaction.amount.toFixed(2),
-      'Estado': '-'
-    }));
+    // Filtros aplicados
+    let filtersText = `Filtros: Año ${selectedYear !== 'all' ? selectedYear : 'Todos'}`;
+    if (selectedQuarter !== 'all') {
+      filtersText += `, Trimestre ${selectedQuarter.replace('Q', '')}`;
+    }
+    if (selectedMonth !== 'all') {
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      filtersText += `, Mes ${monthNames[parseInt(selectedMonth) - 1]}`;
+    }
+    const filtersRow = [filtersText];
     
-    const quoteRows = filteredData.quotes.map(quote => ({
-      'Tipo': 'Presupuesto',
-      'Número': quote.number,
-      'Fecha': formatDate(quote.issueDate),
-      'Cliente/Proveedor': quote.clientName,
-      'Total': quote.total.toFixed(2),
-      'Estado': quote.status === 'accepted' ? 'Aceptado' : 
-               quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
-    }));
+    // Crear sección de resumen
+    const summaryHeaderRow = [`RESUMEN`];
+    const summaryDataRows = [
+      [`Total Facturas:,${filteredData.summary.totalInvoices},Importe:,${formatCurrency(filteredData.summary.incomeTotal)}`],
+      [`Total Gastos:,${filteredData.summary.totalTransactions},Importe:,${formatCurrency(filteredData.summary.expenseTotal)}`],
+      [`Total Presupuestos:,${filteredData.summary.totalQuotes},Balance:,${formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)}`]
+    ];
     
-    // Combinar todos los datos
-    const allRows = [...invoiceRows, ...transactionRows, ...quoteRows];
+    // Espaciador
+    const emptyRow = [''];
     
-    // Convertir a CSV
-    const headers = Object.keys(allRows[0] || {}).join(',');
-    const csvRows = allRows.map(row => 
-      Object.values(row).map(value => 
-        typeof value === 'string' && value.includes(',') ? 
-        `"${value}"` : value
-      ).join(',')
+    // Sección de facturas
+    const invoiceHeaderRow = filteredData.invoices.length > 0 ? [`FACTURAS EMITIDAS`] : [];
+    const invoiceColumnsRow = filteredData.invoices.length > 0 ? [`Tipo,Número,Fecha,Cliente/Proveedor,Base Imponible,IVA,Total,Estado`] : [];
+    const invoiceRows = filteredData.invoices.map(invoice => 
+      [`Factura,${invoice.number},${formatDate(invoice.issueDate)},${cleanCSVField(invoice.client)},${invoice.baseAmount.toFixed(2)},${invoice.vatAmount.toFixed(2)},${invoice.total.toFixed(2)},${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}`]
     );
     
-    const csvContent = [headers, ...csvRows].join('\n');
+    // Sección de transacciones
+    const transactionHeaderRow = filteredData.transactions.length > 0 ? [`TRANSACCIONES Y GASTOS`] : [];
+    const transactionColumnsRow = filteredData.transactions.length > 0 ? [`Tipo,Número,Fecha,Descripción,Categoría,Total,Estado`] : [];
+    const transactionRows = filteredData.transactions.map(transaction => 
+      [`${transaction.type === 'income' ? 'Ingreso' : 'Gasto'},-,${formatDate(transaction.date)},${cleanCSVField(transaction.description)},${cleanCSVField(transaction.category || 'Sin categoría')},${transaction.amount.toFixed(2)},-`]
+    );
     
-    // Crear y descargar el archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Sección de presupuestos
+    const quoteHeaderRow = filteredData.quotes.length > 0 ? [`PRESUPUESTOS`] : [];
+    const quoteColumnsRow = filteredData.quotes.length > 0 ? [`Tipo,Número,Fecha,Cliente/Proveedor,Total,Estado`] : [];
+    const quoteRows = filteredData.quotes.map(quote => 
+      [`Presupuesto,${quote.number},${formatDate(quote.issueDate)},${cleanCSVField(quote.clientName)},${quote.total.toFixed(2)},${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}`]
+    );
+    
+    // Pie de página
+    const footerRow = [`Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos`];
+    
+    // Función auxiliar para limpiar campos con comas
+    function cleanCSVField(field: string) {
+      if (field && field.includes(',')) {
+        return `"${field}"`;
+      }
+      return field;
+    }
+    
+    // Combinar todas las secciones
+    const allRows = [
+      ...titleRow, ...dateRow, ...filtersRow, emptyRow,
+      ...summaryHeaderRow, ...summaryDataRows, emptyRow,
+      ...invoiceHeaderRow, ...invoiceColumnsRow, ...invoiceRows, emptyRow,
+      ...transactionHeaderRow, ...transactionColumnsRow, ...transactionRows, emptyRow,
+      ...quoteHeaderRow, ...quoteColumnsRow, ...quoteRows, emptyRow,
+      ...footerRow
+    ];
+    
+    // Convertir a CSV
+    const csvContent = allRows.join('\n');
+    
+    // Para que Excel reconozca correctamente los caracteres especiales
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     
