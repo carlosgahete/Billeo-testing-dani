@@ -440,7 +440,7 @@ const ExpensesByCategoryNew: React.FC<{
         {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
           {/* Lado izquierdo: Gráfico donut como en la imagen de referencia */}
-          <div className="w-1/2 flex items-center justify-center pt-6">
+          <div className="w-1/2 flex items-center justify-center pt-12">
             {/* Gráfico de donut (anillo) */}
             <div className="relative w-44 h-44">
               {/* Círculo base (agujero blanco del centro) */}
@@ -522,7 +522,7 @@ const ExpensesByCategoryNew: React.FC<{
           </div>
           
           {/* Lado derecho: Lista de categorías con scroll cuando es necesario */}
-          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[280px] overflow-y-auto custom-scrollbar pr-3 pt-6">
+          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[280px] overflow-y-auto custom-scrollbar pr-3 pt-12">
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
