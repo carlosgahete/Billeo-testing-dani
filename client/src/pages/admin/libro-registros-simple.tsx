@@ -468,8 +468,12 @@ export default function SimpleLibroRegistros() {
       yPos = (doc as any).lastAutoTable.finalY + 10;
     }
     
-    // Sección de transacciones
-    if (filteredData.transactions.length > 0) {
+    // Separar las transacciones por tipo
+    const incomeTransactions = filteredData.transactions.filter(transaction => transaction.type === 'income');
+    const expenseTransactions = filteredData.transactions.filter(transaction => transaction.type === 'expense');
+    
+    // Sección de ingresos
+    if (incomeTransactions.length > 0) {
       // Comprobar si necesitamos una nueva página
       if (yPos > 220) {
         doc.addPage();
@@ -477,26 +481,63 @@ export default function SimpleLibroRegistros() {
       }
       
       doc.setFontSize(headerFontSize);
-      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-      doc.text('TRANSACCIONES Y GASTOS', 15, yPos);
+      doc.setTextColor(5, 150, 105); // Verde esmeralda
+      doc.text('INGRESOS', 15, yPos);
       yPos += 10;
       
-      // Tabla de transacciones
-      const transactionHeaders = [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']];
-      const transactionData = filteredData.transactions.map(transaction => [
+      // Tabla de ingresos
+      const incomeHeaders = [['Fecha', 'Descripción', 'Categoría', 'Importe']];
+      const incomeData = incomeTransactions.map(transaction => [
         formatDate(transaction.date),
         transaction.description.length > 30 ? transaction.description.substring(0, 27) + '...' : transaction.description,
         transaction.category || 'Sin categoría',
-        transaction.type === 'income' ? 'Ingreso' : 'Gasto',
         formatCurrency(transaction.amount)
       ]);
       
       autoTable(doc, {
-        head: transactionHeaders,
-        body: transactionData,
+        head: incomeHeaders,
+        body: incomeData,
         startY: yPos,
         headStyles: { 
-          fillColor: [255, 251, 235],
+          fillColor: [236, 253, 245], // Fondo verde claro
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        theme: 'grid'
+      });
+      
+      // Actualizar posición Y
+      yPos = (doc as any).lastAutoTable.finalY + 10;
+    }
+    
+    // Sección de gastos
+    if (expenseTransactions.length > 0) {
+      // Comprobar si necesitamos una nueva página
+      if (yPos > 220) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.setFontSize(headerFontSize);
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); // Ámbar
+      doc.text('GASTOS', 15, yPos);
+      yPos += 10;
+      
+      // Tabla de gastos
+      const expenseHeaders = [['Fecha', 'Descripción', 'Categoría', 'Importe']];
+      const expenseData = expenseTransactions.map(transaction => [
+        formatDate(transaction.date),
+        transaction.description.length > 30 ? transaction.description.substring(0, 27) + '...' : transaction.description,
+        transaction.category || 'Sin categoría',
+        formatCurrency(transaction.amount)
+      ]);
+      
+      autoTable(doc, {
+        head: expenseHeaders,
+        body: expenseData,
+        startY: yPos,
+        headStyles: { 
+          fillColor: [255, 251, 235], // Fondo ámbar claro
           textColor: [0, 0, 0],
           fontStyle: 'bold'
         },
@@ -600,25 +641,36 @@ export default function SimpleLibroRegistros() {
     // Espaciador
     const emptyRow = [''];
     
+    // Separar las transacciones por tipo
+    const incomeTransactions = filteredData.transactions.filter(transaction => transaction.type === 'income');
+    const expenseTransactions = filteredData.transactions.filter(transaction => transaction.type === 'expense');
+    
     // Sección de facturas
     const invoiceHeaderRow = filteredData.invoices.length > 0 ? [`FACTURAS EMITIDAS`] : [];
-    const invoiceColumnsRow = filteredData.invoices.length > 0 ? [`Tipo,Número,Fecha,Cliente/Proveedor,Base Imponible,IVA,Total,Estado`] : [];
+    const invoiceColumnsRow = filteredData.invoices.length > 0 ? [`Número,Fecha,Cliente/Proveedor,Base Imponible,IVA,Total,Estado`] : [];
     const invoiceRows = filteredData.invoices.map(invoice => 
-      [`Factura,${invoice.number},${formatDate(invoice.issueDate)},${cleanCSVField(invoice.client)},${invoice.baseAmount.toFixed(2)},${invoice.vatAmount.toFixed(2)},${invoice.total.toFixed(2)},${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}`]
+      [`${invoice.number},${formatDate(invoice.issueDate)},${cleanCSVField(invoice.client)},${invoice.baseAmount.toFixed(2)},${invoice.vatAmount.toFixed(2)},${invoice.total.toFixed(2)},${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}`]
     );
     
-    // Sección de transacciones
-    const transactionHeaderRow = filteredData.transactions.length > 0 ? [`TRANSACCIONES Y GASTOS`] : [];
-    const transactionColumnsRow = filteredData.transactions.length > 0 ? [`Tipo,Número,Fecha,Descripción,Categoría,Total,Estado`] : [];
-    const transactionRows = filteredData.transactions.map(transaction => 
-      [`${transaction.type === 'income' ? 'Ingreso' : 'Gasto'},-,${formatDate(transaction.date)},${cleanCSVField(transaction.description)},${cleanCSVField(transaction.category || 'Sin categoría')},${transaction.amount.toFixed(2)},-`]
+    // Sección de ingresos (transacciones de tipo ingreso)
+    const incomeHeaderRow = incomeTransactions.length > 0 ? [`INGRESOS`] : [];
+    const incomeColumnsRow = incomeTransactions.length > 0 ? [`Fecha,Descripción,Categoría,Importe`] : [];
+    const incomeRows = incomeTransactions.map(transaction => 
+      [`${formatDate(transaction.date)},${cleanCSVField(transaction.description)},${cleanCSVField(transaction.category || 'Sin categoría')},${transaction.amount.toFixed(2)}`]
+    );
+    
+    // Sección de gastos (transacciones de tipo gasto)
+    const expenseHeaderRow = expenseTransactions.length > 0 ? [`GASTOS`] : [];
+    const expenseColumnsRow = expenseTransactions.length > 0 ? [`Fecha,Descripción,Categoría,Importe`] : [];
+    const expenseRows = expenseTransactions.map(transaction => 
+      [`${formatDate(transaction.date)},${cleanCSVField(transaction.description)},${cleanCSVField(transaction.category || 'Sin categoría')},${transaction.amount.toFixed(2)}`]
     );
     
     // Sección de presupuestos
     const quoteHeaderRow = filteredData.quotes.length > 0 ? [`PRESUPUESTOS`] : [];
-    const quoteColumnsRow = filteredData.quotes.length > 0 ? [`Tipo,Número,Fecha,Cliente/Proveedor,Total,Estado`] : [];
+    const quoteColumnsRow = filteredData.quotes.length > 0 ? [`Número,Fecha,Cliente/Proveedor,Total,Estado`] : [];
     const quoteRows = filteredData.quotes.map(quote => 
-      [`Presupuesto,${quote.number},${formatDate(quote.issueDate)},${cleanCSVField(quote.clientName)},${quote.total.toFixed(2)},${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}`]
+      [`${quote.number},${formatDate(quote.issueDate)},${cleanCSVField(quote.clientName)},${quote.total.toFixed(2)},${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}`]
     );
     
     // Pie de página
@@ -637,7 +689,8 @@ export default function SimpleLibroRegistros() {
       ...titleRow, ...dateRow, ...filtersRow, emptyRow,
       ...summaryHeaderRow, ...summaryDataRows, emptyRow,
       ...invoiceHeaderRow, ...invoiceColumnsRow, ...invoiceRows, emptyRow,
-      ...transactionHeaderRow, ...transactionColumnsRow, ...transactionRows, emptyRow,
+      ...incomeHeaderRow, ...incomeColumnsRow, ...incomeRows, emptyRow,
+      ...expenseHeaderRow, ...expenseColumnsRow, ...expenseRows, emptyRow,
       ...quoteHeaderRow, ...quoteColumnsRow, ...quoteRows, emptyRow,
       ...footerRow
     ];
