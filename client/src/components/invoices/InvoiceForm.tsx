@@ -619,8 +619,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Ya tenemos calculateInvoiceTotals definida globalmente
 
   const handleSubmit = (data: InvoiceFormValues) => {
-    // En lugar de confiar en la función calculateInvoiceTotals que ahora usa setTimeout,
-    // vamos a calcular los valores directamente para el envío
+    // Debido a problemas con los bucles de renderizado, ya no usamos calculateInvoiceTotals aquí,
+    // en su lugar calculamos los valores directamente para evitar problemas
     const items = form.getValues("items") || [];
     const additionalTaxes = form.getValues("additionalTaxes") || [];
     
@@ -1127,8 +1127,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
                                   field.onChange(value);
-                                  // Calcular totales inmediatamente al cambiar el valor
-                                  setTimeout(() => calculateInvoiceTotals(form), 0);
+                                  // Calcular totales inmediatamente al cambiar el valor con referencia segura
+                                  const formRef = form; // Capturar referencia en variable local
+                                  window.setTimeout(() => { 
+                                    if (formRef) calculateInvoiceTotals(formRef); 
+                                  }, 10);
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
@@ -1233,8 +1236,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         size="icon"
                         onClick={() => {
                           remove(index);
-                          // Calcular totales inmediatamente al eliminar un ítem
-                          setTimeout(() => calculateInvoiceTotals(form), 0);
+                          // Calcular totales inmediatamente al eliminar un ítem con referencia segura
+                          const formRef = form; // Capturar referencia en variable local
+                          window.setTimeout(() => { 
+                            if (formRef) calculateInvoiceTotals(formRef); 
+                          }, 10);
                         }}
                         disabled={fields.length === 1}
                         className="h-10 w-10"
@@ -1261,8 +1267,11 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           taxRate: 21,
                           subtotal: 0,
                         });
-                        // Calcular totales inmediatamente después de añadir un nuevo ítem
-                        setTimeout(() => calculateInvoiceTotals(form), 0);
+                        // Calcular totales inmediatamente después de añadir un nuevo ítem con referencia segura
+                        const formRef = form; // Capturar referencia en variable local
+                        window.setTimeout(() => { 
+                          if (formRef) calculateInvoiceTotals(formRef); 
+                        }, 10);
                       }}
                     >
                       <Plus className="h-4 w-4 mr-2" />
