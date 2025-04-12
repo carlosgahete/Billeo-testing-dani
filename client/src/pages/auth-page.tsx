@@ -26,14 +26,8 @@ export default function AuthPage() {
     if (user) {
       // Use a minimal timeout to improve UX and avoid flicker
       const timer = setTimeout(() => {
-        // Si es billeo_admin o tiene rol de admin, redirigir a página de administración
-        if (user.role === 'admin' || user.role === 'superadmin' || 
-            user.username === 'Superadmin' || user.username === 'billeo_admin') {
-          // Redirección actualizada a la ruta correcta
-          navigate("/admin/libro-registros-simple/1");
-        } else {
-          navigate("/");
-        }
+        // Todos los usuarios se redirigen primero al dashboard
+        navigate("/"); // Esta ruta "/" va al dashboard completo
       }, 10);
       return () => clearTimeout(timer);
     }
