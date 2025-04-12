@@ -559,7 +559,8 @@ export default function SimpleLibroRegistros() {
     `;
     
     // Crear un Blob con el HTML
-    const blob = new Blob([htmlContent], { type: 'application/octet-stream' });
+    // Usamos 'application/force-download' para forzar la descarga sin abrir
+    const blob = new Blob([htmlContent], { type: 'application/force-download' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace para descargar
@@ -577,18 +578,34 @@ export default function SimpleLibroRegistros() {
     }
     fileName += '.html'; // Usamos HTML que puede ser abierto y guardado como PDF
     
+    // Configuramos todos los atributos para forzar la descarga sin abrir
     link.href = url;
     link.setAttribute('download', fileName);
-    link.setAttribute('target', '_blank');
+    // Quitamos target="_blank" que puede causar problemas
     link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
     
-    // Limpieza
+    // Añadimos al DOM, hacemos clic y limpiamos con un poco más de retraso
+    document.body.appendChild(link);
+    
+    // Pequeño retraso antes de hacer clic
     setTimeout(() => {
-      document.body.removeChild(link);
-      document.body.removeChild(printableDiv);
-      URL.revokeObjectURL(url);
+      try {
+        link.click();
+      } catch (err) {
+        console.error("Error al hacer clic en el enlace de descarga:", err);
+        alert("Hubo un problema al descargar el PDF. Por favor, inténtelo de nuevo.");
+      }
+      
+      // Limpieza con más tiempo
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        if (document.body.contains(printableDiv)) {
+          document.body.removeChild(printableDiv);
+        }
+        URL.revokeObjectURL(url);
+      }, 300);
     }, 100);
   };
   
@@ -872,24 +889,38 @@ export default function SimpleLibroRegistros() {
     `;
     
     // Crear un blob con el contenido HTML
-    // Usamos 'application/octet-stream' para forzar la descarga sin abrir
-    const blob = new Blob([html], { type: 'application/octet-stream' });
+    // Forzamos más agresivamente el tipo a un tipo binario genérico
+    const blob = new Blob([html], { type: 'application/force-download' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace y hacer clic para descargar
     const link = document.createElement('a');
+    
+    // Configuramos todos los atributos para forzar la descarga sin abrir
     link.href = url;
     link.setAttribute('download', fileName);
-    // Añadimos target="_blank" para evitar que el navegador intente abrir el archivo
-    link.setAttribute('target', '_blank');
+    // Quitamos target="_blank" que puede causar problemas
     link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
     
-    // Limpieza
+    // Añadimos al DOM, hacemos clic y limpiamos con un poco más de retraso
+    document.body.appendChild(link);
+    
+    // Pequeño retraso antes de hacer clic
     setTimeout(() => {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Liberar memoria
+      try {
+        link.click();
+      } catch (err) {
+        console.error("Error al hacer clic en el enlace de descarga:", err);
+        alert("Hubo un problema al descargar el Excel. Por favor, inténtelo de nuevo.");
+      }
+      
+      // Limpieza con más tiempo
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(url);
+      }, 300);
     }, 100);
   };
 
