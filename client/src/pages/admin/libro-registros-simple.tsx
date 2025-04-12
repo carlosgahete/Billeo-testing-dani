@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface LibroRegistrosData {
   invoices: Invoice[];
@@ -367,47 +369,190 @@ export default function SimpleLibroRegistros() {
   const handleDownloadPDF = () => {
     if (!filteredData) return;
     
-    // Para simplificar, vamos a crear un texto simple para descargar
-    let content = "LIBRO DE REGISTROS\n\n";
-    content += `Usuario ID: ${userId || 'Todos'}\n`;
-    content += `Fecha de generación: ${new Date().toLocaleDateString('es-ES')}\n`;
-    content += `Filtros: Año ${selectedYear}, Trimestre ${selectedQuarter}, Mes ${selectedMonth}\n\n`;
+    // Crear un nuevo documento PDF
+    const doc = new jsPDF();
     
-    content += "RESUMEN:\n";
-    content += `- Total Facturas: ${filteredData.summary.totalInvoices} - Importe: ${formatCurrency(filteredData.summary.incomeTotal)}\n`;
-    content += `- Total Gastos: ${filteredData.summary.totalTransactions} - Importe: ${formatCurrency(filteredData.summary.expenseTotal)}\n`;
-    content += `- Total Presupuestos: ${filteredData.summary.totalQuotes}\n`;
-    content += `- Balance: ${formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)}\n\n`;
+    // Configuraciones
+    const titleFontSize = 18;
+    const subtitleFontSize = 14;
+    const headerFontSize = 12;
+    const textFontSize = 10;
+    const smallFontSize = 8;
     
+    // Definimos los colores (en formato RGB)
+    const primaryColor = [37, 99, 235]; // Azul
+    const secondaryColor = [217, 119, 6]; // Ámbar
+    const tertiaryColor = [5, 150, 105]; // Esmeralda
+    const textColor = [60, 60, 60]; // Gris oscuro
+    
+    // Obtener fecha y hora actual
+    const currentDate = new Date().toLocaleDateString('es-ES');
+    const currentTime = new Date().toLocaleTimeString('es-ES');
+    
+    // Título
+    doc.setFontSize(titleFontSize);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('LIBRO DE REGISTROS', 105, 20, { align: 'center' });
+    
+    // Subtítulo (ID usuario)
+    doc.setFontSize(subtitleFontSize);
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.text(`Usuario ID: ${userId || 'Todos'}`, 105, 30, { align: 'center' });
+    
+    // Información de generación
+    doc.setFontSize(textFontSize);
+    doc.text(`Fecha de generación: ${currentDate} ${currentTime}`, 15, 40);
+    
+    // Filtros aplicados
+    let filtrosText = `Filtros: Año ${selectedYear !== 'all' ? selectedYear : 'Todos'}`;
+    if (selectedQuarter !== 'all') {
+      filtrosText += `, Trimestre ${selectedQuarter.replace('Q', '')}`;
+    }
+    if (selectedMonth !== 'all') {
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      filtrosText += `, Mes ${monthNames[parseInt(selectedMonth) - 1]}`;
+    }
+    doc.text(filtrosText, 15, 47);
+    
+    // Sección de resumen
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 52, 180, 30, 'F');
+    
+    doc.setFontSize(headerFontSize);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('RESUMEN', 20, 60);
+    
+    doc.setFontSize(textFontSize);
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.text(`Total Facturas: ${filteredData.summary.totalInvoices} - Importe: ${formatCurrency(filteredData.summary.incomeTotal)}`, 20, 67);
+    doc.text(`Total Gastos: ${filteredData.summary.totalTransactions} - Importe: ${formatCurrency(filteredData.summary.expenseTotal)}`, 20, 74);
+    doc.text(`Total Presupuestos: ${filteredData.summary.totalQuotes}`, 120, 67);
+    doc.text(`Balance: ${formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)}`, 120, 74);
+    
+    // Posición Y actual (para ir añadiendo contenido)
+    let yPos = 90;
+    
+    // Sección de facturas
     if (filteredData.invoices.length > 0) {
-      content += "FACTURAS:\n";
-      filteredData.invoices.forEach(invoice => {
-        content += `- Nº ${invoice.number} | ${formatDate(invoice.issueDate)} | ${invoice.client} | ${formatCurrency(invoice.total)} | ${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}\n`;
+      doc.setFontSize(headerFontSize);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text('FACTURAS EMITIDAS', 15, yPos);
+      yPos += 10;
+      
+      // Tabla de facturas
+      const invoiceHeaders = [['Número', 'Fecha', 'Cliente', 'Base', 'IVA', 'Total', 'Estado']];
+      const invoiceData = filteredData.invoices.map(invoice => [
+        invoice.number,
+        formatDate(invoice.issueDate),
+        invoice.client.length > 25 ? invoice.client.substring(0, 22) + '...' : invoice.client,
+        formatCurrency(invoice.baseAmount),
+        formatCurrency(invoice.vatAmount),
+        formatCurrency(invoice.total),
+        invoice.status === 'paid' ? 'Pagada' : 
+          invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+      ]);
+      
+      autoTable(doc, {
+        head: invoiceHeaders,
+        body: invoiceData,
+        startY: yPos,
+        headStyles: { 
+          fillColor: [230, 236, 255],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        theme: 'grid'
       });
-      content += "\n";
+      
+      // Actualizar posición Y
+      yPos = (doc as any).lastAutoTable.finalY + 10;
     }
     
+    // Sección de transacciones
     if (filteredData.transactions.length > 0) {
-      content += "TRANSACCIONES:\n";
-      filteredData.transactions.forEach(transaction => {
-        content += `- ${formatDate(transaction.date)} | ${transaction.description} | ${transaction.type === 'income' ? 'Ingreso' : 'Gasto'} | ${formatCurrency(transaction.amount)}\n`;
+      // Comprobar si necesitamos una nueva página
+      if (yPos > 220) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.setFontSize(headerFontSize);
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.text('TRANSACCIONES Y GASTOS', 15, yPos);
+      yPos += 10;
+      
+      // Tabla de transacciones
+      const transactionHeaders = [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']];
+      const transactionData = filteredData.transactions.map(transaction => [
+        formatDate(transaction.date),
+        transaction.description.length > 30 ? transaction.description.substring(0, 27) + '...' : transaction.description,
+        transaction.category || 'Sin categoría',
+        transaction.type === 'income' ? 'Ingreso' : 'Gasto',
+        formatCurrency(transaction.amount)
+      ]);
+      
+      autoTable(doc, {
+        head: transactionHeaders,
+        body: transactionData,
+        startY: yPos,
+        headStyles: { 
+          fillColor: [255, 251, 235],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        theme: 'grid'
       });
-      content += "\n";
+      
+      // Actualizar posición Y
+      yPos = (doc as any).lastAutoTable.finalY + 10;
     }
     
+    // Sección de presupuestos
     if (filteredData.quotes.length > 0) {
-      content += "PRESUPUESTOS:\n";
-      filteredData.quotes.forEach(quote => {
-        content += `- Nº ${quote.number} | ${formatDate(quote.issueDate)} | ${quote.clientName} | ${formatCurrency(quote.total)} | ${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}\n`;
+      // Comprobar si necesitamos una nueva página
+      if (yPos > 220) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.setFontSize(headerFontSize);
+      doc.setTextColor(tertiaryColor[0], tertiaryColor[1], tertiaryColor[2]);
+      doc.text('PRESUPUESTOS', 15, yPos);
+      yPos += 10;
+      
+      // Tabla de presupuestos
+      const quoteHeaders = [['Número', 'Fecha', 'Cliente', 'Total', 'Estado']];
+      const quoteData = filteredData.quotes.map(quote => [
+        quote.number,
+        formatDate(quote.issueDate),
+        quote.clientName.length > 30 ? quote.clientName.substring(0, 27) + '...' : quote.clientName,
+        formatCurrency(quote.total),
+        quote.status === 'accepted' ? 'Aceptado' : 
+          quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
+      ]);
+      
+      autoTable(doc, {
+        head: quoteHeaders,
+        body: quoteData,
+        startY: yPos,
+        headStyles: { 
+          fillColor: [236, 253, 245],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        theme: 'grid'
       });
     }
     
-    content += "\nDocumento generado por Billeo - Sistema de Gestión Financiera para Autónomos";
-    
-    // Crear y descargar el archivo
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    // Pie de página
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(smallFontSize);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos', 105, 285, { align: 'center' });
+      doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: 'right' });
+    }
     
     // Determinar nombre del archivo con período de tiempo
     let fileName = `libro_registros_${userId || 'todos'}`;
@@ -419,13 +564,10 @@ export default function SimpleLibroRegistros() {
         fileName += `_mes${selectedMonth}`;
       }
     }
-    fileName += '.txt';
+    fileName += '.pdf';
     
-    link.href = url;
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Guardar el PDF
+    doc.save(fileName);
   };
   
   // Función para descargar como Excel
