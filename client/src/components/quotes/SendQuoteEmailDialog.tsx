@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { generateQuotePDF } from "@/lib/pdf";
+import billeoLogo from '../../assets/billeo-logo.png';
 
 import {
   Dialog,
@@ -94,12 +95,18 @@ export function SendQuoteEmailDialog({
     }
 
     try {
+      // Si los datos de la empresa no incluyen un logo, usamos el logo por defecto de Billeo
+      const logoPath = companyInfo?.logo || billeoLogo;
+      
+      console.log("Usando logo para PDF de presupuesto:", logoPath);
+      
       // Generar el PDF como base64
       const pdfBase64 = await generateQuotePDF(
         quote,
         client,
         quoteItems,
-        { returnAsBase64: true } // Devuelve como base64 en lugar de descarga
+        { returnAsBase64: true }, // Devuelve como base64 en lugar de descarga
+        logoPath // Pasamos el logo para incluirlo en el PDF
       );
 
       // Enviar el correo electrónico si tenemos el pdf en base64

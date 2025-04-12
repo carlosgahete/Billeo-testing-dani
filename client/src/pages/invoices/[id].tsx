@@ -18,6 +18,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { generateInvoicePDF } from "@/lib/pdf";
 import { useToast } from "@/hooks/use-toast";
+import billeoLogo from '../../assets/billeo-logo.png';
 
 const InvoiceDetailPage = () => {
   const { id } = useParams();
@@ -111,9 +112,14 @@ const InvoiceDetailPage = () => {
   
   const handleExportPDF = async () => {
     try {
-      // Enviamos el logo de la empresa para incluirlo en el PDF
-      console.log("Usando logo para PDF:", companyData?.logo);
-      await generateInvoicePDF(invoice, client, items, false, companyData?.logo);
+      // Si los datos de la empresa no incluyen un logo, usamos el logo por defecto de Billeo
+      const logoPath = companyData?.logo || billeoLogo;
+      
+      console.log("Usando logo para PDF:", logoPath);
+      
+      // Enviamos el logo para incluirlo en el PDF
+      await generateInvoicePDF(invoice, client, items, false, logoPath);
+      
       toast({
         title: "PDF generado",
         description: `La factura ${invoice.invoiceNumber} ha sido exportada a PDF`,
