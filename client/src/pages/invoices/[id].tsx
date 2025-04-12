@@ -52,7 +52,12 @@ const InvoiceDetailPage = () => {
     enabled: !!data?.invoice?.clientId,
   });
   
-  const isLoadingAll = isLoading || (data?.invoice?.clientId && clientLoading);
+  // Cargar datos de la empresa para obtener el logo
+  const { data: companyData, isLoading: companyLoading } = useQuery({
+    queryKey: ["/api/company"],
+  });
+  
+  const isLoadingAll = isLoading || (data?.invoice?.clientId && clientLoading) || companyLoading;
   
   if (isEditMode) {
     return (
@@ -106,12 +111,15 @@ const InvoiceDetailPage = () => {
   
   const handleExportPDF = async () => {
     try {
-      await generateInvoicePDF(invoice, client, items);
+      // Enviamos el logo de la empresa para incluirlo en el PDF
+      console.log("Usando logo para PDF:", companyData?.logo);
+      await generateInvoicePDF(invoice, client, items, false, companyData?.logo);
       toast({
         title: "PDF generado",
         description: `La factura ${invoice.invoiceNumber} ha sido exportada a PDF`,
       });
     } catch (error: any) {
+      console.error("Error generando PDF:", error);
       toast({
         title: "Error",
         description: `No se pudo generar el PDF: ${error.message}`,
