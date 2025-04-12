@@ -410,8 +410,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         }
         
         // Recalcular totales después de que el formulario se haya actualizado completamente
-        setTimeout(() => {
-          calculateInvoiceTotals(form);
+        // Usamos un callback independiente para evitar renderizados infinitos
+        window.setTimeout(() => {
+          if (form) calculateInvoiceTotals(form);
         }, 200);
       }
     }
@@ -690,7 +691,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         isPercentage: true 
       });
       // Recalcular totales después de agregar impuesto
-      setTimeout(() => calculateInvoiceTotals(form), 0);
+      window.setTimeout(() => { if (form) calculateInvoiceTotals(form); }, 10);;
     } else if (taxType === 'iva') {
       // IVA adicional (21%)
       appendTax({ 
