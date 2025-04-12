@@ -130,7 +130,8 @@ export async function generateInvoicePDF(
   invoice: Invoice,
   client: Client,
   items: InvoiceItem[],
-  returnBlob: boolean = false
+  returnBlob: boolean = false,
+  companyLogo?: string | null
 ): Promise<void | Blob> {
   // Create a new PDF
   const doc = new jsPDF();
@@ -139,8 +140,8 @@ export async function generateInvoicePDF(
   doc.setFont("helvetica");
   doc.setFontSize(10);
   
-  // Check if the invoice has a logo
-  const logoPath = invoice.logo || null;
+  // Check if we have a logo (from company data or from invoice)
+  const logoPath = companyLogo || invoice.logo || null;
   
   // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
   if (logoPath) {
@@ -338,13 +339,15 @@ export async function generateInvoicePDF(
 export async function generateInvoicePDFBlob(
   invoice: Invoice,
   client: Client,
-  items: InvoiceItem[]
+  items: InvoiceItem[],
+  companyLogo?: string | null
 ): Promise<Blob> {
   try {
     console.log(`Generando PDF para factura ${invoice.invoiceNumber} del cliente ${client?.name || 'desconocido'} con ${items?.length || 0} items`);
+    console.log("Logo de empresa en generateInvoicePDFBlob:", companyLogo);
     
-    // Llamamos a la función original pero con returnBlob = true
-    const pdfBlob = await generateInvoicePDF(invoice, client, items, true) as Blob;
+    // Llamamos a la función original pero con returnBlob = true y pasando el logo
+    const pdfBlob = await generateInvoicePDF(invoice, client, items, true, companyLogo) as Blob;
     
     if (!pdfBlob || !(pdfBlob instanceof Blob)) {
       console.error('Error: No se generó un blob válido para el PDF');
@@ -366,7 +369,8 @@ export async function generateInvoicePDFBlob(
 export async function generateInvoicePDFAsBase64(
   invoice: Invoice,
   client: Client,
-  items: InvoiceItem[]
+  items: InvoiceItem[],
+  companyLogo?: string | null
 ): Promise<string> {
   // Create a new PDF
   const doc = new jsPDF();

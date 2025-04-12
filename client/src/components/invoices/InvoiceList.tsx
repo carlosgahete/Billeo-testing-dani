@@ -372,16 +372,12 @@ const InvoiceList = () => {
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
       const data = await response.json();
       
-      // Asegurarse de que la factura incluya el logo de la empresa si hay uno disponible
-      const invoiceWithLogo = {
-        ...invoice,
-        logo: companyData?.logo || null
-      };
-      
-      console.log("Generando PDF con logo:", invoiceWithLogo.logo);
+      console.log("Compañía:", companyData);
+      console.log("Logo de la empresa:", companyData?.logo);
       
       // Generar el PDF como Blob en lugar de descargarlo directamente
-      const pdfBlob = await generateInvoicePDFBlob(invoiceWithLogo, client, data.items);
+      // Pasamos directamente el logo de la empresa como cuarto parámetro
+      const pdfBlob = await generateInvoicePDFBlob(invoice, client, data.items, companyData?.logo);
       
       if (!pdfBlob) {
         throw new Error("No se pudo generar el PDF");
