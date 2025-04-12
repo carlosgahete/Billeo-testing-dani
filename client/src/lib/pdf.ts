@@ -563,12 +563,27 @@ export async function generateInvoicePDFAsBase64(
   // Add payment details and notes
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("FORMA DE PAGO: Transferencia bancaria", 14, finalY + 30);
-  doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, finalY + 36);
   
+  // Variables para controlar la posición Y de cada elemento
+  let notesYPosition = finalY + 30;
+  
+  // Comprueba si las notas ya contienen información bancaria
+  const notesHaveBankInfo = invoice.notes && 
+    (invoice.notes.toLowerCase().includes("transferencia bancaria") || 
+     invoice.notes.toLowerCase().includes("iban"));
+  
+  // Si las notas no contienen información bancaria, la añadimos
+  if (!notesHaveBankInfo) {
+    doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
+    notesYPosition += 6;
+    doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, notesYPosition);
+    notesYPosition += 10;
+  }
+  
+  // Añadimos las notas si existen
   if (invoice.notes) {
-    doc.text("NOTAS:", 14, finalY + 46);
-    doc.text(invoice.notes, 14, finalY + 52);
+    doc.text("NOTAS:", 14, notesYPosition);
+    doc.text(invoice.notes, 14, notesYPosition + 6);
   }
   
   // Add footer
