@@ -1,5 +1,5 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
 import { getImageAsDataUrl } from "./image-utils";
 
 interface AdditionalTax {
@@ -85,47 +85,47 @@ interface QuoteItem {
   subtotal: number;
 }
 
-// Helper functions
+interface GenerateInvoicePDFOptions {
+  returnAsBlob?: boolean;
+  returnAsBase64?: boolean;
+}
+
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 function getStatusText(status: string): string {
-  switch (status) {
-    case "pending":
-      return "Pendiente";
-    case "paid":
-      return "Pagada";
-    case "overdue":
-      return "Vencida";
-    case "canceled":
-      return "Cancelada";
-    default:
-      return status;
-  }
+  const statusMap: Record<string, string> = {
+    'pending': 'Pendiente',
+    'paid': 'Pagada',
+    'overdue': 'Vencida',
+    'canceled': 'Cancelada',
+    'draft': 'Borrador',
+    'sent': 'Enviada',
+    'accepted': 'Aceptado',
+    'rejected': 'Rechazado'
+  };
+  return statusMap[status] || status;
 }
 
 function getStatusColor(status: string): number[] {
-  switch (status) {
-    case "pending":
-      return [245, 124, 0]; // warning (orange)
-    case "paid":
-      return [46, 125, 50]; // success (green)
-    case "overdue":
-      return [211, 47, 47]; // error (red)
-    case "canceled":
-      return [97, 97, 97]; // neutral (gray)
-    default:
-      return [0, 0, 0];
-  }
+  const statusColorMap: Record<string, number[]> = {
+    'pending': [245, 158, 11], // amber-500
+    'paid': [16, 185, 129],    // emerald-500
+    'overdue': [239, 68, 68],  // red-500
+    'canceled': [107, 114, 128], // gray-500
+    'draft': [107, 114, 128],  // gray-500
+    'sent': [59, 130, 246],    // blue-500
+    'accepted': [16, 185, 129], // emerald-500
+    'rejected': [239, 68, 68]  // red-500
+  };
+  return statusColorMap[status] || [0, 0, 0]; // default black
 }
 
-// Función para generar un PDF y descargarlo
 export async function generateInvoicePDF(
   invoice: Invoice,
   client: Client,
@@ -159,31 +159,21 @@ export async function generateInvoicePDF(
         tmpImg.src = logoDataUrl;
       });
       
-      // Calcular dimensiones manteniendo proporciones para logo pequeño en la esquina
-      const maxWidth = 25; // 50% más pequeño que el original de 50
-      const maxHeight = 12.5; // 50% más pequeño que el original de 25
+      // Calcular dimensiones manteniendo proporciones para el logo en la esquina superior derecha
+      const maxWidth = 40; // Tamaño más grande para mejor visibilidad
+      const maxHeight = 25; // Altura proporcional
       
-      // Calcular el ratio de aspecto
+      // Calcular el ratio de aspecto para mantener proporciones
       const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
       const width = tmpImg.width * ratio;
       const height = tmpImg.height * ratio;
       
       // Posición alineada a la derecha en la parte superior
       const xPosition = 195 - width;
+      const yPosition = 10; // Posición vertical ajustada
       
       // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
-      doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
-      
-      // También añadimos el logo más pequeño a la derecha del encabezado de la factura
-      // Hacerlo un 30% más pequeño para el encabezado
-      const headerMaxWidth = 15;
-      const headerMaxHeight = 7.5;
-      const headerRatio = Math.min(headerMaxWidth / tmpImg.width, headerMaxHeight / tmpImg.height);
-      const headerWidth = tmpImg.width * headerRatio;
-      const headerHeight = tmpImg.height * headerRatio;
-      
-      // Colocamos el logo a la derecha del texto "FACTURA Nº: xxx"
-      doc.addImage(logoDataUrl, 'PNG', 195, 14, headerWidth, headerHeight);
+      doc.addImage(logoDataUrl, 'PNG', xPosition, yPosition, width, height);
       
       console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
     } catch (logoError) {
@@ -249,17 +239,17 @@ export async function generateInvoicePDF(
       item.description,
       Number(item.quantity).toFixed(2),
       `${Number(item.unitPrice).toFixed(2)} €`,
-      `${Number(item.taxRate).toFixed(2)}%`,
+      `${Number(item.taxRate).toFixed(2)} %`,
       `${Number(item.subtotal).toFixed(2)} €`
     ]),
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [25, 118, 210], textColor: [255, 255, 255] },
     columnStyles: {
-      0: { cellWidth: 80 },
-      1: { halign: 'right' },
-      2: { halign: 'right' },
-      3: { halign: 'right' },
-      4: { halign: 'right' }
+      0: { cellWidth: 'auto' },
+      1: { cellWidth: 20, halign: 'right' },
+      2: { cellWidth: 30, halign: 'right' },
+      3: { cellWidth: 20, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' }
     },
     margin: { left: 14, right: 14 }
   });
@@ -284,28 +274,32 @@ export async function generateInvoicePDF(
       let taxText = tax.name;
       let taxAmount = tax.amount;
       
-      // Format differently based on whether it's percentage or fixed
+      // Si es un porcentaje, calculamos el valor real
       if (tax.isPercentage) {
-        taxText += ` (${taxAmount}%)`;
-        taxAmount = (Number(invoice.subtotal) * taxAmount) / 100;
+        taxText = `${tax.name} (${tax.amount}%)`;
+        taxAmount = (invoice.subtotal * tax.amount) / 100;
       }
       
       doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
-      doc.text(`${taxAmount.toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+      doc.text(`${Number(taxAmount).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
       yOffset += 6;
     });
   }
   
+  // Add total with a line above
+  doc.setDrawColor(200);
+  doc.line(140, finalY + yOffset, 195, finalY + yOffset);
+  yOffset += 4;
+  
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("TOTAL:", 140, finalY + yOffset + 4, { align: "right" });
-  doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset + 4, { align: "right" });
+  doc.text("TOTAL:", 140, finalY + yOffset, { align: "right" });
+  doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
   
   // Add payment details and notes
-  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
   
-  // Variables para controlar la posición Y de cada elemento
   let notesYPosition = finalY + 30;
   
   // Comprueba si las notas ya contienen información bancaria
@@ -321,10 +315,11 @@ export async function generateInvoicePDF(
     notesYPosition += 10;
   }
   
-  // Añadimos las notas si existen
+  // Add notes if they exist
   if (invoice.notes) {
     doc.text("NOTAS:", 14, notesYPosition);
-    doc.text(invoice.notes, 14, notesYPosition + 6);
+    notesYPosition += 6;
+    doc.text(invoice.notes, 14, notesYPosition);
   }
   
   // Add footer
@@ -340,17 +335,14 @@ export async function generateInvoicePDF(
     doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
   }
   
-  // Si se solicita devolver el Blob, lo hacemos
+  // Return as blob or save as file
   if (returnBlob) {
-    const pdfData = doc.output('arraybuffer');
-    return new Blob([pdfData], { type: 'application/pdf' });
+    return doc.output('blob');
+  } else {
+    doc.save(`Factura_${invoice.invoiceNumber}.pdf`);
   }
-  
-  // De lo contrario, guardamos el PDF como descarga
-  doc.save(`Factura_${invoice.invoiceNumber}.pdf`);
 }
 
-// Función para generar un PDF como Blob (para uso interno)
 export async function generateInvoicePDFBlob(
   invoice: Invoice,
   client: Client,
@@ -364,251 +356,19 @@ export async function generateInvoicePDFBlob(
     // Llamamos a la función original pero con returnBlob = true y pasando el logo
     const pdfBlob = await generateInvoicePDF(invoice, client, items, true, companyLogo) as Blob;
     
-    if (!pdfBlob || !(pdfBlob instanceof Blob)) {
-      console.error('Error: No se generó un blob válido para el PDF');
-      // Si no hay un blob válido, crear uno básico con un mensaje de error
-      return new Blob(['Error al generar el PDF'], { type: 'application/pdf' });
-    }
-    
-    console.log(`PDF generado correctamente: ${pdfBlob.size} bytes`);
     return pdfBlob;
   } catch (error) {
-    console.error('Error en generateInvoicePDFBlob:', error);
-    // En caso de error, devolvemos un blob básico con un mensaje de error
-    return new Blob(['Error al generar el PDF: ' + (error instanceof Error ? error.message : String(error))], 
-                    { type: 'application/pdf' });
+    console.error("Error generando PDF como blob:", error);
+    throw error;
   }
 }
 
-// Función para generar un PDF como base64 para enviar por email
 export async function generateInvoicePDFAsBase64(
   invoice: Invoice,
   client: Client,
   items: InvoiceItem[],
   companyLogo?: string | null
 ): Promise<string> {
-  // Create a new PDF
-  const doc = new jsPDF();
-  
-  // Set some basic styles
-  doc.setFont("helvetica");
-  doc.setFontSize(10);
-  
-  // Usar el logo pasado como parámetro o el de la factura
-  const logoPath = companyLogo || invoice.logo || null;
-  
-  // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
-  if (logoPath) {
-    try {
-      console.log("Preparando logo para PDF email desde:", logoPath);
-      
-      // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
-      const logoDataUrl = await getImageAsDataUrl(logoPath);
-      
-      // Crear una imagen temporal para obtener las dimensiones reales y mantener proporciones
-      const tmpImg = new Image();
-      await new Promise<void>((resolve, reject) => {
-        tmpImg.onload = () => resolve();
-        tmpImg.onerror = () => reject(new Error('Error al cargar imagen para calcular proporciones'));
-        tmpImg.src = logoDataUrl;
-      });
-      
-      // Calcular dimensiones manteniendo proporciones para logo pequeño en la esquina
-      const maxWidth = 25; // 50% más pequeño que el original de 50
-      const maxHeight = 12.5; // 50% más pequeño que el original de 25
-      
-      // Calcular el ratio de aspecto
-      const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
-      const width = tmpImg.width * ratio;
-      const height = tmpImg.height * ratio;
-      
-      // Posición alineada a la derecha en la parte superior
-      const xPosition = 195 - width;
-      
-      // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
-      doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
-      
-      // También añadimos el logo más pequeño a la derecha del encabezado de la factura
-      // Hacerlo un 30% más pequeño para el encabezado
-      const headerMaxWidth = 15;
-      const headerMaxHeight = 7.5;
-      const headerRatio = Math.min(headerMaxWidth / tmpImg.width, headerMaxHeight / tmpImg.height);
-      const headerWidth = tmpImg.width * headerRatio;
-      const headerHeight = tmpImg.height * headerRatio;
-      
-      // Colocamos el logo a la derecha del texto "FACTURA Nº: xxx"
-      doc.addImage(logoDataUrl, 'PNG', 195, 14, headerWidth, headerHeight);
-      
-      console.log("Logo añadido correctamente al PDF email con dimensiones proporcionales:", width, height);
-    } catch (logoError) {
-      console.error("Error añadiendo logo al PDF email:", logoError);
-    }
-  }
-  
-  // Add company logo and info from company profile
-  doc.setFontSize(20);
-  doc.setTextColor(37, 99, 235); // blue-600
-  // Utilizar información predeterminada basada en la imagen
-  doc.text("Eventos gaper", 14, 22);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  // Usar valores predeterminados
-  doc.text("CIF/NIF: B55410351", 14, 30);
-  doc.text("Playa de sitges 22b", 14, 35);
-  
-  // Formatear dirección completa
-  const postalCode = "28232";
-  const city = "Las Rozas";
-  const country = "España";
-  doc.text(`${postalCode} ${city}, ${country}`, 14, 40);
-  
-  // Add invoice title and number
-  doc.setFontSize(16);
-  doc.setTextColor(37, 99, 235); // blue-600
-  doc.text(`FACTURA Nº: ${invoice.invoiceNumber}`, 140, 22, { align: "right" });
-  
-  // Add invoice details
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  doc.text(`Fecha de emisión: ${formatDate(invoice.issueDate)}`, 140, 30, { align: "right" });
-  doc.text(`Fecha de vencimiento: ${formatDate(invoice.dueDate)}`, 140, 35, { align: "right" });
-  
-  // Add status
-  const statusText = getStatusText(invoice.status);
-  const statusColor = getStatusColor(invoice.status);
-  doc.setFontSize(12);
-  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.text(`Estado: ${statusText}`, 140, 45, { align: "right" });
-  
-  // Add client information
-  doc.setFontSize(12);
-  doc.setTextColor(37, 99, 235); // blue-600
-  doc.text("CLIENTE", 14, 65);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  doc.text(client.name, 14, 73);
-  doc.text(`NIF/CIF: ${client.taxId}`, 14, 78);
-  doc.text(client.address, 14, 83);
-  doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 14, 88);
-  if (client.email) doc.text(`Email: ${client.email}`, 14, 93);
-  if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 98);
-  
-  // Add invoice items
-  doc.setFontSize(12);
-  doc.setTextColor(37, 99, 235); // blue-600
-  doc.text("DETALLES DE LA FACTURA", 14, 115);
-  
-  // Create the table with items
-  autoTable(doc, {
-    startY: 120,
-    head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
-    body: items.map(item => [
-      item.description,
-      Number(item.quantity).toFixed(2),
-      `${Number(item.unitPrice).toFixed(2)} €`,
-      `${Number(item.taxRate).toFixed(2)}%`,
-      `${Number(item.subtotal).toFixed(2)} €`
-    ]),
-    styles: { fontSize: 9, cellPadding: 3 },
-    headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255] },
-    columnStyles: {
-      0: { cellWidth: 80 },
-      1: { halign: 'right' },
-      2: { halign: 'right' },
-      3: { halign: 'right' },
-      4: { halign: 'right' }
-    },
-    margin: { left: 14, right: 14 }
-  });
-  
-  // Add totals
-  // @ts-ignore
-  const finalY = doc.lastAutoTable.finalY + 10;
-  let yOffset = 0;
-  
-  doc.setFontSize(10);
-  doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
-  doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-  yOffset += 6;
-  
-  doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
-  doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-  yOffset += 6;
-  
-  // Add additional taxes if they exist
-  if (invoice.additionalTaxes && invoice.additionalTaxes.length > 0) {
-    invoice.additionalTaxes.forEach(tax => {
-      let taxText = tax.name;
-      let taxAmount = tax.amount;
-      
-      // Format differently based on whether it's percentage or fixed
-      if (tax.isPercentage) {
-        taxText += ` (${taxAmount}%)`;
-        taxAmount = (Number(invoice.subtotal) * taxAmount) / 100;
-      }
-      
-      doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
-      doc.text(`${taxAmount.toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-      yOffset += 6;
-    });
-  }
-  
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("TOTAL:", 140, finalY + yOffset + 4, { align: "right" });
-  doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset + 4, { align: "right" });
-  
-  // Add payment details and notes
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  
-  // Variables para controlar la posición Y de cada elemento
-  let notesYPosition = finalY + 30;
-  
-  // Comprueba si las notas ya contienen información bancaria
-  const notesHaveBankInfo = invoice.notes && 
-    (invoice.notes.toLowerCase().includes("transferencia bancaria") || 
-     invoice.notes.toLowerCase().includes("iban"));
-  
-  // Si las notas no contienen información bancaria, la añadimos
-  if (!notesHaveBankInfo) {
-    doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
-    notesYPosition += 6;
-    doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, notesYPosition);
-    notesYPosition += 10;
-  }
-  
-  // Añadimos las notas si existen
-  if (invoice.notes) {
-    doc.text("NOTAS:", 14, notesYPosition);
-    doc.text(invoice.notes, 14, notesYPosition + 6);
-  }
-  
-  // Add footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(100);
-    doc.text(
-      "Billeo - Sistema de gestión financiera",
-      105, 285, { align: "center" }
-    );
-    doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
-  }
-  
-  // Return the PDF as base64 string
-  return doc.output('datauristring').split(',')[1];
-}
-
-export async function generateQuotePDF(
-  quote: Quote,
-  client: Client,
-  items: QuoteItem[],
-  options?: { returnAsBase64?: boolean }
-): Promise<void | string> {
   try {
     // Create a new PDF
     const doc = new jsPDF();
@@ -617,13 +377,13 @@ export async function generateQuotePDF(
     doc.setFont("helvetica");
     doc.setFontSize(10);
     
-    // Check if the quote has a logo
-    const logoPath = quote.attachments && quote.attachments.length > 0 ? quote.attachments[0] : null;
+    // Check if we have a logo (from company data or from invoice)
+    const logoPath = companyLogo || invoice.logo || null;
     
-    // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
+    // Cargar el logo si existe
     if (logoPath) {
       try {
-        console.log("Preparando logo para PDF desde:", logoPath);
+        console.log("Preparando logo para PDF base64 desde:", logoPath);
         
         // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
         const logoDataUrl = await getImageAsDataUrl(logoPath);
@@ -636,117 +396,54 @@ export async function generateQuotePDF(
           tmpImg.src = logoDataUrl;
         });
         
-        // Calcular dimensiones manteniendo proporciones para logo pequeño en la esquina
-        const maxWidth = 25; // 50% más pequeño que el original de 50
-        const maxHeight = 12.5; // 50% más pequeño que el original de 25
+        // Calcular dimensiones manteniendo proporciones para el logo en la esquina superior derecha
+        const maxWidth = 40; // Tamaño más grande para mejor visibilidad
+        const maxHeight = 25; // Altura proporcional
         
-        // Calcular el ratio de aspecto
+        // Calcular el ratio de aspecto para mantener proporciones
         const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
         const width = tmpImg.width * ratio;
         const height = tmpImg.height * ratio;
         
         // Posición alineada a la derecha en la parte superior
-        const xPosition = 195 - width;
+        const xPosition = 195 - width; // 195 es aproximadamente el ancho de la página menos margen
         
         // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
         doc.addImage(logoDataUrl, 'PNG', xPosition, 10, width, height);
         
-        // También añadimos el logo más pequeño a la derecha del encabezado del presupuesto
-        // Hacerlo un 30% más pequeño para el encabezado
-        const headerMaxWidth = 15;
-        const headerMaxHeight = 7.5;
-        const headerRatio = Math.min(headerMaxWidth / tmpImg.width, headerMaxHeight / tmpImg.height);
-        const headerWidth = tmpImg.width * headerRatio;
-        const headerHeight = tmpImg.height * headerRatio;
-        
-        // Colocamos el logo a la derecha del texto "PRESUPUESTO Nº: xxx"
-        doc.addImage(logoDataUrl, 'PNG', 195, 14, headerWidth, headerHeight);
-        
-        console.log("Logo añadido correctamente al PDF con dimensiones proporcionales:", width, height);
+        console.log("Logo añadido correctamente al PDF base64 con dimensiones:", width, height);
       } catch (logoError) {
-        console.error("Error añadiendo logo al PDF:", logoError);
+        console.error("Error añadiendo logo al PDF base64:", logoError);
       }
     }
     
-    // Añadir información de la empresa real
+    // Add company logo and info using real data from company profile
     doc.setFontSize(20);
     doc.setTextColor(25, 118, 210); // primary color
-    // Usando datos reales de la empresa
-    doc.text("Eventos gaper", 14, 22);
+    // Usar datos de la empresa real si están disponibles, o valores por defecto si no
+    const companyName = "Eventos gaper"; // Valor predeterminado basado en la imagen proporcionada
+    doc.text(companyName, 14, 22);
     
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text("CIF/NIF: B55410351", 14, 30);
-    doc.text("Playa de sitges 22b", 14, 35);
-    doc.text("28232 Las Rozas, España", 14, 40);
+    doc.text(`CIF/NIF: B55410351`, 14, 30); // Valor predeterminado basado en la imagen proporcionada
+    doc.text(`Playa de sitges 22b`, 14, 35); // Valor predeterminado basado en la imagen proporcionada
+    doc.text(`28232 Las Rozas, España`, 14, 40); // Valores predeterminados basados en la imagen proporcionada
     
-    // Add quote title and number
+    // Add invoice title and number
     doc.setFontSize(16);
     doc.setTextColor(25, 118, 210);
-    doc.text(`PRESUPUESTO Nº: ${quote.quoteNumber}`, 140, 22, { align: "right" });
+    doc.text(`FACTURA Nº: ${invoice.invoiceNumber}`, 140, 22, { align: "right" });
     
-    // Add quote details
+    // Add invoice details
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(`Fecha de emisión: ${formatDate(quote.issueDate)}`, 140, 30, { align: "right" });
-    
-    // Destacar la fecha de validez con el color del tema pero de manera elegante
-    // Formatear la fecha de validez para una mejor presentación
-    const headerFormattedDate = new Date(quote.validUntil).toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-    
-    doc.setTextColor(37, 99, 235); // Color azul corporativo
-    doc.setFontSize(11);
-    doc.text(`Válido hasta: ${headerFormattedDate}`, 140, 35, { align: "right" });
-    doc.setTextColor(0);
-    doc.setFontSize(10);
+    doc.text(`Fecha de emisión: ${formatDate(invoice.issueDate)}`, 140, 30, { align: "right" });
+    doc.text(`Fecha de vencimiento: ${formatDate(invoice.dueDate)}`, 140, 35, { align: "right" });
     
     // Add status
-    let statusText;
-    switch (quote.status) {
-      case "draft":
-        statusText = "Borrador";
-        break;
-      case "sent":
-        statusText = "Enviado";
-        break;
-      case "accepted":
-        statusText = "Aceptado";
-        break;
-      case "rejected":
-        statusText = "Rechazado";
-        break;
-      case "expired":
-        statusText = "Vencido";
-        break;
-      default:
-        statusText = quote.status;
-    }
-    
-    let statusColor;
-    switch (quote.status) {
-      case "draft":
-        statusColor = [97, 97, 97]; // gray
-        break;
-      case "sent":
-        statusColor = [25, 118, 210]; // blue
-        break;
-      case "accepted":
-        statusColor = [46, 125, 50]; // green
-        break;
-      case "rejected":
-        statusColor = [211, 47, 47]; // red
-        break;
-      case "expired":
-        statusColor = [211, 47, 47]; // red
-        break;
-      default:
-        statusColor = [0, 0, 0]; // black
-    }
-    
+    const statusText = getStatusText(invoice.status);
+    const statusColor = getStatusColor(invoice.status);
     doc.setFontSize(12);
     doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
     doc.text(`Estado: ${statusText}`, 140, 45, { align: "right" });
@@ -765,9 +462,225 @@ export async function generateQuotePDF(
     if (client.email) doc.text(`Email: ${client.email}`, 14, 88);
     if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 93);
     
-    // Add quote items
+    // Add invoice items
     doc.setFontSize(12);
     doc.setTextColor(25, 118, 210);
+    doc.text("DETALLES DE LA FACTURA", 14, 110);
+    
+    // Create the table with items
+    autoTable(doc, {
+      startY: 115,
+      head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
+      body: items.map(item => [
+        item.description,
+        Number(item.quantity).toFixed(2),
+        `${Number(item.unitPrice).toFixed(2)} €`,
+        `${Number(item.taxRate).toFixed(2)} %`,
+        `${Number(item.subtotal).toFixed(2)} €`
+      ]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [25, 118, 210], textColor: [255, 255, 255] },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 20, halign: 'right' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 20, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+    
+    // Add totals
+    // @ts-ignore
+    const finalY = doc.lastAutoTable.finalY + 10;
+    let yOffset = 0;
+    
+    doc.setFontSize(10);
+    doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+    yOffset += 6;
+    
+    doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+    yOffset += 6;
+    
+    // Add additional taxes if they exist
+    if (invoice.additionalTaxes && invoice.additionalTaxes.length > 0) {
+      invoice.additionalTaxes.forEach(tax => {
+        let taxText = tax.name;
+        let taxAmount = tax.amount;
+        
+        // Si es un porcentaje, calculamos el valor real
+        if (tax.isPercentage) {
+          taxText = `${tax.name} (${tax.amount}%)`;
+          taxAmount = (invoice.subtotal * tax.amount) / 100;
+        }
+        
+        doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
+        doc.text(`${Number(taxAmount).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+        yOffset += 6;
+      });
+    }
+    
+    // Add total with a line above
+    doc.setDrawColor(200);
+    doc.line(140, finalY + yOffset, 195, finalY + yOffset);
+    yOffset += 4;
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+    
+    // Add payment details and notes
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    
+    let notesYPosition = finalY + 30;
+    
+    // Comprueba si las notas ya contienen información bancaria
+    const notesHaveBankInfo = invoice.notes && 
+      (invoice.notes.toLowerCase().includes("transferencia bancaria") || 
+       invoice.notes.toLowerCase().includes("iban"));
+    
+    // Si las notas no contienen información bancaria, la añadimos
+    if (!notesHaveBankInfo) {
+      doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
+      notesYPosition += 6;
+      doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, notesYPosition);
+      notesYPosition += 10;
+    }
+    
+    // Add notes if they exist
+    if (invoice.notes) {
+      doc.text("NOTAS:", 14, notesYPosition);
+      notesYPosition += 6;
+      doc.text(invoice.notes, 14, notesYPosition);
+    }
+    
+    // Add footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        "Billeo - Gestión financiera",
+        105, 285, { align: "center" }
+      );
+      doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
+    }
+    
+    // Devolver como base64
+    return doc.output('datauristring').split(',')[1];
+  } catch (error) {
+    console.error("Error generando PDF como base64:", error);
+    throw error;
+  }
+}
+
+export async function generateQuotePDF(
+  quote: Quote,
+  client: Client,
+  items: QuoteItem[],
+  options?: GenerateInvoicePDFOptions,
+  companyLogo?: string | null
+): Promise<void | Blob | string> {
+  try {
+    // Create a new PDF
+    const doc = new jsPDF();
+    
+    // Set some basic styles
+    doc.setFont("helvetica");
+    doc.setFontSize(10);
+    
+    // Check if we have a logo (from company data or from quote)
+    const logoPath = companyLogo || null; // Los presupuestos no tienen logo propio por ahora
+    
+    // Cargar el logo si existe
+    if (logoPath) {
+      try {
+        console.log("Preparando logo para PDF presupuesto desde:", logoPath);
+        
+        // Usar la utilidad para convertir la imagen a data URL desde la ruta relativa
+        const logoDataUrl = await getImageAsDataUrl(logoPath);
+        
+        // Crear una imagen temporal para obtener las dimensiones reales y mantener proporciones
+        const tmpImg = new Image();
+        await new Promise<void>((resolve, reject) => {
+          tmpImg.onload = () => resolve();
+          tmpImg.onerror = () => reject(new Error('Error al cargar imagen para calcular proporciones'));
+          tmpImg.src = logoDataUrl;
+        });
+        
+        // Calcular dimensiones manteniendo proporciones para el logo en la esquina superior derecha
+        const maxWidth = 40; // Tamaño más grande para mejor visibilidad
+        const maxHeight = 25; // Altura proporcional
+        
+        // Calcular el ratio de aspecto para mantener proporciones
+        const ratio = Math.min(maxWidth / tmpImg.width, maxHeight / tmpImg.height);
+        const width = tmpImg.width * ratio;
+        const height = tmpImg.height * ratio;
+        
+        // Posición alineada a la derecha en la parte superior
+        const xPosition = 195 - width; 
+        const yPosition = 10; // Ajuste vertical
+        
+        // Añadir la imagen al PDF usando la data URL con las dimensiones proporcionales
+        doc.addImage(logoDataUrl, 'PNG', xPosition, yPosition, width, height);
+        
+        console.log("Logo añadido correctamente al PDF presupuesto");
+      } catch (logoError) {
+        console.error("Error añadiendo logo al PDF presupuesto:", logoError);
+      }
+    }
+    
+    // Add company logo and info using real data from company profile
+    doc.setFontSize(20);
+    doc.setTextColor(25, 118, 210); // primary color
+    doc.text("Eventos gaper", 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.text(`CIF/NIF: B55410351`, 14, 30);
+    doc.text(`Playa de sitges 22b`, 14, 35);
+    doc.text(`28232 Las Rozas, España`, 14, 40);
+    
+    // Add quote title and number
+    doc.setFontSize(16);
+    doc.setTextColor(37, 99, 235); // Color azul para el título
+    doc.text(`PRESUPUESTO Nº: ${quote.quoteNumber}`, 140, 22, { align: "right" });
+    
+    // Add quote details
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.text(`Fecha de emisión: ${formatDate(quote.issueDate)}`, 140, 30, { align: "right" });
+    doc.text(`Válido hasta: ${formatDate(quote.validUntil)}`, 140, 35, { align: "right" });
+    
+    // Add status
+    const statusText = getStatusText(quote.status);
+    const statusColor = getStatusColor(quote.status);
+    doc.setFontSize(12);
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.text(`Estado: ${statusText}`, 140, 45, { align: "right" });
+    
+    // Add client information
+    doc.setFontSize(12);
+    doc.setTextColor(37, 99, 235); // Color azul para los encabezados
+    doc.text("CLIENTE", 14, 60);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.text(client.name, 14, 68);
+    doc.text(`NIF/CIF: ${client.taxId}`, 14, 73);
+    doc.text(client.address, 14, 78);
+    doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 14, 83);
+    if (client.email) doc.text(`Email: ${client.email}`, 14, 88);
+    if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 93);
+    
+    // Add quote items
+    doc.setFontSize(12);
+    doc.setTextColor(37, 99, 235); // Color azul para los encabezados
     doc.text("DETALLES DEL PRESUPUESTO", 14, 110);
     
     // Create the table with items
@@ -778,17 +691,17 @@ export async function generateQuotePDF(
         item.description,
         Number(item.quantity).toFixed(2),
         `${Number(item.unitPrice).toFixed(2)} €`,
-        `${Number(item.taxRate).toFixed(2)}%`,
+        `${Number(item.taxRate).toFixed(2)} %`,
         `${Number(item.subtotal).toFixed(2)} €`
       ]),
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [25, 118, 210], textColor: [255, 255, 255] },
+      headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255] },
       columnStyles: {
-        0: { cellWidth: 80 },
-        1: { halign: 'right' },
-        2: { halign: 'right' },
-        3: { halign: 'right' },
-        4: { halign: 'right' }
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 20, halign: 'right' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 20, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' }
       },
       margin: { left: 14, right: 14 }
     });
@@ -813,35 +726,35 @@ export async function generateQuotePDF(
         let taxText = tax.name;
         let taxAmount = tax.amount;
         
-        // Format differently based on whether it's percentage or fixed
+        // Si es un porcentaje, calculamos el valor real
         if (tax.isPercentage) {
-          taxText += ` (${taxAmount}%)`;
-          taxAmount = (Number(quote.subtotal) * taxAmount) / 100;
+          taxText = `${tax.name} (${tax.amount}%)`;
+          taxAmount = (quote.subtotal * tax.amount) / 100;
         }
         
         doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
-        doc.text(`${taxAmount.toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+        doc.text(`${Number(taxAmount).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
         yOffset += 6;
       });
     }
     
+    // Add total with a line above
+    doc.setDrawColor(200);
+    doc.line(140, finalY + yOffset, 195, finalY + yOffset);
+    yOffset += 4;
+    
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL:", 140, finalY + yOffset + 4, { align: "right" });
-    doc.text(`${Number(quote.total).toFixed(2)} €`, 195, finalY + yOffset + 4, { align: "right" });
+    doc.text("TOTAL:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(quote.total).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
     
-    // Add payment details and notes
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+    // Añadir validez del presupuesto en un cuadro destacado
+    const validityText = `Este presupuesto es válido hasta: ${formatDate(quote.validUntil)}`;
+    const textWidth = doc.getTextWidth(validityText);
     
-    // Add note about validity - destacada con un recuadro y texto en negrita
-    // Usar el mismo formato de fecha que usamos en el encabezado
-    const validityText = `Este presupuesto es válido hasta el ${headerFormattedDate}`;
-    
-    // Crear un recuadro para destacar la fecha de validez, pero con estilo más elegante
-    doc.setDrawColor(37, 99, 235); // Color azul para el borde (mismo que el resto del documento)
-    doc.setFillColor(243, 244, 246); // Color de fondo gris muy claro
-    const textWidth = doc.getStringUnitWidth(validityText) * 10 / doc.internal.scaleFactor;
+    // Dibujar un rectángulo redondeado con fondo
+    doc.setFillColor(240, 249, 255); // Color azul muy claro para el fondo
+    doc.setDrawColor(37, 99, 235); // Color azul para el borde
     doc.roundedRect(12, finalY + 25, textWidth + 8, 12, 2, 2, 'FD');
     
     // Texto de validez en negrita con color coherente con el documento
