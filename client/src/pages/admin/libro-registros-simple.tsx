@@ -619,7 +619,7 @@ export default function SimpleLibroRegistros() {
     }, 100);
   };
   
-  // Función para descargar como Excel con múltiples hojas (usando HTML)
+  // Función para descargar como CSV (compatible con Excel)
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
@@ -633,7 +633,7 @@ export default function SimpleLibroRegistros() {
         fileName += `_mes${selectedMonth}`;
       }
     }
-    fileName += '.xls'; // Extensión .xls para que Excel lo reconozca
+    fileName += '.csv'; // Usamos CSV para garantizar compatibilidad
     
     // Generar datos para facturas
     const invoicesData = filteredData.invoices.map(invoice => ({
@@ -791,125 +791,83 @@ export default function SimpleLibroRegistros() {
       </script>
     `;
     
-    // Crear contenido HTML para el archivo Excel con codificación UTF-8 explícita
-    const html = `
-      <!DOCTYPE html>
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" 
-            xmlns:x="urn:schemas-microsoft-com:office:excel" 
-            xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="ProgId" content="Excel.Sheet">
-        <meta name="Generator" content="Microsoft Excel 15">
-        <title>Libro de Registros</title>
-        ${style}
-        <!--[if gte mso 9]>
-        <xml>
-          <x:ExcelWorkbook>
-            <x:ExcelWorksheets>
-              <x:ExcelWorksheet>
-                <x:Name>Resumen</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-              <x:ExcelWorksheet>
-                <x:Name>Facturas</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-              <x:ExcelWorksheet>
-                <x:Name>Ingresos</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-              <x:ExcelWorksheet>
-                <x:Name>Gastos</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-              <x:ExcelWorksheet>
-                <x:Name>Presupuestos</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-            </x:ExcelWorksheets>
-          </x:ExcelWorkbook>
-        </xml>
-        <![endif]-->
-      </head>
-      <body>
-        <h1>Libro de Registros - Usuario ID: ${userId || 'Todos'}</h1>
-        
-        <div class="info-header">
-          <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
-          <p><strong>Filtros aplicados:</strong> 
-            Año: ${selectedYear !== 'all' ? selectedYear : 'Todos'}, 
-            Trimestre: ${selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos'}, 
-            Mes: ${selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'}
-          </p>
-        </div>
-        
-        <!-- Botones para cambiar entre hojas (solo para vista previa) -->
-        <div class="tab-buttons">
-          <button id="btn-resumen" class="tab-button active" onclick="showSheet('resumen')">Resumen</button>
-          <button id="btn-facturas" class="tab-button" onclick="showSheet('facturas')">Facturas</button>
-          <button id="btn-ingresos" class="tab-button" onclick="showSheet('ingresos')">Ingresos</button>
-          <button id="btn-gastos" class="tab-button" onclick="showSheet('gastos')">Gastos</button>
-          <button id="btn-presupuestos" class="tab-button" onclick="showSheet('presupuestos')">Presupuestos</button>
-        </div>
-        
-        <!-- Hoja de Resumen -->
-        <div id="resumen" class="sheet visible">
-          ${createTable(summaryData, "Resumen General")}
-          <p style="margin-top: 30px; color: #666;">* Este informe contiene datos resumidos. Consulta las demás pestañas para ver información detallada.</p>
-        </div>
-        
-        <!-- Hoja de Facturas -->
-        <div id="facturas" class="sheet">
-          ${createTable(invoicesData, "Facturas Emitidas")}
-        </div>
-        
-        <!-- Hoja de Ingresos -->
-        <div id="ingresos" class="sheet">
-          ${createTable(incomesData, "Ingresos")}
-        </div>
-        
-        <!-- Hoja de Gastos -->
-        <div id="gastos" class="sheet">
-          ${createTable(expensesData, "Gastos")}
-        </div>
-        
-        <!-- Hoja de Presupuestos -->
-        <div id="presupuestos" class="sheet">
-          ${createTable(quotesData, "Presupuestos")}
-        </div>
-        
-        ${script}
-        
-        <p style="text-align: center; margin-top: 40px; color: #999; font-size: 12px;">
-          Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos<br>
-          ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}
-        </p>
-      </body>
-      </html>
-    `;
+    // Función para convertir array de objetos a CSV
+    const objectsToCSV = (data: Record<string, any>[]) => {
+      if (!data || data.length === 0) return '';
+      
+      const headers = Object.keys(data[0]);
+      const csvRows = [];
+      
+      // Añadir cabeceras
+      csvRows.push(headers.map(header => `"${header.replace(/_/g, ' ')}"`).join(','));
+      
+      // Añadir filas de datos
+      for (const row of data) {
+        const values = headers.map(header => {
+          const value = row[header];
+          // Formatear valores de moneda
+          if (!isNaN(Number(value)) && 
+              (header.includes('Total') || 
+              header.includes('Importe') || 
+              header.includes('Base') || 
+              header.includes('IVA'))) {
+            return `"${Number(value).toFixed(2)} €"`;
+          }
+          // Escapar comillas en texto
+          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
+          return `"${value}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+      
+      return csvRows.join('\n');
+    };
     
-    // Crear un blob con el contenido HTML
-    // Aseguramos la codificación adecuada usando un Encoder UTF-8
-    const encoder = new TextEncoder();
-    const utf8Array = encoder.encode(html);
-    // Forzamos más agresivamente el tipo a un tipo binario genérico con BOM UTF-8
+    // Crear el contenido CSV para cada sección
+    const summaryCSV = objectsToCSV(summaryData);
+    const invoicesCSV = objectsToCSV(invoicesData);
+    const incomesCSV = objectsToCSV(incomesData);
+    const expensesCSV = objectsToCSV(expensesData);
+    const quotesCSV = objectsToCSV(quotesData);
+    
+    // Combinar todas las secciones
+    const csvContent = [
+      '# LIBRO DE REGISTROS - RESUMEN',
+      '# Generado: ' + new Date().toLocaleDateString('es-ES'),
+      '# Filtros: Año: ' + (selectedYear !== 'all' ? selectedYear : 'Todos') + 
+        ', Trimestre: ' + (selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos') + 
+        ', Mes: ' + (selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'),
+      '',
+      '### RESUMEN ###',
+      summaryCSV,
+      '',
+      '### FACTURAS ###',
+      invoicesCSV,
+      '',
+      '### INGRESOS ###',
+      incomesCSV,
+      '',
+      '### GASTOS ###',
+      expensesCSV,
+      '',
+      '### PRESUPUESTOS ###',
+      quotesCSV,
+      '',
+      '# Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos'
+    ].join('\n');
+    
+    // Preparar el BOM UTF-8 para que Excel reconozca los caracteres internacionales
     const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const combinedArray = new Uint8Array(BOM.length + utf8Array.length);
+    const encoder = new TextEncoder();
+    const csvArray = encoder.encode(csvContent);
+    
+    // Combinar BOM con contenido CSV
+    const combinedArray = new Uint8Array(BOM.length + csvArray.length);
     combinedArray.set(BOM, 0);
-    combinedArray.set(utf8Array, BOM.length);
-    const blob = new Blob([combinedArray], { type: 'application/force-download' });
+    combinedArray.set(csvArray, BOM.length);
+    
+    // Crear el Blob con tipo correcto para CSV
+    const blob = new Blob([combinedArray], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace y hacer clic para descargar
