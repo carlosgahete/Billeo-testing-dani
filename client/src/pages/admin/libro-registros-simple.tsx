@@ -619,7 +619,7 @@ export default function SimpleLibroRegistros() {
     }, 100);
   };
   
-  // Función para descargar como CSV puro para Excel
+  // Función para descargar como Excel en formato estructurado
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
@@ -634,47 +634,138 @@ export default function SimpleLibroRegistros() {
           fileName += `_mes${selectedMonth}`;
         }
       }
-      fileName += '.csv';
+      fileName += '.xlsx'; // Extensión Excel
       
-      // Cabeceras para un CSV puro
-      const headers = ["Número", "Fecha", "Cliente", "Base Imponible", "IVA", "Total", "Estado"];
+      // Período filtrado para el encabezado
+      const periodoFiltrado = selectedYear !== 'all' 
+        ? (selectedQuarter !== 'all' 
+            ? `${selectedYear} - Trimestre ${selectedQuarter.replace('Q', '')}`
+            : selectedMonth !== 'all'
+              ? `${selectedYear} - ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}`
+              : selectedYear)
+        : 'Todos los períodos';
       
-      // Crear las filas para cada factura
-      const rows = filteredData.invoices.map(invoice => [
+      // Fecha actual formateada
+      const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      // --- FACTURAS EMITIDAS ---
+      
+      // Crear cabeceras para facturas
+      const headersFacturas = [
+        "ID de Registro", "Fecha y Hora", "Número", "Fecha Emisión", "Cliente", 
+        "Base Imponible (€)", "IVA (€)", "Total (€)", "% IVA", "Estado"
+      ];
+      
+      // Crear filas para facturas
+      const rowsFacturas = filteredData.invoices.map((invoice, index) => [
+        // ID de registro único secuencial
+        `FAC-${String(index + 1).padStart(4, '0')}`,
+        new Date().toISOString().replace('T', ' ').substring(0, 19),
         invoice.number,
         formatDate(invoice.issueDate),
-        invoice.client.replace(/"/g, '""'), // Escapar comillas dobles en CSV
+        invoice.client.replace(/"/g, '""'), // Escapar comillas dobles
         invoice.baseAmount.toString().replace('.', ','),
         invoice.vatAmount.toString().replace('.', ','),
         invoice.total.toString().replace('.', ','),
+        `${invoice.vatRate || 21}%`,
         invoice.status === 'paid' ? 'Pagada' : 
           invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
       ]);
       
-      // Calcular totales
-      const totalBase = filteredData.invoices.reduce((sum, inv) => sum + inv.baseAmount, 0);
-      const totalIva = filteredData.invoices.reduce((sum, inv) => sum + inv.vatAmount, 0);
-      const totalImporte = filteredData.invoices.reduce((sum, inv) => sum + inv.total, 0);
+      // --- TRANSACCIONES/GASTOS ---
       
-      // Añadir fila de totales
-      rows.push([
-        'TOTALES', '', '', 
-        totalBase.toString().replace('.', ','),
-        totalIva.toString().replace('.', ','),
-        totalImporte.toString().replace('.', ','),
-        ''
+      // Crear cabeceras para transacciones
+      const headersTransacciones = [
+        "ID de Registro", "Fecha y Hora", "Fecha Transacción", "Descripción", 
+        "Categoría", "Importe (€)", "Tipo", "Notas"
+      ];
+      
+      // Crear filas para transacciones
+      const rowsTransacciones = filteredData.transactions.map((transaction, index) => [
+        // ID de registro único secuencial
+        `TRA-${String(index + 1).padStart(4, '0')}`,
+        new Date().toISOString().replace('T', ' ').substring(0, 19),
+        formatDate(transaction.date),
+        transaction.description.replace(/"/g, '""'),
+        transaction.category || 'Sin categoría',
+        transaction.amount.toString().replace('.', ','),
+        transaction.type === 'income' ? 'Ingreso' : 'Gasto',
+        transaction.notes || ''
       ]);
       
-      // Función para convertir una fila a formato CSV
-      const formatRow = (row) => row.map(item => `"${item}"`).join(';');
+      // --- PRESUPUESTOS ---
       
-      // Construir el contenido CSV
-      let csvContent = headers.map(h => `"${h}"`).join(';') + '\r\n';
-      csvContent += rows.map(formatRow).join('\r\n');
+      // Crear cabeceras para presupuestos
+      const headersPresupuestos = [
+        "ID de Registro", "Fecha y Hora", "Número", "Fecha Emisión", 
+        "Fecha Expiración", "Cliente", "Total (€)", "Estado"
+      ];
+      
+      // Crear filas para presupuestos
+      const rowsPresupuestos = filteredData.quotes.map((quote, index) => [
+        // ID de registro único secuencial
+        `PRE-${String(index + 1).padStart(4, '0')}`,
+        new Date().toISOString().replace('T', ' ').substring(0, 19),
+        quote.number,
+        formatDate(quote.issueDate),
+        formatDate(quote.expiryDate || quote.issueDate),
+        quote.clientName.replace(/"/g, '""'),
+        quote.total.toString().replace('.', ','),
+        quote.status === 'accepted' ? 'Aceptado' : 
+          quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
+      ]);
+      
+      // --- RESUMEN ---
+      
+      // Crear cabeceras para resumen
+      const headersResumen = [
+        "Concepto", "Valor"
+      ];
+      
+      // Crear filas para resumen
+      const rowsResumen = [
+        ["Período analizado", periodoFiltrado],
+        ["Usuario", userId ? `ID: ${userId}` : "Todos los usuarios"],
+        ["Fecha de generación", fechaGeneracion],
+        ["Total facturas emitidas", filteredData.summary.totalInvoices.toString()],
+        ["Importe total facturado", filteredData.summary.incomeTotal.toFixed(2).replace('.', ',') + " €"],
+        ["Total transacciones", filteredData.summary.totalTransactions.toString()],
+        ["Importe total gastos", filteredData.summary.expenseTotal.toFixed(2).replace('.', ',') + " €"],
+        ["Total presupuestos", filteredData.summary.totalQuotes.toString()],
+        ["Balance (Ingresos - Gastos)", (filteredData.summary.incomeTotal - filteredData.summary.expenseTotal).toFixed(2).replace('.', ',') + " €"]
+      ];
+      
+      // Función para formatear una sección en CSV
+      const formatSection = (title, headers, rows) => {
+        let section = `"${title}"\r\n`;
+        section += headers.map(h => `"${h}"`).join(';') + '\r\n';
+        section += rows.map(row => row.map(item => `"${item}"`).join(';')).join('\r\n');
+        section += '\r\n\r\n'; // Espacio entre secciones
+        return section;
+      };
+      
+      // Construir el contenido CSV completo con todas las secciones
+      let csvContent = '';
+      csvContent += formatSection('RESUMEN', headersResumen, rowsResumen);
+      csvContent += formatSection('FACTURAS EMITIDAS', headersFacturas, rowsFacturas);
+      csvContent += formatSection('TRANSACCIONES', headersTransacciones, rowsTransacciones);
+      csvContent += formatSection('PRESUPUESTOS', headersPresupuestos, rowsPresupuestos);
+      
+      // Añadir pie de documento
+      csvContent += '"Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos"\r\n';
       
       // Añadir BOM para que Excel detecte caracteres especiales
       const BOM = '\uFEFF';
       csvContent = BOM + csvContent;
+      
+      // Cambiar la extensión para evitar problemas
+      fileName = fileName.replace('.xlsx', '.csv');
       
       // Crear el blob y descargar
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -695,7 +786,7 @@ export default function SimpleLibroRegistros() {
       }, 100);
       
     } catch (error) {
-      console.error('Error al generar el archivo CSV:', error);
+      console.error('Error al generar el archivo Excel:', error);
       alert('Hubo un problema al generar el archivo. Por favor intente de nuevo.');
     }
   };
