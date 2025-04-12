@@ -367,206 +367,65 @@ export default function SimpleLibroRegistros() {
   const handleDownloadPDF = () => {
     if (!filteredData) return;
     
-    // Creamos un "hack" sencillo para hacer la impresión del PDF más fácil
-    // Este método utiliza la capacidad del navegador para imprimir/guardar a PDF
+    // Para simplificar, vamos a crear un texto simple para descargar
+    let content = "LIBRO DE REGISTROS\n\n";
+    content += `Usuario ID: ${userId || 'Todos'}\n`;
+    content += `Fecha de generación: ${new Date().toLocaleDateString('es-ES')}\n`;
+    content += `Filtros: Año ${selectedYear}, Trimestre ${selectedQuarter}, Mes ${selectedMonth}\n\n`;
     
-    // Creamos un elemento DIV oculto para contener la versión imprimible
-    const printableDiv = document.createElement('div');
-    printableDiv.style.display = 'none';
-    printableDiv.style.fontFamily = 'Arial, sans-serif';
-    document.body.appendChild(printableDiv);
+    content += "RESUMEN:\n";
+    content += `- Total Facturas: ${filteredData.summary.totalInvoices} - Importe: ${formatCurrency(filteredData.summary.incomeTotal)}\n`;
+    content += `- Total Gastos: ${filteredData.summary.totalTransactions} - Importe: ${formatCurrency(filteredData.summary.expenseTotal)}\n`;
+    content += `- Total Presupuestos: ${filteredData.summary.totalQuotes}\n`;
+    content += `- Balance: ${formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)}\n\n`;
     
-    // Creamos el contenido HTML
-    printableDiv.innerHTML = `
-      <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
-        <h1 style="text-align: center; margin-bottom: 15px;">LIBRO DE REGISTROS</h1>
-        <h2 style="text-align: center; color: #666; margin-bottom: 30px;">Usuario ID: ${userId || 'Todos'}</h2>
-        
-        <div style="margin-bottom: 20px;">
-          <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
-          <p><strong>Filtros aplicados:</strong> 
-            Año: ${selectedYear !== 'all' ? selectedYear : 'Todos'}, 
-            Trimestre: ${selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos'}, 
-            Mes: ${selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'}
-          </p>
-        </div>
-        
-        <div style="margin-bottom: 30px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
-          <h3 style="margin-bottom: 10px;">Resumen</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px;"><strong>Total Facturas:</strong></td>
-              <td style="padding: 8px; text-align: right;">${filteredData.summary.totalInvoices}</td>
-              <td style="padding: 8px;"><strong>Importe Facturado:</strong></td>
-              <td style="padding: 8px; text-align: right;">${formatCurrency(filteredData.summary.incomeTotal)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px;"><strong>Total Gastos:</strong></td>
-              <td style="padding: 8px; text-align: right;">${filteredData.summary.totalTransactions}</td>
-              <td style="padding: 8px;"><strong>Importe Gastado:</strong></td>
-              <td style="padding: 8px; text-align: right;">${formatCurrency(filteredData.summary.expenseTotal)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px;"><strong>Total Presupuestos:</strong></td>
-              <td style="padding: 8px; text-align: right;">${filteredData.summary.totalQuotes}</td>
-              <td style="padding: 8px;"><strong>Balance:</strong></td>
-              <td style="padding: 8px; text-align: right; font-weight: bold;">${formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)}</td>
-            </tr>
-          </table>
-        </div>
-        
-        ${filteredData.invoices.length > 0 ? `
-        <div style="margin-bottom: 30px;">
-          <h3 style="margin-bottom: 10px; color: #2563eb;">Facturas Emitidas</h3>
-          <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <thead>
-              <tr style="background-color: #e6efff;">
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Número</th>
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Fecha</th>
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Cliente</th>
-                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Base</th>
-                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">IVA</th>
-                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Total</th>
-                <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData.invoices.map(invoice => `
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${invoice.number}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${formatDate(invoice.issueDate)}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${invoice.client}</td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${formatCurrency(invoice.baseAmount)}</td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">${formatCurrency(invoice.vatAmount)}</td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd; font-weight: bold;">${formatCurrency(invoice.total)}</td>
-                  <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                    <span style="padding: 3px 8px; border-radius: 12px; font-size: 11px; background-color: ${
-                      invoice.status === 'paid' ? '#dcfce7; color: #166534' : 
-                      invoice.status === 'pending' ? '#fef3c7; color: #92400e' : 
-                      '#fee2e2; color: #b91c1c'
-                    }">
-                      ${invoice.status === 'paid' ? 'Pagada' : 
-                        invoice.status === 'pending' ? 'Pendiente' : 
-                        'Cancelada'}
-                    </span>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>` : ''}
-        
-        ${filteredData.transactions.length > 0 ? `
-        <div style="margin-bottom: 30px;">
-          <h3 style="margin-bottom: 10px; color: #d97706;">Transacciones y Gastos</h3>
-          <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <thead>
-              <tr style="background-color: #fffbeb;">
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Fecha</th>
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Descripción</th>
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Categoría</th>
-                <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Tipo</th>
-                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Importe</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData.transactions.map(transaction => `
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${formatDate(transaction.date)}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${transaction.description}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${transaction.category || 'Sin categoría'}</td>
-                  <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                    <span style="padding: 3px 8px; border-radius: 12px; font-size: 11px; background-color: ${
-                      transaction.type === 'income' ? '#dcfce7; color: #166534' : 
-                      '#fee2e2; color: #b91c1c'
-                    }">
-                      ${transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
-                    </span>
-                  </td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd; color: ${
-                    transaction.type === 'income' ? '#166534' : '#b91c1c'
-                  }; font-weight: bold;">
-                    ${formatCurrency(transaction.amount)}
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>` : ''}
-        
-        ${filteredData.quotes.length > 0 ? `
-        <div style="margin-bottom: 30px;">
-          <h3 style="margin-bottom: 10px; color: #059669;">Presupuestos</h3>
-          <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <thead>
-              <tr style="background-color: #ecfdf5;">
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Número</th>
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Fecha</th>
-                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Cliente</th>
-                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Total</th>
-                <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData.quotes.map(quote => `
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${quote.number}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${formatDate(quote.issueDate)}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${quote.clientName}</td>
-                  <td style="padding: 8px; text-align: right; border: 1px solid #ddd; font-weight: bold;">${formatCurrency(quote.total)}</td>
-                  <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">
-                    <span style="padding: 3px 8px; border-radius: 12px; font-size: 11px; background-color: ${
-                      quote.status === 'accepted' ? '#dcfce7; color: #166534' : 
-                      quote.status === 'pending' ? '#fef3c7; color: #92400e' : 
-                      '#fee2e2; color: #b91c1c'
-                    }">
-                      ${quote.status === 'accepted' ? 'Aceptado' : 
-                        quote.status === 'pending' ? 'Pendiente' : 
-                        'Rechazado'}
-                    </span>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>` : ''}
-        
-        <div style="text-align: center; color: #666; margin-top: 40px; font-size: 12px;">
-          <p>Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos</p>
-          <p>${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}</p>
-        </div>
-      </div>
-    `;
+    if (filteredData.invoices.length > 0) {
+      content += "FACTURAS:\n";
+      filteredData.invoices.forEach(invoice => {
+        content += `- Nº ${invoice.number} | ${formatDate(invoice.issueDate)} | ${invoice.client} | ${formatCurrency(invoice.total)} | ${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}\n`;
+      });
+      content += "\n";
+    }
     
-    // Función para imprimir la ventana
-    const printWindow = window.open('', '_blank');
-    printWindow!.document.write(`
-      <html>
-        <head>
-          <title>Libro de Registros - Usuario ID: ${userId || 'Todos'}</title>
-          <style>
-            @media print {
-              body { font-family: Arial, sans-serif; }
-              table { page-break-inside: auto; }
-              tr { page-break-inside: avoid; page-break-after: auto; }
-              thead { display: table-header-group; }
-            }
-          </style>
-        </head>
-        <body>
-          ${printableDiv.innerHTML}
-        </body>
-      </html>
-    `);
+    if (filteredData.transactions.length > 0) {
+      content += "TRANSACCIONES:\n";
+      filteredData.transactions.forEach(transaction => {
+        content += `- ${formatDate(transaction.date)} | ${transaction.description} | ${transaction.type === 'income' ? 'Ingreso' : 'Gasto'} | ${formatCurrency(transaction.amount)}\n`;
+      });
+      content += "\n";
+    }
     
-    printWindow!.document.close();
+    if (filteredData.quotes.length > 0) {
+      content += "PRESUPUESTOS:\n";
+      filteredData.quotes.forEach(quote => {
+        content += `- Nº ${quote.number} | ${formatDate(quote.issueDate)} | ${quote.clientName} | ${formatCurrency(quote.total)} | ${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}\n`;
+      });
+    }
     
-    // Esperamos a que el documento se cargue antes de imprimir
-    setTimeout(() => {
-      printWindow!.print();
-      printWindow!.close();
-      document.body.removeChild(printableDiv);
-    }, 500);
+    content += "\nDocumento generado por Billeo - Sistema de Gestión Financiera para Autónomos";
+    
+    // Crear y descargar el archivo
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    // Determinar nombre del archivo con período de tiempo
+    let fileName = `libro_registros_${userId || 'todos'}`;
+    if (selectedYear !== 'all') {
+      fileName += `_${selectedYear}`;
+      if (selectedQuarter !== 'all') {
+        fileName += `_T${selectedQuarter.replace('Q', '')}`;
+      } else if (selectedMonth !== 'all') {
+        fileName += `_mes${selectedMonth}`;
+      }
+    }
+    fileName += '.txt';
+    
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   // Función para descargar como Excel
