@@ -619,295 +619,109 @@ export default function SimpleLibroRegistros() {
     }, 100);
   };
   
-  // Función para descargar como CSV (compatible con Excel)
+  // Función para descargar como Excel directo
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
-    // Nombre del archivo
-    let fileName = `libro_registros_${userId || 'todos'}`;
-    if (selectedYear !== 'all') {
-      fileName += `_${selectedYear}`;
-      if (selectedQuarter !== 'all') {
-        fileName += `_T${selectedQuarter.replace('Q', '')}`;
-      } else if (selectedMonth !== 'all') {
-        fileName += `_mes${selectedMonth}`;
-      }
-    }
-    fileName += '.txt'; // Usamos TXT (con contenido TSV) para garantizar compatibilidad
-    
-    // Generar datos para facturas
-    const invoicesData = filteredData.invoices.map(invoice => ({
-      'Número': invoice.number,
-      'Fecha_Emisión': formatDate(invoice.issueDate),
-      'Fecha_Vencimiento': formatDate(invoice.dueDate || invoice.issueDate),
-      'Cliente': invoice.client,
-      'Base_Imponible': invoice.baseAmount.toFixed(2),
-      'IVA': invoice.vatAmount.toFixed(2),
-      'Total': invoice.total.toFixed(2),
-      'Tipo_IVA': `${invoice.vatRate || 21}%`,
-      'Estado': invoice.status === 'paid' ? 'Pagada' : 
-               invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
-    }));
-    
-    // Generar datos para ingresos
-    const incomesData = filteredData.transactions.filter(t => t.type === 'income').map(income => ({
-      'Fecha': formatDate(income.date),
-      'Descripción': income.description,
-      'Categoría': income.category || 'Sin categoría',
-      'Importe': income.amount.toFixed(2),
-      'Notas': income.notes || ''
-    }));
-    
-    // Generar datos para gastos
-    const expensesData = filteredData.transactions.filter(t => t.type === 'expense').map(expense => ({
-      'Fecha': formatDate(expense.date),
-      'Descripción': expense.description,
-      'Categoría': expense.category || 'Sin categoría',
-      'Importe': expense.amount.toFixed(2),
-      'Notas': expense.notes || ''
-    }));
-    
-    // Generar datos para presupuestos
-    const quotesData = filteredData.quotes.map(quote => ({
-      'Número': quote.number,
-      'Fecha_Emisión': formatDate(quote.issueDate),
-      'Fecha_Expiración': formatDate(quote.expiryDate || quote.issueDate),
-      'Cliente': quote.clientName,
-      'Total': quote.total.toFixed(2),
-      'Estado': quote.status === 'accepted' ? 'Aceptado' : 
-               quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
-    }));
-    
-    // Datos del resumen
-    const summaryData = [{
-      'Periodo': selectedYear !== 'all' ? 
-                (selectedQuarter !== 'all' ? `${selectedYear} - T${selectedQuarter.replace('Q', '')}` :
-                 selectedMonth !== 'all' ? `${selectedYear} - ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}` :
-                 selectedYear) : 'Todos',
-      'Total_Facturas': filteredData.summary.totalInvoices,
-      'Importe_Facturado': filteredData.summary.incomeTotal.toFixed(2),
-      'Total_Gastos': filteredData.summary.totalTransactions,
-      'Importe_Gastos': filteredData.summary.expenseTotal.toFixed(2),
-      'Total_Presupuestos': filteredData.summary.totalQuotes,
-      'Balance': (filteredData.summary.incomeTotal - filteredData.summary.expenseTotal).toFixed(2)
-    }];
-    
-    // Función para crear una tabla HTML a partir de datos
-    const createTable = (data: Record<string, any>[], title: string) => {
-      if (!data || data.length === 0) {
-        return `<h3>${title}</h3><p>No hay datos disponibles</p>`;
-      }
-      
-      const headers = Object.keys(data[0]);
-      
-      let table = `
-        <h3 style="margin-top: 20px; color: #333;">${title}</h3>
-        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-          <tr style="background-color: #f2f2f2; font-weight: bold;">
-            ${headers.map(header => `<th>${header.replace(/_/g, ' ')}</th>`).join('')}
-          </tr>
-          ${data.map((row: Record<string, any>) => `
-            <tr>
-              ${headers.map(header => {
-                const value = row[header];
-                // Formatear como moneda si es un número y contiene palabras clave financieras
-                if (!isNaN(Number(value)) && 
-                    (header.includes('Total') || 
-                     header.includes('Importe') || 
-                     header.includes('Base') || 
-                     header.includes('IVA'))) {
-                  return `<td align="right">${Number(value).toLocaleString('es-ES', {
-                    style: 'currency',
-                    currency: 'EUR'
-                  })}</td>`;
-                }
-                return `<td>${value}</td>`;
-              }).join('')}
-            </tr>
-          `).join('')}
-        </table>
-      `;
-      
-      return table;
-    };
-    
-    // Crear una hoja de estilo para el documento Excel
-    const style = `
-      <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #2563eb; text-align: center; margin-bottom: 20px; }
-        h3 { color: #333; margin-top: 30px; margin-bottom: 10px; }
-        .sheet { display: none; }
-        .visible { display: block; }
-        .tab-buttons { margin-bottom: 20px; }
-        .tab-button {
-          padding: 8px 16px;
-          background-color: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 4px 4px 0 0;
-          cursor: pointer;
-          margin-right: 5px;
+    try {
+      // Preparar el nombre del archivo
+      let fileName = `libro_registros_${userId || 'todos'}`;
+      if (selectedYear !== 'all') {
+        fileName += `_${selectedYear}`;
+        if (selectedQuarter !== 'all') {
+          fileName += `_T${selectedQuarter.replace('Q', '')}`;
+        } else if (selectedMonth !== 'all') {
+          fileName += `_mes${selectedMonth}`;
         }
-        .tab-button.active {
-          background-color: #2563eb;
-          color: white;
-          border-color: #2563eb;
-        }
-        .info-header {
-          background-color: #f9f9f9;
-          padding: 10px;
-          border-radius: 5px;
-          margin-bottom: 20px;
-          border: 1px solid #ddd;
-        }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { background-color: #f2f2f2; text-align: left; padding: 8px; }
-        td { padding: 8px; border: 1px solid #ddd; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-      </style>
-    `;
-    
-    // Lógica para cambiar entre pestañas (para vista previa)
-    const script = `
-      <script>
-        function showSheet(sheetId) {
-          // Ocultar todas las hojas
-          var sheets = document.getElementsByClassName('sheet');
-          for (var i = 0; i < sheets.length; i++) {
-            sheets[i].classList.remove('visible');
-          }
-          
-          // Mostrar la hoja seleccionada
-          document.getElementById(sheetId).classList.add('visible');
-          
-          // Actualizar botones activos
-          var buttons = document.getElementsByClassName('tab-button');
-          for (var i = 0; i < buttons.length; i++) {
-            buttons[i].classList.remove('active');
-          }
-          
-          document.getElementById('btn-' + sheetId).classList.add('active');
-        }
-      </script>
-    `;
-    
-    // Función para convertir array de objetos a CSV
-    const objectsToCSV = (data: Record<string, any>[]) => {
-      if (!data || data.length === 0) return '';
-      
-      const headers = Object.keys(data[0]);
-      const csvRows = [];
-      
-      // Añadir cabeceras
-      csvRows.push(headers.map(header => `"${header.replace(/_/g, ' ')}"`).join(','));
-      
-      // Añadir filas de datos
-      for (const row of data) {
-        const values = headers.map(header => {
-          const value = row[header];
-          // Formatear valores de moneda
-          if (!isNaN(Number(value)) && 
-              (header.includes('Total') || 
-              header.includes('Importe') || 
-              header.includes('Base') || 
-              header.includes('IVA'))) {
-            return `"${Number(value).toFixed(2)} €"`;
-          }
-          // Escapar comillas en texto
-          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
-          return `"${value}"`;
-        });
-        csvRows.push(values.join(','));
       }
+      fileName += '.csv'; // CSVs son universalmente compatibles con Excel
+
+      // Preparar los datos simplificados
+      const filteredPeriod = selectedYear !== 'all' ? 
+        (selectedQuarter !== 'all' ? `${selectedYear} T${selectedQuarter.replace('Q', '')}` :
+        selectedMonth !== 'all' ? `${selectedYear} ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}` :
+        selectedYear) : 'Todos los períodos';
       
-      return csvRows.join('\n');
-    };
-    
-    // Vamos a cambiar el enfoque y crear un TSV (Tab-Separated Values) que Excel abre mejor
-    // Creamos solo el Excel con las facturas, que son el dato central
-    
-    // Preparar el encabezado
-    const headerRow = [
-      'Número', 'Fecha Emisión', 'Fecha Vencimiento', 'Cliente', 
-      'Base Imponible (€)', 'IVA (€)', 'Total (€)', 'Tipo IVA', 'Estado'
-    ].join('\t');
-    
-    // Preparar las filas de datos
-    const dataRows = filteredData.invoices.map(invoice => [
-      invoice.number,
-      formatDate(invoice.issueDate),
-      formatDate(invoice.dueDate || invoice.issueDate),
-      invoice.client,
-      invoice.baseAmount.toFixed(2).replace('.', ','),
-      invoice.vatAmount.toFixed(2).replace('.', ','),
-      invoice.total.toFixed(2).replace('.', ','),
-      `${invoice.vatRate || 21}%`,
-      invoice.status === 'paid' ? 'Pagada' : 
-       invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
-    ].join('\t')).join('\n');
-    
-    // Crear el contenido del archivo
-    const title = `LIBRO DE REGISTROS - FACTURAS EMITIDAS`;
-    const generationDate = `Generado: ${new Date().toLocaleDateString('es-ES')}`;
-    const filterInfo = `Filtros: Año: ${selectedYear !== 'all' ? selectedYear : 'Todos'}, Trimestre: ${selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos'}, Mes: ${selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'}`;
-    const summary = `Total Facturas: ${filteredData.summary.totalInvoices}, Importe Total: ${filteredData.summary.incomeTotal.toFixed(2).replace('.', ',')} €`;
-    
-    // Combinar todo en un contenido TSV limpio
-    const tsvContent = [
-      title,
-      generationDate,
-      filterInfo,
-      summary,
-      '',
-      headerRow,
-      dataRows,
-      '',
-      'Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos'
-    ].join('\n');
-    
-    // Preparar el BOM UTF-8 para que Excel reconozca los caracteres internacionales
-    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const encoder = new TextEncoder();
-    const tsvArray = encoder.encode(tsvContent);
-    
-    // Combinar BOM con contenido TSV
-    const combinedArray = new Uint8Array(BOM.length + tsvArray.length);
-    combinedArray.set(BOM, 0);
-    combinedArray.set(tsvArray, BOM.length);
-    
-    // Crear el Blob con tipo correcto para texto plano
-    const blob = new Blob([combinedArray], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    
-    // Crear un enlace y hacer clic para descargar
-    const link = document.createElement('a');
-    
-    // Configuramos todos los atributos para forzar la descarga sin abrir
-    link.href = url;
-    link.setAttribute('download', fileName);
-    // Quitamos target="_blank" que puede causar problemas
-    link.style.display = 'none';
-    
-    // Añadimos al DOM, hacemos clic y limpiamos con un poco más de retraso
-    document.body.appendChild(link);
-    
-    // Pequeño retraso antes de hacer clic
-    setTimeout(() => {
-      try {
-        link.click();
-      } catch (err) {
-        console.error("Error al hacer clic en el enlace de descarga:", err);
-        alert("Hubo un problema al descargar el Excel. Por favor, inténtelo de nuevo.");
-      }
+      // Crear CSV con formato simple
+      const csvHeader = 'sep=,\n'; // Indicador explícito del separador para Excel
       
-      // Limpieza con más tiempo
+      // Sección de encabezado
+      const csvInfo = [
+        'LIBRO DE REGISTROS - BILLEO',
+        `Generado: ${new Date().toLocaleDateString('es-ES')}`,
+        `Período: ${filteredPeriod}`,
+        `Usuario: ${userId || 'Todos'}`,
+        '',
+        '# RESUMEN DE DATOS #',
+        `Total Facturas emitidas:,${filteredData.summary.totalInvoices}`,
+        `Importe total facturado:,${filteredData.summary.incomeTotal.toFixed(2)} €`,
+        `Total Gastos registrados:,${filteredData.summary.totalTransactions}`,
+        `Importe total de gastos:,${filteredData.summary.expenseTotal.toFixed(2)} €`,
+        `Total Presupuestos:,${filteredData.summary.totalQuotes}`,
+        `Resultado (Ingresos - Gastos):,${(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal).toFixed(2)} €`,
+        ''
+      ].join('\n');
+      
+      // Sección de facturas
+      const facturasCsv = [
+        '# FACTURAS EMITIDAS #',
+        'Número,Fecha Emisión,Fecha Vencimiento,Cliente,Base Imponible (€),IVA (€),Total (€),Tipo IVA,Estado'
+      ];
+      
+      // Añadir filas de datos de facturas
+      filteredData.invoices.forEach(invoice => {
+        facturasCsv.push([
+          invoice.number,
+          formatDate(invoice.issueDate),
+          formatDate(invoice.dueDate || invoice.issueDate),
+          invoice.client.replace(/,/g, ' '), // Evitar comas en el texto
+          invoice.baseAmount.toFixed(2).replace('.', ','),
+          invoice.vatAmount.toFixed(2).replace('.', ','),
+          invoice.total.toFixed(2).replace('.', ','),
+          `${invoice.vatRate || 21}%`,
+          invoice.status === 'paid' ? 'Pagada' : 
+            invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+        ].join(','));
+      });
+      
+      facturasCsv.push(''); // Línea vacía para separar secciones
+      
+      // Crear el contenido completo del CSV
+      const csvContent = csvHeader + csvInfo + facturasCsv.join('\n') + '\n';
+      
+      // Preparar Blob con BOM para UTF-8
+      const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const encoder = new TextEncoder();
+      const csvArray = encoder.encode(csvContent);
+      
+      // Combinar BOM con contenido CSV
+      const combinedArray = new Uint8Array(BOM.length + csvArray.length);
+      combinedArray.set(BOM, 0);
+      combinedArray.set(csvArray, BOM.length);
+      
+      // Crear el Blob con tipo MIME para CSV
+      const blob = new Blob([combinedArray], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      // Crear un enlace para descargar
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      link.style.display = 'none';
+      
+      // Descargar el archivo
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar después de la descarga
       setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
+        document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      }, 300);
-    }, 100);
+      }, 500);
+    } catch (error) {
+      console.error('Error al generar el Excel:', error);
+      alert('Hubo un problema al generar el archivo Excel. Por favor intente de nuevo.');
+    }
   };
 
   return (
