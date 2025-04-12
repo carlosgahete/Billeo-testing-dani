@@ -541,8 +541,11 @@ export default function SimpleLibroRegistros() {
     // En lugar de abrir una ventana de impresión, creamos un PDF para descargar
     // Convertimos el HTML a Blob y lo descargamos
     const htmlContent = `
+      <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
           <title>Libro de Registros - Usuario ID: ${userId || 'Todos'}</title>
           <style>
             body { font-family: Arial, sans-serif; }
@@ -559,8 +562,15 @@ export default function SimpleLibroRegistros() {
     `;
     
     // Crear un Blob con el HTML
-    // Usamos 'application/force-download' para forzar la descarga sin abrir
-    const blob = new Blob([htmlContent], { type: 'application/force-download' });
+    // Aseguramos la codificación adecuada usando un Encoder UTF-8
+    const encoder = new TextEncoder();
+    const utf8Array = encoder.encode(htmlContent);
+    // Forzamos más agresivamente el tipo a un tipo binario genérico con BOM UTF-8
+    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const combinedArray = new Uint8Array(BOM.length + utf8Array.length);
+    combinedArray.set(BOM, 0);
+    combinedArray.set(utf8Array, BOM.length);
+    const blob = new Blob([combinedArray], { type: 'application/force-download' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace para descargar
@@ -781,13 +791,15 @@ export default function SimpleLibroRegistros() {
       </script>
     `;
     
-    // Crear contenido HTML para el archivo Excel
+    // Crear contenido HTML para el archivo Excel con codificación UTF-8 explícita
     const html = `
+      <!DOCTYPE html>
       <html xmlns:o="urn:schemas-microsoft-com:office:office" 
             xmlns:x="urn:schemas-microsoft-com:office:excel" 
             xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset="UTF-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="ProgId" content="Excel.Sheet">
         <meta name="Generator" content="Microsoft Excel 15">
         <title>Libro de Registros</title>
@@ -889,8 +901,15 @@ export default function SimpleLibroRegistros() {
     `;
     
     // Crear un blob con el contenido HTML
-    // Forzamos más agresivamente el tipo a un tipo binario genérico
-    const blob = new Blob([html], { type: 'application/force-download' });
+    // Aseguramos la codificación adecuada usando un Encoder UTF-8
+    const encoder = new TextEncoder();
+    const utf8Array = encoder.encode(html);
+    // Forzamos más agresivamente el tipo a un tipo binario genérico con BOM UTF-8
+    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const combinedArray = new Uint8Array(BOM.length + utf8Array.length);
+    combinedArray.set(BOM, 0);
+    combinedArray.set(utf8Array, BOM.length);
+    const blob = new Blob([combinedArray], { type: 'application/force-download' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace y hacer clic para descargar
