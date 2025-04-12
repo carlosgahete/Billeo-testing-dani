@@ -633,7 +633,7 @@ export default function SimpleLibroRegistros() {
         fileName += `_mes${selectedMonth}`;
       }
     }
-    fileName += '.csv'; // Usamos CSV para garantizar compatibilidad
+    fileName += '.txt'; // Usamos TXT (con contenido TSV) para garantizar compatibilidad
     
     // Generar datos para facturas
     const invoicesData = filteredData.invoices.map(invoice => ({
@@ -823,51 +823,60 @@ export default function SimpleLibroRegistros() {
       return csvRows.join('\n');
     };
     
-    // Crear el contenido CSV para cada sección
-    const summaryCSV = objectsToCSV(summaryData);
-    const invoicesCSV = objectsToCSV(invoicesData);
-    const incomesCSV = objectsToCSV(incomesData);
-    const expensesCSV = objectsToCSV(expensesData);
-    const quotesCSV = objectsToCSV(quotesData);
+    // Vamos a cambiar el enfoque y crear un TSV (Tab-Separated Values) que Excel abre mejor
+    // Creamos solo el Excel con las facturas, que son el dato central
     
-    // Combinar todas las secciones
-    const csvContent = [
-      '# LIBRO DE REGISTROS - RESUMEN',
-      '# Generado: ' + new Date().toLocaleDateString('es-ES'),
-      '# Filtros: Año: ' + (selectedYear !== 'all' ? selectedYear : 'Todos') + 
-        ', Trimestre: ' + (selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos') + 
-        ', Mes: ' + (selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'),
+    // Preparar el encabezado
+    const headerRow = [
+      'Número', 'Fecha Emisión', 'Fecha Vencimiento', 'Cliente', 
+      'Base Imponible (€)', 'IVA (€)', 'Total (€)', 'Tipo IVA', 'Estado'
+    ].join('\t');
+    
+    // Preparar las filas de datos
+    const dataRows = filteredData.invoices.map(invoice => [
+      invoice.number,
+      formatDate(invoice.issueDate),
+      formatDate(invoice.dueDate || invoice.issueDate),
+      invoice.client,
+      invoice.baseAmount.toFixed(2).replace('.', ','),
+      invoice.vatAmount.toFixed(2).replace('.', ','),
+      invoice.total.toFixed(2).replace('.', ','),
+      `${invoice.vatRate || 21}%`,
+      invoice.status === 'paid' ? 'Pagada' : 
+       invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+    ].join('\t')).join('\n');
+    
+    // Crear el contenido del archivo
+    const title = `LIBRO DE REGISTROS - FACTURAS EMITIDAS`;
+    const generationDate = `Generado: ${new Date().toLocaleDateString('es-ES')}`;
+    const filterInfo = `Filtros: Año: ${selectedYear !== 'all' ? selectedYear : 'Todos'}, Trimestre: ${selectedQuarter !== 'all' ? `T${selectedQuarter.replace('Q', '')}` : 'Todos'}, Mes: ${selectedMonth !== 'all' ? new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'}) : 'Todos'}`;
+    const summary = `Total Facturas: ${filteredData.summary.totalInvoices}, Importe Total: ${filteredData.summary.incomeTotal.toFixed(2).replace('.', ',')} €`;
+    
+    // Combinar todo en un contenido TSV limpio
+    const tsvContent = [
+      title,
+      generationDate,
+      filterInfo,
+      summary,
       '',
-      '### RESUMEN ###',
-      summaryCSV,
+      headerRow,
+      dataRows,
       '',
-      '### FACTURAS ###',
-      invoicesCSV,
-      '',
-      '### INGRESOS ###',
-      incomesCSV,
-      '',
-      '### GASTOS ###',
-      expensesCSV,
-      '',
-      '### PRESUPUESTOS ###',
-      quotesCSV,
-      '',
-      '# Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos'
+      'Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos'
     ].join('\n');
     
     // Preparar el BOM UTF-8 para que Excel reconozca los caracteres internacionales
     const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const encoder = new TextEncoder();
-    const csvArray = encoder.encode(csvContent);
+    const tsvArray = encoder.encode(tsvContent);
     
-    // Combinar BOM con contenido CSV
-    const combinedArray = new Uint8Array(BOM.length + csvArray.length);
+    // Combinar BOM con contenido TSV
+    const combinedArray = new Uint8Array(BOM.length + tsvArray.length);
     combinedArray.set(BOM, 0);
-    combinedArray.set(csvArray, BOM.length);
+    combinedArray.set(tsvArray, BOM.length);
     
-    // Crear el Blob con tipo correcto para CSV
-    const blob = new Blob([combinedArray], { type: 'text/csv;charset=utf-8' });
+    // Crear el Blob con tipo correcto para texto plano
+    const blob = new Blob([combinedArray], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     
     // Crear un enlace y hacer clic para descargar
