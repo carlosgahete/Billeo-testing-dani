@@ -53,16 +53,11 @@ function toNumber(value: any, defaultValue = 0): number {
   return isNaN(numericValue) ? defaultValue : numericValue;
 }
 
-// Variable para controlar el debounce sin perder el foco
-let lastCalculationTimeout: number | null = null;
-
 // Función segura para calcular totales sin causar renderizados infinitos
-function calculateInvoiceTotals(formInstance: any) {
-  // Prevenir múltiples cálculos seguidos
-  if (lastCalculationTimeout) {
-    clearTimeout(lastCalculationTimeout);
-  }
-  
+function calculateInvoiceTotals(
+  formInstance: any, 
+  options: { executeUpdate?: boolean, silentMode?: boolean } = { executeUpdate: true, silentMode: false }
+) {
   // Verificar que tenemos una instancia de formulario válida
   if (!formInstance || typeof formInstance.getValues !== 'function') {
     console.warn("⚠️ Se intentó calcular totales sin una instancia de formulario válida");
@@ -109,43 +104,37 @@ function calculateInvoiceTotals(formInstance: any) {
   const total = subtotal + tax + additionalTaxesTotal;
   const safeTotal = Math.max(0, total);
   
-  // Actualizamos con un pequeño retraso para evitar pérdida de foco durante edición
-  // Usamos una técnica más segura para evitar bucles de rerenderizado
-  const formRef = formInstance; // Capturamos la referencia actual en una variable local
-  
-  lastCalculationTimeout = window.setTimeout(() => {
-    // Verificamos que la instancia del formulario sigue siendo válida
-    if (!formRef || typeof formRef.setValue !== 'function') {
-      console.warn("⚠️ Formulario no válido al actualizar valores");
-      return;
-    }
-    
+  // Si la opción executeUpdate está activada, actualizamos el formulario
+  // Esto permite calcular sin actualizar cuando solo necesitamos los valores
+  if (options.executeUpdate && formInstance) {
     try {
       // Actualizamos los items con los nuevos subtotales calculados - con captura de errores
-      formRef.setValue("items", updatedItems, { shouldValidate: false });
+      formInstance.setValue("items", updatedItems, { shouldValidate: false });
       
       // Actualizamos los totales de la factura sin validar para evitar pérdida de foco
-      formRef.setValue("subtotal", subtotal, { shouldValidate: false });
-      formRef.setValue("tax", tax, { shouldValidate: false });
-      formRef.setValue("total", safeTotal, { shouldValidate: false });
+      formInstance.setValue("subtotal", subtotal, { shouldValidate: false });
+      formInstance.setValue("tax", tax, { shouldValidate: false });
+      formInstance.setValue("total", safeTotal, { shouldValidate: false });
       
-      // Log para debug
-      console.log("💰 Cálculo de totales:", {
-        subtotal,
-        tax,
-        additionalTaxesTotal,
-        total: safeTotal,
-        desglose: additionalTaxes.map((tax: any) => ({
-          nombre: tax.name,
-          valor: tax.isPercentage ? 
-            `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
-            `${tax.amount}€`
-        }))
-      });
+      // Log para debug solo si no estamos en modo silencioso
+      if (!options.silentMode) {
+        console.log("💰 Cálculo de totales:", {
+          subtotal,
+          tax,
+          additionalTaxesTotal,
+          total: safeTotal,
+          desglose: additionalTaxes.map((tax: any) => ({
+            nombre: tax.name,
+            valor: tax.isPercentage ? 
+              `${tax.amount}% = ${(subtotal * (toNumber(tax.amount, 0) / 100)).toFixed(2)}€` : 
+              `${tax.amount}€`
+          }))
+        });
+      }
     } catch (error) {
       console.error("Error al actualizar valores del formulario:", error);
     }
-  }, 10); // Aumentamos ligeramente el retraso para mayor seguridad
+  }
   
   // Devolvemos los valores calculados para uso inmediato si es necesario
   return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
@@ -517,12 +506,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         
         // Incorporar datos originales si están disponibles
         // Ya verificamos en el useEffect que datos existe
-        const originalInvoice: Record<string, any> = (
+        const originalInvoice = (
           invoiceData && 
           typeof invoiceData === 'object' && 
           invoiceData !== null && 
           'invoice' in invoiceData
-        ) ? invoiceData.invoice : {};
+        ) ? invoiceData.invoice as Record<string, any> : {} as Record<string, any>;
         
         // Asegurar que los impuestos adicionales estén en el formato correcto
         // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
@@ -538,11 +527,16 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           processedAdditionalTaxes = processedAdditionalTaxes.map(tax => {
             if (typeof tax === 'object' && tax !== null) {
               return {
-                ...tax,
-                amount: typeof tax.amount === 'number' ? formatNumber(tax.amount) : tax.amount
+                name: tax.name || "",
+                isPercentage: Boolean(tax.isPercentage),
+                amount: typeof tax.amount === 'number' ? Number(tax.amount) : Number(tax.amount || 0)
               };
             }
-            return tax;
+            return {
+              name: "",
+              amount: 0,
+              isPercentage: false
+            };
           });
         }
         
