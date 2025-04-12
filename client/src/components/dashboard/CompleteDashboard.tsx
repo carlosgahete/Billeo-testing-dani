@@ -573,7 +573,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                       margin={{
                         top: 5,
                         right: 5,
-                        left: 5,
+                        left: 10,
                         bottom: 5,
                       }}
                     >
@@ -586,7 +586,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                       />
                       <YAxis 
                         tickFormatter={(value) => `${value}€`}
-                        width={30}
+                        width={45}
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 10 }}
