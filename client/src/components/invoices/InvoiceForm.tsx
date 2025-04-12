@@ -287,9 +287,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const bankAccount = companyData.bankAccount;
       
       if (bankAccount) {
-        const defaultNotes = `Pago mediante transferencia bancaria a ${bankAccount}`;
-        form.setValue("notes", defaultNotes);
-        console.log("✅ Número de cuenta añadido a notas:", defaultNotes);
+        // Dejamos las notas vacías y usaremos la información bancaria en otra sección del PDF
+        form.setValue("notes", "");
+        console.log("✅ Notas vacías para evitar duplicación con información bancaria");
       }
     }
   }, [companyData, form, isEditMode]);
@@ -627,11 +627,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     const items = form.getValues("items") || [];
     const additionalTaxes = form.getValues("additionalTaxes") || [];
     
-    // Si las notas están vacías y tenemos número de cuenta, añadirlo automáticamente
-    if ((!data.notes || data.notes.trim() === "") && companyData?.bankAccount) {
-      data.notes = `Pago mediante transferencia bancaria a ${companyData.bankAccount}`;
-      form.setValue("notes", data.notes);
-    }
+    // Las notas no necesitan incluir información bancaria, ya que aparece en otra parte del PDF
+    // Dejamos las notas como están si el usuario las ha introducido manualmente
     
     // Calculamos subtotales
     const updatedItems = items.map((item: any) => {
