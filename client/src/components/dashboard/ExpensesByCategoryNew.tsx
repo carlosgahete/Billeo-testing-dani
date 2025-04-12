@@ -440,12 +440,12 @@ const ExpensesByCategoryNew: React.FC<{
         {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
           {/* Lado izquierdo: Gráfico donut como en la imagen de referencia */}
-          <div className="w-1/2 flex items-center justify-center">
+          <div className="w-1/2 flex items-center justify-center pt-6">
             {/* Gráfico de donut (anillo) */}
             <div className="relative w-44 h-44">
               {/* Círculo base (agujero blanco del centro) */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-white rounded-full"></div>
+                <div className="w-16 h-16 bg-white rounded-full"></div>
               </div>
               
               {/* Construcción del donut con segmentos circulares */}
@@ -522,7 +522,7 @@ const ExpensesByCategoryNew: React.FC<{
           </div>
           
           {/* Lado derecho: Lista de categorías con scroll cuando es necesario */}
-          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[300px] overflow-y-auto custom-scrollbar pr-3">
+          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[280px] overflow-y-auto custom-scrollbar pr-3 pt-6">
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
@@ -542,14 +542,14 @@ const ExpensesByCategoryNew: React.FC<{
               >
                 {/* Círculo con icono */}
                 <div className="relative mr-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                     {/* Indicador de color */}
                     <div 
                       className="absolute left-0 top-0 w-3 h-3 rounded-full" 
                       style={{ backgroundColor: item.color }}
                     ></div>
                     {/* Icono */}
-                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-lg">{item.icon}</span>
                   </div>
                 </div>
                 
