@@ -619,7 +619,7 @@ export default function SimpleLibroRegistros() {
     }, 100);
   };
   
-  // Función para descargar como Excel en formato estructurado
+  // Función para descargar como Excel con formato visual HTML
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
@@ -634,7 +634,7 @@ export default function SimpleLibroRegistros() {
           fileName += `_mes${selectedMonth}`;
         }
       }
-      fileName += '.xlsx'; // Extensión Excel
+      fileName += '.xls'; // Extensión Excel
       
       // Período filtrado para el encabezado
       const periodoFiltrado = selectedYear !== 'all' 
@@ -645,7 +645,7 @@ export default function SimpleLibroRegistros() {
               : selectedYear)
         : 'Todos los períodos';
       
-      // Fecha actual formateada
+      // Obtener fecha actual formateada para el informe
       const fechaGeneracion = new Date().toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',
@@ -654,82 +654,202 @@ export default function SimpleLibroRegistros() {
         minute: '2-digit'
       });
       
-      // --- FACTURAS EMITIDAS ---
+      // Estilos CSS para el documento HTML
+      const styles = `
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+          }
+          h1 {
+            color: #2563eb;
+            font-size: 24px;
+            margin-bottom: 5px;
+          }
+          h2 {
+            color: #3b82f6;
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 5px;
+          }
+          .info {
+            background-color: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+          }
+          .info p {
+            margin: 5px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 12px;
+          }
+          th {
+            background-color: #f1f5f9;
+            text-align: left;
+            padding: 8px;
+            font-weight: bold;
+            border: 1px solid #cbd5e1;
+          }
+          td {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+          }
+          .numeric {
+            text-align: right;
+          }
+          .header-row {
+            background-color: #e2e8f0;
+          }
+          .footer-row {
+            background-color: #f1f5f9;
+            font-weight: bold;
+          }
+          tr:nth-child(even) {
+            background-color: #f8fafc;
+          }
+          .footer {
+            margin-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+          }
+        </style>
+      `;
       
-      // Crear cabeceras para facturas
+      // Función para crear una tabla HTML a partir de datos
+      const createTable = (headers: string[], data: any[][], showFooter = false, footerData: any[] | null = null) => {
+        let table = '<table border="1">';
+        
+        // Cabecera
+        table += '<thead><tr class="header-row">';
+        headers.forEach((header: string) => {
+          table += `<th>${header}</th>`;
+        });
+        table += '</tr></thead>';
+        
+        // Datos
+        table += '<tbody>';
+        data.forEach((row: any[]) => {
+          table += '<tr>';
+          row.forEach((cell: any, index: number) => {
+            // Aplicar alineación derecha para columnas numéricas (generalmente cantidades)
+            const isNumeric = 
+              (typeof cell === 'string' && cell.includes('€')) || 
+              (!isNaN(parseFloat(String(cell)))) || 
+              (typeof cell === 'string' && cell.includes(',') && !isNaN(parseFloat(cell.replace(',', '.'))));
+            
+            table += `<td${isNumeric ? ' class="numeric"' : ''}>${cell}</td>`;
+          });
+          table += '</tr>';
+        });
+        
+        // Pie (totales)
+        if (showFooter && footerData) {
+          table += '<tr class="footer-row">';
+          footerData.forEach((cell: any, index: number) => {
+            const isNumeric = 
+              (typeof cell === 'string' && cell.includes('€')) || 
+              (!isNaN(parseFloat(String(cell)))) || 
+              (typeof cell === 'string' && cell.includes(',') && !isNaN(parseFloat(cell.replace(',', '.'))));
+            
+            table += `<td${isNumeric ? ' class="numeric"' : ''}>${cell}</td>`;
+          });
+          table += '</tr>';
+        }
+        
+        table += '</tbody></table>';
+        return table;
+      };
+      
+      // --- PREPARAR DATOS PARA FACTURAS ---
       const headersFacturas = [
         "ID de Registro", "Fecha y Hora", "Número", "Fecha Emisión", "Cliente", 
         "Base Imponible (€)", "IVA (€)", "Total (€)", "% IVA", "Estado"
       ];
       
-      // Crear filas para facturas
-      const rowsFacturas = filteredData.invoices.map((invoice, index) => [
-        // ID de registro único secuencial
+      const dataFacturas = filteredData.invoices.map((invoice, index) => [
         `FAC-${String(index + 1).padStart(4, '0')}`,
         new Date().toISOString().replace('T', ' ').substring(0, 19),
         invoice.number,
         formatDate(invoice.issueDate),
-        invoice.client.replace(/"/g, '""'), // Escapar comillas dobles
-        invoice.baseAmount.toString().replace('.', ','),
-        invoice.vatAmount.toString().replace('.', ','),
-        invoice.total.toString().replace('.', ','),
+        invoice.client,
+        invoice.baseAmount.toFixed(2).replace('.', ',') + ' €',
+        invoice.vatAmount.toFixed(2).replace('.', ',') + ' €',
+        invoice.total.toFixed(2).replace('.', ',') + ' €',
         `${invoice.vatRate || 21}%`,
         invoice.status === 'paid' ? 'Pagada' : 
           invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
       ]);
       
-      // --- TRANSACCIONES/GASTOS ---
+      // Calcular totales para facturas
+      const totalBaseFacturas = filteredData.invoices.reduce((sum, inv) => sum + inv.baseAmount, 0).toFixed(2).replace('.', ',') + ' €';
+      const totalIVAFacturas = filteredData.invoices.reduce((sum, inv) => sum + inv.vatAmount, 0).toFixed(2).replace('.', ',') + ' €';
+      const totalFacturas = filteredData.invoices.reduce((sum, inv) => sum + inv.total, 0).toFixed(2).replace('.', ',') + ' €';
       
-      // Crear cabeceras para transacciones
-      const headersTransacciones = [
-        "ID de Registro", "Fecha y Hora", "Fecha Transacción", "Descripción", 
-        "Categoría", "Importe (€)", "Tipo", "Notas"
+      const footerFacturas = [
+        'TOTALES', '', '', '', '', 
+        totalBaseFacturas, 
+        totalIVAFacturas, 
+        totalFacturas, 
+        '', ''
       ];
       
-      // Crear filas para transacciones
-      const rowsTransacciones = filteredData.transactions.map((transaction, index) => [
-        // ID de registro único secuencial
+      // --- PREPARAR DATOS PARA TRANSACCIONES ---
+      const headersTransacciones = [
+        "ID de Registro", "Fecha y Hora", "Fecha", "Descripción", "Categoría", 
+        "Importe (€)", "Tipo", "Notas"
+      ];
+      
+      const dataTransacciones = filteredData.transactions.map((transaction, index) => [
         `TRA-${String(index + 1).padStart(4, '0')}`,
         new Date().toISOString().replace('T', ' ').substring(0, 19),
         formatDate(transaction.date),
-        transaction.description.replace(/"/g, '""'),
+        transaction.description,
         transaction.category || 'Sin categoría',
-        transaction.amount.toString().replace('.', ','),
+        transaction.amount.toFixed(2).replace('.', ',') + ' €',
         transaction.type === 'income' ? 'Ingreso' : 'Gasto',
         transaction.notes || ''
       ]);
       
-      // --- PRESUPUESTOS ---
+      // Calcular totales para transacciones
+      const totalTransacciones = filteredData.transactions.reduce((sum, tra) => sum + tra.amount, 0).toFixed(2).replace('.', ',') + ' €';
       
-      // Crear cabeceras para presupuestos
+      const footerTransacciones = [
+        'TOTALES', '', '', '', '', totalTransacciones, '', ''
+      ];
+      
+      // --- PREPARAR DATOS PARA PRESUPUESTOS ---
       const headersPresupuestos = [
         "ID de Registro", "Fecha y Hora", "Número", "Fecha Emisión", 
         "Fecha Expiración", "Cliente", "Total (€)", "Estado"
       ];
       
-      // Crear filas para presupuestos
-      const rowsPresupuestos = filteredData.quotes.map((quote, index) => [
-        // ID de registro único secuencial
+      const dataPresupuestos = filteredData.quotes.map((quote, index) => [
         `PRE-${String(index + 1).padStart(4, '0')}`,
         new Date().toISOString().replace('T', ' ').substring(0, 19),
         quote.number,
         formatDate(quote.issueDate),
         formatDate(quote.expiryDate || quote.issueDate),
-        quote.clientName.replace(/"/g, '""'),
-        quote.total.toString().replace('.', ','),
+        quote.clientName,
+        quote.total.toFixed(2).replace('.', ',') + ' €',
         quote.status === 'accepted' ? 'Aceptado' : 
           quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
       ]);
       
-      // --- RESUMEN ---
+      // --- PREPARAR DATOS DE RESUMEN ---
+      const headersResumen = ["Concepto", "Valor"];
       
-      // Crear cabeceras para resumen
-      const headersResumen = [
-        "Concepto", "Valor"
-      ];
-      
-      // Crear filas para resumen
-      const rowsResumen = [
+      const dataResumen = [
         ["Período analizado", periodoFiltrado],
         ["Usuario", userId ? `ID: ${userId}` : "Todos los usuarios"],
         ["Fecha de generación", fechaGeneracion],
@@ -741,34 +861,45 @@ export default function SimpleLibroRegistros() {
         ["Balance (Ingresos - Gastos)", (filteredData.summary.incomeTotal - filteredData.summary.expenseTotal).toFixed(2).replace('.', ',') + " €"]
       ];
       
-      // Función para formatear una sección en CSV
-      const formatSection = (title, headers, rows) => {
-        let section = `"${title}"\r\n`;
-        section += headers.map(h => `"${h}"`).join(';') + '\r\n';
-        section += rows.map(row => row.map(item => `"${item}"`).join(';')).join('\r\n');
-        section += '\r\n\r\n'; // Espacio entre secciones
-        return section;
-      };
+      // Crear el documento HTML completo
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Libro de Registros - Billeo</title>
+          ${styles}
+        </head>
+        <body>
+          <h1>Libro de Registros - Billeo</h1>
+          
+          <div class="info">
+            <p><strong>Período:</strong> ${periodoFiltrado}</p>
+            <p><strong>Usuario:</strong> ${userId ? `ID: ${userId}` : "Todos los usuarios"}</p>
+            <p><strong>Generado:</strong> ${fechaGeneracion}</p>
+          </div>
+          
+          <h2>Resumen</h2>
+          ${createTable(headersResumen, dataResumen)}
+          
+          <h2>Facturas Emitidas</h2>
+          ${createTable(headersFacturas, dataFacturas, true, footerFacturas)}
+          
+          <h2>Transacciones</h2>
+          ${createTable(headersTransacciones, dataTransacciones, true, footerTransacciones)}
+          
+          <h2>Presupuestos</h2>
+          ${createTable(headersPresupuestos, dataPresupuestos)}
+          
+          <div class="footer">
+            <p>Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos</p>
+          </div>
+        </body>
+        </html>
+      `;
       
-      // Construir el contenido CSV completo con todas las secciones
-      let csvContent = '';
-      csvContent += formatSection('RESUMEN', headersResumen, rowsResumen);
-      csvContent += formatSection('FACTURAS EMITIDAS', headersFacturas, rowsFacturas);
-      csvContent += formatSection('TRANSACCIONES', headersTransacciones, rowsTransacciones);
-      csvContent += formatSection('PRESUPUESTOS', headersPresupuestos, rowsPresupuestos);
-      
-      // Añadir pie de documento
-      csvContent += '"Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos"\r\n';
-      
-      // Añadir BOM para que Excel detecte caracteres especiales
-      const BOM = '\uFEFF';
-      csvContent = BOM + csvContent;
-      
-      // Cambiar la extensión para evitar problemas
-      fileName = fileName.replace('.xlsx', '.csv');
-      
-      // Crear el blob y descargar
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      // Crear el blob y preparar para descarga
+      const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
       const url = URL.createObjectURL(blob);
       
       // Crear link de descarga
