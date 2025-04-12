@@ -54,7 +54,7 @@ function toNumber(value: any, defaultValue = 0): number {
 }
 
 // Variable para controlar el debounce sin perder el foco
-let lastCalculationTimeout: NodeJS.Timeout | null = null;
+let lastCalculationTimeout: number | null = null;
 
 // Función segura para calcular totales sin causar renderizados infinitos
 function calculateInvoiceTotals(formInstance: any) {
@@ -319,8 +319,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   };
   
   // Función para procesar los impuestos adicionales
-  const processAdditionalTaxes = (additionalTaxes: any) => {
-    let result = [];
+  const processAdditionalTaxes = (additionalTaxes: any): { name: string; amount: number; isPercentage: boolean }[] => {
+    let result: any[] = [];
     
     if (!additionalTaxes) {
       return [];
@@ -380,10 +380,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       let sourceType = "";
       
       // Determinar la fuente de datos a utilizar
-      if (initialData && initialData.invoice && initialData.items) {
+      if (initialData && typeof initialData === 'object' && initialData !== null && 'invoice' in initialData && 'items' in initialData) {
         dataSource = initialData;
         sourceType = "initialData";
-      } else if (invoiceData && invoiceData.invoice && invoiceData.items) {
+      } else if (invoiceData && typeof invoiceData === 'object' && invoiceData !== null && 'invoice' in invoiceData && 'items' in invoiceData) {
         dataSource = invoiceData;
         sourceType = "invoiceData";
       }
@@ -516,8 +516,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         console.log("🔄 Modo edición - ID:", invoiceId);
         
         // Incorporar datos originales si están disponibles
-        // @ts-ignore - Ya verificamos en el useEffect que datos existe
-        const originalInvoice = (invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData) ? invoiceData.invoice : {};
+        // Ya verificamos en el useEffect que datos existe
+        const originalInvoice: Record<string, any> = (
+          invoiceData && 
+          typeof invoiceData === 'object' && 
+          invoiceData !== null && 
+          'invoice' in invoiceData
+        ) ? invoiceData.invoice : {};
         
         // Asegurar que los impuestos adicionales estén en el formato correcto
         // Convertir a JSON si no lo está, para que la API lo guarde consistentemente
