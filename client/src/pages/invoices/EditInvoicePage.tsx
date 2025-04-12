@@ -33,28 +33,30 @@ export default function EditInvoicePage() {
     staleTime: 0, // No usar caché
     retry: 3, // Intentar hasta 3 veces
     retryDelay: 1000, // Esperar 1 segundo entre reintentos
-    // Aquí intentamos obtener directamente la factura si el primer intento falla
+    // Consulta simplificada para obtener la factura completa con sus items
     queryFn: async () => {
       try {
-        // Intentar obtener los datos con el formato estándar
-        const invoiceResponse = await fetch(`/api/invoices/${invoiceId}`);
-        const invoiceData = await invoiceResponse.json();
-        console.log("🔍 Respuesta API (formato 1):", invoiceData);
+        // Obtener factura completa con sus items (respuesta estructurada como {invoice, items})
+        const response = await fetch(`/api/invoices/${invoiceId}`);
         
-        if (invoiceData && typeof invoiceData === 'object') {
-          return invoiceData;
+        if (!response.ok) {
+          throw new Error(`Error al obtener factura: ${response.status} ${response.statusText}`);
         }
         
-        // Si falla, intentar obtener la factura y los items por separado
-        console.log("⚠️ Formato 1 falló, intentando formato alternativo");
-        const invoiceBasicResponse = await fetch(`/api/invoices/${invoiceId}?basic=true`);
-        const invoiceBasic = await invoiceBasicResponse.json();
+        const data = await response.json();
+        console.log("🔍 Respuesta API:", data);
         
-        const invoiceItemsResponse = await fetch(`/api/invoices/${invoiceId}/items`);
-        const invoiceItems = await invoiceItemsResponse.json();
+        // Verificar que tenemos la estructura esperada
+        if (!data || !data.invoice) {
+          throw new Error("Formato de respuesta incorrecto del servidor");
+        }
         
-        console.log("🔍 Respuesta API (formato 2):", { invoice: invoiceBasic, items: invoiceItems });
-        return { invoice: invoiceBasic, items: invoiceItems };
+        // Asegurarnos de que items sea un array, incluso si está vacío
+        if (!data.items) {
+          data.items = [];
+        }
+        
+        return data;
       } catch (err) {
         console.error("❌ Error al obtener datos de la factura:", err);
         throw new Error("No se pudieron obtener los datos de la factura. Por favor, intenta de nuevo.");
@@ -62,7 +64,7 @@ export default function EditInvoicePage() {
     }
   });
   
-  // Efecto para procesar los datos una vez se cargan (versión simplificada)
+  // Efecto simplificado para procesar los datos una vez se cargan
   useEffect(() => {
     if (isError) {
       console.error("Error al cargar datos de factura:", error);
@@ -72,76 +74,19 @@ export default function EditInvoicePage() {
     
     if (!isLoading && data) {
       try {
-        // Procesamiento simplificado para evitar errores de TypeScript
-        let formattedData: any = null;
-        
-        // Caso 1: El formato ya es el esperado { invoice: {...}, items: [...] }
-        if (data && data.invoice && ('items' in data)) {
-          formattedData = { 
-            invoice: data.invoice,
-            items: Array.isArray(data.items) ? data.items : []
-          };
-        }
-        // Caso 2: Es un objeto pero no tiene la estructura esperada
-        else if (data && typeof data === 'object' && !Array.isArray(data)) {
-          // Buscar si hay alguna propiedad que sea un array (posibles items)
-          let itemsProperty = '';
-          let itemsArray: any[] = [];
-          const invoiceData = { ...data };
-          
-          // Buscar una propiedad que sea un array para usarla como items
-          Object.keys(data).forEach(key => {
-            if (Array.isArray(data[key as keyof typeof data])) {
-              itemsProperty = key;
-              // Usar type assertion para acceder con seguridad
-              itemsArray = data[key as keyof typeof data] as any[];
-            }
-          });
-          
-          // Si encontramos una propiedad que contenga un array, asumimos que son los items
-          if (itemsProperty && itemsArray.length > 0) {
-            // Eliminar la propiedad de items del objeto principal
-            delete (invoiceData as any)[itemsProperty];
-            
-            formattedData = {
-              invoice: invoiceData,
-              items: itemsArray
-            };
-          } else {
-            // No hay array, tratamos todo como la factura y creamos items vacíos
-            formattedData = {
-              invoice: data,
-              items: []
-            };
-          }
-        }
-        // Caso 3: Los datos son un array
-        else if (Array.isArray(data)) {
-          if (data.length > 0) {
-            formattedData = {
-              invoice: data[0],
-              items: data.slice(1)
-            };
-          } else {
-            throw new Error("Los datos recibidos son un array vacío");
-          }
-        }
-        // Caso 4: Formato desconocido
-        else {
-          throw new Error("Formato de datos desconocido");
+        if (!data.invoice || !data.items) {
+          throw new Error("El formato de los datos recibidos no es válido");
         }
         
-        // Validación final
-        if (!formattedData || !formattedData.invoice) {
-          throw new Error("No se pudo extraer la información de la factura");
-        }
+        console.log("✅ Datos de factura cargados:", {
+          invoiceId: data.invoice.id,
+          invoiceNumber: data.invoice.invoiceNumber,
+          itemsCount: data.items.length,
+          firstItem: data.items[0] ? `${data.items[0].description} (${data.items[0].quantity}x€${data.items[0].unitPrice})` : 'N/A'
+        });
         
-        // Asegurar que items siempre sea un array
-        if (!formattedData.items || !Array.isArray(formattedData.items)) {
-          formattedData.items = [];
-        }
-        
-        setInvoiceData(formattedData);
+        // Usar datos directamente - ya están en el formato correcto { invoice, items }
+        setInvoiceData(data);
         
       } catch (error: any) {
         console.error("❌ Error al procesar datos:", error.message);

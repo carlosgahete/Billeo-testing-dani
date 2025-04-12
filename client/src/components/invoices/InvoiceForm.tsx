@@ -287,167 +287,133 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   }, [companyData, form, isEditMode]);
 
   // Initialize form with invoice data when loaded - either from API or passed in
-  useEffect(() => {
-    // Primero intentar usar datos proporcionados directamente
-    if (initialData && isEditMode && initialData.invoice && initialData.items) {
-      console.log("⚡ Usando datos iniciales proporcionados directamente:", initialData);
-      
-      const { invoice, items } = initialData;
-      
-      // Aseguramos que las fechas estén en formato YYYY-MM-DD
-      const formatDateForInput = (dateString: string) => {
-        if (!dateString) return new Date().toISOString().split("T")[0];
-        try {
-          const date = new Date(dateString);
-          return date.toISOString().split("T")[0];
-        } catch (e) {
-          console.error("Error al formatear fecha:", e);
-          return dateString;
-        }
-      };
-      
-      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
-      let additionalTaxesArray = [];
-      
-      if (invoice.additionalTaxes) {
-        // Si es una cadena JSON, intentamos parsearlo
-        if (typeof invoice.additionalTaxes === 'string') {
-          try {
-            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
-          } catch (e) {
-            console.error("Error al parsear additionalTaxes como JSON:", e);
-            additionalTaxesArray = [];
-          }
-        } 
-        // Si ya es un array, lo usamos directamente
-        else if (Array.isArray(invoice.additionalTaxes)) {
-          additionalTaxesArray = invoice.additionalTaxes;
-        }
-      }
-      
-      // Transformar los datos para el formulario
-      const formattedInvoice = {
-        ...invoice,
-        invoiceNumber: invoice.invoiceNumber || "",
-        clientId: invoice.clientId || 0,
-        issueDate: formatDateForInput(invoice.issueDate),
-        dueDate: formatDateForInput(invoice.dueDate),
-        status: invoice.status || "pending",
-        notes: invoice.notes || "",
-        subtotal: Number(invoice.subtotal || 0),
-        tax: Number(invoice.tax || 0),
-        total: Number(invoice.total || 0),
-        // Mapeamos los items asegurando valores correctos
-        items: (items || []).map((item: any) => ({
-          description: item.description || "",
-          quantity: Number(item.quantity) || 0,
-          unitPrice: Number(item.unitPrice) || 0,
-          taxRate: Number(item.taxRate) || 21,
-          subtotal: Number(item.subtotal) || 0,
-        })),
-        // Formateamos los impuestos adicionales
-        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
-          name: tax.name || "",
-          amount: Number(tax.amount || 0),
-          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
-        }))
-      };
-      
-      console.log("🔄 Datos formateados para el formulario (initialData):", formattedInvoice);
-      
-      // Actualizar el formulario con los datos formateados
-      form.reset(formattedInvoice);
-      
-      // Si hay archivos adjuntos, actualizamos el estado
-      if (invoice.attachments) {
-        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
-      }
-      
-      // Recalcular totales después de que el formulario se haya actualizado completamente
-      setTimeout(() => {
-        // Función calculateInvoiceTotals(form) reemplazada con código inline
-      }, 200);
+  // Función para formatear fechas al formato YYYY-MM-DD
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return new Date().toISOString().split("T")[0];
+    try {
+      const date = new Date(dateString);
+      return date.toISOString().split("T")[0];
+    } catch (e) {
+      console.error("Error al formatear fecha:", e);
+      return dateString;
     }
-    // Si no, usar datos de la API
-    else if (isEditMode && invoiceData && typeof invoiceData === 'object' && 'invoice' in invoiceData && 'items' in invoiceData) {
-      console.log("⚡ Cargando datos de factura para edición desde API:", invoiceData);
+  };
+  
+  // Función para procesar los impuestos adicionales
+  const processAdditionalTaxes = (additionalTaxes: any) => {
+    let result = [];
+    
+    if (!additionalTaxes) {
+      return [];
+    }
+    
+    // Si es una cadena JSON, intentamos parsearlo
+    if (typeof additionalTaxes === 'string') {
+      try {
+        result = JSON.parse(additionalTaxes);
+      } catch (e) {
+        console.error("Error al parsear additionalTaxes como JSON:", e);
+        result = [];
+      }
+    } 
+    // Si ya es un array, lo usamos directamente
+    else if (Array.isArray(additionalTaxes)) {
+      result = additionalTaxes;
+    }
+    
+    return result.map((tax: any) => ({
+      name: tax.name || "",
+      amount: Number(tax.amount || 0),
+      isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
+    }));
+  };
+  
+  // Función para procesar los items de la factura
+  const processInvoiceItems = (items: any[]) => {
+    if (!items || !Array.isArray(items)) {
+      console.warn("⚠️ No se encontraron items o no es un array");
+      return [];
+    }
+    
+    console.log(`✅ Procesando ${items.length} items para la factura`);
+    
+    return items.map((item: any) => {
+      // Registrar cada item para debug
+      console.log(`   Item: ${item.description || 'Sin descripción'} (${item.quantity || 0} x €${item.unitPrice || 0})`);
       
-      // @ts-ignore - Aseguramos el acceso a las propiedades mediante comprobación previa
-      const { invoice, items } = invoiceData;
-      
-      // Aseguramos que las fechas estén en formato YYYY-MM-DD
-      const formatDateForInput = (dateString: string) => {
-        if (!dateString) return new Date().toISOString().split("T")[0];
-        try {
-          const date = new Date(dateString);
-          return date.toISOString().split("T")[0];
-        } catch (e) {
-          console.error("Error al formatear fecha:", e);
-          return dateString;
-        }
+      return {
+        id: item.id, // Mantener el ID si existe
+        invoiceId: item.invoiceId, // Mantener la referencia a la factura
+        description: item.description || "",
+        quantity: Number(item.quantity) || 0,
+        unitPrice: Number(item.unitPrice) || 0,
+        taxRate: Number(item.taxRate) || 21,
+        subtotal: Number(item.subtotal) || 0,
       };
+    });
+  };
+  
+  // Inicializa el formulario con los datos
+  useEffect(() => {
+    // Si estamos en modo edición y tenemos datos
+    if (isEditMode) {
+      let dataSource = null;
+      let sourceType = "";
       
-      // Verificar si los impuestos adicionales existen y convertirlos a un formato adecuado
-      let additionalTaxesArray = [];
-      
-      if (invoice.additionalTaxes) {
-        // Si es una cadena JSON, intentamos parsearlo
-        if (typeof invoice.additionalTaxes === 'string') {
-          try {
-            additionalTaxesArray = JSON.parse(invoice.additionalTaxes);
-          } catch (e) {
-            console.error("Error al parsear additionalTaxes como JSON:", e);
-            additionalTaxesArray = [];
-          }
-        } 
-        // Si ya es un array, lo usamos directamente
-        else if (Array.isArray(invoice.additionalTaxes)) {
-          additionalTaxesArray = invoice.additionalTaxes;
-        }
+      // Determinar la fuente de datos a utilizar
+      if (initialData && initialData.invoice && initialData.items) {
+        dataSource = initialData;
+        sourceType = "initialData";
+      } else if (invoiceData && invoiceData.invoice && invoiceData.items) {
+        dataSource = invoiceData;
+        sourceType = "invoiceData";
       }
       
-      // Transformar los datos para el formulario
-      const formattedInvoice = {
-        ...invoice,
-        invoiceNumber: invoice.invoiceNumber || "",
-        clientId: invoice.clientId || 0,
-        issueDate: formatDateForInput(invoice.issueDate),
-        dueDate: formatDateForInput(invoice.dueDate),
-        status: invoice.status || "pending",
-        notes: invoice.notes || "",
-        subtotal: Number(invoice.subtotal || 0),
-        tax: Number(invoice.tax || 0),
-        total: Number(invoice.total || 0),
-        // Mapeamos los items asegurando valores correctos
-        items: (items || []).map((item: any) => ({
-          description: item.description || "",
-          quantity: Number(item.quantity) || 0,
-          unitPrice: Number(item.unitPrice) || 0,
-          taxRate: Number(item.taxRate) || 21,
-          subtotal: Number(item.subtotal) || 0,
-        })),
-        // Formateamos los impuestos adicionales
-        additionalTaxes: additionalTaxesArray.map((tax: any) => ({
-          name: tax.name || "",
-          amount: Number(tax.amount || 0),
-          isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
-        }))
-      };
-      
-      console.log("🔄 Datos formateados para el formulario:", formattedInvoice);
-      
-      // Actualizar el formulario con los datos formateados
-      form.reset(formattedInvoice);
-      
-      // Si hay archivos adjuntos, actualizamos el estado
-      if (invoice.attachments) {
-        setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+      // Si tenemos datos para procesar
+      if (dataSource) {
+        console.log(`⚡ Usando datos de ${sourceType} para la factura:`, dataSource);
+        
+        const { invoice, items } = dataSource;
+        
+        // Procesar los items (importante para el problema de los items que desaparecen)
+        const processedItems = processInvoiceItems(items);
+        
+        // Transformar los datos para el formulario
+        const formattedInvoice = {
+          ...invoice,
+          invoiceNumber: invoice.invoiceNumber || "",
+          clientId: invoice.clientId || 0,
+          issueDate: formatDateForInput(invoice.issueDate),
+          dueDate: formatDateForInput(invoice.dueDate),
+          status: invoice.status || "pending",
+          notes: invoice.notes || "",
+          subtotal: Number(invoice.subtotal || 0),
+          tax: Number(invoice.tax || 0),
+          total: Number(invoice.total || 0),
+          // Usar los items procesados
+          items: processedItems,
+          // Procesar impuestos adicionales
+          additionalTaxes: processAdditionalTaxes(invoice.additionalTaxes)
+        };
+        
+        console.log("🔄 Datos formateados para el formulario:", {
+          ...formattedInvoice,
+          items: `${processedItems.length} items`
+        });
+        
+        // Actualizar el formulario con los datos formateados
+        form.reset(formattedInvoice);
+        
+        // Si hay archivos adjuntos, actualizamos el estado
+        if (invoice.attachments) {
+          setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+        }
+        
+        // Recalcular totales después de que el formulario se haya actualizado completamente
+        setTimeout(() => {
+          calculateInvoiceTotals(form);
+        }, 200);
       }
-      
-      // Recalcular totales después de que el formulario se haya actualizado completamente
-      setTimeout(() => {
-        // Función calculateInvoiceTotals(form) reemplazada con código inline
-      }, 200);
     }
   }, [invoiceData, initialData, isEditMode, form]);
 
