@@ -1142,7 +1142,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
-                                  calculateInvoiceTotals(form);
+                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                                 }}
                               />
                             </FormControl>
@@ -1172,7 +1172,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
-                                  calculateInvoiceTotals(form);
+                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                                 }}
                               />
                             </FormControl>
@@ -1383,7 +1383,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                                 size="sm"
                                                 onClick={() => {
                                                   field.onChange(!field.value);
-                                                  calculateInvoiceTotals(form);
+                                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                                                 }}
                                                 className="h-8 px-2 text-xs font-normal"
                                               >
@@ -1409,7 +1409,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             size="sm"
                             onClick={() => {
                               removeTax(index);
-                              calculateInvoiceTotals(form);
+                              { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                             }}
                             className="h-6 w-6 p-0"
                           >
