@@ -22,7 +22,6 @@ import {
   Calendar,
   Tag,
   WrenchIcon,
-  ToolIcon,
   CircleDollarSign,
   RefreshCcw
 } from "lucide-react";
