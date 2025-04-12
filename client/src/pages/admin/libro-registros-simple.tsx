@@ -538,42 +538,91 @@ export default function SimpleLibroRegistros() {
       </div>
     `;
     
-    // En lugar de abrir una ventana de impresión, creamos un PDF para descargar
-    // Convertimos el HTML a Blob y lo descargamos
-    const htmlContent = `
-      <!DOCTYPE html>
+    // Función para imprimir la ventana
+    const printWindow = window.open('', '_blank');
+    printWindow!.document.write(`
       <html>
         <head>
-          <meta charset="UTF-8">
-          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
           <title>Libro de Registros - Usuario ID: ${userId || 'Todos'}</title>
           <style>
-            body { font-family: Arial, sans-serif; }
-            table { page-break-inside: auto; }
-            tr { page-break-inside: avoid; page-break-after: auto; }
-            thead { display: table-header-group; }
-            @page { size: auto; margin: 20mm; }
+            @media print {
+              body { font-family: Arial, sans-serif; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+              thead { display: table-header-group; }
+            }
           </style>
         </head>
         <body>
           ${printableDiv.innerHTML}
         </body>
       </html>
-    `;
+    `);
     
-    // Crear un Blob con el HTML
-    // Aseguramos la codificación adecuada usando un Encoder UTF-8
-    const encoder = new TextEncoder();
-    const utf8Array = encoder.encode(htmlContent);
-    // Forzamos más agresivamente el tipo a un tipo binario genérico con BOM UTF-8
-    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const combinedArray = new Uint8Array(BOM.length + utf8Array.length);
-    combinedArray.set(BOM, 0);
-    combinedArray.set(utf8Array, BOM.length);
-    const blob = new Blob([combinedArray], { type: 'application/force-download' });
+    printWindow!.document.close();
+    
+    // Esperamos a que el documento se cargue antes de imprimir
+    setTimeout(() => {
+      printWindow!.print();
+      printWindow!.close();
+      document.body.removeChild(printableDiv);
+    }, 500);
+  };
+  
+  // Función para descargar como Excel
+  const handleDownloadExcel = () => {
+    if (!filteredData) return;
+    
+    // Crear datos para el CSV
+    const invoiceRows = filteredData.invoices.map(invoice => ({
+      'Tipo': 'Factura',
+      'Número': invoice.number,
+      'Fecha': formatDate(invoice.issueDate),
+      'Cliente/Proveedor': invoice.client,
+      'Base Imponible': invoice.baseAmount.toFixed(2),
+      'IVA': invoice.vatAmount.toFixed(2),
+      'Total': invoice.total.toFixed(2),
+      'Estado': invoice.status === 'paid' ? 'Pagada' : 
+               invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+    }));
+    
+    const transactionRows = filteredData.transactions.map(transaction => ({
+      'Tipo': transaction.type === 'income' ? 'Ingreso' : 'Gasto',
+      'Número': '-',
+      'Fecha': formatDate(transaction.date),
+      'Cliente/Proveedor': transaction.description,
+      'Categoría': transaction.category || 'Sin categoría',
+      'Total': transaction.amount.toFixed(2),
+      'Estado': '-'
+    }));
+    
+    const quoteRows = filteredData.quotes.map(quote => ({
+      'Tipo': 'Presupuesto',
+      'Número': quote.number,
+      'Fecha': formatDate(quote.issueDate),
+      'Cliente/Proveedor': quote.clientName,
+      'Total': quote.total.toFixed(2),
+      'Estado': quote.status === 'accepted' ? 'Aceptado' : 
+               quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
+    }));
+    
+    // Combinar todos los datos
+    const allRows = [...invoiceRows, ...transactionRows, ...quoteRows];
+    
+    // Convertir a CSV
+    const headers = Object.keys(allRows[0] || {}).join(',');
+    const csvRows = allRows.map(row => 
+      Object.values(row).map(value => 
+        typeof value === 'string' && value.includes(',') ? 
+        `"${value}"` : value
+      ).join(',')
+    );
+    
+    const csvContent = [headers, ...csvRows].join('\n');
+    
+    // Crear y descargar el archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    
-    // Crear un enlace para descargar
     const link = document.createElement('a');
     
     // Determinar nombre del archivo con período de tiempo
@@ -586,149 +635,13 @@ export default function SimpleLibroRegistros() {
         fileName += `_mes${selectedMonth}`;
       }
     }
-    fileName += '.html'; // Usamos HTML que puede ser abierto y guardado como PDF
+    fileName += '.csv';
     
-    // Configuramos todos los atributos para forzar la descarga sin abrir
     link.href = url;
     link.setAttribute('download', fileName);
-    // Quitamos target="_blank" que puede causar problemas
-    link.style.display = 'none';
-    
-    // Añadimos al DOM, hacemos clic y limpiamos con un poco más de retraso
     document.body.appendChild(link);
-    
-    // Pequeño retraso antes de hacer clic
-    setTimeout(() => {
-      try {
-        link.click();
-      } catch (err) {
-        console.error("Error al hacer clic en el enlace de descarga:", err);
-        alert("Hubo un problema al descargar el PDF. Por favor, inténtelo de nuevo.");
-      }
-      
-      // Limpieza con más tiempo
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-        if (document.body.contains(printableDiv)) {
-          document.body.removeChild(printableDiv);
-        }
-        URL.revokeObjectURL(url);
-      }, 300);
-    }, 100);
-  };
-  
-  // Función para descargar como CSV plano - máxima compatibilidad
-  const handleDownloadExcel = () => {
-    if (!filteredData) return;
-    
-    try {
-      // Nombre del archivo
-      let fileName = `libro_registros_${userId || 'todos'}`;
-      if (selectedYear !== 'all') {
-        fileName += `_${selectedYear}`;
-        if (selectedQuarter !== 'all') {
-          fileName += `_T${selectedQuarter.replace('Q', '')}`;
-        } else if (selectedMonth !== 'all') {
-          fileName += `_mes${selectedMonth}`;
-        }
-      }
-      fileName += '.csv';
-      
-      // Generamos el contenido del CSV
-      // Usamos el carácter ; como separador que es estándar en Excel español
-      let csvContent = ''; 
-      
-      // Añadir encabezado con información general
-      csvContent += 'LIBRO DE REGISTROS - BILLEO\n';
-      csvContent += `Fecha de generación;${new Date().toLocaleDateString('es-ES')}\n`;
-      csvContent += `Período;${selectedYear === 'all' ? 'Todos' : selectedYear}${selectedQuarter !== 'all' ? ` - Trimestre ${selectedQuarter.replace('Q', '')}` : ''}${selectedMonth !== 'all' ? ` - ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}` : ''}\n`;
-      csvContent += `Usuario;${userId || 'Todos'}\n\n`;
-      
-      // Sección para facturas
-      csvContent += 'FACTURAS EMITIDAS\n';
-      csvContent += 'ID;Fecha;Número;Cliente;Base Imponible;IVA;Total;Estado\n';
-      
-      // Añadir facturas
-      filteredData.invoices.forEach((invoice, index) => {
-        csvContent += `FAC-${String(index + 1).padStart(4, '0')};`;
-        csvContent += `${formatDate(invoice.issueDate)};`;
-        csvContent += `${invoice.number};`;
-        csvContent += `${invoice.client.replace(/;/g, ',')};`; // Evitar problemas con el separador
-        csvContent += `${invoice.baseAmount.toFixed(2).replace('.', ',')};`;
-        csvContent += `${invoice.vatAmount.toFixed(2).replace('.', ',')};`;
-        csvContent += `${invoice.total.toFixed(2).replace('.', ',')};`;
-        csvContent += `${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}\n`;
-      });
-      
-      // Totales facturas
-      const totalBaseFacturas = filteredData.invoices.reduce((sum, inv) => sum + inv.baseAmount, 0);
-      const totalIVAFacturas = filteredData.invoices.reduce((sum, inv) => sum + inv.vatAmount, 0);
-      const totalFacturas = filteredData.invoices.reduce((sum, inv) => sum + inv.total, 0);
-      
-      csvContent += `TOTALES;;;;;;${totalBaseFacturas.toFixed(2).replace('.', ',')};${totalIVAFacturas.toFixed(2).replace('.', ',')};${totalFacturas.toFixed(2).replace('.', ',')}\n\n`;
-      
-      // Sección para transacciones
-      csvContent += 'TRANSACCIONES\n';
-      csvContent += 'ID;Fecha;Descripción;Categoría;Importe;Tipo;Notas\n';
-      
-      // Añadir transacciones
-      filteredData.transactions.forEach((transaction, index) => {
-        csvContent += `TRA-${String(index + 1).padStart(4, '0')};`;
-        csvContent += `${formatDate(transaction.date)};`;
-        csvContent += `${transaction.description.replace(/;/g, ',')};`; // Evitar problemas con el separador
-        csvContent += `${(transaction.category || 'Sin categoría').replace(/;/g, ',')};`;
-        csvContent += `${transaction.amount.toFixed(2).replace('.', ',')};`;
-        csvContent += `${transaction.type === 'income' ? 'Ingreso' : 'Gasto'};`;
-        csvContent += `${(transaction.notes || '').replace(/;/g, ',')}\n`; // Evitar problemas con el separador
-      });
-      
-      // Total transacciones
-      const totalTransacciones = filteredData.transactions.reduce((sum, tra) => sum + tra.amount, 0);
-      csvContent += `TOTALES;;;;${totalTransacciones.toFixed(2).replace('.', ',')}\n\n`;
-      
-      // Sección para presupuestos
-      csvContent += 'PRESUPUESTOS\n';
-      csvContent += 'ID;Fecha;Número;Cliente;Total;Estado\n';
-      
-      // Añadir presupuestos
-      filteredData.quotes.forEach((quote, index) => {
-        csvContent += `PRE-${String(index + 1).padStart(4, '0')};`;
-        csvContent += `${formatDate(quote.issueDate)};`;
-        csvContent += `${quote.number};`;
-        csvContent += `${quote.clientName.replace(/;/g, ',')};`; // Evitar problemas con el separador
-        csvContent += `${quote.total.toFixed(2).replace('.', ',')};`;
-        csvContent += `${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}\n`;
-      });
-      
-      // Añadir pie del documento
-      csvContent += '\nDocumento generado por Billeo - Sistema de Gestión Financiera para Autónomos';
-      
-      // Añadir BOM para que Excel detecte correctamente los caracteres UTF-8
-      const BOM = '\uFEFF';
-      csvContent = BOM + csvContent;
-      
-      // Crear Blob con el contenido
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      
-      // Descargar el archivo
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      
-      // Limpiar
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-    } catch (error) {
-      console.error('Error al generar el archivo CSV:', error);
-      alert('Hubo un problema al generar el archivo. Por favor intente de nuevo.');
-    }
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
