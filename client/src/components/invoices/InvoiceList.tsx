@@ -708,7 +708,8 @@ const InvoiceList = () => {
             
             // Generar PDF
             updateProgress(i + 1, `Generando PDF para factura ${invoice.invoiceNumber}...`);
-            const pdfBlob = await generateInvoicePDFBlob(invoice, client, items);
+            // Usar el logo de la empresa en la generación del PDF
+            const pdfBlob = await generateInvoicePDFBlob(invoice, client, items, companyData?.logo);
             
             // Nombre único para el archivo
             const fileName = `Factura_${invoice.invoiceNumber}_${client.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
@@ -977,7 +978,8 @@ const InvoiceList = () => {
             
             // Generar PDF
             updateProgress(i + 1, `Generando PDF para factura ${invoice.invoiceNumber}...`);
-            const pdfBlob = await generateInvoicePDFBlob(invoice, client, items);
+            // Incluir el logo de la empresa en el PDF
+            const pdfBlob = await generateInvoicePDFBlob(invoice, client, items, companyData?.logo);
             
             // Nombre único para el archivo 
             const fileName = `Factura_${invoice.invoiceNumber}_${client.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;

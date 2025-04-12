@@ -379,8 +379,8 @@ export async function generateInvoicePDFAsBase64(
   doc.setFont("helvetica");
   doc.setFontSize(10);
   
-  // Check if the invoice has a logo
-  const logoPath = invoice.logo || null;
+  // Usar el logo pasado como parámetro o el de la factura
+  const logoPath = companyLogo || invoice.logo || null;
   
   // Cargar el logo si existe - lo agregamos en dos lugares: arriba a la derecha y en el encabezado
   if (logoPath) {

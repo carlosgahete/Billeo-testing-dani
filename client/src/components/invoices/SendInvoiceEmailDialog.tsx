@@ -108,8 +108,9 @@ export function SendInvoiceEmailDialog({
     try {
       setIsPending(true);
       
-      // Generar PDF como base64
-      const pdfBase64 = await generateInvoicePDFAsBase64(invoice, client, invoiceItems || [], company);
+      // Generar PDF como base64 usando el logo de company
+      console.log("Utilizando logo en email:", company?.logo);
+      const pdfBase64 = await generateInvoicePDFAsBase64(invoice, client, invoiceItems || [], company?.logo);
       
       // Enviar el PDF por email
       const response = await apiRequest("POST", `/api/invoices/${invoice.id}/send-email`, {
