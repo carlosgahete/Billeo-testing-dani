@@ -633,9 +633,11 @@ export default function SimpleLibroRegistros() {
     // Crear sección de resumen
     const summaryHeaderRow = [`RESUMEN`];
     const summaryDataRows = [
-      [`Total Facturas:,${filteredData.summary.totalInvoices},Importe:,${formatCurrency(filteredData.summary.incomeTotal)}`],
-      [`Total Gastos:,${filteredData.summary.totalTransactions},Importe:,${formatCurrency(filteredData.summary.expenseTotal)}`],
-      [`Total Presupuestos:,${filteredData.summary.totalQuotes},Balance:,${formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)}`]
+      ['Concepto', 'Cantidad', 'Importe'],
+      ['Facturas', filteredData.summary.totalInvoices, formatCurrency(filteredData.summary.incomeTotal)],
+      ['Gastos', filteredData.summary.totalTransactions, formatCurrency(filteredData.summary.expenseTotal)],
+      ['Presupuestos', filteredData.summary.totalQuotes, ''],
+      ['Balance', '', formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)]
     ];
     
     // Espaciador
@@ -647,31 +649,47 @@ export default function SimpleLibroRegistros() {
     
     // Sección de facturas
     const invoiceHeaderRow = filteredData.invoices.length > 0 ? [`FACTURAS EMITIDAS`] : [];
-    const invoiceColumnsRow = filteredData.invoices.length > 0 ? [`Número,Fecha,Cliente/Proveedor,Base Imponible,IVA,Total,Estado`] : [];
-    const invoiceRows = filteredData.invoices.map(invoice => 
-      [`${invoice.number},${formatDate(invoice.issueDate)},${cleanCSVField(invoice.client)},${invoice.baseAmount.toFixed(2)},${invoice.vatAmount.toFixed(2)},${invoice.total.toFixed(2)},${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}`]
-    );
+    const invoiceColumnsRow = filteredData.invoices.length > 0 ? [['Número', 'Fecha', 'Cliente/Proveedor', 'Base Imponible', 'IVA', 'Total', 'Estado']] : [];
+    const invoiceRows = filteredData.invoices.map(invoice => [
+      invoice.number,
+      formatDate(invoice.issueDate),
+      invoice.client,
+      invoice.baseAmount.toFixed(2),
+      invoice.vatAmount.toFixed(2),
+      invoice.total.toFixed(2),
+      invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+    ]);
     
     // Sección de ingresos (transacciones de tipo ingreso)
     const incomeHeaderRow = incomeTransactions.length > 0 ? [`INGRESOS`] : [];
-    const incomeColumnsRow = incomeTransactions.length > 0 ? [`Fecha,Descripción,Categoría,Importe`] : [];
-    const incomeRows = incomeTransactions.map(transaction => 
-      [`${formatDate(transaction.date)},${cleanCSVField(transaction.description)},${cleanCSVField(transaction.category || 'Sin categoría')},${transaction.amount.toFixed(2)}`]
-    );
+    const incomeColumnsRow = incomeTransactions.length > 0 ? [['Fecha', 'Descripción', 'Categoría', 'Importe']] : [];
+    const incomeRows = incomeTransactions.map(transaction => [
+      formatDate(transaction.date),
+      transaction.description,
+      transaction.category || 'Sin categoría',
+      transaction.amount.toFixed(2)
+    ]);
     
     // Sección de gastos (transacciones de tipo gasto)
     const expenseHeaderRow = expenseTransactions.length > 0 ? [`GASTOS`] : [];
-    const expenseColumnsRow = expenseTransactions.length > 0 ? [`Fecha,Descripción,Categoría,Importe`] : [];
-    const expenseRows = expenseTransactions.map(transaction => 
-      [`${formatDate(transaction.date)},${cleanCSVField(transaction.description)},${cleanCSVField(transaction.category || 'Sin categoría')},${transaction.amount.toFixed(2)}`]
-    );
+    const expenseColumnsRow = expenseTransactions.length > 0 ? [['Fecha', 'Descripción', 'Categoría', 'Importe']] : [];
+    const expenseRows = expenseTransactions.map(transaction => [
+      formatDate(transaction.date),
+      transaction.description,
+      transaction.category || 'Sin categoría',
+      transaction.amount.toFixed(2)
+    ]);
     
     // Sección de presupuestos
     const quoteHeaderRow = filteredData.quotes.length > 0 ? [`PRESUPUESTOS`] : [];
-    const quoteColumnsRow = filteredData.quotes.length > 0 ? [`Número,Fecha,Cliente/Proveedor,Total,Estado`] : [];
-    const quoteRows = filteredData.quotes.map(quote => 
-      [`${quote.number},${formatDate(quote.issueDate)},${cleanCSVField(quote.clientName)},${quote.total.toFixed(2)},${quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'}`]
-    );
+    const quoteColumnsRow = filteredData.quotes.length > 0 ? [['Número', 'Fecha', 'Cliente/Proveedor', 'Total', 'Estado']] : [];
+    const quoteRows = filteredData.quotes.map(quote => [
+      quote.number,
+      formatDate(quote.issueDate),
+      quote.clientName,
+      quote.total.toFixed(2),
+      quote.status === 'accepted' ? 'Aceptado' : quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
+    ]);
     
     // Pie de página
     const footerRow = [`Documento generado por Billeo - Sistema de Gestión Financiera para Autónomos`];
@@ -696,7 +714,26 @@ export default function SimpleLibroRegistros() {
     ];
     
     // Convertir a CSV
-    const csvContent = allRows.join('\n');
+    let csvContent = '';
+    
+    // Procesar cada fila correctamente como CSV
+    allRows.forEach(row => {
+      if (Array.isArray(row)) {
+        // Tratar cada elemento del array como una celda del CSV
+        const processedRow = row.map(cell => {
+          // Si la celda contiene comas, comillas o saltos de línea, entrecomillarla
+          if (cell && (typeof cell === 'string') && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+            // Escapar las comillas doblándolas
+            return `"${cell.replace(/"/g, '""')}"`;
+          }
+          return cell;
+        }).join(',');
+        csvContent += processedRow + '\n';
+      } else {
+        // Si es una sola cadena (como los encabezados), simplemente añadirla
+        csvContent += row + '\n';
+      }
+    });
     
     // Para que Excel reconozca correctamente los caracteres especiales
     const bom = '\uFEFF';
