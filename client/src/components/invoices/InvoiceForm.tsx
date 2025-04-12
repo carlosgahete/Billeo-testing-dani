@@ -524,20 +524,17 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           processedAdditionalTaxes = [];
         } else if (Array.isArray(processedAdditionalTaxes)) {
           // Formatear los valores numéricos en los impuestos adicionales
-          processedAdditionalTaxes = processedAdditionalTaxes.map(tax => {
+          const typedAdditionalTaxes: { name: string; amount: number; isPercentage: boolean }[] = [];
+          processedAdditionalTaxes.forEach(tax => {
             if (typeof tax === 'object' && tax !== null) {
-              return {
+              typedAdditionalTaxes.push({
                 name: tax.name || "",
                 isPercentage: Boolean(tax.isPercentage),
-                amount: typeof tax.amount === 'number' ? Number(tax.amount) : Number(tax.amount || 0)
-              };
+                amount: typeof tax.amount === 'number' ? tax.amount : Number(tax.amount || 0)
+              });
             }
-            return {
-              name: "",
-              amount: 0,
-              isPercentage: false
-            };
           });
+          processedAdditionalTaxes = typedAdditionalTaxes;
         }
         
         // Mantener los campos originales si no se proporcionan nuevos valores
