@@ -624,7 +624,108 @@ export default function SimpleLibroRegistros() {
     if (!filteredData) return;
     
     try {
-      // Preparar el nombre del archivo
+      // Obtener datos básicos para las facturas
+      const data = filteredData.invoices.map(invoice => ({
+        numero: invoice.number,
+        fecha: formatDate(invoice.issueDate),
+        cliente: invoice.client,
+        base: invoice.baseAmount,
+        iva: invoice.vatAmount,
+        total: invoice.total,
+        estado: invoice.status === 'paid' ? 'Pagada' : 
+                invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+      }));
+      
+      // Si no hay datos, mostrar mensaje
+      if (data.length === 0) {
+        alert('No hay datos para exportar');
+        return;
+      }
+      
+      // Crear la tabla HTML
+      let table = '<table border="1" cellspacing="0" cellpadding="5">';
+      
+      // Encabezado
+      table += '<thead><tr style="background-color: #f8f9fa; font-weight: bold;">';
+      table += '<th colspan="7" style="font-size: 16px; text-align: center;">LIBRO DE REGISTROS</th>';
+      table += '</tr>';
+      table += '<tr style="background-color: #f8f9fa; font-weight: bold;">';
+      table += `<th colspan="7" style="font-size: 14px; text-align: center;">
+                  Período: ${selectedYear !== 'all' ? selectedYear : 'Todos'} 
+                  ${selectedQuarter !== 'all' ? `- Trimestre ${selectedQuarter.replace('Q', '')}` : ''}
+                  ${selectedMonth !== 'all' ? `- ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}` : ''}
+                </th>`;
+      table += '</tr>';
+      table += '<tr style="background-color: #e9ecef;">';
+      table += '<th>Número</th>';
+      table += '<th>Fecha</th>';
+      table += '<th>Cliente</th>';
+      table += '<th>Base Imponible</th>';
+      table += '<th>IVA</th>';
+      table += '<th>Total</th>';
+      table += '<th>Estado</th>';
+      table += '</tr></thead>';
+      
+      // Cuerpo
+      table += '<tbody>';
+      data.forEach(row => {
+        table += '<tr>';
+        table += `<td>${row.numero}</td>`;
+        table += `<td>${row.fecha}</td>`;
+        table += `<td>${row.cliente}</td>`;
+        table += `<td style="text-align: right;">${row.base.toFixed(2)} €</td>`;
+        table += `<td style="text-align: right;">${row.iva.toFixed(2)} €</td>`;
+        table += `<td style="text-align: right;">${row.total.toFixed(2)} €</td>`;
+        table += `<td>${row.estado}</td>`;
+        table += '</tr>';
+      });
+      
+      // Totales
+      const totalBase = data.reduce((sum, row) => sum + row.base, 0);
+      const totalIva = data.reduce((sum, row) => sum + row.iva, 0);
+      const totalImporte = data.reduce((sum, row) => sum + row.total, 0);
+      
+      table += '<tr style="font-weight: bold; background-color: #f8f9fa;">';
+      table += '<td colspan="3" style="text-align: right;">TOTALES</td>';
+      table += `<td style="text-align: right;">${totalBase.toFixed(2)} €</td>`;
+      table += `<td style="text-align: right;">${totalIva.toFixed(2)} €</td>`;
+      table += `<td style="text-align: right;">${totalImporte.toFixed(2)} €</td>`;
+      table += '<td></td>';
+      table += '</tr>';
+      
+      table += '</tbody></table>';
+
+      // Crear un documento HTML completo con la tabla
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Libro de Registros</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { padding: 8px; }
+            th { background-color: #f8f9fa; text-align: left; }
+          </style>
+        </head>
+        <body>
+          <h1>Libro de Registros - Facturas</h1>
+          <p>Generado el ${new Date().toLocaleDateString('es-ES')} para usuario ID: ${userId || 'Todos'}</p>
+          ${table}
+          <p style="margin-top: 20px; color: #6c757d; font-size: 12px;">Documento generado por Billeo - Sistema de Gestión Financiera</p>
+        </body>
+        </html>
+      `;
+      
+      // Crear un objeto Blob a partir del contenido HTML
+      const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+      
+      // Generar una URL para el Blob
+      const url = URL.createObjectURL(blob);
+      
+      // Crear un enlace para descargar
+      const link = document.createElement('a');
       let fileName = `libro_registros_${userId || 'todos'}`;
       if (selectedYear !== 'all') {
         fileName += `_${selectedYear}`;
@@ -634,90 +735,15 @@ export default function SimpleLibroRegistros() {
           fileName += `_mes${selectedMonth}`;
         }
       }
-      fileName += '.csv'; // CSVs son universalmente compatibles con Excel
-
-      // Preparar los datos simplificados
-      const filteredPeriod = selectedYear !== 'all' ? 
-        (selectedQuarter !== 'all' ? `${selectedYear} T${selectedQuarter.replace('Q', '')}` :
-        selectedMonth !== 'all' ? `${selectedYear} ${new Date(2025, parseInt(selectedMonth)-1, 1).toLocaleDateString('es-ES', {month: 'long'})}` :
-        selectedYear) : 'Todos los períodos';
-      
-      // Crear CSV con formato simple
-      const csvHeader = 'sep=,\n'; // Indicador explícito del separador para Excel
-      
-      // Sección de encabezado
-      const csvInfo = [
-        'LIBRO DE REGISTROS - BILLEO',
-        `Generado: ${new Date().toLocaleDateString('es-ES')}`,
-        `Período: ${filteredPeriod}`,
-        `Usuario: ${userId || 'Todos'}`,
-        '',
-        '# RESUMEN DE DATOS #',
-        `Total Facturas emitidas:,${filteredData.summary.totalInvoices}`,
-        `Importe total facturado:,${filteredData.summary.incomeTotal.toFixed(2)} €`,
-        `Total Gastos registrados:,${filteredData.summary.totalTransactions}`,
-        `Importe total de gastos:,${filteredData.summary.expenseTotal.toFixed(2)} €`,
-        `Total Presupuestos:,${filteredData.summary.totalQuotes}`,
-        `Resultado (Ingresos - Gastos):,${(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal).toFixed(2)} €`,
-        ''
-      ].join('\n');
-      
-      // Sección de facturas
-      const facturasCsv = [
-        '# FACTURAS EMITIDAS #',
-        'Número,Fecha Emisión,Fecha Vencimiento,Cliente,Base Imponible (€),IVA (€),Total (€),Tipo IVA,Estado'
-      ];
-      
-      // Añadir filas de datos de facturas
-      filteredData.invoices.forEach(invoice => {
-        facturasCsv.push([
-          invoice.number,
-          formatDate(invoice.issueDate),
-          formatDate(invoice.dueDate || invoice.issueDate),
-          invoice.client.replace(/,/g, ' '), // Evitar comas en el texto
-          invoice.baseAmount.toFixed(2).replace('.', ','),
-          invoice.vatAmount.toFixed(2).replace('.', ','),
-          invoice.total.toFixed(2).replace('.', ','),
-          `${invoice.vatRate || 21}%`,
-          invoice.status === 'paid' ? 'Pagada' : 
-            invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
-        ].join(','));
-      });
-      
-      facturasCsv.push(''); // Línea vacía para separar secciones
-      
-      // Crear el contenido completo del CSV
-      const csvContent = csvHeader + csvInfo + facturasCsv.join('\n') + '\n';
-      
-      // Preparar Blob con BOM para UTF-8
-      const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-      const encoder = new TextEncoder();
-      const csvArray = encoder.encode(csvContent);
-      
-      // Combinar BOM con contenido CSV
-      const combinedArray = new Uint8Array(BOM.length + csvArray.length);
-      combinedArray.set(BOM, 0);
-      combinedArray.set(csvArray, BOM.length);
-      
-      // Crear el Blob con tipo MIME para CSV
-      const blob = new Blob([combinedArray], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      
-      // Crear un enlace para descargar
-      const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', fileName);
-      link.style.display = 'none';
-      
-      // Descargar el archivo
-      document.body.appendChild(link);
+      link.download = fileName + '.xls';
       link.click();
       
-      // Limpiar después de la descarga
+      // Limpiar el recurso URL
       setTimeout(() => {
-        document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      }, 500);
+      }, 100);
+      
     } catch (error) {
       console.error('Error al generar el Excel:', error);
       alert('Hubo un problema al generar el archivo Excel. Por favor intente de nuevo.');
