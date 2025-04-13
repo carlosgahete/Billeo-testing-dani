@@ -342,17 +342,9 @@ export default function AuthPage() {
       </div>
       
       {/* Decoración adicional */}
-      {/* Footer para dispositivos móviles */}
-      <div className="fixed bottom-4 left-0 right-0 w-full md:hidden">
-        <div className="text-[8px] text-blue-400/60 flex justify-between px-4">
-          <span>© {new Date().getFullYear()} Billeo</span>
-          <span>Tu gestión financiera</span>
-        </div>
-      </div>
-      
-      {/* Footer para desktop */}
-      <div className="hidden md:block fixed bottom-4 left-0 right-0 w-full text-center text-xs text-blue-400/60">
-        <span className="whitespace-nowrap">© {new Date().getFullYear()} Billeo · Tu gestión financiera</span>
+      {/* Footer simplificado para todos los dispositivos */}
+      <div className="mt-12 text-center">
+        <p className="text-[9px] text-blue-400/60">© {new Date().getFullYear()} Billeo</p>
       </div>
     </div>
   );
