@@ -135,7 +135,7 @@
     display: none !important;
   }
   
-  /* Forzar al header a ser completamente invisible en facturas */
+  /* Forzar al header a ser completamente invisible en facturas y reducir espacio superior */
   body:has(.invoice-table-mobile) header,
   body:has(.invoice-table-mobile) .mt-2,
   .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full > div:first-child,
@@ -149,6 +149,39 @@
     padding: 0 !important;
     height: 0 !important;
     visibility: hidden !important;
+  }
+  
+  /* Reduce el espacio superior en la vista móvil */
+  @media (max-width: 768px) {
+    header {
+      margin-bottom: -10px !important;
+      min-height: auto !important;
+    }
+    
+    main {
+      padding-top: 5px !important;
+    }
+    
+    /* Ajuste específico para la página de presupuestos */
+    .quotes-page-container main,
+    body:has(.mobile-quote-buttons-container) main {
+      padding-top: 0 !important;
+      margin-top: -25px !important;
+    }
+    
+    .mobile-quote-buttons-container {
+      margin-top: -15px !important;
+    }
+    
+    /* Ajustes forzados para el header en la página de presupuestos */
+    body:has(.mobile-quote-buttons-container) header,
+    body:has(.quotes-page-container) header {
+      margin-bottom: -20px !important;
+      padding-bottom: 0 !important;
+      min-height: 44px !important;
+      height: 44px !important;
+      overflow: hidden !important;
+    }
   }
   
   /* Selectores adicionales para eliminar el encabezado (excepto en diálogos) */

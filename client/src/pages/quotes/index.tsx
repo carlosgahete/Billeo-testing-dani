@@ -352,6 +352,7 @@ export default function QuotesPage() {
 
   return (
     <Layout>
+      <div className="quotes-page-container">
       {/* Cabecera estilo Apple - Solo escritorio */}
       <div className="section-header fade-in mb-3 -mt-3 pt-0 hidden md:flex items-center">
         <div className="flex items-center ml-8 md:ml-4">
@@ -600,9 +601,9 @@ export default function QuotesPage() {
       {/* Eliminar duplicado de botones */}
 
       {/* Lista de presupuestos - Estilo Apple */}
-      <div className="mt-2 fade-in">
-        <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-8">
-          <div className="p-3 md:p-6">
+      <div className="mt-1 fade-in">
+        <div className="glass-panel rounded-xl md:rounded-3xl border border-gray-200/50 scale-in mb-2 md:mb-8">
+          <div className="p-2 md:p-6">
             {/* Título de la sección - Oculto en móvil */}
             <div className="hidden md:flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -619,6 +620,7 @@ export default function QuotesPage() {
             <QuoteList userId={user.id} showActions={true} filter={filter} />
           </div>
         </div>
+      </div>
       </div>
     </Layout>
   );
