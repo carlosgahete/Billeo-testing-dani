@@ -148,22 +148,7 @@ const IncomeFilters = ({
         </div>
       </div>
       
-      {/* Versión móvil - solo el botón de filtrar en la esquina derecha */}
-      <div className="sm:hidden mb-2 flex justify-end">
-        <Button 
-          variant="secondary" 
-          size="sm"
-          className="rounded-full bg-[#F5F5F5] hover:bg-gray-200 text-gray-700 transition-all duration-200 shadow-sm px-3 py-1.5"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          {filtersApplied && (
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#34C759] text-white text-xs font-semibold mr-1.5">
-              ✓
-            </span>
-          )}
-          <span className="font-medium">{showFilters ? "Ocultar" : "Filtrar"}</span>
-        </Button>
-      </div>
+
       
       {showFilters && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-300">
