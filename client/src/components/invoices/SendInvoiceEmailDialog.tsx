@@ -109,9 +109,13 @@ export function SendInvoiceEmailDialog({
     try {
       setIsPending(true);
       
-      // Generar PDF como base64 usando el logo de company
-      console.log("Utilizando logo en email:", company?.logo);
-      const pdfBase64 = await generateInvoicePDFAsBase64(invoice, client, invoiceItems || [], company?.logo);
+      // Si los datos de la empresa no incluyen un logo, usamos el logo por defecto de Billeo
+      const logoPath = company?.logo || billeoLogo;
+      
+      console.log("Utilizando logo en email:", logoPath);
+      
+      // Generar PDF como base64 usando el logo
+      const pdfBase64 = await generateInvoicePDFAsBase64(invoice, client, invoiceItems || [], logoPath);
       
       // Enviar el PDF por email
       const response = await apiRequest("POST", `/api/invoices/${invoice.id}/send-email`, {
