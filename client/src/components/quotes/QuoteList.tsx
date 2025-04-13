@@ -562,7 +562,7 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
         
         <CardContent className="px-1 sm:px-6">
           {isMobile ? (
-            <div className="space-y-3 mt-2">
+            <div className="space-y-3 mt-0 px-0 sm:px-0">
               {/* Versión móvil con tarjetas en estilo Apple */}
               {displayQuotes.map((quote: Quote) => {
                 const client = clientsData.find((c: Client) => c.id === quote.clientId);
@@ -597,22 +597,22 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
                 return (
                   <div 
                     key={quote.id} 
-                    className={`border ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm`}
+                    className={`border ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm w-full`}
                   >
                     {/* Cabecera de la tarjeta con gradiente sutil */}
-                    <div className="p-3 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
+                    <div className="p-4 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
                       <div className="font-medium text-gray-800 flex items-center">
-                        <span className="mr-2">{quote.quoteNumber}</span>
+                        <span className="mr-2 text-base">{quote.quoteNumber}</span>
                         <span 
-                          className="w-2.5 h-2.5 rounded-full" 
+                          className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: statusColor }}
                         ></span>
                       </div>
-                      <div className="text-sm font-medium">{formatCurrency(quote.total)}</div>
+                      <div className="text-base font-medium">{formatCurrency(quote.total)}</div>
                     </div>
                     
                     {/* Cuerpo de la tarjeta */}
-                    <div className="p-3 space-y-2">
+                    <div className="p-4 space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Cliente:</span>
                         <span className="font-medium text-gray-800">{client?.name || "Cliente no encontrado"}</span>
