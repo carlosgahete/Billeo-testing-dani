@@ -464,16 +464,6 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
   };
 
   if (isQuotesLoading || isClientsLoading) {
-    // En móvil no mostramos la tarjeta completa, solo un indicador más simple
-    if (isMobile) {
-      return (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin h-8 w-8 rounded-full border-2 border-gray-200 border-t-gray-600" />
-        </div>
-      );
-    }
-    
-    // Versión normal para escritorio
     return (
       <Card className="w-full border-none shadow-sm">
         <CardHeader className="pb-3">
@@ -513,24 +503,6 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
       emptyMessage = "No tienes presupuestos en borrador o pendientes de respuesta.";
     }
     
-    // Vista simplificada para móvil
-    if (isMobile) {
-      return (
-        <div className="py-8 px-4">
-          <div className="text-center">
-            <h3 className="text-lg font-medium mb-2">{emptyTitle}</h3>
-            <p className="text-muted-foreground mb-6 text-sm">
-              {emptyMessage}
-            </p>
-            <Link href="/quotes/create">
-              <Button className="w-full shadow-sm">Crear presupuesto</Button>
-            </Link>
-          </div>
-        </div>
-      );
-    }
-    
-    // Vista normal para escritorio
     return (
       <Card className="w-full border-none shadow-sm">
         <CardHeader className="pb-3">
@@ -559,147 +531,6 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
     );
   }
 
-  // En móvil, simplificamos aún más la visualización
-  if (isMobile) {
-    return (
-      <div className="space-y-3 w-full">
-        {displayQuotes.map((quote: Quote) => {
-          const client = clientsData.find((c: Client) => c.id === quote.clientId);
-          
-          // Determinar el color del borde según el estado
-          let borderColorClass = "border-slate-200";
-          let statusColor = "#9ca3af"; // gris por defecto
-          
-          switch (quote.status) {
-            case "draft":
-              borderColorClass = "border-slate-200";
-              statusColor = "#9ca3af";
-              break;
-            case "sent":
-              borderColorClass = "border-blue-200";
-              statusColor = "#3b82f6";
-              break;
-            case "accepted":
-              borderColorClass = "border-green-200";
-              statusColor = "#10b981";
-              break;
-            case "rejected":
-              borderColorClass = "border-red-200";
-              statusColor = "#ef4444";
-              break;
-            case "expired":
-              borderColorClass = "border-amber-200";
-              statusColor = "#f59e0b";
-              break;
-          }
-          
-          return (
-            <div 
-              key={quote.id} 
-              className={`border ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm`}
-            >
-              {/* Cabecera de la tarjeta con gradiente sutil */}
-              <div className="p-3 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
-                <div className="font-medium text-gray-800 flex items-center">
-                  <span className="mr-2">{quote.quoteNumber}</span>
-                  <span 
-                    className="w-2.5 h-2.5 rounded-full" 
-                    style={{ backgroundColor: statusColor }}
-                  ></span>
-                </div>
-                <div className="text-sm font-medium">{formatCurrency(quote.total)}</div>
-              </div>
-              
-              {/* Cuerpo de la tarjeta */}
-              <div className="p-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Cliente:</span>
-                  <span className="font-medium text-gray-800">{client?.name || "Cliente no encontrado"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Fecha:</span>
-                  <span className="text-gray-700">{formatDate(quote.issueDate)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Válido hasta:</span>
-                  <span className="text-gray-700">{formatDate(quote.validUntil)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Estado:</span>
-                  <span>{getStatusBadge(quote.status)}</span>
-                </div>
-              </div>
-              
-              {/* Acciones */}
-              {showActions && (
-                <div className="px-3 py-2 bg-gray-50 border-t flex justify-between">
-                  <div className="flex gap-1">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleDownloadPDF(quote)}
-                      className="h-8 w-8 p-0 rounded-full"
-                    >
-                      <Download className="h-4 w-4 text-gray-600" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleEmailQuote(quote)}
-                      className="h-8 w-8 p-0 rounded-full"
-                    >
-                      <Mail className="h-4 w-4 text-gray-600" />
-                    </Button>
-                  </div>
-                  <div className="flex gap-1">
-                    <Link href={`/quotes/edit/${quote.id}`}>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="h-8 w-8 p-0 rounded-full"
-                      >
-                        <Pencil className="h-4 w-4 text-gray-600" />
-                      </Button>
-                    </Link>
-                    {quote.status === "draft" && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => handleSend(quote.id)}
-                        className="h-8 w-8 p-0 rounded-full"
-                      >
-                        <Send className="h-4 w-4 text-blue-600" />
-                      </Button>
-                    )}
-                    {quote.status === "sent" && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => handleConvert(quote.id)}
-                        className="h-8 w-8 p-0 rounded-full"
-                      >
-                        <FileCheck className="h-4 w-4 text-green-600" />
-                      </Button>
-                    )}
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleDelete(quote.id)}
-                      className="h-8 w-8 p-0 rounded-full"
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  // Vista normal para escritorio
   return (
     <>
       <Card className="w-full border-none shadow-sm">
