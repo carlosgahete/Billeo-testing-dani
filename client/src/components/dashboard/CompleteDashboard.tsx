@@ -287,9 +287,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
   return (
     <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0", className)}>
-      {/* Cabecera del dashboard con título centrado sin ícono */}
+      {/* Cabecera del dashboard con título centrado solo en móvil, con icono en desktop */}
       <div className="section-header px-1 pt-1 pb-0 md:px-4 md:py-4">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center md:justify-start">
+          <div className="md:flex hidden items-center">
+            <BarChart3 className="h-6 w-6 text-primary mr-3" />
+          </div>
           <h1 className="section-title text-sm md:text-lg font-medium">Dashboard</h1>
         </div>
         
