@@ -106,95 +106,169 @@ const LoginPage = () => {
     }
   };
 
-  // Versión móvil estilo Apple
+  // Versión móvil estilo Apple iOS
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen w-full bg-gray-50">
+      <div className="flex flex-col h-screen w-full bg-gradient-to-b from-[#f8f8fa] to-[#f0f0f3] overflow-hidden">
+        {/* Área de estado (simula barra de iOS) */}
+        <div className="h-10 bg-transparent"></div>
+        
         {/* Header con logo y título */}
-        <div className="flex-none pt-12 pb-8 flex flex-col items-center">
-          <div className="mb-6 flex justify-center">
+        <div className="flex-none pt-8 pb-6 flex flex-col items-center">
+          <div className="mb-7 flex justify-center">
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-14"
+              className="h-16 drop-shadow-sm"
             />
           </div>
-          <h1 className="text-2xl font-semibold text-center text-gray-800">
-            Bienvenido
+          <h1 className="text-2xl font-medium text-center" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#1d1d1f' }}>
+            Iniciar sesión
           </h1>
-          <p className="text-center text-gray-500 mt-2 px-6">
-            Inicia sesión para gestionar tus finanzas
-          </p>
         </div>
         
         {/* Formulario de login estilo iOS */}
-        <div className="flex-grow px-6 pb-8 pt-2">
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Campo de usuario estilo iOS */}
-            <div className="space-y-2">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="flex items-center px-4 py-3">
-                  <FingerprintIcon className="h-5 w-5 text-blue-500 mr-3" />
-                  <input
-                    type="text"
-                    className="w-full bg-transparent border-none focus:outline-none text-base text-gray-700"
-                    placeholder="Usuario (demo)"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                </div>
+        <div className="flex-grow px-6 pb-10 pt-8">
+          <form onSubmit={handleLogin} className="space-y-3">
+            {/* Grupo de campos estilo iOS */}
+            <div 
+              className="overflow-hidden rounded-2xl shadow-sm" 
+              style={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(10px)', 
+                WebkitBackdropFilter: 'blur(10px)', 
+                border: '0.5px solid rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              {/* Campo de usuario estilo iOS */}
+              <div className="flex items-center px-4 py-3.5 border-b border-gray-100">
+                <FingerprintIcon className="h-5 w-5 text-[#007AFF] mr-3 flex-shrink-0" />
+                <input
+                  type="text"
+                  className="w-full bg-transparent border-none focus:outline-none text-base font-normal"
+                  style={{ 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', 
+                    color: '#1d1d1f',
+                    caretColor: '#007AFF'
+                  }}
+                  placeholder="Usuario"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  autoComplete="username"
+                />
               </div>
-            </div>
-            
-            {/* Campo de contraseña estilo iOS */}
-            <div className="space-y-2">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="flex items-center px-4 py-3">
-                  <LockIcon className="h-5 w-5 text-blue-500 mr-3" />
-                  <input
-                    type="password"
-                    className="w-full bg-transparent border-none focus:outline-none text-base text-gray-700"
-                    placeholder="Contraseña (demo)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
+              
+              {/* Campo de contraseña estilo iOS */}
+              <div className="flex items-center px-4 py-3.5">
+                <LockIcon className="h-5 w-5 text-[#007AFF] mr-3 flex-shrink-0" />
+                <input
+                  type="password"
+                  className="w-full bg-transparent border-none focus:outline-none text-base font-normal"
+                  style={{ 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', 
+                    color: '#1d1d1f',
+                    caretColor: '#007AFF'
+                  }}
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
               </div>
             </div>
             
             {/* Botón de inicio de sesión estilo iOS */}
-            <div className="pt-4">
+            <div className="pt-6">
               <button
                 type="submit"
-                className="button-apple-primary w-full py-3.5 flex items-center justify-center text-base"
+                className="w-full rounded-2xl py-3.5 flex items-center justify-center"
+                style={{ 
+                  background: '#007AFF', 
+                  color: 'white',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '16px',
+                  boxShadow: isLoading ? 'none' : '0 4px 12px rgba(0, 122, 255, 0.3)'
+                }}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   "Iniciando sesión..."
                 ) : (
                   <>
-                    Iniciar sesión
-                    <ArrowRightIcon className="ml-2 h-4 w-4" />
+                    Continuar
                   </>
                 )}
               </button>
             </div>
             
+            {/* Info de recuperación de contraseña estilo iOS */}
+            <div className="text-center mt-3">
+              <a 
+                href="#" 
+                className="text-sm"
+                style={{ 
+                  fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                  color: '#007AFF',
+                  fontWeight: 400
+                }}
+                onClick={(e) => e.preventDefault()}
+              >
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+            
+            {/* Línea separadora estilo iOS */}
+            <div className="flex items-center py-6">
+              <div className="flex-grow h-px bg-gray-200"></div>
+              <span 
+                className="px-3 text-xs"
+                style={{ 
+                  fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                  color: '#86868b' 
+                }}
+              >
+                o
+              </span>
+              <div className="flex-grow h-px bg-gray-200"></div>
+            </div>
+            
             {/* Info de demo */}
-            <div className="text-center text-sm mt-6">
-              <p className="text-gray-500">
-                Puedes usar la cuenta demo:<br/>
-                <span className="font-semibold">demo</span> / <span className="font-semibold">demo</span>
+            <div className="text-center">
+              <p 
+                className="text-sm mb-2"
+                style={{ 
+                  fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                  color: '#86868b' 
+                }}
+              >
+                Puedes usar la cuenta demo
+              </p>
+              <p
+                className="text-sm font-semibold"
+                style={{ 
+                  fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                  color: '#1d1d1f'
+                }}
+              >
+                Usuario: <span style={{ color: '#007AFF' }}>demo</span> · Contraseña: <span style={{ color: '#007AFF' }}>demo</span>
               </p>
             </div>
           </form>
         </div>
         
         {/* Footer con copyright */}
-        <div className="flex-none pb-8 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} Billeo - Gestión financiera
+        <div 
+          className="flex-none pb-10 text-center text-xs"
+          style={{ 
+            fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+            color: '#86868b' 
+          }}
+        >
+          © {new Date().getFullYear()} Billeo · Gestión financiera
         </div>
       </div>
     );
