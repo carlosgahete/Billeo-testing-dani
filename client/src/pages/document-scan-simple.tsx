@@ -303,7 +303,7 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="container mx-auto py-3 max-w-5xl">
+    <div className="flex flex-col justify-center min-h-[80vh] container mx-auto py-3 max-w-5xl">
       {/* Botón flotante minimalista para volver en móvil */}
       <div className="sm:hidden fixed top-2 left-2 z-10">
         <Button 
