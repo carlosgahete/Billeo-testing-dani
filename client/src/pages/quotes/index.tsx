@@ -352,8 +352,7 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      {/* Cabecera estilo Apple alineada con menú hamburguesa */}
-      {/* Encabezado - oculto en móvil */}
+      {/* Cabecera estilo Apple - Solo escritorio */}
       <div className="section-header fade-in mb-3 -mt-3 pt-0 hidden md:flex items-center">
         <div className="flex items-center ml-8 md:ml-4">
           <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 -mt-2">
@@ -373,7 +372,7 @@ export default function QuotesPage() {
       </div>
       
       {/* Botones para móvil - Posicionados al principio */}
-      <div className="md:hidden -mt-3 -mb-2">
+      <div className="md:hidden mt-1 mb-2">
         <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
       </div>
 
@@ -613,6 +612,8 @@ export default function QuotesPage() {
                 <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
               </div>
             </div>
+            
+            {/* Título móvil - Eliminado para que coincida con el diseño de referencia */}
             
             {/* Filtramos las citas según el filtro seleccionado */}
             <QuoteList userId={user.id} showActions={true} filter={filter} />
