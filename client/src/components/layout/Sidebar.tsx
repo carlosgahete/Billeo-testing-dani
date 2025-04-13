@@ -380,8 +380,8 @@ const Sidebar = ({
           </button>
         </div>
         
-        {/* Botón de escanear documentos */}
-        <div className="px-4 pt-4 pb-2">
+        {/* Botón de escanear documentos - Visible solo en tablet/desktop */}
+        <div className="hidden md:block px-4 pt-4 pb-2">
           <Link href="/document-scan" onClick={handleNavClick}>
             <Button className="w-full font-medium" size="default">
               <ScanLine className="mr-2 h-4 w-4" />

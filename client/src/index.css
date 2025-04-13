@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Importar ajustes para móviles */
+@import './styles/mobile-fixes.css';
  
 @layer base {
   :root {
@@ -457,9 +460,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .dark .text-gray-800 {
   @apply text-gray-100;
 }
-
-/* Importar ajustes para móviles */
-@import './styles/mobile-fixes.css';
 
 /* Personalizaciones para tablas responsivas */
 .responsive-table {
