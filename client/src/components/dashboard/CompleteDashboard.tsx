@@ -413,30 +413,47 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Widgets principales - Estilo Apple - En móvil: cada widget en una fila */}
-      <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-8 mt-1 md:mt-8">
+      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
+          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 mt-1 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3">
-          <div className="flex items-center">
-            <div className="bg-[#E2F6ED] p-2 rounded-full mr-3">
-              <ArrowUp className="h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-md font-medium text-gray-800">Ingresos</h3>
-              <div className="flex items-center justify-between">
-                <div className="text-xl font-bold text-[#34C759]">
-                  {formatCurrency(baseImponibleIngresos)}
-                </div>
+        <div className="dashboard-card fade-in mx-0 px-0">
+          <div className="md:p-6 p-2">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-2 md:mr-3">
+                <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500">IVA repercutido:</span>
-                <span>{formatCurrency(ivaRepercutido)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500">IRPF:</span>
-                <span>{formatCurrency(retencionesIrpf)}</span>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Entradas totales</p>
               </div>
             </div>
+            
+            <div className="md:mb-5 mb-2">
+              <div className="md:text-3xl text-2xl font-bold text-[#34C759] md:pt-3 pt-1">
+                {formatCurrency(baseImponibleIngresos)}
+              </div>
+              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
+                Ingresos totales (sin IVA)
+              </div>
+            </div>
+            
+            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-2 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
+              <div className="flex justify-between items-center">
+                <span className="md:text-sm text-xs text-gray-600">IVA repercutido:</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaRepercutido)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="md:text-sm text-xs text-gray-600">IRPF:</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(retencionesIrpf)}</span>
+              </div>
+            </div>
+            
+            <Link href="/invoices" className="md:block hidden">
+              <button className="w-full px-4 py-2 rounded-md font-medium text-[#34C759] border border-[#34C759] hover:bg-[#34C759]/10 transition-colors">
+                Ver facturas
+              </button>
+            </Link>
           </div>
         </div>
 
@@ -559,62 +576,26 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
 
-            {/* Panel financiero - Estilo Apple - Filas individuales en móvil */}
+            {/* Comparativa financiera - Estilo Apple */}
             <div className="bg-white rounded-xl border border-gray-100 p-1 sm:p-3 glass-panel">
-              {/* En móvil: una fila para cada elemento */}
-              <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
-                {/* Ingresos */}
-                <div className="bg-[#F5FFF7] p-3 rounded-lg border border-[#DCFFE5] flex items-center">
-                  <div className="bg-[#E2F6ED] p-2 rounded-full mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#34C759]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 19V5M5 12l7-7 7 7"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-md text-gray-800 font-medium">Ingresos</div>
-                    <div className="text-xl font-bold text-[#34C759]">
-                      {formatCurrency(baseImponibleIngresos)}
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">IVA repercutido:</span>
-                      <span>{formatCurrency(ivaRepercutido)}</span>
-                    </div>
+              {/* Mostrar el resultado en grande */}
+              <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
+                <div className="bg-[#F5FFF7] p-1 sm:p-2 rounded-lg border border-[#DCFFE5]">
+                  <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
+                  <div className="text-sm font-semibold text-[#34C759] tracking-tight">
+                    {formatCurrency(baseImponibleIngresos)}
                   </div>
                 </div>
-                {/* Gastos */}
-                <div className="bg-[#FFF5F5] p-3 rounded-lg border border-[#FFDFDF] flex items-center">
-                  <div className="bg-[#FEECEB] p-2 rounded-full mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#FF3B30]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 5v14M5 12l7 7 7-7"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-md text-gray-800 font-medium">Gastos</div>
-                    <div className="text-xl font-bold text-[#FF3B30]">
-                      {formatCurrency(baseImponibleGastos)}
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">IVA soportado:</span>
-                      <span>{formatCurrency(ivaSoportado)}</span>
-                    </div>
+                <div className="bg-[#FFF5F5] p-1 sm:p-2 rounded-lg border border-[#FFDFDF]">
+                  <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
+                  <div className="text-sm font-semibold text-[#FF3B30] tracking-tight">
+                    {formatCurrency(baseImponibleGastos)}
                   </div>
                 </div>
-                {/* Resultado */}
-                <div className="bg-[#F0F7FF] p-3 rounded-lg border border-[#DAE8FF] flex items-center">
-                  <div className="bg-[#E9F8FB] p-2 rounded-full mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#007AFF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1 0 8h-3"></path>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-md text-gray-800 font-medium">Resultado Final</div>
-                    <div className="text-xl font-bold text-[#007AFF]">
-                      {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">IVA a pagar:</span>
-                      <span>{formatCurrency(ivaRepercutido - ivaSoportado)}</span>
-                    </div>
+                <div className="bg-[#F0F7FF] p-1 sm:p-2 rounded-lg border border-[#DAE8FF]">
+                  <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
+                  <div className="text-sm font-semibold text-[#007AFF] tracking-tight">
+                    {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
                   </div>
                 </div>
               </div>
