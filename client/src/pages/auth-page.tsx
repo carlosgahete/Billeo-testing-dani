@@ -342,7 +342,7 @@ export default function AuthPage() {
       </div>
       
       {/* Decoración adicional */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-blue-400/60">
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-blue-400/60 whitespace-nowrap">
         © {new Date().getFullYear()} Billeo · Tu gestión financiera
       </div>
     </div>
