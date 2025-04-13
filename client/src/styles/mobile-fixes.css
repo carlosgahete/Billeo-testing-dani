@@ -1,8 +1,11 @@
 /* Corrige el problema de doble scroll en móviles eliminando scrolls internos */
 @media (max-width: 768px) {
-  /* Ajustes globales para evitar scroll horizontal */
+  /* Ajustes globales para permitir scroll vertical pero evitar horizontal */
   html, body {
     overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    position: relative;
   }
   
   /* Evita que los campos de texto hagan zoom automático */
@@ -57,7 +60,8 @@
     padding: 0 16px !important;
   }
 
-  /* Aplicar a elementos con scroll interno en el dashboard */
+  /* Permitir desplazamiento para contenedores principales */
+  /* Comentamos estas reglas para permitir el desplazamiento
   .max-h-40,
   .max-h-\[280px\],
   .h-\[280px\],
@@ -68,6 +72,7 @@
     height: auto !important;
     max-height: none !important;
   }
+  */
 
   /* Específicos para componentes con scrolls identificados */
   .custom-scrollbar {
