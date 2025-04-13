@@ -38,8 +38,8 @@ const InvoicesPage = () => {
         </div>
       </div>
       
-      {/* Tarjetas de resumen estilo Apple */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
+      {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
