@@ -302,7 +302,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <button 
               type="button"
               onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
-              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF] border-[#007AFF] text-white hover:bg-[#0069D9]"
               aria-controls="year-dropdown"
             >
               <span>{year}</span>
@@ -348,7 +348,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <button 
               type="button"
               onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
-              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF] border-[#007AFF] text-white hover:bg-[#0069D9]"
               aria-controls="period-dropdown"
             >
               <span>
