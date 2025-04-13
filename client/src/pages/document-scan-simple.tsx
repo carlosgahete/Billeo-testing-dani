@@ -293,7 +293,7 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="min-h-screen w-full flex flex-col">
+    <div className="min-h-screen w-full flex flex-col justify-center items-center">
       {/* Botón flotante minimalista para volver en móvil */}
       <div className="sm:hidden fixed top-2 left-2 z-10">
         <Button 
@@ -306,14 +306,14 @@ const DocumentScanPage = () => {
         </Button>
       </div>
       
-      {/* Encabezado con título para mejor contexto */}
-      <div className="w-full pt-10 pb-2 text-center">
-        <h1 className="text-2xl font-semibold text-gray-800">Escanear Documento</h1>
-        <p className="text-sm text-gray-500 mt-1">Sube una factura para procesarla</p>
-      </div>
-      
-      {/* Contenido principal centrado verticalmente */}
-      <div className="flex-1 flex flex-col justify-center items-center px-4 pt-0 pb-4">
+      {/* Contenedor principal completamente centrado */}
+      <div className="w-full max-w-[370px] flex flex-col items-center px-4">
+        {/* Encabezado con título para mejor contexto */}
+        <div className="w-full mb-6 text-center">
+          <h1 className="text-2xl font-semibold text-gray-800">Escanear Documento</h1>
+          <p className="text-sm text-gray-500 mt-1">Sube una factura para procesarla</p>
+        </div>
+        
         {/* Control de archivos invisible */}
         <input
           type="file"
@@ -326,7 +326,7 @@ const DocumentScanPage = () => {
 
         {!showEditMode ? (
           // Modo de subida de documento
-          <div className="w-full max-w-[370px]">
+          <div className="w-full">
             {/* Zona de arrastrar y soltar - versión simple para móvil al estilo Apple */}
             <div 
               className="w-full border border-gray-100 rounded-3xl py-8 px-6 text-center bg-white shadow-sm cursor-pointer"
