@@ -1730,13 +1730,33 @@ const InvoiceList = () => {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleExportInvoicePDF(invoice)}
-                                className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
+                                className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-blue-600 transition-colors"
                                 aria-label="Descargar"
                               >
                                 <Download className="h-4 w-4" />
                               </button>
                               
-                              {/* Temporalmente ocultamos el botón de email en móvil para simplificar */}
+                              {/* Botón para enviar por email en móvil */}
+                              <SendInvoiceEmailDialog
+                                invoice={invoice}
+                                client={client}
+                                company={companyData}
+                                trigger={
+                                  <button
+                                    className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-blue-600 transition-colors"
+                                    aria-label="Enviar por email"
+                                  >
+                                    <Mail className="h-4 w-4" />
+                                  </button>
+                                }
+                              />
+                              
+                              {/* Botón para eliminar factura */}
+                              <DeleteInvoiceDialog
+                                invoiceId={invoice.id}
+                                invoiceNumber={invoice.invoiceNumber}
+                                onConfirm={() => queryClient.invalidateQueries({ queryKey: ["/api/invoices"] })}
+                              />
                             </div>
                             
                             <button
