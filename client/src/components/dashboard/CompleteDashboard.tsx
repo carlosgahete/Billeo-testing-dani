@@ -286,9 +286,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0", className)}>
+    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4", className)}>
       {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
-      <div className="section-header px-1 pt-0 md:pt-1 pb-0 md:px-4 md:py-4">
+      <div className="section-header px-0 pt-0 md:pt-1 pb-0 md:px-4 md:py-4">
         <div className="flex items-center justify-center md:justify-start mt-[-15px] md:mt-0">
           <div className="md:flex hidden items-center">
             <BarChart3 className="h-6 w-6 text-primary mr-3" />
@@ -296,7 +296,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <h1 className="section-title text-sm md:text-lg font-medium">Dashboard</h1>
         </div>
         
-        <div className="flex items-center w-full gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-0">
+        <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-0">
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
           <div className="relative w-[45%] sm:w-auto">
             <button 
@@ -419,8 +419,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in mx-0 px-0 col-span-1">
-          <div className="md:p-6 p-2">
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-2 md:mr-3">
                 <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
@@ -460,8 +460,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in mx-0 px-0 col-span-1">
-          <div className="md:p-6 p-2">
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
                 <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
@@ -501,8 +501,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Resultado Final - Estilo Apple - Mismo ancho que las otras tarjetas */}
-        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 mx-0 px-0">
-          <div className="md:p-6 p-2">
+        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 -mx-2 sm:mx-0 px-0">
+          <div className="md:p-6 p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
                 <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
