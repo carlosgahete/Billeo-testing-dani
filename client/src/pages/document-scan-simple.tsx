@@ -380,37 +380,47 @@ const DocumentScanPage = () => {
               onClick={() => document.getElementById('file-input')?.click()}
             >
               {/* Icono con diseño Apple auténtico - centrado */}
-              <div className="flex items-center justify-center w-full mb-4">
-                <div 
-                  className="h-[70px] w-[70px] rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(135deg, #34AADC 0%, #007AFF 100%)",
-                    boxShadow: "0 4px 14px rgba(0, 122, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
-                  }}
-                >
-                  <svg 
-                    width="28" 
-                    height="28" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-white"
-                  >
-                    <path 
-                      d="M12 4L12 16M12 4L7 9M12 4L17 9" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    />
-                    <path 
-                      d="M5 20H19" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                    />
-                  </svg>
-                </div>
+              <div className="flex items-center justify-center w-full mb-5">
+                <svg width="86" height="86" viewBox="0 0 86 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="uploadIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#007AFF" />
+                      <stop offset="100%" stopColor="#0055D5" />
+                    </linearGradient>
+                    <filter id="uploadShadow" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
+                      <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#0066FF" floodOpacity="0.2" />
+                    </filter>
+                    <clipPath id="clip">
+                      <rect width="86" height="86" rx="43" fill="white"/>
+                    </clipPath>
+                    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+                      <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+                      <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Fondo base con gradiente */}
+                  <g filter="url(#uploadShadow)" clipPath="url(#clip)">
+                    <rect width="86" height="86" rx="43" fill="url(#uploadIconGradient)"/>
+                    <rect width="86" height="43" fill="url(#shine)"/>
+                  </g>
+                  
+                  {/* Icono de subida estilo SF Symbols */}
+                  <path 
+                    d="M43 29.5V53M43 29.5L32 40.5M43 29.5L54 40.5" 
+                    stroke="white" 
+                    strokeWidth="3" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
+                  <path 
+                    d="M28 59H58" 
+                    stroke="white" 
+                    strokeWidth="3" 
+                    strokeLinecap="round"
+                  />
+                </svg>
               </div>
               
               <p 
