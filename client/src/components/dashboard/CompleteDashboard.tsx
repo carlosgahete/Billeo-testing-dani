@@ -418,7 +418,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-6">
+          <div className="md:p-6 p-3">
             <div className="flex items-center mb-5">
               <div className="bg-[#E2F6ED] p-3 rounded-full mr-3">
                 <ArrowUp className="h-5 w-5 text-[#34C759]" strokeWidth={1.5} />
@@ -438,7 +438,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-3 mb-5 p-4 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
+            <div className="space-y-3 mb-5 md:p-4 p-3 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">IVA repercutido:</span>
                 <span className="font-medium text-gray-800">{formatCurrency(ivaRepercutido)}</span>
@@ -459,7 +459,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Gastos - Estilo Apple */}
         <div className="dashboard-card fade-in">
-          <div className="p-6">
+          <div className="md:p-6 p-3">
             <div className="flex items-center mb-5">
               <div className="bg-[#FEECEB] p-3 rounded-full mr-3">
                 <ArrowDown className="h-5 w-5 text-[#FF3B30]" strokeWidth={1.5} />
@@ -479,7 +479,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-3 mb-5 p-4 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
+            <div className="space-y-3 mb-5 md:p-4 p-3 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">IVA soportado (21%):</span>
                 <span className="font-medium text-gray-800">{formatCurrency(ivaSoportado)}</span>
@@ -500,7 +500,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final - Estilo Apple - Ocupa todo el ancho en móvil */}
         <div className="dashboard-card fade-in col-span-2 lg:col-span-1">
-          <div className="p-6">
+          <div className="md:p-6 p-3">
             <div className="flex items-center mb-5">
               <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
                 <PiggyBank className="h-5 w-5 text-[#007AFF]" strokeWidth={1.5} />
@@ -520,7 +520,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-3 mb-5 p-4 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
+            <div className="space-y-3 mb-5 md:p-4 p-3 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">IVA a pagar:</span>
                 <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
