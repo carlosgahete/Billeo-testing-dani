@@ -629,9 +629,9 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
         </DialogContent>
       </Dialog>
       
-      {/* Header simplificado estilo Apple */}
+      {/* Sólo botón de volver estilo iOS (extremadamente simple) */}
       <div className="mb-2 sm:mb-6">
-        {/* Botón de volver exclusivamente para móvil - estilo iOS */}
+        {/* Botón de volver minimalista para móvil */}
         <div className="sm:hidden flex items-center justify-between mb-0">
           <Button 
             variant="ghost" 
@@ -640,7 +640,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
             className="h-9 px-2 -ml-2 text-[#007AFF]"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Volver
+            <span>Volver a transacciones</span>
           </Button>
         </div>
         
@@ -673,37 +673,39 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
           </CardHeader>
           <CardContent className="pb-4 sm:pb-6">
             <div className="space-y-4 sm:space-y-6">
-              {/* Área de carga de archivos con diseño Apple */}
-              <div 
-                className="rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#007AFF] transition-colors p-4 sm:p-6 bg-gray-50/50 hover:bg-blue-50/10 active:bg-blue-50/20"
-                onClick={() => document.getElementById('document-upload')?.click()}
-              >
-                <div className="flex flex-col items-center justify-center gap-2">
-                  {/* Icono con diseño Apple */}
-                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-b from-[#0A84FF] to-[#0063CC] flex items-center justify-center shadow-sm">
-                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity rounded-full"></div>
-                    <Upload className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+              {/* Área de carga extremadamente simple estilo Apple */}
+              <div className="sm:pt-4 sm:pb-2">
+                <div 
+                  className="rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#007AFF] transition-colors p-4 sm:p-6 bg-gray-50/40 hover:bg-blue-50/10 active:bg-blue-50/20"
+                  onClick={() => document.getElementById('document-upload')?.click()}
+                >
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    {/* Icono con diseño Apple */}
+                    <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-b from-[#0A84FF] to-[#0063CC] flex items-center justify-center shadow-sm">
+                      <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity rounded-full"></div>
+                      <Upload className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+                    </div>
+                    <Label 
+                      htmlFor="document-upload" 
+                      className="text-sm sm:text-base font-medium text-gray-800 cursor-pointer text-center hover:text-[#007AFF] transition-colors mt-2"
+                    >
+                      {/* Texto minimalista para móvil/desktop */}
+                      <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
+                      <span className="sm:hidden">Toca para subir factura</span>
+                    </Label>
+                    <p className="text-xs sm:text-sm text-gray-500 text-center">
+                      JPG, PNG, PDF
+                    </p>
                   </div>
-                  <Label 
-                    htmlFor="document-upload" 
-                    className="text-sm sm:text-base font-medium text-gray-800 cursor-pointer text-center hover:text-[#007AFF] transition-colors mt-2"
-                  >
-                    {/* Texto adaptativo para móvil/desktop */}
-                    <span className="hidden sm:inline">Arrastra tu factura o haz clic para subir</span>
-                    <span className="sm:hidden">Toca para seleccionar imagen</span>
-                  </Label>
-                  <p className="text-xs sm:text-sm text-gray-500 text-center">
-                    Formatos: PDF, JPG, PNG
-                  </p>
+                  <input
+                    id="document-upload"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    capture="environment"
+                  />
                 </div>
-                <input
-                  id="document-upload"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  capture="environment"
-                />
               </div>
 
               {previewUrl && (
