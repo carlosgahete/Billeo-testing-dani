@@ -349,14 +349,15 @@ export default function AuthPage() {
           left: '0',
           right: '0',
           width: '100%',
-          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '0 16px',
           fontSize: '9px',
           color: 'rgba(96, 165, 250, 0.6)',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap'
         }}
       >
-        © {new Date().getFullYear()} Billeo
+        <span>© {new Date().getFullYear()} Billeo</span>
+        <span>Tu gestión financiera</span>
       </div>
     </div>
   );
