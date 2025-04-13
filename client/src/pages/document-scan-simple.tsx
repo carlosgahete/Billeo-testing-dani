@@ -322,16 +322,11 @@ const DocumentScanPage = () => {
           transform: "translate(-50%, -60%)"
         }}
       >
-        {/* Título con estilo Apple */}
-        <h1 className="text-[28px] font-medium text-gray-800 mb-4" style={{ 
+        {/* Título minimalista al estilo Apple iOS 15 */}
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1" style={{ 
           fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
           letterSpacing: "-0.02em"
-        }}>Escanear Documento</h1>
-        <p className="text-gray-500 mb-6 -mt-1" style={{ 
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-          fontSize: "15px",
-          letterSpacing: "-0.01em"
-        }}>Sube una factura para procesarla</p>
+        }}>Escanear</h1>
         
         {/* Control de archivos invisible */}
         <input
@@ -447,7 +442,7 @@ const DocumentScanPage = () => {
                 ) : (
                   <div className="flex items-center justify-center">
                     <FileText className="mr-2 h-4 w-4" />
-                    <span>Procesar Documento</span>
+                    <span>Continuar</span>
                   </div>
                 )}
               </Button>
