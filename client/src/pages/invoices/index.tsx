@@ -25,9 +25,9 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-2 md:px-2 space-y-6 mt-2 max-w-full">
-      {/* Cabecera estilo Apple - Versión responsiva */}
-      <div className="section-header mx-2 fade-in">
-        <div className="hidden sm:flex items-center">
+      {/* Cabecera estilo Apple - Solo visible en desktop */}
+      <div className="hidden sm:block section-header mx-2 fade-in">
+        <div className="flex items-center">
           <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1 ml-10 md:ml-12">
             <Receipt className="h-5 w-5 text-[#007AFF]" />
           </div>
@@ -36,12 +36,9 @@ const InvoicesPage = () => {
             <p className="text-sm text-gray-500 mt-0 leading-tight">Administra y controla tus documentos fiscales</p>
           </div>
         </div>
-        
-        {/* Versión móvil simplificada */}
-        <div className="sm:hidden px-2 py-3 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-800">Facturas</h2>
-        </div>
       </div>
+      
+      {/* No mostramos ningún encabezado en móvil */}
       
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
