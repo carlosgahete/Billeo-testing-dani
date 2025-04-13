@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,6 +96,7 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [quoteItems, setQuoteItems] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const isMobile = useIsMobile();
 
   // Fetch quotes
