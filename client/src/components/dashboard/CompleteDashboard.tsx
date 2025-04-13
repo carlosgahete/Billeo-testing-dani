@@ -580,21 +580,24 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="bg-white rounded-xl border border-gray-100 p-1 sm:p-3 glass-panel">
               {/* Mostrar el resultado en grande */}
               <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
+                {/* Ingresos - mismo tamaño que resultado final en móvil */}
                 <div className="bg-[#F5FFF7] p-1 sm:p-2 rounded-lg border border-[#DCFFE5]">
                   <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
-                  <div className="text-sm font-semibold text-[#34C759] tracking-tight">
+                  <div className="text-sm font-semibold text-[#34C759] tracking-tight truncate">
                     {formatCurrency(baseImponibleIngresos)}
                   </div>
                 </div>
+                {/* Gastos - mismo tamaño que resultado final en móvil */}
                 <div className="bg-[#FFF5F5] p-1 sm:p-2 rounded-lg border border-[#FFDFDF]">
                   <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
-                  <div className="text-sm font-semibold text-[#FF3B30] tracking-tight">
+                  <div className="text-sm font-semibold text-[#FF3B30] tracking-tight truncate">
                     {formatCurrency(baseImponibleGastos)}
                   </div>
                 </div>
+                {/* Resultado - mismo tamaño que los otros en móvil */}
                 <div className="bg-[#F0F7FF] p-1 sm:p-2 rounded-lg border border-[#DAE8FF]">
                   <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
-                  <div className="text-sm font-semibold text-[#007AFF] tracking-tight">
+                  <div className="text-sm font-semibold text-[#007AFF] tracking-tight truncate">
                     {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
                   </div>
                 </div>
