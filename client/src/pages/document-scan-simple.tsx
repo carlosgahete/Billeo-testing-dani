@@ -294,15 +294,21 @@ const DocumentScanPage = () => {
   
   return (
     <div className="h-screen w-full flex items-center justify-center">
-      {/* Botón flotante minimalista para volver en móvil */}
-      <div className="sm:hidden fixed top-2 left-2 z-10">
+      {/* Botón flotante estilo Apple premium para volver en móvil */}
+      <div className="sm:hidden fixed top-3 left-3 z-10">
         <Button 
           variant="ghost" 
           size="icon"
           onClick={() => navigate("/transactions")} 
-          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
+          className="h-10 w-10 rounded-full flex items-center justify-center"
+          style={{
+            background: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 2px 14px rgba(0,0,0,0.08)",
+            border: "1px solid rgba(209, 213, 219, 0.5)"
+          }}
         >
-          <ArrowLeft className="h-4 w-4 text-[#007AFF]" />
+          <ArrowLeft className="h-5 w-5 text-[#0A84FF]" />
         </Button>
       </div>
       
@@ -316,8 +322,16 @@ const DocumentScanPage = () => {
           transform: "translate(-50%, -60%)"
         }}
       >
-        {/* Título justo encima del recuadro */}
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Escanear Documento</h1>
+        {/* Título con estilo Apple */}
+        <h1 className="text-[28px] font-medium text-gray-800 mb-4" style={{ 
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+          letterSpacing: "-0.02em"
+        }}>Escanear Documento</h1>
+        <p className="text-gray-500 mb-6 -mt-1" style={{ 
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+          fontSize: "15px",
+          letterSpacing: "-0.01em"
+        }}>Sube una factura para procesarla</p>
         
         {/* Control de archivos invisible */}
         <input
@@ -332,33 +346,56 @@ const DocumentScanPage = () => {
         {!showEditMode ? (
           // Modo de subida de documento
           <div className="w-full">
-            {/* Zona de arrastrar y soltar - versión simple para móvil al estilo Apple */}
+            {/* Zona de arrastrar y soltar - versión Apple con estilo premium */}
             <div 
-              className="w-full border border-gray-100 rounded-3xl py-8 px-6 text-center bg-white shadow-sm cursor-pointer"
+              className="w-full border border-gray-200 rounded-[22px] py-10 px-6 text-center bg-white cursor-pointer"
               style={{
-                boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+                boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
+                background: "linear-gradient(160deg, #ffffff 0%, #f8f9ff 100%)"
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => document.getElementById('file-input')?.click()}
             >
-              {/* Icono con diseño Apple */}
-              <div className="mx-auto h-16 w-16 rounded-full bg-[#4285F4] flex items-center justify-center">
-                <Upload className="h-8 w-8 text-white" />
+              {/* Icono con diseño Apple - con gradiente */}
+              <div 
+                className="mx-auto h-[70px] w-[70px] rounded-full flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, #0A84FF 0%, #0066CC 100%)",
+                  boxShadow: "0 8px 16px rgba(10, 132, 255, 0.2)"
+                }}
+              >
+                <Upload className="h-9 w-9 text-white" />
               </div>
               
-              <p className="text-base font-medium text-gray-900 mt-4">
+              <p 
+                className="text-[17px] font-medium text-gray-900 mt-5"
+                style={{ 
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                  letterSpacing: "-0.01em"
+                }}
+              >
                 <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
                 <span className="sm:hidden">Toca para subir factura</span>
               </p>
               
-              <p className="text-xs text-gray-500 mt-2">
+              <p 
+                className="text-gray-500 mt-2"
+                style={{ 
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                  fontSize: "14px"
+                }}
+              >
                 JPG, PNG, PDF
               </p>
               
               {fileName && (
-                <div className="mt-2">
-                  <Badge variant="secondary" className="text-[#007AFF] bg-blue-50">
+                <div className="mt-3">
+                  <Badge 
+                    variant="secondary" 
+                    className="text-[#0A84FF] bg-blue-50 py-1 px-3 rounded-full"
+                    style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" }}
+                  >
                     {fileName}
                   </Badge>
                 </div>
@@ -379,16 +416,27 @@ const DocumentScanPage = () => {
               </div>
             )}
             
-            {/* Botón de procesamiento exactamente como en la imagen de referencia */}
-            <div className="mt-6">
+            {/* Botón de procesamiento estilo Apple premium */}
+            <div className="mt-8">
               <Button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className={`relative rounded-full py-2 px-8 text-sm font-normal w-full 
+                className={`relative py-3 px-8 text-[15px] font-medium w-full transition-all duration-200 
                   ${uploading || !file 
-                    ? "bg-gray-200/80 text-gray-400" 
-                    : "bg-gray-200/80 text-gray-500"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                    : "text-white"
                   }`}
+                style={{
+                  borderRadius: "12px",
+                  background: !file || uploading ? 
+                    "linear-gradient(to bottom, #f5f5f7, #eeeef0)" : 
+                    "linear-gradient(to bottom, #0A84FF, #0066CC)",
+                  boxShadow: !file || uploading ? 
+                    "none" : 
+                    "0 4px 14px rgba(10, 132, 255, 0.25)",
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                  letterSpacing: "-0.01em"
+                }}
                 variant="ghost"
               >
                 {uploading ? (
@@ -399,7 +447,7 @@ const DocumentScanPage = () => {
                 ) : (
                   <div className="flex items-center justify-center">
                     <FileText className="mr-2 h-4 w-4" />
-                    <span>Procesar</span>
+                    <span>Procesar Documento</span>
                   </div>
                 )}
               </Button>
