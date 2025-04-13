@@ -289,6 +289,17 @@ export function DataTable<TData, TValue>({
                         return null;
                       }
                       
+                      // Si la celda no tiene un renderizador o tiene un error, no la mostramos
+                      if (!cell.column.columnDef.cell) {
+                        return null;
+                      }
+                      
+                      // Si el contenido es código o función, no lo mostramos
+                      const cellContent = String(cell.getValue() || '');
+                      if (cellContent.includes('props') || cellContent.includes('function') || cellContent.includes('=>')) {
+                        return null;
+                      }
+                      
                       return (
                         <div key={cell.id} className="flex justify-between">
                           <span className="text-gray-500 font-medium">
