@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { QuoteList } from "@/components/quotes/QuoteList";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
@@ -64,6 +65,7 @@ export default function QuotesPage() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [filter, setFilter] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   // Efecto para refrescar la lista cuando cambia el filtro
   useEffect(() => {
@@ -590,21 +592,36 @@ export default function QuotesPage() {
 
       {/* Lista de presupuestos - Estilo Apple */}
       <div className="mt-8 fade-in">
-        <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-8">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="bg-[#F3F3F3] p-2.5 rounded-full mr-3">
-                  <FileText className="h-5 w-5 text-[#5856D6]" />
+        {!isMobile ? (
+          <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-8">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="bg-[#F3F3F3] p-2.5 rounded-full mr-3">
+                    <FileText className="h-5 w-5 text-[#5856D6]" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
                 </div>
-                <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
               </div>
+              
+              {/* Lista de presupuestos en escritorio/tablet con el fondo blanco */}
+              <QuoteList userId={user.id} showActions={true} filter={filter} />
+            </div>
+          </div>
+        ) : (
+          <div className="scale-in mb-8">
+            {/* En móvil, eliminamos el contenedor blanco y mostramos directamente la lista */}
+            <div className="flex items-center mb-4 px-2">
+              <div className="bg-[#F3F3F3] p-2.5 rounded-full mr-3">
+                <FileText className="h-5 w-5 text-[#5856D6]" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
             </div>
             
-            {/* Filtramos las citas según el filtro seleccionado */}
+            {/* Lista de presupuestos en móvil sin contenedor con fondo blanco */}
             <QuoteList userId={user.id} showActions={true} filter={filter} />
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   );
