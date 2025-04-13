@@ -91,7 +91,8 @@ const IncomeFilters = ({
 
   return (
     <div>
-      <div className="bg-[#34C759] dark:bg-[#30BE54] rounded-2xl p-4 mb-5 shadow-md border border-[#34C759]/50 relative overflow-hidden transition-all duration-300">
+      {/* Versión desktop del header (oculta en móvil) */}
+      <div className="hidden sm:block bg-[#34C759] dark:bg-[#30BE54] rounded-2xl p-4 mb-5 shadow-md border border-[#34C759]/50 relative overflow-hidden transition-all duration-300">
         {/* Forma decorativa */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
         
@@ -145,6 +146,23 @@ const IncomeFilters = ({
             </Button>
           </div>
         </div>
+      </div>
+      
+      {/* Versión móvil - solo el botón de filtrar en la esquina derecha */}
+      <div className="sm:hidden mb-2 flex justify-end">
+        <Button 
+          variant="secondary" 
+          size="sm"
+          className="rounded-full bg-[#F5F5F5] hover:bg-gray-200 text-gray-700 transition-all duration-200 shadow-sm px-3 py-1.5"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          {filtersApplied && (
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#34C759] text-white text-xs font-semibold mr-1.5">
+              ✓
+            </span>
+          )}
+          <span className="font-medium">{showFilters ? "Ocultar" : "Filtrar"}</span>
+        </Button>
       </div>
       
       {showFilters && (
