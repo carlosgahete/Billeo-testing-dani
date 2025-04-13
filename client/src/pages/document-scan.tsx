@@ -629,10 +629,10 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
         </DialogContent>
       </Dialog>
       
-      {/* Simplemente un botón de volver sin ningún título */}
+      {/* Botón de volver oculto en móvil, visible en desktop */}
       <div className="mb-2 sm:mb-6">
-        {/* Botón de volver minimalista para versión móvil */}
-        <div className="sm:hidden flex items-center justify-between mb-0">
+        {/* Botón de volver para versión móvil - OCULTO */}
+        <div className="hidden">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -651,6 +651,18 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
             Volver
           </Button>
         </div>
+      </div>
+
+      {/* Botón flotante minimalista para volver en móvil */}
+      <div className="sm:hidden fixed top-2 left-2 z-10">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => navigate("/transactions")} 
+          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
+        >
+          <ArrowLeft className="h-4 w-4 text-[#007AFF]" />
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
