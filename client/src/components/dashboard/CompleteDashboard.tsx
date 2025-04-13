@@ -415,10 +415,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
       {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
           En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-8 mt-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 mt-4 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
-        <div className="dashboard-card fade-in">
-          <div className="md:p-6 p-3">
+        <div className="dashboard-card fade-in mx-0 px-0">
+          <div className="md:p-6 p-2">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-2 md:mr-3">
                 <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
@@ -499,7 +499,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Resultado Final - Estilo Apple - Ocupa todo el ancho en móvil */}
-        <div className="dashboard-card fade-in col-span-2 lg:col-span-1">
+        <div className="dashboard-card fade-in col-span-2 lg:col-span-1 mx-0 px-0">
           <div className="md:p-6 p-3">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
