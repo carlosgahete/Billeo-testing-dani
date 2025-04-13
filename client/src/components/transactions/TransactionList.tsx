@@ -1170,7 +1170,14 @@ const TransactionList = () => {
                     ? "bg-[#FF9F0A] text-white hover:bg-[#FF9F0A]/90" 
                     : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
-                  onClick={() => setShowExpenseFilters(!showExpenseFilters)}
+                  onClick={() => {
+                    // Asegurarse de que estamos en la pestaña de gastos
+                    if (currentTab !== 'expense') {
+                      setCurrentTab('expense');
+                    }
+                    // Mostrar u ocultar los filtros de gastos
+                    setShowExpenseFilters(!showExpenseFilters);
+                  }}
                   title={expenseFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar gastos"}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${expenseFiltersApplied ? '' : 'mr-1 sm:mr-2'}`}>
@@ -1224,7 +1231,14 @@ const TransactionList = () => {
                     ? "bg-[#34C759] text-white hover:bg-[#34C759]/90" 
                     : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
-                  onClick={() => setShowIncomeFilters(!showIncomeFilters)}
+                  onClick={() => {
+                    // Asegurarse de que estamos en la pestaña de ingresos
+                    if (currentTab !== 'income') {
+                      setCurrentTab('income');
+                    }
+                    // Mostrar u ocultar los filtros de ingresos
+                    setShowIncomeFilters(!showIncomeFilters);
+                  }}
                   title={incomeFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar ingresos"}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${incomeFiltersApplied ? '' : 'mr-1 sm:mr-2'}`}>
