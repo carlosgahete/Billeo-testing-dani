@@ -341,11 +341,7 @@ export default function AuthPage() {
         </Tabs>
       </div>
       
-      {/* Decoración adicional */}
-      {/* Footer solo visible en pantallas medianas y grandes */}
-      <div className="hidden md:block absolute bottom-6 left-0 right-0 text-center">
-        <p className="text-xs text-blue-400/60">© {new Date().getFullYear()} Billeo · Tu gestión financiera</p>
-      </div>
+      {/* Footer completamente eliminado para resolver problema de móvil */}
     </div>
   );
 }
