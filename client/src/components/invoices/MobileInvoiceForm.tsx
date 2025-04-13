@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -496,21 +496,32 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     },
   });
 
-  const handleSubmit = (data: InvoiceFormValues) => {
-    // Calcular totales de forma segura antes de enviar
-    const calculatedTotals = calculateInvoiceTotals(form, { executeUpdate: false });
-    
-    // Crear una copia de los datos con los totales calculados
-    const dataWithTotals = {
-      ...data,
-      subtotal: calculatedTotals?.subtotal || data.subtotal,
-      tax: calculatedTotals?.tax || data.tax,
-      total: calculatedTotals?.total || data.total
-    };
-    
-    // Enviar los datos con los totales actualizados
-    mutation.mutate(dataWithTotals);
-  };
+  // Memorizar el handleSubmit para evitar re-renders constantes
+  const handleSubmit = useCallback((data: InvoiceFormValues) => {
+    // Usamos try-catch para evitar que errores en esta función generen re-renders
+    try {
+      // Calcular totales sin modificar el formulario
+      const totals = calculateInvoiceTotals(form, { executeUpdate: false });
+      
+      // Crear objeto con los datos del formulario y los totales calculados
+      const dataToSubmit = {
+        ...data,
+        subtotal: totals?.subtotal || data.subtotal,
+        tax: totals?.tax || data.tax,
+        total: totals?.total || data.total
+      };
+      
+      // Enviar los datos con los totales actualizados
+      mutation.mutate(dataToSubmit);
+    } catch (error) {
+      console.error("Error al preparar datos para enviar:", error);
+      toast({
+        title: "Error al procesar el formulario",
+        description: "No se pudieron calcular los totales correctamente",
+        variant: "destructive"
+      });
+    }
+  }, [form, mutation, toast]);
 
   const handleAddItem = () => {
     append({
@@ -561,22 +572,25 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     setAttachments((prev) => [...prev, filePath]);
   };
 
-  // Effect for recalculating totals when values change - optimizado para evitar renderizados infinitos
+  // Función memorizada para recalcular totales (para evitar renderizados infinitos)
+  const recalculateTotals = useCallback((name: string | undefined) => {
+    if (name && (name.startsWith('items.') || name.startsWith('additionalTaxes.'))) {
+      // Retrasar el cálculo para evitar bucles
+      setTimeout(() => {
+        calculateInvoiceTotals(form, { silentMode: true });
+      }, 300);
+    }
+  }, [form]);
+  
+  // Efecto optimizado que se ejecuta solo una vez para configurar los listeners
   useEffect(() => {
     // Suscribirse a los cambios en items para recalcular subtotales
-    const { unsubscribe } = form.watch((value, { name, type }) => {
-      // Solo recalcular si el cambio fue en un item o los impuestos
-      if (name && (name.startsWith('items.') || name.startsWith('additionalTaxes.'))) {
-        // Usar un throttle/debounce para evitar múltiples cálculos en rápida sucesión
-        setTimeout(() => {
-          calculateInvoiceTotals(form, { silentMode: true });
-        }, 300);
-      }
+    const { unsubscribe } = form.watch((_, { name }) => {
+      recalculateTotals(name);
     });
-
-    // Limpiar suscripción al desmontar
+    
+    // Limpiar la suscripción al desmontar el componente
     return () => unsubscribe();
-  // Importante para evitar bucles infinitos de renderizado:
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
