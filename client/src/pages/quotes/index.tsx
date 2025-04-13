@@ -4,6 +4,7 @@ import { QuoteList } from "@/components/quotes/QuoteList";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Card, 
   CardContent, 
@@ -64,6 +65,7 @@ export default function QuotesPage() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [filter, setFilter] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   // Efecto para refrescar la lista cuando cambia el filtro
   useEffect(() => {
