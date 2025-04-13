@@ -303,17 +303,21 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
-            <Receipt className="h-7 w-7 mr-3 text-[#007AFF]" />
-            Escanear documento
-          </h1>
-          <p className="text-muted-foreground">
-            Sube una factura o documento para procesarlo automáticamente.
-          </p>
-        </div>
+    <div className="container mx-auto py-3 max-w-5xl">
+      {/* Botón flotante minimalista para volver en móvil */}
+      <div className="sm:hidden fixed top-2 left-2 z-10">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => navigate("/transactions")} 
+          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
+        >
+          <ArrowLeft className="h-4 w-4 text-[#007AFF]" />
+        </Button>
+      </div>
+      
+      {/* Botón de volver en escritorio */}
+      <div className="hidden sm:flex justify-end mb-4">
         <Button
           variant="outline"
           onClick={() => navigate("/transactions")}
@@ -326,7 +330,7 @@ const DocumentScanPage = () => {
       
       <div className="grid gap-6">
         <Card className="overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
+          <CardHeader className="hidden sm:block bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
             <CardTitle className="text-xl font-semibold text-gray-900">
               Procesar documento
             </CardTitle>
@@ -337,9 +341,9 @@ const DocumentScanPage = () => {
           <CardContent className="-mt-4">
             {!showEditMode ? (
               <div className="space-y-6">
-                {/* Zona de arrastrar y soltar */}
+                {/* Zona de arrastrar y soltar - versión simple para móvil */}
                 <div 
-                  className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="border-2 border-dashed border-gray-200 rounded-2xl p-4 sm:p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                   onClick={() => document.getElementById('file-input')?.click()}
@@ -350,19 +354,23 @@ const DocumentScanPage = () => {
                     accept="image/*,.pdf"
                     onChange={handleFileChange}
                     className="hidden"
+                    capture="environment"
                   />
-                  <div className="space-y-3">
-                    <div className="mx-auto h-20 w-20 bg-blue-50 rounded-full flex items-center justify-center">
-                      <Upload className="h-10 w-10 text-[#007AFF]" />
+                  <div className="space-y-2 sm:space-y-3">
+                    {/* Icono con diseño Apple */}
+                    <div className="mx-auto h-14 w-14 sm:h-20 sm:w-20 rounded-full bg-gradient-to-b from-[#0A84FF] to-[#0063CC] flex items-center justify-center shadow-sm">
+                      <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity rounded-full"></div>
+                      <Upload className="h-7 w-7 sm:h-10 sm:w-10 text-white" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Arrastra y suelta o haz clic para subir
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900">
+                      <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
+                      <span className="sm:hidden">Toca para subir factura</span>
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Formatos aceptados: JPG, PNG, PDF
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      JPG, PNG, PDF
                     </p>
                     {fileName && (
-                      <div className="mt-2">
+                      <div className="mt-1 sm:mt-2">
                         <Badge variant="secondary" className="text-[#007AFF] bg-blue-50">
                           {fileName}
                         </Badge>
@@ -385,22 +393,31 @@ const DocumentScanPage = () => {
                   </div>
                 )}
                 
-                <div className="flex justify-end">
+                {/* Botón de procesamiento con estilo Apple */}
+                <div className="flex justify-center sm:justify-end">
                   <Button 
                     onClick={handleUpload} 
                     disabled={!file || uploading}
-                    className="flex items-center px-4 bg-[#007AFF] hover:bg-blue-600 text-white"
+                    className={`relative overflow-hidden px-6 sm:px-8 py-2.5 rounded-full font-medium text-sm ${
+                      uploading || !file 
+                        ? "bg-gray-200 text-gray-500" 
+                        : "bg-gradient-to-b from-[#0A84FF] to-[#0063CC] text-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                    }`}
                   >
+                    {/* Efecto de brillo al pasar el cursor */}
+                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                    
                     {uploading ? (
-                      <>
+                      <div className="flex items-center justify-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Procesando...
-                      </>
+                        <span>Procesando...</span>
+                      </div>
                     ) : (
-                      <>
+                      <div className="flex items-center justify-center">
                         <FileText className="mr-2 h-4 w-4" />
-                        Procesar documento
-                      </>
+                        <span className="hidden sm:inline">Procesar documento</span>
+                        <span className="sm:hidden">Procesar</span>
+                      </div>
                     )}
                   </Button>
                 </div>
