@@ -16,6 +16,8 @@ interface IncomeFiltersProps {
   categories: Category[];
   onFilterChange: (filteredTransactions: Transaction[]) => void;
   onExportClick?: () => void;
+  showFilters?: boolean;
+  onToggleFilters?: () => void;
 }
 
 const IncomeFilters = ({
@@ -23,13 +25,19 @@ const IncomeFilters = ({
   categories = [],
   onFilterChange,
   onExportClick,
+  showFilters = true,
+  onToggleFilters,
 }: IncomeFiltersProps) => {
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [filtersApplied, setFiltersApplied] = useState(false);
 
+  // Restablecer los filtros cuando se oculta el panel
+  useEffect(() => {
+    // Se ha eliminado esta condición ya que ahora el estado showFilters es controlado por el padre
+  }, []);
+  
   // Actualizar filtros cuando cambia cualquiera de las condiciones
   useEffect(() => {
     if (filtersApplied) {
@@ -140,7 +148,7 @@ const IncomeFilters = ({
                   ? "bg-white/20 text-white border border-white/40 hover:bg-white/30" 
                   : "bg-white text-[#34C759] hover:bg-white/90"
               }`}
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={onToggleFilters}
             >
               {showFilters ? "Ocultar filtros" : "Filtrar"}
             </Button>
