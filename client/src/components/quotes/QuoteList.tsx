@@ -49,7 +49,8 @@ import {
   Send, 
   FileCheck, 
   XCircle, 
-  Mail 
+  Mail,
+  Search
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -490,6 +491,20 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
     filteredQuotes = quotes.filter(q => q.status === "draft" || q.status === "sent");
   }
   
+  // Aplicar filtro de búsqueda si hay texto en el input
+  if (searchQuery.trim() !== "") {
+    const searchTermLower = searchQuery.toLowerCase().trim();
+    filteredQuotes = filteredQuotes.filter(q => {
+      const client = clientsData.find(c => c.id === q.clientId);
+      
+      return (
+        q.quoteNumber.toLowerCase().includes(searchTermLower) || 
+        (client && client.name.toLowerCase().includes(searchTermLower)) ||
+        formatCurrency(q.total).toLowerCase().includes(searchTermLower)
+      );
+    });
+  }
+  
   const displayQuotes = limit && typeof limit === 'number' ? filteredQuotes.slice(0, limit) : filteredQuotes;
 
   if (displayQuotes.length === 0) {
@@ -539,14 +554,14 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
         <CardHeader className="pb-3 border-b px-2 sm:px-6">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-primary-700">
+              <CardTitle className={`text-primary-700 ${isMobile ? 'hidden' : ''}`}>
                 {filter === "accepted" 
                   ? "Presupuestos aceptados" 
                   : filter === "pending" 
                     ? "Presupuestos pendientes" 
                     : "Tus presupuestos"}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className={isMobile ? 'hidden' : ''}>
                 {filter 
                   ? `Mostrando presupuestos ${filter === "accepted" ? "aceptados" : "pendientes"}` 
                   : "Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades."}
@@ -565,6 +580,19 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
         <CardContent className="px-1 sm:px-6">
           {isMobile ? (
             <div className="grid grid-cols-1 gap-4 mt-2">
+              {/* Barra de búsqueda solo en móvil */}
+              <div className="flex items-center px-2 mb-2">
+                <div className="relative w-full">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar presupuesto..."
+                    className="pl-8 pr-4 h-9 w-full rounded-xl bg-white border border-slate-200"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
               {/* Versión móvil con tarjetas individuales en estilo Apple */}
               {displayQuotes.map((quote: Quote) => {
                 const client = clientsData.find((c: Client) => c.id === quote.clientId);
