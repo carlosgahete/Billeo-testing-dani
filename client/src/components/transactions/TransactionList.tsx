@@ -12,8 +12,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-// Añadimos hook para detección de dispositivo móvil
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { 
   Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, FileText,
   ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw,
@@ -151,6 +149,25 @@ const TransactionList = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedTransactions, setSelectedTransactions] = useState<Transaction[]>([]);
   const [isRepairing, setIsRepairing] = useState(false);
+  
+  // Estado para detectar dispositivos móviles
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Efecto para detectar si estamos en un dispositivo móvil
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Comprobación inicial
+    checkIfMobile();
+    
+    // Escuchar cambios de tamaño de ventana
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
   
   // Eliminar múltiples transacciones
   const handleDeleteSelectedTransactions = async (transactions: Transaction[]) => {
