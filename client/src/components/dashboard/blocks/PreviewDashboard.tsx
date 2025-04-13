@@ -73,11 +73,16 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({ userId }) => {
         </div>
       </div>
 
-      {/* Three summary blocks */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <IncomeSummary data={dashboardStats} isLoading={isLoading} />
-        <ExpensesSummary data={dashboardStats} isLoading={isLoading} />
-        <ResultSummary data={dashboardStats} isLoading={isLoading} />
+      {/* Tres bloques de resumen - en móvil: ingresos y gastos en fila, resultado abajo */}
+      <div className="space-y-4">
+        {/* Ingresos y gastos en la misma fila en móvil */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <IncomeSummary data={dashboardStats} isLoading={isLoading} />
+          <ExpensesSummary data={dashboardStats} isLoading={isLoading} />
+          <div className="col-span-2 md:col-span-1">
+            <ResultSummary data={dashboardStats} isLoading={isLoading} />
+          </div>
+        </div>
       </div>
 
       {/* Two blocks side by side */}

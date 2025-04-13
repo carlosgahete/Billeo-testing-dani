@@ -413,8 +413,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
+          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
         <div className="dashboard-card fade-in">
           <div className="p-6">
@@ -497,8 +498,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Resultado Final - Estilo Apple */}
-        <div className="dashboard-card fade-in">
+        {/* Widget de Resultado Final - Estilo Apple - Ocupa todo el ancho en móvil */}
+        <div className="dashboard-card fade-in col-span-2 lg:col-span-1">
           <div className="p-6">
             <div className="flex items-center mb-5">
               <div className="bg-[#E9F8FB] p-3 rounded-full mr-3">
