@@ -17,15 +17,15 @@ const BaseBlock: React.FC<BaseBlockProps> = ({
 }) => {
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm h-full flex flex-col bg-white">
-      {/* Cabecera fija con altura fija */}
-      <div className={`flex items-center p-3 ${bgColor} h-[56px]`}>
+      {/* Cabecera fija con altura fija - altura reducida en móvil */}
+      <div className={`flex items-center p-3 ${bgColor} md:h-[56px] h-[50px]`}>
         <div className={`mr-2 ${iconColor}`}>
           {icon}
         </div>
         <h3 className="text-lg font-medium">{title}</h3>
       </div>
-      {/* Contenido principal con altura elástica pero mínima */}
-      <div className="p-4 flex-1 flex flex-col">
+      {/* Contenido principal con altura elástica pero mínima - padding reducido en móvil */}
+      <div className="md:p-4 p-3 flex-1 flex flex-col">
         {children}
       </div>
     </div>

@@ -72,25 +72,35 @@ const ResultSummary: React.FC<ResultSummaryProps> = ({ data: propData, isLoading
       iconColor="text-green-600"
     >
       <div className="flex-1 flex flex-col justify-between h-full">
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
+          {/* Cabecera con título y resultado principal - versión móvil más compacta */}
           <div className="flex items-center justify-between">
             <span className="text-2xl font-semibold">
               {formatCurrency(result)}
             </span>
-            <span className="text-sm text-muted-foreground">
-              Resultado con IVA
+            {/* Enlace compacto en móvil */}
+            <span className="md:text-sm text-xs md:block flex items-center text-muted-foreground">
+              <span>Resultado con IVA</span>
+              <a 
+                href="/reports" 
+                className="md:hidden text-blue-600 text-xs ml-2 hover:text-blue-800"
+              >
+                Ver
+              </a>
             </span>
           </div>
           
+          {/* Base imponible - versión compacta en móvil */}
           <div className="px-2 py-1.5 bg-gray-50 rounded-md border">
             <span className="flex justify-between items-center text-sm mb-1">
               <span className="font-medium">Base imponible</span>
               <span className="font-semibold">{formatCurrency(resultadoBaseImponible)}</span>
             </span>
-            <p className="text-xs text-gray-500">Resultado calculado con los valores sin IVA</p>
+            <p className="text-xs text-gray-500 md:block hidden">Resultado calculado con los valores sin IVA</p>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
+          {/* Grid de IVA y IRPF - más compacto en móvil */}
+          <div className="grid grid-cols-2 gap-2 md:gap-3">
             <div className="flex flex-col p-2 border rounded-md">
               <div className="flex items-center mb-1">
                 <BarChart className="h-3 w-3 text-blue-500 mr-1" />
@@ -108,6 +118,7 @@ const ResultSummary: React.FC<ResultSummaryProps> = ({ data: propData, isLoading
             </div>
           </div>
           
+          {/* Resultado neto - igual en ambas versiones */}
           <div className="border-t pt-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Resultado neto (aprox.)</p>
@@ -116,7 +127,8 @@ const ResultSummary: React.FC<ResultSummaryProps> = ({ data: propData, isLoading
           </div>
         </div>
         
-        <div className="mt-3">
+        {/* Botón de acción - solo visible en desktop */}
+        <div className="mt-3 hidden md:block">
           <a 
             href="/reports" 
             className="text-blue-600 text-sm w-full border border-blue-600 rounded-md py-1.5 hover:bg-blue-50 transition flex items-center justify-center"
