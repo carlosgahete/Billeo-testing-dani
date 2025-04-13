@@ -372,7 +372,7 @@ export default function QuotesPage() {
       </div>
       
       {/* Botones móviles - Sin icono, optimizado para espacio */}
-      <div className="md:hidden -mt-8 mobile-quote-buttons-container">
+      <div className="md:hidden -mt-3 mobile-quote-buttons-container">
         <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
       </div>
 

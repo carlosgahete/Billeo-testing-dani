@@ -560,9 +560,9 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
           </div>
         </CardHeader>
         
-        <CardContent className="px-0 sm:px-6">
+        <CardContent className="px-1 sm:px-6">
           {isMobile ? (
-            <div className="space-y-3 mt-0 -mx-6 sm:-mx-3">
+            <div className="space-y-3 mt-2">
               {/* Versión móvil con tarjetas en estilo Apple */}
               {displayQuotes.map((quote: Quote) => {
                 const client = clientsData.find((c: Client) => c.id === quote.clientId);
@@ -597,37 +597,37 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
                 return (
                   <div 
                     key={quote.id} 
-                    className={`border ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm w-full`}
+                    className={`border ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm`}
                   >
                     {/* Cabecera de la tarjeta con gradiente sutil */}
-                    <div className="p-4 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
+                    <div className="p-3 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
                       <div className="font-medium text-gray-800 flex items-center">
-                        <span className="mr-2 text-base">{quote.quoteNumber}</span>
+                        <span className="mr-2">{quote.quoteNumber}</span>
                         <span 
-                          className="w-3 h-3 rounded-full" 
+                          className="w-2.5 h-2.5 rounded-full" 
                           style={{ backgroundColor: statusColor }}
                         ></span>
                       </div>
-                      <div className="text-base font-medium">{formatCurrency(quote.total)}</div>
+                      <div className="text-sm font-medium">{formatCurrency(quote.total)}</div>
                     </div>
                     
                     {/* Cuerpo de la tarjeta */}
-                    <div className="p-4 space-y-3">
+                    <div className="p-3 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 text-base">Cliente:</span>
-                        <span className="font-medium text-gray-800 text-base">{client?.name || "Cliente no encontrado"}</span>
+                        <span className="text-gray-500">Cliente:</span>
+                        <span className="font-medium text-gray-800">{client?.name || "Cliente no encontrado"}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 text-base">Fecha:</span>
-                        <span className="text-gray-700 text-base">{formatDate(quote.issueDate)}</span>
+                        <span className="text-gray-500">Fecha:</span>
+                        <span className="text-gray-700">{formatDate(quote.issueDate)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 text-base">Válido hasta:</span>
-                        <span className="text-gray-700 text-base">{formatDate(quote.validUntil)}</span>
+                        <span className="text-gray-500">Válido hasta:</span>
+                        <span className="text-gray-700">{formatDate(quote.validUntil)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 text-base">Estado:</span>
-                        <span className="text-base">{getStatusBadge(quote.status)}</span>
+                        <span className="text-gray-500">Estado:</span>
+                        <span>{getStatusBadge(quote.status)}</span>
                       </div>
                     </div>
                     
