@@ -19,10 +19,12 @@ const CreateInvoicePage = () => {
     );
   }
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   return (
     <div className="max-w-full p-4 md:p-6">
-      {/* Cabecera estilo Apple */}
-      <div className="w-full flex items-center justify-between mb-6">
+      {/* Cabecera estilo Apple - solo visible en escritorio */}
+      <div className={`w-full flex items-center justify-between mb-6 ${isMobile ? 'hidden' : ''}`}>
         <div className="flex items-center">
           <button 
             onClick={() => navigate("/invoices")}
@@ -42,6 +44,19 @@ const CreateInvoicePage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Botón de volver para móvil sin título */}
+      {isMobile && (
+        <div className="w-full flex mb-2">
+          <button 
+            onClick={() => navigate("/invoices")}
+            className="button-apple-secondary button-apple-sm flex items-center"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <span>Volver</span>
+          </button>
+        </div>
+      )}
       
       <InvoiceForm />
     </div>

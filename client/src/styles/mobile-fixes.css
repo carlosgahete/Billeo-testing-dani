@@ -64,6 +64,16 @@
     padding: 0 !important;
   }
   
+  /* Ocultar encabezados en la pantalla de crear factura */
+  .max-w-full.p-4.md\\:p-6 h1.text-xl.font-semibold.text-gray-800,
+  .max-w-full.p-4.md\\:p-6 p.text-gray-500.text-sm.mt-1 {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
   /* Eliminar margen superior al contenedor principal */
   body .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full {
     margin-top: 0 !important;
