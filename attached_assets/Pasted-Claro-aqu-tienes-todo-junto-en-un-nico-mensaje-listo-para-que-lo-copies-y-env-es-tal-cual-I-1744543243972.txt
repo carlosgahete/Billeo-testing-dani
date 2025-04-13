@@ -1,0 +1,41 @@
+Claro, aquí tienes todo junto en un único mensaje, listo para que lo copies y envíes tal cual:
+
+⸻
+
+Instrucciones para corregir el problema de doble scroll en móvil:
+	1.	Aplicar los cambios solo en versión móvil:
+
+@media (max-width: 768px) {
+  /* Selecciona el contenedor que actualmente tiene overflow */
+  .contenedor-scroll {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+	•	Cambiar .contenedor-scroll por la clase real del contenedor que actualmente genera el scroll interno.
+	•	El !important es necesario para asegurarse de que sobrescriba cualquier estilo anterior que fuerce el scroll o limite la altura.
+	•	overflow: visible permitirá que el contenido se expanda de forma natural.
+	•	height: auto eliminará cualquier altura fija que esté causando scroll innecesario.
+
+	2.	Objetivo:
+
+	•	Eliminar cualquier scroll interno en contenedores dentro de la vista móvil.
+	•	Dejar todo el contenido en un solo scroll general (el de la página completa).
+	•	Mejorar la experiencia de usuario en móviles, evitando confusiones y haciendo la navegación más fluida.
+
+	3.	Motivo del cambio:
+
+En dispositivos móviles, tener contenedores con overflow: scroll o overflow: auto genera un doble scroll, lo que da una mala experiencia de usuario. Para mejorar la navegación, todo el contenido debe fluir en un solo scroll general de la página. Por eso, en móvil eliminamos el overflow y dejamos que el contenido crezca libremente.
+
+	4.	Checklist para validar que el cambio está bien aplicado:
+
+	•	No debe haber ningún contenedor interno que haga scroll propio en móvil.
+	•	Solo debe existir el scroll principal de la página.
+	•	Las tarjetas o bloques de contenido deben visualizarse correctamente, adaptándose al ancho del móvil.
+	•	El desplazamiento debe ser suave y continuo de arriba hacia abajo, sin cortes ni zonas atrapadas.
+
+⸻
+
+¿Te lo preparo también como un pequeño documento si quieres enviarlo como archivo?
+(Dime y te lo paso en Word, PDF o Markdown si quieres hacerlo aún más formal).

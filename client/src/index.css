@@ -458,6 +458,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply text-gray-100;
 }
 
+/* Importar ajustes para móviles */
+@import './styles/mobile-fixes.css';
+
 /* Personalizaciones para tablas responsivas */
 .responsive-table {
   @apply w-full overflow-x-auto;

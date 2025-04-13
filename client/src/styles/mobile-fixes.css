@@ -1,0 +1,21 @@
+/* Corrige el problema de doble scroll en móviles eliminando scrolls internos */
+@media (max-width: 768px) {
+  /* Aplicar a elementos con scroll interno en el dashboard */
+  .max-h-40,
+  .max-h-\[280px\],
+  .h-\[280px\],
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Específicos para componentes con scrolls identificados */
+  .custom-scrollbar {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
