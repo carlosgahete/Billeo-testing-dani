@@ -799,8 +799,8 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
             </MobileAccordionItem>
           </MobileAccordion>
 
-          {/* MobileAccordion para información adicional */}
-          <MobileAccordion type="single" defaultValue="additional-info" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+          {/* MobileAccordion para información adicional - inicialmente cerrado */}
+          <MobileAccordion type="single" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
             <MobileAccordionItem value="additional-info">
               <MobileAccordionTrigger 
                 title="Información adicional" 
@@ -926,8 +926,8 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
             </MobileAccordionItem>
           </MobileAccordion>
 
-          {/* MobileAccordion para detalles de la factura */}
-          <MobileAccordion type="single" defaultValue="invoice-details" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+          {/* MobileAccordion para detalles de la factura - inicialmente cerrado */}
+          <MobileAccordion type="single" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
             <MobileAccordionItem value="invoice-details">
               <MobileAccordionTrigger 
                 title="Detalles de la factura" 
