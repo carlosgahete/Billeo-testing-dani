@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus } from "lucide-react";
+import { ChevronLeft, ArrowLeft, Trash2, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
   // Estado para datos básicos de la factura
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [status, setStatus] = useState("pending");
-  const [selectedClientId, setSelectedClientId] = useState<number | string>("");
+  const [selectedClientId, setSelectedClientId] = useState<number>(0);
   const [subtotal, setSubtotal] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
   const [additionalTaxes, setAdditionalTaxes] = useState<any[]>([]);
@@ -37,9 +37,10 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
   // Actualizar estado cuando lleguen los datos iniciales
   useEffect(() => {
     if (initialData?.invoice) {
+      console.log("Cargando datos iniciales:", initialData.invoice);
       setInvoiceNumber(initialData.invoice.invoiceNumber || "");
       setStatus(initialData.invoice.status || "pending");
-      setSelectedClientId(initialData.invoice.clientId || "");
+      setSelectedClientId(initialData.invoice.clientId || 0);
       setSubtotal(parseFloat(String(initialData.invoice.subtotal || 0)));
       setTax(parseFloat(String(initialData.invoice.tax || 0)));
       
@@ -142,22 +143,13 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedClientId) {
-      toast({
-        title: "Error",
-        description: "Debes seleccionar un cliente",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     // Crear objeto de factura con los datos actualizados
     const total = calculateTotal();
     
     const invoiceData = {
       invoiceNumber,
       status,
-      clientId: Number(selectedClientId),
+      clientId: selectedClientId,
       issueDate: initialData?.invoice?.issueDate || new Date().toISOString().split("T")[0],
       dueDate: initialData?.invoice?.dueDate || new Date().toISOString().split("T")[0],
       subtotal: subtotal,
@@ -174,6 +166,7 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
       }]
     };
     
+    console.log("Enviando datos:", invoiceData);
     updateMutation.mutate(invoiceData);
   };
   
@@ -185,27 +178,27 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
           <span className="text-blue-500 ml-2">Simple</span>
         </h2>
         
+        {/* Selector de cliente */}
+        <div className="form-group mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Cliente
+          </label>
+          <select
+            className="w-full p-2 border rounded"
+            value={selectedClientId || ""}
+            onChange={(e) => setSelectedClientId(Number(e.target.value))}
+            required
+          >
+            <option value="">Seleccionar cliente</option>
+            {clients.map((client: any) => (
+              <option key={client.id} value={client.id}>
+                {client.name} {client.taxId ? `(${client.taxId})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Selector de cliente */}
-          <div className="form-group mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Cliente
-            </label>
-            <select
-              className="w-full p-2 border rounded"
-              value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
-              required
-            >
-              <option value="">Seleccionar cliente</option>
-              {clients.map((client: any) => (
-                <option key={client.id} value={client.id}>
-                  {client.name} {client.taxId ? `(${client.taxId})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-          
           <div className="form-group">
             <label className="block text-sm font-medium mb-1">
               Número de factura
