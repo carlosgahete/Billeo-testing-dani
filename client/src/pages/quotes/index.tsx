@@ -370,6 +370,11 @@ export default function QuotesPage() {
           </div>
         </div>
       </div>
+      
+      {/* Botones para móvil */}
+      <div className="md:hidden -mt-2 mb-2">
+        <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
+      </div>
 
       {/* Dashboard de presupuestos con estilo Apple */}
       <div className="mb-8 fade-in">
@@ -592,10 +597,7 @@ export default function QuotesPage() {
         </div>
       </div>
 
-      {/* Los botones de acción para móvil ahora están en el componente MobileQuoteButtons */}
-
-      {/* Importamos y usamos los botones para móvil */}
-      {isMobile && <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />}
+      {/* Eliminar duplicado de botones */}
 
       {/* Lista de presupuestos - Estilo Apple */}
       <div className="mt-4 fade-in">
