@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { generateInvoicePDFAsBase64 } from "@/lib/pdf";
+import { useIsMobile } from "@/hooks/use-mobile";
 import billeoLogo from '../../assets/billeo-logo.png';
 import {
   Dialog,
@@ -78,17 +79,25 @@ interface InvoiceItem {
 export function SendInvoiceEmailDialog({ 
   invoice, 
   client, 
-  company
+  company,
+  trigger
 }: { 
   invoice: Invoice; 
-  client: Client;
-  company: Company | null;
+  client: Client | null | undefined;
+  company: Company | null | undefined;
+  trigger?: React.ReactNode;
 }) {
+  // Asegurarse de que tenemos un cliente válido
+  if (!client) {
+    console.error("SendInvoiceEmailDialog: No se proporcionó un cliente válido");
+    return null;
+  }
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(client?.email || "");
   const [ccEmail, setCcEmail] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const isMobile = useIsMobile();
 
   // Cargar los items de la factura cuando se abre el diálogo
   const { data: invoiceItems, isLoading: isLoadingItems } = useQuery<any[]>({
@@ -160,91 +169,131 @@ export function SendInvoiceEmailDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-blue-600 hover:bg-blue-50"
-                onClick={handleButtonClick}
-              >
-                <Mail className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Enviar por email</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {trigger ? (
+          trigger
+        ) : (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-blue-600 hover:bg-blue-50"
+                  onClick={handleButtonClick}
+                >
+                  <Mail className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Enviar por email</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Enviar factura por email</DialogTitle>
-          <DialogDescription>
-            Envía la factura {invoice.invoiceNumber} por correo electrónico al cliente.
-          </DialogDescription>
+      <DialogContent className={isMobile ? "w-[95%] p-4 max-h-[90vh]" : "sm:max-w-md"}>
+        <DialogHeader className={isMobile ? "mb-2" : ""}>
+          <DialogTitle className={isMobile ? "text-base" : ""}>
+            {isMobile ? `Enviar por email #${invoice.invoiceNumber}` : "Enviar factura por email"}
+          </DialogTitle>
+          {!isMobile && (
+            <DialogDescription>
+              Envía la factura {invoice.invoiceNumber} por correo electrónico al cliente.
+            </DialogDescription>
+          )}
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="recipient" className="text-right">
-              Para
-            </Label>
+        <div className={`grid gap-${isMobile ? '2' : '4'} py-${isMobile ? '2' : '4'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-4'} items-center gap-2`}>
+            {isMobile ? (
+              <Label htmlFor="recipient" className="text-sm text-gray-600 mb-1">Para</Label>
+            ) : (
+              <Label htmlFor="recipient" className="text-right">Para</Label>
+            )}
             <Input
               id="recipient"
               value={recipientEmail}
               onChange={(e) => setRecipientEmail(e.target.value)}
               placeholder="ejemplo@correo.com"
-              className="col-span-3"
+              className={isMobile ? "" : "col-span-3"}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="cc" className="text-right">
-              CC
-            </Label>
-            <Input
-              id="cc"
-              value={ccEmail}
-              onChange={(e) => setCcEmail(e.target.value)}
-              placeholder="opcional@correo.com"
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <div className="col-span-4 text-sm text-muted-foreground">
-              <p>El mensaje incluirá:</p>
-              <ul className="list-disc pl-5 mt-1">
-                <li>Un saludo personalizado al cliente</li>
-                <li>La factura {invoice.invoiceNumber} adjunta en PDF</li>
-                <li>Los datos de contacto de tu empresa</li>
-              </ul>
+          {!isMobile && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="cc" className="text-right">CC</Label>
+              <Input
+                id="cc"
+                value={ccEmail}
+                onChange={(e) => setCcEmail(e.target.value)}
+                placeholder="opcional@correo.com"
+                className="col-span-3"
+              />
             </div>
-          </div>
+          )}
+          {!isMobile && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <div className="col-span-4 text-sm text-muted-foreground">
+                <p>El mensaje incluirá:</p>
+                <ul className="list-disc pl-5 mt-1">
+                  <li>Un saludo personalizado al cliente</li>
+                  <li>La factura {invoice.invoiceNumber} adjunta en PDF</li>
+                  <li>Los datos de contacto de tu empresa</li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancelar
-          </Button>
+        <DialogFooter className={isMobile ? "flex-col space-y-2 pt-2" : ""}>
+          {isMobile && (
+            <Button 
+              type="submit" 
+              onClick={handleSendEmail}
+              disabled={isPending || isLoadingItems}
+              className="w-full"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : isLoadingItems ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Preparando...
+                </>
+              ) : (
+                "Enviar factura"
+              )}
+            </Button>
+          )}
           <Button 
-            type="submit" 
-            onClick={handleSendEmail}
-            disabled={isPending || isLoadingItems}
-            className="min-w-[120px]"
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+            className={isMobile ? "w-full" : ""}
           >
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Enviando...
-              </>
-            ) : isLoadingItems ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Preparando...
-              </>
-            ) : (
-              "Enviar factura"
-            )}
+            {isMobile ? "Cancelar" : "Cancelar"}
           </Button>
+          {!isMobile && (
+            <Button 
+              type="submit" 
+              onClick={handleSendEmail}
+              disabled={isPending || isLoadingItems}
+              className="min-w-[120px]"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : isLoadingItems ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Preparando...
+                </>
+              ) : (
+                "Enviar factura"
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
