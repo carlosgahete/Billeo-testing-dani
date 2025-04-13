@@ -64,6 +64,7 @@ const DocumentScanPage = () => {
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
   const [showEditMode, setShowEditMode] = useState(false);
+  const [isSecondStep, setIsSecondStep] = useState(false);
   
   // Consulta para obtener categorías
   const { data: categories = [] } = useQuery<Category[]>({
@@ -151,6 +152,7 @@ const DocumentScanPage = () => {
       
       // Ir directamente a edición sin mostrar el diálogo de confirmación
       setShowEditMode(true);
+      setIsSecondStep(true);
       
       toast({
         title: "Documento procesado",
@@ -181,6 +183,8 @@ const DocumentScanPage = () => {
     setExtractedData(null);
     setTransaction(null);
     setDocumentImage(null);
+    setShowEditMode(false);
+    setIsSecondStep(false);
     
     // Función de limpieza cuando se desmonta el componente
     return () => {
