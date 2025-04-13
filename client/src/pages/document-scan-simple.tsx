@@ -312,24 +312,32 @@ const DocumentScanPage = () => {
         </Button>
       </div>
       
-      {/* Contenedor principal exactamente en el centro de la pantalla */}
+      {/* Contenedor principal exactamente en el centro de la pantalla - estilo Apple mejorado */}
       <div 
-        className="w-full max-w-[370px] px-4 text-center"
+        className="w-full max-w-[400px] px-4 text-center"
         style={{
           position: "absolute",
           top: "50%",
           left: "50%",
-          transform: "translate(-50%, -60%)"
+          transform: "translate(-50%, -60%)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          background: "rgba(255, 255, 255, 0.7)"
         }}
       >
         {/* Título con estilo Apple auténtico */}
-        <div className="mb-6">
-          <h1 className="text-[28px] font-semibold text-gray-900 mb-1" style={{ 
+        <div className="mb-8">
+          <h1 className="text-[30px] font-bold text-gray-900 mb-1" style={{ 
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
-            letterSpacing: "-0.02em"
+            letterSpacing: "-0.025em",
+            background: "linear-gradient(to right, #1E293B, #334155)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            textShadow: "0 1px 2px rgba(0, 0, 0, 0.02)"
           }}>Escanear Factura</h1>
-          <p className="text-[15px] text-gray-500 font-normal" style={{ 
+          <p className="text-[16px] text-gray-500 font-normal" style={{ 
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+            letterSpacing: "-0.01em"
           }}>Sube una imagen o PDF de tu factura</p>
         </div>
         
@@ -357,12 +365,13 @@ const DocumentScanPage = () => {
           <div className="w-full">
             {/* Zona de arrastrar y soltar moderno y limpio */}
             <div 
-              className="w-full rounded-[20px] py-12 px-6 text-center cursor-pointer"
+              className="w-full rounded-[24px] py-14 px-6 text-center cursor-pointer"
               style={{
-                background: "linear-gradient(to bottom, rgba(249, 250, 255, 0.8), rgba(240, 242, 245, 0.8))",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)",
-                border: "1px solid rgba(209, 213, 219, 0.3)",
-                backdropFilter: "blur(6px)"
+                background: "linear-gradient(to bottom, rgba(255, 255, 255, 0.85), rgba(246, 246, 248, 0.85))",
+                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08), inset 0 0 0 0.5px rgba(255, 255, 255, 0.5)",
+                border: "1px solid rgba(209, 213, 219, 0.4)",
+                backdropFilter: "blur(30px)",
+                WebkitBackdropFilter: "blur(30px)"
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
@@ -371,21 +380,25 @@ const DocumentScanPage = () => {
               {/* Icono con diseño Apple auténtico - centrado */}
               <div className="flex items-center justify-center w-full mb-2">
                 <div 
-                  className="h-[70px] w-[70px] rounded-full flex items-center justify-center"
+                  className="h-[80px] w-[80px] rounded-full flex items-center justify-center transform transition-transform hover:scale-105 active:scale-95"
                   style={{
-                    background: "linear-gradient(135deg, #0A84FF 0%, #007AFF 100%)",
-                    boxShadow: "0 6px 12px rgba(10, 132, 255, 0.15)"
+                    background: "linear-gradient(135deg, #0A84FF 0%, #0077ED 100%)",
+                    boxShadow: "0 8px 16px rgba(10, 132, 255, 0.2), inset 0 -2px 0 rgba(0, 0, 0, 0.1), inset 0 2px 0 rgba(255, 255, 255, 0.1)",
+                    border: "1px solid rgba(0, 122, 255, 0.8)"
                   }}
                 >
-                  <Upload className="h-9 w-9 text-white" />
+                  <Upload className="h-10 w-10 text-white" />
                 </div>
               </div>
               
               <p 
-                className="text-[17px] font-medium text-gray-800 mt-5" 
+                className="text-[18px] font-medium text-gray-800 mt-5" 
                 style={{ 
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                  letterSpacing: "-0.01em"
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+                  letterSpacing: "-0.02em",
+                  background: "linear-gradient(to bottom, #1A1A1A, #4A4A4A)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent"
                 }}
               >
                 <span className="hidden sm:inline">Arrastra y suelta o selecciona un archivo</span>
@@ -441,10 +454,15 @@ const DocumentScanPage = () => {
                 </Button>
               </div>
               
-              <div className="inline-flex items-center justify-center bg-gray-100/60 rounded-full px-3 py-1 mt-4">
-                <p className="text-gray-500 text-sm"
+              <div className="inline-flex items-center justify-center bg-[#F2F2F7]/80 rounded-full px-4 py-1.5 mt-5" style={{
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                  boxShadow: "inset 0 0 0 0.5px rgba(0, 0, 0, 0.08)"
+                }}>
+                <p className="text-gray-500 text-sm font-medium"
                   style={{ 
                     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                    letterSpacing: "-0.01em"
                   }}
                 >
                   JPG, PNG, PDF
@@ -483,21 +501,38 @@ const DocumentScanPage = () => {
               <Button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className={`relative py-3 px-8 text-[15px] font-medium w-full transition-all duration-200 
+                className={`relative py-4 px-8 text-[16px] font-medium w-full transition-all duration-300 
                   ${uploading || !file 
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                     : "text-white"
                   }`}
                 style={{
-                  borderRadius: "12px",
+                  borderRadius: "14px",
                   background: !file || uploading ? 
                     "linear-gradient(to bottom, #f8f8fa, #f2f2f4)" : 
-                    "linear-gradient(to bottom, #0A84FF, #0074E4)",
+                    "linear-gradient(135deg, #0A84FF 0%, #0062CC 100%)",
                   boxShadow: !file || uploading ? 
                     "none" : 
-                    "0 2px 8px rgba(10, 132, 255, 0.25)",
+                    "0 4px 12px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                  letterSpacing: "-0.01em"
+                  letterSpacing: "-0.01em",
+                  border: !file || uploading ?
+                    "1px solid #e5e7eb" :
+                    "none",
+                  transform: "translateY(0)",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseOver={(e) => {
+                  if (file && !uploading) {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(10, 132, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (file && !uploading) {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+                  }
                 }}
                 variant="ghost"
               >
