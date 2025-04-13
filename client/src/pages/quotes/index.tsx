@@ -353,274 +353,270 @@ export default function QuotesPage() {
   return (
     <Layout>
       <div className="quotes-page-container">
-      {/* Cabecera estilo Apple - Solo escritorio */}
-      <div className="section-header fade-in mb-3 -mt-3 pt-0 hidden md:flex items-center">
-        <div className="flex items-center ml-8 md:ml-4">
-          <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 -mt-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
-          </div>
-          <div className="-mt-2">
-            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5">Presupuestos</h2>
-            <p className="text-sm text-gray-500 mt-0 leading-tight">Gestiona tus propuestas comerciales</p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Botones móviles - Sin icono, optimizado para espacio */}
-      <div className="md:hidden mt-1 mobile-quote-buttons-container">
-        <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
-      </div>
-
-      {/* Dashboard de presupuestos con estilo Apple - Oculto en móvil */}
-      <div className="mb-8 fade-in hidden md:block">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          {/* Tarjeta 1: Resumen de presupuestos - Estilo Apple */}
-          <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[430px]">
-              <div className="flex items-center mb-5">
-                <div className="bg-[#F0F1FF] p-3 rounded-full mr-3">
-                  <FileText className="h-5 w-5 text-[#5856D6]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Resumen</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">Estado de presupuestos</p>
-                </div>
-              </div>
-              
-              <div className="mb-5">
-                <div className="text-3xl font-medium text-[#5856D6] pt-3">
-                  {totalQuotes}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Presupuestos totales
-                </div>
-              </div>
-              
-              <div className="space-y-2 p-4 bg-[#F8F8FC] rounded-xl border border-[#EEEEFF]">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <span className="w-2.5 h-2.5 bg-gray-300 rounded-full mr-2"></span>
-                    Borradores
-                  </span>
-                  <span className="font-medium text-gray-800">{draftQuotes}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <span className="w-2.5 h-2.5 bg-blue-400 rounded-full mr-2"></span>
-                    Enviados
-                  </span>
-                  <span className="font-medium text-gray-800">{sentQuotes}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <span className="w-2.5 h-2.5 bg-green-400 rounded-full mr-2"></span>
-                    Aceptados
-                  </span>
-                  <span className="font-medium text-gray-800">{acceptedQuotes}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <span className="w-2.5 h-2.5 bg-red-400 rounded-full mr-2"></span>
-                    Rechazados
-                  </span>
-                  <span className="font-medium text-gray-800">{rejectedQuotes}</span>
-                </div>
-              </div>
-              
-              <div className="mt-auto">
-                <button
-                  className="h-10 rounded-full bg-[#5856D6] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#4645ab] transition-colors"
-                  onClick={generateQuotesSummaryPDF}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Descargar resumen
-                </button>
-              </div>
+        {/* Cabecera estilo Apple - Solo escritorio */}
+        <div className="section-header fade-in mb-3 -mt-3 pt-0 hidden md:flex items-center">
+          <div className="flex items-center ml-8 md:ml-4">
+            <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 -mt-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
             </div>
-          </div>
-          
-          {/* Tarjeta 2: Valor económico - Estilo Apple */}
-          <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[430px]">
-              <div className="flex items-center mb-5">
-                <div className="bg-[#E8F5EE] p-3 rounded-full mr-3">
-                  <Banknote className="h-5 w-5 text-[#34C759]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Valor económico</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">Importe total presupuestado</p>
-                </div>
-              </div>
-              
-              <div className="mb-5">
-                <div className="text-3xl font-medium text-[#34C759] pt-3">
-                  {formatCurrency(totalValue)}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Valor total de presupuestos
-                </div>
-              </div>
-              
-              <div className="space-y-3 p-4 bg-[#F7FFF9] rounded-xl border border-[#E3FFE9]">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Presupuestos aceptados:</span>
-                  <span className="font-medium text-gray-800">{formatCurrency(acceptedValue)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Pendientes de aceptar:</span>
-                  <span className="font-medium text-gray-800">{formatCurrency(totalValue - acceptedValue)}</span>
-                </div>
-              </div>
-              
-              <div className="mt-auto">
-                <button
-                  className="h-10 rounded-full bg-[#34C759] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#2baa4e] transition-colors"
-                  onClick={() => navigate("/quotes/create")}
-                >
-                  <FilePlus className="h-4 w-4 mr-2" />
-                  Crear nuevo presupuesto
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Tarjeta 3: Tasa de conversión - Estilo Apple */}
-          <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[430px]">
-              <div className="flex items-center mb-5">
-                <div className="bg-[#EEF6FF] p-3 rounded-full mr-3">
-                  <BarChart3 className="h-5 w-5 text-[#007AFF]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Tasa de conversión</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">Efectividad de presupuestos</p>
-                </div>
-              </div>
-              
-              <div className="mb-5">
-                <div className="text-3xl font-medium text-[#007AFF] pt-3">
-                  {conversionRate}%
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Tasa de aceptación
-                </div>
-              </div>
-              
-              <div className="space-y-3 p-4 bg-[#F5F9FF] rounded-xl border border-[#E0EDFF]">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Presupuestos enviados:</span>
-                  <span className="font-medium text-gray-800">{sentQuotes + acceptedQuotes + rejectedQuotes}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Presupuestos aceptados:</span>
-                  <span className="font-medium text-gray-800">{acceptedQuotes}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Clientes activos:</span>
-                  <span className="font-medium text-gray-800">{clients.length}</span>
-                </div>
-              </div>
-              
-              <div className="mt-auto">
-                <button
-                  className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
-                  onClick={() => {
-                    const newFilter = filter === "accepted" ? null : "accepted";
-                    setFilter(newFilter);
-                  }}
-                >
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  {filter === "accepted" ? "Ver todos" : "Ver aceptados"}
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Tarjeta 4: Presupuestos pendientes - Estilo Apple */}
-          <div className="dashboard-card fade-in scale-in">
-            <div className="p-6 flex flex-col h-[430px]">
-              <div className="flex items-center mb-5">
-                <div className="bg-[#FFF8E7] p-3 rounded-full mr-3">
-                  <FileClock className="h-5 w-5 text-[#FF9500]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Pendientes</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">Requieren seguimiento</p>
-                </div>
-              </div>
-              
-              <div className="mb-5">
-                <div className="text-3xl font-medium text-[#FF9500] pt-3">
-                  {draftQuotes + sentQuotes}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Presupuestos pendientes
-                </div>
-              </div>
-              
-              <div className="space-y-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#FFEECA]">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <span className="w-2.5 h-2.5 bg-neutral-300 rounded-full mr-2"></span>
-                    Por enviar
-                  </span>
-                  <span className="font-medium text-gray-800">{draftQuotes}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <span className="w-2.5 h-2.5 bg-blue-400 rounded-full mr-2"></span>
-                    Esperando respuesta
-                  </span>
-                  <span className="font-medium text-gray-800">{sentQuotes}</span>
-                </div>
-              </div>
-              
-              <div className="mt-auto">
-                <button
-                  className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
-                  onClick={() => {
-                    const newFilter = filter === "pending" ? null : "pending";
-                    setFilter(newFilter);
-                  }}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {filter === "pending" ? "Ver todos" : "Ver pendientes"}
-                </button>
-              </div>
+            <div className="-mt-2">
+              <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5">Presupuestos</h2>
+              <p className="text-sm text-gray-500 mt-0 leading-tight">Gestiona tus propuestas comerciales</p>
             </div>
           </div>
         </div>
-      </div>
+        
+        {/* Botones móviles - Sin icono, optimizado para espacio */}
+        <div className="md:hidden mt-1 mobile-quote-buttons-container">
+          <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
+        </div>
 
-      {/* Eliminar duplicado de botones */}
-
-      {/* Lista de presupuestos - Estilo Apple */}
-      <div className="mt-1 fade-in">
-        <div className="glass-panel rounded-xl md:rounded-3xl border border-gray-200/50 scale-in mb-2 md:mb-8">
-          <div className="p-2 md:p-6">
-            {/* Título de la sección - Oculto en móvil */}
-            <div className="hidden md:flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="bg-[#F3F3F3] p-2.5 rounded-full mr-3">
-                  <FileText className="h-5 w-5 text-[#5856D6]" />
+        {/* Dashboard de presupuestos con estilo Apple - Oculto en móvil */}
+        <div className="mb-8 fade-in hidden md:block">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            {/* Tarjeta 1: Resumen de presupuestos */}
+            <div className="dashboard-card fade-in scale-in">
+              <div className="p-6 flex flex-col h-[430px]">
+                <div className="flex items-center mb-5">
+                  <div className="bg-[#F0F1FF] p-3 rounded-full mr-3">
+                    <FileText className="h-5 w-5 text-[#5856D6]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Resumen</h3>
+                    <p className="text-sm text-gray-500 mt-0.5">Estado de presupuestos</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
+                
+                <div className="mb-5">
+                  <div className="text-3xl font-medium text-[#5856D6] pt-3">
+                    {totalQuotes}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Presupuestos totales
+                  </div>
+                </div>
+                
+                <div className="space-y-2 p-4 bg-[#F8F8FC] rounded-xl border border-[#EEEEFF]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2.5 h-2.5 bg-gray-300 rounded-full mr-2"></span>
+                      Borradores
+                    </span>
+                    <span className="font-medium text-gray-800">{draftQuotes}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2.5 h-2.5 bg-blue-400 rounded-full mr-2"></span>
+                      Enviados
+                    </span>
+                    <span className="font-medium text-gray-800">{sentQuotes}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2.5 h-2.5 bg-green-400 rounded-full mr-2"></span>
+                      Aceptados
+                    </span>
+                    <span className="font-medium text-gray-800">{acceptedQuotes}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2.5 h-2.5 bg-red-400 rounded-full mr-2"></span>
+                      Rechazados
+                    </span>
+                    <span className="font-medium text-gray-800">{rejectedQuotes}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-auto">
+                  <button
+                    className="h-10 rounded-full bg-[#5856D6] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#4645ab] transition-colors"
+                    onClick={generateQuotesSummaryPDF}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Descargar resumen
+                  </button>
+                </div>
               </div>
             </div>
             
-            {/* Título móvil - Eliminado para que coincida con el diseño de referencia */}
+            {/* Tarjeta 2: Valor económico */}
+            <div className="dashboard-card fade-in scale-in">
+              <div className="p-6 flex flex-col h-[430px]">
+                <div className="flex items-center mb-5">
+                  <div className="bg-[#E8F5EE] p-3 rounded-full mr-3">
+                    <Banknote className="h-5 w-5 text-[#34C759]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Valor económico</h3>
+                    <p className="text-sm text-gray-500 mt-0.5">Importe total presupuestado</p>
+                  </div>
+                </div>
+                
+                <div className="mb-5">
+                  <div className="text-3xl font-medium text-[#34C759] pt-3">
+                    {formatCurrency(totalValue)}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Valor total de presupuestos
+                  </div>
+                </div>
+                
+                <div className="space-y-3 p-4 bg-[#F7FFF9] rounded-xl border border-[#E3FFE9]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Presupuestos aceptados:</span>
+                    <span className="font-medium text-gray-800">{formatCurrency(acceptedValue)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Pendientes de aceptar:</span>
+                    <span className="font-medium text-gray-800">{formatCurrency(totalValue - acceptedValue)}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-auto">
+                  <button
+                    className="h-10 rounded-full bg-[#34C759] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#2baa4e] transition-colors"
+                    onClick={() => navigate("/quotes/create")}
+                  >
+                    <FilePlus className="h-4 w-4 mr-2" />
+                    Crear nuevo presupuesto
+                  </button>
+                </div>
+              </div>
+            </div>
             
-            {/* Filtramos las citas según el filtro seleccionado */}
-            <QuoteList userId={user.id} showActions={true} filter={filter} />
+            {/* Tarjeta 3: Tasa de conversión */}
+            <div className="dashboard-card fade-in scale-in">
+              <div className="p-6 flex flex-col h-[430px]">
+                <div className="flex items-center mb-5">
+                  <div className="bg-[#EEF6FF] p-3 rounded-full mr-3">
+                    <BarChart3 className="h-5 w-5 text-[#007AFF]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Tasa de conversión</h3>
+                    <p className="text-sm text-gray-500 mt-0.5">Efectividad de presupuestos</p>
+                  </div>
+                </div>
+                
+                <div className="mb-5">
+                  <div className="text-3xl font-medium text-[#007AFF] pt-3">
+                    {conversionRate}%
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Tasa de aceptación
+                  </div>
+                </div>
+                
+                <div className="space-y-3 p-4 bg-[#F5F9FF] rounded-xl border border-[#E0EDFF]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Presupuestos enviados:</span>
+                    <span className="font-medium text-gray-800">{sentQuotes + acceptedQuotes + rejectedQuotes}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Presupuestos aceptados:</span>
+                    <span className="font-medium text-gray-800">{acceptedQuotes}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Clientes activos:</span>
+                    <span className="font-medium text-gray-800">{clients.length}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-auto">
+                  <button
+                    className="h-10 rounded-full bg-[#007AFF] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#0062cc] transition-colors"
+                    onClick={() => {
+                      const newFilter = filter === "accepted" ? null : "accepted";
+                      setFilter(newFilter);
+                    }}
+                  >
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    {filter === "accepted" ? "Ver todos" : "Ver aceptados"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Tarjeta 4: Presupuestos pendientes */}
+            <div className="dashboard-card fade-in scale-in">
+              <div className="p-6 flex flex-col h-[430px]">
+                <div className="flex items-center mb-5">
+                  <div className="bg-[#FFF8E7] p-3 rounded-full mr-3">
+                    <FileClock className="h-5 w-5 text-[#FF9500]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-0 leading-tight">Pendientes</h3>
+                    <p className="text-sm text-gray-500 mt-0.5">Requieren seguimiento</p>
+                  </div>
+                </div>
+                
+                <div className="mb-5">
+                  <div className="text-3xl font-medium text-[#FF9500] pt-3">
+                    {draftQuotes + sentQuotes}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Presupuestos pendientes
+                  </div>
+                </div>
+                
+                <div className="space-y-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#FFEECA]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2.5 h-2.5 bg-neutral-300 rounded-full mr-2"></span>
+                      Por enviar
+                    </span>
+                    <span className="font-medium text-gray-800">{draftQuotes}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2.5 h-2.5 bg-blue-400 rounded-full mr-2"></span>
+                      Esperando respuesta
+                    </span>
+                    <span className="font-medium text-gray-800">{sentQuotes}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-auto">
+                  <button
+                    className="h-10 rounded-full bg-[#FF9500] text-white flex items-center justify-center font-medium px-4 w-full hover:bg-[#cc7800] transition-colors"
+                    onClick={() => {
+                      const newFilter = filter === "pending" ? null : "pending";
+                      setFilter(newFilter);
+                    }}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {filter === "pending" ? "Ver todos" : "Ver pendientes"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Lista de presupuestos - Estilo Apple */}
+        <div className="mt-1 fade-in">
+          <div className="glass-panel rounded-xl md:rounded-3xl border border-gray-200/50 scale-in mb-2 md:mb-8">
+            <div className="p-2 md:p-6">
+              {/* Título de la sección - Oculto en móvil */}
+              <div className="hidden md:flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="bg-[#F3F3F3] p-2.5 rounded-full mr-3">
+                    <FileText className="h-5 w-5 text-[#5856D6]" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-800">Listado de presupuestos</h3>
+                </div>
+              </div>
+              
+              {/* Filtramos las citas según el filtro seleccionado */}
+              <QuoteList userId={user.id} showActions={true} filter={filter} />
+            </div>
+          </div>
+        </div>
       </div>
     </Layout>
   );
