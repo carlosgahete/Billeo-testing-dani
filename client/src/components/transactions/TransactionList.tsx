@@ -150,6 +150,10 @@ const TransactionList = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedTransactions, setSelectedTransactions] = useState<Transaction[]>([]);
   const [isRepairing, setIsRepairing] = useState(false);
+  const [showExpenseFilters, setShowExpenseFilters] = useState(false);
+  const [showIncomeFilters, setShowIncomeFilters] = useState(false);
+  const [expenseFiltersApplied, setExpenseFiltersApplied] = useState(false);
+  const [incomeFiltersApplied, setIncomeFiltersApplied] = useState(false);
   
   // Detectar dispositivos móviles de forma directa
   const [isMobile, setIsMobile] = useState(false);
@@ -1061,25 +1065,31 @@ const TransactionList = () => {
           </Tabs>
         </div>
         <div className="px-5 sm:pb-5 pb-3">
-          {/* Mostrar filtros de gastos cuando estamos en la pestaña de gastos */}
-          {currentTab === "expense" && transactions && categories && (
+          {/* Mostrar filtros de gastos cuando estamos en la pestaña de gastos y se ha activado el filtro */}
+          {currentTab === "expense" && showExpenseFilters && transactions && categories && (
             <div className="mb-6">
               <ExpenseFilters 
                 transactions={transactions}
                 categories={categories}
-                onFilterChange={setFilteredExpenseTransactions}
+                onFilterChange={(filtered) => {
+                  setFilteredExpenseTransactions(filtered);
+                  setExpenseFiltersApplied(filtered.length > 0);
+                }}
                 onExportClick={handleExportFilteredExpenses}
               />
             </div>
           )}
           
-          {/* Mostrar filtros de ingresos cuando estamos en la pestaña de ingresos */}
-          {currentTab === "income" && transactions && categories && (
+          {/* Mostrar filtros de ingresos cuando estamos en la pestaña de ingresos y se ha activado el filtro */}
+          {currentTab === "income" && showIncomeFilters && transactions && categories && (
             <div className="mb-6">
               <IncomeFilters 
                 transactions={transactions}
                 categories={categories}
-                onFilterChange={setFilteredIncomeTransactions}
+                onFilterChange={(filtered) => {
+                  setFilteredIncomeTransactions(filtered);
+                  setIncomeFiltersApplied(filtered.length > 0);
+                }}
                 onExportClick={handleExportFilteredIncome}
               />
             </div>
@@ -1154,6 +1164,30 @@ const TransactionList = () => {
                   <span className="sm:hidden">Originales</span>
                 </button>
                 
+                {/* Botón de filtro */}
+                <button 
+                  className={`text-sm px-3 py-1.5 flex items-center rounded-full transition-colors ${
+                    expenseFiltersApplied 
+                    ? "bg-[#FF9F0A] text-white hover:bg-[#FF9F0A]/90" 
+                    : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setShowExpenseFilters(!showExpenseFilters)}
+                  title={expenseFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar gastos"}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 sm:mr-2">
+                    <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                  </svg>
+                  <span className="hidden sm:inline">
+                    {showExpenseFilters ? "Ocultar filtros" : "Filtrar"}
+                  </span>
+                  <span className="sm:hidden">Filtrar</span>
+                  {expenseFiltersApplied && (
+                    <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#FF9F0A] font-bold flex items-center justify-center">
+                      ✓
+                    </span>
+                  )}
+                </button>
+                
                 {/* Se eliminó el registro rápido de gastos */}
               </>
             ) : currentTab === 'income' ? (
@@ -1184,6 +1218,32 @@ const TransactionList = () => {
                       "Exportar todos los ingresos"}
                   </span>
                   <span className="sm:hidden">Exportar</span>
+                </button>
+                
+                {/* Botón de filtro para ingresos */}
+                <button 
+                  className={`text-sm px-3 py-1.5 flex items-center rounded-full transition-colors ${
+                    incomeFiltersApplied 
+                    ? "bg-[#34C759] text-white hover:bg-[#34C759]/90" 
+                    : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setShowIncomeFilters(!showIncomeFilters)}
+                  title={incomeFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar ingresos"}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 sm:mr-2">
+                    <line x1="12" y1="20" x2="12" y2="10" />
+                    <line x1="18" y1="20" x2="18" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="16" />
+                  </svg>
+                  <span className="hidden sm:inline">
+                    {showIncomeFilters ? "Ocultar filtros" : "Filtrar"}
+                  </span>
+                  <span className="sm:hidden">Filtrar</span>
+                  {incomeFiltersApplied && (
+                    <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#34C759] font-bold flex items-center justify-center">
+                      ✓
+                    </span>
+                  )}
                 </button>
               </>
             ) : null}
