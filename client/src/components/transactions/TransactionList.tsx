@@ -1119,6 +1119,7 @@ const TransactionList = () => {
                       `Exportar ${filteredExpenseTransactions.length} filtrados` : 
                       "Exportar todos los gastos"}
                   </span>
+                  <span className="sm:hidden">PDF</span>
                 </button>
                 
                 {/* Escanear gasto */}
@@ -1129,6 +1130,7 @@ const TransactionList = () => {
                 >
                   <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Escanear gasto</span>
+                  <span className="sm:hidden">Scan</span>
                 </button>
                 
                 {/* Descargar originales */}
@@ -1158,6 +1160,7 @@ const TransactionList = () => {
                 >
                   <Download className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Descargar originales</span>
+                  <span className="sm:hidden">Docs</span>
                 </button>
                 
                 {/* Botón de filtro */}
@@ -1195,6 +1198,7 @@ const TransactionList = () => {
                 >
                   <Receipt className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Crear factura</span>
+                  <span className="sm:hidden">Factura</span>
                 </button>
 
                 {/* Exportar ingresos */}
@@ -1210,6 +1214,7 @@ const TransactionList = () => {
                       `Exportar ${filteredIncomeTransactions.length} filtrados` : 
                       "Exportar todos los ingresos"}
                   </span>
+                  <span className="sm:hidden">PDF</span>
                 </button>
                 
                 {/* Botón de filtro para ingresos */}
