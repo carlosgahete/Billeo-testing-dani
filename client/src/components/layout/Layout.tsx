@@ -68,12 +68,12 @@ const Layout = ({ children }: LayoutProps) => {
           className={`
             flex-1 
             overflow-y-auto 
-            ${isMobile ? 'pt-16' : ''}
+            ${isMobile ? 'pt-20' : ''}
             ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
           `}
         >
-          <div className="w-full py-0 lg:py-6 px-0 sm:px-2 lg:px-8">
+          <div className="w-full py-1 lg:py-6 px-0 sm:px-2 lg:px-8">
             {children}
           </div>
         </div>
