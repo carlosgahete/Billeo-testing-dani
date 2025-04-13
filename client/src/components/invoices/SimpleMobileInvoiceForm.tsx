@@ -107,8 +107,8 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
       {clientData && (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <h3 className="text-sm font-semibold text-gray-700">Cliente:</h3>
-          <p className="text-sm">{clientData.name}</p>
-          {clientData.taxId && <p className="text-xs text-gray-500">CIF/NIF: {clientData.taxId}</p>}
+          <p className="text-sm">{clientData?.name || 'Cliente'}</p>
+          {clientData?.taxId && <p className="text-xs text-gray-500">CIF/NIF: {clientData.taxId}</p>}
         </div>
       )}
       
@@ -117,15 +117,15 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
         <div className="mb-5 grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-gray-500">Subtotal:</span>
-            <span className="ml-1 font-medium">{initialData.invoice.subtotal?.toFixed(2)}€</span>
+            <span className="ml-1 font-medium">{parseFloat(String(initialData.invoice.subtotal || 0)).toFixed(2)}€</span>
           </div>
           <div>
             <span className="text-gray-500">IVA:</span>
-            <span className="ml-1 font-medium">{initialData.invoice.tax?.toFixed(2)}€</span>
+            <span className="ml-1 font-medium">{parseFloat(String(initialData.invoice.tax || 0)).toFixed(2)}€</span>
           </div>
           <div className="col-span-2">
             <span className="text-gray-500">Total:</span>
-            <span className="ml-1 font-semibold text-blue-600">{initialData.invoice.total?.toFixed(2)}€</span>
+            <span className="ml-1 font-semibold text-blue-600">{parseFloat(String(initialData.invoice.total || 0)).toFixed(2)}€</span>
           </div>
         </div>
       )}
@@ -170,11 +170,11 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
                 <div key={idx} className="p-2 border-b text-sm">
                   <div className="font-medium">{item.description}</div>
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>{item.quantity} x {item.unitPrice?.toFixed(2)}€</span>
-                    <span>IVA: {item.taxRate}%</span>
+                    <span>{item.quantity} x {parseFloat(String(item.unitPrice || 0)).toFixed(2)}€</span>
+                    <span>IVA: {parseFloat(String(item.taxRate || 0))}%</span>
                   </div>
                   <div className="text-right text-xs font-medium">
-                    Subtotal: {item.subtotal?.toFixed(2)}€
+                    Subtotal: {parseFloat(String(item.subtotal || 0)).toFixed(2)}€
                   </div>
                 </div>
               ))}
