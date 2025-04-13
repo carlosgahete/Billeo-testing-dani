@@ -296,13 +296,13 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <h1 className="section-title text-sm md:text-lg font-medium">Dashboard</h1>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Botón de Año */}
-          <div className="relative">
+        <div className="flex items-center w-full gap-3 sm:flex-wrap sm:w-auto">
+          {/* Botón de Año - En móvil ocupa el 45% del ancho */}
+          <div className="relative w-[45%] sm:w-auto">
             <button 
               type="button"
               onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
-              className="inline-flex items-center gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
               aria-controls="year-dropdown"
             >
               <span>{year}</span>
@@ -312,7 +312,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </button>
             
             {/* Dropdown años */}
-            <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-24 py-1 border border-gray-200 focus:outline-none">
+            <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
               <button
                 onClick={() => {
                   setYear("2025");
@@ -343,12 +343,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
           </div>
           
-          {/* Botón de Periodo */}
-          <div className="relative">
+          {/* Botón de Periodo - En móvil ocupa el 55% del ancho */}
+          <div className="relative w-[55%] sm:w-auto">
             <button 
               type="button"
               onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
-              className="inline-flex items-center gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 bg-white rounded-md border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
               aria-controls="period-dropdown"
             >
               <span>
@@ -363,8 +363,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </svg>
             </button>
             
-            {/* Dropdown periodos */}
-            <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-40 py-1 border border-gray-200 focus:outline-none">
+            {/* Dropdown periodos - Ancho completo en móvil */}
+            <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
               <button
                 onClick={() => {
                   setPeriod("all");
