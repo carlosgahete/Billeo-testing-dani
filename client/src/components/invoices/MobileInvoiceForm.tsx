@@ -366,14 +366,14 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     });
   };
   
-  // Inicializa el formulario con los datos
+  // Inicializa el formulario con los datos (solo una vez al cargar)
   useEffect(() => {
     // Si estamos en modo edición y tenemos datos
     if (isEditMode) {
       let dataSource = null;
       let sourceType = "";
       
-      // Determinar la fuente de datos a utilizar
+      // Determinar la fuente de datos a utilizar - solo una vez
       if (initialData && typeof initialData === 'object' && initialData !== null && 'invoice' in initialData && 'items' in initialData) {
         dataSource = initialData;
         sourceType = "initialData";
@@ -422,16 +422,15 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
           setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
         }
         
-        // Recalcular totales después de que el formulario se haya actualizado completamente
-        // Usamos un callback independiente para evitar renderizados infinitos
-        // Usamos setTimeout con una referencia segura al formulario
-        const formRef = form; // Capturamos la referencia en una constante estable
-        window.setTimeout(() => {
-          if (formRef) calculateInvoiceTotals(formRef);
+        // Usar un timeout para calcular totales después de que React haya terminado el render
+        setTimeout(() => {
+          calculateInvoiceTotals(form);
         }, 200);
       }
     }
-  }, [invoiceData, initialData, isEditMode, form]);
+  // Importante: Esta dependencia debe ejecutarse solo una vez cuando los datos están disponibles
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -498,9 +497,19 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
   });
 
   const handleSubmit = (data: InvoiceFormValues) => {
-    // Asegurarnos de que los totales están calculados antes de enviar
-    calculateInvoiceTotals(form);
-    mutation.mutate(data);
+    // Calcular totales de forma segura antes de enviar
+    const calculatedTotals = calculateInvoiceTotals(form, { executeUpdate: false });
+    
+    // Crear una copia de los datos con los totales calculados
+    const dataWithTotals = {
+      ...data,
+      subtotal: calculatedTotals?.subtotal || data.subtotal,
+      tax: calculatedTotals?.tax || data.tax,
+      total: calculatedTotals?.total || data.total
+    };
+    
+    // Enviar los datos con los totales actualizados
+    mutation.mutate(dataWithTotals);
   };
 
   const handleAddItem = () => {
@@ -544,27 +553,32 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     });
     setShowTaxDialog(false);
     
-    // Recalcular totales
-    setTimeout(() => calculateInvoiceTotals(form), 100);
+    // Recalcular totales sin causar re-renderizados
+    setTimeout(() => calculateInvoiceTotals(form, { silentMode: true }), 300);
   };
 
   const handleFileUpload = (filePath: string) => {
     setAttachments((prev) => [...prev, filePath]);
   };
 
-  // Effect for recalculating totals when values change
+  // Effect for recalculating totals when values change - optimizado para evitar renderizados infinitos
   useEffect(() => {
     // Suscribirse a los cambios en items para recalcular subtotales
     const { unsubscribe } = form.watch((value, { name, type }) => {
       // Solo recalcular si el cambio fue en un item o los impuestos
       if (name && (name.startsWith('items.') || name.startsWith('additionalTaxes.'))) {
-        calculateInvoiceTotals(form, { silentMode: true });
+        // Usar un throttle/debounce para evitar múltiples cálculos en rápida sucesión
+        setTimeout(() => {
+          calculateInvoiceTotals(form, { silentMode: true });
+        }, 300);
       }
     });
 
     // Limpiar suscripción al desmontar
     return () => unsubscribe();
-  }, [form]);
+  // Importante para evitar bucles infinitos de renderizado:
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if ((isEditMode && invoiceLoading && !initialData) || clientsLoading) {
     return <div className="flex justify-center p-8">Cargando...</div>;
