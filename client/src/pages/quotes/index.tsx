@@ -372,8 +372,8 @@ export default function QuotesPage() {
         </div>
       </div>
       
-      {/* Botones para móvil */}
-      <div className="md:hidden -mt-2 mb-2">
+      {/* Botones para móvil - Posicionados al principio */}
+      <div className="md:hidden -mt-3 -mb-2">
         <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
       </div>
 
@@ -604,7 +604,8 @@ export default function QuotesPage() {
       <div className="mt-4 fade-in">
         <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-8">
           <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            {/* Título de la sección - Oculto en móvil */}
+            <div className="hidden md:flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div className="bg-[#F3F3F3] p-2.5 rounded-full mr-3">
                   <FileText className="h-5 w-5 text-[#5856D6]" />
