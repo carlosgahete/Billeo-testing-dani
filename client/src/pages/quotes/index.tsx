@@ -590,8 +590,28 @@ export default function QuotesPage() {
         </div>
       </div>
 
+      {/* Botones de acción principales para móvil */}
+      {isMobile && (
+        <div className="flex justify-between gap-2 fade-in mt-6 mb-4 px-1">
+          <Link href="/quotes/create" className="flex-1">
+            <Button className="w-full" size="default">
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo presupuesto
+            </Button>
+          </Link>
+          <Button 
+            className="flex-1 bg-[#5856D6] hover:bg-[#4645ab]" 
+            onClick={generateQuotesSummaryPDF}
+            size="default"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Descargar resumen
+          </Button>
+        </div>
+      )}
+
       {/* Lista de presupuestos - Estilo Apple */}
-      <div className="mt-8 fade-in">
+      <div className="mt-4 fade-in">
         <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-8">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">

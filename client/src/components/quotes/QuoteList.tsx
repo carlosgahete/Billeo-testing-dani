@@ -881,7 +881,8 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
         </CardContent>
         
         <CardFooter className="flex justify-between items-center pt-6 border-t px-2 sm:px-6">
-          <div className="md:hidden">
+          {/* Botón "Nuevo" en escritorio, en móvil ya está arriba */}
+          <div className="hidden md:block">
             {showActions && (
               <Link href="/quotes/create">
                 <Button>
