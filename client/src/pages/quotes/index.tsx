@@ -353,7 +353,8 @@ export default function QuotesPage() {
   return (
     <Layout>
       {/* Cabecera estilo Apple alineada con menú hamburguesa */}
-      <div className="section-header fade-in mb-3 -mt-3 pt-0 flex items-center">
+      {/* Encabezado - oculto en móvil */}
+      <div className="section-header fade-in mb-3 -mt-3 pt-0 hidden md:flex items-center">
         <div className="flex items-center ml-8 md:ml-4">
           <div className="bg-[#FFF8E7] p-3 rounded-full mr-3 -mt-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
