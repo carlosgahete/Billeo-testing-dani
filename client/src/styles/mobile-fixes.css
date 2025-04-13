@@ -169,42 +169,28 @@
     padding: 7px 12px !important;
   }
   
-  /* Botón de volver estilo iOS */
+  /* Botón de volver estilo iOS - tipo píldora */
   .apple-back-button {
-    background: none !important;
-    color: #007AFF !important;
-    font-size: 17px !important;
-    padding: 0 !important;
-    height: auto !important;
+    background-color: #F2F2F2 !important;
+    color: #444444 !important;
+    font-size: 15px !important;
+    padding: 8px 16px !important;
+    height: 34px !important;
     border: none !important;
     display: flex !important;
     align-items: center !important;
     font-weight: normal !important;
-    box-shadow: none !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03) !important;
     position: relative !important;
-    margin-left: 0 !important;
+    margin-left: 6px !important;
+    border-radius: 17px !important;
   }
   
-  /* Icon de chevron personalizado para Apple */
-  .apple-chevron {
-    position: relative !important;
-    display: inline-block !important;
-    width: 9px !important;
-    height: 17px !important;
-    margin-right: 5px !important;
-  }
-  
-  .apple-chevron::before {
-    content: '' !important;
-    position: absolute !important;
-    width: 8px !important;
-    height: 8px !important;
-    border-left: 2px solid #007AFF !important;
-    border-bottom: 2px solid #007AFF !important;
-    transform: rotate(45deg) !important;
-    top: 4px !important;
-    left: 3px !important;
-    border-radius: 1px !important;
+  .apple-back-button svg {
+    width: 15px !important;
+    height: 15px !important;
+    margin-right: 3px !important;
+    stroke-width: 2.5px !important;
   }
   
   /* Campos de formulario estilo Apple */
