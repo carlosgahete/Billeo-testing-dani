@@ -1162,28 +1162,21 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       </Form>
 
       {/* Form for adding or editing clients */}
-      <Dialog open={showClientForm} onOpenChange={setShowClientForm}>
-        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {clientToEdit ? "Editar cliente" : "Nuevo cliente"}
-            </DialogTitle>
-            <DialogDescription>
-              {clientToEdit
-                ? "Modifica los datos del cliente"
-                : "Añade un nuevo cliente para poder asociarlo a facturas"}
-            </DialogDescription>
-          </DialogHeader>
-          <ClientForm 
-            clientToEdit={clientToEdit}
-            onClientSaved={() => {
-              queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-              setShowClientForm(false);
-              setClientToEdit(null);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <ClientForm 
+        open={showClientForm}
+        onOpenChange={setShowClientForm}
+        clientToEdit={clientToEdit}
+        onClientCreated={(newClient) => {
+          queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+          setShowClientForm(false);
+          setClientToEdit(null);
+          
+          // Establecer el cliente recién creado como seleccionado
+          if (newClient && newClient.id) {
+            form.setValue("clientId", newClient.id);
+          }
+        }}
+      />
 
       {/* Dialog for adding custom taxes */}
       <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
