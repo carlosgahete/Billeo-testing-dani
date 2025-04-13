@@ -675,23 +675,28 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-4 sm:pb-6">
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
+              {/* Área de carga de archivos con diseño Apple */}
               <div 
-                className="rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#007AFF] transition-colors p-6 bg-gray-50/50 hover:bg-blue-50/20"
+                className="rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#007AFF] transition-colors p-4 sm:p-6 bg-gray-50/50 hover:bg-blue-50/10 active:bg-blue-50/20"
                 onClick={() => document.getElementById('document-upload')?.click()}
               >
                 <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center shadow-sm">
-                    <Upload className="h-8 w-8 text-[#007AFF]" />
+                  {/* Icono con diseño Apple */}
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-b from-[#0A84FF] to-[#0063CC] flex items-center justify-center shadow-sm">
+                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity rounded-full"></div>
+                    <Upload className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
                   </div>
                   <Label 
                     htmlFor="document-upload" 
-                    className="text-base font-medium text-gray-800 cursor-pointer text-center hover:text-[#007AFF] transition-colors mt-2"
+                    className="text-sm sm:text-base font-medium text-gray-800 cursor-pointer text-center hover:text-[#007AFF] transition-colors mt-2"
                   >
-                    Arrastra tu factura o haz clic para subir
+                    {/* Texto adaptativo para móvil/desktop */}
+                    <span className="hidden sm:inline">Arrastra tu factura o haz clic para subir</span>
+                    <span className="sm:hidden">Toca para seleccionar imagen</span>
                   </Label>
-                  <p className="text-sm text-gray-500 text-center">
-                    Formatos soportados: PDF, JPG, PNG
+                  <p className="text-xs sm:text-sm text-gray-500 text-center">
+                    Formatos: PDF, JPG, PNG
                   </p>
                 </div>
                 <input
@@ -700,6 +705,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={handleFileChange}
                   className="hidden"
+                  capture="environment"
                 />
               </div>
 
@@ -752,22 +758,32 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                 </div>
               )}
               
+              {/* Botón de procesamiento estilo Apple */}
               <div className="flex justify-center">
                 <Button 
                   type="button" 
                   onClick={handleUpload} 
                   disabled={uploading || !file}
-                  className="bg-[#007AFF] hover:bg-[#0062cc] text-white px-8 py-2 rounded-full transition-colors"
+                  className={`relative overflow-hidden px-6 sm:px-8 py-2.5 rounded-full font-medium text-sm ${
+                    uploading || !file 
+                      ? "bg-gray-200 text-gray-500" 
+                      : "bg-gradient-to-b from-[#0A84FF] to-[#0063CC] text-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                  }`}
                 >
+                  {/* Efecto de brillo al pasar el cursor */}
+                  <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                  
                   {uploading ? (
-                    <>
+                    <div className="flex items-center justify-center">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Procesando...
-                    </>
+                      <span>Procesando...</span>
+                    </div>
                   ) : (
-                    <>
-                      Procesar documento
-                    </>
+                    <div className="flex items-center justify-center">
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Procesar documento</span>
+                      <span className="sm:hidden">Procesar</span>
+                    </div>
                   )}
                 </Button>
               </div>
@@ -775,72 +791,77 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
           </CardContent>
         </Card>
         
-        <Card className="overflow-hidden border rounded-3xl shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
-          <CardHeader className="pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
-            <CardTitle className="text-2xl font-medium text-gray-900 flex items-center">
-              <Receipt className="h-5 w-5 mr-2 text-[#34C759]" />
+        <Card className="overflow-hidden border rounded-xl sm:rounded-3xl shadow-md sm:shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
+          <CardHeader className="pb-2 sm:pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
+            <CardTitle className="text-lg sm:text-2xl font-medium text-gray-900 flex items-center">
+              <Receipt className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#34C759]" />
               Resultados
             </CardTitle>
-            <CardDescription className="text-sm text-gray-500">
+            <CardDescription className="text-xs sm:text-sm text-gray-500">
               Datos extraídos automáticamente por IA
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-4 sm:pb-6">
             {!extractedData && !transaction ? (
-              <div className="text-center py-10 px-4">
-                <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
-                  <div className="h-20 w-20 bg-[#34C759]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Receipt className="h-10 w-10 text-[#34C759]" />
+              <div className="text-center py-6 sm:py-10 px-3 sm:px-4">
+                <div className="bg-gray-50/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-100">
+                  {/* Icono con diseño Apple */}
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 bg-gradient-to-b from-[#34C759] to-[#30B850] rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-sm">
+                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity rounded-full"></div>
+                    <Receipt className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-1.5 sm:mb-2">
                     Sin datos procesados
                   </h3>
-                  <p className="text-gray-500 max-w-sm mx-auto">
-                    Los datos extraídos de tu factura aparecerán automáticamente aquí después de procesarla con IA
+                  <p className="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto">
+                    <span className="hidden sm:inline">Los datos extraídos de tu factura aparecerán automáticamente aquí después de procesarla con IA</span>
+                    <span className="sm:hidden">Procesa una factura para ver los resultados aquí</span>
                   </p>
-                  <div className="flex justify-center mt-4">
-                    <ArrowLeft className="h-5 w-5 text-[#007AFF] animate-pulse mr-2" />
-                    <p className="text-sm text-[#007AFF]">Sube un documento para comenzar</p>
+                  <div className="flex justify-center items-center mt-3 sm:mt-4">
+                    <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-[#007AFF] animate-pulse mr-1.5 sm:mr-2" />
+                    <p className="text-xs sm:text-sm text-[#007AFF] font-medium">Sube un documento para comenzar</p>
                   </div>
                 </div>
               </div>
             ) : (
               // Formulario de edición mostrado directamente sin diálogo de confirmación
               <div className="space-y-6">
-                {/* Imagen del documento escaneado */}
+                {/* Imagen del documento escaneado - Diseño optimizado para móvil */}
                 {documentImage && (
-                  <div className="mb-6">
-                    <h3 className="font-medium text-xl text-gray-800 mb-3 flex items-center">
-                      <FileText className="h-5 w-5 mr-2 text-[#007AFF]" />
+                  <div className="mb-4 sm:mb-6">
+                    <h3 className="font-medium text-base sm:text-xl text-gray-800 mb-2 sm:mb-3 flex items-center">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-[#007AFF]" />
                       Documento escaneado
                     </h3>
-                    <div className="border border-gray-200 rounded-2xl p-3 bg-gray-50/50 shadow-sm">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm font-medium text-gray-600">Vista previa del documento:</p>
+                    <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-2 sm:p-3 bg-gray-50/50 shadow-sm">
+                      <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600">Vista previa:</p>
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => setIsResultZoomed(!isResultZoomed)}
-                          className="h-8 px-3 rounded-full border-gray-200 hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
+                          className="h-7 sm:h-8 px-2 sm:px-3 text-xs rounded-full border-gray-200 hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
                         >
                           {isResultZoomed ? (
                             <>
-                              <ZoomOut className="h-4 w-4 mr-1.5" />
-                              Reducir
+                              <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                              <span className="hidden sm:inline">Reducir</span>
+                              <span className="sm:hidden">-</span>
                             </>
                           ) : (
                             <>
-                              <ZoomIn className="h-4 w-4 mr-1.5" />
-                              Ampliar
+                              <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                              <span className="hidden sm:inline">Ampliar</span>
+                              <span className="sm:hidden">+</span>
                             </>
                           )}
                         </Button>
                       </div>
-                      <div className="relative">
+                      <div className="relative bg-white/50 rounded-lg overflow-hidden">
                         <img 
                           src={documentImage} 
                           alt="Documento escaneado" 
-                          className="w-full h-40 object-contain rounded-lg cursor-pointer" 
+                          className="w-full h-32 sm:h-40 object-contain rounded-lg cursor-pointer" 
                           onClick={() => setIsResultZoomed(true)}
                         />
                       </div>
@@ -851,8 +872,8 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                 {/* Campos para editar la información extraída usando el formulario simple */}
                 {transaction && (
                   <div className="space-y-6">
-                    <h3 className="font-medium text-xl text-gray-800 mb-4 flex items-center">
-                      <Receipt className="h-5 w-5 mr-2 text-[#34C759]" />
+                    <h3 className="font-medium text-base sm:text-xl text-gray-800 mb-2 sm:mb-4 flex items-center">
+                      <Receipt className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-[#34C759]" />
                       Detalles del gasto
                     </h3>
                     
