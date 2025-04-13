@@ -892,38 +892,7 @@ const TransactionList = () => {
         </div>
       )}
 
-      {/* Resumen para dispositivos móviles - Minimalista */}
-      <div className="flex sm:hidden justify-between items-center mb-4 px-2">
-        <div className="text-center flex-1">
-          <p className="text-xs text-gray-500">Ingresos</p>
-          <p className="text-base font-medium text-[#007AFF]">{formatCurrency(incomeTotal, "income")}</p>
-        </div>
-        <div className="mx-2 h-8 border-r border-gray-100"></div>
-        <div className="text-center flex-1">
-          <p className="text-xs text-gray-500">Gastos</p>
-          <p className="text-base font-medium text-[#FF3B30]">{formatCurrency(expenseTotal, "expense")}</p>
-        </div>
-        <div className="mx-2 h-8 border-r border-gray-100"></div>
-        <div className="text-center flex-1">
-          <p className="text-xs text-gray-500">Balance</p>
-          <p className="text-base font-medium text-[#34C759]">
-            {balance < 0 
-              ? `-${Math.abs(balance).toLocaleString('es-ES', {
-                  style: 'currency',
-                  currency: 'EUR',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}`
-              : balance.toLocaleString('es-ES', {
-                  style: 'currency',
-                  currency: 'EUR',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })
-            }
-          </p>
-        </div>
-      </div>
+      {/* El resumen para dispositivos móviles ha sido eliminado completamente para un diseño más minimalista */}
       
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
