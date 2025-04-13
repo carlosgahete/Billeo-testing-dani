@@ -293,7 +293,7 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="min-h-screen w-full flex flex-col justify-center items-center">
+    <div className="h-screen w-full flex items-center justify-center">
       {/* Botón flotante minimalista para volver en móvil */}
       <div className="sm:hidden fixed top-2 left-2 z-10">
         <Button 
@@ -306,13 +306,16 @@ const DocumentScanPage = () => {
         </Button>
       </div>
       
-      {/* Contenedor principal completamente centrado */}
-      <div className="w-full max-w-[370px] flex flex-col items-center px-4">
-        {/* Encabezado con título para mejor contexto */}
-        <div className="w-full mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-gray-800">Escanear Documento</h1>
-          <p className="text-sm text-gray-500 mt-1">Sube una factura para procesarla</p>
-        </div>
+      {/* Contenedor principal exactamente en el centro de la pantalla */}
+      <div 
+        className="w-full max-w-[370px] px-4"
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)"
+        }}
+      >
         
         {/* Control de archivos invisible */}
         <input
