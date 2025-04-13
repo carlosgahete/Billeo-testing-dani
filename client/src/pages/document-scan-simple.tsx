@@ -308,14 +308,16 @@ const DocumentScanPage = () => {
       
       {/* Contenedor principal exactamente en el centro de la pantalla */}
       <div 
-        className="w-full max-w-[370px] px-4"
+        className="w-full max-w-[370px] px-4 text-center"
         style={{
           position: "absolute",
           top: "50%",
           left: "50%",
-          transform: "translate(-50%, -50%)"
+          transform: "translate(-50%, -60%)"
         }}
       >
+        {/* Título justo encima del recuadro */}
+        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Escanear Documento</h1>
         
         {/* Control de archivos invisible */}
         <input
