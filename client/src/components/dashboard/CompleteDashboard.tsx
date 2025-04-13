@@ -576,29 +576,62 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
 
-            {/* Comparativa financiera - Estilo Apple */}
+            {/* Panel financiero - Estilo Apple - Filas individuales en móvil */}
             <div className="bg-white rounded-xl border border-gray-100 p-1 sm:p-3 glass-panel">
-              {/* Mostrar el resultado en grande */}
-              <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
-                {/* Ingresos - mismo tamaño que resultado final en móvil */}
-                <div className="bg-[#F5FFF7] p-1 sm:p-2 rounded-lg border border-[#DCFFE5]">
-                  <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
-                  <div className="text-sm font-semibold text-[#34C759] tracking-tight truncate">
-                    {formatCurrency(baseImponibleIngresos)}
+              {/* En móvil: una fila para cada elemento */}
+              <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
+                {/* Ingresos */}
+                <div className="bg-[#F5FFF7] p-3 rounded-lg border border-[#DCFFE5] flex items-center">
+                  <div className="bg-[#E2F6ED] p-2 rounded-full mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#34C759]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 19V5M5 12l7-7 7 7"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-md text-gray-800 font-medium">Ingresos</div>
+                    <div className="text-xl font-bold text-[#34C759]">
+                      {formatCurrency(baseImponibleIngresos)}
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">IVA repercutido:</span>
+                      <span>{formatCurrency(ivaRepercutido)}</span>
+                    </div>
                   </div>
                 </div>
-                {/* Gastos - mismo tamaño que resultado final en móvil */}
-                <div className="bg-[#FFF5F5] p-1 sm:p-2 rounded-lg border border-[#FFDFDF]">
-                  <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
-                  <div className="text-sm font-semibold text-[#FF3B30] tracking-tight truncate">
-                    {formatCurrency(baseImponibleGastos)}
+                {/* Gastos */}
+                <div className="bg-[#FFF5F5] p-3 rounded-lg border border-[#FFDFDF] flex items-center">
+                  <div className="bg-[#FEECEB] p-2 rounded-full mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#FF3B30]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12l7 7 7-7"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-md text-gray-800 font-medium">Gastos</div>
+                    <div className="text-xl font-bold text-[#FF3B30]">
+                      {formatCurrency(baseImponibleGastos)}
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">IVA soportado:</span>
+                      <span>{formatCurrency(ivaSoportado)}</span>
+                    </div>
                   </div>
                 </div>
-                {/* Resultado - mismo tamaño que los otros en móvil */}
-                <div className="bg-[#F0F7FF] p-1 sm:p-2 rounded-lg border border-[#DAE8FF]">
-                  <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
-                  <div className="text-sm font-semibold text-[#007AFF] tracking-tight truncate">
-                    {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
+                {/* Resultado */}
+                <div className="bg-[#F0F7FF] p-3 rounded-lg border border-[#DAE8FF] flex items-center">
+                  <div className="bg-[#E9F8FB] p-2 rounded-full mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#007AFF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1 0 8h-3"></path>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-md text-gray-800 font-medium">Resultado Final</div>
+                    <div className="text-xl font-bold text-[#007AFF]">
+                      {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">IVA a pagar:</span>
+                      <span>{formatCurrency(ivaRepercutido - ivaSoportado)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
