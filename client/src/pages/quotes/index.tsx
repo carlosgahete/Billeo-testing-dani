@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { QuoteList } from "@/components/quotes/QuoteList";
+import { MobileQuoteButtons } from "@/components/quotes/MobileQuoteButtons";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
@@ -70,7 +71,8 @@ export default function QuotesPage() {
   // Efecto para refrescar la lista cuando cambia el filtro
   useEffect(() => {
     console.log("Filtro aplicado:", filter);
-  }, [filter]);
+    console.log("Es móvil:", isMobile);
+  }, [filter, isMobile]);
 
   // Obtener estadísticas de presupuestos
   const { data: quotes = [], isLoading: quotesLoading } = useQuery<Quote[]>({
@@ -590,25 +592,10 @@ export default function QuotesPage() {
         </div>
       </div>
 
-      {/* Botones de acción principales para móvil */}
-      {isMobile && (
-        <div className="flex justify-between gap-2 fade-in mt-6 mb-4 px-1">
-          <Link href="/quotes/create" className="flex-1">
-            <Button className="w-full" size="default">
-              <Plus className="h-4 w-4 mr-1" />
-              Nuevo presupuesto
-            </Button>
-          </Link>
-          <Button 
-            className="flex-1 bg-[#5856D6] hover:bg-[#4645ab]" 
-            onClick={generateQuotesSummaryPDF}
-            size="default"
-          >
-            <Download className="h-4 w-4 mr-1" />
-            Descargar resumen
-          </Button>
-        </div>
-      )}
+      {/* Los botones de acción para móvil ahora están en el componente MobileQuoteButtons */}
+
+      {/* Importamos y usamos los botones para móvil */}
+      {isMobile && <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />}
 
       {/* Lista de presupuestos - Estilo Apple */}
       <div className="mt-4 fade-in">
