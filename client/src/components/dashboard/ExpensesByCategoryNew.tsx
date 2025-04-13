@@ -440,12 +440,12 @@ const ExpensesByCategoryNew: React.FC<{
         {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
           {/* Lado izquierdo: Gráfico donut como en la imagen de referencia */}
-          <div className="w-1/2 flex items-center justify-start pl-10 pt-8">
+          <div className="w-1/2 flex items-center justify-start pl-2 sm:pl-10 pt-4 sm:pt-8">
             {/* Gráfico de donut (anillo) */}
-            <div className="relative w-48 h-48">
+            <div className="relative w-36 h-36 sm:w-48 sm:h-48">
               {/* Círculo base (agujero blanco del centro) */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-white rounded-full"></div>
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full"></div>
               </div>
               
               {/* Construcción del donut con segmentos circulares */}
@@ -522,7 +522,7 @@ const ExpensesByCategoryNew: React.FC<{
           </div>
           
           {/* Lado derecho: Lista de categorías con scroll cuando es necesario */}
-          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[280px] overflow-y-auto custom-scrollbar pr-3 pt-8">
+          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[280px] overflow-y-auto custom-scrollbar pr-1 sm:pr-3 pt-4 sm:pt-8">
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
@@ -542,27 +542,27 @@ const ExpensesByCategoryNew: React.FC<{
               >
                 {/* Círculo con icono */}
                 <div className="relative mr-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center">
                     {/* Indicador de color */}
                     <div 
                       className="absolute left-0 top-0 w-3 h-3 rounded-full" 
                       style={{ backgroundColor: item.color }}
                     ></div>
                     {/* Icono */}
-                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-sm sm:text-lg">{item.icon}</span>
                   </div>
                 </div>
                 
                 {/* Información de la categoría */}
                 <div className="flex-grow">
-                  <div className="text-base font-medium text-gray-900">{item.name}</div>
-                  <div className="text-sm text-gray-500">
-                    {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
+                  <div className="text-sm sm:text-base font-medium text-gray-900">{item.name}</div>
+                  <div className="text-xs sm:text-sm text-gray-500">
+                    {item.count} {item.count === 1 ? 'trans.' : 'trans.'}
                   </div>
                 </div>
                 
                 {/* Valores y porcentajes */}
-                <div className="text-right mr-8">
+                <div className="text-right mr-2 sm:mr-8">
                   <div className="text-base font-medium text-red-600">
                     {formatCurrency(item.value * -1)}
                   </div>
