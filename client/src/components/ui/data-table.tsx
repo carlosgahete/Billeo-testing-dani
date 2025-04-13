@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, Filter, Trash2, FileDown, Check, ChevronDown } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Filter, Trash2, FileDown, Check, ChevronDown, ArrowUp, ArrowDown, Calendar, Clock, Pencil } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface DataTableProps<TData, TValue> {
@@ -227,10 +227,16 @@ export function DataTable<TData, TValue>({
             return (
               <div 
                 key={row.id}
-                className={`bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow ${row.getIsSelected() ? 'border-[#007AFF] border-2' : ''}`}
+                className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 ${row.getIsSelected() ? 'ring-2 ring-[#007AFF]' : 'ring-1 ring-gray-200/80'}`}
               >
                 {/* Card Header - Main Info */}
-                <div className="flex justify-between items-center px-4 py-3 border-b border-gray-50">
+                <div 
+                  className={`flex justify-between items-center px-4 py-3 border-b ${
+                    row.original.type === 'income' 
+                      ? 'bg-gradient-to-r from-[#34C759]/10 to-[#34C759]/5 border-[#34C759]/20' 
+                      : 'bg-gradient-to-r from-[#FF3B30]/10 to-[#FF3B30]/5 border-[#FF3B30]/20'
+                  }`}
+                >
                   <div className="flex items-center space-x-3">
                     {/* Selection Checkbox (if selectable) */}
                     {selectCell && (
@@ -242,62 +248,95 @@ export function DataTable<TData, TValue>({
                       </div>
                     )}
                     
-                    {/* Title & Date */}
-                    <div>
-                      <h3 className="font-medium text-sm text-gray-900">
-                        {titleCell ? flexRender(
-                          titleCell.column.columnDef.cell,
-                          titleCell.getContext()
-                        ) : ''}
-                      </h3>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {dateCell ? flexRender(
-                          dateCell.column.columnDef.cell,
-                          dateCell.getContext()
-                        ) : ''}
+                    {/* Title & Date with Icon */}
+                    <div className="flex items-center">
+                      {/* Category Color Indicator or Type Icon */}
+                      <div className={`flex-shrink-0 w-8 h-8 mr-3 rounded-full flex items-center justify-center ${
+                        row.original.type === 'income' 
+                          ? 'bg-gradient-to-br from-[#34C759] to-[#30D158]' 
+                          : 'bg-gradient-to-br from-[#FF3B30] to-[#FF453A]'
+                      }`}>
+                        {row.original.type === 'income' ? (
+                          <ArrowDown className="h-4 w-4 text-white transform rotate-180" />
+                        ) : (
+                          <ArrowUp className="h-4 w-4 text-white transform rotate-180" />
+                        )}
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium text-sm text-gray-900 flex items-center">
+                          {titleCell ? flexRender(
+                            titleCell.column.columnDef.cell,
+                            titleCell.getContext()
+                          ) : ''}
+                        </h3>
+                        <div className="text-xs text-gray-500 mt-0.5 flex items-center">
+                          <Calendar className="h-3 w-3 inline mr-1 text-gray-400" />
+                          {dateCell ? flexRender(
+                            dateCell.column.columnDef.cell,
+                            dateCell.getContext()
+                          ) : ''}
+                        </div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Amount */}
                   <div className="text-right">
-                    <div className="font-semibold text-sm">
+                    <div className={`font-semibold text-sm ${
+                      row.original.type === 'income' 
+                        ? 'text-[#34C759]' 
+                        : 'text-[#FF3B30]'
+                    }`}>
                       {amountCell ? flexRender(
                         amountCell.column.columnDef.cell,
                         amountCell.getContext()
                       ) : ''}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {typeCell ? flexRender(
-                        typeCell.column.columnDef.cell,
-                        typeCell.getContext()
-                      ) : ''}
+                    <div className="text-xs text-gray-500 mt-0.5 flex items-center justify-end">
+                      {row.original.categoryName ? (
+                        <>
+                          {row.original.categoryColor && (
+                            <div 
+                              className="w-2 h-2 rounded-full mr-1" 
+                              style={{ backgroundColor: row.original.categoryColor }}
+                            />
+                          )}
+                          <span>{row.original.categoryName}</span>
+                        </>
+                      ) : (
+                        <span>Sin categoría</span>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 {/* Hidden details that expand on click */}
                 <details className="group">
-                  <summary className="px-4 py-2 text-xs text-gray-500 hover:bg-gray-50 cursor-pointer flex items-center justify-center">
+                  <summary className="px-4 py-2.5 text-xs font-medium text-[#007AFF] hover:bg-[#007AFF]/5 cursor-pointer flex items-center justify-center transition-all duration-200">
                     <span>Ver más detalles</span>
                     <ChevronDown className="h-3 w-3 ml-1 group-open:rotate-180 transition-transform" />
                   </summary>
-                  <div className="px-4 py-3 bg-gray-50 text-xs space-y-2">
+                  <div className={`px-4 py-4 text-xs space-y-3 bg-gradient-to-b ${
+                    row.original.type === 'income' 
+                      ? 'from-[#34C759]/5 to-white' 
+                      : 'from-[#FF3B30]/5 to-white'
+                  }`}>
                     {/* Descripción */}
-                    {dataCells.find(c => c.column.id === 'description') && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500 font-medium">Descripción:</span>
-                        <span className="text-gray-900">
-                          {row.original.description || "Sin descripción"}
+                    {row.original.description && (
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-[#8E8E93] text-[10px] uppercase tracking-wide font-medium">Descripción</span>
+                        <span className="text-gray-900 text-sm">
+                          {row.original.description}
                         </span>
                       </div>
                     )}
                     
-                    {/* Categoría */}
-                    {dataCells.find(c => c.column.id === 'category') && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500 font-medium">Categoría:</span>
-                        <span className="text-gray-900 flex items-center">
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Categoría */}
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-[#8E8E93] text-[10px] uppercase tracking-wide font-medium">Categoría</span>
+                        <span className="text-gray-900 text-sm flex items-center">
                           {row.original.categoryId ? (
                             <>
                               {row.original.categoryColor && (
@@ -313,23 +352,21 @@ export function DataTable<TData, TValue>({
                           )}
                         </span>
                       </div>
-                    )}
-                    
-                    {/* Método de pago */}
-                    {dataCells.find(c => c.column.id === 'paymentMethod') && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500 font-medium">Método de pago:</span>
-                        <span className="text-gray-900">
+                      
+                      {/* Método de pago */}
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-[#8E8E93] text-[10px] uppercase tracking-wide font-medium">Método de pago</span>
+                        <span className="text-gray-900 text-sm">
                           {row.original.paymentMethod || "No especificado"}
                         </span>
                       </div>
-                    )}
+                    </div>
                     
                     {/* Notas */}
                     {row.original.notes && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500 font-medium">Notas:</span>
-                        <span className="text-gray-900">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-[#8E8E93] text-[10px] uppercase tracking-wide font-medium">Notas</span>
+                        <span className="text-gray-900 text-sm">
                           {row.original.notes}
                         </span>
                       </div>
@@ -337,13 +374,34 @@ export function DataTable<TData, TValue>({
                     
                     {/* Fecha de actualización */}
                     {row.original.updatedAt && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500 font-medium">Actualizado:</span>
-                        <span className="text-gray-900">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-[#8E8E93] text-[10px] uppercase tracking-wide font-medium">Actualización</span>
+                        <span className="text-gray-900 text-sm flex items-center">
+                          <Clock className="h-3 w-3 mr-1.5 text-gray-400" />
                           {new Date(row.original.updatedAt).toLocaleDateString('es-ES')}
                         </span>
                       </div>
                     )}
+                    
+                    {/* Botones de acción */}
+                    <div className="pt-2 flex justify-end space-x-2">
+                      <button 
+                        className="text-xs flex items-center justify-center px-3 py-1.5 
+                                  rounded-full bg-[#007AFF]/10 text-[#007AFF] font-medium
+                                  hover:bg-[#007AFF]/20 transition-colors duration-200"
+                      >
+                        <Pencil className="h-3 w-3 mr-1" />
+                        Editar
+                      </button>
+                      <button 
+                        className="text-xs flex items-center justify-center px-3 py-1.5 
+                                  rounded-full bg-[#FF3B30]/10 text-[#FF3B30] font-medium
+                                  hover:bg-[#FF3B30]/20 transition-colors duration-200"
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 </details>
               </div>
