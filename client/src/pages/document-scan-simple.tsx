@@ -359,8 +359,8 @@ const DocumentScanPage = () => {
               onDrop={handleDrop}
               onClick={() => document.getElementById('file-input')?.click()}
             >
-              {/* Icono con diseño Apple auténtico */}
-              <div className="mx-auto">
+              {/* Icono con diseño Apple auténtico - centrado */}
+              <div className="flex items-center justify-center w-full mb-2">
                 <div 
                   className="h-[70px] w-[70px] rounded-full flex items-center justify-center"
                   style={{
