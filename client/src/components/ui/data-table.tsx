@@ -283,37 +283,67 @@ export function DataTable<TData, TValue>({
                     <ChevronDown className="h-3 w-3 ml-1 group-open:rotate-180 transition-transform" />
                   </summary>
                   <div className="px-4 py-3 bg-gray-50 text-xs space-y-2">
-                    {dataCells.map((cell) => {
-                      // Skip cells we already showed in the main view
-                      if (cell === titleCell || cell === dateCell || cell === amountCell || cell === typeCell) {
-                        return null;
-                      }
-                      
-                      // Si la celda no tiene un renderizador o tiene un error, no la mostramos
-                      if (!cell.column.columnDef.cell) {
-                        return null;
-                      }
-                      
-                      // Si el contenido es código o función, no lo mostramos
-                      const cellContent = String(cell.getValue() || '');
-                      if (cellContent.includes('props') || cellContent.includes('function') || cellContent.includes('=>')) {
-                        return null;
-                      }
-                      
-                      return (
-                        <div key={cell.id} className="flex justify-between">
-                          <span className="text-gray-500 font-medium">
-                            {cell.column.columnDef.header?.toString() || cell.column.id}:
-                          </span>
-                          <span className="text-gray-900">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {/* Descripción */}
+                    {dataCells.find(c => c.column.id === 'description') && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 font-medium">Descripción:</span>
+                        <span className="text-gray-900">
+                          {row.original.description || "Sin descripción"}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Categoría */}
+                    {dataCells.find(c => c.column.id === 'category') && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 font-medium">Categoría:</span>
+                        <span className="text-gray-900 flex items-center">
+                          {row.original.categoryId ? (
+                            <>
+                              {row.original.categoryColor && (
+                                <div 
+                                  className="w-3 h-3 rounded-full mr-2" 
+                                  style={{ backgroundColor: row.original.categoryColor }}
+                                />
+                              )}
+                              {row.original.categoryName || "Sin categoría"}
+                            </>
+                          ) : (
+                            "Sin categoría"
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Método de pago */}
+                    {dataCells.find(c => c.column.id === 'paymentMethod') && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 font-medium">Método de pago:</span>
+                        <span className="text-gray-900">
+                          {row.original.paymentMethod || "No especificado"}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Notas */}
+                    {row.original.notes && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 font-medium">Notas:</span>
+                        <span className="text-gray-900">
+                          {row.original.notes}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Fecha de actualización */}
+                    {row.original.updatedAt && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 font-medium">Actualizado:</span>
+                        <span className="text-gray-900">
+                          {new Date(row.original.updatedAt).toLocaleDateString('es-ES')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </details>
               </div>
