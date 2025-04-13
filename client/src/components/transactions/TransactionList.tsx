@@ -1023,8 +1023,8 @@ const TransactionList = () => {
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-gray-200 scale-in bg-white shadow-sm overflow-hidden">
-        <div className="pt-6 pb-3 px-5">
+      <div className="rounded-xl border border-gray-200 scale-in bg-white shadow-sm overflow-hidden sm:mt-0 -mt-2">
+        <div className="sm:pt-6 pt-4 pb-3 px-5">
           <Tabs 
             defaultValue="all" 
             value={currentTab}
@@ -1060,7 +1060,7 @@ const TransactionList = () => {
             </TabsList>
           </Tabs>
         </div>
-        <div className="px-5 pb-5">
+        <div className="px-5 sm:pb-5 pb-3">
           {/* Mostrar filtros de gastos cuando estamos en la pestaña de gastos */}
           {currentTab === "expense" && transactions && categories && (
             <div className="mb-6">
