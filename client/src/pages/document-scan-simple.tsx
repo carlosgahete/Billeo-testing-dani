@@ -380,47 +380,41 @@ const DocumentScanPage = () => {
               onClick={() => document.getElementById('file-input')?.click()}
             >
               {/* Icono con diseño Apple auténtico - centrado */}
-              <div className="flex items-center justify-center w-full mb-5">
-                <svg width="86" height="86" viewBox="0 0 86 86" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="uploadIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#007AFF" />
-                      <stop offset="100%" stopColor="#0055D5" />
-                    </linearGradient>
-                    <filter id="uploadShadow" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
-                      <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#0066FF" floodOpacity="0.2" />
-                    </filter>
-                    <clipPath id="clip">
-                      <rect width="86" height="86" rx="43" fill="white"/>
-                    </clipPath>
-                    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
-                      <stop offset="50%" stopColor="rgba(255,255,255,0)" />
-                      <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                    </linearGradient>
-                  </defs>
+              <div className="flex items-center justify-center w-full mb-4">
+                <div className="relative" style={{ width: "80px", height: "80px" }}>
+                  {/* Base circular con gradiente de azul iOS */}
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: "linear-gradient(145deg, #0A84FF, #0066CC)",
+                      boxShadow: "0 4px 10px rgba(0, 122, 255, 0.25)"
+                    }}
+                  ></div>
                   
-                  {/* Fondo base con gradiente */}
-                  <g filter="url(#uploadShadow)" clipPath="url(#clip)">
-                    <rect width="86" height="86" rx="43" fill="url(#uploadIconGradient)"/>
-                    <rect width="86" height="43" fill="url(#shine)"/>
-                  </g>
+                  {/* Capa de brillo superior */}
+                  <div
+                    className="absolute inset-0 rounded-full overflow-hidden"
+                    style={{ opacity: 0.2 }}
+                  >
+                    <div
+                      className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full"
+                      style={{
+                        background: "linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)"
+                      }}
+                    ></div>
+                  </div>
                   
-                  {/* Icono de subida estilo SF Symbols */}
-                  <path 
-                    d="M43 29.5V53M43 29.5L32 40.5M43 29.5L54 40.5" 
-                    stroke="white" 
-                    strokeWidth="3" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                  <path 
-                    d="M28 59H58" 
-                    stroke="white" 
-                    strokeWidth="3" 
-                    strokeLinecap="round"
-                  />
-                </svg>
+                  {/* Icono de flecha hacia arriba estilo SF Symbols */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img 
+                      src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDYuNzVWMjUuNSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTkuNzUgMTVMMTggNi43NUwyNi4yNSAxNSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTkgMjkuMjVIMjciIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" 
+                      width="36" 
+                      height="36" 
+                      alt="Upload Icon" 
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
               </div>
               
               <p 
