@@ -19,6 +19,11 @@
     max-height: none !important;
   }
   
+  /* Ocultar encabezado en la vista de crear/editar facturas */
+  .mobile-invoice-header {
+    display: none !important;
+  }
+  
   /* Ocultar completamente los encabezados en vista móvil */
   .section-header, 
   .hidden.md\\:block.section-header, 
@@ -92,5 +97,11 @@
   .fixed.bottom-6.right-6 button {
     animation: float-animation 4s ease-in-out infinite;
     box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+  }
+  
+  /* Ocultar los elementos specificos en la vista de crear/editar facturas */
+  h1.text-xl.font-semibold.text-gray-800.flex.items-center {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
   }
 }

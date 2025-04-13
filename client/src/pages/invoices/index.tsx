@@ -27,20 +27,18 @@ const InvoicesPage = () => {
 
   return (
     <div className="w-full pl-0 pr-2 md:px-2 space-y-0 sm:space-y-6 mt-0 sm:mt-2 max-w-full">
-      {/* El encabezado solo se muestra en desktop, NUNCA en móvil */}
-      {!isMobile && (
-        <div className="hidden md:block section-header mx-2 fade-in">
-          <div className="flex items-center">
-            <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1 ml-10 md:ml-12">
-              <Receipt className="h-5 w-5 text-[#007AFF]" />
-            </div>
-            <div className="flex-grow my-auto">
-              <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5 mt-2">Gestión de Facturas</h2>
-              <p className="text-sm text-gray-500 mt-0 leading-tight">Administra y controla tus documentos fiscales</p>
-            </div>
+      {/* El encabezado COMPLETAMENTE OCULTO en móvil y visible únicamente en desktop */}
+      <div className="hidden md:block section-header mx-2 fade-in">
+        <div className="flex items-center">
+          <div className="bg-[#E9F8FB] p-3 rounded-full mr-3 self-start mt-1 ml-10 md:ml-12">
+            <Receipt className="h-5 w-5 text-[#007AFF]" />
+          </div>
+          <div className="flex-grow my-auto">
+            <h2 className="text-xl font-semibold text-gray-800 tracking-tight leading-none mb-0.5 mt-2">Gestión de Facturas</h2>
+            <p className="text-sm text-gray-500 mt-0 leading-tight">Administra y controla tus documentos fiscales</p>
           </div>
         </div>
-      )}
+      </div>
       
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">

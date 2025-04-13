@@ -19,10 +19,12 @@ const CreateInvoicePage = () => {
     );
   }
 
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div className="max-w-full p-4 md:p-6">
-      {/* Cabecera estilo Apple */}
-      <div className="w-full flex items-center justify-between mb-6">
+      {/* Cabecera estilo Apple - visible solo en desktop */}
+      <div className={`w-full flex items-center justify-between mb-6 ${isMobile ? 'mobile-invoice-header' : ''}`}>
         <div className="flex items-center">
           <button 
             onClick={() => navigate("/invoices")}
