@@ -497,42 +497,29 @@ const DocumentScanPage = () => {
             )}
             
             {/* Botón de procesamiento estilo Apple premium */}
-            <div className="mt-8">
+            <div className="mt-8 mb-6">
               <Button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className={`relative py-4 px-8 text-[16px] font-medium w-full transition-all duration-300 
+                className={`relative py-3 px-8 text-[15px] font-medium w-full transition-all duration-300 
                   ${uploading || !file 
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" 
                     : "text-white"
                   }`}
                 style={{
-                  borderRadius: "14px",
+                  borderRadius: "12px",
                   background: !file || uploading ? 
                     "linear-gradient(to bottom, #f8f8fa, #f2f2f4)" : 
                     "linear-gradient(135deg, #0A84FF 0%, #0062CC 100%)",
                   boxShadow: !file || uploading ? 
                     "none" : 
-                    "0 4px 12px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                    "0 2px 10px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                   letterSpacing: "-0.01em",
                   border: !file || uploading ?
                     "1px solid #e5e7eb" :
                     "none",
-                  transform: "translateY(0)",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseOver={(e) => {
-                  if (file && !uploading) {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(10, 132, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (file && !uploading) {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
-                  }
+                  opacity: !file ? "0.9" : "1",
                 }}
                 variant="ghost"
               >
