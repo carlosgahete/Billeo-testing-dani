@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, Receipt } from "lucide-react";
+import { Loader2, ArrowLeft, Receipt, ChevronLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -71,7 +71,7 @@ const CreateInvoicePage = () => {
             onClick={() => navigate("/invoices")}
             className="apple-back-button"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <ChevronLeft className="h-5 w-5" />
             <span>Volver</span>
           </button>
         </div>

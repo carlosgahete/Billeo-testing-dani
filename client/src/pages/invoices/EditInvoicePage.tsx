@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Receipt } from "lucide-react";
+import { ArrowLeft, Loader2, Receipt, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import MobileInvoiceForm from "@/components/invoices/MobileInvoiceForm";
@@ -181,7 +181,7 @@ export default function EditInvoicePage() {
             onClick={() => navigate("/invoices")}
             className="apple-back-button"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <ChevronLeft className="h-5 w-5" />
             <span>Volver</span>
           </button>
         </div>

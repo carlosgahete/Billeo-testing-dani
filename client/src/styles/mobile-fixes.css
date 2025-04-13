@@ -169,27 +169,27 @@
     padding: 7px 12px !important;
   }
   
-  /* Botón de volver estilo iOS - tipo píldora */
+  /* Botón de volver estilo iOS - texto simple con flecha */
   .apple-back-button {
-    background-color: #F2F2F2 !important;
-    color: #444444 !important;
-    font-size: 15px !important;
-    padding: 8px 16px !important;
-    height: 34px !important;
+    background: none !important;
+    color: #007AFF !important;
+    font-size: 16px !important;
+    padding: 0 !important;
+    height: auto !important;
     border: none !important;
     display: flex !important;
     align-items: center !important;
     font-weight: normal !important;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: none !important;
     position: relative !important;
-    margin-left: 6px !important;
-    border-radius: 17px !important;
+    margin-left: 4px !important;
   }
   
   .apple-back-button svg {
-    width: 15px !important;
-    height: 15px !important;
-    margin-right: 3px !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 2px !important;
+    color: #007AFF !important;
     stroke-width: 2.5px !important;
   }
   
