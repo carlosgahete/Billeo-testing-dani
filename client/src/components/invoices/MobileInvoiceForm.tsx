@@ -869,53 +869,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                     </div>
                   </div>
 
-                  <div>
-                    <div className="mb-3 flex items-center justify-between">
-                      <FormLabel className="mb-0">Impuestos adicionales</FormLabel>
-                      <button
-                        type="button"
-                        onClick={handleAddTax}
-                        className="button-apple-secondary button-apple-sm text-xs h-8 flex items-center"
-                      >
-                        <Plus className="mr-1 h-3 w-3" />
-                        Añadir impuesto
-                      </button>
-                    </div>
-                    
-                    {taxFields.length > 0 ? (
-                      <div className="space-y-2">
-                        {taxFields.map((taxField, index) => (
-                          <div 
-                            key={taxField.id} 
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-                          >
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-700">
-                                {form.getValues(`additionalTaxes.${index}.name`)}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {form.getValues(`additionalTaxes.${index}.isPercentage`) 
-                                  ? `${form.getValues(`additionalTaxes.${index}.amount`)}%` 
-                                  : `${form.getValues(`additionalTaxes.${index}.amount`)}€`
-                                }
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeTax(index)}
-                              className="h-8 w-8 p-0 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 italic">
-                        No hay impuestos adicionales configurados
-                      </div>
-                    )}
-                  </div>
+
                 </div>
               </MobileAccordionContent>
             </MobileAccordionItem>
@@ -1073,8 +1027,57 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                     <Plus className="mr-2 h-4 w-4" />
                     Añadir ítem
                   </button>
+                  
+                  {/* Sección de impuestos adicionales */}
+                  <div className="mt-6 mb-3">
+                    <div className="mb-3 flex items-center justify-between">
+                      <FormLabel className="mb-0">Impuestos adicionales</FormLabel>
+                      <button
+                        type="button"
+                        onClick={handleAddTax}
+                        className="button-apple-secondary button-apple-sm text-xs h-8 flex items-center"
+                      >
+                        <Plus className="mr-1 h-3 w-3" />
+                        Añadir impuesto
+                      </button>
+                    </div>
+                    
+                    {taxFields.length > 0 ? (
+                      <div className="space-y-2">
+                        {taxFields.map((taxField, index) => (
+                          <div 
+                            key={taxField.id} 
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-700">
+                                {form.getValues(`additionalTaxes.${index}.name`)}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {form.getValues(`additionalTaxes.${index}.isPercentage`) 
+                                  ? `${form.getValues(`additionalTaxes.${index}.amount`)}%` 
+                                  : `${form.getValues(`additionalTaxes.${index}.amount`)}€`
+                                }
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeTax(index)}
+                              className="h-8 w-8 p-0 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 italic">
+                        No hay impuestos adicionales configurados
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="p-4 rounded-lg mt-6" style={{backgroundColor: 'rgba(250, 250, 252, 0.95)', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', backdropFilter: 'blur(10px)'}}>
+                  <div className="p-4 rounded-lg mt-3" style={{backgroundColor: 'rgba(250, 250, 252, 0.95)', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', backdropFilter: 'blur(10px)'}}>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">
