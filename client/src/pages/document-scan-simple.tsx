@@ -314,30 +314,29 @@ const DocumentScanPage = () => {
       
       {/* Contenedor principal exactamente en el centro de la pantalla - estilo Apple mejorado */}
       <div 
-        className="w-full max-w-[380px] px-4 text-center rounded-[16px] py-8"
+        className="w-full max-w-[340px] px-3 text-center rounded-[20px] py-6"
         style={{
           position: "absolute",
           top: "55%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          background: "rgba(255, 255, 255, 0.92)",
-          border: "1px solid rgba(209, 213, 219, 0.4)",
-          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.06)"
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          background: "rgba(247, 247, 247, 0.85)",
+          border: "1px solid rgba(255, 255, 255, 0.5)",
+          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.04)"
         }}
       >
         {/* Título con estilo Apple auténtico */}
-        <div className="mb-8">
-          <h1 className="text-[30px] font-bold text-gray-900 mb-1" style={{ 
+        <div className="mb-6">
+          <h1 className="text-[24px] font-semibold text-gray-900 mb-1" style={{ 
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
             letterSpacing: "-0.025em",
             background: "linear-gradient(to right, #1E293B, #334155)",
             WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            textShadow: "0 1px 2px rgba(0, 0, 0, 0.02)"
+            WebkitTextFillColor: "transparent"
           }}>Escanear Factura</h1>
-          <p className="text-[16px] text-gray-500 font-normal" style={{ 
+          <p className="text-[14px] text-gray-500 font-normal" style={{ 
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
             letterSpacing: "-0.01em"
           }}>Sube una imagen o PDF de tu factura</p>
@@ -367,13 +366,13 @@ const DocumentScanPage = () => {
           <div className="w-full">
             {/* Zona de arrastrar y soltar moderno y limpio */}
             <div 
-              className="w-full rounded-[16px] py-10 px-6 text-center cursor-pointer"
+              className="w-full rounded-[16px] py-7 px-4 text-center cursor-pointer"
               style={{
-                background: "linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(250, 250, 252, 0.9))",
-                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(255, 255, 255, 0.6)",
-                border: "1px solid rgba(209, 213, 219, 0.35)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)"
+                background: "linear-gradient(to bottom, rgba(250, 250, 252, 0.9), rgba(245, 245, 247, 0.9))",
+                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.03), inset 0 0 0 0.5px rgba(255, 255, 255, 0.8)",
+                border: "1px solid rgba(209, 213, 219, 0.3)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)"
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
@@ -381,13 +380,13 @@ const DocumentScanPage = () => {
             >
               {/* Icono con diseño Apple auténtico - centrado */}
               <div className="flex items-center justify-center w-full mb-4">
-                <div className="relative" style={{ width: "80px", height: "80px" }}>
+                <div className="relative" style={{ width: "70px", height: "70px" }}>
                   {/* Base circular con gradiente de azul iOS */}
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
                       background: "linear-gradient(145deg, #0A84FF, #0066CC)",
-                      boxShadow: "0 4px 10px rgba(0, 122, 255, 0.25)"
+                      boxShadow: "0 2px 8px rgba(0, 122, 255, 0.2)"
                     }}
                   ></div>
                   
@@ -404,15 +403,12 @@ const DocumentScanPage = () => {
                     ></div>
                   </div>
                   
-                  {/* Icono de flecha hacia arriba estilo SF Symbols */}
+                  {/* SF Symbol de carga */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <img 
-                      src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDYuNzVWMjUuNSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTkuNzUgMTVMMTggNi43NUwyNi4yNSAxNSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTkgMjkuMjVIMjciIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" 
-                      width="36" 
-                      height="36" 
-                      alt="Upload Icon" 
-                      className="object-contain"
-                    />
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 4L12 14M12 4L8 8M12 4L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M6 14L6 16C6 18.2091 7.79086 20 10 20L14 20C16.2091 20 18 18.2091 18 16L18 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
                 </div>
               </div>
