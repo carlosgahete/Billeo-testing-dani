@@ -415,11 +415,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
-          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
-        {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido */}
+      {/* En móvil: Ocultar estos widgets | En desktop: Mostrar normalmente */}
+      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
+        {/* Widget de Ingresos - Estilo Apple - Solo visible en desktop */}
+        <div className="dashboard-card fade-in mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -451,7 +451,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <Link href="/invoices" className="md:block hidden">
+            <Link href="/invoices">
               <button className="w-full px-4 py-2 rounded-md font-medium text-[#34C759] border border-[#34C759] hover:bg-[#34C759]/10 transition-colors">
                 Ver facturas
               </button>
@@ -459,8 +459,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        {/* Widget de Gastos - Estilo Apple - Solo visible en desktop */}
+        <div className="dashboard-card fade-in mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -492,7 +492,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <Link href="/transactions" className="md:block hidden">
+            <Link href="/transactions">
               <button className="w-full px-4 py-2 rounded-md font-medium text-[#FF3B30] border border-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors">
                 Ver gastos
               </button>
@@ -500,8 +500,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Resultado Final - Estilo Apple - Mismo ancho que las otras tarjetas */}
-        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 -mx-2 sm:mx-0 px-0">
+        {/* Widget de Resultado Final - Estilo Apple - Solo visible en desktop */}
+        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 mx-0 px-0">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -533,13 +533,37 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <Link href="/reports" className="md:block hidden">
+            <Link href="/reports">
               <button className="w-full px-4 py-2 rounded-md font-medium text-[#007AFF] border border-[#007AFF] hover:bg-[#007AFF]/10 transition-colors">
                 Ver informes
               </button>
             </Link>
           </div>
         </div>
+      </div>
+      
+      {/* Resumen simplificado para móvil - Solo visible en móvil */}
+      <div className="flex sm:hidden justify-around items-center mx-2 mt-2 mb-6 bg-white rounded-xl shadow-sm p-4">
+        <Link href="/invoices" className="flex flex-col items-center">
+          <div className="bg-[#E2F6ED] p-2.5 rounded-full mb-2">
+            <ArrowUp className="h-5 w-5 text-[#34C759]" strokeWidth={1.5} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">Ingresos</span>
+        </Link>
+        
+        <Link href="/transactions" className="flex flex-col items-center">
+          <div className="bg-[#FEECEB] p-2.5 rounded-full mb-2">
+            <ArrowDown className="h-5 w-5 text-[#FF3B30]" strokeWidth={1.5} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">Gastos</span>
+        </Link>
+        
+        <Link href="/reports" className="flex flex-col items-center">
+          <div className="bg-[#E9F8FB] p-2.5 rounded-full mb-2">
+            <PiggyBank className="h-5 w-5 text-[#007AFF]" strokeWidth={1.5} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">Informes</span>
+        </Link>
       </div>
 
       {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple - Ocultos en móvil */}
