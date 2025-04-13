@@ -125,7 +125,10 @@ const ExpenseFilters = ({
     setDateRange({ start: "", end: "" });
     setPriceRange({ min: "", max: "" });
     setFiltersApplied(false);
-    onFilterChange([]);
+    
+    // Restaurar todas las transacciones de tipo "expense"
+    const expenseTransactions = transactions.filter(tx => tx.type === "expense");
+    onFilterChange(expenseTransactions);
     
     // En móvil, cerrar automáticamente el panel de filtros después de limpiar
     const isMobile = window.innerWidth < 640; // sm breakpoint en Tailwind
