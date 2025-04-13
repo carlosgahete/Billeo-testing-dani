@@ -540,16 +540,24 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
               </CardDescription>
             </div>
             <div className="hidden md:block">
-              <Link href="/quotes/create">
-                <Button className="gap-1">
-                  <span>+</span> Nuevo presupuesto
-                </Button>
-              </Link>
+              <div className="flex space-x-2">
+                <Link href="/quotes/create">
+                  <Button className="gap-1">
+                    <span>+</span> Nuevo presupuesto
+                  </Button>
+                </Link>
+                <Link href="/quotes/simple/create">
+                  <Button variant="outline" className="gap-1">
+                    <span>+</span> Versión simple
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="px-1 sm:px-6">
-          <div className="overflow-x-auto -mx-1 sm:mx-0">
+          {/* Tabla para vista de escritorio */}
+          <div className="hidden md:block overflow-x-auto -mx-1 sm:mx-0">
             <Table className="w-full min-w-full">
               <TableHeader>
                 <TableRow>
@@ -728,15 +736,139 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
               </TableBody>
             </Table>
           </div>
+          
+          {/* Vista móvil en tarjetas */}
+          <div className="md:hidden px-2 pb-16">
+            {displayQuotes.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <div className="mb-3 flex justify-center">
+                  <FileText className="h-12 w-12 text-gray-300" />
+                </div>
+                <p className="text-sm">No se encontraron presupuestos</p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {displayQuotes.map((quote) => {
+                  const client = clientsData?.find((c) => c.id === quote.clientId);
+                  const statusColors = {
+                    accepted: "bg-green-50 text-green-700 border-green-200",
+                    draft: "bg-slate-50 text-slate-700 border-slate-200",
+                    sent: "bg-blue-50 text-blue-700 border-blue-200",
+                    rejected: "bg-red-50 text-red-700 border-red-200",
+                    expired: "bg-gray-50 text-gray-700 border-gray-200"
+                  };
+                  const statusColorClass = statusColors[quote.status] || "bg-gray-50 text-gray-700 border-gray-200";
+                  
+                  return (
+                    <li key={quote.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200/80">
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-medium text-gray-800">{quote.quoteNumber}</h3>
+                          <span className={`text-xs px-2 py-1 rounded-md ${statusColorClass}`}>
+                            {quote.status === "accepted" && "Aceptado"}
+                            {quote.status === "draft" && "Borrador"}
+                            {quote.status === "sent" && "Enviado"}
+                            {quote.status === "rejected" && "Rechazado"}
+                            {quote.status === "expired" && "Expirado"}
+                          </span>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <p className="text-sm text-gray-700 truncate">{client?.name || "Cliente sin especificar"}</p>
+                          <p className="text-xs text-gray-500">{formatDate(quote.issueDate)}</p>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-xs text-gray-500">Total</p>
+                            <p className="text-sm font-semibold">{formatCurrency(quote.total)}</p>
+                          </div>
+                          
+                          {showActions && (
+                            <div className="flex space-x-2">
+                              <Link href={`/quotes/simple/edit/${quote.id}`}>
+                                <Button size="sm" variant="outline" className="h-9 px-3">
+                                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                                  <span className="text-xs">Editar Simple</span>
+                                </Button>
+                              </Link>
+                              
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-9 w-9 p-0" 
+                                onClick={() => handleDelete(quote.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {showActions && (
+                          <div className="flex mt-3 gap-1.5 overflow-x-auto no-scrollbar py-2">
+                            <Link href={`/quotes/edit/${quote.id}`} className="shrink-0">
+                              <Button size="sm" variant="secondary" className="h-8">
+                                Editar Completo
+                              </Button>
+                            </Link>
+                            
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="h-8 shrink-0"
+                              onClick={() => handleDownloadPDF(quote)}
+                            >
+                              <Download className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">PDF</span>
+                            </Button>
+                            
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="h-8 shrink-0"
+                              onClick={() => handleEmailQuote(quote)}
+                            >
+                              <Mail className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">Email</span>
+                            </Button>
+                            
+                            {quote.status === "accepted" && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-8 shrink-0 text-green-600 bg-green-50"
+                                onClick={() => handleConvert(quote.id)}
+                              >
+                                <FileCheck className="h-3.5 w-3.5 mr-1" />
+                                <span className="text-xs">Convertir</span>
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </CardContent>
         <CardFooter className="flex justify-between items-center pt-6 border-t px-2 sm:px-6">
           <div className="md:hidden">
             {showActions && (
-              <Link href="/quotes/create">
-                <Button>
-                  <span className="mr-1">+</span> Nuevo
-                </Button>
-              </Link>
+              <div className="flex space-x-2">
+                <Link href="/quotes/create">
+                  <Button>
+                    <span className="mr-1">+</span> Nuevo
+                  </Button>
+                </Link>
+                <Link href="/quotes/simple/create">
+                  <Button variant="outline">
+                    <span className="mr-1">+</span> Simple
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
           {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
