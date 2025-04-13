@@ -176,12 +176,9 @@ export default function EditInvoicePage() {
       
       {/* Botón de volver para móvil sin título - estilo iOS textual */}
       {isMobile && (
-        <div className="mb-3 mt-1 pl-1 text-left">
-          <button 
-            onClick={() => navigate("/invoices")}
-            className="apple-back-button"
-          >
-            <ChevronLeft className="h-4 w-4" />
+        <div className="mt-1 mb-3 ml-2">
+          <button onClick={() => navigate("/invoices")} className="apple-back-button">
+            <ChevronLeft />
             <span>Volver</span>
           </button>
         </div>

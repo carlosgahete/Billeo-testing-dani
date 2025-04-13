@@ -175,31 +175,24 @@
     color: #007AFF !important;
     font-size: 16px !important;
     padding: 0 !important;
-    height: 24px !important;
+    height: auto !important;
     border: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
     font-weight: normal !important;
     box-shadow: none !important;
-    position: relative !important;
-    margin-left: 0 !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
+  }
+  
+  .apple-back-button svg,
+  .apple-back-button span {
+    display: inline-block !important;
+    vertical-align: middle !important;
   }
   
   .apple-back-button svg {
-    width: 16px !important;
-    height: 16px !important;
-    margin-right: 4px !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 1px !important;
     color: #007AFF !important;
-    stroke-width: 2.5px !important;
-  }
-  
-  .apple-back-button span {
-    line-height: 1 !important;
-    vertical-align: middle !important;
-    display: inline-block !important;
+    stroke-width: 2px !important;
   }
   
   /* Campos de formulario estilo Apple */
