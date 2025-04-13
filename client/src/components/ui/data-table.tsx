@@ -24,7 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, Filter, Trash2, FileDown, Check } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Filter, Trash2, FileDown, Check, ChevronDown } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -199,6 +200,123 @@ export function DataTable<TData, TValue>({
     }
   };
   
+  // Check if we are on mobile
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  // Function to render mobile card view
+  const renderMobileCards = () => {
+    return (
+      <div className="space-y-3 px-2 pb-2">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => {
+            // Get the select cell (if selectable is true)
+            const selectCell = selectable ? row.getVisibleCells()[0] : null;
+            // Get the actual data cells (skipping select cell if it exists)
+            const dataCells = selectable 
+              ? row.getVisibleCells().slice(1) 
+              : row.getVisibleCells();
+            
+            // Find important cells based on your data model
+            // For transactions, we might want to show date, title, amount
+            // Note: This assumes specific column structure
+            const titleCell = dataCells.find(cell => cell.column.id.includes('title'));
+            const dateCell = dataCells.find(cell => cell.column.id.includes('date'));
+            const amountCell = dataCells.find(cell => cell.column.id.includes('amount'));
+            const typeCell = dataCells.find(cell => cell.column.id.includes('type'));
+            
+            return (
+              <div 
+                key={row.id}
+                className={`bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow ${row.getIsSelected() ? 'border-[#007AFF] border-2' : ''}`}
+              >
+                {/* Card Header - Main Info */}
+                <div className="flex justify-between items-center px-4 py-3 border-b border-gray-50">
+                  <div className="flex items-center space-x-3">
+                    {/* Selection Checkbox (if selectable) */}
+                    {selectCell && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {flexRender(
+                          selectCell.column.columnDef.cell,
+                          selectCell.getContext()
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Title & Date */}
+                    <div>
+                      <h3 className="font-medium text-sm text-gray-900">
+                        {titleCell ? flexRender(
+                          titleCell.column.columnDef.cell,
+                          titleCell.getContext()
+                        ) : ''}
+                      </h3>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {dateCell ? flexRender(
+                          dateCell.column.columnDef.cell,
+                          dateCell.getContext()
+                        ) : ''}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Amount */}
+                  <div className="text-right">
+                    <div className="font-semibold text-sm">
+                      {amountCell ? flexRender(
+                        amountCell.column.columnDef.cell,
+                        amountCell.getContext()
+                      ) : ''}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {typeCell ? flexRender(
+                        typeCell.column.columnDef.cell,
+                        typeCell.getContext()
+                      ) : ''}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Hidden details that expand on click */}
+                <details className="group">
+                  <summary className="px-4 py-2 text-xs text-gray-500 hover:bg-gray-50 cursor-pointer flex items-center justify-center">
+                    <span>Ver más detalles</span>
+                    <ChevronDown className="h-3 w-3 ml-1 group-open:rotate-180 transition-transform" />
+                  </summary>
+                  <div className="px-4 py-3 bg-gray-50 text-xs space-y-2">
+                    {dataCells.map((cell) => {
+                      // Skip cells we already showed in the main view
+                      if (cell === titleCell || cell === dateCell || cell === amountCell || cell === typeCell) {
+                        return null;
+                      }
+                      
+                      return (
+                        <div key={cell.id} className="flex justify-between">
+                          <span className="text-gray-500 font-medium">
+                            {cell.column.columnDef.header?.toString() || cell.column.id}:
+                          </span>
+                          <span className="text-gray-900">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              </div>
+            );
+          })
+        ) : (
+          <div className="py-12 text-center text-gray-500">
+            No hay resultados.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="relative">
       {/* Barra de acción flotante - aparece cuando hay elementos seleccionados */}
@@ -279,68 +397,73 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
-      <div className="rounded-xl overflow-x-auto bg-white">
-        <Table className="min-w-full">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b-0">
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead 
-                      key={header.id} 
-                      className="whitespace-nowrap px-5 py-3 font-medium text-xs text-[#8E8E93] bg-[#F2F2F7] tracking-wide uppercase first:rounded-tl-xl last:rounded-tr-xl"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, index) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={`
-                    transition-colors duration-200 
-                    ${index !== table.getRowModel().rows.length - 1 ? 'border-b border-[#E5E5EA]/80' : ''}
-                    bg-white
-                    hover:bg-[#F2F2F7]/60
-                  `}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id} 
-                      className="py-3.5 px-5 text-sm text-gray-800"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+      {/* Renderización condicional: tabla para desktop, tarjetas para móvil */}
+      {isMobile ? (
+        renderMobileCards()
+      ) : (
+        <div className="rounded-xl overflow-x-auto bg-white">
+          <Table className="min-w-full">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b-0">
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead 
+                        key={header.id} 
+                        className="whitespace-nowrap px-5 py-3 font-medium text-xs text-[#8E8E93] bg-[#F2F2F7] tracking-wide uppercase first:rounded-tl-xl last:rounded-tr-xl"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-gray-500"
-                >
-                  No hay resultados.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row, index) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={`
+                      transition-colors duration-200 
+                      ${index !== table.getRowModel().rows.length - 1 ? 'border-b border-[#E5E5EA]/80' : ''}
+                      bg-white
+                      hover:bg-[#F2F2F7]/60
+                    `}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell 
+                        key={cell.id} 
+                        className="py-3.5 px-5 text-sm text-gray-800"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-gray-500"
+                  >
+                    No hay resultados.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {pagination && (
         <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0 sm:space-x-2 py-4 px-4 mt-2">
