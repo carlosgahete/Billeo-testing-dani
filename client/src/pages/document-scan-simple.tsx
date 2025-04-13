@@ -413,7 +413,7 @@ const DocumentScanPage = () => {
                     gap: "0.35rem"
                   }}
                 >
-                  <FileIcon className="h-4 w-4 mr-1" />
+                  <FileText className="h-4 w-4 mr-1" />
                   <span>Archivo</span>
                 </Button>
                 
