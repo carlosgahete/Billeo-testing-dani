@@ -380,32 +380,37 @@ const DocumentScanPage = () => {
               onClick={() => document.getElementById('file-input')?.click()}
             >
               {/* Icono con diseño Apple auténtico - centrado */}
-              <div className="flex items-center justify-center w-full mb-2">
-                <svg 
-                  width="60" 
-                  height="60" 
-                  viewBox="0 0 60 60" 
-                  className="transform transition-transform hover:scale-105 active:scale-95"
+              <div className="flex items-center justify-center w-full mb-4">
+                <div 
+                  className="h-[70px] w-[70px] rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #34AADC 0%, #007AFF 100%)",
+                    boxShadow: "0 4px 14px rgba(0, 122, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                  }}
                 >
-                  <defs>
-                    <linearGradient id="uploadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#34AADC" />
-                      <stop offset="100%" stopColor="#007AFF" />
-                    </linearGradient>
-                    <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="2" />
-                      <feOffset dx="0" dy="1" />
-                      <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" />
-                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0" />
-                    </filter>
-                  </defs>
-                  <circle cx="30" cy="30" r="28" fill="url(#uploadGradient)" filter="url(#shadowFilter)" />
-                  <path 
-                    d="M30 18L22 26H26V36H34V26H38L30 18ZM20 38V42H40V38H20Z" 
-                    fill="white" 
-                    fillRule="evenodd"
-                  />
-                </svg>
+                  <svg 
+                    width="28" 
+                    height="28" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-white"
+                  >
+                    <path 
+                      d="M12 4L12 16M12 4L7 9M12 4L17 9" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                    <path 
+                      d="M5 20H19" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                    />
+                  </svg>
+                </div>
               </div>
               
               <p 
