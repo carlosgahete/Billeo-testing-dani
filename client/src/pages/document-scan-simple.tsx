@@ -314,15 +314,17 @@ const DocumentScanPage = () => {
       
       {/* Contenedor principal exactamente en el centro de la pantalla - estilo Apple mejorado */}
       <div 
-        className="w-full max-w-[400px] px-4 text-center"
+        className="w-full max-w-[400px] px-4 text-center rounded-[24px] py-10"
         style={{
           position: "absolute",
-          top: "50%",
+          top: "55%",
           left: "50%",
-          transform: "translate(-50%, -60%)",
+          transform: "translate(-50%, -50%)",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
-          background: "rgba(255, 255, 255, 0.7)"
+          background: "rgba(255, 255, 255, 0.7)",
+          border: "1px solid rgba(209, 213, 219, 0.3)",
+          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.08)"
         }}
       >
         {/* Título con estilo Apple auténtico */}
