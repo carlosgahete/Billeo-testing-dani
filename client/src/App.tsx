@@ -46,6 +46,7 @@ import LibroRegistrosSelector from "@/pages/libro-registros-page";
 import SimpleQuoteCreatePage from "@/pages/quotes/simple/create";
 import SimpleQuoteEditPage from "@/pages/quotes/simple/edit/[id]";
 import SimpleQuoteListPage from "@/pages/quotes/simple/list";
+import UltraSimpleQuotesPage from "@/pages/quotes/ultra-simple";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -263,6 +264,11 @@ function Router() {
             <ProtectedRoute path={`/quotes/simple/edit/${params.id}`} component={SimpleQuoteEditPage} />
           </Layout>
         )}
+      </Route>
+      
+      {/* Ruta ultra simple para presupuestos - directa sin layout */}
+      <Route path="/quotes/ultra-simple">
+        <UltraSimpleQuotesPage />
       </Route>
       
       <Route path="*" component={NotFound} />
