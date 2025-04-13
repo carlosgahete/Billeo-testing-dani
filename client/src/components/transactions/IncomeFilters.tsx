@@ -85,7 +85,7 @@ const IncomeFilters = ({
     
     // En móvil, cerrar automáticamente el panel de filtros después de aplicarlos
     const isMobile = window.innerWidth < 640; // sm breakpoint en Tailwind
-    if (isMobile && onToggleFilters && filtered.length > 0) {
+    if (isMobile && onToggleFilters) {
       onToggleFilters();
     }
     
