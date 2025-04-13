@@ -286,7 +286,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("container-apple section-apple bg-[#F9F9F9]", className)}>
+    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0", className)}>
       {/* Cabecera del dashboard con título y controles - Estilo Apple */}
       <div className="section-header">
         <div className="flex items-center">
@@ -415,7 +415,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
       {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
           En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 mt-4 md:mt-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 mt-1 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
         <div className="dashboard-card fade-in mx-0 px-0">
           <div className="md:p-6 p-2">
@@ -541,10 +541,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-8 mt-2 md:mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-1 md:gap-8 mt-1 md:mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in col-span-3">
-          <div className="p-4">
+          <div className="p-2 md:p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
                 <div className="bg-[#F0EDFF] p-2 rounded-full mr-2">
