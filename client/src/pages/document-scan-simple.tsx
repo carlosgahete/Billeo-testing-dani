@@ -346,23 +346,13 @@ const DocumentScanPage = () => {
           }}>Sube una imagen o PDF de tu factura</p>
         </div>
         
-        {/* Control de archivos invisible - opción de archivo */}
+        {/* Control de archivos invisible */}
         <input
           type="file"
           id="file-input"
           accept="image/*,.pdf"
           onChange={handleFileChange}
           className="hidden"
-        />
-        
-        {/* Control de cámara invisible - opción de cámara */}
-        <input
-          type="file"
-          id="camera-input"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-          capture="environment"
         />
 
         {!showEditMode ? (
@@ -405,56 +395,8 @@ const DocumentScanPage = () => {
                   WebkitTextFillColor: "transparent"
                 }}
               >
-                <span className="hidden sm:inline">Arrastra y suelta o selecciona un archivo</span>
-                <span className="sm:hidden">Selecciona un método para subir</span>
+                Arrastra y suelta o selecciona un archivo
               </p>
-              
-              {/* Opciones de subida en dispositivos móviles */}
-              <div className="flex justify-center space-x-3 mt-4 sm:hidden">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const input = document.getElementById('file-input') as HTMLInputElement;
-                    if (input) input.click();
-                  }}
-                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-[13px] transition-all"
-                  style={{
-                    background: "rgba(248, 248, 248, 0.8)",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.1)",
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                    fontWeight: 500,
-                    color: "#007AFF",
-                    letterSpacing: "-0.01em"
-                  }}
-                >
-                  <FileText className="h-4 w-4 mr-1 text-[#007AFF]" />
-                  <span>Archivo</span>
-                </button>
-                
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const input = document.getElementById('camera-input') as HTMLInputElement;
-                    if (input) input.click();
-                  }}
-                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-[13px] transition-all"
-                  style={{
-                    background: "rgba(248, 248, 248, 0.8)",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.1)",
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                    fontWeight: 500,
-                    color: "#007AFF",
-                    letterSpacing: "-0.01em"
-                  }}
-                >
-                  <Camera className="h-4 w-4 mr-1 text-[#007AFF]" />
-                  <span>Cámara</span>
-                </button>
-              </div>
               
               <div className="inline-flex items-center justify-center bg-[#F2F2F7]/80 rounded-full px-4 py-1.5 mt-5" style={{
                   backdropFilter: "blur(8px)",
