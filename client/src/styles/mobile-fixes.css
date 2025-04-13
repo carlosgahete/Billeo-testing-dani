@@ -22,7 +22,11 @@
   /* Ocultar completamente los encabezados en vista móvil */
   .section-header, 
   .hidden.md\\:block.section-header, 
-  [class*="section-header"] {
+  [class*="section-header"],
+  h2.text-xl.font-semibold.text-gray-800,
+  .flex.items-center:has(h2),
+  .bg-\[\#E9F8FB\],
+  .text-sm.text-gray-500.mt-0.leading-tight {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
@@ -30,6 +34,16 @@
     overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+  
+  /* Forzar al header a ser completamente invisible en facturas */
+  body:has(.invoice-table-mobile) header,
+  body:has(.invoice-table-mobile) .mt-2,
+  .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full > div:first-child {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
   }
   
   /* Estilo iOS para el diseño adaptado de facturas en móvil */
