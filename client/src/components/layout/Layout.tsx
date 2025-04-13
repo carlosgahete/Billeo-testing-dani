@@ -73,7 +73,7 @@ const Layout = ({ children }: LayoutProps) => {
             transition-all duration-300
           `}
         >
-          <div className="w-full py-0 lg:py-6 px-0 sm:px-2 lg:px-8">
+          <div className="w-full py-0 lg:py-6 px-4 sm:px-6 lg:px-8">
             {children}
           </div>
         </div>
