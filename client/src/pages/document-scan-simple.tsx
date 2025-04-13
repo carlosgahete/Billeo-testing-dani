@@ -429,51 +429,78 @@ const DocumentScanPage = () => {
               
               {/* Opciones de subida en dispositivos móviles */}
               <div className="flex justify-center space-x-3 mt-4 sm:hidden">
-                <Button
-                  variant="outline" 
-                  size="sm"
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     const input = document.getElementById('file-input') as HTMLInputElement;
                     if (input) input.click();
                   }}
-                  className="rounded-full px-4 py-2 text-sm"
+                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-sm transition-all"
                   style={{
-                    background: "linear-gradient(to bottom, #ffffff, #f5f5f7)",
-                    border: "1px solid rgba(209, 213, 219, 0.5)",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                    background: "rgba(255, 255, 255, 0.8)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.08)",
                     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.35rem"
+                    fontWeight: 500,
+                    color: "#1A1A1A",
+                    letterSpacing: "-0.01em"
                   }}
                 >
-                  <FileText className="h-4 w-4 mr-1" />
+                  <div className="mr-2 relative" style={{width: "16px", height: "16px"}}>
+                    <div 
+                      className="absolute inset-0 rounded-full" 
+                      style={{
+                        background: "linear-gradient(145deg, #34C759, #30B350)",
+                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+                      }}
+                    ></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 13.004V3.004C3 1.9 3.9 1 5.004 1H10.996C12.1 1 13 1.895 13 3.004V13.004C13 14.108 12.1 15.008 10.996 15.008H5.004C3.9 15.008 3 14.108 3 13.004Z" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M7 11H9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
                   <span>Archivo</span>
-                </Button>
+                </button>
                 
-                <Button
-                  variant="outline" 
-                  size="sm"
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     const input = document.getElementById('camera-input') as HTMLInputElement;
                     if (input) input.click();
                   }}
-                  className="rounded-full px-4 py-2 text-sm"
+                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-sm transition-all"
                   style={{
-                    background: "linear-gradient(to bottom, #ffffff, #f5f5f7)",
-                    border: "1px solid rgba(209, 213, 219, 0.5)",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                    background: "rgba(255, 255, 255, 0.8)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.08)",
                     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.35rem"
+                    fontWeight: 500,
+                    color: "#1A1A1A",
+                    letterSpacing: "-0.01em"
                   }}
                 >
-                  <Camera className="h-4 w-4 mr-1" />
+                  <div className="mr-2 relative" style={{width: "16px", height: "16px"}}>
+                    <div 
+                      className="absolute inset-0 rounded-full" 
+                      style={{
+                        background: "linear-gradient(145deg, #FF2D55, #F0264F)",
+                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+                      }}
+                    ></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 5h14v7.5c0 .828-.672 1.5-1.5 1.5h-11c-.828 0-1.5-.672-1.5-1.5V5Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M1 5l2-3h10l2 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="8" cy="9" r="2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
                   <span>Cámara</span>
-                </Button>
+                </button>
               </div>
               
               <div className="inline-flex items-center justify-center bg-[#F2F2F7]/80 rounded-full px-4 py-1.5 mt-5" style={{
@@ -542,28 +569,27 @@ const DocumentScanPage = () => {
                 </div>
               )}
               
-              <Button 
+              <button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className="h-10 relative px-6 text-[15px] font-medium w-auto mx-auto transition-all duration-300 text-white rounded-full flex items-center"
+                className="h-10 relative px-7 text-[15px] font-medium w-auto mx-auto transition-all duration-300 text-white rounded-full flex items-center justify-center"
                 style={{
                   background: !file || uploading ? 
-                    "linear-gradient(to bottom, #f8f8fa, #f2f2f4)" : 
+                    "linear-gradient(to bottom, rgba(248, 248, 250, 0.9), rgba(242, 242, 244, 0.9))" : 
                     "linear-gradient(135deg, #0A84FF 0%, #0077ED 100%)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
                   boxShadow: !file || uploading ? 
-                    "none" : 
-                    "0 2px 10px rgba(10, 132, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+                    "0 1px 2px rgba(0, 0, 0, 0.05), inset 0 0 0 0.5px rgba(0, 0, 0, 0.05)" : 
+                    "0 2px 6px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                   letterSpacing: "-0.01em",
-                  border: !file || uploading ?
-                    "1px solid #e5e7eb" :
-                    "none",
-                  opacity: !file ? "0.5" : "1",
+                  fontWeight: 500,
+                  opacity: !file ? "0.6" : "1",
                   color: !file || uploading ? "#A1A1A6" : "white",
-                  display: "inline-flex",
-                  justifyContent: "center"
+                  border: "none",
+                  cursor: !file || uploading ? "default" : "pointer"
                 }}
-                variant="ghost"
               >
                 {uploading ? (
                   <div className="flex items-center justify-center">
@@ -581,7 +607,7 @@ const DocumentScanPage = () => {
                     <span>Continuar</span>
                   </div>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
         ) : (
