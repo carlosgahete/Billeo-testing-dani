@@ -342,8 +342,9 @@ export default function AuthPage() {
       </div>
       
       {/* Decoración adicional */}
-      <div className="fixed bottom-4 left-0 right-0 w-full text-center text-[10px] md:text-xs text-blue-400/60">
-        <div className="whitespace-nowrap tracking-tight transform scale-90 inline-block">© {new Date().getFullYear()} Billeo · Tu gestión financiera</div>
+      <div className="fixed bottom-3 left-0 right-0 w-full text-center text-[9px] md:text-xs text-blue-400/60">
+        <div className="hidden sm:inline-block whitespace-nowrap">© {new Date().getFullYear()} Billeo · Tu gestión financiera</div>
+        <div className="sm:hidden inline-block whitespace-nowrap">© {new Date().getFullYear()} Billeo</div>
       </div>
     </div>
   );
