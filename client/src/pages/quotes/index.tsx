@@ -88,13 +88,13 @@ export default function QuotesPage() {
       <div className="px-1 -mt-20">
         <div className="flex justify-between gap-2 mb-3">
           <Link href="/quotes/create">
-            <Button className="bg-[#007AFF] hover:bg-[#0062CC] text-white">
+            <Button className="bg-[#FF9500] hover:bg-[#F08300] text-white px-3 py-1 h-9">
               <Plus className="h-4 w-4 mr-1" />
               Nuevo presupuesto
             </Button>
           </Link>
           <Button 
-            className="bg-[#5856D6] hover:bg-[#4645ab] text-white" 
+            className="bg-[#34C759] hover:bg-[#2EB350] text-white px-3 py-1 h-9" 
             onClick={generateQuotesSummaryPDF}
           >
             <Download className="h-4 w-4 mr-1" />
