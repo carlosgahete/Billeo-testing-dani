@@ -174,13 +174,18 @@ export default function EditInvoicePage() {
         </div>
       )}
       
-      {/* Botón de volver para móvil sin título - estilo iOS textual */}
+      {/* Botón de volver para móvil sin título */}
       {isMobile && (
         <div className="mt-1 mb-3 ml-2">
-          <button onClick={() => navigate("/invoices")} className="apple-back-button">
-            <ChevronLeft />
-            <span>Volver</span>
-          </button>
+          <a 
+            href="#" 
+            onClick={(e) => { e.preventDefault(); navigate("/invoices"); }} 
+            className="text-blue-500 no-underline"
+            style={{ display: 'inline-flex', alignItems: 'center' }}
+          >
+            <ChevronLeft size={16} style={{ marginRight: 1 }} />
+            Volver
+          </a>
         </div>
       )}
       
