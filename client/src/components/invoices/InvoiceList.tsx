@@ -1731,13 +1731,7 @@ const InvoiceList = () => {
                                 <Download className="h-4 w-4" />
                               </button>
                               
-                              <button 
-                                onClick={() => setSelectedInvoiceId(invoice.id)}
-                                className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
-                                aria-label="Enviar email"
-                              >
-                                <Mail className="h-4 w-4" />
-                              </button>
+                              {/* Temporalmente ocultamos el botón de email en móvil para simplificar */}
                             </div>
                             
                             <button

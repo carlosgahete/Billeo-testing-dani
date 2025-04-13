@@ -23,4 +23,28 @@
   .section-header {
     display: none !important;
   }
+  
+  /* Estilo iOS para el diseño adaptado de facturas en móvil */
+  .invoice-table-mobile {
+    background-color: #f5f5f7 !important; /* Fondo tipo iOS */
+  }
+  
+  /* Estilo para las tarjetas en móvil */
+  .glass-panel {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Estilo para el botón flotante (FAB) */
+  @keyframes float-animation {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .fixed.bottom-6.right-6 button {
+    animation: float-animation 4s ease-in-out infinite;
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+  }
 }
