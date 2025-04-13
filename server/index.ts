@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { registerRoutes } from "./routes";
 import { configureBetterExpenseRoutes } from "./routes-expenses-basic";
 import { configureDirectExpenseRoutes } from "./routes-direct-expenses";
@@ -8,6 +10,10 @@ import { configureOptionsRoutes } from "./routes-options";
 import { configureSimpleExpensesRoutes } from "./routes-simple-expenses";
 import { configureExpensesRoutes } from "./routes-expenses";
 import { setupVite, serveStatic, log } from "./vite";
+
+// Obtener el equivalente a __dirname en ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 // Aumentar el límite de tamaño para permitir PDFs más grandes
@@ -75,6 +81,11 @@ app.use((req, res, next) => {
   // Ruta HTML pura para presupuestos - acceso directo sin autenticación
   app.get('/mobile-quotes', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/quotes-standalone.html'));
+  });
+  
+  // Ruta ultra-minimalista para presupuestos (diseño Apple)
+  app.get('/super-light-quotes', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/public/quotes-super-light.html'));
   });
 
   const server = await registerRoutes(app);
