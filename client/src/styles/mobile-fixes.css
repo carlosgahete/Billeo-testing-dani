@@ -1,23 +1,8 @@
 /* Corrige el problema de doble scroll en móviles eliminando scrolls internos */
 @media (max-width: 768px) {
-  /* Ajustes globales para evitar scroll horizontal y zoom excesivo */
+  /* Ajustes globales para evitar scroll horizontal */
   html, body {
-    width: 100%;
-    max-width: 100%;
     overflow-x: hidden;
-  }
-
-  /* Asegurar que todos los contenedores principales respeten el ancho máximo */
-  .contenedor-principal, .tarjeta, .seccion, 
-  [class*="container"],
-  div[class*="max-w-"],
-  .max-w-full,
-  .w-full,
-  div[class*="p-"],
-  div[class*="m-"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
   }
 
   /* Aplicar a elementos con scroll interno en el dashboard */
@@ -26,13 +11,7 @@
   .h-\[280px\],
   .overflow-auto,
   .overflow-y-auto,
-  .overflow-x-auto,
-  [class*="overflow"],
-  [class*="max-h"],
-  .contenedor-scroll,
-  div[style*="overflow"],
-  div[style*="height"],
-  div[style*="max-height"] {
+  .overflow-x-auto {
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;

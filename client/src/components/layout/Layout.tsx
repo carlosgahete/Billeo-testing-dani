@@ -13,8 +13,10 @@ const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Usar el hook para hacer scroll al inicio en cada cambio de ruta
-  useScrollToTop();
+  // Vamos a simplificar el scroll to top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   useEffect(() => {
     // Close mobile menu when switching to desktop
