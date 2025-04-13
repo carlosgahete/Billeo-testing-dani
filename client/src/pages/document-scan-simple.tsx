@@ -380,37 +380,17 @@ const DocumentScanPage = () => {
             >
               {/* Icono con diseño Apple auténtico - centrado */}
               <div className="flex items-center justify-center w-full mb-4">
-                <div className="relative" style={{ width: "70px", height: "70px" }}>
-                  {/* Base circular con gradiente de azul iOS */}
-                  <div
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: "linear-gradient(145deg, #0A84FF, #0066CC)",
-                      boxShadow: "0 2px 8px rgba(0, 122, 255, 0.2)"
-                    }}
-                  ></div>
-                  
-                  {/* Capa de brillo superior */}
-                  <div
-                    className="absolute inset-0 rounded-full overflow-hidden"
-                    style={{ opacity: 0.2 }}
-                  >
-                    <div
-                      className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full"
-                      style={{
-                        background: "linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)"
-                      }}
-                    ></div>
-                  </div>
-                  
-                  {/* SF Symbol de carga */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 4L12 14M12 4L8 8M12 4L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6 14L6 16C6 18.2091 7.79086 20 10 20L14 20C16.2091 20 18 18.2091 18 16L18 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                </div>
+                <div className="flex items-center justify-center p-2 rounded-full" style={{ 
+                  width: "56px", 
+                  height: "56px",
+                  background: "#007AFF", 
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+                }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 5l-0.002 11M12 5l-4 4M12 5l4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 14v2c0 1.657 1.343 3 3 3h6c1.657 0 3-1.343 3-3v-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               </div>
               
               <p 
@@ -435,33 +415,19 @@ const DocumentScanPage = () => {
                     const input = document.getElementById('file-input') as HTMLInputElement;
                     if (input) input.click();
                   }}
-                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-sm transition-all"
+                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-[13px] transition-all"
                   style={{
-                    background: "rgba(255, 255, 255, 0.8)",
+                    background: "rgba(248, 248, 248, 0.8)",
                     backdropFilter: "blur(8px)",
                     WebkitBackdropFilter: "blur(8px)",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.08)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.1)",
                     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                     fontWeight: 500,
-                    color: "#1A1A1A",
+                    color: "#007AFF",
                     letterSpacing: "-0.01em"
                   }}
                 >
-                  <div className="mr-2 relative" style={{width: "16px", height: "16px"}}>
-                    <div 
-                      className="absolute inset-0 rounded-full" 
-                      style={{
-                        background: "linear-gradient(145deg, #34C759, #30B350)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
-                      }}
-                    ></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 13.004V3.004C3 1.9 3.9 1 5.004 1H10.996C12.1 1 13 1.895 13 3.004V13.004C13 14.108 12.1 15.008 10.996 15.008H5.004C3.9 15.008 3 14.108 3 13.004Z" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M7 11H9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  </div>
+                  <FileText className="h-4 w-4 mr-1 text-[#007AFF]" />
                   <span>Archivo</span>
                 </button>
                 
@@ -471,34 +437,19 @@ const DocumentScanPage = () => {
                     const input = document.getElementById('camera-input') as HTMLInputElement;
                     if (input) input.click();
                   }}
-                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-sm transition-all"
+                  className="flex items-center justify-center rounded-full px-4 py-[7px] text-[13px] transition-all"
                   style={{
-                    background: "rgba(255, 255, 255, 0.8)",
+                    background: "rgba(248, 248, 248, 0.8)",
                     backdropFilter: "blur(8px)",
                     WebkitBackdropFilter: "blur(8px)",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.08)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(0, 0, 0, 0.1)",
                     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                     fontWeight: 500,
-                    color: "#1A1A1A",
+                    color: "#007AFF",
                     letterSpacing: "-0.01em"
                   }}
                 >
-                  <div className="mr-2 relative" style={{width: "16px", height: "16px"}}>
-                    <div 
-                      className="absolute inset-0 rounded-full" 
-                      style={{
-                        background: "linear-gradient(145deg, #FF2D55, #F0264F)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
-                      }}
-                    ></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M1 5h14v7.5c0 .828-.672 1.5-1.5 1.5h-11c-.828 0-1.5-.672-1.5-1.5V5Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M1 5l2-3h10l2 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="8" cy="9" r="2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  </div>
+                  <Camera className="h-4 w-4 mr-1 text-[#007AFF]" />
                   <span>Cámara</span>
                 </button>
               </div>
