@@ -380,17 +380,15 @@ const DocumentScanPage = () => {
             >
               {/* Icono con diseño Apple auténtico - centrado */}
               <div className="flex items-center justify-center w-full mb-4">
-                <div className="flex items-center justify-center p-2 rounded-full" style={{ 
-                  width: "56px", 
-                  height: "56px",
-                  background: "#007AFF", 
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
-                }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 5l-0.002 11M12 5l-4 4M12 5l4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6 14v2c0 1.657 1.343 3 3 3h6c1.657 0 3-1.343 3-3v-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
+                <svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+                <g fill="none" fillRule="evenodd">
+                  <circle fill="#007AFF" cx="28" cy="28" r="28"/>
+                  <g stroke="#FFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M28 19v18M22 25l6-6 6 6"/>
+                    <path d="M19 29v4a5 5 0 005 5h8a5 5 0 005-5v-4"/>
+                  </g>
+                </g>
+              </svg>
               </div>
               
               <p 
@@ -523,39 +521,34 @@ const DocumentScanPage = () => {
               <button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className="h-10 relative px-7 text-[15px] font-medium w-auto mx-auto transition-all duration-300 text-white rounded-full flex items-center justify-center"
+                className="relative px-5 py-2.5 text-[15px] font-medium w-auto mx-auto transition-all duration-200 flex items-center justify-center rounded-md"
                 style={{
                   background: !file || uploading ? 
-                    "linear-gradient(to bottom, rgba(248, 248, 250, 0.9), rgba(242, 242, 244, 0.9))" : 
-                    "linear-gradient(135deg, #0A84FF 0%, #0077ED 100%)",
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
-                  boxShadow: !file || uploading ? 
-                    "0 1px 2px rgba(0, 0, 0, 0.05), inset 0 0 0 0.5px rgba(0, 0, 0, 0.05)" : 
-                    "0 2px 6px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                    "#F2F2F7" : 
+                    "#007AFF",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                   letterSpacing: "-0.01em",
                   fontWeight: 500,
                   opacity: !file ? "0.6" : "1",
-                  color: !file || uploading ? "#A1A1A6" : "white",
+                  color: !file || uploading ? "#8E8E93" : "white",
                   border: "none",
                   cursor: !file || uploading ? "default" : "pointer"
                 }}
               >
                 {uploading ? (
                   <div className="flex items-center justify-center">
-                    <svg className="animate-spin mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
+                    <svg className="animate-spin mr-1.5 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <span>Procesando</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-1.5">
-                      <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
                     <span>Continuar</span>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5">
+                      <path d="M2.5 6.5h8M10.5 6.5l-3.5-3.5M10.5 6.5l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
                 )}
               </button>
