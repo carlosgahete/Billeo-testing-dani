@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Receipt, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
-import MobileInvoiceForm from "@/components/invoices/MobileInvoiceForm";
+import SimpleMobileInvoiceForm from "@/components/invoices/SimpleMobileInvoiceForm";
 
 // Página específica para editar facturas con manejo de errores mejorado
 export default function EditInvoicePage() {
@@ -192,7 +192,7 @@ export default function EditInvoicePage() {
       {/* Renderiza el formulario adecuado según el dispositivo */}
       {invoiceData && (
         isMobile ? (
-          <MobileInvoiceForm 
+          <SimpleMobileInvoiceForm 
             invoiceId={invoiceId} 
             initialData={invoiceData} 
           />

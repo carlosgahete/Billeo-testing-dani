@@ -1,11 +1,14 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import {
+import { ChevronLeft, ArrowLeft } from "lucide-react";
+import { z } from "zod";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
   Form,
   FormControl,
   FormField,
@@ -14,41 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { 
-  MobileAccordion, 
-  MobileAccordionContent, 
-  MobileAccordionItem, 
-  MobileAccordionTrigger 
-} from "@/components/ui/accordion";
-import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
-import FileUpload from "../common/FileUpload";
-import { ClientForm } from "../clients/ClientForm";
 
 // Importamos la lógica de cálculo y schemas desde InvoiceForm
 function toNumber(value: any, defaultValue = 0): number {
@@ -496,32 +464,14 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     },
   });
 
-  // Memorizar el handleSubmit para evitar re-renders constantes
-  const handleSubmit = useCallback((data: InvoiceFormValues) => {
-    // Usamos try-catch para evitar que errores en esta función generen re-renders
-    try {
-      // Calcular totales sin modificar el formulario
-      const totals = calculateInvoiceTotals(form, { executeUpdate: false });
-      
-      // Crear objeto con los datos del formulario y los totales calculados
-      const dataToSubmit = {
-        ...data,
-        subtotal: totals?.subtotal || data.subtotal,
-        tax: totals?.tax || data.tax,
-        total: totals?.total || data.total
-      };
-      
-      // Enviar los datos con los totales actualizados
-      mutation.mutate(dataToSubmit);
-    } catch (error) {
-      console.error("Error al preparar datos para enviar:", error);
-      toast({
-        title: "Error al procesar el formulario",
-        description: "No se pudieron calcular los totales correctamente",
-        variant: "destructive"
-      });
-    }
-  }, [form, mutation, toast]);
+  // Versión simplificada para diagnóstico
+  const handleSubmit = (data: any) => {
+    console.log("Submit form data:", data);
+    toast({
+      title: "Formulario enviado",
+      description: "Datos recibidos correctamente"
+    });
+  };
 
   const handleAddItem = () => {
     append({
