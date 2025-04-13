@@ -458,8 +458,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Gastos - Estilo Apple */}
-        <div className="dashboard-card fade-in">
-          <div className="md:p-6 p-3">
+        <div className="dashboard-card fade-in mx-0 px-0">
+          <div className="md:p-6 p-2">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
                 <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
@@ -500,7 +500,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final - Estilo Apple - Ocupa todo el ancho en móvil */}
         <div className="dashboard-card fade-in col-span-2 lg:col-span-1 mx-0 px-0">
-          <div className="md:p-6 p-3">
+          <div className="md:p-6 p-2">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
                 <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />

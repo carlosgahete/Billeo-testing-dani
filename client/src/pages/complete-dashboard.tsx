@@ -3,7 +3,7 @@ import CompleteDashboard from '@/components/dashboard/CompleteDashboard';
 
 const CompleteDashboardPage: React.FC = () => {
   return (
-    <div className="w-full">
+    <div className="w-full mx-0 px-0">
       <CompleteDashboard />
     </div>
   );
