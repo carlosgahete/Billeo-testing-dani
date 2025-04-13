@@ -891,6 +891,39 @@ const TransactionList = () => {
         </div>
       </div>
 
+      {/* Resumen para dispositivos móviles - Minimalista */}
+      <div className="flex sm:hidden justify-between items-center mb-4 px-2">
+        <div className="text-center flex-1">
+          <p className="text-xs text-gray-500">Ingresos</p>
+          <p className="text-base font-medium text-[#007AFF]">{formatCurrency(incomeTotal, "income")}</p>
+        </div>
+        <div className="mx-2 h-8 border-r border-gray-100"></div>
+        <div className="text-center flex-1">
+          <p className="text-xs text-gray-500">Gastos</p>
+          <p className="text-base font-medium text-[#FF3B30]">{formatCurrency(expenseTotal, "expense")}</p>
+        </div>
+        <div className="mx-2 h-8 border-r border-gray-100"></div>
+        <div className="text-center flex-1">
+          <p className="text-xs text-gray-500">Balance</p>
+          <p className="text-base font-medium text-[#34C759]">
+            {balance < 0 
+              ? `-${Math.abs(balance).toLocaleString('es-ES', {
+                  style: 'currency',
+                  currency: 'EUR',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}`
+              : balance.toLocaleString('es-ES', {
+                  style: 'currency',
+                  currency: 'EUR',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })
+            }
+          </p>
+        </div>
+      </div>
+      
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
         {/* Tarjeta de Ingresos Totales */}
@@ -1004,6 +1037,21 @@ const TransactionList = () => {
         </div>
         ) : null}
       </div>
+      
+      {/* Alerta móvil si se necesita reparación */}
+      {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
+        <div className="sm:hidden mx-2 mb-4 p-2 bg-amber-50 border border-amber-100 rounded-lg flex items-center">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mr-2 flex-shrink-0" />
+          <span className="text-xs text-amber-700 flex-grow">Faltan ingresos por facturas cobradas</span>
+          <button 
+            className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full"
+            onClick={handleRepairInvoiceTransactions}
+            disabled={isRepairing}
+          >
+            {isRepairing ? 'Reparando...' : 'Reparar'}
+          </button>
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-gray-200 scale-in bg-white shadow-sm overflow-hidden">
         <div className="pt-6 pb-3 px-5">
