@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { generateInvoicePDFAsBase64 } from "@/lib/pdf";
+import billeoLogo from '../../assets/billeo-logo.png';
 import {
   Dialog,
   DialogContent,
