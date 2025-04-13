@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Receipt, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import SimpleMobileInvoiceForm from "@/components/invoices/SimpleMobileInvoiceForm";
 
