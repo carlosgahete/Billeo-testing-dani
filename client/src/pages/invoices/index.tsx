@@ -24,7 +24,7 @@ const InvoicesPage = () => {
   }
 
   return (
-    <div className="w-full pl-0 pr-2 md:px-2 space-y-6 mt-2 max-w-full">
+    <div className="w-full pl-0 pr-2 md:px-2 space-y-0 sm:space-y-6 mt-0 sm:mt-2 max-w-full">
       {/* El encabezado ha sido completamente eliminado de la vista móvil - solo visible en pantallas medianas y grandes */}
       <div className="hidden md:block section-header mx-2 fade-in">
         <div className="flex items-center">

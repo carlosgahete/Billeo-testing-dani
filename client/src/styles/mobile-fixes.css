@@ -20,8 +20,16 @@
   }
   
   /* Ocultar completamente los encabezados en vista móvil */
-  .section-header {
+  .section-header, 
+  .hidden.md\\:block.section-header, 
+  [class*="section-header"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   /* Estilo iOS para el diseño adaptado de facturas en móvil */
