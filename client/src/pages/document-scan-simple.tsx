@@ -314,17 +314,17 @@ const DocumentScanPage = () => {
       
       {/* Contenedor principal exactamente en el centro de la pantalla - estilo Apple mejorado */}
       <div 
-        className="w-full max-w-[400px] px-4 text-center rounded-[24px] py-10"
+        className="w-full max-w-[380px] px-4 text-center rounded-[16px] py-8"
         style={{
           position: "absolute",
           top: "55%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          background: "rgba(255, 255, 255, 0.7)",
-          border: "1px solid rgba(209, 213, 219, 0.3)",
-          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.08)"
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          background: "rgba(255, 255, 255, 0.92)",
+          border: "1px solid rgba(209, 213, 219, 0.4)",
+          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.06)"
         }}
       >
         {/* Título con estilo Apple auténtico */}
@@ -367,13 +367,13 @@ const DocumentScanPage = () => {
           <div className="w-full">
             {/* Zona de arrastrar y soltar moderno y limpio */}
             <div 
-              className="w-full rounded-[24px] py-14 px-6 text-center cursor-pointer"
+              className="w-full rounded-[16px] py-10 px-6 text-center cursor-pointer"
               style={{
-                background: "linear-gradient(to bottom, rgba(255, 255, 255, 0.85), rgba(246, 246, 248, 0.85))",
-                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08), inset 0 0 0 0.5px rgba(255, 255, 255, 0.5)",
-                border: "1px solid rgba(209, 213, 219, 0.4)",
-                backdropFilter: "blur(30px)",
-                WebkitBackdropFilter: "blur(30px)"
+                background: "linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(250, 250, 252, 0.9))",
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.04), inset 0 0 0 0.5px rgba(255, 255, 255, 0.6)",
+                border: "1px solid rgba(209, 213, 219, 0.35)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)"
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
@@ -381,16 +381,31 @@ const DocumentScanPage = () => {
             >
               {/* Icono con diseño Apple auténtico - centrado */}
               <div className="flex items-center justify-center w-full mb-2">
-                <div 
-                  className="h-[80px] w-[80px] rounded-full flex items-center justify-center transform transition-transform hover:scale-105 active:scale-95"
-                  style={{
-                    background: "linear-gradient(135deg, #0A84FF 0%, #0077ED 100%)",
-                    boxShadow: "0 8px 16px rgba(10, 132, 255, 0.2), inset 0 -2px 0 rgba(0, 0, 0, 0.1), inset 0 2px 0 rgba(255, 255, 255, 0.1)",
-                    border: "1px solid rgba(0, 122, 255, 0.8)"
-                  }}
+                <svg 
+                  width="60" 
+                  height="60" 
+                  viewBox="0 0 60 60" 
+                  className="transform transition-transform hover:scale-105 active:scale-95"
                 >
-                  <Upload className="h-10 w-10 text-white" />
-                </div>
+                  <defs>
+                    <linearGradient id="uploadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#34AADC" />
+                      <stop offset="100%" stopColor="#007AFF" />
+                    </linearGradient>
+                    <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="2" />
+                      <feOffset dx="0" dy="1" />
+                      <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" />
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0" />
+                    </filter>
+                  </defs>
+                  <circle cx="30" cy="30" r="28" fill="url(#uploadGradient)" filter="url(#shadowFilter)" />
+                  <path 
+                    d="M30 18L22 26H26V36H34V26H38L30 18ZM20 38V42H40V38H20Z" 
+                    fill="white" 
+                    fillRule="evenodd"
+                  />
+                </svg>
               </div>
               
               <p 
@@ -498,41 +513,66 @@ const DocumentScanPage = () => {
               </div>
             )}
             
-            {/* Botón de procesamiento estilo Apple premium */}
-            <div className="mt-8 mb-6">
+            {/* Botón de procesamiento estilo Apple SF Symbols */}
+            <div className="mt-6 mb-2">
+              {file && (
+                <div className="flex justify-center mb-3">
+                  <div
+                    className="inline-flex items-center bg-[#F2F2F7]/80 rounded-full px-4 py-1.5"
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                      boxShadow: "inset 0 0 0 0.5px rgba(0, 0, 0, 0.08)"
+                    }}
+                  >
+                    <p className="text-gray-600 text-sm font-medium"
+                      style={{ 
+                        fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                        letterSpacing: "-0.01em"
+                      }}
+                    >
+                      {file.name.split('.').pop()?.toUpperCase()} - {(file.size / 1024).toFixed(0)} KB
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <Button 
                 onClick={handleUpload} 
                 disabled={!file || uploading}
-                className={`relative py-3 px-8 text-[15px] font-medium w-full transition-all duration-300 
-                  ${uploading || !file 
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" 
-                    : "text-white"
-                  }`}
+                className="h-10 relative px-6 text-[15px] font-medium w-auto mx-auto transition-all duration-300 text-white rounded-full flex items-center"
                 style={{
-                  borderRadius: "12px",
                   background: !file || uploading ? 
                     "linear-gradient(to bottom, #f8f8fa, #f2f2f4)" : 
-                    "linear-gradient(135deg, #0A84FF 0%, #0062CC 100%)",
+                    "linear-gradient(135deg, #0A84FF 0%, #0077ED 100%)",
                   boxShadow: !file || uploading ? 
                     "none" : 
-                    "0 2px 10px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                    "0 2px 10px rgba(10, 132, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                   letterSpacing: "-0.01em",
                   border: !file || uploading ?
                     "1px solid #e5e7eb" :
                     "none",
-                  opacity: !file ? "0.9" : "1",
+                  opacity: !file ? "0.5" : "1",
+                  color: !file || uploading ? "#A1A1A6" : "white",
+                  display: "inline-flex",
+                  justifyContent: "center"
                 }}
                 variant="ghost"
               >
                 {uploading ? (
                   <div className="flex items-center justify-center">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Procesando...</span>
+                    <svg className="animate-spin mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Procesando</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center">
-                    <FileText className="mr-2 h-4 w-4" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-1.5">
+                      <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     <span>Continuar</span>
                   </div>
                 )}
