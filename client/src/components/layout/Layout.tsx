@@ -28,7 +28,7 @@ const Layout = ({ children }: LayoutProps) => {
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-100">
+    <div className="h-screen flex flex-col bg-neutral-100">
       {/* Mobile header */}
       {isMobile && (
         <Header 
@@ -38,7 +38,7 @@ const Layout = ({ children }: LayoutProps) => {
         />
       )}
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Diseño fijo */}
         <Sidebar 
           sidebarOpen={sidebarOpen} 

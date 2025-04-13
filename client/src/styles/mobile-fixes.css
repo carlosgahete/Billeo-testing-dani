@@ -1,11 +1,8 @@
 /* Corrige el problema de doble scroll en móviles eliminando scrolls internos */
 @media (max-width: 768px) {
-  /* Ajustes globales para permitir scroll vertical pero evitar horizontal */
+  /* Ajustes globales para evitar scroll horizontal */
   html, body {
     overflow-x: hidden;
-    overflow-y: auto;
-    height: auto;
-    position: relative;
   }
   
   /* Evita que los campos de texto hagan zoom automático */
@@ -60,8 +57,7 @@
     padding: 0 16px !important;
   }
 
-  /* Permitir desplazamiento para contenedores principales */
-  /* Comentamos estas reglas para permitir el desplazamiento
+  /* Aplicar a elementos con scroll interno en el dashboard */
   .max-h-40,
   .max-h-\[280px\],
   .h-\[280px\],
@@ -72,7 +68,6 @@
     height: auto !important;
     max-height: none !important;
   }
-  */
 
   /* Específicos para componentes con scrolls identificados */
   .custom-scrollbar {
@@ -88,7 +83,6 @@
   h2.text-xl.font-semibold.text-gray-800,
   .flex.items-center:has(h2),
   .bg-\[\#E9F8FB\],
-  .bg-\[\#FFF8E7\],
   .text-sm.text-gray-500.mt-0.leading-tight {
     display: none !important;
     visibility: hidden !important;
@@ -99,43 +93,7 @@
     padding: 0 !important;
   }
   
-  /* Ocultar específicamente el icono naranja de presupuestos */
-  .bg-\[\#FFF8E7\],
-  [id*="quote-icon"],
-  [class*="quote-icon"],
-  svg[stroke="#FF9500"],
-  svg[stroke="#ff9500"],
-  div[style*="background-color: rgb(255, 149, 0)"],
-  div[style*="background-color: #ff9500"],
-  div[style*="background-color: #FF9500"],
-  svg[stroke*="#FF9500"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: absolute !important;
-    left: -9999px !important;
-    pointer-events: none !important;
-  }
-  
-  /* Eliminar absolutamente cualquier icono naranja de la pantalla */
-  div > svg, path, div > div > svg, div > div > div > svg {
-    fill: transparent !important; 
-  }
-  
-  /* Eliminar específicamente cualquier color naranja de presupuestos */
-  div.section-header ~ div > div > svg,
-  div.section-header svg,
-  div.mobile-quote-buttons-container ~ div svg,
-  div.mobile-quote-buttons-container ~ div ~ div svg {
-    display: none !important;
-  }
-  
-  /* Forzar al header a ser completamente invisible en facturas y reducir espacio superior */
+  /* Forzar al header a ser completamente invisible en facturas */
   body:has(.invoice-table-mobile) header,
   body:has(.invoice-table-mobile) .mt-2,
   .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full > div:first-child,
@@ -149,39 +107,6 @@
     padding: 0 !important;
     height: 0 !important;
     visibility: hidden !important;
-  }
-  
-  /* Reduce el espacio superior en la vista móvil */
-  @media (max-width: 768px) {
-    header {
-      margin-bottom: -10px !important;
-      min-height: auto !important;
-    }
-    
-    main {
-      padding-top: 5px !important;
-    }
-    
-    /* Ajuste específico para la página de presupuestos */
-    .quotes-page-container main,
-    body:has(.mobile-quote-buttons-container) main {
-      padding-top: 0 !important;
-      margin-top: -25px !important;
-    }
-    
-    .mobile-quote-buttons-container {
-      margin-top: -15px !important;
-    }
-    
-    /* Ajustes forzados para el header en la página de presupuestos */
-    body:has(.mobile-quote-buttons-container) header,
-    body:has(.quotes-page-container) header {
-      margin-bottom: -20px !important;
-      padding-bottom: 0 !important;
-      min-height: 44px !important;
-      height: 44px !important;
-      overflow: hidden !important;
-    }
   }
   
   /* Selectores adicionales para eliminar el encabezado (excepto en diálogos) */

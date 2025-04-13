@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { generateQuotePDF } from "@/lib/pdf";
 import { SendQuoteEmailDialog } from "./SendQuoteEmailDialog";
-import { useIsMobile } from "@/hooks/use-media-query";
 
 import {
   Table,
@@ -16,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,17 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { 
-  Pencil, 
-  Trash2, 
-  Download, 
-  FileText, 
-  Send, 
-  FileCheck, 
-  XCircle, 
-  Mail,
-  Search
-} from "lucide-react";
+import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 interface Quote {
@@ -97,8 +85,6 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [quoteItems, setQuoteItems] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const isMobile = useIsMobile();
 
   // Fetch quotes
   const { data: quotes = [], isLoading: isQuotesLoading } = useQuery<Quote[]>({
@@ -491,20 +477,6 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
     filteredQuotes = quotes.filter(q => q.status === "draft" || q.status === "sent");
   }
   
-  // Aplicar filtro de búsqueda si hay texto en el input (solo para vista móvil)
-  if (isMobile && searchQuery.trim() !== "") {
-    const searchTermLower = searchQuery.toLowerCase().trim();
-    filteredQuotes = filteredQuotes.filter(q => {
-      const client = clientsData.find(c => c.id === q.clientId);
-      
-      return (
-        q.quoteNumber.toLowerCase().includes(searchTermLower) || 
-        (client && client.name.toLowerCase().includes(searchTermLower)) ||
-        formatCurrency(q.total).toLowerCase().includes(searchTermLower)
-      );
-    });
-  }
-  
   const displayQuotes = limit && typeof limit === 'number' ? filteredQuotes.slice(0, limit) : filteredQuotes;
 
   if (displayQuotes.length === 0) {
@@ -554,14 +526,14 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
         <CardHeader className="pb-3 border-b px-2 sm:px-6">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className={`text-primary-700 ${isMobile ? 'hidden' : ''}`}>
+              <CardTitle className="text-primary-700">
                 {filter === "accepted" 
                   ? "Presupuestos aceptados" 
                   : filter === "pending" 
                     ? "Presupuestos pendientes" 
                     : "Tus presupuestos"}
               </CardTitle>
-              <CardDescription className={isMobile ? 'hidden' : ''}>
+              <CardDescription>
                 {filter 
                   ? `Mostrando presupuestos ${filter === "accepted" ? "aceptados" : "pendientes"}` 
                   : "Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades."}
@@ -576,343 +548,189 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
             </div>
           </div>
         </CardHeader>
-        
         <CardContent className="px-1 sm:px-6">
-          {isMobile ? (
-            <div className="grid grid-cols-1 gap-4 mt-2">
-              {/* Barra de búsqueda solo en móvil */}
-              <div className="flex items-center px-2 mb-2">
-                <div className="relative w-full">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Buscar presupuesto..."
-                    className="pl-8 pr-4 h-9 w-full rounded-xl bg-white border border-slate-200"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              {/* Versión móvil con tarjetas individuales en estilo Apple */}
-              {displayQuotes.map((quote: Quote) => {
-                const client = clientsData.find((c: Client) => c.id === quote.clientId);
-                
-                // Determinar el color del borde según el estado
-                let borderColorClass = "border-slate-200";
-                let statusColor = "#9ca3af"; // gris por defecto
-                
-                switch (quote.status) {
-                  case "draft":
-                    borderColorClass = "border-slate-200";
-                    statusColor = "#9ca3af";
-                    break;
-                  case "sent":
-                    borderColorClass = "border-blue-200";
-                    statusColor = "#3b82f6";
-                    break;
-                  case "accepted":
-                    borderColorClass = "border-green-200";
-                    statusColor = "#10b981";
-                    break;
-                  case "rejected":
-                    borderColorClass = "border-red-200";
-                    statusColor = "#ef4444";
-                    break;
-                  case "expired":
-                    borderColorClass = "border-amber-200";
-                    statusColor = "#f59e0b";
-                    break;
-                }
-                
-                return (
-                  <div 
-                    key={quote.id} 
-                    className={`border border-l-4 ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm`}
-                  >
-                    {/* Cabecera de la tarjeta con gradiente sutil */}
-                    <div className="p-3 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
-                      <div className="font-medium text-gray-800 flex items-center">
-                        <span className="mr-2">{quote.quoteNumber}</span>
-                        <span 
-                          className="w-2.5 h-2.5 rounded-full" 
-                          style={{ backgroundColor: statusColor }}
-                        ></span>
-                      </div>
-                      <div className="text-sm font-medium">{formatCurrency(quote.total)}</div>
-                    </div>
-                    
-                    {/* Cuerpo de la tarjeta */}
-                    <div className="p-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Cliente:</span>
-                        <span className="font-medium text-gray-800">{client?.name || "Cliente no encontrado"}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Fecha:</span>
-                        <span className="text-gray-700">{formatDate(quote.issueDate)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Válido hasta:</span>
-                        <span className="text-gray-700">{formatDate(quote.validUntil)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Estado:</span>
-                        <span>{getStatusBadge(quote.status)}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Acciones */}
-                    {showActions && (
-                      <div className="px-3 py-2 bg-gray-50 border-t flex justify-between">
-                        <div className="flex gap-1">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleDownloadPDF(quote)}
-                            className="h-8 w-8 p-0 rounded-full"
-                          >
-                            <Download className="h-4 w-4 text-gray-600" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleEmailQuote(quote)}
-                            className="h-8 w-8 p-0 rounded-full"
-                          >
-                            <Mail className="h-4 w-4 text-gray-600" />
-                          </Button>
-                        </div>
-                        <div className="flex gap-1">
-                          <Link href={`/quotes/edit/${quote.id}`}>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-8 w-8 p-0 rounded-full"
-                            >
-                              <Pencil className="h-4 w-4 text-gray-600" />
-                            </Button>
-                          </Link>
-                          {quote.status === "draft" && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => handleSend(quote.id)}
-                              className="h-8 w-8 p-0 rounded-full"
-                            >
-                              <Send className="h-4 w-4 text-blue-600" />
-                            </Button>
-                          )}
-                          {quote.status === "sent" && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => handleConvert(quote.id)}
-                              className="h-8 w-8 p-0 rounded-full"
-                            >
-                              <FileCheck className="h-4 w-4 text-green-600" />
-                            </Button>
-                          )}
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleDelete(quote.id)}
-                            className="h-8 w-8 p-0 rounded-full"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-1 sm:mx-0">
-              <Table className="w-full min-w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[60px] md:w-[100px]">Núm.</TableHead>
-                    <TableHead className="w-[120px] md:w-[180px]">Cliente</TableHead>
-                    <TableHead className="hidden md:table-cell w-[120px]">Fecha</TableHead>
-                    <TableHead className="hidden md:table-cell w-[120px]">Válido hasta</TableHead>
-                    <TableHead className="w-[100px] md:w-[120px]">Total</TableHead>
-                    <TableHead className="w-[80px] md:w-[120px]">Estado</TableHead>
-                    {showActions && <TableHead className="text-right w-[120px] md:w-[200px]">Acciones</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayQuotes.map((quote: Quote) => {
-                    const client = clientsData.find((c: Client) => c.id === quote.clientId);
-                    return (
-                      <TableRow 
-                        key={quote.id}
-                        className={quote.status === "accepted" ? "bg-green-50" : 
-                                  quote.status === "rejected" ? "bg-red-50" : 
-                                  quote.status === "expired" ? "bg-gray-50" : ""}
-                      >
-                        <TableCell className="font-medium py-2 px-1 sm:px-4">{quote.quoteNumber}</TableCell>
-                        <TableCell className="truncate max-w-[100px] md:max-w-[180px] py-2 px-1 sm:px-4">{client?.name || "Cliente no encontrado"}</TableCell>
-                        <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.issueDate)}</TableCell>
-                        <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.validUntil)}</TableCell>
-                        <TableCell className="font-medium py-2 px-1 sm:px-4">{formatCurrency(quote.total)}</TableCell>
-                        <TableCell className="py-2 px-1 sm:px-4">{getStatusBadge(quote.status)}</TableCell>
-                        {showActions && (
-                          <TableCell className="py-2 px-1 sm:px-4">
-                            <div className="flex justify-end items-center gap-0.5 sm:gap-1">
+          <div className="overflow-x-auto -mx-1 sm:mx-0">
+            <Table className="w-full min-w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px] md:w-[100px]">Núm.</TableHead>
+                  <TableHead className="w-[120px] md:w-[180px]">Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px]">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px]">Válido hasta</TableHead>
+                  <TableHead className="w-[100px] md:w-[120px]">Total</TableHead>
+                  <TableHead className="w-[80px] md:w-[120px]">Estado</TableHead>
+                  {showActions && <TableHead className="text-right w-[120px] md:w-[200px]">Acciones</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayQuotes.map((quote: Quote) => {
+                  const client = clientsData.find((c: Client) => c.id === quote.clientId);
+                  return (
+                    <TableRow 
+                      key={quote.id}
+                      className={quote.status === "accepted" ? "bg-green-50" : 
+                                quote.status === "rejected" ? "bg-red-50" : 
+                                quote.status === "expired" ? "bg-gray-50" : ""}
+                    >
+                      <TableCell className="font-medium py-2 px-1 sm:px-4">{quote.quoteNumber}</TableCell>
+                      <TableCell className="truncate max-w-[100px] md:max-w-[180px] py-2 px-1 sm:px-4">{client?.name || "Cliente no encontrado"}</TableCell>
+                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.issueDate)}</TableCell>
+                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.validUntil)}</TableCell>
+                      <TableCell className="font-medium py-2 px-1 sm:px-4">{formatCurrency(quote.total)}</TableCell>
+                      <TableCell className="py-2 px-1 sm:px-4">{getStatusBadge(quote.status)}</TableCell>
+                      {showActions && (
+                        <TableCell className="py-2 px-1 sm:px-4">
+                          <div className="flex justify-end items-center gap-0.5 sm:gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDownloadPDF(quote)}
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary-50"
+                                  >
+                                    <Download className="h-4 w-4 text-primary-600" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Descargar PDF</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            {quote.status === "draft" && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDownloadPDF(quote)}
-                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary-50"
-                                    >
-                                      <Download className="h-4 w-4 text-primary-600" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Descargar PDF</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              
-                              {quote.status === "draft" && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleSend(quote.id)}
-                                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
-                                      >
-                                        <Send className="h-4 w-4 text-blue-600" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Enviar presupuesto</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                              
-                              {quote.status === "sent" && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleReject(quote.id)}
-                                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
-                                      >
-                                        <XCircle className="h-4 w-4 text-red-600" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Rechazar presupuesto</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                              
-                              {(quote.status === "sent" || quote.status === "accepted") && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleConvert(quote.id)}
-                                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-green-50"
-                                      >
-                                        <FileCheck className="h-4 w-4 text-green-600" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Convertir a factura</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                              
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span>
-                                      <Link href={`/quotes/edit/${quote.id}`}>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          disabled={quote.status === "accepted" || quote.status === "rejected"}
-                                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-amber-50"
-                                        >
-                                          <Pencil className="h-4 w-4 text-amber-600" />
-                                        </Button>
-                                      </Link>
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Editar presupuesto</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              
-                              {/* Botón de correo electrónico */}
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleEmailQuote(quote)}
+                                      onClick={() => handleSend(quote.id)}
                                       className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
                                     >
-                                      <Mail className="h-4 w-4 text-blue-600" />
+                                      <Send className="h-4 w-4 text-blue-600" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Enviar por correo</p>
+                                    <p>Enviar presupuesto</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              
-                              {/* Botón de eliminar */}
+                            )}
+                            
+                            {quote.status === "sent" && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDelete(quote.id)}
-                                      disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                      onClick={() => handleReject(quote.id)}
                                       className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
                                     >
-                                      <Trash2 className="h-4 w-4 text-red-600" />
+                                      <XCircle className="h-4 w-4 text-red-600" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Eliminar</p>
+                                    <p>Rechazar presupuesto</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                            )}
+                            
+                            {(quote.status === "sent" || quote.status === "accepted") && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleConvert(quote.id)}
+                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-green-50"
+                                    >
+                                      <FileCheck className="h-4 w-4 text-green-600" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Convertir a factura</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span>
+                                    <Link href={`/quotes/edit/${quote.id}`}>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-amber-50"
+                                      >
+                                        <Pencil className="h-4 w-4 text-amber-600" />
+                                      </Button>
+                                    </Link>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Editar presupuesto</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            {/* Botón de correo electrónico */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEmailQuote(quote)}
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
+                                  >
+                                    <Mail className="h-4 w-4 text-blue-600" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Enviar por correo</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            {/* Botón de eliminar */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDelete(quote.id)}
+                                    disabled={quote.status === "accepted" || quote.status === "rejected"}
+                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Eliminar presupuesto</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
-        
         <CardFooter className="flex justify-between items-center pt-6 border-t px-2 sm:px-6">
-          {/* Botón "Nuevo" en escritorio, en móvil ya está arriba */}
-          <div className="hidden md:block">
+          <div className="md:hidden">
             {showActions && (
               <Link href="/quotes/create">
                 <Button>
