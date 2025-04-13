@@ -18,4 +18,9 @@
     height: auto !important;
     max-height: none !important;
   }
+  
+  /* Ocultar completamente los encabezados en vista móvil */
+  .section-header {
+    display: none !important;
+  }
 }
