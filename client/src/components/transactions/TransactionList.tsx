@@ -869,7 +869,7 @@ const TransactionList = () => {
   };
 
   return (
-    <div className="space-y-6 fade-in">
+    <div className="space-y-4 sm:space-y-6 fade-in">
       {isMobile ? null : (
         /* Cabecera estilo Apple solo en desktop */
         <div className="section-header fade-in mb-3 mt-0 pt-0 flex items-center justify-between">
@@ -1008,13 +1008,13 @@ const TransactionList = () => {
         ) : null}
       </div>
       
-      {/* Alerta móvil si se necesita reparación */}
+      {/* Alerta móvil si se necesita reparación - versión más compacta */}
       {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
-        <div className="sm:hidden mx-2 mb-4 p-2 bg-amber-50 border border-amber-100 rounded-lg flex items-center">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mr-2 flex-shrink-0" />
-          <span className="text-xs text-amber-700 flex-grow">Faltan ingresos por facturas cobradas</span>
+        <div className="sm:hidden mx-1 mb-2 p-1.5 bg-amber-50 border border-amber-100 rounded-lg flex items-center">
+          <AlertTriangle className="h-3 w-3 text-amber-500 mr-1.5 flex-shrink-0" />
+          <span className="text-xs text-amber-700 flex-grow">Faltan ingresos</span>
           <button 
-            className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full"
+            className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full"
             onClick={handleRepairInvoiceTransactions}
             disabled={isRepairing}
           >
