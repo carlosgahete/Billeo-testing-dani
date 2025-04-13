@@ -302,11 +302,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <button 
               type="button"
               onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
-              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF] border-[#007AFF] text-white hover:bg-[#0069D9]"
+              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="year-dropdown"
             >
               <span>{year}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -348,7 +348,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <button 
               type="button"
               onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
-              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF] border-[#007AFF] text-white hover:bg-[#0069D9]"
+              className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="period-dropdown"
             >
               <span>
@@ -358,7 +358,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 period === "q3" ? "Trimestre 3" : 
                 period === "q4" ? "Trimestre 4" : ""}
               </span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
