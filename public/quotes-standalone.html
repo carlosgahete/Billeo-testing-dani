@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presupuestos</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding: 16px;
+      padding-bottom: 80px;
+    }
+    
+    .header {
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .quote-number {
+      font-weight: 600;
+    }
+    
+    .client-name {
+      font-size: 14px;
+      color: #6e6e73;
+    }
+    
+    .amount {
+      font-weight: 700;
+      text-align: right;
+    }
+    
+    .status {
+      font-size: 14px;
+      color: #6e6e73;
+      text-align: right;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    
+    .btn-primary {
+      background-color: #0071e3;
+      color: white;
+      flex: 1;
+    }
+    
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid #d2d2d7;
+      color: #1d1d1f;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 30px 0;
+    }
+    
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      color: #86868b;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: #0071e3;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: none;
+      cursor: pointer;
+    }
+    
+    .error {
+      color: #ff3b30;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100px;
+    }
+    
+    .spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-top: 3px solid #0071e3;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Presupuestos</h1>
+    </div>
+    
+    <div id="content">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+  
+  <button id="create-button" class="fab">+</button>
+  
+  <script>
+    // Configuración
+    const API_BASE_URL = '';
+    
+    // Estado
+    let quotes = [];
+    let clients = [];
+    
+    // Elementos del DOM
+    const contentEl = document.getElementById('content');
+    const createButton = document.getElementById('create-button');
+    
+    // Eventos
+    createButton.addEventListener('click', () => {
+      window.location.href = '/quotes/simple/create';
+    });
+    
+    // Cargar datos al inicio
+    document.addEventListener('DOMContentLoaded', loadData);
+    
+    // Funciones
+    async function loadData() {
+      try {
+        // Mostrar cargando
+        showLoading();
+        
+        // Intentar cargar sesión si no está ya cargada
+        const userStatus = await fetch('/api/user', { 
+          credentials: 'include'
+        });
+        
+        if (!userStatus.ok) {
+          showError('Por favor inicia sesión para ver tus presupuestos');
+          return;
+        }
+        
+        // Cargar presupuestos
+        const quotesResponse = await fetch('/api/quotes', {
+          credentials: 'include'
+        });
+        
+        if (!quotesResponse.ok) {
+          showError('Error cargando presupuestos');
+          return;
+        }
+        
+        quotes = await quotesResponse.json();
+        
+        // Cargar clientes
+        const clientsResponse = await fetch('/api/clients', {
+          credentials: 'include'
+        });
+        
+        if (clientsResponse.ok) {
+          clients = await clientsResponse.json();
+        }
+        
+        // Mostrar datos
+        renderQuotes();
+        
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión');
+      }
+    }
+    
+    function renderQuotes() {
+      if (quotes.length === 0) {
+        // Mostrar estado vacío
+        contentEl.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>No tienes presupuestos todavía</p>
+            <p style="margin-top: 8px; margin-bottom: 16px; color: #86868b;">
+              Empieza a crear presupuestos para tus clientes
+            </p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Crear HTML para cada presupuesto
+      const quotesHtml = quotes.map(quote => {
+        const client = clients.find(c => c.id === quote.clientId) || { name: 'Cliente desconocido' };
+        const statusText = getStatusText(quote.status);
+        
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="quote-number">${quote.quoteNumber}</div>
+                <div class="client-name">${client.name}</div>
+              </div>
+              <div>
+                <div class="amount">${formatCurrency(quote.total)}</div>
+                <div class="status">${statusText}</div>
+              </div>
+            </div>
+            <div class="button-group">
+              <button class="btn btn-primary" onclick="editQuote(${quote.id})">Editar</button>
+              <button class="btn btn-outline" onclick="deleteQuote(${quote.id})">Eliminar</button>
+              <button class="btn btn-outline" onclick="downloadPdf(${quote.id})">PDF</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Actualizar contenido
+      contentEl.innerHTML = quotesHtml;
+    }
+    
+    function showLoading() {
+      contentEl.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      `;
+    }
+    
+    function showError(message) {
+      contentEl.innerHTML = `
+        <div class="error">
+          <p>${message}</p>
+        </div>
+      `;
+    }
+    
+    function editQuote(id) {
+      window.location.href = `/quotes/simple/edit/${id}`;
+    }
+    
+    async function deleteQuote(id) {
+      if (!confirm('¿Seguro que quieres eliminar este presupuesto?')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/quotes/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          // Actualizar lista local
+          quotes = quotes.filter(q => q.id !== id);
+          renderQuotes();
+        } else {
+          alert('Error al eliminar presupuesto');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+      }
+    }
+    
+    function downloadPdf(id) {
+      window.open(`/api/quotes/${id}/pdf`, '_blank');
+    }
+    
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: 'EUR'
+      }).format(amount);
+    }
+    
+    function getStatusText(status) {
+      switch (status) {
+        case 'draft': return 'Borrador';
+        case 'sent': return 'Enviado';
+        case 'accepted': return 'Aceptado';
+        case 'rejected': return 'Rechazado';
+        case 'expired': return 'Expirado';
+        default: return status;
+      }
+    }
+  </script>
+</body>
+</html>

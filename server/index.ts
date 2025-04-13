@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { configureBetterExpenseRoutes } from "./routes-expenses-basic";
 import { configureDirectExpenseRoutes } from "./routes-direct-expenses";
@@ -70,6 +71,11 @@ app.use((req, res, next) => {
   
   // Configurar middleware para CORS y opciones comunes
   configureOptionsRoutes(app);
+  
+  // Ruta HTML pura para presupuestos - acceso directo sin autenticación
+  app.get('/mobile-quotes', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/quotes-standalone.html'));
+  });
 
   const server = await registerRoutes(app);
   
