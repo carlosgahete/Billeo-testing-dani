@@ -332,8 +332,8 @@ const ExpensesByCategoryNew: React.FC<{
 
   if (!data.length) {
     return (
-      <Card className="h-full overflow-hidden fade-in dashboard-card">
-        <CardHeader className="bg-red-50 p-3">
+      <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
+        <CardHeader className="bg-red-50 p-1 sm:p-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base text-red-700 flex items-center">
               <TrendingDown className="mr-2 h-4 w-4" />
@@ -387,7 +387,7 @@ const ExpensesByCategoryNew: React.FC<{
 
   // Diseño exactamente como la imagen de referencia
   return (
-    <Card className="h-full overflow-hidden fade-in dashboard-card">
+    <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
       <CardHeader className="bg-red-50 p-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base text-red-700 flex items-center">
@@ -431,7 +431,7 @@ const ExpensesByCategoryNew: React.FC<{
         </div>
       </CardHeader>
       
-      <CardContent className="p-3">
+      <CardContent className="p-1 sm:p-3">
         {/* Título del periodo */}
         <div className="mb-2 text-gray-700 text-xs">
           {periodLabel}
