@@ -1,0 +1,89 @@
+Claro, aquí tienes el mensaje actualizado incluyendo al principio que todo esto es solo para la versión móvil:
+
+⸻
+
+Cambios solicitados — Versión Móvil
+
+Este ajuste es exclusivamente para la versión móvil.
+Queremos optimizar la experiencia del usuario en dispositivos móviles, eliminando problemas de doble scroll y de visualización ampliada.
+
+⸻
+
+1. Eliminar el doble scroll en móvil
+
+Problema detectado:
+Actualmente, en móvil, los contenidos aparecen dentro de un contenedor con scroll propio, provocando una experiencia incómoda de doble desplazamiento:
+	•	Un scroll dentro del contenedor.
+	•	Y otro scroll general de la página.
+
+Objetivo:
+	•	Eliminar cualquier scroll interno en contenedores.
+	•	Dejar un solo scroll general para toda la página.
+
+Instrucciones técnicas:
+
+Aplicar solo para móviles (ancho máximo 768px):
+
+@media (max-width: 768px) {
+  /* Reemplazar '.contenedor-scroll' por la clase real del contenedor afectado */
+  .contenedor-scroll {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+Detalles:
+	•	Usar overflow: visible para que el contenido fluya naturalmente.
+	•	height: auto elimina la altura fija que provoca scroll interno.
+	•	Asegurarse de que las tarjetas o bloques de información se adapten correctamente al ancho del dispositivo.
+
+Checklist para validar:
+	•	No debe haber scrolls internos dentro de contenedores en móvil.
+	•	Solo debe existir el scroll principal de toda la página.
+	•	El desplazamiento debe ser suave y continuo de arriba a abajo.
+
+⸻
+
+2. Corregir la visualización ampliada (problema de tamaño en móviles)
+
+Problema detectado:
+Toda la web aparece “ampliada” en móviles, obligando al usuario a hacer zoom hacia fuera (alejar) para verla bien.
+
+Objetivo:
+	•	Que la web se adapte automáticamente al ancho real del dispositivo móvil.
+	•	Que el usuario no tenga que hacer ningún ajuste manual de zoom o escala.
+
+Instrucciones técnicas:
+	1.	Insertar correctamente el meta viewport en el <head> de todas las páginas:
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	2.	Ajustar los estilos de html y body:
+
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+	3.	Asegurar que todos los contenedores principales respeten el ancho máximo:
+
+.contenedor-principal, .tarjeta, .seccion {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+	4.	Evitar cualquier zoom, transform: scale(), o cambios dinámicos de tamaño que puedan afectar la visualización inicial.
+
+⸻
+
+Resumen de objetivos
+	•	No debe haber doble scroll en ningún momento en móvil.
+	•	El cliente debe ver la web ajustada automáticamente a su pantalla, sin necesidad de hacer zoom o alejarse manualmente.
+	•	Toda la experiencia debe ser fluida, limpia y adaptada 100% al móvil.
+
+⸻
+
+¿Quieres que también te prepare una versión que parezca enviada “de parte tuya”, tipo un mensaje más directo para que puedas simplemente copiar y pegar en WhatsApp o email?
+(Algo como: “Oye, para la parte móvil habría que hacer estos ajustes…”) Te lo paso si quieres.
