@@ -1111,9 +1111,7 @@ const TransactionList = () => {
                   className="text-sm px-2 sm:px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => handleExportFilteredExpenses()}
                   disabled={transactions?.filter(t => t.type === 'expense').length === 0}
-                  title={filteredExpenseTransactions.length > 0 ? 
-                    `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
-                    `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
+                  title="Exportar gastos a PDF"
                 >
                   <FileDown className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">
@@ -1121,17 +1119,16 @@ const TransactionList = () => {
                       `Exportar ${filteredExpenseTransactions.length} filtrados` : 
                       "Exportar todos los gastos"}
                   </span>
-                  <span className="sm:hidden">PDF</span>
                 </button>
                 
                 {/* Escanear gasto */}
                 <button 
                   className="text-sm px-2 sm:px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
                   onClick={() => navigate("/documents/scan")}
+                  title="Escanear gasto"
                 >
                   <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Escanear gasto</span>
-                  <span className="sm:hidden">Scan</span>
                 </button>
                 
                 {/* Descargar originales */}
@@ -1157,11 +1154,10 @@ const TransactionList = () => {
                       downloadExpenseOriginalsAsZip(expenses as any, categories || []);
                     });
                   }}
-                  title="Descargar documentos originales de los gastos"
+                  title="Descargar documentos originales"
                 >
                   <Download className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Descargar originales</span>
-                  <span className="sm:hidden">Docs</span>
                 </button>
                 
                 {/* Botón de filtro */}
@@ -1174,7 +1170,7 @@ const TransactionList = () => {
                   onClick={() => setShowExpenseFilters(!showExpenseFilters)}
                   title={expenseFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar gastos"}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 sm:mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${expenseFiltersApplied ? '' : 'mr-1 sm:mr-2'}`}>
                     <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                   </svg>
                   <span className="hidden sm:inline">
@@ -1195,10 +1191,10 @@ const TransactionList = () => {
                 <button 
                   className="text-sm px-2 sm:px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
                   onClick={() => navigate("/invoices/create")}
+                  title="Crear factura"
                 >
                   <Receipt className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Crear factura</span>
-                  <span className="sm:hidden">Factura</span>
                 </button>
 
                 {/* Exportar ingresos */}
@@ -1206,9 +1202,7 @@ const TransactionList = () => {
                   className="text-sm px-2 sm:px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => handleExportFilteredIncome()}
                   disabled={transactions?.filter(t => t.type === 'income').length === 0}
-                  title={filteredIncomeTransactions.length > 0 ? 
-                    `Exportar ${filteredIncomeTransactions.length} ingresos filtrados` : 
-                    `Exportar todos los ingresos (${transactions?.filter(t => t.type === 'income').length || 0})`}
+                  title="Exportar ingresos a PDF"
                 >
                   <FileDown className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">
@@ -1216,7 +1210,6 @@ const TransactionList = () => {
                       `Exportar ${filteredIncomeTransactions.length} filtrados` : 
                       "Exportar todos los ingresos"}
                   </span>
-                  <span className="sm:hidden">PDF</span>
                 </button>
                 
                 {/* Botón de filtro para ingresos */}
@@ -1229,7 +1222,7 @@ const TransactionList = () => {
                   onClick={() => setShowIncomeFilters(!showIncomeFilters)}
                   title={incomeFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar ingresos"}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 sm:mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${incomeFiltersApplied ? '' : 'mr-1 sm:mr-2'}`}>
                     <line x1="12" y1="20" x2="12" y2="10" />
                     <line x1="18" y1="20" x2="18" y2="4" />
                     <line x1="6" y1="20" x2="6" y2="16" />
