@@ -174,14 +174,14 @@ export default function EditInvoicePage() {
         </div>
       )}
       
-      {/* Botón de volver para móvil sin título */}
+      {/* Botón de volver para móvil sin título - estilo iOS */}
       {isMobile && (
-        <div className="w-full flex px-4 mb-2">
+        <div className="w-full flex ml-1 mt-1 mb-3">
           <button 
             onClick={() => navigate("/invoices")}
-            className="button-apple-secondary button-apple-sm flex items-center"
+            className="apple-back-button"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <ArrowLeft className="h-5 w-5" />
             <span>Volver</span>
           </button>
         </div>

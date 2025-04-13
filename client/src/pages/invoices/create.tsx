@@ -64,14 +64,14 @@ const CreateInvoicePage = () => {
         </div>
       </div>
       
-      {/* Botón de volver para móvil sin título */}
+      {/* Botón de volver para móvil sin título - estilo iOS */}
       {isMobile && (
-        <div className="w-full flex mb-2">
+        <div className="w-full flex mb-3 ml-1 mt-1">
           <button 
             onClick={() => navigate("/invoices")}
-            className="button-apple-secondary button-apple-sm flex items-center"
+            className="apple-back-button"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <ArrowLeft className="h-5 w-5" />
             <span>Volver</span>
           </button>
         </div>
