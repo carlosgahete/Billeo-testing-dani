@@ -573,9 +573,9 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 mobile-invoice-form-wrapper">
           {/* MobileAccordion para datos de la factura */}
-          <MobileAccordion type="single" defaultValue="invoice-data" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+          <MobileAccordion type="single" defaultValue="invoice-data" collapsible className="MobileAccordion">
             <MobileAccordionItem value="invoice-data">
               <MobileAccordionTrigger 
                 title="Datos de la factura" 
@@ -666,14 +666,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                               </SelectContent>
                             </Select>
                           </div>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <button 
+                            type="button"
                             onClick={() => setShowClientForm(true)}
-                            className="shrink-0"
+                            className="button-apple-secondary button-apple-sm shrink-0"
                           >
                             Nuevo
-                          </Button>
+                          </button>
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -800,7 +799,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
           </MobileAccordion>
 
           {/* MobileAccordion para información adicional - inicialmente cerrado */}
-          <MobileAccordion type="single" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+          <MobileAccordion type="single" collapsible className="MobileAccordion">
             <MobileAccordionItem value="additional-info">
               <MobileAccordionTrigger 
                 title="Información adicional" 
@@ -927,7 +926,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
           </MobileAccordion>
 
           {/* MobileAccordion para detalles de la factura - inicialmente cerrado */}
-          <MobileAccordion type="single" collapsible className="mb-4 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
+          <MobileAccordion type="single" collapsible className="MobileAccordion">
             <MobileAccordionItem value="invoice-details">
               <MobileAccordionTrigger 
                 title="Detalles de la factura" 
@@ -1142,21 +1141,21 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
             </MobileAccordionItem>
           </MobileAccordion>
 
-          <div className="flex justify-end space-x-2 mt-8">
-            <Button
+          <div className="flex justify-between space-x-3 mt-8">
+            <button
               type="button"
-              variant="outline"
+              className="button-apple-secondary flex-1"
               onClick={() => navigate("/invoices")}
             >
               Cancelar
-            </Button>
-            <Button 
+            </button>
+            <button 
               type="submit" 
               disabled={mutation.isPending}
-              className="px-6"
+              className="button-apple-primary flex-1"
             >
               {mutation.isPending ? "Guardando..." : isEditMode ? "Actualizar factura" : "Crear factura"}
-            </Button>
+            </button>
           </div>
         </form>
       </Form>

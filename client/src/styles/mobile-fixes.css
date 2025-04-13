@@ -103,4 +103,95 @@
     animation: float-animation 4s ease-in-out infinite;
     box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
   }
+  
+  /* Estilos Apple para el formulario móvil de facturas */
+  .MobileAccordion {
+    border-radius: 16px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+    margin-bottom: 16px !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    overflow: hidden !important;
+  }
+  
+  .MobileAccordionTrigger {
+    padding: 16px !important;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+    color: #1c1c1e !important;
+  }
+  
+  .MobileAccordionContent {
+    padding: 0 16px 16px 16px !important;
+  }
+  
+  /* Estilo para todo el formulario móvil */
+  .mobile-invoice-form-wrapper {
+    background-color: #f5f5f7 !important;
+    padding: 16px !important;
+    padding-top: 8px !important;
+  }
+  
+  /* Botones estilo Apple */
+  .button-apple-primary {
+    background-color: #007AFF !important;
+    color: white !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    padding: 10px 16px !important;
+    border: none !important;
+    transition: background-color 0.2s !important;
+  }
+  
+  .button-apple-primary:active,
+  .button-apple-primary:hover {
+    background-color: #0066CC !important;
+  }
+  
+  .button-apple-secondary {
+    background-color: rgba(0, 122, 255, 0.1) !important;
+    color: #007AFF !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    padding: 8px 14px !important;
+    border: none !important;
+    transition: background-color 0.2s !important;
+  }
+  
+  .button-apple-secondary:active,
+  .button-apple-secondary:hover {
+    background-color: rgba(0, 122, 255, 0.2) !important;
+  }
+  
+  .button-apple-sm {
+    font-size: 14px !important;
+    padding: 7px 12px !important;
+  }
+  
+  /* Campos de formulario estilo Apple */
+  .mobile-invoice-form-wrapper input,
+  .mobile-invoice-form-wrapper select,
+  .mobile-invoice-form-wrapper textarea {
+    border-radius: 10px !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background-color: white !important;
+    padding: 12px !important;
+    transition: all 0.2s !important;
+  }
+  
+  .mobile-invoice-form-wrapper input:focus,
+  .mobile-invoice-form-wrapper select:focus,
+  .mobile-invoice-form-wrapper textarea:focus {
+    border-color: #007AFF !important;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2) !important;
+  }
+  
+  /* Etiquetas de campo estilo Apple */
+  .mobile-invoice-form-wrapper label {
+    font-size: 14px !important;
+    color: #86868b !important;
+    margin-bottom: 6px !important;
+    display: block !important;
+  }
 }
