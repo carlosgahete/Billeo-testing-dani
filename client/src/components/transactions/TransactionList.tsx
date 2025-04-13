@@ -18,6 +18,7 @@ import {
   AlertTriangle, DollarSign
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMediaQuery, useIsMobile } from "@/hooks/use-media-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -150,13 +151,13 @@ const TransactionList = () => {
   const [selectedTransactions, setSelectedTransactions] = useState<Transaction[]>([]);
   const [isRepairing, setIsRepairing] = useState(false);
   
-  // Estado para detectar dispositivos móviles
+  // Detectar dispositivos móviles de forma directa
   const [isMobile, setIsMobile] = useState(false);
   
   // Efecto para detectar si estamos en un dispositivo móvil
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 640);
     };
     
     // Comprobación inicial
