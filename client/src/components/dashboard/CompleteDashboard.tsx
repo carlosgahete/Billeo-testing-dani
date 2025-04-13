@@ -543,8 +543,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-1 md:gap-8 mt-1 md:mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
-        <div className="dashboard-card fade-in col-span-3">
-          <div className="p-2 md:p-4">
+        <div className="dashboard-card fade-in col-span-3 mx-0 px-0">
+          <div className="p-1 md:p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
                 <div className="bg-[#F0EDFF] p-2 rounded-full mr-2">
@@ -577,22 +577,22 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
 
             {/* Comparativa financiera - Estilo Apple */}
-            <div className="bg-white rounded-xl border border-gray-100 p-3 glass-panel">
+            <div className="bg-white rounded-xl border border-gray-100 p-1 sm:p-3 glass-panel">
               {/* Mostrar el resultado en grande */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="bg-[#F5FFF7] p-2 rounded-lg border border-[#DCFFE5]">
+              <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
+                <div className="bg-[#F5FFF7] p-1 sm:p-2 rounded-lg border border-[#DCFFE5]">
                   <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
                   <div className="text-sm font-semibold text-[#34C759] tracking-tight">
                     {formatCurrency(baseImponibleIngresos)}
                   </div>
                 </div>
-                <div className="bg-[#FFF5F5] p-2 rounded-lg border border-[#FFDFDF]">
+                <div className="bg-[#FFF5F5] p-1 sm:p-2 rounded-lg border border-[#FFDFDF]">
                   <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
                   <div className="text-sm font-semibold text-[#FF3B30] tracking-tight">
                     {formatCurrency(baseImponibleGastos)}
                   </div>
                 </div>
-                <div className="bg-[#F0F7FF] p-2 rounded-lg border border-[#DAE8FF]">
+                <div className="bg-[#F0F7FF] p-1 sm:p-2 rounded-lg border border-[#DAE8FF]">
                   <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
                   <div className="text-sm font-semibold text-[#007AFF] tracking-tight">
                     {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}

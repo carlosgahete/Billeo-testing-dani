@@ -388,7 +388,7 @@ const ExpensesByCategoryNew: React.FC<{
   // Diseño exactamente como la imagen de referencia
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
-      <CardHeader className="bg-red-50 p-3">
+      <CardHeader className="bg-red-50 p-1 sm:p-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base text-red-700 flex items-center">
             <TrendingDown className="mr-2 h-4 w-4" />
