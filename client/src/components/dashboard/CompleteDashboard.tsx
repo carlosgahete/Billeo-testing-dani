@@ -541,7 +541,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-8 mt-4 md:mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-8 mt-2 md:mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in col-span-3">
           <div className="p-4">
@@ -667,7 +667,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Gastos por Categoría */}
-        <div className="col-span-2">
+        <div className="col-span-2 mx-0 px-0">
           <ExpensesByCategory 
             transactions={transactions || []} 
             categories={categories || []}
