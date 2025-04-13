@@ -12,6 +12,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+// Añadimos hook para detección de dispositivo móvil
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { 
   Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, FileText,
   ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw,
