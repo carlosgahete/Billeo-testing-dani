@@ -1467,25 +1467,15 @@ const InvoiceList = () => {
         </div>
       </div>
       
-      {/* Botones de acción para móvil (sin encabezado) */}
-      <div className="flex md:hidden justify-end items-center mx-2 my-3">
-        <div className="flex gap-2">
-          <button
-            className="button-apple-secondary button-apple-sm flex items-center p-2"
-            onClick={exportAllInvoices}
-            aria-label="Exportar facturas"
-          >
-            <Download className="h-4 w-4" />
-          </button>
-          
-          <button
-            className="button-apple button-apple-sm flex items-center p-2"
-            onClick={() => navigate("/invoices/create")}
-            aria-label="Nueva factura"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Botón de acción flotante (FAB) para crear facturas en móvil */}
+      <div className="fixed bottom-6 right-6 z-10 md:hidden">
+        <button
+          className="w-14 h-14 rounded-full bg-[#007AFF] text-white shadow-lg flex items-center justify-center hover:bg-[#0071EB] active:bg-[#0068D6] transition-colors"
+          onClick={() => navigate("/invoices/create")}
+          aria-label="Nueva factura"
+        >
+          <Plus className="h-7 w-7" />
+        </button>
       </div>
 
       {/* Panel de filtros - Botón integrado en la interfaz de DataTable */}
@@ -1629,30 +1619,141 @@ const InvoiceList = () => {
             />
           </div>
           
-          {/* Versión móvil: Barra de búsqueda simple */}
-          <div className="block md:hidden px-4 py-3">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="w-full px-10 py-2 search-field-apple text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          {/* Versión móvil: Interfaz estilo iOS con botones de acción principales */}
+          <div className="block md:hidden">
+            {/* Barra de búsqueda estilo iOS */}
+            <div className="px-4 pt-3 pb-2 bg-white">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  className="w-full px-10 py-2 search-field-apple text-sm rounded-xl bg-gray-100/80 border-0"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                </div>
+              </div>
+            </div>
+            
+            {/* Filtros rápidos tipo segmentos de iOS */}
+            <div className="px-4 mb-2 flex justify-center">
+              <div className="w-full max-w-[320px] bg-gray-100 p-1 rounded-lg flex">
+                <button 
+                  onClick={() => setStatusFilter('all')} 
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                >
+                  Todas
+                </button>
+                <button 
+                  onClick={() => setStatusFilter('paid')} 
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'paid' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                >
+                  Pagadas
+                </button>
+                <button 
+                  onClick={() => setStatusFilter('pending')} 
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'pending' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                >
+                  Pendientes
+                </button>
               </div>
             </div>
           </div>
           
-          {/* DataTable sin búsqueda (ya tenemos nuestra propia barra) */}
-          <div className="invoice-table-mobile">
+          {/* Versión de escritorio: tabla normal */}
+          <div className="hidden md:block">
             <DataTable
               columns={columns}
               data={filteredInvoices}
               pagination={true}
               showSearch={false}
             />
+          </div>
+          
+          {/* Versión móvil: Estilo lista iOS */}
+          <div className="block md:hidden">
+            <div className="px-4 pb-16">
+              {filteredInvoices.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="mb-3 flex justify-center">
+                    <FileCheck className="h-12 w-12 text-gray-300" />
+                  </div>
+                  <p className="text-sm">No se encontraron facturas</p>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {filteredInvoices.map((invoice) => {
+                    const client = clientsData?.find((c) => c.id === invoice.clientId);
+                    const statusColors = {
+                      paid: "bg-green-50 text-green-700 border-green-200",
+                      pending: "bg-blue-50 text-blue-700 border-blue-200",
+                      overdue: "bg-red-50 text-red-700 border-red-200",
+                      canceled: "bg-gray-50 text-gray-700 border-gray-200",
+                    };
+                    const statusColorClass = statusColors[invoice.status];
+                    
+                    return (
+                      <li key={invoice.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200/80">
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-medium text-gray-800">#{invoice.invoiceNumber}</h3>
+                            <span className={`text-xs px-2 py-1 rounded-md ${statusColorClass}`}>
+                              {invoice.status === "paid" && "Pagada"}
+                              {invoice.status === "pending" && "Pendiente"}
+                              {invoice.status === "overdue" && "Vencida"}
+                              {invoice.status === "canceled" && "Cancelada"}
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600 mb-1">
+                            {client?.name || "Cliente desconocido"}
+                          </div>
+                          
+                          <div className="flex justify-between items-center mt-2">
+                            <div className="text-xs text-gray-500">
+                              {new Date(invoice.issueDate).toLocaleDateString("es-ES")}
+                            </div>
+                            <div className="font-semibold text-gray-900">
+                              {new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(invoice.total)}
+                            </div>
+                          </div>
+                          
+                          {/* Acciones rápidas */}
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleExportInvoicePDF(invoice)}
+                                className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
+                                aria-label="Descargar"
+                              >
+                                <Download className="h-4 w-4" />
+                              </button>
+                              
+                              <button 
+                                onClick={() => setSelectedInvoiceId(invoice.id)}
+                                className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
+                                aria-label="Enviar email"
+                              >
+                                <Mail className="h-4 w-4" />
+                              </button>
+                            </div>
+                            
+                            <button
+                              onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
+                              className="text-xs py-1.5 px-3 rounded-lg bg-[#007AFF] text-white font-medium"
+                            >
+                              Editar
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>
