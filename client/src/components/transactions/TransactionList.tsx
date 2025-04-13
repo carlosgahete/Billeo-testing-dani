@@ -1066,11 +1066,13 @@ const TransactionList = () => {
         </div>
         <div className="px-5 sm:pb-5 pb-3">
           {/* Mostrar filtros de gastos cuando estamos en la pestaña de gastos y se ha activado el filtro */}
-          {currentTab === "expense" && showExpenseFilters && transactions && categories && (
+          {currentTab === "expense" && transactions && categories && (
             <div className="mb-6">
               <ExpenseFilters 
                 transactions={transactions}
                 categories={categories}
+                showFilters={showExpenseFilters}
+                onToggleFilters={() => setShowExpenseFilters(!showExpenseFilters)}
                 onFilterChange={(filtered) => {
                   setFilteredExpenseTransactions(filtered);
                   setExpenseFiltersApplied(filtered.length > 0);
@@ -1081,11 +1083,13 @@ const TransactionList = () => {
           )}
           
           {/* Mostrar filtros de ingresos cuando estamos en la pestaña de ingresos y se ha activado el filtro */}
-          {currentTab === "income" && showIncomeFilters && transactions && categories && (
+          {currentTab === "income" && transactions && categories && (
             <div className="mb-6">
               <IncomeFilters 
                 transactions={transactions}
                 categories={categories}
+                showFilters={showIncomeFilters}
+                onToggleFilters={() => setShowIncomeFilters(!showIncomeFilters)}
                 onFilterChange={(filtered) => {
                   setFilteredIncomeTransactions(filtered);
                   setIncomeFiltersApplied(filtered.length > 0);

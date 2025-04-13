@@ -17,6 +17,8 @@ interface ExpenseFiltersProps {
   categories: Category[];
   onFilterChange: React.Dispatch<React.SetStateAction<Transaction[]>>;
   onExportClick?: () => void;
+  showFilters?: boolean;
+  onToggleFilters?: () => void;
 }
 
 const ExpenseFilters = ({
@@ -24,8 +26,9 @@ const ExpenseFilters = ({
   categories,
   onFilterChange,
   onExportClick,
+  showFilters = true,
+  onToggleFilters,
 }: ExpenseFiltersProps) => {
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{start: string, end: string}>({
     start: "", 
@@ -39,10 +42,8 @@ const ExpenseFilters = ({
 
   // Restablecer los filtros cuando se oculta el panel
   useEffect(() => {
-    if (!showFilters) {
-      clearFilters();
-    }
-  }, [showFilters]);
+    // Se ha eliminado esta condición ya que ahora el estado showFilters es controlado por el padre
+  }, []);
 
   // Marcar filtros como aplicados cuando hay criterios seleccionados
   useEffect(() => {
@@ -168,7 +169,7 @@ const ExpenseFilters = ({
                   ? "bg-white/20 text-white border border-white/40 hover:bg-white/30" 
                   : "bg-white text-[#FF9F0A] hover:bg-white/90"
               }`}
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={onToggleFilters}
             >
               {showFilters ? "Ocultar filtros" : "Filtrar"}
             </Button>
