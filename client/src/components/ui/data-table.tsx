@@ -231,11 +231,7 @@ export function DataTable<TData, TValue>({
               >
                 {/* Card Header - Main Info */}
                 <div 
-                  className={`flex justify-between items-center px-4 py-3 border-b ${
-                    row.original.type === 'income' 
-                      ? 'bg-gradient-to-r from-[#34C759]/10 to-[#34C759]/5 border-[#34C759]/20' 
-                      : 'bg-gradient-to-r from-[#FF3B30]/10 to-[#FF3B30]/5 border-[#FF3B30]/20'
-                  }`}
+                  className="flex justify-between items-center px-4 py-3 border-b border-gray-100"
                 >
                   <div className="flex items-center space-x-3">
                     {/* Selection Checkbox (if selectable) */}
@@ -251,15 +247,15 @@ export function DataTable<TData, TValue>({
                     {/* Title & Date with Icon */}
                     <div className="flex items-center">
                       {/* Category Color Indicator or Type Icon */}
-                      <div className={`flex-shrink-0 w-8 h-8 mr-3 rounded-full flex items-center justify-center ${
+                      <div className={`flex-shrink-0 w-7 h-7 mr-3 rounded-full flex items-center justify-center border ${
                         row.original.type === 'income' 
-                          ? 'bg-gradient-to-br from-[#34C759] to-[#30D158]' 
-                          : 'bg-gradient-to-br from-[#FF3B30] to-[#FF453A]'
+                          ? 'border-[#34C759]/30 bg-[#34C759]/10' 
+                          : 'border-[#FF3B30]/30 bg-[#FF3B30]/10'
                       }`}>
                         {row.original.type === 'income' ? (
-                          <ArrowDown className="h-4 w-4 text-white transform rotate-180" />
+                          <ArrowDown className={`h-3.5 w-3.5 ${row.original.type === 'income' ? 'text-[#34C759]' : 'text-[#FF3B30]'} transform rotate-180`} />
                         ) : (
-                          <ArrowUp className="h-4 w-4 text-white transform rotate-180" />
+                          <ArrowUp className={`h-3.5 w-3.5 ${row.original.type === 'income' ? 'text-[#34C759]' : 'text-[#FF3B30]'} transform rotate-180`} />
                         )}
                       </div>
                       
@@ -317,11 +313,7 @@ export function DataTable<TData, TValue>({
                     <span>Ver más detalles</span>
                     <ChevronDown className="h-3 w-3 ml-1 group-open:rotate-180 transition-transform" />
                   </summary>
-                  <div className={`px-4 py-4 text-xs space-y-3 bg-gradient-to-b ${
-                    row.original.type === 'income' 
-                      ? 'from-[#34C759]/5 to-white' 
-                      : 'from-[#FF3B30]/5 to-white'
-                  }`}>
+                  <div className="px-4 py-4 text-xs space-y-3 bg-gray-50/50">
                     {/* Descripción */}
                     {row.original.description && (
                       <div className="flex flex-col space-y-1">
@@ -362,15 +354,7 @@ export function DataTable<TData, TValue>({
                       </div>
                     </div>
                     
-                    {/* Notas */}
-                    {row.original.notes && (
-                      <div className="flex flex-col space-y-1">
-                        <span className="text-[#8E8E93] text-[10px] uppercase tracking-wide font-medium">Notas</span>
-                        <span className="text-gray-900 text-sm">
-                          {row.original.notes}
-                        </span>
-                      </div>
-                    )}
+
                     
                     {/* Fecha de actualización */}
                     {row.original.updatedAt && (
