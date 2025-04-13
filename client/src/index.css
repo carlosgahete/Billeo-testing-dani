@@ -1,9 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Importar ajustes para móviles */
-@import './styles/mobile-fixes.css';
  
 @layer base {
   :root {
@@ -501,6 +498,33 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .hide-on-mobile {
     @apply hidden sm:table-cell;
+  }
+  
+  /* Ajustes específicos para tabla de facturas */
+  .invoice-table-mobile .rdt_TableCol,
+  .invoice-table-mobile .rdt_TableCell {
+    padding: 8px 4px;
+    font-size: 0.85rem;
+  }
+  
+  .invoice-table-mobile .rdt_TableCell {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Eliminar doble scroll en móvil */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Mejoras para botones en móvil */
+  .mobile-action-button {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    margin: 0 1px;
   }
 }
 

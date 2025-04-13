@@ -1422,8 +1422,8 @@ const InvoiceList = () => {
 
   return (
     <div className="w-full fade-in">
-      {/* Encabezado estilo Apple */}
-      <div className="glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 flex justify-between items-center mx-2 mb-4 border border-[#007AFF]/20">
+      {/* Encabezado estilo Apple - Versión completa para escritorio */}
+      <div className="hidden md:flex glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 justify-between items-center mx-2 mb-4 border border-[#007AFF]/20">
         <div className="flex items-center">
           <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
             <FileCheck className="h-4 w-4 text-[#007AFF]" />
@@ -1441,8 +1441,7 @@ const InvoiceList = () => {
             onClick={exportAllInvoices}
           >
             <Download className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Exportar todo</span>
-            <span className="sm:hidden">Exportar</span>
+            <span>Exportar todo</span>
           </button>
           
           {/* Botón para exportar solo las facturas filtradas */}
@@ -1454,8 +1453,7 @@ const InvoiceList = () => {
             >
               <FileDown className="h-4 w-4 mr-1.5" />
               <span className="hidden lg:inline">Exportar filtradas</span>
-              <span className="hidden sm:inline lg:hidden">Filtradas</span>
-              <span className="sm:hidden">{filteredInvoices.length}</span>
+              <span className="lg:hidden">Filtradas</span>
             </button>
           )}
           
@@ -1464,8 +1462,29 @@ const InvoiceList = () => {
             onClick={() => navigate("/invoices/create")}
           >
             <Plus className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Nueva factura</span>
-            <span className="sm:hidden">Nueva</span>
+            <span>Nueva factura</span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Encabezado minimalista para móvil */}
+      <div className="flex md:hidden justify-between items-center mx-2 my-3">
+        <h3 className="font-semibold text-lg text-gray-800">Facturas</h3>
+        <div className="flex gap-2">
+          <button
+            className="button-apple-secondary button-apple-sm flex items-center p-2"
+            onClick={exportAllInvoices}
+            aria-label="Exportar facturas"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+          
+          <button
+            className="button-apple button-apple-sm flex items-center p-2"
+            onClick={() => navigate("/invoices/create")}
+            aria-label="Nueva factura"
+          >
+            <Plus className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -1589,33 +1608,53 @@ const InvoiceList = () => {
       {/* Tabla de facturas */}
       <div className="glass-panel overflow-hidden rounded-2xl border border-gray-200/50 shadow-sm mx-2 scale-in">
         <div className="w-full">
-          {/* Usar el nuevo componente SearchBar */}
-          <SearchBar
-            placeholder="Buscar facturas..."
-            initialValue={searchQuery}
-            onSearch={(value) => {
-              console.log(`InvoiceList: SearchBar actualizó query a "${value}"`);
-              setSearchQuery(value);
-            }}
-            filterButton={
-              <Button 
-                variant="outline" 
-                className="hidden md:flex items-center gap-1"
-                onClick={() => setIsFilterVisible(!isFilterVisible)}
-              >
-                <Filter className="h-4 w-4" />
-                {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
-              </Button>
-            }
-          />
+          {/* Versión desktop: Barra de búsqueda y filtros */}
+          <div className="hidden md:block">
+            <SearchBar
+              placeholder="Buscar facturas por número, cliente o fecha..."
+              initialValue={searchQuery}
+              onSearch={(value) => {
+                console.log(`InvoiceList: SearchBar actualizó query a "${value}"`);
+                setSearchQuery(value);
+              }}
+              filterButton={
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-1"
+                  onClick={() => setIsFilterVisible(!isFilterVisible)}
+                >
+                  <Filter className="h-4 w-4" />
+                  {isFilterVisible ? "Ocultar filtros" : "Mostrar filtros"}
+                </Button>
+              }
+            />
+          </div>
+          
+          {/* Versión móvil: Barra de búsqueda simple */}
+          <div className="block md:hidden px-4 py-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar..."
+                className="w-full px-10 py-2 search-field-apple text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              </div>
+            </div>
+          </div>
           
           {/* DataTable sin búsqueda (ya tenemos nuestra propia barra) */}
-          <DataTable
-            columns={columns}
-            data={filteredInvoices}
-            pagination={true}
-            showSearch={false}
-          />
+          <div className="invoice-table-mobile">
+            <DataTable
+              columns={columns}
+              data={filteredInvoices}
+              pagination={true}
+              showSearch={false}
+            />
+          </div>
         </div>
       </div>
     </div>
