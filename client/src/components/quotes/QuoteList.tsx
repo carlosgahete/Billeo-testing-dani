@@ -39,7 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail } from "lucide-react";
+import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail, CheckCircle, FileEdit, Clock, HelpCircle, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 interface Quote {
@@ -737,120 +737,194 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
             </Table>
           </div>
           
-          {/* Vista móvil en tarjetas */}
-          <div className="md:hidden px-2 pb-16">
+          {/* Vista móvil en tarjetas, extremadamente optimizada y minimalista */}
+          <div className="md:hidden mobile-card-container pb-24">
             {displayQuotes.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="mb-3 flex justify-center">
+              <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+                <div className="bg-white/80 rounded-full p-4 mb-4">
                   <FileText className="h-12 w-12 text-gray-300" />
                 </div>
-                <p className="text-sm">No se encontraron presupuestos</p>
+                <p className="text-gray-500">No se encontraron presupuestos</p>
               </div>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2.5 px-1">
                 {displayQuotes.map((quote) => {
                   const client = clientsData?.find((c) => c.id === quote.clientId);
-                  const statusColors = {
-                    accepted: "bg-green-50 text-green-700 border-green-200",
-                    draft: "bg-slate-50 text-slate-700 border-slate-200",
-                    sent: "bg-blue-50 text-blue-700 border-blue-200",
-                    rejected: "bg-red-50 text-red-700 border-red-200",
-                    expired: "bg-gray-50 text-gray-700 border-gray-200"
+                  
+                  // Colores para los distintos estados basados en iOS
+                  const getStatusInfo = (status) => {
+                    switch(status) {
+                      case 'accepted':
+                        return { 
+                          text: 'Aceptado', 
+                          color: 'text-green-600',
+                          bg: 'bg-green-50',
+                          iconBg: 'bg-green-100',
+                          icon: <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                        };
+                      case 'draft':
+                        return { 
+                          text: 'Borrador', 
+                          color: 'text-gray-600',
+                          bg: 'bg-gray-50',
+                          iconBg: 'bg-gray-100',
+                          icon: <FileEdit className="h-3.5 w-3.5 text-gray-600" />
+                        };
+                      case 'sent':
+                        return { 
+                          text: 'Enviado', 
+                          color: 'text-blue-600',
+                          bg: 'bg-blue-50',
+                          iconBg: 'bg-blue-100',
+                          icon: <Send className="h-3.5 w-3.5 text-blue-600" />
+                        };
+                      case 'rejected':
+                        return { 
+                          text: 'Rechazado', 
+                          color: 'text-red-600',
+                          bg: 'bg-red-50',
+                          iconBg: 'bg-red-100',
+                          icon: <XCircle className="h-3.5 w-3.5 text-red-600" />
+                        };
+                      case 'expired':
+                        return { 
+                          text: 'Expirado', 
+                          color: 'text-amber-600',
+                          bg: 'bg-amber-50',
+                          iconBg: 'bg-amber-100',
+                          icon: <Clock className="h-3.5 w-3.5 text-amber-600" />
+                        };
+                      default:
+                        return { 
+                          text: 'Desconocido', 
+                          color: 'text-gray-600',
+                          bg: 'bg-gray-50', 
+                          iconBg: 'bg-gray-100',
+                          icon: <HelpCircle className="h-3.5 w-3.5 text-gray-600" />
+                        };
+                    }
                   };
-                  const statusColorClass = statusColors[quote.status] || "bg-gray-50 text-gray-700 border-gray-200";
+                  
+                  const statusInfo = getStatusInfo(quote.status);
                   
                   return (
-                    <li key={quote.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200/80">
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-medium text-gray-800">{quote.quoteNumber}</h3>
-                          <span className={`text-xs px-2 py-1 rounded-md ${statusColorClass}`}>
-                            {quote.status === "accepted" && "Aceptado"}
-                            {quote.status === "draft" && "Borrador"}
-                            {quote.status === "sent" && "Enviado"}
-                            {quote.status === "rejected" && "Rechazado"}
-                            {quote.status === "expired" && "Expirado"}
-                          </span>
-                        </div>
-                        
-                        <div className="mb-3">
-                          <p className="text-sm text-gray-700 truncate">{client?.name || "Cliente sin especificar"}</p>
-                          <p className="text-xs text-gray-500">{formatDate(quote.issueDate)}</p>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-xs text-gray-500">Total</p>
-                            <p className="text-sm font-semibold">{formatCurrency(quote.total)}</p>
+                    <li key={quote.id} className="ios-card">
+                      {/* Cabecera con número e info de cliente */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2.5">
+                          {/* Icono de estado */}
+                          <div className={`flex-shrink-0 rounded-full ${statusInfo.iconBg} p-1.5`}>
+                            {statusInfo.icon}
                           </div>
                           
-                          {showActions && (
-                            <div className="flex space-x-2">
-                              <Link href={`/quotes/simple/edit/${quote.id}`}>
-                                <Button size="sm" variant="outline" className="h-9 px-3">
-                                  <Pencil className="h-3.5 w-3.5 mr-1" />
-                                  <span className="text-xs">Editar Simple</span>
-                                </Button>
-                              </Link>
-                              
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-9 w-9 p-0" 
-                                onClick={() => handleDelete(quote.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          )}
+                          <div>
+                            <p className="font-medium text-gray-900">{quote.quoteNumber}</p>
+                            <p className="text-xs text-gray-500 truncate max-w-[120px]">
+                              {client?.name || "Cliente sin especificar"}
+                            </p>
+                          </div>
                         </div>
                         
-                        {showActions && (
-                          <div className="flex mt-3 gap-1.5 overflow-x-auto no-scrollbar py-2">
-                            <Link href={`/quotes/edit/${quote.id}`} className="shrink-0">
-                              <Button size="sm" variant="secondary" className="h-8">
-                                Editar Completo
-                              </Button>
-                            </Link>
-                            
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-8 shrink-0"
-                              onClick={() => handleDownloadPDF(quote)}
-                            >
-                              <Download className="h-3.5 w-3.5 mr-1" />
-                              <span className="text-xs">PDF</span>
-                            </Button>
-                            
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-8 shrink-0"
-                              onClick={() => handleEmailQuote(quote)}
-                            >
-                              <Mail className="h-3.5 w-3.5 mr-1" />
-                              <span className="text-xs">Email</span>
-                            </Button>
-                            
-                            {quote.status === "accepted" && (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="h-8 shrink-0 text-green-600 bg-green-50"
-                                onClick={() => handleConvert(quote.id)}
-                              >
-                                <FileCheck className="h-3.5 w-3.5 mr-1" />
-                                <span className="text-xs">Convertir</span>
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                        {/* Precio y estado */}
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900">{formatCurrency(quote.total)}</p>
+                          <p className={`text-xs ${statusInfo.color}`}>{statusInfo.text}</p>
+                        </div>
                       </div>
+                      
+                      {/* Fechas en formato pequeño */}
+                      <div className="flex justify-between text-xs text-gray-500 mt-3">
+                        <div>
+                          <p>Creado: {formatDate(quote.issueDate)}</p>
+                        </div>
+                        <div>
+                          <p>Válido hasta: {formatDate(quote.validUntil)}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Acciones principales, máximo 2 botones grandes */}
+                      {showActions && (
+                        <div className="mt-4 flex justify-between items-center">
+                          <Link href={`/quotes/simple/edit/${quote.id}`} className="flex-1 mr-2">
+                            <Button 
+                              className="w-full button-apple-secondary" 
+                              variant="outline"
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                              Editar Simple
+                            </Button>
+                          </Link>
+                          
+                          <Button
+                            className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100"
+                            variant="ghost"
+                            onClick={() => handleDelete(quote.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Botones de acción secundarios en un overflow horizontal */}
+                      {showActions && (
+                        <div className="flex mt-2 gap-2 overflow-x-auto no-scrollbar pb-1">
+                          <Link href={`/quotes/edit/${quote.id}`} className="shrink-0">
+                            <Button size="sm" variant="secondary" className="text-xs px-2.5 h-8">
+                              Editar Completo
+                            </Button>
+                          </Link>
+                          
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="text-xs px-2.5 h-8 shrink-0"
+                            onClick={() => handleDownloadPDF(quote)}
+                          >
+                            <Download className="h-3.5 w-3.5 mr-1" />
+                            PDF
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="text-xs px-2.5 h-8 shrink-0"
+                            onClick={() => handleEmailQuote(quote)}
+                          >
+                            <Mail className="h-3.5 w-3.5 mr-1" />
+                            Email
+                          </Button>
+                          
+                          {quote.status === "accepted" && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="text-xs px-2.5 h-8 shrink-0 text-green-600 bg-green-50"
+                              onClick={() => handleConvert(quote.id)}
+                            >
+                              <FileCheck className="h-3.5 w-3.5 mr-1" />
+                              Convertir
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </li>
                   );
                 })}
               </ul>
+            )}
+            
+            {/* Botón flotante en lugar de botones grandes */}
+            {showActions && (
+              <div className="fixed bottom-20 right-4 z-10 flex flex-col space-y-2">
+                <Link href="/quotes/simple/create">
+                  <Button 
+                    className="rounded-full h-14 w-14 shadow-lg bg-white text-primary-600 border border-primary-100"
+                    variant="outline"
+                  >
+                    <Plus className="h-6 w-6" />
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </CardContent>
