@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ZoomIn, ZoomOut, X, ArrowLeft } from "lucide-react";
+import { Loader2, Upload, FileText, Receipt, ZoomIn, ZoomOut, X, ArrowLeft, Camera, FileIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -333,11 +333,20 @@ const DocumentScanPage = () => {
           }}>Sube una imagen o PDF de tu factura</p>
         </div>
         
-        {/* Control de archivos invisible */}
+        {/* Control de archivos invisible - opción de archivo */}
         <input
           type="file"
           id="file-input"
           accept="image/*,.pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        
+        {/* Control de cámara invisible - opción de cámara */}
+        <input
+          type="file"
+          id="camera-input"
+          accept="image/*"
           onChange={handleFileChange}
           className="hidden"
           capture="environment"
@@ -379,11 +388,60 @@ const DocumentScanPage = () => {
                   letterSpacing: "-0.01em"
                 }}
               >
-                <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
-                <span className="sm:hidden">Toca para subir factura</span>
+                <span className="hidden sm:inline">Arrastra y suelta o selecciona un archivo</span>
+                <span className="sm:hidden">Selecciona un método para subir</span>
               </p>
               
-              <div className="inline-flex items-center justify-center bg-gray-100/60 rounded-full px-3 py-1 mt-3">
+              {/* Opciones de subida en dispositivos móviles */}
+              <div className="flex justify-center space-x-3 mt-4 sm:hidden">
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const input = document.getElementById('file-input') as HTMLInputElement;
+                    if (input) input.click();
+                  }}
+                  className="rounded-full px-4 py-2 text-sm"
+                  style={{
+                    background: "linear-gradient(to bottom, #ffffff, #f5f5f7)",
+                    border: "1px solid rgba(209, 213, 219, 0.5)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.35rem"
+                  }}
+                >
+                  <FileIcon className="h-4 w-4 mr-1" />
+                  <span>Archivo</span>
+                </Button>
+                
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const input = document.getElementById('camera-input') as HTMLInputElement;
+                    if (input) input.click();
+                  }}
+                  className="rounded-full px-4 py-2 text-sm"
+                  style={{
+                    background: "linear-gradient(to bottom, #ffffff, #f5f5f7)",
+                    border: "1px solid rgba(209, 213, 219, 0.5)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.35rem"
+                  }}
+                >
+                  <Camera className="h-4 w-4 mr-1" />
+                  <span>Cámara</span>
+                </Button>
+              </div>
+              
+              <div className="inline-flex items-center justify-center bg-gray-100/60 rounded-full px-3 py-1 mt-4">
                 <p className="text-gray-500 text-sm"
                   style={{ 
                     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
