@@ -87,6 +87,12 @@ export default function QuotesPage() {
     <Layout>
       <div className="-mt-20">
         <div className="flex justify-center space-x-2 mx-auto mb-3">
+          <Link href="/quotes/create">
+            <Button className="bg-[#FF9500] hover:bg-[#F08300] text-white px-3 py-1 h-9">
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo presupuesto
+            </Button>
+          </Link>
           <Button 
             className="bg-[#34C759] hover:bg-[#2EB350] text-white px-3 py-1 h-9" 
             onClick={generateQuotesSummaryPDF}
@@ -94,12 +100,6 @@ export default function QuotesPage() {
             <Download className="h-4 w-4 mr-1" />
             Descargar resumen
           </Button>
-          <Link href="/quotes/create">
-            <Button className="bg-[#FF9500] hover:bg-[#F08300] text-white px-3 py-1 h-9">
-              <Plus className="h-4 w-4 mr-1" />
-              Nuevo presupuesto
-            </Button>
-          </Link>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
