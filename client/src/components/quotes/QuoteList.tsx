@@ -491,8 +491,8 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
     filteredQuotes = quotes.filter(q => q.status === "draft" || q.status === "sent");
   }
   
-  // Aplicar filtro de búsqueda si hay texto en el input
-  if (searchQuery.trim() !== "") {
+  // Aplicar filtro de búsqueda si hay texto en el input (solo para vista móvil)
+  if (isMobile && searchQuery.trim() !== "") {
     const searchTermLower = searchQuery.toLowerCase().trim();
     filteredQuotes = filteredQuotes.filter(q => {
       const client = clientsData.find(c => c.id === q.clientId);
