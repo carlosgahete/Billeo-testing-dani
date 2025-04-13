@@ -39,7 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail, CheckCircle, FileEdit, Clock, HelpCircle, Plus } from "lucide-react";
+import { Pencil, Trash2, Download, FileText, Send, FileCheck, XCircle, Mail } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 interface Quote {
@@ -522,12 +522,79 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
 
   return (
     <>
-      <div className="md:hidden px-1 pt-2">
-        <h1 className="text-lg font-bold mb-3 pl-2">Presupuestos</h1>
+      {/* Vista móvil ultra simple */}
+      <div className="md:hidden">
+        <h1 className="text-xl font-bold px-4 py-3">Presupuestos</h1>
+        
+        <div className="px-4 pb-20">
+          <div className="space-y-3">
+            {displayQuotes.map((quote) => {
+              const client = clientsData?.find((c) => c.id === quote.clientId);
+              
+              // Estado simplificado
+              let statusText = "";
+              switch(quote.status) {
+                case 'accepted': statusText = "Aceptado"; break;
+                case 'draft': statusText = "Borrador"; break;
+                case 'sent': statusText = "Enviado"; break;
+                case 'rejected': statusText = "Rechazado"; break;
+                case 'expired': statusText = "Expirado"; break;
+                default: statusText = "Desconocido";
+              }
+              
+              return (
+                <div key={quote.id} className="bg-white p-3 border rounded-lg">
+                  <div className="flex justify-between mb-1">
+                    <div>
+                      <p className="font-medium">{quote.quoteNumber}</p>
+                      <p className="text-gray-500 text-sm truncate">{client?.name || "Cliente no encontrado"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">{formatCurrency(quote.total)}</p>
+                      <p className="text-sm text-gray-500">{statusText}</p>
+                    </div>
+                  </div>
+                  
+                  {showActions && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Link href={`/quotes/simple/edit/${quote.id}`} className="flex-1">
+                        <Button size="sm" className="w-full">Editar</Button>
+                      </Link>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(quote.id)}
+                      >
+                        Eliminar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadPDF(quote)}
+                      >
+                        PDF
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        {/* Botón flotante simple */}
+        {showActions && (
+          <div className="fixed bottom-20 right-6">
+            <Link href="/quotes/simple/create">
+              <Button className="h-14 w-14 rounded-full shadow-lg">+</Button>
+            </Link>
+          </div>
+        )}
       </div>
-      
-      <Card className="w-full border-none shadow-sm">
-        <CardHeader className="pb-3 border-b px-2 sm:px-6 hidden md:block">
+    
+      {/* Vista de escritorio con tabla */}
+      <Card className="w-full border-none shadow-sm hidden md:block">
+        <CardHeader className="pb-3 border-b px-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-primary-700">
@@ -543,7 +610,7 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
                   : "Listado completo de tus presupuestos emitidos. Puedes enviarlos a tus clientes, convertirlos en facturas o editarlos según tus necesidades."}
               </CardDescription>
             </div>
-            <div className="hidden md:block">
+            <div>
               <div className="flex space-x-2">
                 <Link href="/quotes/create">
                   <Button className="gap-1">
@@ -559,160 +626,52 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-1 sm:px-6">
-          {/* Tabla para vista de escritorio */}
-          <div className="hidden md:block overflow-x-auto -mx-1 sm:mx-0">
-            <Table className="w-full min-w-full">
+        <CardContent className="px-6">
+          <div className="overflow-x-auto">
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[60px] md:w-[100px]">Núm.</TableHead>
-                  <TableHead className="w-[120px] md:w-[180px]">Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell w-[120px]">Fecha</TableHead>
-                  <TableHead className="hidden md:table-cell w-[120px]">Válido hasta</TableHead>
-                  <TableHead className="w-[100px] md:w-[120px]">Total</TableHead>
-                  <TableHead className="w-[80px] md:w-[120px]">Estado</TableHead>
-                  {showActions && <TableHead className="text-right w-[120px] md:w-[200px]">Acciones</TableHead>}
+                  <TableHead>Núm.</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell">Válido hasta</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Estado</TableHead>
+                  {showActions && <TableHead className="text-right">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayQuotes.map((quote: Quote) => {
                   const client = clientsData.find((c: Client) => c.id === quote.clientId);
                   return (
-                    <TableRow 
-                      key={quote.id}
-                      className={quote.status === "accepted" ? "bg-green-50" : 
-                                quote.status === "rejected" ? "bg-red-50" : 
-                                quote.status === "expired" ? "bg-gray-50" : ""}
-                    >
-                      <TableCell className="font-medium py-2 px-1 sm:px-4">{quote.quoteNumber}</TableCell>
-                      <TableCell className="truncate max-w-[100px] md:max-w-[180px] py-2 px-1 sm:px-4">{client?.name || "Cliente no encontrado"}</TableCell>
-                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.issueDate)}</TableCell>
-                      <TableCell className="hidden md:table-cell py-2 px-4">{formatDate(quote.validUntil)}</TableCell>
-                      <TableCell className="font-medium py-2 px-1 sm:px-4">{formatCurrency(quote.total)}</TableCell>
-                      <TableCell className="py-2 px-1 sm:px-4">{getStatusBadge(quote.status)}</TableCell>
+                    <TableRow key={quote.id}>
+                      <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
+                      <TableCell>{client?.name || "Cliente no encontrado"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{formatDate(quote.issueDate)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{formatDate(quote.validUntil)}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(quote.total)}</TableCell>
+                      <TableCell>{getStatusBadge(quote.status)}</TableCell>
                       {showActions && (
-                        <TableCell className="py-2 px-1 sm:px-4">
-                          <div className="flex justify-end items-center gap-0.5 sm:gap-1">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDownloadPDF(quote)}
-                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary-50"
-                                  >
-                                    <Download className="h-4 w-4 text-primary-600" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Descargar PDF</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDownloadPDF(quote)}
+                              className="h-8 w-8"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
                             
-                            {quote.status === "draft" && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleSend(quote.id)}
-                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
-                                    >
-                                      <Send className="h-4 w-4 text-blue-600" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Enviar presupuesto</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEmailQuote(quote)}
+                              className="h-8 w-8"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
                             
-                            {quote.status === "sent" && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleReject(quote.id)}
-                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
-                                    >
-                                      <XCircle className="h-4 w-4 text-red-600" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Rechazar presupuesto</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                            
-                            {(quote.status === "sent" || quote.status === "accepted") && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleConvert(quote.id)}
-                                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-green-50"
-                                    >
-                                      <FileCheck className="h-4 w-4 text-green-600" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Convertir a factura</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                            
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span>
-                                    <Link href={`/quotes/edit/${quote.id}`}>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        disabled={quote.status === "accepted" || quote.status === "rejected"}
-                                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-amber-50"
-                                      >
-                                        <Pencil className="h-4 w-4 text-amber-600" />
-                                      </Button>
-                                    </Link>
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Editar presupuesto</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            {/* Botón de correo electrónico */}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEmailQuote(quote)}
-                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-blue-50"
-                                  >
-                                    <Mail className="h-4 w-4 text-blue-600" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Enviar por correo</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            {/* Botón de eliminar */}
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -720,10 +679,9 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleDelete(quote.id)}
-                                    disabled={quote.status === "accepted" || quote.status === "rejected"}
-                                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-red-50"
+                                    className="h-8 w-8"
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -731,6 +689,12 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
+                            
+                            <Link href={`/quotes/edit/${quote.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </Link>
                           </div>
                         </TableCell>
                       )}
@@ -740,97 +704,17 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
               </TableBody>
             </Table>
           </div>
-          
-          {/* Vista móvil súper simple */}
-          <div className="md:hidden p-2 pb-16">
-            {displayQuotes.length === 0 ? (
-              <div className="text-center py-12">
-                <p>No se encontraron presupuestos</p>
-              </div>
-            ) : (
-              <div className="grid gap-3">
-                {displayQuotes.map((quote) => {
-                  const client = clientsData?.find((c) => c.id === quote.clientId);
-                  
-                  // Texto para el estado
-                  let statusText = "";
-                  switch(quote.status) {
-                    case 'accepted': statusText = "Aceptado"; break;
-                    case 'draft': statusText = "Borrador"; break;
-                    case 'sent': statusText = "Enviado"; break;
-                    case 'rejected': statusText = "Rechazado"; break;
-                    case 'expired': statusText = "Expirado"; break;
-                    default: statusText = "Desconocido";
-                  }
-                  
-                  return (
-                    <div key={quote.id} className="bg-white p-4 border rounded-xl shadow-sm">
-                      <div className="flex justify-between mb-2">
-                        <div>
-                          <h3 className="font-medium">{quote.quoteNumber}</h3>
-                          <p className="text-sm text-gray-600">{client?.name || "Cliente no encontrado"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold">{formatCurrency(quote.total)}</p>
-                          <p className="text-sm">{statusText}</p>
-                        </div>
-                      </div>
-                      
-                      {showActions && (
-                        <div className="flex gap-2 mt-3 flex-wrap">
-                          <Link href={`/quotes/simple/edit/${quote.id}`}>
-                            <Button size="sm" variant="outline">Editar</Button>
-                          </Link>
-                          
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(quote.id)}
-                          >
-                            Eliminar
-                          </Button>
-                          
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownloadPDF(quote)}
-                          >
-                            PDF
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            
-            {/* Botón para crear nuevo */}
-            {showActions && (
-              <div className="fixed bottom-16 right-4">
-                <Link href="/quotes/simple/create">
-                  <Button className="rounded-full h-12 w-12 shadow-md">
-                    +
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
         </CardContent>
-        <CardFooter className="flex justify-between items-center pt-6 border-t px-2 sm:px-6 hidden md:flex">
-          {!showActions && limit && typeof limit === 'number' && displayQuotes.length >= limit && (
-            <Link href="/quotes" className="ml-auto">
-              <Button variant="outline">Ver todos</Button>
-            </Link>
-          )}
+        <CardFooter className="flex justify-end border-t p-4">
           {quotes.length > 0 && (
-            <p className="text-muted-foreground text-sm ml-auto">
+            <p className="text-muted-foreground text-sm">
               Total: {quotes.length} presupuestos
             </p>
           )}
         </CardFooter>
       </Card>
 
+      {/* Diálogos de confirmación */}
       <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -853,7 +737,7 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
           <AlertDialogHeader>
             <AlertDialogTitle>Convertir a factura</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Deseas convertir este presupuesto en una factura? Se creará una nueva factura con todos los datos del presupuesto, incluyendo cliente, conceptos, importes e impuestos. Una vez convertido, serás redirigido a la sección de facturas para ver y gestionar la factura recién creada.
+              ¿Deseas convertir este presupuesto en una factura? Se creará una nueva factura con todos los datos del presupuesto.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
