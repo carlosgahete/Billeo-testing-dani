@@ -346,12 +346,14 @@ const DocumentScanPage = () => {
         {!showEditMode ? (
           // Modo de subida de documento
           <div className="w-full">
-            {/* Zona de arrastrar y soltar al estilo Apple */}
+            {/* Zona de arrastrar y soltar moderno y limpio */}
             <div 
-              className="w-full border border-gray-200 rounded-[18px] py-10 px-6 text-center cursor-pointer"
+              className="w-full rounded-[20px] py-12 px-6 text-center cursor-pointer"
               style={{
-                background: "linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%)",
-                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.05)"
+                background: "linear-gradient(to bottom, rgba(249, 250, 255, 0.8), rgba(240, 242, 245, 0.8))",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)",
+                border: "1px solid rgba(209, 213, 219, 0.3)",
+                backdropFilter: "blur(6px)"
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
@@ -371,7 +373,7 @@ const DocumentScanPage = () => {
               </div>
               
               <p 
-                className="text-[17px] font-medium text-gray-900 mt-5"
+                className="text-[17px] font-medium text-gray-800 mt-5" 
                 style={{ 
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                   letterSpacing: "-0.01em"
@@ -381,15 +383,15 @@ const DocumentScanPage = () => {
                 <span className="sm:hidden">Toca para subir factura</span>
               </p>
               
-              <p 
-                className="text-gray-500 mt-2"
-                style={{ 
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-                  fontSize: "14px"
-                }}
-              >
-                JPG, PNG, PDF
-              </p>
+              <div className="inline-flex items-center justify-center bg-gray-100/60 rounded-full px-3 py-1 mt-3">
+                <p className="text-gray-500 text-sm"
+                  style={{ 
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                  }}
+                >
+                  JPG, PNG, PDF
+                </p>
+              </div>
               
               {fileName && (
                 <div className="mt-3">
