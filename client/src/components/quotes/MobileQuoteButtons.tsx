@@ -9,7 +9,7 @@ interface MobileQuoteButtonsProps {
 
 export function MobileQuoteButtons({ onGeneratePDF }: MobileQuoteButtonsProps) {
   return (
-    <div className="flex justify-between gap-1 fade-in mb-0 mt-0 w-full z-10 px-1">
+    <div className="flex justify-between gap-2 fade-in mb-0 mt-0">
       <Link href="/quotes/create" className="flex-1">
         <Button 
           className="w-full bg-[#007AFF] hover:bg-[#0062CC] text-white font-medium rounded-xl h-9 text-xs px-2"

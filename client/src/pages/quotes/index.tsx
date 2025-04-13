@@ -372,7 +372,7 @@ export default function QuotesPage() {
       </div>
       
       {/* Botones móviles - Sin icono, optimizado para espacio */}
-      <div className="md:hidden mt-2 mobile-quote-buttons-container mx-[-16px]">
+      <div className="md:hidden mt-2 mobile-quote-buttons-container">
         <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
       </div>
 
@@ -600,9 +600,9 @@ export default function QuotesPage() {
       {/* Eliminar duplicado de botones */}
 
       {/* Lista de presupuestos - Estilo Apple */}
-      <div className="mt-6 fade-in mx-[-16px]">
-        <div className="rounded-3xl scale-in mb-4">
-          <div className="p-0 md:p-6">
+      <div className="mt-6 fade-in">
+        <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-4">
+          <div className="p-1 md:p-6">
             {/* Título de la sección - Oculto en móvil */}
             <div className="hidden md:flex items-center justify-between mb-4">
               <div className="flex items-center">
