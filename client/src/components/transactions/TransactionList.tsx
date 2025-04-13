@@ -891,7 +891,7 @@ const TransactionList = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" style={{display: isMobile ? 'none' : 'grid'}}>
         {/* Tarjeta de Ingresos Totales - Estilo Apple moderno con gradiente e iconos */}
         <div className="scale-in dashboard-card relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#34C759] to-[#30D158]"></div>
@@ -906,7 +906,7 @@ const TransactionList = () => {
             <p className="text-3xl font-semibold text-[#1D1D1F] mb-5 pl-1">
               {formatCurrency(incomeTotal, "income")}
             </p>
-            
+          
             <div className="p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl flex items-center justify-between hover:bg-[#34C759]/10 transition-all mb-2">
               <div className="flex items-center">
                 <Receipt className="h-4 w-4 text-[#34C759] mr-2" />
