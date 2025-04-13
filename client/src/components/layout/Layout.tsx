@@ -29,8 +29,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-100">
-      {/* Mobile header */}
-      {isMobile && (
+      {/* Mobile header - Ocultado a petición del usuario */}
+      {false && isMobile && (
         <Header 
           isMobile={true} 
           mobileMenuOpen={mobileMenuOpen} 
@@ -68,7 +68,7 @@ const Layout = ({ children }: LayoutProps) => {
           className={`
             flex-1 
             overflow-y-auto 
-            ${isMobile ? 'pt-20' : ''}
+            ${false && isMobile ? 'pt-20' : ''}
             ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
           `}
