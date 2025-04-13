@@ -872,16 +872,14 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                   <div>
                     <div className="mb-3 flex items-center justify-between">
                       <FormLabel className="mb-0">Impuestos adicionales</FormLabel>
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
-                        size="sm"
                         onClick={handleAddTax}
-                        className="text-xs h-8"
+                        className="button-apple-secondary button-apple-sm text-xs h-8 flex items-center"
                       >
                         <Plus className="mr-1 h-3 w-3" />
                         Añadir impuesto
-                      </Button>
+                      </button>
                     </div>
                     
                     {taxFields.length > 0 ? (
@@ -902,15 +900,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                                 }
                               </div>
                             </div>
-                            <Button
+                            <button
                               type="button"
-                              variant="ghost"
-                              size="sm"
                               onClick={() => removeTax(index)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition-colors"
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -1053,35 +1049,32 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
 
                       <div className="col-span-1 flex justify-center items-end">
                         {fields.length > 1 && (
-                          <Button
+                          <button
                             type="button"
-                            variant="ghost"
-                            size="icon"
                             onClick={() => {
                               remove(index);
                               // Recalculamos tras eliminar
                               setTimeout(() => calculateInvoiceTotals(form), 100);
                             }}
-                            className="h-10 w-10"
+                            className="h-8 w-8 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition-colors"
                           >
                             <Minus className="h-4 w-4 text-red-500" />
-                          </Button>
+                          </button>
                         )}
                       </div>
                     </div>
                   ))}
 
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
                     onClick={handleAddItem}
-                    className="w-full"
+                    className="button-apple-secondary w-full flex items-center justify-center"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Añadir ítem
-                  </Button>
+                  </button>
 
-                  <div className="p-4 bg-gray-50 rounded-lg shadow-sm border mt-6">
+                  <div className="p-4 rounded-lg mt-6" style={{backgroundColor: 'rgba(250, 250, 252, 0.95)', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', backdropFilter: 'blur(10px)'}}>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">
@@ -1208,21 +1201,32 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                   value={newTaxData.amount}
                   onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value)})}
                 />
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  className="ml-2 px-3"
+                  className="button-apple-secondary button-apple-sm ml-2 px-3 h-10 min-w-10"
                   onClick={() => setNewTaxData({...newTaxData, isPercentage: !newTaxData.isPercentage})}
                 >
                   {newTaxData.isPercentage ? '%' : '€'}
-                </Button>
+                </button>
               </div>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTaxDialog(false)}>Cancelar</Button>
-            <Button onClick={handleAddTaxFromDialog}>Agregar impuesto</Button>
+            <button 
+              type="button" 
+              className="button-apple-secondary"
+              onClick={() => setShowTaxDialog(false)}
+            >
+              Cancelar
+            </button>
+            <button 
+              type="button" 
+              className="button-apple-primary"
+              onClick={handleAddTaxFromDialog}
+            >
+              Agregar impuesto
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
