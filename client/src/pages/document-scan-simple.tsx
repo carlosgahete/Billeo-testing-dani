@@ -1,21 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Receipt, ZoomIn, ZoomOut, X, Plus, Check, ArrowLeft } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Loader2, Upload, FileText, Receipt, ZoomIn, ZoomOut, X, ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 
 // Importar nuestro componente para la edición de documentos
@@ -244,7 +234,7 @@ const DocumentScanPage = () => {
     
     // Convertir string a number o null
     const numericCategoryId = categoryId === "null" ? null : 
-                             categoryId ? parseInt(categoryId) : null;
+                              categoryId ? parseInt(categoryId) : null;
     
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
@@ -303,7 +293,7 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="flex flex-col justify-center min-h-[80vh] container mx-auto py-3 max-w-5xl">
+    <div className="h-screen w-full flex flex-col">
       {/* Botón flotante minimalista para volver en móvil */}
       <div className="sm:hidden fixed top-2 left-2 z-10">
         <Button 
@@ -316,178 +306,153 @@ const DocumentScanPage = () => {
         </Button>
       </div>
       
-      {/* Botón de volver en escritorio */}
-      <div className="hidden sm:flex justify-end mb-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/transactions")}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Volver a transacciones
-        </Button>
-      </div>
-      
-      <div className="grid gap-6">
-        <Card className="overflow-hidden shadow-none border-none sm:border sm:shadow-sm">
-          <CardHeader className="hidden sm:block bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
-            <CardTitle className="text-xl font-semibold text-gray-900">
-              Procesar documento
-            </CardTitle>
-            <CardDescription>
-              Sube una factura para extraer automáticamente los datos fiscales.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="-mt-4">
-            {!showEditMode ? (
-              <div className="space-y-6">
-                {/* Zona de arrastrar y soltar - versión simple para móvil al estilo Apple */}
-                <div 
-                  className="w-full mx-auto border border-gray-100 rounded-3xl p-6 text-center bg-white shadow-sm cursor-pointer"
-                  style={{
-                    maxWidth: "370px"
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById('file-input')?.click()}
-                >
-                  <input
-                    type="file"
-                    id="file-input"
-                    accept="image/*,.pdf"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    capture="environment"
-                  />
-                  <div className="py-2">
-                    {/* Icono con diseño Apple */}
-                    <div className="mx-auto h-16 w-16 rounded-full bg-[#4285F4] flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-white" />
-                    </div>
-                    
-                    <p className="text-base font-medium text-gray-900 mt-4">
-                      <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
-                      <span className="sm:hidden">Toca para subir factura</span>
-                    </p>
-                    
-                    <p className="text-xs text-gray-500 mt-2">
-                      JPG, PNG, PDF
-                    </p>
-                    
-                    {fileName && (
-                      <div className="mt-2">
-                        <Badge variant="secondary" className="text-[#007AFF] bg-blue-50">
-                          {fileName}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
+      {/* Contenido principal centrado verticalmente */}
+      <div className="flex-1 flex flex-col justify-center items-center px-4">
+        {/* Control de archivos invisible */}
+        <input
+          type="file"
+          id="file-input"
+          accept="image/*,.pdf"
+          onChange={handleFileChange}
+          className="hidden"
+          capture="environment"
+        />
+
+        {!showEditMode ? (
+          // Modo de subida de documento
+          <div className="w-full max-w-[370px]">
+            {/* Zona de arrastrar y soltar - versión simple para móvil al estilo Apple */}
+            <div 
+              className="w-full border border-gray-100 rounded-3xl py-7 px-6 text-center bg-white shadow-sm cursor-pointer"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById('file-input')?.click()}
+            >
+              {/* Icono con diseño Apple */}
+              <div className="mx-auto h-16 w-16 rounded-full bg-[#4285F4] flex items-center justify-center">
+                <Upload className="h-8 w-8 text-white" />
+              </div>
+              
+              <p className="text-base font-medium text-gray-900 mt-4">
+                <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
+                <span className="sm:hidden">Toca para subir factura</span>
+              </p>
+              
+              <p className="text-xs text-gray-500 mt-2">
+                JPG, PNG, PDF
+              </p>
+              
+              {fileName && (
+                <div className="mt-2">
+                  <Badge variant="secondary" className="text-[#007AFF] bg-blue-50">
+                    {fileName}
+                  </Badge>
                 </div>
-                
-                {/* Vista previa si es una imagen */}
-                {previewUrl && (
-                  <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                    <h3 className="font-medium text-gray-700 mb-2">Vista previa</h3>
-                    <div className="relative">
-                      <img 
-                        src={previewUrl} 
-                        alt="Vista previa" 
-                        className="w-full h-48 object-contain rounded-lg" 
-                      />
-                    </div>
+              )}
+            </div>
+            
+            {/* Vista previa si es una imagen */}
+            {previewUrl && (
+              <div className="mt-6 border border-gray-200 rounded-xl p-4 bg-gray-50">
+                <h3 className="font-medium text-gray-700 mb-2">Vista previa</h3>
+                <div className="relative">
+                  <img 
+                    src={previewUrl} 
+                    alt="Vista previa" 
+                    className="w-full h-48 object-contain rounded-lg" 
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Botón de procesamiento exactamente como en la imagen de referencia */}
+            <div className="mt-6">
+              <Button 
+                onClick={handleUpload} 
+                disabled={!file || uploading}
+                className={`relative rounded-full py-2 px-8 text-sm font-normal w-full 
+                  ${uploading || !file 
+                    ? "bg-gray-200/80 text-gray-400" 
+                    : "bg-gray-200/80 text-gray-500"
+                  }`}
+                variant="ghost"
+              >
+                {uploading ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Procesando...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <FileText className="mr-2 h-4 w-4" />
+                    <span>Procesar</span>
                   </div>
                 )}
-                
-                {/* Botón de procesamiento exactamente como en la imagen de referencia */}
-                <div className="flex justify-center mt-6 mb-2" style={{ maxWidth: "370px", margin: "0 auto", marginTop: "24px" }}>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Modo de edición
+          <div className="w-full max-w-[500px] bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+            {/* Imagen del documento escaneado */}
+            {documentImage && (
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="font-medium text-sm text-gray-800 flex items-center">
+                    <FileText className="h-4 w-4 mr-1 text-[#007AFF]" />
+                    Documento escaneado
+                  </h3>
                   <Button 
-                    onClick={handleUpload} 
-                    disabled={!file || uploading}
-                    className={`relative rounded-full py-2 px-8 text-sm font-normal w-full 
-                      ${uploading || !file 
-                        ? "bg-gray-200/80 text-gray-400" 
-                        : "bg-gray-200/80 text-gray-500"
-                      }`}
-                    variant="ghost"
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setIsResultZoomed(!isResultZoomed)}
+                    className="h-7 px-2 text-xs rounded-full hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
                   >
-                    {uploading ? (
-                      <div className="flex items-center justify-center">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Procesando...</span>
-                      </div>
+                    {isResultZoomed ? (
+                      <>
+                        <ZoomOut className="h-3 w-3 mr-1" />
+                        Reducir
+                      </>
                     ) : (
-                      <div className="flex items-center justify-center">
-                        <FileText className="mr-2 h-4 w-4" />
-                        <span>Procesar</span>
-                      </div>
+                      <>
+                        <ZoomIn className="h-3 w-3 mr-1" />
+                        Ampliar
+                      </>
                     )}
                   </Button>
                 </div>
-              </div>
-            ) : (
-              // Formulario de edición mostrado directamente sin diálogo de confirmación
-              <div className="space-y-3">
-                {/* Imagen del documento escaneado */}
-                {documentImage && (
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <h3 className="font-medium text-sm text-gray-800 flex items-center">
-                        <FileText className="h-4 w-4 mr-1 text-[#007AFF]" />
-                        Documento escaneado
-                      </h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setIsResultZoomed(!isResultZoomed)}
-                        className="h-7 px-2 text-xs rounded-full hover:bg-blue-50 hover:text-[#007AFF] transition-colors"
-                      >
-                        {isResultZoomed ? (
-                          <>
-                            <ZoomOut className="h-3 w-3 mr-1" />
-                            Reducir
-                          </>
-                        ) : (
-                          <>
-                            <ZoomIn className="h-3 w-3 mr-1" />
-                            Ampliar
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    <div className="border border-gray-200 rounded-lg bg-gray-50/50 shadow-sm overflow-hidden">
-                      <img 
-                        src={documentImage} 
-                        alt="Documento escaneado" 
-                        className="w-full h-28 object-contain cursor-pointer" 
-                        onClick={() => setIsResultZoomed(true)}
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Formulario de edición usando SimpleEditForm */}
-                {transaction && (
-                  <div className="space-y-3">
-                    <h3 className="font-medium text-base text-gray-800 mb-2 flex items-center">
-                      <Receipt className="h-4 w-4 mr-1.5 text-[#34C759]" />
-                      Detalles del gasto
-                    </h3>
-                    
-                    <SimpleEditForm 
-                      transaction={transaction}
-                      extractedData={extractedData || {}}
-                      categories={categories}
-                      onCreateCategory={() => setNewCategoryDialogOpen(true)}
-                      onSave={handleSaveChanges}
-                      onSaveAndNavigate={handleGoToTransactions}
-                      onUpdateCategory={handleUpdateCategory}
-                    />
-                  </div>
-                )}
+                <div className="border border-gray-200 rounded-lg bg-gray-50/50 shadow-sm overflow-hidden">
+                  <img 
+                    src={documentImage} 
+                    alt="Documento escaneado" 
+                    className="w-full h-28 object-contain cursor-pointer" 
+                    onClick={() => setIsResultZoomed(true)}
+                  />
+                </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+            
+            {/* Formulario de edición usando SimpleEditForm */}
+            {transaction && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-base text-gray-800 mb-2 flex items-center">
+                  <Receipt className="h-4 w-4 mr-1.5 text-[#34C759]" />
+                  Detalles del gasto
+                </h3>
+                
+                <SimpleEditForm 
+                  transaction={transaction}
+                  extractedData={extractedData || {}}
+                  categories={categories}
+                  onCreateCategory={() => setNewCategoryDialogOpen(true)}
+                  onSave={handleSaveChanges}
+                  onSaveAndNavigate={handleGoToTransactions}
+                  onUpdateCategory={handleUpdateCategory}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modal para la imagen ampliada */}
