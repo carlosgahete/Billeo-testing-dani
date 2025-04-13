@@ -52,35 +52,59 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
 
   return (
     <Card className="overflow-hidden border-t-4 border-t-green-500">
-      <CardContent className="pt-6 pb-4 px-6">
-        <div className="flex items-center text-gray-600 mb-2">
-          <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
-          <span className="text-sm">Ingresos</span>
-        </div>
-        
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-2xl font-bold text-green-600">{formatCurrency(income)} €</h3>
-            <p className="text-sm text-gray-500">Base imponible: {formatCurrency(baseImponible)} €</p>
-            <p className="text-sm text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)} €</p>
+      <CardContent className="pt-6 pb-4 md:px-6 px-4">
+        {/* Cabecera con título e ícono */}
+        <div className="flex items-center justify-between text-gray-600 mb-2">
+          <div className="flex items-center">
+            <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
+            <span className="text-sm">Ingresos</span>
           </div>
           
+          {/* Enlace compacto en móvil */}
+          <a 
+            href="/invoices"
+            className="md:hidden text-blue-600 text-xs hover:text-blue-800"
+          >
+            Ver
+          </a>
+        </div>
+        
+        <div className="space-y-2">
+          {/* Monto principal */}
+          <div>
+            <h3 className="text-2xl font-bold text-green-600">{formatCurrency(income)} €</h3>
+            
+            {/* Info detallada con responsive para ocultar en móvil o mostrar más compacta */}
+            <div className="flex flex-col md:block">
+              <p className="text-sm text-gray-500 md:block">
+                <span className="md:inline">Base imponible: </span>
+                <span>{formatCurrency(baseImponible)} €</span>
+              </p>
+              <p className="text-sm text-gray-500 md:block">
+                <span className="md:inline">IVA repercutido: </span>
+                <span>{formatCurrency(ivaRepercutido)} €</span>
+              </p>
+            </div>
+          </div>
+          
+          {/* Elementos condicionales más compactos en móvil */}
           {irpfRetenido > 0 && (
-            <div className="text-sm">
+            <div className="text-sm flex justify-between md:justify-start">
               <span className="text-gray-600">IRPF retenido:</span>
-              <span className="text-amber-600 ml-1">{formatCurrency(irpfRetenido)} €</span>
+              <span className="text-amber-600 md:ml-1">{formatCurrency(irpfRetenido)} €</span>
             </div>
           )}
           
           {pendingAmount > 0 && (
-            <div className="text-sm">
-              <span className="text-gray-600">Facturación pendiente:</span>
-              <span className="text-orange-500 ml-1">{formatCurrency(pendingAmount)} €</span>
+            <div className="text-sm flex justify-between md:justify-start">
+              <span className="text-gray-600">Pendiente:</span>
+              <span className="text-orange-500 md:ml-1">{formatCurrency(pendingAmount)} €</span>
             </div>
           )}
         </div>
         
-        <div className="mt-4">
+        {/* Enlace de "Ver facturas" oculto en móvil y visible en desktop */}
+        <div className="mt-4 hidden md:block">
           <a 
             href="/invoices" 
             className="text-blue-600 text-sm w-full text-center border-t border-gray-100 pt-3 transition-colors hover:text-blue-800 flex items-center justify-center"
