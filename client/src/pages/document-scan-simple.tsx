@@ -343,9 +343,9 @@ const DocumentScanPage = () => {
               <div className="space-y-6">
                 {/* Zona de arrastrar y soltar - versión simple para móvil al estilo Apple */}
                 <div 
-                  className="w-4/5 sm:w-full mx-auto border border-gray-100 rounded-2xl p-6 sm:p-6 text-center bg-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  className="w-full mx-auto border border-gray-100 rounded-3xl p-6 text-center bg-white shadow-sm cursor-pointer"
                   style={{
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)"
+                    maxWidth: "370px"
                   }}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
@@ -359,20 +359,23 @@ const DocumentScanPage = () => {
                     className="hidden"
                     capture="environment"
                   />
-                  <div className="py-4 space-y-4 sm:space-y-4">
+                  <div className="py-2">
                     {/* Icono con diseño Apple */}
-                    <div className="mx-auto h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#4285F4] flex items-center justify-center shadow-sm transition-transform duration-300 hover:scale-105">
-                      <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                    <div className="mx-auto h-16 w-16 rounded-full bg-[#4285F4] flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-white" />
                     </div>
-                    <p className="text-base font-medium text-gray-900 mt-3">
+                    
+                    <p className="text-base font-medium text-gray-900 mt-4">
                       <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
                       <span className="sm:hidden">Toca para subir factura</span>
                     </p>
-                    <p className="text-xs text-gray-500">
+                    
+                    <p className="text-xs text-gray-500 mt-2">
                       JPG, PNG, PDF
                     </p>
+                    
                     {fileName && (
-                      <div className="mt-1 sm:mt-2">
+                      <div className="mt-2">
                         <Badge variant="secondary" className="text-[#007AFF] bg-blue-50">
                           {fileName}
                         </Badge>
@@ -395,20 +398,17 @@ const DocumentScanPage = () => {
                   </div>
                 )}
                 
-                {/* Botón de procesamiento al estilo Apple */}
-                <div className="flex justify-center mt-6 mb-2">
+                {/* Botón de procesamiento exactamente como en la imagen de referencia */}
+                <div className="flex justify-center mt-6 mb-2" style={{ maxWidth: "370px", margin: "0 auto", marginTop: "24px" }}>
                   <Button 
                     onClick={handleUpload} 
                     disabled={!file || uploading}
-                    className={`relative rounded-full py-2.5 px-7 text-sm font-medium ${
-                      uploading || !file 
-                        ? "bg-gray-200 text-gray-400" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200/90 active:scale-[0.98] shadow-sm transition-all"
-                    }`}
+                    className={`relative rounded-full py-2 px-8 text-sm font-normal w-full 
+                      ${uploading || !file 
+                        ? "bg-gray-200/80 text-gray-400" 
+                        : "bg-gray-200/80 text-gray-500"
+                      }`}
                     variant="ghost"
-                    style={{
-                      boxShadow: !file || uploading ? "none" : "0 1px 2px rgba(0,0,0,0.05)"
-                    }}
                   >
                     {uploading ? (
                       <div className="flex items-center justify-center">
