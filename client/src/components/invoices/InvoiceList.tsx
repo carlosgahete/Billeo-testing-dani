@@ -1467,9 +1467,8 @@ const InvoiceList = () => {
         </div>
       </div>
       
-      {/* Encabezado minimalista para móvil */}
-      <div className="flex md:hidden justify-between items-center mx-2 my-3">
-        <h3 className="font-semibold text-lg text-gray-800">Facturas</h3>
+      {/* Botones de acción para móvil (sin encabezado) */}
+      <div className="flex md:hidden justify-end items-center mx-2 my-3">
         <div className="flex gap-2">
           <button
             className="button-apple-secondary button-apple-sm flex items-center p-2"
