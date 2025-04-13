@@ -287,11 +287,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
   return (
     <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0", className)}>
-      {/* Cabecera del dashboard con título y controles - Estilo Apple */}
-      <div className="section-header px-1 py-0 md:px-4 md:py-2">
-        <div className="flex items-center justify-center">
-          <BarChart3 className="h-4 w-4 text-primary mr-2 sm:h-5 sm:w-5 sm:mr-3" />
-          <h1 className="section-title text-sm sm:text-base md:text-lg">Dashboard</h1>
+      {/* Cabecera del dashboard con título y controles - Estilo Apple (Solo móvil) */}
+      <div className="section-header px-1 py-0">
+        <div className="flex items-center justify-center mb-0 mt-1">
+          <BarChart3 className="h-3 w-3 text-primary mr-1" />
+          <h1 className="section-title text-xs">Dashboard</h1>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
