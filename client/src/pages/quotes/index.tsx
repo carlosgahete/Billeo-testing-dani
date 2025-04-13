@@ -600,10 +600,10 @@ export default function QuotesPage() {
 
       {/* Eliminar duplicado de botones */}
 
-      {/* Lista de presupuestos - Estilo Apple */}
+      {/* Lista de presupuestos - Estilo Apple (Con estilos específicos para móvil) */}
       <div className="mt-4 fade-in">
-        <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in mb-8">
-          <div className="p-6">
+        <div className={`${isMobile ? 'border-none shadow-none' : 'glass-panel rounded-3xl border border-gray-200/50'} scale-in mb-8`}>
+          <div className={`${isMobile ? 'p-1' : 'p-6'}`}>
             {/* Título de la sección - Oculto en móvil */}
             <div className="hidden md:flex items-center justify-between mb-4">
               <div className="flex items-center">
