@@ -173,19 +173,38 @@
   .apple-back-button {
     background: none !important;
     color: #007AFF !important;
-    font-size: 16px !important;
+    font-size: 17px !important;
     padding: 0 !important;
     height: auto !important;
     border: none !important;
     display: flex !important;
     align-items: center !important;
     font-weight: normal !important;
+    box-shadow: none !important;
+    position: relative !important;
+    margin-left: 0 !important;
   }
   
-  .apple-back-button svg {
-    margin-right: 2px !important;
-    height: 18px !important;
-    width: 18px !important;
+  /* Icon de chevron personalizado para Apple */
+  .apple-chevron {
+    position: relative !important;
+    display: inline-block !important;
+    width: 9px !important;
+    height: 17px !important;
+    margin-right: 5px !important;
+  }
+  
+  .apple-chevron::before {
+    content: '' !important;
+    position: absolute !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-left: 2px solid #007AFF !important;
+    border-bottom: 2px solid #007AFF !important;
+    transform: rotate(45deg) !important;
+    top: 4px !important;
+    left: 3px !important;
+    border-radius: 1px !important;
   }
   
   /* Campos de formulario estilo Apple */

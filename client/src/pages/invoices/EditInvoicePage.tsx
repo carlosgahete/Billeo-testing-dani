@@ -181,7 +181,7 @@ export default function EditInvoicePage() {
             onClick={() => navigate("/invoices")}
             className="apple-back-button"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <span className="apple-chevron"></span>
             <span>Volver</span>
           </button>
         </div>
