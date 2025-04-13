@@ -1288,61 +1288,56 @@ const InvoiceList = () => {
         
         return (
           <>
-            {/* Versión móvil: Menú dropdown */}
-            <div className="flex justify-end md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-
-                  <DropdownMenuItem onClick={() => navigate(`/invoices/edit/${invoice.id}`)}>
-                    <Edit className="h-4 w-4 mr-2" /> Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExportInvoicePDF(invoice)}>
-                    <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      // Abrir el modal de enviar email (buscar y hacer clic en el diálogo)
-                      const emailButton = document.querySelector(`[data-invoice-id="${invoice.id}"] button[aria-label="Enviar por email"]`);
-                      if (emailButton) {
-                        (emailButton as HTMLButtonElement).click();
-                      }
-                    }}
-                  >
-                    <Mail className="h-4 w-4 mr-2" /> Enviar por email
-                  </DropdownMenuItem>
-                  {invoice.status !== 'paid' && (
-                    <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice)}>
-                      <Check className="h-4 w-4 mr-2" /> Marcar como pagada
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => {
-                      // Modal de confirmación para eliminar
-                      if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
-                        apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
-                          toast({
-                            title: "Factura eliminada",
-                            description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
-                          });
-                          
-                          // Redireccionar a la página de facturas
-                          setTimeout(() => {
-                            window.location.href = '/invoices';
-                          }, 500);
-                        });
-                      }
-                  }}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Versión móvil: Botones esenciales */}
+            <div className="flex justify-end md:hidden space-x-1">
+              {/* Botón de enviar por email */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-blue-600 hover:bg-blue-50"
+                aria-label="Enviar por email"
+                onClick={() => {
+                  // Buscar el diálogo de email
+                  const emailButton = document.querySelector(`[data-invoice-id="${invoice.id}"] button[aria-label="Enviar por email"]`);
+                  if (emailButton) {
+                    (emailButton as HTMLButtonElement).click();
+                  }
+                }}
+              >
+                <Mail className="h-4 w-4" />
+              </Button>
+              
+              {/* Botón de descargar */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-green-600 hover:bg-green-50"
+                onClick={() => handleExportInvoicePDF(invoice)}
+              >
+                <FileDown className="h-4 w-4" />
+              </Button>
+              
+              {/* Botón de eliminar */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
+                    apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
+                      toast({
+                        title: "Factura eliminada",
+                        description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
+                      });
+                      // Actualizar la lista
+                      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                    });
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
             
             {/* Versión desktop: Botones individuales */}
@@ -1476,7 +1471,7 @@ const InvoiceList = () => {
       </div>
 
       {/* Panel de filtros - Botón integrado en la interfaz de DataTable */}
-      <div className="mb-4 mx-2">
+      <div className="mb-4 mx-2 hidden md:block">
         {isFilterVisible && (
           <Card className="p-4 mb-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/60">
             <CardContent className="p-0">
@@ -1596,7 +1591,7 @@ const InvoiceList = () => {
         <div className="w-full">
           {/* Usar el nuevo componente SearchBar */}
           <SearchBar
-            placeholder="Buscar facturas por número, cliente o fecha..."
+            placeholder="Buscar facturas..."
             initialValue={searchQuery}
             onSearch={(value) => {
               console.log(`InvoiceList: SearchBar actualizó query a "${value}"`);
@@ -1605,7 +1600,7 @@ const InvoiceList = () => {
             filterButton={
               <Button 
                 variant="outline" 
-                className="flex items-center gap-1"
+                className="hidden md:flex items-center gap-1"
                 onClick={() => setIsFilterVisible(!isFilterVisible)}
               >
                 <Filter className="h-4 w-4" />
