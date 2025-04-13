@@ -287,9 +287,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
   return (
     <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0", className)}>
-      {/* Cabecera del dashboard con título centrado solo en móvil, con icono en desktop */}
-      <div className="section-header px-1 pt-1 pb-0 md:px-4 md:py-4">
-        <div className="flex items-center justify-center md:justify-start">
+      {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
+      <div className="section-header px-1 pt-0 md:pt-1 pb-0 md:px-4 md:py-4">
+        <div className="flex items-center justify-center md:justify-start mt-[-10px] md:mt-0">
           <div className="md:flex hidden items-center">
             <BarChart3 className="h-6 w-6 text-primary mr-3" />
           </div>
@@ -417,7 +417,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
       {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
           En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 mt-1 md:mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-4 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
         <div className="dashboard-card fade-in mx-0 px-0 col-span-1">
           <div className="md:p-6 p-2">
@@ -543,7 +543,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-1 md:gap-8 mt-1 md:mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-8 mt-5 md:mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in col-span-3 mx-0 px-0">
           <div className="p-1 md:p-4">
