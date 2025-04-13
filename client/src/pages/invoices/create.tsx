@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import InvoiceForm from "@/components/invoices/InvoiceForm";
 import { Loader2, ArrowLeft, Receipt } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import InvoiceForm from "@/components/invoices/InvoiceForm";
+import MobileInvoiceForm from "@/components/invoices/MobileInvoiceForm";
 
 const CreateInvoicePage = () => {
   const { isLoading: authLoading } = useQuery({
@@ -10,6 +12,25 @@ const CreateInvoicePage = () => {
   });
   
   const [, navigate] = useLocation();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectar si es móvil al montar el componente y actualizar al cambiar el tamaño de la ventana
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Comprobar al cargar
+    checkIfMobile();
+    
+    // Añadir listener para cambios de tamaño
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Limpiar listener al desmontar
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   if (authLoading) {
     return (
@@ -18,8 +39,6 @@ const CreateInvoicePage = () => {
       </div>
     );
   }
-
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <div className="max-w-full p-4 md:p-6">
@@ -58,7 +77,8 @@ const CreateInvoicePage = () => {
         </div>
       )}
       
-      <InvoiceForm />
+      {/* Renderiza el formulario adecuado según el dispositivo */}
+      {isMobile ? <MobileInvoiceForm /> : <InvoiceForm />}
     </div>
   );
 };

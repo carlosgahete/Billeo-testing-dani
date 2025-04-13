@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
+import MobileInvoiceForm from "@/components/invoices/MobileInvoiceForm";
 
 // Página específica para editar facturas con manejo de errores mejorado
 export default function EditInvoicePage() {
@@ -15,9 +16,28 @@ export default function EditInvoicePage() {
   // Estado para almacenar los datos cargados de la factura
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Convertir el ID a número
   const invoiceId = parseInt(id as string);
+  
+  // Detectar si es móvil al montar el componente y actualizar al cambiar el tamaño de la ventana
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Comprobar al cargar
+    checkIfMobile();
+    
+    // Añadir listener para cambios de tamaño
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Limpiar listener al desmontar
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
   
   // Definir la interfaz para los datos de la factura
   interface InvoiceData {
@@ -130,32 +150,56 @@ export default function EditInvoicePage() {
   // Renderizar el formulario con los datos cargados
   return (
     <div className="max-w-full">
-      <div className="w-full bg-gradient-to-r from-blue-600 to-blue-400 py-4 px-5 flex items-center mb-6 shadow-md rounded-lg mx-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => navigate("/invoices")}
-          className="border-white bg-transparent hover:bg-blue-500 text-white hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          <span>Volver</span>
-        </Button>
-        <div className="ml-4 flex-1">
-          <h1 className="text-xl font-bold text-white flex items-center">
-            <Receipt className="h-5 w-5 mr-2" />
-            Editar factura
-          </h1>
-          <p className="text-blue-100 text-sm mt-1">
-            Modifica los detalles de la factura {invoiceData?.invoice?.invoiceNumber || ""}
-          </p>
+      {/* Cabecera para escritorio - cabecera bonita con gradiente */}
+      {!isMobile && (
+        <div className="w-full bg-gradient-to-r from-blue-600 to-blue-400 py-4 px-5 flex items-center mb-6 shadow-md rounded-lg mx-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/invoices")}
+            className="border-white bg-transparent hover:bg-blue-500 text-white hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            <span>Volver</span>
+          </Button>
+          <div className="ml-4 flex-1">
+            <h1 className="text-xl font-bold text-white flex items-center">
+              <Receipt className="h-5 w-5 mr-2" />
+              Editar factura
+            </h1>
+            <p className="text-blue-100 text-sm mt-1">
+              Modifica los detalles de la factura {invoiceData?.invoice?.invoiceNumber || ""}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
       
+      {/* Botón de volver para móvil sin título */}
+      {isMobile && (
+        <div className="w-full flex px-4 mb-2">
+          <button 
+            onClick={() => navigate("/invoices")}
+            className="button-apple-secondary button-apple-sm flex items-center"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <span>Volver</span>
+          </button>
+        </div>
+      )}
+      
+      {/* Renderiza el formulario adecuado según el dispositivo */}
       {invoiceData && (
-        <InvoiceForm 
-          invoiceId={invoiceId} 
-          initialData={invoiceData} 
-        />
+        isMobile ? (
+          <MobileInvoiceForm 
+            invoiceId={invoiceId} 
+            initialData={invoiceData} 
+          />
+        ) : (
+          <InvoiceForm 
+            invoiceId={invoiceId} 
+            initialData={invoiceData} 
+          />
+        )
       )}
     </div>
   );
