@@ -520,18 +520,18 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-3 mb-5 md:p-4 p-3 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
+            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-2 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">IVA a pagar:</span>
-                <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
+                <span className="md:text-sm text-xs text-gray-600">IVA a pagar:</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">IRPF a pagar:</span>
-                <span className="font-medium text-gray-800">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
+                <span className="md:text-sm text-xs text-gray-600">IRPF a pagar:</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
               </div>
             </div>
             
-            <Link href="/reports" className="block">
+            <Link href="/reports" className="md:block hidden">
               <button className="w-full px-4 py-2 rounded-md font-medium text-[#007AFF] border border-[#007AFF] hover:bg-[#007AFF]/10 transition-colors">
                 Ver informes
               </button>
