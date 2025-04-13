@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Eye, Edit, Trash2, Plus, Download, Upload, TrendingDown, FileText,
   ArrowUp, ScanText, Receipt, FileDown, Wrench, Sparkles, RefreshCcw,
-  AlertTriangle
+  AlertTriangle, DollarSign
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -891,108 +891,69 @@ const TransactionList = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" style={{display: isMobile ? 'none' : 'grid'}}>
-        {/* Tarjeta de Ingresos Totales - Estilo Apple moderno con gradiente e iconos */}
-        <div className="scale-in dashboard-card relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#34C759] to-[#30D158]"></div>
-          <div className="p-6">
-            <div className="flex items-center mb-3">
-              <div className="w-10 h-10 bg-[#34C759]/10 rounded-full flex items-center justify-center mr-3">
-                <ArrowUp className="h-5 w-5 text-[#34C759]" />
+      {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
+        {/* Tarjeta de Ingresos Totales */}
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
+                <ArrowUp className="h-4 w-4 text-[#007AFF]" />
               </div>
-              <h3 className="text-base font-medium text-[#1D1D1F]">Ingresos totales</h3>
+              <div>
+                <p className="text-sm text-gray-600">Ingresos totales</p>
+              </div>
             </div>
             
-            <p className="text-3xl font-semibold text-[#1D1D1F] mb-5 pl-1">
-              {formatCurrency(incomeTotal, "income")}
-            </p>
-          
-            <div className="p-3 bg-[#34C759]/5 border border-[#34C759]/10 rounded-xl flex items-center justify-between hover:bg-[#34C759]/10 transition-all mb-2">
-              <div className="flex items-center">
-                <Receipt className="h-4 w-4 text-[#34C759] mr-2" />
-                <span className="text-sm text-[#1D1D1F]">
-                  {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
-                </span>
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#007AFF] pt-1">
+                {formatCurrency(incomeTotal, "income")}
               </div>
-              <button 
-                className="text-xs px-2 py-1 bg-[#34C759]/10 text-[#34C759] rounded-full"
-                onClick={() => navigate("/invoices")}
-              >
-                Ver
-              </button>
-            </div>
-
-            {/* Mostrar botón de reparación solo cuando hay facturas pagadas pero faltan ingresos */}
-            {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 && (
-              <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between hover:bg-amber-100 transition-all">
-                <div className="flex items-center">
-                  <AlertTriangle className="h-4 w-4 text-amber-500 mr-2" />
-                  <span className="text-sm text-amber-700">
-                    Faltan ingresos por facturas cobradas
-                  </span>
-                </div>
-                <button 
-                  className="text-xs px-2 py-1 bg-amber-100 text-amber-600 rounded-full"
-                  onClick={handleRepairInvoiceTransactions}
-                  disabled={isRepairing}
-                >
-                  {isRepairing ? 'Reparando...' : 'Reparar'}
-                </button>
+              <div className="text-xs text-gray-500 mt-1">
+                {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
               </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Tarjeta de Gastos Totales - Estilo Apple moderno con gradiente e iconos */}
-        <div className="scale-in dashboard-card relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF3B30] to-[#FF453A]"></div>
-          <div className="p-6">
-            <div className="flex items-center mb-3">
-              <div className="w-10 h-10 bg-[#FF3B30]/10 rounded-full flex items-center justify-center mr-3">
-                <TrendingDown className="h-5 w-5 text-[#FF3B30]" />
-              </div>
-              <h3 className="text-base font-medium text-[#1D1D1F]">Gastos totales</h3>
-            </div>
-            
-            <p className="text-3xl font-semibold text-[#1D1D1F] mb-5 pl-1">
-              {formatCurrency(expenseTotal, "expense")}
-            </p>
-            
-            <div className="p-3 bg-[#FF3B30]/5 border border-[#FF3B30]/10 rounded-xl flex items-center justify-between hover:bg-[#FF3B30]/10 transition-all">
-              <div className="flex items-center">
-                <ScanText className="h-4 w-4 text-[#FF3B30] mr-2" />
-                <span className="text-sm text-[#1D1D1F]">
-                  {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
-                </span>
-              </div>
-              <button 
-                className="text-xs px-2 py-1 bg-[#FF3B30]/10 text-[#FF3B30] rounded-full"
-                onClick={() => navigate("/documents/scan")}
-              >
-                Escanear
-              </button>
             </div>
           </div>
         </div>
         
-        {/* Tarjeta de Balance Neto - Con color azul e icono de cerdito */}
-        <div className="scale-in dashboard-card relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0070F3] to-[#39F]"></div>
-          <div className="p-6">
-            <div className="flex items-center mb-3">
-              <div className="w-10 h-10 bg-[#0070F3]/10 rounded-full flex items-center justify-center mr-3">
-                {/* Icono de cerdito */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V5z"/>
-                  <path d="M2 9v1c0 1.1.9 2 2 2h1"/>
-                  <path d="M16 11h0"/>
-                </svg>
+        {/* Tarjeta de Gastos Totales */}
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#FFF5F5] p-2.5 rounded-full mr-3">
+                <TrendingDown className="h-4 w-4 text-[#FF3B30]" />
               </div>
-              <h3 className="text-base font-medium text-[#1D1D1F]">Balance neto</h3>
+              <div>
+                <p className="text-sm text-gray-600">Gastos totales</p>
+              </div>
             </div>
             
-            <p className="text-3xl font-semibold text-[#0070F3] mb-5 pl-1">
-              {balance < 0 
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#FF3B30] pt-1">
+                {formatCurrency(expenseTotal, "expense")}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Tarjeta de Balance Neto */}
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#F5FFF7] p-2.5 rounded-full mr-3">
+                <DollarSign className="h-4 w-4 text-[#34C759]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Balance neto</p>
+              </div>
+            </div>
+            
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[#34C759] pt-1">
+                {balance < 0 
                 ? `-${Math.abs(balance).toLocaleString('es-ES', {
                     style: 'currency',
                     currency: 'EUR',
@@ -1005,38 +966,47 @@ const TransactionList = () => {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })
-              }
-            </p>
-            
-            <div className="p-3 bg-[#0070F3]/5 border border-[#0070F3]/10 hover:bg-[#0070F3]/10 rounded-xl flex items-center justify-center transition-all">
-              <div className="flex items-center">
-                {balance >= 0 ? (
-                  <>
-                    <svg className="h-4 w-4 text-[#0070F3] mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2m-1 5v4H7v2h4v4h2v-4h4v-2h-4V7h-2z" fill="currentColor"/>
-                    </svg>
-                    <span className="text-sm font-medium text-[#0070F3]">
-                      Balance positivo: {Math.round(balance/incomeTotal*100)}% de ingresos
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 text-[#0070F3] mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2m-1 5v8h2V7h-2z" fill="currentColor"/>
-                    </svg>
-                    <span className="text-sm font-medium text-[#0070F3]">
-                      Balance negativo: {Math.abs(Math.round(balance/expenseTotal*100))}% sobre ingresos
-                    </span>
-                  </>
-                )}
+                }
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {balance >= 0 ? 'Balance positivo' : 'Balance negativo'}
               </div>
             </div>
           </div>
         </div>
+        
+        {/* Tarjeta de Reparar si es necesario */}
+        {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
+        <div className="dashboard-card fade-in">
+          <div className="p-5">
+            <div className="flex items-center mb-4">
+              <div className="bg-[#FFF9F5] p-2.5 rounded-full mr-3">
+                <AlertTriangle className="h-4 w-4 text-[#FF9500]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Acción necesaria</p>
+              </div>
+            </div>
+            
+            <div className="mb-3">
+              <div className="text-sm font-medium text-gray-700 pb-3">
+                Faltan ingresos por facturas cobradas
+              </div>
+              <button 
+                className="text-sm px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors"
+                onClick={handleRepairInvoiceTransactions}
+                disabled={isRepairing}
+              >
+                {isRepairing ? 'Reparando...' : 'Reparar ahora'}
+              </button>
+            </div>
+          </div>
+        </div>
+        ) : null}
       </div>
 
-      <div className="glass-panel rounded-2xl border border-gray-100/60 scale-in shadow-sm bg-white/95 backdrop-blur-lg">
-        <div className="p-4 pb-0 md:p-5 md:pb-0">
+      <div className="rounded-xl border border-gray-200 scale-in bg-white shadow-sm overflow-hidden">
+        <div className="pt-6 pb-3 px-5">
           <Tabs 
             defaultValue="all" 
             value={currentTab}
@@ -1072,7 +1042,7 @@ const TransactionList = () => {
             </TabsList>
           </Tabs>
         </div>
-        <div className="p-5">
+        <div className="px-5 pb-5">
           {/* Mostrar filtros de gastos cuando estamos en la pestaña de gastos */}
           {currentTab === "expense" && transactions && categories && (
             <div className="mb-6">
@@ -1110,7 +1080,7 @@ const TransactionList = () => {
 
                 {/* Exportar todos los gastos */}
                 <button 
-                  className="button-apple-secondary button-apple-sm flex items-center"
+                  className="text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => handleExportFilteredExpenses()}
                   disabled={transactions?.filter(t => t.type === 'expense').length === 0}
                   title={filteredExpenseTransactions.length > 0 ? 
@@ -1128,7 +1098,7 @@ const TransactionList = () => {
                 
                 {/* Escanear gasto */}
                 <button 
-                  className="button-apple button-apple-sm flex items-center"
+                  className="text-sm px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
                   onClick={() => navigate("/documents/scan")}
                 >
                   <ScanText className="h-4 w-4 mr-1.5 sm:mr-2" />
@@ -1138,7 +1108,7 @@ const TransactionList = () => {
                 
                 {/* Descargar originales */}
                 <button 
-                  className="button-apple button-apple-sm flex items-center"
+                  className="text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => {
                     // Importamos dinámicamente para evitar problemas de dependencias cíclicas
                     import('@/lib/attachmentService').then(({ downloadExpenseOriginalsAsZip }) => {
@@ -1172,7 +1142,7 @@ const TransactionList = () => {
               <>
                 {/* Crear factura */}
                 <button 
-                  className="button-apple-primary button-apple-sm flex items-center"
+                  className="text-sm px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
                   onClick={() => navigate("/invoices/create")}
                 >
                   <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
@@ -1182,7 +1152,7 @@ const TransactionList = () => {
 
                 {/* Exportar ingresos */}
                 <button 
-                  className="button-apple-secondary button-apple-sm flex items-center"
+                  className="text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => handleExportFilteredIncome()}
                   disabled={transactions?.filter(t => t.type === 'income').length === 0}
                   title={filteredIncomeTransactions.length > 0 ? 
