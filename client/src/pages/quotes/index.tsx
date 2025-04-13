@@ -85,8 +85,8 @@ export default function QuotesPage() {
 
   return (
     <Layout>
-      <div className="px-1">
-        <div className="flex justify-between gap-2 -mt-1 mb-3">
+      <div className="px-1 -mt-10">
+        <div className="flex justify-between gap-2 mb-3">
           <Link href="/quotes/create">
             <Button className="bg-[#007AFF] hover:bg-[#0062CC] text-white">
               <Plus className="h-4 w-4 mr-1" />
