@@ -329,7 +329,7 @@ const DocumentScanPage = () => {
       </div>
       
       <div className="grid gap-6">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden shadow-none border-none sm:border sm:shadow-sm">
           <CardHeader className="hidden sm:block bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
             <CardTitle className="text-xl font-semibold text-gray-900">
               Procesar documento
@@ -343,7 +343,7 @@ const DocumentScanPage = () => {
               <div className="space-y-6">
                 {/* Zona de arrastrar y soltar - versión simple para móvil */}
                 <div 
-                  className="border-2 border-dashed border-gray-200 rounded-2xl p-4 sm:p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="border border-dashed border-gray-200 rounded-2xl p-4 sm:p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                   onClick={() => document.getElementById('file-input')?.click()}
@@ -358,15 +358,14 @@ const DocumentScanPage = () => {
                   />
                   <div className="space-y-2 sm:space-y-3">
                     {/* Icono con diseño Apple */}
-                    <div className="mx-auto h-14 w-14 sm:h-20 sm:w-20 rounded-full bg-gradient-to-b from-[#0A84FF] to-[#0063CC] flex items-center justify-center shadow-sm">
-                      <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity rounded-full"></div>
+                    <div className="mx-auto h-14 w-14 sm:h-20 sm:w-20 rounded-full bg-[#4285F4] flex items-center justify-center shadow-sm">
                       <Upload className="h-7 w-7 sm:h-10 sm:w-10 text-white" />
                     </div>
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900">
+                    <p className="text-base font-medium text-gray-900">
                       <span className="hidden sm:inline">Arrastra y suelta o haz clic para subir</span>
                       <span className="sm:hidden">Toca para subir factura</span>
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500">
+                    </p>
+                    <p className="text-xs text-gray-500">
                       JPG, PNG, PDF
                     </p>
                     {fileName && (
@@ -393,20 +392,18 @@ const DocumentScanPage = () => {
                   </div>
                 )}
                 
-                {/* Botón de procesamiento con estilo Apple */}
-                <div className="flex justify-center sm:justify-end">
+                {/* Botón de procesamiento similar al mostrado en la imagen */}
+                <div className="flex justify-center mt-4">
                   <Button 
                     onClick={handleUpload} 
                     disabled={!file || uploading}
-                    className={`relative overflow-hidden px-6 sm:px-8 py-2.5 rounded-full font-medium text-sm ${
+                    className={`relative rounded-full py-2 px-6 text-sm ${
                       uploading || !file 
                         ? "bg-gray-200 text-gray-500" 
-                        : "bg-gradient-to-b from-[#0A84FF] to-[#0063CC] text-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                        : "bg-gray-200/80 text-gray-500 hover:bg-gray-200 focus:outline-none"
                     }`}
+                    variant="ghost"
                   >
-                    {/* Efecto de brillo al pasar el cursor */}
-                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
-                    
                     {uploading ? (
                       <div className="flex items-center justify-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -415,8 +412,7 @@ const DocumentScanPage = () => {
                     ) : (
                       <div className="flex items-center justify-center">
                         <FileText className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Procesar documento</span>
-                        <span className="sm:hidden">Procesar</span>
+                        <span>Procesar</span>
                       </div>
                     )}
                   </Button>
