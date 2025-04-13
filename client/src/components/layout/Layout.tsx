@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useScrollToTop } from "@/hooks/use-scroll-to-top";
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +12,9 @@ const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Usar el hook para hacer scroll al inicio en cada cambio de ruta
+  useScrollToTop();
   
   useEffect(() => {
     // Close mobile menu when switching to desktop

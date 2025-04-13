@@ -80,7 +80,7 @@
   
   /* Selectores adicionales para eliminar el encabezado */
   h2,
-  .bg-\\[\\#E9F8FB\\],
+  .bg-\[#E9F8FB\],
   .text-xl.font-semibold.text-gray-800,
   .text-sm.text-gray-500.mt-0.leading-tight {
     display: none !important;
