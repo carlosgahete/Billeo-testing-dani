@@ -41,7 +41,7 @@ const CreateInvoicePage = () => {
   }
 
   return (
-    <div className="max-w-full p-4 md:p-6">
+    <div className={`max-w-full ${isMobile ? 'p-2 pt-1' : 'p-4 md:p-6'}`}>
       {/* Cabecera estilo Apple - solo visible en escritorio */}
       <div className={`w-full flex items-center justify-between mb-6 ${isMobile ? 'hidden' : ''}`}>
         <div className="flex items-center">
@@ -66,7 +66,7 @@ const CreateInvoicePage = () => {
       
       {/* Botón de volver para móvil sin título - estilo iOS */}
       {isMobile && (
-        <div className="w-full flex mb-3 ml-1 mt-1">
+        <div className="w-full flex mb-1 ml-1 -mt-1">
           <button 
             onClick={() => navigate("/invoices")}
             className="apple-back-button"

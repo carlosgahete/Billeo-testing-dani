@@ -149,7 +149,7 @@ export default function EditInvoicePage() {
   
   // Renderizar el formulario con los datos cargados
   return (
-    <div className="max-w-full">
+    <div className={`max-w-full ${isMobile ? 'p-2 pt-1' : ''}`}>
       {/* Cabecera para escritorio - cabecera bonita con gradiente */}
       {!isMobile && (
         <div className="w-full bg-gradient-to-r from-blue-600 to-blue-400 py-4 px-5 flex items-center mb-6 shadow-md rounded-lg mx-4">
@@ -176,7 +176,7 @@ export default function EditInvoicePage() {
       
       {/* Botón de volver para móvil sin título - estilo iOS */}
       {isMobile && (
-        <div className="w-full flex ml-1 mt-1 mb-3">
+        <div className="w-full flex ml-1 -mt-1 mb-1">
           <button 
             onClick={() => navigate("/invoices")}
             className="apple-back-button"
