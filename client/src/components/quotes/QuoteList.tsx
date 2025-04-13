@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { generateQuotePDF } from "@/lib/pdf";
 import { SendQuoteEmailDialog } from "./SendQuoteEmailDialog";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 import {
   Table,

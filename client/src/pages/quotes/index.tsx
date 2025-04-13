@@ -5,7 +5,7 @@ import { MobileQuoteButtons } from "@/components/quotes/MobileQuoteButtons";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { 
   Card, 
   CardContent, 
