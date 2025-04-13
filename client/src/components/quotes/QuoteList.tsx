@@ -562,8 +562,8 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
         
         <CardContent className="px-1 sm:px-6">
           {isMobile ? (
-            <div className="space-y-3 mt-2">
-              {/* Versión móvil con tarjetas en estilo Apple */}
+            <div className="grid grid-cols-1 gap-4 mt-2">
+              {/* Versión móvil con tarjetas individuales en estilo Apple */}
               {displayQuotes.map((quote: Quote) => {
                 const client = clientsData.find((c: Client) => c.id === quote.clientId);
                 
@@ -597,7 +597,7 @@ export function QuoteList({ userId, showActions = true, limit, filter }: QuoteLi
                 return (
                   <div 
                     key={quote.id} 
-                    className={`border ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm`}
+                    className={`border border-l-4 ${borderColorClass} rounded-xl overflow-hidden bg-white shadow-sm`}
                   >
                     {/* Cabecera de la tarjeta con gradiente sutil */}
                     <div className="p-3 border-b bg-gradient-to-br from-white to-slate-50 flex justify-between items-center">
