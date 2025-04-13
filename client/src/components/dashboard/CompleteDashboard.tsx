@@ -420,9 +420,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
-          <div className="md:p-6 p-1">
+          <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-2 md:mr-3">
+              <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-3 md:mr-3">
                 <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
               </div>
               <div>
@@ -440,7 +440,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-2 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
+            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA repercutido:</span>
                 <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaRepercutido)}</span>
@@ -461,9 +461,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
-          <div className="md:p-6 p-1">
+          <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
+              <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
                 <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
               </div>
               <div>
@@ -481,7 +481,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-2 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
+            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA soportado:</span>
                 <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaSoportado)}</span>
@@ -502,9 +502,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
         {/* Widget de Resultado Final - Estilo Apple - Mismo ancho que las otras tarjetas */}
         <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 -mx-2 sm:mx-0 px-0">
-          <div className="md:p-6 p-1">
+          <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
+              <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
                 <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
               </div>
               <div>
@@ -522,7 +522,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-2 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
+            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA a pagar:</span>
                 <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
