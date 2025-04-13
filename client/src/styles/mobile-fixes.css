@@ -88,6 +88,7 @@
   h2.text-xl.font-semibold.text-gray-800,
   .flex.items-center:has(h2),
   .bg-\[\#E9F8FB\],
+  .bg-\[\#FFF8E7\],
   .text-sm.text-gray-500.mt-0.leading-tight {
     display: none !important;
     visibility: hidden !important;
@@ -96,6 +97,42 @@
     overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+  
+  /* Ocultar específicamente el icono naranja de presupuestos */
+  .bg-\[\#FFF8E7\],
+  [id*="quote-icon"],
+  [class*="quote-icon"],
+  svg[stroke="#FF9500"],
+  svg[stroke="#ff9500"],
+  div[style*="background-color: rgb(255, 149, 0)"],
+  div[style*="background-color: #ff9500"],
+  div[style*="background-color: #FF9500"],
+  svg[stroke*="#FF9500"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    pointer-events: none !important;
+  }
+  
+  /* Eliminar absolutamente cualquier icono naranja de la pantalla */
+  div > svg, path, div > div > svg, div > div > div > svg {
+    fill: transparent !important; 
+  }
+  
+  /* Eliminar específicamente cualquier color naranja de presupuestos */
+  div.section-header ~ div > div > svg,
+  div.section-header svg,
+  div.mobile-quote-buttons-container ~ div svg,
+  div.mobile-quote-buttons-container ~ div ~ div svg {
+    display: none !important;
   }
   
   /* Forzar al header a ser completamente invisible en facturas */
