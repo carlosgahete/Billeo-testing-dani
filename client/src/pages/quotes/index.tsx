@@ -103,8 +103,7 @@ export default function QuotesPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-          <h2 className="text-xl font-semibold mb-1">Tus presupuestos</h2>
-          <p className="text-gray-500 mb-6">Empieza a crear presupuestos profesionales para tus clientes</p>
+          <h2 className="text-xl font-semibold mb-6">Tus presupuestos</h2>
           
           {quotes.length === 0 ? (
             <div className="text-center py-12">
