@@ -103,6 +103,12 @@ const IncomeFilters = ({
     // Restaurar a todas las transacciones de tipo income
     const incomeTransactions = transactions.filter((t) => t.type === "income");
     onFilterChange(incomeTransactions);
+    
+    // En móvil, cerrar automáticamente el panel de filtros después de limpiar
+    const isMobile = window.innerWidth < 640; // sm breakpoint en Tailwind
+    if (isMobile && onToggleFilters) {
+      onToggleFilters();
+    }
   };
 
   return (

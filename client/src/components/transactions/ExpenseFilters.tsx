@@ -126,6 +126,12 @@ const ExpenseFilters = ({
     setPriceRange({ min: "", max: "" });
     setFiltersApplied(false);
     onFilterChange([]);
+    
+    // En móvil, cerrar automáticamente el panel de filtros después de limpiar
+    const isMobile = window.innerWidth < 640; // sm breakpoint en Tailwind
+    if (isMobile && onToggleFilters) {
+      onToggleFilters();
+    }
   };
 
   return (
