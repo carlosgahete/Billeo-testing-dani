@@ -498,8 +498,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Resultado Final - Estilo Apple - Ocupa todo el ancho en móvil */}
-        <div className="dashboard-card fade-in col-span-2 lg:col-span-1 mx-0 px-0">
+        {/* Widget de Resultado Final - Estilo Apple - Mismo ancho que las otras tarjetas */}
+        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 mx-0 px-0">
           <div className="md:p-6 p-2">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-2 md:mr-3">
