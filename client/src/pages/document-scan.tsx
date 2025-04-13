@@ -629,9 +629,9 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
         </DialogContent>
       </Dialog>
       
-      {/* Sólo botón de volver estilo iOS (extremadamente simple) */}
+      {/* Simplemente un botón de volver sin ningún título */}
       <div className="mb-2 sm:mb-6">
-        {/* Botón de volver minimalista para móvil */}
+        {/* Botón de volver minimalista para versión móvil */}
         <div className="sm:hidden flex items-center justify-between mb-0">
           <Button 
             variant="ghost" 
@@ -640,22 +640,16 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
             className="h-9 px-2 -ml-2 text-[#007AFF]"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            <span>Volver a transacciones</span>
+            <span>Volver</span>
           </Button>
         </div>
         
-        {/* Versión desktop del header */}
+        {/* Versión desktop - solo botón sin header*/}
         <div className="hidden sm:flex items-center">
           <Button variant="ghost" size="sm" onClick={() => navigate("/transactions")} className="mr-4">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Volver
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-800">Escanear documento</h1>
-            <p className="text-muted-foreground">
-              Sube una factura o recibo para procesarlo automáticamente
-            </p>
-          </div>
         </div>
       </div>
 
