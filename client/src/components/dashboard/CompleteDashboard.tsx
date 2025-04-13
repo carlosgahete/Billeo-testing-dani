@@ -415,11 +415,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
-          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
-        {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+      {/* Primera fila: Widgets principales - Solo visibles en tablet/desktop */}
+      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
+        {/* Widget de Ingresos - Solo visible en tablet/desktop */}
+        <div className="dashboard-card fade-in sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -427,7 +426,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Entradas totales</p>
+                <p className="md:text-sm text-xs text-gray-500 mt-0.5">Entradas totales</p>
               </div>
             </div>
             
@@ -435,7 +434,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <div className="md:text-3xl text-2xl font-bold text-[#34C759] md:pt-3 pt-1">
                 {formatCurrency(baseImponibleIngresos)}
               </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
+              <div className="stat-label text-xs md:text-sm mt-1">
                 Ingresos totales (sin IVA)
               </div>
             </div>
@@ -451,7 +450,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <Link href="/invoices" className="md:block hidden">
+            <Link href="/invoices">
               <button className="w-full px-4 py-2 rounded-md font-medium text-[#34C759] border border-[#34C759] hover:bg-[#34C759]/10 transition-colors">
                 Ver facturas
               </button>
@@ -459,8 +458,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        {/* Widget de Gastos - Solo visible en tablet/desktop */}
+        <div className="dashboard-card fade-in sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -468,7 +467,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Gastos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Salidas totales</p>
+                <p className="md:text-sm text-xs text-gray-500 mt-0.5">Salidas totales</p>
               </div>
             </div>
             
@@ -476,7 +475,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <div className="md:text-3xl text-2xl font-bold text-[#FF3B30] md:pt-3 pt-1">
                 {formatCurrency(baseImponibleGastos)}
               </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
+              <div className="stat-label text-xs md:text-sm mt-1">
                 Gastos totales
               </div>
             </div>
@@ -492,7 +491,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             
-            <Link href="/transactions" className="md:block hidden">
+            <Link href="/transactions">
               <button className="w-full px-4 py-2 rounded-md font-medium text-[#FF3B30] border border-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors">
                 Ver gastos
               </button>
@@ -500,8 +499,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Resultado Final - Estilo Apple - Mismo ancho que las otras tarjetas */}
-        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 -mx-2 sm:mx-0 px-0">
+        {/* Widget de Resultado Final - Solo visible en tablet/desktop */}
+        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 sm:mx-0 px-0">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -509,7 +508,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado Final</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Ingresos - Gastos</p>
+                <p className="md:text-sm text-xs text-gray-500 mt-0.5">Ingresos - Gastos</p>
               </div>
             </div>
             
@@ -517,7 +516,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <div className="md:text-3xl text-2xl font-bold text-[#007AFF] md:pt-3 pt-1">
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
+              <div className="stat-label text-xs md:text-sm mt-1">
                 {isPositiveResult ? 'Beneficio neto' : 'Pérdida neta'}
               </div>
             </div>
