@@ -629,31 +629,52 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
         </DialogContent>
       </Dialog>
       
-      <div className="mb-6 flex items-center">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mr-4">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Volver
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Escanear documento</h1>
-          <p className="text-muted-foreground">
-            Sube una factura o recibo para procesarlo automáticamente
-          </p>
+      {/* Header con diseño iOS - Adaptativo para móvil */}
+      <div className="mb-6">
+        {/* Versión móvil del header con diseño iOS */}
+        <div className="sm:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/")} 
+              className="h-9 px-2 -ml-2 text-[#007AFF]"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Volver
+            </Button>
+            <span className="font-medium text-base text-center text-gray-900">Escanear</span>
+            <div className="w-[52px]"></div> {/* Div vacío para equilibrar el header */}
+          </div>
+        </div>
+        
+        {/* Versión desktop del header */}
+        <div className="hidden sm:flex items-center">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mr-4">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-800">Escanear documento</h1>
+            <p className="text-muted-foreground">
+              Sube una factura o recibo para procesarlo automáticamente
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="overflow-hidden border rounded-3xl shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
-          <CardHeader className="pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
-            <CardTitle className="text-2xl font-medium text-gray-900 flex items-center">
-              <Receipt className="h-5 w-5 mr-2 text-[#007AFF]" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="overflow-hidden border rounded-xl sm:rounded-3xl shadow-md sm:shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
+          <CardHeader className="pb-2 sm:pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
+            <CardTitle className="text-lg sm:text-2xl font-medium text-gray-900 flex items-center">
+              <Receipt className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#007AFF]" />
               Escanear gasto
             </CardTitle>
-            <CardDescription className="text-sm text-gray-500">
+            <CardDescription className="text-xs sm:text-sm text-gray-500">
               Sube una factura para procesarla automáticamente con IA
             </CardDescription>
           </CardHeader>
-          <CardContent className="pb-6">
+          <CardContent className="pb-4 sm:pb-6">
             <div className="space-y-6">
               <div 
                 className="rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#007AFF] transition-colors p-6 bg-gray-50/50 hover:bg-blue-50/20"

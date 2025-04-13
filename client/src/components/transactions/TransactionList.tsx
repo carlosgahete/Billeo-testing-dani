@@ -1126,15 +1126,16 @@ const TransactionList = () => {
                   <span className="sm:hidden">PDF</span>
                 </button>
                 
-                {/* Escanear gasto */}
+                {/* Escanear gasto - Estilo Apple */}
                 <button 
-                  className="text-sm px-2 sm:px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-gradient-to-b from-[#007AFF] to-[#0063CC] text-white rounded-full hover:from-[#0A84FF] hover:to-[#0A6ADC] transition-all flex items-center shadow-sm relative overflow-hidden"
                   onClick={() => navigate("/documents/scan")}
                   title="Escanear gasto"
                 >
+                  <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
                   <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Escanear gasto</span>
-                  <span className="sm:hidden">Scan</span>
+                  <span className="hidden sm:inline font-medium">Escanear gasto</span>
+                  <span className="sm:hidden font-medium">Scan</span>
                 </button>
                 
                 {/* Descargar originales */}
@@ -1201,15 +1202,16 @@ const TransactionList = () => {
               </>
             ) : currentTab === 'income' ? (
               <>
-                {/* Crear factura */}
+                {/* Crear factura - Estilo Apple */}
                 <button 
-                  className="text-sm px-2 sm:px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-gradient-to-b from-[#007AFF] to-[#0063CC] text-white rounded-full hover:from-[#0A84FF] hover:to-[#0A6ADC] transition-all flex items-center shadow-sm relative overflow-hidden"
                   onClick={() => navigate("/invoices/create")}
                   title="Crear factura"
                 >
+                  <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
                   <Receipt className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Crear factura</span>
-                  <span className="sm:hidden">Factura</span>
+                  <span className="hidden sm:inline font-medium">Crear factura</span>
+                  <span className="sm:hidden font-medium">Factura</span>
                 </button>
 
                 {/* Exportar ingresos */}
