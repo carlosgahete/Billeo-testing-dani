@@ -342,9 +342,21 @@ export default function AuthPage() {
       </div>
       
       {/* Decoración adicional */}
-      <div className="fixed bottom-3 left-0 right-0 w-full text-center text-[9px] md:text-xs text-blue-400/60">
-        <div className="hidden sm:inline-block whitespace-nowrap">© {new Date().getFullYear()} Billeo · Tu gestión financiera</div>
-        <div className="sm:hidden inline-block whitespace-nowrap">© {new Date().getFullYear()} Billeo</div>
+      <div 
+        style={{
+          position: 'fixed',
+          bottom: '4px',
+          left: '0',
+          right: '0',
+          width: '100%',
+          textAlign: 'center',
+          fontSize: '9px',
+          color: 'rgba(96, 165, 250, 0.6)',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        © {new Date().getFullYear()} Billeo
       </div>
     </div>
   );
