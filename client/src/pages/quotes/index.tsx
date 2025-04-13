@@ -376,8 +376,8 @@ export default function QuotesPage() {
         <MobileQuoteButtons onGeneratePDF={generateQuotesSummaryPDF} />
       </div>
 
-      {/* Dashboard de presupuestos con estilo Apple */}
-      <div className="mb-8 fade-in">
+      {/* Dashboard de presupuestos con estilo Apple - Oculto en móvil */}
+      <div className="mb-8 fade-in hidden md:block">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {/* Tarjeta 1: Resumen de presupuestos - Estilo Apple */}
           <div className="dashboard-card fade-in scale-in">
