@@ -1035,8 +1035,8 @@ const TransactionList = () => {
         </div>
       </div>
 
-      <div className="glass-panel rounded-3xl border border-gray-200/50 scale-in">
-        <div className="p-5 pb-0">
+      <div className="glass-panel rounded-2xl border border-gray-100/60 scale-in shadow-sm bg-white/95 backdrop-blur-lg">
+        <div className="p-4 pb-0 md:p-5 md:pb-0">
           <Tabs 
             defaultValue="all" 
             value={currentTab}
@@ -1050,10 +1050,25 @@ const TransactionList = () => {
             }}
             className="w-full"
           >
-            <TabsList className="bg-gray-100 p-1 rounded-full border border-gray-200/50">
-              <TabsTrigger className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm" value="all">Todos</TabsTrigger>
-              <TabsTrigger className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm" value="income">Ingresos</TabsTrigger>
-              <TabsTrigger className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm" value="expense">Gastos</TabsTrigger>
+            <TabsList className="bg-[#F2F2F7] p-1 rounded-full border border-gray-200/60 mx-auto flex justify-center w-full max-w-sm shadow-inner">
+              <TabsTrigger 
+                className="rounded-full text-sm min-w-[80px] md:min-w-[100px] transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-[#000] data-[state=active]:shadow-sm data-[state=inactive]:text-[#8E8E93] font-medium" 
+                value="all"
+              >
+                Todos
+              </TabsTrigger>
+              <TabsTrigger 
+                className="rounded-full text-sm min-w-[80px] md:min-w-[100px] transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-[#000] data-[state=active]:shadow-sm data-[state=inactive]:text-[#8E8E93] font-medium" 
+                value="income"
+              >
+                Ingresos
+              </TabsTrigger>
+              <TabsTrigger 
+                className="rounded-full text-sm min-w-[80px] md:min-w-[100px] transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-[#000] data-[state=active]:shadow-sm data-[state=inactive]:text-[#8E8E93] font-medium" 
+                value="expense"
+              >
+                Gastos
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

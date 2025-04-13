@@ -252,20 +252,20 @@ export function DataTable<TData, TValue>({
       
       {/* Search input con estilo Apple, botones de acción y botón de filtro */}
       {showSearch && (
-        <div className="flex items-center justify-between py-4 px-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-4 gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#8E8E93]" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#8E8E93]" />
             <Input
               placeholder={searchPlaceholder}
               value={globalFilter}
               onChange={handleSearch}
-              className="pl-9 rounded-xl border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/20 text-sm placeholder:text-[#8E8E93]"
+              className="pl-9 h-10 rounded-full border-[#E5E5EA] bg-[#F2F2F7] focus:border-[#007AFF] focus:ring-[#007AFF]/10 text-sm placeholder:text-[#8E8E93] shadow-inner"
             />
           </div>
           
           {/* Botones de acción habituales */}
           {actionButtons && (
-            <div className="flex items-center space-x-2 ml-4">
+            <div className="flex items-center gap-2 md:ml-4">
               {actionButtons}
             </div>
           )}
@@ -279,7 +279,7 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
-      <div className="rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto bg-white">
+      <div className="rounded-xl overflow-x-auto bg-white">
         <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -288,7 +288,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="whitespace-nowrap px-5 py-3.5 font-medium text-xs text-gray-500 bg-gray-50/80 tracking-wide uppercase first:rounded-tl-2xl last:rounded-tr-2xl"
+                      className="whitespace-nowrap px-5 py-3 font-medium text-xs text-[#8E8E93] bg-[#F2F2F7] tracking-wide uppercase first:rounded-tl-xl last:rounded-tr-xl"
                     >
                       {header.isPlaceholder
                         ? null
@@ -310,9 +310,9 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                   className={`
                     transition-colors duration-200 
-                    ${index !== table.getRowModel().rows.length - 1 ? 'border-b border-gray-100/80' : ''}
+                    ${index !== table.getRowModel().rows.length - 1 ? 'border-b border-[#E5E5EA]/80' : ''}
                     bg-white
-                    hover:bg-gray-50/80
+                    hover:bg-[#F2F2F7]/60
                   `}
                 >
                   {row.getVisibleCells().map((cell) => (
