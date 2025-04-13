@@ -293,7 +293,7 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="h-screen w-full flex items-center justify-center">
+    <div className={`min-h-screen w-full ${!isSecondStep ? 'flex items-center justify-center' : 'py-4'}`}>
       {/* Botón flotante estilo Apple premium para volver en móvil */}
       <div className="sm:hidden fixed top-3 left-3 z-10">
         <Button 
@@ -308,14 +308,14 @@ const DocumentScanPage = () => {
             border: "1px solid rgba(209, 213, 219, 0.5)"
           }}
         >
-          <ArrowLeft className="h-5 w-5 text-[#0A84FF]" />
+          <ArrowLeft className="h-5 w-5 text-[#007AFF]" />
         </Button>
       </div>
       
-      {/* Contenedor principal exactamente en el centro de la pantalla - estilo Apple mejorado */}
+      {/* Contenedor principal - posicionamiento diferente según el paso */}
       <div 
-        className="w-full max-w-[340px] px-3 text-center rounded-[20px] py-6"
-        style={{
+        className={`w-full ${!isSecondStep ? 'max-w-[340px] px-3 text-center rounded-[20px] py-6' : 'max-w-[500px] mx-auto px-4'}`}
+        style={!isSecondStep ? {
           position: "absolute",
           top: "55%",
           left: "50%",
@@ -325,7 +325,7 @@ const DocumentScanPage = () => {
           background: "rgba(247, 247, 247, 0.85)",
           border: "1px solid rgba(255, 255, 255, 0.5)",
           boxShadow: "0 2px 12px rgba(0, 0, 0, 0.04)"
-        }}
+        } : {}}
       >
         {/* Título con estilo Apple auténtico */}
         <div className="mb-6">
