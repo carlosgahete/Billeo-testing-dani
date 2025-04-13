@@ -1420,52 +1420,57 @@ const InvoiceList = () => {
     return <div className="flex justify-center p-8">Cargando...</div>;
   }
 
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div className="w-full fade-in">
-      {/* Encabezado estilo Apple - Versión completa para escritorio */}
-      <div className="hidden md:flex glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 justify-between items-center mx-2 mb-4 border border-[#007AFF]/20">
-        <div className="flex items-center">
-          <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
-            <FileCheck className="h-4 w-4 text-[#007AFF]" />
+      {/* Encabezado estilo Apple - SOLO VISIBLE EN ESCRITORIO */}
+      {!isMobile && (
+        <div className="hidden md:flex glass-panel overflow-hidden rounded-3xl bg-gradient-to-r from-[#007AFF]/10 to-[#007AFF]/5 p-4 justify-between items-center mx-2 mb-4 border border-[#007AFF]/20">
+          <div className="flex items-center">
+            <div className="bg-[#F0F7FF] p-2.5 rounded-full mr-3">
+              <FileCheck className="h-4 w-4 text-[#007AFF]" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-800 mb-0.5">Facturas emitidas</h3>
+              <p className="text-sm text-gray-500">
+                {invoicesData?.length || 0} facturas en total
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-medium text-gray-800 mb-0.5">Facturas emitidas</h3>
-            <p className="text-sm text-gray-500">
-              {invoicesData?.length || 0} facturas en total
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="button-apple-secondary button-apple-sm flex items-center"
-            onClick={exportAllInvoices}
-          >
-            <Download className="h-4 w-4 mr-1.5" />
-            <span>Exportar todo</span>
-          </button>
           
-          {/* Botón para exportar solo las facturas filtradas */}
-          {filteredInvoices.length > 0 && filteredInvoices.length !== invoicesData?.length && (
+          <div className="flex gap-2">
             <button
-              className="button-apple-secondary button-apple-sm flex items-center ml-1"
-              onClick={handleExportFilteredInvoices}
-              title={`Exportar ${filteredInvoices.length} facturas filtradas`}
+              className="button-apple-secondary button-apple-sm flex items-center"
+              onClick={exportAllInvoices}
             >
-              <FileDown className="h-4 w-4 mr-1.5" />
-              <span className="hidden lg:inline">Exportar filtradas</span>
-              <span className="lg:hidden">Filtradas</span>
+              <Download className="h-4 w-4 mr-1.5" />
+              <span>Exportar todo</span>
             </button>
-          )}
-          
-          <button
-            className="button-apple button-apple-sm flex items-center ml-1"
-            onClick={() => navigate("/invoices/create")}
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            <span>Nueva factura</span>
-          </button>
+            
+            {/* Botón para exportar solo las facturas filtradas */}
+            {filteredInvoices.length > 0 && filteredInvoices.length !== invoicesData?.length && (
+              <button
+                className="button-apple-secondary button-apple-sm flex items-center ml-1"
+                onClick={handleExportFilteredInvoices}
+                title={`Exportar ${filteredInvoices.length} facturas filtradas`}
+              >
+                <FileDown className="h-4 w-4 mr-1.5" />
+                <span className="hidden lg:inline">Exportar filtradas</span>
+                <span className="lg:hidden">Filtradas</span>
+              </button>
+            )}
+            
+            <button
+              className="button-apple button-apple-sm flex items-center ml-1"
+              onClick={() => navigate("/invoices/create")}
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              <span>Nueva factura</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Botón de acción flotante (FAB) para crear facturas en móvil */}
       <div className="fixed bottom-6 right-6 z-10 md:hidden">

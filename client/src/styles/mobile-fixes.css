@@ -39,11 +39,35 @@
   /* Forzar al header a ser completamente invisible en facturas */
   body:has(.invoice-table-mobile) header,
   body:has(.invoice-table-mobile) .mt-2,
-  .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full > div:first-child {
+  .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full > div:first-child,
+  .glass-panel h3.font-medium,
+  .rounded-3xl h3,
+  .hidden.md\\:flex,
+  body .receipt-icon,
+  body div:has(> h2.text-xl.font-semibold.text-gray-800) {
     display: none !important;
     margin: 0 !important;
     padding: 0 !important;
     height: 0 !important;
+    visibility: hidden !important;
+  }
+  
+  /* Selectores adicionales para eliminar el encabezado */
+  h2,
+  .bg-\\[\\#E9F8FB\\],
+  .text-xl.font-semibold.text-gray-800,
+  .text-sm.text-gray-500.mt-0.leading-tight {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Eliminar margen superior al contenedor principal */
+  body .w-full.pl-0.pr-2.md\\:px-2.space-y-0.sm\\:space-y-6.mt-0.sm\\:mt-2.max-w-full {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
   
   /* Estilo iOS para el diseño adaptado de facturas en móvil */
