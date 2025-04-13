@@ -542,8 +542,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-8 mt-5 md:mt-8">
+      {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple - Ocultos en móvil */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-8 mt-5 md:mt-8">
         {/* Widget de Comparativa Financiera - Estilo Apple */}
         <div className="dashboard-card fade-in col-span-3 mx-0 px-0">
           <div className="p-1 md:p-4">
