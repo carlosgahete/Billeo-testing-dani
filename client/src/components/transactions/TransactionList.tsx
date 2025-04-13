@@ -1108,35 +1108,35 @@ const TransactionList = () => {
 
                 {/* Exportar todos los gastos */}
                 <button 
-                  className="text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => handleExportFilteredExpenses()}
                   disabled={transactions?.filter(t => t.type === 'expense').length === 0}
                   title={filteredExpenseTransactions.length > 0 ? 
                     `Exportar ${filteredExpenseTransactions.length} gastos filtrados` : 
                     `Exportar todos los gastos (${transactions?.filter(t => t.type === 'expense').length || 0})`}
                 >
-                  <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <FileDown className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">
                     {filteredExpenseTransactions.length > 0 ? 
                       `Exportar ${filteredExpenseTransactions.length} filtrados` : 
                       "Exportar todos los gastos"}
                   </span>
-                  <span className="sm:hidden">Exportar</span>
+                  <span className="sm:hidden">PDF</span>
                 </button>
                 
                 {/* Escanear gasto */}
                 <button 
-                  className="text-sm px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
                   onClick={() => navigate("/documents/scan")}
                 >
-                  <ScanText className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Escanear gasto</span>
-                  <span className="sm:hidden">Escanear</span>
+                  <span className="sm:hidden">Scan</span>
                 </button>
                 
                 {/* Descargar originales */}
                 <button 
-                  className="text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => {
                     // Importamos dinámicamente para evitar problemas de dependencias cíclicas
                     import('@/lib/attachmentService').then(({ downloadExpenseOriginalsAsZip }) => {
@@ -1159,14 +1159,14 @@ const TransactionList = () => {
                   }}
                   title="Descargar documentos originales de los gastos"
                 >
-                  <Download className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <Download className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Descargar originales</span>
-                  <span className="sm:hidden">Originales</span>
+                  <span className="sm:hidden">Docs</span>
                 </button>
                 
                 {/* Botón de filtro */}
                 <button 
-                  className={`text-sm px-3 py-1.5 flex items-center rounded-full transition-colors ${
+                  className={`text-sm px-2 sm:px-3 py-1.5 flex items-center rounded-full transition-colors ${
                     expenseFiltersApplied 
                     ? "bg-[#FF9F0A] text-white hover:bg-[#FF9F0A]/90" 
                     : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -1174,13 +1174,12 @@ const TransactionList = () => {
                   onClick={() => setShowExpenseFilters(!showExpenseFilters)}
                   title={expenseFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar gastos"}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 sm:mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 sm:mr-2">
                     <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                   </svg>
                   <span className="hidden sm:inline">
                     {showExpenseFilters ? "Ocultar filtros" : "Filtrar"}
                   </span>
-                  <span className="sm:hidden">Filtrar</span>
                   {expenseFiltersApplied && (
                     <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#FF9F0A] font-bold flex items-center justify-center">
                       ✓
@@ -1194,35 +1193,35 @@ const TransactionList = () => {
               <>
                 {/* Crear factura */}
                 <button 
-                  className="text-sm px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-[#007AFF] text-white rounded-full hover:bg-[#0A84FF] transition-colors flex items-center"
                   onClick={() => navigate("/invoices/create")}
                 >
-                  <Receipt className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <Receipt className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Crear factura</span>
                   <span className="sm:hidden">Factura</span>
                 </button>
 
                 {/* Exportar ingresos */}
                 <button 
-                  className="text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
                   onClick={() => handleExportFilteredIncome()}
                   disabled={transactions?.filter(t => t.type === 'income').length === 0}
                   title={filteredIncomeTransactions.length > 0 ? 
                     `Exportar ${filteredIncomeTransactions.length} ingresos filtrados` : 
                     `Exportar todos los ingresos (${transactions?.filter(t => t.type === 'income').length || 0})`}
                 >
-                  <FileDown className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  <FileDown className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">
                     {filteredIncomeTransactions.length > 0 ? 
                       `Exportar ${filteredIncomeTransactions.length} filtrados` : 
                       "Exportar todos los ingresos"}
                   </span>
-                  <span className="sm:hidden">Exportar</span>
+                  <span className="sm:hidden">PDF</span>
                 </button>
                 
                 {/* Botón de filtro para ingresos */}
                 <button 
-                  className={`text-sm px-3 py-1.5 flex items-center rounded-full transition-colors ${
+                  className={`text-sm px-2 sm:px-3 py-1.5 flex items-center rounded-full transition-colors ${
                     incomeFiltersApplied 
                     ? "bg-[#34C759] text-white hover:bg-[#34C759]/90" 
                     : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -1230,7 +1229,7 @@ const TransactionList = () => {
                   onClick={() => setShowIncomeFilters(!showIncomeFilters)}
                   title={incomeFiltersApplied ? "Filtros personalizados aplicados" : "Filtrar ingresos"}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 sm:mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 sm:mr-2">
                     <line x1="12" y1="20" x2="12" y2="10" />
                     <line x1="18" y1="20" x2="18" y2="4" />
                     <line x1="6" y1="20" x2="6" y2="16" />
@@ -1238,7 +1237,6 @@ const TransactionList = () => {
                   <span className="hidden sm:inline">
                     {showIncomeFilters ? "Ocultar filtros" : "Filtrar"}
                   </span>
-                  <span className="sm:hidden">Filtrar</span>
                   {incomeFiltersApplied && (
                     <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#34C759] font-bold flex items-center justify-center">
                       ✓

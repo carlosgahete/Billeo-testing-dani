@@ -466,7 +466,7 @@ export function DataTable<TData, TValue>({
           
           {/* Botones de acción habituales */}
           {actionButtons && (
-            <div className="flex items-center gap-2 md:ml-4">
+            <div className="flex items-center flex-wrap gap-2 md:ml-4">
               {actionButtons}
             </div>
           )}
