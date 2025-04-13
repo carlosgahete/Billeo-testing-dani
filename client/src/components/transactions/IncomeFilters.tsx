@@ -82,6 +82,14 @@ const IncomeFilters = ({
 
     // Informar de los cambios
     onFilterChange(filtered);
+    
+    // En móvil, cerrar automáticamente el panel de filtros después de aplicarlos
+    const isMobile = window.innerWidth < 640; // sm breakpoint en Tailwind
+    if (isMobile && onToggleFilters && filtered.length > 0) {
+      onToggleFilters();
+    }
+    
+    // Marcar como filtros aplicados
     setFiltersApplied(true);
   };
 

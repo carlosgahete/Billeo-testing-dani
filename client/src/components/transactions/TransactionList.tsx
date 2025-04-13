@@ -1191,7 +1191,7 @@ const TransactionList = () => {
                     {showExpenseFilters ? "Ocultar filtros" : "Filtrar"}
                   </span>
                   {expenseFiltersApplied && (
-                    <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#FF9F0A] font-bold flex items-center justify-center">
+                    <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#FF9F0A] font-bold flex items-center justify-center shadow-sm">
                       ✓
                     </span>
                   )}
@@ -1254,7 +1254,7 @@ const TransactionList = () => {
                     {showIncomeFilters ? "Ocultar filtros" : "Filtrar"}
                   </span>
                   {incomeFiltersApplied && (
-                    <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#34C759] font-bold flex items-center justify-center">
+                    <span className="ml-1 bg-white rounded-full w-4 h-4 text-[10px] text-[#34C759] font-bold flex items-center justify-center shadow-sm">
                       ✓
                     </span>
                   )}
