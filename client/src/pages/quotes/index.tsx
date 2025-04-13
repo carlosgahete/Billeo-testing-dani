@@ -86,7 +86,7 @@ export default function QuotesPage() {
   return (
     <Layout>
       <div className="-mt-20">
-        <div className="flex justify-center space-x-8 mx-auto max-w-xs mb-3">
+        <div className="flex justify-center space-x-16 mx-auto px-8 mb-3">
           <Button 
             className="bg-[#34C759] hover:bg-[#2EB350] text-white px-3 py-1 h-9" 
             onClick={generateQuotesSummaryPDF}
