@@ -322,11 +322,16 @@ const DocumentScanPage = () => {
           transform: "translate(-50%, -60%)"
         }}
       >
-        {/* Título minimalista al estilo Apple iOS 15 */}
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1" style={{ 
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
-          letterSpacing: "-0.02em"
-        }}>Escanear</h1>
+        {/* Título con estilo Apple auténtico */}
+        <div className="mb-6">
+          <h1 className="text-[28px] font-semibold text-gray-900 mb-1" style={{ 
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+            letterSpacing: "-0.02em"
+          }}>Escanear Factura</h1>
+          <p className="text-[15px] text-gray-500 font-normal" style={{ 
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+          }}>Sube una imagen o PDF de tu factura</p>
+        </div>
         
         {/* Control de archivos invisible */}
         <input
@@ -341,26 +346,28 @@ const DocumentScanPage = () => {
         {!showEditMode ? (
           // Modo de subida de documento
           <div className="w-full">
-            {/* Zona de arrastrar y soltar - versión Apple con estilo premium */}
+            {/* Zona de arrastrar y soltar al estilo Apple */}
             <div 
-              className="w-full border border-gray-200 rounded-[22px] py-10 px-6 text-center bg-white cursor-pointer"
+              className="w-full border border-gray-200 rounded-[18px] py-10 px-6 text-center cursor-pointer"
               style={{
-                boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-                background: "linear-gradient(160deg, #ffffff 0%, #f8f9ff 100%)"
+                background: "linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%)",
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.05)"
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => document.getElementById('file-input')?.click()}
             >
-              {/* Icono con diseño Apple - con gradiente */}
-              <div 
-                className="mx-auto h-[70px] w-[70px] rounded-full flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(135deg, #0A84FF 0%, #0066CC 100%)",
-                  boxShadow: "0 8px 16px rgba(10, 132, 255, 0.2)"
-                }}
-              >
-                <Upload className="h-9 w-9 text-white" />
+              {/* Icono con diseño Apple auténtico */}
+              <div className="mx-auto">
+                <div 
+                  className="h-[70px] w-[70px] rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #0A84FF 0%, #007AFF 100%)",
+                    boxShadow: "0 6px 12px rgba(10, 132, 255, 0.15)"
+                  }}
+                >
+                  <Upload className="h-9 w-9 text-white" />
+                </div>
               </div>
               
               <p 
@@ -424,11 +431,11 @@ const DocumentScanPage = () => {
                 style={{
                   borderRadius: "12px",
                   background: !file || uploading ? 
-                    "linear-gradient(to bottom, #f5f5f7, #eeeef0)" : 
-                    "linear-gradient(to bottom, #0A84FF, #0066CC)",
+                    "linear-gradient(to bottom, #f8f8fa, #f2f2f4)" : 
+                    "linear-gradient(to bottom, #0A84FF, #0074E4)",
                   boxShadow: !file || uploading ? 
                     "none" : 
-                    "0 4px 14px rgba(10, 132, 255, 0.25)",
+                    "0 2px 8px rgba(10, 132, 255, 0.25)",
                   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
                   letterSpacing: "-0.01em"
                 }}
