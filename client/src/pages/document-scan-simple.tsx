@@ -293,7 +293,7 @@ const DocumentScanPage = () => {
   };
   
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="min-h-screen w-full flex flex-col">
       {/* Botón flotante minimalista para volver en móvil */}
       <div className="sm:hidden fixed top-2 left-2 z-10">
         <Button 
@@ -306,8 +306,14 @@ const DocumentScanPage = () => {
         </Button>
       </div>
       
+      {/* Encabezado con título para mejor contexto */}
+      <div className="w-full pt-10 pb-2 text-center">
+        <h1 className="text-2xl font-semibold text-gray-800">Escanear Documento</h1>
+        <p className="text-sm text-gray-500 mt-1">Sube una factura para procesarla</p>
+      </div>
+      
       {/* Contenido principal centrado verticalmente */}
-      <div className="flex-1 flex flex-col justify-center items-center px-4">
+      <div className="flex-1 flex flex-col justify-center items-center px-4 pt-0 pb-4">
         {/* Control de archivos invisible */}
         <input
           type="file"
@@ -323,7 +329,10 @@ const DocumentScanPage = () => {
           <div className="w-full max-w-[370px]">
             {/* Zona de arrastrar y soltar - versión simple para móvil al estilo Apple */}
             <div 
-              className="w-full border border-gray-100 rounded-3xl py-7 px-6 text-center bg-white shadow-sm cursor-pointer"
+              className="w-full border border-gray-100 rounded-3xl py-8 px-6 text-center bg-white shadow-sm cursor-pointer"
+              style={{
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+              }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => document.getElementById('file-input')?.click()}
