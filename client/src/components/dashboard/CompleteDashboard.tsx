@@ -413,47 +413,30 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
-          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 mt-1 md:mt-8">
+      {/* Widgets principales - Estilo Apple - En móvil: cada widget en una fila */}
+      <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-8 mt-1 md:mt-8">
         {/* Widget de Ingresos - Estilo Apple */}
-        <div className="dashboard-card fade-in mx-0 px-0">
-          <div className="md:p-6 p-2">
-            <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-2 md:mr-3">
-                <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3">
+          <div className="flex items-center">
+            <div className="bg-[#E2F6ED] p-2 rounded-full mr-3">
+              <ArrowUp className="h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-md font-medium text-gray-800">Ingresos</h3>
+              <div className="flex items-center justify-between">
+                <div className="text-xl font-bold text-[#34C759]">
+                  {formatCurrency(baseImponibleIngresos)}
+                </div>
               </div>
-              <div>
-                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Entradas totales</p>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">IVA repercutido:</span>
+                <span>{formatCurrency(ivaRepercutido)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">IRPF:</span>
+                <span>{formatCurrency(retencionesIrpf)}</span>
               </div>
             </div>
-            
-            <div className="md:mb-5 mb-2">
-              <div className="md:text-3xl text-2xl font-bold text-[#34C759] md:pt-3 pt-1">
-                {formatCurrency(baseImponibleIngresos)}
-              </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
-                Ingresos totales (sin IVA)
-              </div>
-            </div>
-            
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-2 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IVA repercutido:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaRepercutido)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IRPF:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(retencionesIrpf)}</span>
-              </div>
-            </div>
-            
-            <Link href="/invoices" className="md:block hidden">
-              <button className="w-full px-4 py-2 rounded-md font-medium text-[#34C759] border border-[#34C759] hover:bg-[#34C759]/10 transition-colors">
-                Ver facturas
-              </button>
-            </Link>
           </div>
         </div>
 
