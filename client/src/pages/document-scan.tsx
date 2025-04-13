@@ -629,28 +629,24 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
         </DialogContent>
       </Dialog>
       
-      {/* Header con diseño iOS - Adaptativo para móvil */}
-      <div className="mb-6">
-        {/* Versión móvil del header con diseño iOS */}
-        <div className="sm:hidden">
-          <div className="flex items-center justify-between mb-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/")} 
-              className="h-9 px-2 -ml-2 text-[#007AFF]"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
-            </Button>
-            <span className="font-medium text-base text-center text-gray-900">Escanear</span>
-            <div className="w-[52px]"></div> {/* Div vacío para equilibrar el header */}
-          </div>
+      {/* Header simplificado estilo Apple */}
+      <div className="mb-2 sm:mb-6">
+        {/* Botón de volver exclusivamente para móvil - estilo iOS */}
+        <div className="sm:hidden flex items-center justify-between mb-0">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/transactions")} 
+            className="h-9 px-2 -ml-2 text-[#007AFF]"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
+          </Button>
         </div>
         
         {/* Versión desktop del header */}
         <div className="hidden sm:flex items-center">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mr-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/transactions")} className="mr-4">
             <ArrowLeft className="h-4 w-4 mr-1" />
             Volver
           </Button>
@@ -665,7 +661,8 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <Card className="overflow-hidden border rounded-xl sm:rounded-3xl shadow-md sm:shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
-          <CardHeader className="pb-2 sm:pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
+          {/* Eliminar cabecera para versión móvil, mantener para versión desktop */}
+          <CardHeader className="hidden sm:block pb-2 sm:pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
             <CardTitle className="text-lg sm:text-2xl font-medium text-gray-900 flex items-center">
               <Receipt className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#007AFF]" />
               Escanear gasto
@@ -792,7 +789,7 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
         </Card>
         
         <Card className="overflow-hidden border rounded-xl sm:rounded-3xl shadow-md sm:shadow-lg bg-white/95 backdrop-blur-sm border-gray-100">
-          <CardHeader className="pb-2 sm:pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
+          <CardHeader className="hidden sm:block pb-2 sm:pb-3 bg-gradient-to-b from-[#f8f8f8] to-white">
             <CardTitle className="text-lg sm:text-2xl font-medium text-gray-900 flex items-center">
               <Receipt className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#34C759]" />
               Resultados
