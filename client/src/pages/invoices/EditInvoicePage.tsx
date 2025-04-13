@@ -174,9 +174,9 @@ export default function EditInvoicePage() {
         </div>
       )}
       
-      {/* Botón de volver para móvil sin título - estilo iOS píldora */}
+      {/* Botón de volver para móvil sin título - estilo iOS textual */}
       {isMobile && (
-        <div className="w-full flex mb-4 mt-2">
+        <div className="w-full mb-4 mt-2 pl-2">
           <button 
             onClick={() => navigate("/invoices")}
             className="apple-back-button"

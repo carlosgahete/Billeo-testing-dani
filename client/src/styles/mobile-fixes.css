@@ -177,7 +177,7 @@
     padding: 0 !important;
     height: auto !important;
     border: none !important;
-    display: flex !important;
+    display: inline-flex !important;  /* Cambiado a inline-flex */
     align-items: center !important;
     font-weight: normal !important;
     box-shadow: none !important;
