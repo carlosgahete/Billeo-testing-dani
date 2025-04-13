@@ -342,9 +342,9 @@ export default function AuthPage() {
       </div>
       
       {/* Decoración adicional */}
-      {/* Footer simplificado para todos los dispositivos */}
-      <div className="mt-12 text-center">
-        <p className="text-[9px] text-blue-400/60">© {new Date().getFullYear()} Billeo</p>
+      {/* Footer solo visible en pantallas medianas y grandes */}
+      <div className="hidden md:block absolute bottom-6 left-0 right-0 text-center">
+        <p className="text-xs text-blue-400/60">© {new Date().getFullYear()} Billeo · Tu gestión financiera</p>
       </div>
     </div>
   );
