@@ -264,6 +264,14 @@ const Sidebar = ({
       icon: <FileText size={20} />,
       label: "Libro de Registros",
     });
+  } 
+  // Para usuarios normales, mostrar enlace a su propio libro de registros
+  else if (user) {
+    adminItems.push({
+      href: "/mis-registros",  // Ruta para usuarios normales
+      icon: <FileText size={20} />,
+      label: "Mi Libro de Registros",
+    });
   }
   
   console.log("Admin items:", adminItems);
