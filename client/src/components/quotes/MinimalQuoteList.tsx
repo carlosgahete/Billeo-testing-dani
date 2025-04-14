@@ -270,12 +270,40 @@ export function MinimalQuoteList({ userId }: Props) {
         description: "Estamos enviando el presupuesto por email"
       });
       
+      // Necesitamos obtener el PDF primero
+      console.log("Obteniendo PDF del presupuesto...");
+      
+      // Primero obtenemos el PDF (no en base64 sino como blob para adjuntarlo)
+      const pdfResponse = await fetch(`/api/quotes/${quoteId}/pdf`);
+      if (!pdfResponse.ok) {
+        throw new Error("No se pudo obtener el PDF del presupuesto");
+      }
+      
+      const pdfBlob = await pdfResponse.blob();
+      console.log("PDF obtenido correctamente, tamaño:", pdfBlob.size, "bytes");
+      
+      // Convertir el blob a base64
+      const reader = new FileReader();
+      const pdfBase64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          // El resultado es: "data:application/pdf;base64,XXXX"
+          // Necesitamos extraer solo la parte de base64 sin el prefijo
+          const base64 = reader.result.toString().split(',')[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(pdfBlob);
+      });
+      
+      const pdfBase64 = await pdfBase64Promise;
+      console.log("PDF convertido a base64, longitud:", pdfBase64.length);
+      
       // Llamar a la API para enviar el email
       const response = await apiRequest("POST", `/api/quotes/${quoteId}/send-email`, { 
         recipientEmail: email, 
-        // Generar PDF en el servidor
-        pdfBase64: null
+        pdfBase64: pdfBase64
       });
+      
+      console.log("Respuesta del servidor:", response.status, response.statusText);
       
       if (response.ok) {
         toast({

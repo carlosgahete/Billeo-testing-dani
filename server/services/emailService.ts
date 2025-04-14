@@ -20,7 +20,7 @@ export async function initEmailService() {
       
       transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: 465, // Puerto para Hostinger
+        port: parseInt(process.env.SMTP_PORT || '465'), // Usar la variable de entorno o 465 por defecto
         secure: true, // true para puerto 465
         auth: {
           user: process.env.SMTP_USERNAME,

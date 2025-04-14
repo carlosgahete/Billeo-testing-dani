@@ -2198,6 +2198,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pdfBuffer = Buffer.from(pdfBase64, 'base64');
       
       // Enviar correo electrónico con la función específica para presupuestos
+      console.log("Preparando envío de email para presupuesto...");
+      console.log("Destinatario:", emailToSend);
+      console.log("Cliente:", client.name);
+      console.log("Número de presupuesto:", quote.quoteNumber);
+      console.log("Tamaño del PDF:", pdfBuffer.length, "bytes");
+      console.log("Nombre de la empresa:", companyInfo.name);
+      console.log("Remitente:", 'contacto@billeo.es');
+      console.log("CC:", ccEmail || "No incluido");
+      console.log("Fecha de validez:", quote.validUntil || "No definida");
+      
       const emailResult = await sendQuoteEmail(
         emailToSend,
         client.name,
