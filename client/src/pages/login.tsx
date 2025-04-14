@@ -79,13 +79,13 @@ const LoginPage = () => {
       }
 
       // Attempt to login
-      await apiRequest("/api/auth/login", "POST", { 
+      await apiRequest("/api/login", "POST", { 
         username, 
         password 
       });
       
       // Invalidate auth session cache immediately
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/session"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
       // Show success message
       toast({
