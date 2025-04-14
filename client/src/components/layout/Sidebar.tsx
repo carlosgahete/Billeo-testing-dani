@@ -144,8 +144,11 @@ const Sidebar = ({
       href: "/quotes", 
       icon: <FileText size={20} />, 
       label: "Presupuestos" 
-    },
-
+    }
+  ];
+  
+  // Items que irán al final
+  const bottomNavigationItems: NavItem[] = [
     { 
       href: "/company", 
       icon: <Building2 size={20} />, 
@@ -265,8 +268,8 @@ const Sidebar = ({
   
   console.log("Admin items:", adminItems);
   
-  // Combinar todos los arrays
-  const navigationItems: NavItem[] = [...baseNavigationItems, ...adminItems];
+  // Combinar todos los arrays (Empresa y Configuración al final)
+  const navigationItems: NavItem[] = [...baseNavigationItems, ...adminItems, ...bottomNavigationItems];
 
   // Desktop sidebar
   if (!isMobile) {
