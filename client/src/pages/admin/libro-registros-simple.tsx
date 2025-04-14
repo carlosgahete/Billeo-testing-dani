@@ -873,18 +873,18 @@ export default function SimpleLibroRegistros() {
           <div className="flex items-end space-x-2">
             <Button 
               variant="outline" 
-              className="flex items-center bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700 text-xs py-1 h-8"
+              className="flex items-center bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700"
               onClick={handleDownloadPDF}
             >
-              <FileText className="h-3.5 w-3.5 mr-1" />
+              <FileText className="h-4 w-4 mr-1.5" />
               PDF
             </Button>
             <Button 
               variant="outline" 
-              className="flex items-center bg-green-50 border-green-200 hover:bg-green-100 text-green-700 text-xs py-1 h-8"
+              className="flex items-center bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
               onClick={handleDownloadExcel}
             >
-              <FileSpreadsheet className="h-3.5 w-3.5 mr-1" />
+              <FileSpreadsheet className="h-4 w-4 mr-1.5" />
               Excel
             </Button>
           </div>
