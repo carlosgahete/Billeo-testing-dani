@@ -846,37 +846,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Ruta para obtener todos los clientes que pueden ser asignados (solo superadmin)
-  app.get("/api/admin/assignable-clients", requireSuperAdmin, async (req, res) => {
-    try {
-      const superadminId = (req.user as any).id;
-      const data = await storage.getAllClientsAssignableToAdmin(superadminId);
-      
-      res.status(200).json(data);
-    } catch (error) {
-      console.error("Error al obtener clientes asignables:", error);
-      res.status(500).json({ message: "Error al obtener clientes asignables" });
-    }
-  });
-  
-  // Ruta para asignar un cliente a un administrador
-  app.post("/api/admin/assign-client", requireSuperAdmin, async (req, res) => {
-    try {
-      const { adminId, clientId } = req.body;
-      
-      if (!adminId || !clientId) {
-        return res.status(400).json({ message: "Se requieren adminId y clientId" });
-      }
-      
-      const assignedBy = (req.user as any).id;
-      const relation = await storage.assignClientToAdmin(adminId, clientId, assignedBy);
-      
-      res.status(201).json(relation);
-    } catch (error) {
-      console.error("Error al asignar cliente a administrador:", error);
-      res.status(500).json({ message: "Error al asignar cliente a administrador" });
-    }
-  });
+  // Nota: Las rutas para /api/admin/assignable-clients y /api/admin/assign-client
+  // están definidas más abajo en el archivo para evitar duplicación
   
   // Ruta para eliminar la asignación de un cliente a un administrador
   app.delete("/api/admin/remove-assignment", requireSuperAdmin, async (req, res) => {
