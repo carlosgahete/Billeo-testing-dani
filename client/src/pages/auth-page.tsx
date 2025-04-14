@@ -66,7 +66,8 @@ export default function AuthPage() {
           <img 
             src={billeoLogo} 
             alt="Billeo Logo" 
-            className="h-16 animate-scaleIn"
+            className="h-14 animate-scaleIn"
+            loading="eager"
           />
         </div>
         <p className="text-gray-500 mt-2 max-w-sm">

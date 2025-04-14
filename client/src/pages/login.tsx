@@ -119,7 +119,8 @@ const LoginPage = () => {
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-16 drop-shadow-sm"
+              className="h-12 drop-shadow-sm"
+              loading="eager"
             />
           </div>
           <h1 className="text-2xl font-medium text-center" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#1d1d1f' }}>
@@ -283,7 +284,8 @@ const LoginPage = () => {
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-11"
+              className="h-10"
+              loading="eager"
             />
           </div>
           <p className="text-sm text-neutral-500">
