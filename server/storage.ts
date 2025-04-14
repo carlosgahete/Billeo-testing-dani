@@ -770,10 +770,21 @@ export class DatabaseStorage implements IStorage {
     assignedClients: { clientId: number; adminId: number; }[];
     allClients: Client[];
   }> {
-    // Obtener todos los clientes del superadmin
-    const allClients = await this.getClientsByUserId(superadminId);
+    let allClients: Client[] = [];
     
-    // Obtener todas las relaciones existentes para estos clientes
+    // Verificar si el usuario es un administrador especial (billeo_admin)
+    const user = await this.getUser(superadminId);
+    const isSpecialAdmin = user && (user.username === 'billeo_admin' || user.username === 'Superadmin');
+    
+    if (isSpecialAdmin) {
+      // Los administradores especiales pueden ver todos los clientes
+      allClients = await db.select().from(clients);
+    } else {
+      // Los superadmins normales solo ven sus propios clientes
+      allClients = await this.getClientsByUserId(superadminId);
+    }
+    
+    // Obtener todas las relaciones existentes para todos los clientes
     const clientIds = allClients.map(client => client.id);
     
     let assignedClients: { clientId: number; adminId: number; }[] = [];
