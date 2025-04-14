@@ -1,473 +1,362 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
 import { 
-  Loader2, 
-  UserCog, 
-  Users, 
-  Link as LinkIcon, 
-  Unlink, 
-  Check, 
-  X, 
-  CircleAlert 
-} from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Search, UserCheck, Users, ShieldAlert, Shield } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
-// Interfaces
-interface Admin {
+// Tipos
+type Client = {
+  id: number;
+  name: string;
+  email: string | null;
+  taxId: string;
+};
+
+type Admin = {
   id: number;
   name: string;
   username: string;
   email: string;
-}
+};
 
-interface Client {
-  id: number;
-  name: string;
-  taxId: string;
-  email: string | null;
-}
-
-interface AdminClientAssignment {
+type Assignment = {
   clientId: number;
   adminId: number;
-}
+};
 
-export default function ClientAssignmentPage() {
-  const { user, isLoading } = useAuth();
+const ClientAssignmentPage: React.FC = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Estados
+  const [loading, setLoading] = useState<boolean>(true);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
-  const [assignments, setAssignments] = useState<AdminClientAssignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dataLoaded, setDataLoaded] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [confirmAssignment, setConfirmAssignment] = useState<{adminId: number, clientId: number} | null>(null);
-  const [confirmUnassignment, setConfirmUnassignment] = useState<{adminId: number, clientId: number} | null>(null);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAdmin, setSelectedAdmin] = useState<number | null>(null);
-
-  // Verificar si el usuario actual es superadmin
-  const isSuperAdmin = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN');
-
-  // Cargar datos iniciales
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [saving, setSaving] = useState<boolean>(false);
+  
+  // Verificación de permisos - solo superadmin tiene acceso
+  if (!user || (user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
+    return <Redirect to="/auth" />;
+  }
+  
+  // Cargar administradores, clientes y asignaciones actuales
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // 1. Obtener todos los usuarios con rol admin
-        const usersResponse = await apiRequest("GET", "/api/admin/users");
-        const usersData = await usersResponse.json();
-        
+        // 1. Cargar administradores
+        const adminsRes = await apiRequest("GET", "/api/admin/users");
+        if (!adminsRes.ok) {
+          throw new Error("Error al cargar administradores");
+        }
+        const adminsData = await adminsRes.json();
         // Filtrar solo administradores (no superadmins)
-        const adminUsers = usersData.filter((u: any) => 
-          u.role === 'admin' || u.role === 'superadmin' || u.role === 'SUPERADMIN'
+        const onlyAdmins = adminsData.filter((admin: any) => 
+          admin.role === "admin" && admin.id !== user.id
         );
-        setAdmins(adminUsers);
+        setAdmins(onlyAdmins);
         
-        // 2. Obtener clientes asignables
-        const clientsResponse = await apiRequest("GET", "/api/admin/assignable-clients");
-        const clientsData = await clientsResponse.json();
-        
+        // 2. Cargar clientes
+        const clientsRes = await apiRequest("GET", "/api/admin/assignable-clients");
+        if (!clientsRes.ok) {
+          throw new Error("Error al cargar clientes asignables");
+        }
+        const clientsData = await clientsRes.json();
         setClients(clientsData.allClients);
+        setFilteredClients(clientsData.allClients);
         setAssignments(clientsData.assignedClients);
-        setDataLoaded(true);
+        
       } catch (error) {
         console.error("Error al cargar datos:", error);
         toast({
           title: "Error",
-          description: "No se pudieron cargar los datos de administradores y clientes",
-          variant: "destructive",
+          description: "No se pudieron cargar los datos de asignación de clientes",
+          variant: "destructive"
         });
       } finally {
         setLoading(false);
       }
     };
     
-    if (user && isSuperAdmin) {
-      fetchData();
+    fetchData();
+  }, []);
+  
+  // Filtrar clientes según término de búsqueda
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredClients(clients);
+      return;
     }
-  }, [user, isSuperAdmin]);
-
-  // Manejar asignación de cliente a admin
-  const handleAssignClient = async (adminId: number, clientId: number) => {
-    try {
-      setActionLoading(true);
-      
-      const response = await apiRequest("POST", "/api/admin/assign-client", {
-        adminId,
-        clientId
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        
-        // Actualizar el estado local con la nueva asignación
-        setAssignments([
-          ...assignments,
-          { adminId, clientId }
-        ]);
-        
-        toast({
-          title: "Éxito",
-          description: "Cliente asignado correctamente al administrador",
-        });
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.message || "No se pudo asignar el cliente al administrador",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error al asignar cliente:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo asignar el cliente al administrador",
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-      setConfirmAssignment(null);
-    }
+    
+    const term = searchTerm.toLowerCase();
+    const filtered = clients.filter(client => 
+      client.name.toLowerCase().includes(term) ||
+      client.email?.toLowerCase().includes(term) ||
+      client.taxId.toLowerCase().includes(term)
+    );
+    
+    setFilteredClients(filtered);
+  }, [searchTerm, clients]);
+  
+  // Verificar si un cliente está asignado a un admin específico
+  const isClientAssignedToAdmin = (clientId: number, adminId: number): boolean => {
+    return assignments.some(
+      assignment => assignment.clientId === clientId && assignment.adminId === adminId
+    );
   };
-
-  // Manejar eliminación de asignación
-  const handleUnassignClient = async (adminId: number, clientId: number) => {
+  
+  // Manejar asignación/desasignación de cliente
+  const handleAssignmentToggle = async (clientId: number, adminId: number) => {
+    if (!adminId) return;
+    
+    setSaving(true);
+    
     try {
-      setActionLoading(true);
+      const isCurrentlyAssigned = isClientAssignedToAdmin(clientId, adminId);
       
-      const response = await apiRequest("DELETE", "/api/admin/assign-client", {
-        adminId,
-        clientId
-      });
-      
-      if (response.ok) {
-        // Eliminar la asignación del estado local
-        setAssignments(
-          assignments.filter(
-            a => !(a.adminId === adminId && a.clientId === clientId)
-          )
+      if (isCurrentlyAssigned) {
+        // Eliminar asignación
+        const res = await apiRequest("DELETE", "/api/admin/remove-assignment", {
+          adminId,
+          clientId
+        });
+        
+        if (!res.ok) {
+          throw new Error("Error al eliminar asignación");
+        }
+        
+        // Actualizar estado local
+        setAssignments(prev => 
+          prev.filter(a => !(a.clientId === clientId && a.adminId === adminId))
         );
         
         toast({
-          title: "Éxito",
+          title: "Asignación eliminada",
           description: "Cliente desasignado correctamente del administrador",
         });
       } else {
-        const errorData = await response.json();
+        // Crear asignación
+        const res = await apiRequest("POST", "/api/admin/assign-client", {
+          adminId,
+          clientId
+        });
+        
+        if (!res.ok) {
+          throw new Error("Error al crear asignación");
+        }
+        
+        // Actualizar estado local
+        setAssignments(prev => [...prev, { clientId, adminId }]);
+        
         toast({
-          title: "Error",
-          description: errorData.message || "No se pudo desasignar el cliente del administrador",
-          variant: "destructive",
+          title: "Asignación creada",
+          description: "Cliente asignado correctamente al administrador",
         });
       }
     } catch (error) {
-      console.error("Error al desasignar cliente:", error);
+      console.error("Error al gestionar asignación:", error);
       toast({
         title: "Error",
-        description: "No se pudo desasignar el cliente del administrador",
-        variant: "destructive",
+        description: "No se pudo gestionar la asignación del cliente",
+        variant: "destructive"
       });
     } finally {
-      setActionLoading(false);
-      setConfirmUnassignment(null);
+      setSaving(false);
     }
   };
-
-  // Verificar si el cliente está asignado a un administrador
-  const isClientAssignedToAdmin = (adminId: number, clientId: number) => {
-    return assignments.some(
-      a => a.adminId === adminId && a.clientId === clientId
-    );
-  };
-
-  // Obtener los clientes asignados a un administrador específico
-  const getClientsAssignedToAdmin = (adminId: number) => {
-    const assignedClientIds = assignments
-      .filter(a => a.adminId === adminId)
-      .map(a => a.clientId);
-      
-    return clients.filter(client => assignedClientIds.includes(client.id));
-  };
-
-  // Obtener los administradores asignados a un cliente específico
-  const getAdminsAssignedToClient = (clientId: number) => {
-    const assignedAdminIds = assignments
-      .filter(a => a.clientId === clientId)
-      .map(a => a.adminId);
-      
-    return admins.filter(admin => assignedAdminIds.includes(admin.id));
-  };
-
-  // Verificar permisos
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  // Requerir que sea superadmin
-  if (!user || !(user.role === 'superadmin' || user.role === 'SUPERADMIN')) {
-    return <Redirect to="/" />;
-  }
-
+  
   return (
-    <div className="container mx-auto py-10 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Asignación de Clientes</h1>
+    <div className="container mx-auto py-6 max-w-7xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Asignación de Clientes</h1>
+          <p className="text-sm text-gray-500">
+            Asigne clientes a administradores para permisos de libro de registros
+          </p>
+        </div>
       </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Lista de Administradores */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <UserCog className="mr-2 h-5 w-5" />
-                Administradores
-              </CardTitle>
-              <CardDescription>
-                Seleccione un administrador para ver o asignar clientes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                <div className="space-y-2">
-                  {admins.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No hay administradores disponibles
+      
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl">Administradores</CardTitle>
+          <CardDescription>
+            Seleccione un administrador para gestionar sus clientes asignados
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-lg">Cargando datos...</span>
+            </div>
+          ) : admins.length === 0 ? (
+            <div className="text-center py-8">
+              <ShieldAlert className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium">No hay administradores</h3>
+              <p className="text-sm text-gray-500 mt-2">
+                No se encontraron usuarios con rol de administrador en el sistema.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {admins.map(admin => (
+                <Card
+                  key={admin.id}
+                  className={`cursor-pointer transition-colors ${
+                    selectedAdmin === admin.id 
+                      ? "border-primary bg-primary/5" 
+                      : "hover:border-gray-300"
+                  }`}
+                  onClick={() => setSelectedAdmin(admin.id)}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-start">
+                      <div className="bg-primary/10 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                        <Shield className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-lg">{admin.name}</h3>
+                        <p className="text-sm text-gray-500">{admin.email}</p>
+                        <p className="text-xs text-gray-400 mt-1">@{admin.username}</p>
+                      </div>
                     </div>
-                  ) : (
-                    admins.map(admin => (
-                      <div 
-                        key={admin.id}
-                        className={`p-3 rounded-md cursor-pointer transition-colors ${
-                          selectedAdmin === admin.id 
-                            ? 'bg-primary/10 border-l-4 border-primary' 
-                            : 'hover:bg-accent'
-                        }`}
-                        onClick={() => setSelectedAdmin(admin.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{admin.name}</p>
-                            <p className="text-sm text-muted-foreground">{admin.email}</p>
-                          </div>
-                          <div className="flex items-center">
-                            <span className="text-sm text-muted-foreground mr-2">
-                              {getClientsAssignedToAdmin(admin.id).length} clientes
-                            </span>
-                            <div className={`h-2 w-2 rounded-full ${
-                              getClientsAssignedToAdmin(admin.id).length > 0 
-                                ? 'bg-green-500' 
-                                : 'bg-gray-300'
-                            }`}></div>
-                          </div>
-                        </div>
+                    
+                    <div className="mt-4 flex justify-between items-center">
+                      <div className="text-xs text-gray-500">
+                        {assignments.filter(a => a.adminId === admin.id).length} cliente(s) asignado(s)
                       </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          {/* Lista de Clientes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5" />
-                Clientes
-              </CardTitle>
-              <CardDescription>
-                {selectedAdmin 
-                  ? `Clientes asignados al administrador: ${admins.find(a => a.id === selectedAdmin)?.name}`
-                  : "Seleccione un administrador para ver sus clientes asignados"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!selectedAdmin ? (
-                <div className="flex flex-col items-center justify-center h-[400px] text-center">
-                  <UserCog className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    Seleccione un administrador de la lista para ver o asignar clientes
-                  </p>
-                </div>
-              ) : (
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-2">
-                    {clients.length === 0 ? (
-                      <div className="text-center py-4 text-muted-foreground">
-                        No hay clientes disponibles para asignar
-                      </div>
-                    ) : (
-                      clients.map(client => {
-                        const isAssigned = isClientAssignedToAdmin(selectedAdmin, client.id);
-                        return (
-                          <div key={client.id} className="p-3 rounded-md border border-border">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium">{client.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {client.taxId} {client.email && `• ${client.email}`}
-                                </p>
-                              </div>
-                              
-                              {isAssigned ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                                  onClick={() => setConfirmUnassignment({
-                                    adminId: selectedAdmin,
-                                    clientId: client.id
-                                  })}
-                                  disabled={actionLoading}
-                                >
-                                  <Unlink className="h-4 w-4 mr-1" />
-                                  Desasignar
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
-                                  onClick={() => setConfirmAssignment({
-                                    adminId: selectedAdmin,
-                                    clientId: client.id
-                                  })}
-                                  disabled={actionLoading}
-                                >
-                                  <LinkIcon className="h-4 w-4 mr-1" />
-                                  Asignar
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Diálogo de confirmación para asignar cliente */}
-      <AlertDialog 
-        open={!!confirmAssignment} 
-        onOpenChange={(open) => !open && setConfirmAssignment(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar asignación</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Está seguro de que desea asignar este cliente al administrador seleccionado?
-              {confirmAssignment && (
-                <div className="mt-2 p-3 bg-muted rounded-md">
-                  <p><span className="font-medium">Cliente:</span> {clients.find(c => c.id === confirmAssignment.clientId)?.name}</p>
-                  <p><span className="font-medium">Administrador:</span> {admins.find(a => a.id === confirmAssignment.adminId)?.name}</p>
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-primary hover:bg-primary/90"
-              onClick={() => {
-                if (confirmAssignment) {
-                  handleAssignClient(confirmAssignment.adminId, confirmAssignment.clientId);
-                }
-              }}
-              disabled={actionLoading}
-            >
-              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Diálogo de confirmación para desasignar cliente */}
-      <AlertDialog 
-        open={!!confirmUnassignment} 
-        onOpenChange={(open) => !open && setConfirmUnassignment(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar desasignación</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Está seguro de que desea eliminar la asignación de este cliente al administrador?
-              {confirmUnassignment && (
-                <div className="mt-2 p-3 bg-muted rounded-md">
-                  <p><span className="font-medium">Cliente:</span> {clients.find(c => c.id === confirmUnassignment.clientId)?.name}</p>
-                  <p><span className="font-medium">Administrador:</span> {admins.find(a => a.id === confirmUnassignment.adminId)?.name}</p>
-                </div>
-              )}
-              <div className="mt-3 flex items-center text-amber-600 bg-amber-50 p-2 rounded-md">
-                <CircleAlert className="h-4 w-4 mr-2" />
-                <span className="text-sm">El administrador ya no podrá acceder al libro de registros de este cliente.</span>
+                      {selectedAdmin === admin.id && (
+                        <div className="h-2 w-2 rounded-full bg-primary"></div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      {selectedAdmin && (
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col md:flex-row justify-between md:items-center">
+              <div>
+                <CardTitle className="text-xl">Clientes Asignables</CardTitle>
+                <CardDescription>
+                  Gestione qué clientes puede ver el administrador seleccionado
+                </CardDescription>
               </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={() => {
-                if (confirmUnassignment) {
-                  handleUnassignClient(confirmUnassignment.adminId, confirmUnassignment.clientId);
-                }
-              }}
-              disabled={actionLoading}
-            >
-              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <X className="h-4 w-4 mr-2" />}
-              Desasignar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <div className="mt-4 md:mt-0 w-full md:w-64">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Buscar cliente..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-lg">Cargando datos...</span>
+              </div>
+            ) : clients.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium">No hay clientes</h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  No se encontraron clientes en el sistema para asignar.
+                </p>
+              </div>
+            ) : filteredClients.length === 0 ? (
+              <div className="text-center py-8">
+                <Search className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium">No hay resultados</h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  No se encontraron clientes que coincidan con la búsqueda.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">Asignado</TableHead>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead className="hidden md:table-cell">CIF/NIF</TableHead>
+                      <TableHead className="hidden md:table-cell">Email</TableHead>
+                      <TableHead className="w-24 text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClients.map(client => (
+                      <TableRow key={client.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isClientAssignedToAdmin(client.id, selectedAdmin)}
+                            onCheckedChange={() => handleAssignmentToggle(client.id, selectedAdmin)}
+                            disabled={saving}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{client.name}</TableCell>
+                        <TableCell className="hidden md:table-cell">{client.taxId}</TableCell>
+                        <TableCell className="hidden md:table-cell">{client.email || "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant={isClientAssignedToAdmin(client.id, selectedAdmin) ? "destructive" : "default"}
+                            size="sm"
+                            onClick={() => handleAssignmentToggle(client.id, selectedAdmin)}
+                            disabled={saving}
+                          >
+                            {isClientAssignedToAdmin(client.id, selectedAdmin) ? (
+                              <>Quitar</>
+                            ) : (
+                              <>Asignar</>
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
-}
+};
+
+export default ClientAssignmentPage;

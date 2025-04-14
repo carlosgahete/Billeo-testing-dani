@@ -823,6 +823,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Ruta para obtener el cliente asociado a un usuario específico
+  app.get("/api/client/by-user/:userId", requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+      
+      // Obtener la empresa asociada al usuario
+      const clients = await storage.getClientsByUserId(userId);
+      
+      if (clients.length === 0) {
+        return res.status(404).json({ message: "No se encontró un cliente asociado a este usuario" });
+      }
+      
+      // Devolvemos el primer cliente asociado al usuario
+      res.status(200).json(clients[0]);
+    } catch (error) {
+      console.error("Error al obtener cliente por usuario:", error);
+      res.status(500).json({ message: "Error al obtener cliente asociado al usuario" });
+    }
+  });
+  
+  // Ruta para obtener todos los clientes que pueden ser asignados (solo superadmin)
+  app.get("/api/admin/assignable-clients", requireSuperAdmin, async (req, res) => {
+    try {
+      const superadminId = (req.user as any).id;
+      const data = await storage.getAllClientsAssignableToAdmin(superadminId);
+      
+      res.status(200).json(data);
+    } catch (error) {
+      console.error("Error al obtener clientes asignables:", error);
+      res.status(500).json({ message: "Error al obtener clientes asignables" });
+    }
+  });
+  
+  // Ruta para asignar un cliente a un administrador
+  app.post("/api/admin/assign-client", requireSuperAdmin, async (req, res) => {
+    try {
+      const { adminId, clientId } = req.body;
+      
+      if (!adminId || !clientId) {
+        return res.status(400).json({ message: "Se requieren adminId y clientId" });
+      }
+      
+      const assignedBy = (req.user as any).id;
+      const relation = await storage.assignClientToAdmin(adminId, clientId, assignedBy);
+      
+      res.status(201).json(relation);
+    } catch (error) {
+      console.error("Error al asignar cliente a administrador:", error);
+      res.status(500).json({ message: "Error al asignar cliente a administrador" });
+    }
+  });
+  
+  // Ruta para eliminar la asignación de un cliente a un administrador
+  app.delete("/api/admin/remove-assignment", requireSuperAdmin, async (req, res) => {
+    try {
+      const { adminId, clientId } = req.body;
+      
+      if (!adminId || !clientId) {
+        return res.status(400).json({ message: "Se requieren adminId y clientId" });
+      }
+      
+      const success = await storage.removeClientFromAdmin(adminId, clientId);
+      
+      if (success) {
+        res.status(200).json({ message: "Asignación eliminada correctamente" });
+      } else {
+        res.status(404).json({ message: "No se encontró la asignación especificada" });
+      }
+    } catch (error) {
+      console.error("Error al eliminar asignación:", error);
+      res.status(500).json({ message: "Error al eliminar asignación" });
+    }
+  });
+  
   // Keep compatibility with old auth endpoint
   app.get("/api/auth/session", async (req, res) => {
     // Verificar si el usuario está autenticado mediante passport

@@ -237,6 +237,14 @@ function Router() {
           </Layout>
         )}
       </Route>
+      <Route path="/admin/client-assignment">
+        <Layout>
+          <ProtectedAdminRoute 
+            path="/admin/client-assignment" 
+            component={ClientAssignmentPage} 
+          />
+        </Layout>
+      </Route>
       <Route path="/profile">
         <Layout>
           <ProtectedRoute path="/profile" component={ProfilePage} />
