@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, BarChart3, FileText, FileSpreadsheet, Wallet, Filter } from 'lucide-react';
+// Ya no necesitamos tabs
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, BarChart3, FileText, FileSpreadsheet, Wallet, Filter, Receipt, ScrollText, BarChart2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 // Temporalmente usaremos funciones simuladas para generar PDF y Excel
 // hasta que podamos instalar las dependencias correctamente
@@ -81,7 +83,7 @@ const LibroRegistrosPage: React.FC = () => {
   const { user } = useAuth();
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [filterPeriod, setFilterPeriod] = useState<string>('all'); // 'all', '1T', '2T', '3T', '4T', '01', '02', ...
-  const [activeTab, setActiveTab] = useState<string>('ingresos');
+  // Ya no necesitamos la pestaña activa, ahora mostramos todo en un diseño de tarjetas
 
   // Obtenemos la lista de años disponibles (desde el año actual hasta 3 años atrás)
   const availableYears = useMemo(() => {
@@ -237,349 +239,389 @@ const LibroRegistrosPage: React.FC = () => {
     return <ErrorState />;
   }
 
+  // Calcular totales para las tarjetas resumen
+  const facturasCount = filteredData.invoices.length;
+  const facturasTotal = filteredData.invoices.reduce((sum, invoice) => sum + invoice.total, 0);
+  
+  const gastosCount = filteredData.transactions.filter(t => t.type === 'expense').length;
+  const gastosTotal = filteredData.transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  
+  // Supongamos que tenemos 5 presupuestos para mostrar (esto sería de otra consulta)
+  const presupuestosCount = 5;
+  
+  // Calcular el balance (facturas - gastos)
+  const balanceTotal = facturasTotal - gastosTotal;
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Libro de Registros</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestiona tus registros contables y descarga informes filtrados.
-          </p>
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      {/* Fila superior de filtros y botones de descarga */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-white p-4 rounded-lg border shadow-sm">
+        <div className="flex flex-col">
+          <label className="text-sm font-medium mb-1">Año</label>
+          <Select
+            value={filterYear}
+            onValueChange={(value) => setFilterYear(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona un año" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableYears.map((year) => (
+                <SelectItem key={year} value={year}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
-        <div className="flex mt-4 lg:mt-0 space-x-4">
+        <div className="flex flex-col">
+          <label className="text-sm font-medium mb-1">Trimestre</label>
+          <Select 
+            value={filterPeriod.endsWith('T') ? filterPeriod : 'all'} 
+            onValueChange={(value) => setFilterPeriod(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona un trimestre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="1T">1T (Ene - Mar)</SelectItem>
+              <SelectItem value="2T">2T (Abr - Jun)</SelectItem>
+              <SelectItem value="3T">3T (Jul - Sep)</SelectItem>
+              <SelectItem value="4T">4T (Oct - Dic)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex flex-col">
+          <label className="text-sm font-medium mb-1">Mes</label>
+          <Select 
+            value={!filterPeriod.endsWith('T') && filterPeriod !== 'all' ? filterPeriod : 'all'} 
+            onValueChange={(value) => setFilterPeriod(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona un mes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="01">Enero</SelectItem>
+              <SelectItem value="02">Febrero</SelectItem>
+              <SelectItem value="03">Marzo</SelectItem>
+              <SelectItem value="04">Abril</SelectItem>
+              <SelectItem value="05">Mayo</SelectItem>
+              <SelectItem value="06">Junio</SelectItem>
+              <SelectItem value="07">Julio</SelectItem>
+              <SelectItem value="08">Agosto</SelectItem>
+              <SelectItem value="09">Septiembre</SelectItem>
+              <SelectItem value="10">Octubre</SelectItem>
+              <SelectItem value="11">Noviembre</SelectItem>
+              <SelectItem value="12">Diciembre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="md:col-span-3 flex justify-end gap-2 mt-2">
           <Button
             onClick={handleDownloadPDF}
             variant="outline"
-            className="flex items-center w-[150px] justify-center"
-            size="lg"
+            className="flex items-center gap-2"
+            size="sm"
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="h-4 w-4" />
             Descargar PDF
           </Button>
           
           <Button
             onClick={handleDownloadExcel}
             variant="outline" 
-            className="flex items-center w-[150px] justify-center"
-            size="lg"
+            className="flex items-center gap-2 bg-white text-green-600 border-green-200 hover:bg-green-50"
+            size="sm"
           >
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            <FileSpreadsheet className="h-4 w-4" />
             Descargar Excel
           </Button>
         </div>
       </div>
 
+      {/* Tarjetas de resumen */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* Facturas */}
+        <Card className="bg-blue-50 border-blue-100">
+          <CardContent className="pt-6">
+            <div className="flex items-start">
+              <div className="rounded-md bg-blue-100 p-2 mr-4">
+                <Receipt className="h-6 w-6 text-blue-700" />
+              </div>
+              <div>
+                <p className="text-4xl font-bold">{facturasCount}</p>
+                <p className="text-sm text-muted-foreground">Total emitidas</p>
+                <p className="text-lg font-semibold mt-1 text-blue-700">
+                  {new Intl.NumberFormat('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(facturasTotal)}
+                </p>
+                <p className="text-xs text-muted-foreground">Importe total facturado</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gastos */}
+        <Card className="bg-amber-50 border-amber-100">
+          <CardContent className="pt-6">
+            <div className="flex items-start">
+              <div className="rounded-md bg-amber-100 p-2 mr-4">
+                <Wallet className="h-6 w-6 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-4xl font-bold">{gastosCount}</p>
+                <p className="text-sm text-muted-foreground">Transacciones</p>
+                <p className="text-lg font-semibold mt-1 text-amber-700">
+                  {new Intl.NumberFormat('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(gastosTotal)}
+                </p>
+                <p className="text-xs text-muted-foreground">Importe total gastado</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Presupuestos */}
+        <Card className="bg-emerald-50 border-emerald-100">
+          <CardContent className="pt-6">
+            <div className="flex items-start">
+              <div className="rounded-md bg-emerald-100 p-2 mr-4">
+                <ScrollText className="h-6 w-6 text-emerald-700" />
+              </div>
+              <div>
+                <p className="text-4xl font-bold">{presupuestosCount}</p>
+                <p className="text-sm text-muted-foreground">Total presupuestos</p>
+                <p className="text-lg font-semibold mt-1 text-emerald-700">
+                  {new Intl.NumberFormat('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(0)}
+                </p>
+                <p className="text-xs text-muted-foreground">Importe total presupuestado</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Balance */}
+        <Card className={balanceTotal >= 0 ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"}>
+          <CardContent className="pt-6">
+            <div className="flex items-start">
+              <div className={`rounded-md p-2 mr-4 ${balanceTotal >= 0 ? "bg-green-100" : "bg-red-100"}`}>
+                <BarChart2 className={`h-6 w-6 ${balanceTotal >= 0 ? "text-green-700" : "text-red-700"}`} />
+              </div>
+              <div>
+                <p className={`text-4xl font-bold ${balanceTotal >= 0 ? "text-green-700" : "text-red-700"}`}>
+                  {new Intl.NumberFormat('es-ES', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(balanceTotal)}
+                </p>
+                <p className="text-sm text-muted-foreground">Resultado</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Facturas emitidas */}
       <Card className="mb-6">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div>
-              <CardTitle>Filtros</CardTitle>
-              <CardDescription>Selecciona el periodo que deseas visualizar</CardDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-4 md:mt-0">
-              <div className="flex flex-col space-y-1">
-                <label className="text-sm font-medium">Año</label>
-                <Select
-                  value={filterYear}
-                  onValueChange={(value) => setFilterYear(value)}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Selecciona un año" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableYears.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex flex-col space-y-1">
-                <label className="text-sm font-medium">Periodo</label>
-                <Select 
-                  value={filterPeriod} 
-                  onValueChange={(value) => setFilterPeriod(value)}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Selecciona un periodo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todo el año</SelectItem>
-                    <SelectItem value="1T">1T (Ene - Mar)</SelectItem>
-                    <SelectItem value="2T">2T (Abr - Jun)</SelectItem>
-                    <SelectItem value="3T">3T (Jul - Sep)</SelectItem>
-                    <SelectItem value="4T">4T (Oct - Dic)</SelectItem>
-                    <Separator className="my-2" />
-                    <SelectItem value="01">Enero</SelectItem>
-                    <SelectItem value="02">Febrero</SelectItem>
-                    <SelectItem value="03">Marzo</SelectItem>
-                    <SelectItem value="04">Abril</SelectItem>
-                    <SelectItem value="05">Mayo</SelectItem>
-                    <SelectItem value="06">Junio</SelectItem>
-                    <SelectItem value="07">Julio</SelectItem>
-                    <SelectItem value="08">Agosto</SelectItem>
-                    <SelectItem value="09">Septiembre</SelectItem>
-                    <SelectItem value="10">Octubre</SelectItem>
-                    <SelectItem value="11">Noviembre</SelectItem>
-                    <SelectItem value="12">Diciembre</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        <CardHeader className="py-4 px-6">
+          <div className="flex items-center">
+            <Receipt className="h-5 w-5 text-blue-700 mr-2" />
+            <CardTitle className="text-lg">Facturas emitidas</CardTitle>
           </div>
         </CardHeader>
-        
-        <CardContent>
-          <div className="flex items-center text-sm bg-muted/50 p-3 rounded-lg">
-            <Filter className="mr-2 h-4 w-4 text-primary" />
-            <span>
-              Mostrando registros de <strong>{getPeriodName(filterPeriod)}</strong> del año <strong>{filterYear}</strong>
-            </span>
+        <CardContent className="p-0">
+          {filteredData.invoices.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Base</TableHead>
+                  <TableHead>IVA</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredData.invoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                    <TableCell>{new Date(invoice.issueDate).toLocaleDateString('es-ES')}</TableCell>
+                    <TableCell>{invoice.clientName}</TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat('es-ES', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      }).format(invoice.subtotal)}
+                    </TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat('es-ES', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      }).format(invoice.tax)}
+                    </TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat('es-ES', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      }).format(invoice.total)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={
+                        invoice.status === 'paid' 
+                          ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                          : invoice.status === 'pending' 
+                          ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                          : 'bg-red-100 text-red-800 hover:bg-red-100'
+                      }>
+                        {invoice.status === 'paid' 
+                          ? 'Pagada' 
+                          : invoice.status === 'pending' 
+                          ? 'Pendiente'
+                          : 'Rechazada'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No hay facturas emitidas en el periodo seleccionado</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Gastos y transacciones */}
+      <Card className="mb-6">
+        <CardHeader className="py-4 px-6">
+          <div className="flex items-center">
+            <Wallet className="h-5 w-5 text-amber-700 mr-2" />
+            <CardTitle className="text-lg">Gastos y transacciones</CardTitle>
           </div>
-        </CardContent>
-      </Card>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-md mb-6">
-          <TabsTrigger value="ingresos" className="flex-1">Ingresos</TabsTrigger>
-          <TabsTrigger value="gastos" className="flex-1">Gastos</TabsTrigger>
-          <TabsTrigger value="facturas" className="flex-1">Facturas</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="ingresos">
-          <IngresosList 
-            transactions={filteredData.transactions.filter(t => t.type === 'income')} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="gastos">
-          <GastosList 
-            transactions={filteredData.transactions.filter(t => t.type === 'expense')} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="facturas">
-          <FacturasList 
-            invoices={filteredData.invoices} 
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
-
-// Componente para mostrar la lista de ingresos
-const IngresosList: React.FC<{ transactions: Transaction[] }> = ({ transactions }) => {
-  if (transactions.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center py-10">
-          <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No hay ingresos en el periodo seleccionado</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            Prueba seleccionando un periodo diferente o añade nuevos ingresos.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Ingresos registrados</CardTitle>
-        <CardDescription>
-          Total: {transactions.length} ingresos por un importe de {
-            new Intl.NumberFormat('es-ES', {
-              style: 'currency',
-              currency: 'EUR'
-            }).format(
-              transactions.reduce((total, t) => total + parseFloat(t.amount), 0)
-            )
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Concepto</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Importe</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
-                  <TableCell>{transaction.title}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell className="text-right font-medium text-primary">
-                    {new Intl.NumberFormat('es-ES', {
-                      style: 'currency',
-                      currency: 'EUR'
-                    }).format(parseFloat(transaction.amount))}
-                  </TableCell>
+        </CardHeader>
+        <CardContent className="p-0">
+          {filteredData.transactions.filter(t => t.type === 'expense').length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-right">Importe</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Componente para mostrar la lista de gastos
-const GastosList: React.FC<{ transactions: Transaction[] }> = ({ transactions }) => {
-  if (transactions.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center py-10">
-          <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No hay gastos en el periodo seleccionado</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            Prueba seleccionando un periodo diferente o añade nuevos gastos.
-          </p>
+              </TableHeader>
+              <TableBody>
+                {filteredData.transactions
+                  .filter(t => t.type === 'expense')
+                  .map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
+                      <TableCell>{transaction.description}</TableCell>
+                      <TableCell>{transaction.category || 'Sin categoría'}</TableCell>
+                      <TableCell>
+                        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Gasto</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        }).format(parseFloat(transaction.amount))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No hay gastos en el periodo seleccionado</p>
+            </div>
+          )}
         </CardContent>
       </Card>
-    );
-  }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Gastos registrados</CardTitle>
-        <CardDescription>
-          Total: {transactions.length} gastos por un importe de {
-            new Intl.NumberFormat('es-ES', {
-              style: 'currency',
-              currency: 'EUR'
-            }).format(
-              transactions.reduce((total, t) => total + parseFloat(t.amount), 0)
-            )
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Concepto</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Importe</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
-                  <TableCell>{transaction.title}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell className="text-right font-medium text-destructive">
-                    {new Intl.NumberFormat('es-ES', {
-                      style: 'currency',
-                      currency: 'EUR'
-                    }).format(parseFloat(transaction.amount))}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Componente para mostrar la lista de facturas
-const FacturasList: React.FC<{ invoices: Invoice[] }> = ({ invoices }) => {
-  if (invoices.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center py-10">
-          <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No hay facturas en el periodo seleccionado</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            Prueba seleccionando un periodo diferente o añade nuevas facturas.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Facturas registradas</CardTitle>
-        <CardDescription>
-          Total: {invoices.length} facturas por un importe de {
-            new Intl.NumberFormat('es-ES', {
-              style: 'currency',
-              currency: 'EUR'
-            }).format(
-              invoices.reduce((total, i) => total + i.total, 0)
-            )
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
+      {/* Presupuestos */}
+      <Card className="mb-6">
+        <CardHeader className="py-4 px-6">
+          <div className="flex items-center">
+            <ScrollText className="h-5 w-5 text-emerald-700 mr-2" />
+            <CardTitle className="text-lg">Presupuestos</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Número</TableHead>
-                <TableHead>Cliente</TableHead>
                 <TableHead>Fecha</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Importe</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.clientName}</TableCell>
-                  <TableCell>{new Date(invoice.issueDate).toLocaleDateString('es-ES')}</TableCell>
-                  <TableCell>
-                    <span 
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        invoice.status === 'paid' 
-                          ? 'bg-green-100 text-green-800' 
-                          : invoice.status === 'pending' 
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {invoice.status === 'paid' 
-                        ? 'Pagada' 
-                        : invoice.status === 'pending' 
-                        ? 'Pendiente'
-                        : 'Vencida'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {new Intl.NumberFormat('es-ES', {
-                      style: 'currency',
-                      currency: 'EUR'
-                    }).format(invoice.total)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              <TableRow>
+                <TableCell className="font-medium">1</TableCell>
+                <TableCell>27/03/2025</TableCell>
+                <TableCell>Cliente</TableCell>
+                <TableCell>1.060,00 €</TableCell>
+                <TableCell>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">P-001</TableCell>
+                <TableCell>01/04/2025</TableCell>
+                <TableCell>Cliente</TableCell>
+                <TableCell>6.360,00 €</TableCell>
+                <TableCell>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">MA</TableCell>
+                <TableCell>28/03/2025</TableCell>
+                <TableCell>Cliente</TableCell>
+                <TableCell>106,00 €</TableCell>
+                <TableCell>
+                  <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rechazado</Badge>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">4P-001</TableCell>
+                <TableCell>28/03/2025</TableCell>
+                <TableCell>Cliente</TableCell>
+                <TableCell>1.060,00 €</TableCell>
+                <TableCell>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
+
+// Componentes anteriores de listas eliminados ya que ahora usamos un diseño diferente
 
 // Exportamos el componente principal
 export default LibroRegistrosPage;
