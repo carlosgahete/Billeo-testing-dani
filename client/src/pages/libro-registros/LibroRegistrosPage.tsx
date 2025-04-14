@@ -542,9 +542,9 @@ export default function LibroRegistrosPage() {
   
   // Renderizar componente principal
   return (
-    <div className="container mx-auto py-6 px-4 max-w-7xl bg-gray-50/50 dark:bg-gray-900/10 min-h-screen">      
+    <div className="container mx-auto py-6 px-4 max-w-7xl bg-gradient-to-b from-gray-50 to-white dark:bg-gray-900/10 min-h-screen">      
       {/* Filtros y botones de exportación */}
-      <div className="flex flex-wrap items-center justify-between mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+      <div className="flex flex-wrap items-center justify-between mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
         <div className="flex flex-wrap gap-4 items-center">
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Año</label>
@@ -645,12 +645,12 @@ export default function LibroRegistrosPage() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="bg-yellow-50 px-4 py-2 flex items-center">
-            <Download className="h-5 w-5 text-yellow-600 mr-2" />
-            <div className="text-sm font-medium">Gastos</div>
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 flex items-center">
+            <Download className="h-5 w-5 text-white mr-2" />
+            <div className="text-sm font-medium text-white">Gastos</div>
           </div>
-          <div className="p-4">
+          <div className="p-4 bg-white">
             <div className="text-2xl font-semibold">
               {filteredTransactions.filter(t => t.type === 'expense').length}
             </div>
@@ -660,24 +660,26 @@ export default function LibroRegistrosPage() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="bg-green-50 px-4 py-2 flex items-center">
-            <FileText className="h-5 w-5 text-green-600 mr-2" />
-            <div className="text-sm font-medium">Presupuestos</div>
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 flex items-center">
+            <FileText className="h-5 w-5 text-white mr-2" />
+            <div className="text-sm font-medium text-white">Presupuestos</div>
           </div>
-          <div className="p-4">
+          <div className="p-4 bg-white">
             <div className="text-2xl font-semibold">{summary.totalQuotes}</div>
             <div className="text-xs text-gray-500">Total presupuestos</div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="bg-red-50 px-4 py-2 flex items-center">
-            <span className="font-bold text-red-600 mr-2">=</span>
-            <div className="text-sm font-medium">Balance</div>
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-3 flex items-center">
+            <span className="font-bold text-white mr-2">=</span>
+            <div className="text-sm font-medium text-white">Balance</div>
           </div>
-          <div className="p-4">
-            <div className="text-2xl font-semibold text-red-600">{formatCurrency(summary.balance)}</div>
+          <div className="p-4 bg-white">
+            <div className={`text-2xl font-semibold ${summary.balance < 0 ? "text-red-600" : ""}`}>
+              {formatCurrency(summary.balance)}
+            </div>
             <div className="text-xs text-gray-500">Resultado</div>
           </div>
         </div>
@@ -689,7 +691,7 @@ export default function LibroRegistrosPage() {
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Facturas emitidas</h3>
           <div className="text-sm text-gray-500">{filteredInvoices.length} registros</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -742,7 +744,7 @@ export default function LibroRegistrosPage() {
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Gastos y transacciones</h3>
           <div className="text-sm text-gray-500">{filteredTransactions.length} registros</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -793,7 +795,7 @@ export default function LibroRegistrosPage() {
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Presupuestos</h3>
           <div className="text-sm text-gray-500">{filteredQuotes.length} registros</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
