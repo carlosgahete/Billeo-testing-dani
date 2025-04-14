@@ -496,7 +496,7 @@ export default function LibroRegistrosPage() {
     return (
       <div className="container mx-auto py-6">
         <PageHeader
-          heading="Libro de Registros"
+          title="Libro de Registros"
           description="Consulta y exporta tu actividad financiera"
         />
         <div className="flex items-center justify-center h-64">
@@ -511,7 +511,7 @@ export default function LibroRegistrosPage() {
     return (
       <div className="container mx-auto py-6">
         <PageHeader
-          heading="Libro de Registros"
+          title="Libro de Registros"
           description="Consulta y exporta tu actividad financiera"
         />
         <Card className="mb-6">
@@ -528,7 +528,7 @@ export default function LibroRegistrosPage() {
     return (
       <div className="container mx-auto py-6">
         <PageHeader
-          heading="Libro de Registros"
+          title="Libro de Registros"
           description="Consulta y exporta tu actividad financiera"
         />
         <Card className="mb-6">
