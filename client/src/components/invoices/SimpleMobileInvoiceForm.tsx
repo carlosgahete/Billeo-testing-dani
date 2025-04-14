@@ -166,7 +166,9 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
         total: total.toString(),
         additionalTaxes: additionalTaxes,
         notes: initialData?.invoice?.notes || "",
-        attachments: initialData?.invoice?.attachments || []
+        attachments: initialData?.invoice?.attachments || [],
+        // Forzar creación de transacción si el estado es 'paid'
+        createTransaction: status === 'paid'
       },
       // Incluir items de factura
       items: initialData?.items || [{
