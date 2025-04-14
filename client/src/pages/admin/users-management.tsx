@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
-import { Loader2, Edit, Trash2, UserCheck, UserPlus, ShieldCheck } from "lucide-react";
+import { Loader2, Edit, Trash2, UserCheck, UserPlus, ShieldCheck, User as UserIcon, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -414,7 +414,7 @@ export default function UsersManagement() {
                           disabled={user.role === 'user'}
                           className={user.role === 'user' ? 'bg-blue-50 font-semibold' : ''}
                         >
-                          <User className="mr-2 h-4 w-4" /> Usuario
+                          <UserIcon className="mr-2 h-4 w-4" /> Usuario
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleChangeRole(user.id, 'admin')}
