@@ -97,9 +97,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     refetchOnWindowFocus: true,
     refetchOnMount: "always",
     refetchOnReconnect: true,
-    refetchInterval: 3000, // Refrescar cada 3 segundos automáticamente
+    refetchInterval: 1000, // Refrescar cada segundo automáticamente para mayor reactividad
     staleTime: 0, // Sin tiempo de caducidad - siempre considerar los datos obsoletos
     gcTime: 0, // Sin tiempo de recolección de basura - limpiar inmediatamente
+    retry: 3, // Intentar 3 veces si falla la petición
+    retryDelay: 500, // Esperar 500ms entre reintentos
+    refetchIntervalInBackground: true // Seguir actualizando incluso cuando la pestaña no está activa
   });
   
   // Forzar un refresco al cargar el componente

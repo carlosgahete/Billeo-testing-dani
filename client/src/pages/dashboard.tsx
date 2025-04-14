@@ -102,7 +102,14 @@ const Dashboard = () => {
     gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
     retry: 3, // Intentar 3 veces si falla
     retryDelay: 300, // Tiempo más corto entre reintentos
-    refetchIntervalInBackground: true // Continuar actualizando incluso cuando la pestaña no está enfocada
+    refetchIntervalInBackground: true, // Continuar actualizando incluso cuando la pestaña no está enfocada
+    onSuccess: (data) => {
+      // Verificar si hay datos nuevos y forzar una actualización de transacciones
+      if (data && data.income > 0) {
+        // Invalidar también las consultas de transacciones para asegurar todo esté actualizado
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      }
+    }
   });
 
   const isLoading = userLoading || statsLoading;
