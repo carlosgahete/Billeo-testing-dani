@@ -38,6 +38,7 @@ import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
 import LibroRegistrosSimpleTest from "@/pages/admin/libro-registros-simple-test";
 import LibroRegistrosLibre from "@/pages/admin/libro-registros-libre";
+import LibroRegistrosPublico from "@/pages/admin/libro-registros-publico";
 import LibroRegistrosClientPage from "@/pages/admin/libro-registros-client";
 import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
@@ -263,6 +264,13 @@ function Router() {
       <Route path="/admin/libro-libre">
         <Layout>
           <LibroRegistrosLibre />
+        </Layout>
+      </Route>
+      
+      {/* Ruta pública que usa datos de DEMO completamente independiente */}
+      <Route path="/admin/libro-publico">
+        <Layout>
+          <LibroRegistrosPublico />
         </Layout>
       </Route>
       
