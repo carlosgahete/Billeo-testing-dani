@@ -140,10 +140,12 @@ const ClientAssignmentPage: React.FC = () => {
       const isCurrentlyAssigned = isClientAssignedToAdmin(clientId, adminId);
       
       if (isCurrentlyAssigned) {
-        // Eliminar asignación
-        const res = await apiRequest("DELETE", "/api/admin/remove-assignment", {
+        // Eliminar asignación - Usamos POST con un parámetro adicional para indicar que es eliminación
+        // Este enfoque es más confiable que DELETE con body en algunos entornos
+        const res = await apiRequest("POST", "/api/admin/manage-assignment", {
           adminId,
-          clientId
+          clientId,
+          action: "remove"
         });
         
         if (!res.ok) {
@@ -161,9 +163,10 @@ const ClientAssignmentPage: React.FC = () => {
         });
       } else {
         // Crear asignación
-        const res = await apiRequest("POST", "/api/admin/assign-client", {
+        const res = await apiRequest("POST", "/api/admin/manage-assignment", {
           adminId,
-          clientId
+          clientId,
+          action: "assign"
         });
         
         if (!res.ok) {

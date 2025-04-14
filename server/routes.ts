@@ -783,6 +783,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Nueva ruta unificada para gestionar asignaciones (asignar/eliminar)
+  app.post("/api/admin/manage-assignment", requireSuperAdmin, async (req, res) => {
+    try {
+      const { adminId, clientId, action } = req.body;
+      
+      if (!adminId || !clientId || !action) {
+        return res.status(400).json({ message: "Se requieren adminId, clientId y action" });
+      }
+      
+      if (action !== "assign" && action !== "remove") {
+        return res.status(400).json({ message: "Action debe ser 'assign' o 'remove'" });
+      }
+      
+      // Verificar que el adminId corresponde a un usuario con rol admin
+      const adminUser = await storage.getUser(adminId);
+      if (!adminUser) {
+        return res.status(404).json({ message: "Administrador no encontrado" });
+      }
+      
+      if (adminUser.role !== 'admin' && adminUser.role !== 'superadmin') {
+        return res.status(400).json({ message: "El usuario debe tener rol de administrador" });
+      }
+      
+      // Verificar que el cliente existe
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Cliente no encontrado" });
+      }
+      
+      const superadminId = (req.user as any).id;
+      
+      if (action === "assign") {
+        // Verificar que el cliente pertenece al superadmin
+        if (client.userId !== superadminId) {
+          return res.status(403).json({ message: "No tienes permiso para asignar este cliente" });
+        }
+        
+        // Asignar el cliente al administrador
+        const result = await storage.assignClientToAdmin(adminId, clientId, superadminId);
+        
+        res.status(200).json({
+          message: "Cliente asignado correctamente al administrador",
+          relation: result
+        });
+      } else { // action === "remove"
+        const success = await storage.removeClientFromAdmin(adminId, clientId);
+        
+        if (success) {
+          res.status(200).json({ message: "Asignación eliminada correctamente" });
+        } else {
+          res.status(404).json({ message: "No se encontró la asignación a eliminar" });
+        }
+      }
+    } catch (error) {
+      console.error("Error al gestionar asignación:", error);
+      res.status(500).json({ message: "Error al gestionar asignación" });
+    }
+  });
+  
+  // Mantener rutas anteriores por compatibilidad
+  
   // Nota: La ruta para eliminar asignaciones es "/api/admin/remove-assignment", 
   // definida más abajo en el archivo para mantener compatibilidad con el frontend
   
