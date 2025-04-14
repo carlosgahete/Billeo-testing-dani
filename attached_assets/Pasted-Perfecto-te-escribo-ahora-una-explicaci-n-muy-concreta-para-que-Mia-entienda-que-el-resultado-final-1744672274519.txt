@@ -1,0 +1,96 @@
+Perfecto, te escribo ahora una explicación muy concreta para que Mia entienda que el resultado final debe ser exactamente igual a la imagen que le has pasado. Aquí tienes el texto listo para enviarle:
+
+⸻
+
+Instrucciones Claras para Mia:
+
+Cómo debe ser exactamente el apartado de Libro de Registro
+
+⸻
+
+Mia, muy importante:
+
+La sección del Libro de Registro debe verse y funcionar exactamente como en la imagen que te hemos enviado.
+
+Estos son los puntos que debes respetar al detalle:
+
+⸻
+
+1. Filtros de Búsqueda (arriba del todo):
+	•	Filtros disponibles:
+	•	Año
+	•	Trimestre
+	•	Mes
+	•	Cada uno de estos filtros debe ser un select desplegable donde el SuperAdmin pueda elegir rápidamente.
+
+⸻
+
+2. Botones de descarga:
+	•	Botones visibles:
+	•	Descargar PDF
+	•	Descargar Excel
+	•	Deben estar justo a la derecha de los filtros, visibles y accesibles.
+
+⸻
+
+3. Tarjetas de resumen (justo debajo de los filtros):
+
+Cuatro tarjetas de resumen con estos datos:
+	•	Facturas:
+	•	Número total de facturas emitidas.
+	•	Importe total facturado.
+	•	Gastos:
+	•	Número total de gastos registrados.
+	•	Importe total gastado.
+	•	Presupuestos:
+	•	Número total de presupuestos creados.
+	•	Balance:
+	•	Resultado final (facturación menos gastos).
+
+Estas tarjetas tienen que tener colores diferenciados, igual que en el ejemplo.
+
+⸻
+
+4. Tablas de datos:
+
+Debajo de las tarjetas de resumen deben aparecer tres bloques de datos, con tablas perfectamente organizadas:
+	•	Facturas emitidas (izquierda):
+	•	Número
+	•	Fecha
+	•	Cliente
+	•	Base
+	•	IVA
+	•	Total
+	•	Estado (Pagada, Pendiente, etc.)
+	•	Presupuestos (centro):
+	•	Número
+	•	Fecha
+	•	Cliente
+	•	Total
+	•	Estado (Aceptado, Rechazado, etc.)
+	•	Gastos y transacciones (derecha):
+	•	Fecha
+	•	Descripción
+	•	Categoría
+	•	Tipo (Ingreso o Gasto)
+	•	Importe
+
+El estilo de las tablas debe ser igual que en la imagen: ordenadas, con buena separación entre filas y usando colores suaves y etiquetas de estado (como “Pagada”, “Aceptado”, “Gasto”) en verde o rojo según corresponda.
+
+⸻
+
+5. Funcionalidad de descarga:
+
+Cuando el SuperAdmin aplique filtros (por año, trimestre o mes) y pulse en Descargar PDF o Descargar Excel, debe exportarse sólo la información que aparece en pantalla después de aplicar el filtro.
+
+⸻
+
+6. Observaciones adicionales:
+	•	Todo debe ser claro, limpio y profesional, exactamente como en el diseño enviado.
+	•	No deben faltar ninguno de los bloques o apartados que aparecen en la imagen.
+	•	Las descargas deben respetar el formato (orden de las columnas, nombres, totales) que se ve en pantalla.
+
+⸻
+
+¿Quieres también que te prepare una frase de cierre para el mensaje, tipo “cualquier duda dime, pero tiene que salir exactamente igual que la imagen”?
+Te lo puedo escribir si quieres que quede más formal o más directo, según cómo prefieras hablarle a Mia. ¿Te lo preparo?

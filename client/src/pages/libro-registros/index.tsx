@@ -435,188 +435,193 @@ const LibroRegistrosPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Facturas emitidas */}
-      <Card className="mb-6">
-        <CardHeader className="py-4 px-6">
-          <div className="flex items-center">
-            <Receipt className="h-5 w-5 text-blue-700 mr-2" />
-            <CardTitle className="text-lg">Facturas emitidas</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {filteredData.invoices.length > 0 ? (
+      {/* No necesitamos las tablas individuales ya que ahora las mostramos en conjunto */}
+
+      {/* Sección de tres tablas lado a lado (facturas, gastos y presupuestos) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Facturas emitidas */}
+        <Card>
+          <CardHeader className="py-4 px-6">
+            <div className="flex items-center">
+              <Receipt className="h-5 w-5 text-blue-700 mr-2" />
+              <CardTitle className="text-lg">Facturas emitidas</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredData.invoices.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Número</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Base</TableHead>
+                    <TableHead>IVA</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.invoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                      <TableCell>{new Date(invoice.issueDate).toLocaleDateString('es-ES')}</TableCell>
+                      <TableCell>{invoice.clientName}</TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        }).format(invoice.subtotal)}
+                      </TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        }).format(invoice.tax)}
+                      </TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat('es-ES', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        }).format(invoice.total)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={
+                          invoice.status === 'paid' 
+                            ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                            : invoice.status === 'pending' 
+                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                            : 'bg-red-100 text-red-800 hover:bg-red-100'
+                        }>
+                          {invoice.status === 'paid' 
+                            ? 'Pagada' 
+                            : invoice.status === 'pending' 
+                            ? 'Pendiente'
+                            : 'Rechazada'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No hay facturas emitidas en el periodo seleccionado</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Presupuestos */}
+        <Card>
+          <CardHeader className="py-4 px-6">
+            <div className="flex items-center">
+              <ScrollText className="h-5 w-5 text-emerald-700 mr-2" />
+              <CardTitle className="text-lg">Presupuestos</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Número</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Cliente</TableHead>
-                  <TableHead>Base</TableHead>
-                  <TableHead>IVA</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.invoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                    <TableCell>{new Date(invoice.issueDate).toLocaleDateString('es-ES')}</TableCell>
-                    <TableCell>{invoice.clientName}</TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat('es-ES', {
-                        style: 'currency',
-                        currency: 'EUR'
-                      }).format(invoice.subtotal)}
-                    </TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat('es-ES', {
-                        style: 'currency',
-                        currency: 'EUR'
-                      }).format(invoice.tax)}
-                    </TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat('es-ES', {
-                        style: 'currency',
-                        currency: 'EUR'
-                      }).format(invoice.total)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={
-                        invoice.status === 'paid' 
-                          ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                          : invoice.status === 'pending' 
-                          ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
-                          : 'bg-red-100 text-red-800 hover:bg-red-100'
-                      }>
-                        {invoice.status === 'paid' 
-                          ? 'Pagada' 
-                          : invoice.status === 'pending' 
-                          ? 'Pendiente'
-                          : 'Rechazada'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No hay facturas emitidas en el periodo seleccionado</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Gastos y transacciones */}
-      <Card className="mb-6">
-        <CardHeader className="py-4 px-6">
-          <div className="flex items-center">
-            <Wallet className="h-5 w-5 text-amber-700 mr-2" />
-            <CardTitle className="text-lg">Gastos y transacciones</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {filteredData.transactions.filter(t => t.type === 'expense').length > 0 ? (
-            <Table>
-              <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead className="text-right">Importe</TableHead>
+                  <TableCell className="font-medium">1</TableCell>
+                  <TableCell>27/03/2025</TableCell>
+                  <TableCell>Cliente</TableCell>
+                  <TableCell>1.060,00 €</TableCell>
+                  <TableCell>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.transactions
-                  .filter(t => t.type === 'expense')
-                  .map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
-                      <TableCell>{transaction.description}</TableCell>
-                      <TableCell>{transaction.category || 'Sin categoría'}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Gasto</Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {new Intl.NumberFormat('es-ES', {
-                          style: 'currency',
-                          currency: 'EUR'
-                        }).format(parseFloat(transaction.amount))}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                <TableRow>
+                  <TableCell className="font-medium">P-001</TableCell>
+                  <TableCell>01/04/2025</TableCell>
+                  <TableCell>Cliente</TableCell>
+                  <TableCell>6.360,00 €</TableCell>
+                  <TableCell>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">MA</TableCell>
+                  <TableCell>28/03/2025</TableCell>
+                  <TableCell>Cliente</TableCell>
+                  <TableCell>106,00 €</TableCell>
+                  <TableCell>
+                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rechazado</Badge>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">4P-001</TableCell>
+                  <TableCell>28/03/2025</TableCell>
+                  <TableCell>Cliente</TableCell>
+                  <TableCell>1.060,00 €</TableCell>
+                  <TableCell>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No hay gastos en el periodo seleccionado</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Presupuestos */}
-      <Card className="mb-6">
-        <CardHeader className="py-4 px-6">
-          <div className="flex items-center">
-            <ScrollText className="h-5 w-5 text-emerald-700 mr-2" />
-            <CardTitle className="text-lg">Presupuestos</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">1</TableCell>
-                <TableCell>27/03/2025</TableCell>
-                <TableCell>Cliente</TableCell>
-                <TableCell>1.060,00 €</TableCell>
-                <TableCell>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">P-001</TableCell>
-                <TableCell>01/04/2025</TableCell>
-                <TableCell>Cliente</TableCell>
-                <TableCell>6.360,00 €</TableCell>
-                <TableCell>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">MA</TableCell>
-                <TableCell>28/03/2025</TableCell>
-                <TableCell>Cliente</TableCell>
-                <TableCell>106,00 €</TableCell>
-                <TableCell>
-                  <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rechazado</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">4P-001</TableCell>
-                <TableCell>28/03/2025</TableCell>
-                <TableCell>Cliente</TableCell>
-                <TableCell>1.060,00 €</TableCell>
-                <TableCell>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptado</Badge>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        {/* Gastos y transacciones */}
+        <Card>
+          <CardHeader className="py-4 px-6">
+            <div className="flex items-center">
+              <Wallet className="h-5 w-5 text-amber-700 mr-2" />
+              <CardTitle className="text-lg">Gastos y transacciones</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredData.transactions.filter(t => t.type === 'expense').length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead className="text-right">Importe</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.transactions
+                    .filter(t => t.type === 'expense')
+                    .map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell>{transaction.category || 'Sin categoría'}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Gasto</Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {new Intl.NumberFormat('es-ES', {
+                            style: 'currency',
+                            currency: 'EUR'
+                          }).format(parseFloat(transaction.amount))}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No hay gastos en el periodo seleccionado</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
