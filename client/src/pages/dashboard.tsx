@@ -42,32 +42,29 @@ interface DashboardStats {
   pendingCount: number;
   pendingQuotes: number;
   pendingQuotesCount: number;
-  baseImponible?: number;
-  ivaRepercutido?: number;
-  ivaSoportado?: number;
-  irpfRetenidoIngresos?: number;
-  totalWithholdings?: number;
+  baseImponible: number;
+  ivaRepercutido: number;
+  ivaSoportado: number;
+  irpfRetenidoIngresos: number;
+  totalWithholdings: number;
+  invoiceStats?: {
+    paidCount: number;
+    pendingCount: number;
+    totalCount: number;
+  };
   taxes: {
     vat: number;
     incomeTax: number;
     ivaALiquidar: number;
   };
-  [key: string]: any;
 }
 
-// Añadir función de utilidad para depuración
+// Función de utilidad para depuración optimizada para producción
+// Eliminamos todos los logs para mejorar rendimiento (estilo Apple)
 const debugData = (data: any) => {
-  console.log("DATOS DEL DASHBOARD:", data);
-  if (data?.baseImponible) {
-    console.log("Base Imponible desde API:", data.baseImponible);
-  } else {
-    console.log("⚠️ Base Imponible NO disponible en API");
-  }
-  
-  if (data?.income) {
-    console.log("Income Total:", data.income);
-    console.log("Income sin IVA (approx):", Number((data.income / 1.21).toFixed(2)));
-  }
+  // Esta función está intencionalmente vacía para mejorar el rendimiento
+  // Los logs se han eliminado para evitar la sobrecarga de la consola
+  // y maximizar la fluidez de la aplicación
 };
 
 const Dashboard = () => {
@@ -83,42 +80,40 @@ const Dashboard = () => {
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard", { year, period }],
     queryFn: async () => {
-      // Añadir un timestamp y encabezados no-cache para garantizar datos frescos siempre
-      const timestamp = Date.now();
-      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}&nocache=${timestamp}`, {
+      // Optimización tipo Apple: usamos caché controlada para mejorar velocidad de carga
+      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}`, {
         headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          // Permitimos cierta caché para mejorar rendimiento, usando una estrategia más eficiente
+          'Cache-Control': 'max-age=5' // 5 segundos de caché permitida
         }
       });
       if (!res.ok) throw new Error("Error al cargar estadísticas");
-      return res.json();
-    },
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always", // Siempre recarga al montar el componente
-    refetchOnReconnect: true,
-    refetchInterval: 300, // Actualización más rápida para mayor fluidez al estilo Apple
-    staleTime: 0, // Considerar los datos obsoletos inmediatamente
-    gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
-    retry: 2, // Menos reintentos para no bloquear la interfaz
-    retryDelay: 100, // Tiempo mucho más corto entre reintentos
-    refetchIntervalInBackground: true, // Continuar actualizando incluso cuando la pestaña no está enfocada
-    onSuccess: (data) => {
-      // Sistema de sincronización optimizado - más fluido al estilo Apple
-      // Controlamos si realmente necesitamos sincronizar para evitar renderizados innecesarios
-      const shouldSync = true; // Optimización futura: usar hash de datos para determinar si hay cambios
+      const result = await res.json();
       
-      if (data && shouldSync) {
-        // Usamos una Promise.all para realizar todas las actualizaciones en paralelo - más rápido
-        Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
-          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] })
-        ]).catch(() => {
-          // Manejo silencioso de errores para evitar bloqueos de interfaz
-        });
+      // Optimización: sincronización inmediata a través de efectos secundarios en queryFn
+      // Esto evita usar onSuccess que causa problemas de tipado
+      if (result) {
+        // Sistema de sincronización optimizado - más fluido al estilo Apple
+        setTimeout(() => {
+          Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
+            queryClient.invalidateQueries({ queryKey: ["/api/invoices"] })
+          ]).catch(() => {
+            // Silencio
+          });
+        }, 0);
       }
-    }
+      
+      return result;
+    },
+    refetchOnWindowFocus: false, // Optimización: desactivamos para evitar actualizaciones innecesarias
+    refetchOnMount: true, // Refrescamos sólo si los datos están obsoletos (staleTime)
+    refetchOnReconnect: true,
+    refetchInterval: 5000, // Cada 5 segundos - más eficiente y menos intensivo
+    staleTime: 4900, // Datos se consideran frescos por casi 5 segundos
+    gcTime: 60000, // 1 minuto - optimización de memoria
+    retry: 1, // Un solo reintento para mejorar la experiencia de usuario
+    retryDelay: 300 // Tiempo más razonable entre reintentos para mejor UX
   });
 
   const isLoading = userLoading || statsLoading;
