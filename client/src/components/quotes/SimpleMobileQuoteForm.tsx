@@ -195,7 +195,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
     <>
       <div className="bg-white min-h-screen px-4 py-6 pb-32 max-w-md mx-auto">
         {/* Header con botón de retroceso estilo iOS */}
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-8 mt-2">
           <button 
             onClick={() => navigate("/quotes")} 
             className="text-[#007AFF] flex items-center mr-auto"
@@ -204,7 +204,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
             <span>Volver</span>
           </button>
           <h2 className="text-xl font-semibold text-center flex-1 -ml-20">
-            {quoteId ? "Editar" : "Nuevo"} 
+            {quoteId ? "Editar presupuesto" : "Presupuesto"} 
           </h2>
         </div>
         
