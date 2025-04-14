@@ -52,7 +52,9 @@ const upload = multer({
     if (allowedMimetypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Tipo de archivo no permitido'), false);
+      // Transformamos el error a null como espera el callback
+      cb(null, false);
+      return new Error('Tipo de archivo no permitido');
     }
   },
 });
@@ -306,18 +308,18 @@ router.get('/metadata', requireAuth, async (req, res) => {
     res.status(200).json({
       success: true,
       metadata: {
-        id: fileRecord.id,
-        userId: fileRecord.userId,
-        filename: fileRecord.filename,
-        originalName: fileRecord.originalName,
-        path: fileRecord.path,
-        size: fileRecord.size,
-        mimeType: fileRecord.mimeType,
-        fileType: fileRecord.fileType,
-        entityType: fileRecord.entityType,
-        entityId: fileRecord.entityId,
-        uploadDate: fileRecord.uploadDate,
-        thumbnailPath: fileRecord.thumbnailPath
+        id: (fileRecord as any).id,
+        userId: (fileRecord as any).userId,
+        filename: (fileRecord as any).filename,
+        originalName: (fileRecord as any).originalName,
+        path: (fileRecord as any).path,
+        size: (fileRecord as any).size,
+        mimeType: (fileRecord as any).mimeType,
+        fileType: (fileRecord as any).fileType,
+        entityType: (fileRecord as any).entityType,
+        entityId: (fileRecord as any).entityId,
+        uploadDate: (fileRecord as any).uploadDate,
+        thumbnailPath: (fileRecord as any).thumbnailPath
       }
     });
   } catch (error) {
@@ -349,7 +351,7 @@ router.get('/by-entity', requireAuth, async (req, res) => {
     // Devolver las rutas de los archivos
     res.status(200).json({
       success: true,
-      files: files.map(file => file.path)
+      files: files.map(file => (file as any).path)
     });
   } catch (error) {
     console.error('Error al obtener archivos por entidad:', error);

@@ -9,7 +9,7 @@ import { configureDirectExpenseRoutes } from "./routes-direct-expenses";
 import { configureOptionsRoutes } from "./routes-options";
 import { configureSimpleExpensesRoutes } from "./routes-simple-expenses";
 import { configureExpensesRoutes } from "./routes-expenses";
-import { configureFileRoutes } from "./routes-files";
+import { configureFileRoutes } from "./routes-files-new";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Obtener el equivalente a __dirname en ESM
