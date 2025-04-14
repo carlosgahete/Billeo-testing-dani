@@ -245,10 +245,8 @@ function Router() {
           <ProtectedRoute
             path="/mis-registros"
             component={(props: any) => {
-              const { user } = useAuth();
-              return user ? (
-                <LibroRegistrosSimplePage params={{userId: user.id.toString()}} {...props} />
-              ) : <LoadingIndicator />;
+              // Usamos un componente que pasará automáticamente el ID del usuario conectado
+              return <LibroRegistrosSimplePage {...props} />;
             }}
           />
         </Layout>

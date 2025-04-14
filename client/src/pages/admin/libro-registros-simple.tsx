@@ -95,9 +95,17 @@ export default function SimpleLibroRegistros() {
   const [userSearchTerm, setUserSearchTerm] = useState<string>("");
   const [userPopoverOpen, setUserPopoverOpen] = useState(false);
   
-  // Verificación adicional de seguridad: solo superadmin, admin o usuarios específicos pueden ver esto 
+  // Verificación adicional de seguridad con acceso para usuarios a su propio libro
   // Esta es una protección redundante junto con la protección de ruta en App.tsx
-  if (!user || (
+  if (!user) {
+    return <Redirect to="/" />;
+  }
+  
+  // Verificar si el usuario está intentando acceder a su propio libro de registros
+  const isViewingSelf = params?.userId && parseInt(params.userId) === user.id;
+  
+  // Si no es un admin ni está viendo su propio libro, redireccionar
+  if (!isViewingSelf && (
     user.role !== 'superadmin' && 
     user.role !== 'SUPERADMIN' && 
     user.role !== 'admin' &&
@@ -162,13 +170,13 @@ export default function SimpleLibroRegistros() {
           user?.username === 'Superadmin' ||
           user?.username === 'billeo_admin';
         
-        // Si el usuario es superadmin y no se especifica userId (o es vacío),
-        // usamos su propio ID para mostrar sus registros
+        // Si no se especifica userId (o es vacío), usamos el ID del usuario actual
         let idToUse = userId;
         
-        if (user && isSuperAdmin && (!userId || userId === '')) {
+        if (user && (!userId || userId === '')) {
+          // Para cualquier tipo de usuario, si accede sin especificar ID, muestra sus propios datos
           idToUse = user.id.toString();
-          console.log("Usuario superadmin/admin, usando su propio ID:", idToUse);
+          console.log("Usuario accediendo a su propio ID:", idToUse);
         }
         
         if (!idToUse) {
@@ -198,14 +206,8 @@ export default function SimpleLibroRegistros() {
       }
     };
     
-    // Determinar si debemos cargar los datos
-    const isSuperAdmin = 
-      user?.role === 'superadmin' || 
-      user?.role === 'SUPERADMIN' || 
-      user?.username === 'Superadmin' ||
-      user?.username === 'billeo_admin';
-    
-    if (userId || (user && isSuperAdmin)) {
+    // Cualquier usuario puede ver su propio libro de registros
+    if (user) {
       fetchData();
     } else {
       setLoading(false);
