@@ -148,7 +148,6 @@ export function MinimalQuoteList({ userId }: Props) {
   // Estados para filtrado, ordenación y búsqueda
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch quotes
@@ -340,13 +339,14 @@ export function MinimalQuoteList({ userId }: Props) {
 
   return (
     <div className="p-4 pb-32 overflow-y-auto min-h-full h-full">
-      {/* Barra de búsqueda estilo iOS */}
-      <div className="px-1 pb-2">
-        <div className="relative">
+      {/* Componente de filtro de presupuestos */}
+      <div className="px-1 pb-4">
+        {/* 1. Barra de búsqueda estilo iOS */}
+        <div className="relative mb-3">
           <input
             type="text"
             placeholder="Buscar..."
-            className="w-full px-10 py-2 search-field-apple text-sm rounded-xl bg-gray-100/80 border-0"
+            className="w-full px-10 py-2 search-field-apple text-sm rounded-xl bg-[#F7F9FA] border-0 text-[#8A8F98]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -362,51 +362,35 @@ export function MinimalQuoteList({ userId }: Props) {
             </button>
           )}
         </div>
-      </div>
-      
-      {/* Filters section */}
-      {showFilters && (
-        <div className="bg-gray-50 rounded-lg p-3 mb-4 border">
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Estado</label>
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value)}
-              >
-                <SelectTrigger className="w-full h-9 text-sm">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="draft">Borradores</SelectItem>
-                  <SelectItem value="sent">Enviados</SelectItem>
-                  <SelectItem value="accepted">Aceptados</SelectItem>
-                  <SelectItem value="rejected">Rechazados</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Orden</label>
-              <button
-                onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                className="flex items-center justify-between w-full px-3 h-9 rounded-md border text-sm"
-              >
-                <span>Fecha {sortOrder === "desc" ? "reciente" : "antigua"}</span>
-                {sortOrder === "desc" ? (
-                  <ArrowDown className="h-4 w-4" />
-                ) : (
-                  <ArrowUp className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-          
-          <div className="text-xs text-gray-500 mt-2">
-            {sortedQuotes.length} presupuestos encontrados
-          </div>
+        
+        {/* 2. Botones de filtro de estado */}
+        <div className="w-full bg-gray-100 p-1 rounded-lg flex">
+          <button 
+            onClick={() => setStatusFilter('all')} 
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-center ${statusFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+          >
+            Todos
+          </button>
+          <button 
+            onClick={() => setStatusFilter('draft')} 
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-center ${statusFilter === 'draft' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+          >
+            Borradores
+          </button>
+          <button 
+            onClick={() => setStatusFilter('sent')} 
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-center ${statusFilter === 'sent' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+          >
+            Enviados
+          </button>
+          <button 
+            onClick={() => setStatusFilter('accepted')} 
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-center ${statusFilter === 'accepted' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+          >
+            Aceptados
+          </button>
         </div>
-      )}
+      </div>
       
       {/* Quotes list */}
       {sortedQuotes.length === 0 ? (
