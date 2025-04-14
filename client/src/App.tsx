@@ -227,7 +227,7 @@ function Router() {
         )}
       </Route>
       
-      {/* Nueva ruta corregida del Libro de Registros Simple */}
+      {/* Ruta del Libro de Registros Simple (con userId) */}
       <Route path="/admin/libro-registros-simple/:userId">
         {(params) => (
           <Layout>
@@ -237,6 +237,16 @@ function Router() {
             />
           </Layout>
         )}
+      </Route>
+
+      {/* Ruta del Libro de Registros Simple (sin userId) */}
+      <Route path="/admin/libro-registros-simple">
+        <Layout>
+          <ProtectedAdminRoute 
+            path="/admin/libro-registros-simple" 
+            component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
+          />
+        </Layout>
       </Route>
       
       {/* Ruta mejorada del Libro de Registros protegida para admins y superadmins */}
