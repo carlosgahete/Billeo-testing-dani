@@ -2717,6 +2717,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to delete this transaction" });
       }
       
+      // Si es un ingreso y tiene invoiceId asociado, también eliminar la factura
+      if (transaction.type === 'income' && transaction.invoiceId) {
+        try {
+          console.log(`Eliminando factura con ID ${transaction.invoiceId} asociada a la transacción ${transactionId}`);
+          await storage.deleteInvoice(transaction.invoiceId);
+        } catch (invoiceError) {
+          console.error(`Error al eliminar factura asociada (ID ${transaction.invoiceId}):`, invoiceError);
+          // Continuamos con la eliminación de la transacción aunque falle la factura
+        }
+      }
+      
       const deleted = await storage.deleteTransaction(transactionId);
       
       if (!deleted) {
@@ -2725,6 +2736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(200).json({ message: "Transaction deleted successfully" });
     } catch (error) {
+      console.error("Error al eliminar transacción:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
