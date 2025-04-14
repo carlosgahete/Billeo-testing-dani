@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/lib/auth";
-import { useTheme } from "@/components/theme-provider";
+import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { useLocation } from "wouter";
 import { 
   ChevronLeft, 
@@ -184,8 +184,26 @@ const MobileSettingsPage = () => {
   
   // Manejar cierre de sesión
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      // Solicitud para cerrar sesión en el servidor
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      // Actualizar el estado de autenticación
+      refreshUser();
+      
+      // Redirigir a la página de inicio de sesión
+      navigate("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al cerrar la sesión. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Manejar carga de imagen de perfil

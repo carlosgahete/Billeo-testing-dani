@@ -4,6 +4,8 @@ import { Loader2, Save, Upload, User, Moon, Sun } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import MobileSettingsPage from "@/components/settings/MobileSettingsPage";
 import { 
   Card, 
   CardContent, 
@@ -238,6 +240,9 @@ const SettingsPage = () => {
     });
   };
 
+  // Verificar si estamos en vista móvil
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
   if (userLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
@@ -245,10 +250,15 @@ const SettingsPage = () => {
       </div>
     );
   }
-
+  
+  // Renderizar versión móvil
+  if (isMobile) {
+    return <MobileSettingsPage />;
+  }
+  
   return (
     <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto">
-      {/* Encabezado estilo Apple */}
+      {/* Encabezado estilo Apple - Solo visible en escritorio */}
       <div className="mb-8">
         <div className="flex items-center mb-4 space-x-3">
           <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-2xl shadow-sm">
