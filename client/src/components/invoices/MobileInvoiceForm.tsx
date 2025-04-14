@@ -4,7 +4,20 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ArrowLeft, FileText, Plus, Minus, Trash2, CalendarIcon, Pencil, ChevronDown } from "lucide-react";
+import { 
+  ChevronLeft, 
+  ArrowLeft, 
+  FileText, 
+  Plus, 
+  Minus, 
+  Trash2, 
+  CalendarIcon, 
+  Pencil, 
+  ChevronDown,
+  Upload,
+  Paperclip,
+  Camera
+} from "lucide-react";
 import { z } from "zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +40,11 @@ import {
   MobileAccordion, 
   MobileAccordionItem, 
   MobileAccordionTrigger, 
-  MobileAccordionContent 
+  MobileAccordionContent,
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent
 } from "@/components/ui/accordion";
 import { ClientForm } from "@/components/clients/ClientForm";
 import FileUpload from "@/components/common/FileUpload";
