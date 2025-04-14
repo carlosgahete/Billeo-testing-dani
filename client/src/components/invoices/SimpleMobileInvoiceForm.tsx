@@ -70,12 +70,28 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
         return await apiRequest("POST", "/api/invoices", data);
       }
     },
-    onSuccess: () => {
-      // Invalidar consultas para actualizar los datos
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Importante para que aparezca en transacciones
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] }); // Actualizar dashboard
-      queryClient.invalidateQueries({ queryKey: ["/api/public/stats/dashboard"] });
+    onSuccess: (data) => {
+      console.log("Factura guardada exitosamente:", data);
+      
+      // Invalidar consultas inmediatamente para actualizar los datos en todas las vistas
+      const invalidatePromises = [
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }), 
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/public/stats/dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] }),
+      ];
+      
+      // Ejecutar todas las invalidaciones a la vez
+      Promise.all(invalidatePromises).then(() => {
+        console.log("Todas las consultas han sido invalidadas");
+        
+        // Forzar una actualización adicional para asegurar que los datos estén frescos
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+        }, 500);
+      });
       
       // Mostrar mensaje y redirigir
       toast({
@@ -86,7 +102,7 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
       // Pequeño delay para asegurar que la navegación ocurra después de la actualización
       setTimeout(() => {
         navigate("/invoices");
-      }, 500);
+      }, 1000);
     },
     onError: (error: any) => {
       console.error("Error al guardar factura:", error);

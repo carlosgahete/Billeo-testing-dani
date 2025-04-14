@@ -1407,9 +1407,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Si la factura se crea con estado "pagada", crear automáticamente una transacción de ingreso
-      // MEJORA: Verificamos tanto newInvoice.status como invoiceData.status para mayor seguridad
-      if (newInvoice.status === 'paid' || invoiceData.status === 'paid') {
+      // Si la factura se crea con estado "pagada" o si se indica explícitamente createTransaction, 
+      // crear automáticamente una transacción de ingreso
+      // MEJORA: Verificamos múltiples condiciones para mayor seguridad
+      if (newInvoice.status === 'paid' || invoiceData.status === 'paid' || invoice.createTransaction === true) {
         try {
           console.log("[SERVER] ⭐⭐⭐ Factura creada como pagada. Creando transacción de ingreso automática");
           
