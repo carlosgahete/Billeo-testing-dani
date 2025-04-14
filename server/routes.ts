@@ -474,7 +474,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = req.user as any;
-      if (user.role !== 'superadmin' && user.role !== 'SUPERADMIN') {
+      // Permitir acceso si el usuario tiene rol superadmin o si es un usuario especial (Superadmin o billeo_admin)
+      if (
+        user.role !== 'superadmin' && 
+        user.role !== 'SUPERADMIN' && 
+        user.username !== 'Superadmin' && 
+        user.username !== 'billeo_admin'
+      ) {
         return res.status(403).json({ message: "No autorizado. Se requiere rol de superadministrador." });
       }
       
