@@ -430,6 +430,7 @@ export default function UsersManagement() {
                         >
                           <UserCog className="mr-2 h-4 w-4" /> Administrador
                         </DropdownMenuItem>
+                        {/* Solo superadmins pueden promover a otros usuarios a superadmin */}
                         {isSuperAdmin && (
                           <DropdownMenuItem
                             onClick={() => setConfirmPromoteUser(user.id)}
