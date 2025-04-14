@@ -131,8 +131,8 @@ export default function EnhancedLibroRegistros() {
   const [sortColumn, setSortColumn] = useState<string>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
-  // Verificación adicional de seguridad: solo superadmin puede ver esto
-  if (!user || (user.role !== 'superadmin' && user.role !== 'SUPERADMIN')) {
+  // Verificación adicional de seguridad: admins y superadmins pueden ver esto
+  if (!user || (user.role !== 'superadmin' && user.role !== 'SUPERADMIN' && user.role !== 'admin')) {
     return <Redirect to="/" />;
   }
 

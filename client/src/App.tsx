@@ -220,7 +220,7 @@ function Router() {
         )}
       </Route>
       
-      {/* Ruta mejorada del Libro de Registros protegida SOLO para superadmins */}
+      {/* Ruta mejorada del Libro de Registros protegida para admins y superadmins */}
       <Route path="/admin/libro-enhanced/:userId">
         {(params) => (
           <Layout>
