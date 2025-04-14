@@ -633,53 +633,57 @@ export default function LibroRegistrosPage() {
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-start mb-2">
-            <div className="p-2 bg-white rounded-md shadow-sm mr-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
+          <div className="flex items-start mb-3">
+            <FileText className="h-5 w-5 text-blue-600 mr-2" />
             <div className="text-sm font-medium">Facturas</div>
           </div>
-          <div className="text-3xl font-bold">{summary.totalInvoices}</div>
-          <div className="text-sm text-gray-500">Total emitidas</div>
-          <div className="text-lg font-semibold mt-2">{formatCurrency(summary.incomeTotal)}</div>
-          <div className="text-sm text-gray-500">Importe total facturado</div>
+          <div>
+            <div className="text-2xl font-semibold">{summary.totalInvoices}</div>
+            <div className="text-xs text-gray-500">Total emitidas</div>
+          </div>
+          <div className="mt-3">
+            <div className="text-lg font-semibold">{formatCurrency(summary.incomeTotal)}</div>
+            <div className="text-xs text-gray-500">Importe total facturado</div>
+          </div>
         </div>
         
         <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-start mb-2">
-            <div className="p-2 bg-white rounded-md shadow-sm mr-2">
-              <Download className="h-5 w-5 text-yellow-600" />
-            </div>
+          <div className="flex items-start mb-3">
+            <Download className="h-5 w-5 text-yellow-600 mr-2" />
             <div className="text-sm font-medium">Gastos</div>
           </div>
-          <div className="text-3xl font-bold">
-            {filteredTransactions.filter(t => t.type === 'expense').length}
+          <div>
+            <div className="text-2xl font-semibold">
+              {filteredTransactions.filter(t => t.type === 'expense').length}
+            </div>
+            <div className="text-xs text-gray-500">Transacciones</div>
           </div>
-          <div className="text-sm text-gray-500">Transacciones</div>
-          <div className="text-lg font-semibold mt-2">{formatCurrency(summary.expenseTotal)}</div>
-          <div className="text-sm text-gray-500">Importe total gastado</div>
+          <div className="mt-3">
+            <div className="text-lg font-semibold">{formatCurrency(summary.expenseTotal)}</div>
+            <div className="text-xs text-gray-500">Importe total gastado</div>
+          </div>
         </div>
         
         <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-start mb-2">
-            <div className="p-2 bg-white rounded-md shadow-sm mr-2">
-              <FileText className="h-5 w-5 text-green-600" />
-            </div>
+          <div className="flex items-start mb-3">
+            <FileText className="h-5 w-5 text-green-600 mr-2" />
             <div className="text-sm font-medium">Presupuestos</div>
           </div>
-          <div className="text-3xl font-bold">{summary.totalQuotes}</div>
-          <div className="text-sm text-gray-500">Total presupuestos</div>
+          <div>
+            <div className="text-2xl font-semibold">{summary.totalQuotes}</div>
+            <div className="text-xs text-gray-500">Total presupuestos</div>
+          </div>
         </div>
         
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="flex items-start mb-2">
-            <div className="p-2 bg-white rounded-md shadow-sm mr-2 flex items-center justify-center">
-              <span className="font-bold text-purple-600">=</span>
-            </div>
+        <div className="bg-red-50 rounded-lg p-4">
+          <div className="flex items-start mb-3">
+            <span className="font-bold text-red-600 mr-2">=</span>
             <div className="text-sm font-medium">Balance</div>
           </div>
-          <div className="text-3xl font-bold">{formatCurrency(summary.balance)}</div>
-          <div className="text-sm text-gray-500">Resultado</div>
+          <div>
+            <div className="text-2xl font-semibold text-red-700">{formatCurrency(summary.balance)}</div>
+            <div className="text-xs text-gray-500">Resultado</div>
+          </div>
         </div>
       </div>
       
@@ -689,18 +693,18 @@ export default function LibroRegistrosPage() {
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Facturas emitidas</h3>
           <div className="text-sm text-gray-500">{filteredInvoices.length} registros</div>
         </div>
-        <div className="overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50 dark:bg-gray-900/20">
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Número</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Fecha</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Cliente</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Base</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">IVA</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Total</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Estado</TableHead>
+                <TableRow>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Número</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Cliente</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Base</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">IVA</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Total</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -711,16 +715,19 @@ export default function LibroRegistrosPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredInvoices.map((invoice) => (
-                    <TableRow key={invoice.id} className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/10">
-                      <TableCell className="font-medium text-sm py-3">{invoice.number}</TableCell>
-                      <TableCell className="text-sm py-3">{formatDate(invoice.date)}</TableCell>
-                      <TableCell className="text-sm py-3">{invoice.clientName}</TableCell>
-                      <TableCell className="text-sm py-3">{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
-                      <TableCell className="text-sm py-3">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
-                      <TableCell className="font-medium text-sm py-3">{formatCurrency(parseFloat(invoice.total))}</TableCell>
-                      <TableCell className="text-sm py-3">
-                        <Badge className={invoice.status === 'paid' ? "bg-green-50 text-green-700 hover:bg-green-50 rounded-md px-2 py-0.5 font-normal text-xs" : "bg-gray-50 text-gray-600 hover:bg-gray-50 rounded-md px-2 py-0.5 font-normal text-xs"}>
+                  filteredInvoices.map((invoice, index) => (
+                    <TableRow 
+                      key={invoice.id} 
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-900/10 ${index < filteredInvoices.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}
+                    >
+                      <TableCell className="py-3 px-4 text-sm">{invoice.number}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{formatDate(invoice.date)}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{invoice.clientName}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm font-medium">{formatCurrency(parseFloat(invoice.total))}</TableCell>
+                      <TableCell className="py-3 px-4">
+                        <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : "bg-gray-100 text-gray-800 hover:bg-gray-100 px-2 py-0.5 rounded-md text-xs"}>
                           {invoice.status === 'paid' ? 'Pagada' : invoice.status}
                         </Badge>
                       </TableCell>
@@ -739,16 +746,16 @@ export default function LibroRegistrosPage() {
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Gastos y transacciones</h3>
           <div className="text-sm text-gray-500">{filteredTransactions.length} registros</div>
         </div>
-        <div className="overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50 dark:bg-gray-900/20">
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Fecha</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Descripción</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Categoría</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Tipo</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Importe</TableHead>
+                <TableRow>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Descripción</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Categoría</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Tipo</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Importe</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -759,17 +766,20 @@ export default function LibroRegistrosPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id} className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/10">
-                      <TableCell className="text-sm py-3">{formatDate(transaction.date)}</TableCell>
-                      <TableCell className="text-sm py-3">{transaction.description}</TableCell>
-                      <TableCell className="text-sm py-3">{transaction.category || '-'}</TableCell>
-                      <TableCell className="text-sm py-3">
-                        <Badge className={transaction.type === 'income' ? "bg-green-50 text-green-700 hover:bg-green-50 rounded-md px-2 py-0.5 font-normal text-xs" : "bg-red-50 text-red-700 hover:bg-red-50 rounded-md px-2 py-0.5 font-normal text-xs"}>
+                  filteredTransactions.map((transaction, index) => (
+                    <TableRow 
+                      key={transaction.id} 
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-900/10 ${index < filteredTransactions.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}
+                    >
+                      <TableCell className="py-3 px-4 text-sm">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{transaction.description}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{transaction.category || '-'}</TableCell>
+                      <TableCell className="py-3 px-4">
+                        <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : "bg-red-100 text-red-800 hover:bg-red-100 px-2 py-0.5 rounded-md text-xs"}>
                           {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium text-sm py-3">{formatCurrency(parseFloat(transaction.amount))}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm font-medium">{formatCurrency(parseFloat(transaction.amount))}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -785,16 +795,16 @@ export default function LibroRegistrosPage() {
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Presupuestos</h3>
           <div className="text-sm text-gray-500">{filteredQuotes.length} registros</div>
         </div>
-        <div className="overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50 dark:bg-gray-900/20">
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Número</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Fecha</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Cliente</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Total</TableHead>
-                  <TableHead className="font-medium text-gray-500 text-xs uppercase">Estado</TableHead>
+                <TableRow>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Número</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Cliente</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Total</TableHead>
+                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -805,18 +815,21 @@ export default function LibroRegistrosPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredQuotes.map((quote) => (
-                    <TableRow key={quote.id} className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/10">
-                      <TableCell className="font-medium text-sm py-3">{quote.number}</TableCell>
-                      <TableCell className="text-sm py-3">{formatDate(quote.date)}</TableCell>
-                      <TableCell className="text-sm py-3">{quote.clientName}</TableCell>
-                      <TableCell className="font-medium text-sm py-3">{formatCurrency(parseFloat(quote.total))}</TableCell>
-                      <TableCell className="text-sm py-3">
+                  filteredQuotes.map((quote, index) => (
+                    <TableRow 
+                      key={quote.id} 
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-900/10 ${index < filteredQuotes.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}
+                    >
+                      <TableCell className="py-3 px-4 text-sm">{quote.number}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{formatDate(quote.date)}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm">{quote.clientName}</TableCell>
+                      <TableCell className="py-3 px-4 text-sm font-medium">{formatCurrency(parseFloat(quote.total))}</TableCell>
+                      <TableCell className="py-3 px-4">
                         <Badge 
                           className={
-                            quote.status === 'accepted' ? "bg-green-50 text-green-700 hover:bg-green-50 rounded-md px-2 py-0.5 font-normal text-xs" : 
-                            quote.status === 'rejected' ? "bg-red-50 text-red-700 hover:bg-red-50 rounded-md px-2 py-0.5 font-normal text-xs" : 
-                            "bg-gray-50 text-gray-600 hover:bg-gray-50 rounded-md px-2 py-0.5 font-normal text-xs"
+                            quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : 
+                            quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100 px-2 py-0.5 rounded-md text-xs" : 
+                            "bg-gray-100 text-gray-800 hover:bg-gray-100 px-2 py-0.5 rounded-md text-xs"
                           }
                         >
                           {quote.status === 'accepted' ? 'Aceptado' : 
