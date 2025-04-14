@@ -694,13 +694,13 @@ export default function LibroRegistrosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Número</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Cliente</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Base</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">IVA</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Total</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Estado</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Número</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Cliente</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Base</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">IVA</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Total</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -747,11 +747,11 @@ export default function LibroRegistrosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Descripción</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Categoría</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Tipo</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Importe</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Descripción</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Categoría</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Tipo</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Importe</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -798,11 +798,11 @@ export default function LibroRegistrosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Número</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Cliente</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Total</TableHead>
-                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Estado</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Número</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Cliente</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Total</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
