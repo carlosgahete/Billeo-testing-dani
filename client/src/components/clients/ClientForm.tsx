@@ -120,8 +120,8 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto mobile-client-form">
+        <DialogHeader className="sticky top-0 bg-white z-10 pb-2">
           <DialogTitle>{isEditMode ? "Editar cliente" : "Añadir nuevo cliente"}</DialogTitle>
         </DialogHeader>
         

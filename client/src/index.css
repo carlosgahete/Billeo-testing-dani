@@ -519,6 +519,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     overflow-x: hidden;
   }
   
+  /* Soporte para scroll en formularios modales en móvil */
+  .mobile-client-form {
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
+    padding-bottom: 16px;
+  }
+  
+  .mobile-client-form .DialogHeader {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
   /* Mejoras para botones en móvil */
   .mobile-action-button {
     width: 32px;
