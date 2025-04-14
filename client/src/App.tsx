@@ -60,6 +60,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/login" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
@@ -240,16 +241,7 @@ function Router() {
       
       {/* Ruta mejorada del Libro de Registros protegida para admins y superadmins */}
       
-      {/* Nueva ruta del Libro de Registros para Clientes */}
-      <Route path="/admin/libro-registros-client">
-        <Layout>
-          <ProtectedAdminRoute 
-            path="/admin/libro-registros-client" 
-            component={LibroRegistrosClientPage} 
-          />
-        </Layout>
-      </Route>
-      
+{/* Ruta de libro-registros original eliminada para simplificar */}
       {/* Ruta para que los usuarios normales vean su propio libro de registros */}
       <Route path="/mis-registros">
         <Layout>
@@ -257,7 +249,7 @@ function Router() {
             path="/mis-registros"
             component={(props: any) => {
               // Usamos un componente que pasará automáticamente el ID del usuario conectado
-              return <LibroRegistrosClientPage forceOwnUser={true} {...props} />;
+              return <LibroRegistrosSimplePage forceOwnUser={true} {...props} />;
             }}
           />
         </Layout>
