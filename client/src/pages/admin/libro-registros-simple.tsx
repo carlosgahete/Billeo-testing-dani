@@ -188,13 +188,18 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
           user?.username === 'Superadmin' ||
           user?.username === 'billeo_admin';
         
-        // Si no se especifica userId (o es vacío), usamos el ID del usuario actual
-        let idToUse = userId;
+        // SIEMPRE usamos el ID del usuario actual como prioridad, a menos que se especifique otro
+        let idToUse = user?.id.toString() || '1'; // Default: mostrar el usuario actual
         
-        if (user && (!userId || userId === '')) {
-          // Para cualquier tipo de usuario, si accede sin especificar ID, muestra sus propios datos
-          idToUse = user.id.toString();
-          console.log("Usuario accediendo a su propio ID:", idToUse);
+        // Solo si explícitamente se pide ver otro usuario mediante URL, usamos ese ID
+        if (userId && userId !== '' && user?.id.toString() !== userId) {
+          // Si la URL especifica otro usuario, verificamos si tiene permiso para verlo
+          if (user?.role === 'admin' || user?.role === 'superadmin' || user?.username === 'billeo_admin') {
+            idToUse = userId;
+            console.log("Admin accediendo a otro usuario ID:", idToUse);
+          } else {
+            console.log("Intento de acceso no autorizado. Redirigiendo a datos propios:", user?.id);
+          }
         }
         
         if (!idToUse) {
@@ -836,68 +841,56 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
 
   return (
     <div className="container-fluid px-4 py-6 w-full max-w-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+      <div className="flex flex-row justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Libro de Registros</h1>
           <p className="text-sm text-gray-500">
-            Visualizando registros del usuario ID: {
-              user && user.username === 'billeo_admin' && (!userId || userId === '') 
-                ? user.id 
-                : (userId || 'No seleccionado')
-            }
+            {user ? `${user.name} (${user.username})` : 'Usuario actual'}
           </p>
         </div>
         
-        {/* Selector de usuarios para administradores (con búsqueda) */}
+        {/* Selector de usuarios para administradores (con búsqueda) - Colocado a la derecha */}
         {user && (user.role === 'admin' || user.role === 'superadmin' || user.username === 'billeo_admin') && (
-          <div className="mt-4 md:mt-0 w-full md:w-auto">
-            <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-gray-500" />
-              <Popover open={userPopoverOpen} onOpenChange={setUserPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full md:w-[240px] justify-between" 
-                    disabled={loadingUsers}
-                  >
-                    {userId === '6' && user?.username === 'billeo_admin' 
-                      ? `Mis registros (${user.username})`
-                      : userId 
-                        ? users.find(u => u.id.toString() === userId)
-                          ? `${users.find(u => u.id.toString() === userId)?.name} (${users.find(u => u.id.toString() === userId)?.username})`
-                          : "Seleccionar usuario"
-                        : "Seleccionar usuario"
-                    }
-                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[240px] p-0" align="end">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Buscar usuario..." 
-                      className="h-9" 
-                      value={userSearchTerm}
-                      onValueChange={setUserSearchTerm}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No se encontraron usuarios</CommandEmpty>
-                      <CommandGroup>
-                        {/* Opción para ver datos propios del admin */}
-                        {user.username === 'billeo_admin' && (
-                          <CommandItem
-                            value="self"
-                            onSelect={() => {
-                              handleUserChange('self');
-                              setUserPopoverOpen(false);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            Mis registros ({user.username})
-                          </CommandItem>
-                        )}
-                        
-                        {/* Lista de todos los usuarios filtrados por búsqueda */}
-                        {users
+          <div className="flex items-center space-x-2">
+            <Popover open={userPopoverOpen} onOpenChange={setUserPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-auto justify-between" 
+                  disabled={loadingUsers}
+                >
+                  <Users className="h-5 w-5 mr-2 text-blue-500" />
+                  Ver otro cliente
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[240px] p-0" align="end">
+                <Command>
+                  <CommandInput 
+                    placeholder="Buscar usuario..." 
+                    className="h-9" 
+                    value={userSearchTerm}
+                    onValueChange={setUserSearchTerm}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron usuarios</CommandEmpty>
+                    <CommandGroup>
+                      {/* Opción para ver datos propios del admin */}
+                      {user.username === 'billeo_admin' && (
+                        <CommandItem
+                          value="self"
+                          onSelect={() => {
+                            handleUserChange('self');
+                            setUserPopoverOpen(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          Mis registros ({user.username})
+                        </CommandItem>
+                      )}
+                      
+                      {/* Lista de todos los usuarios filtrados por búsqueda */}
+                      {users
                           .filter(userOption => {
                             const searchTermLower = userSearchTerm.toLowerCase().trim();
                             // Si no hay término de búsqueda, mostrar todos
@@ -946,7 +939,6 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
         )}
       </div>
       
