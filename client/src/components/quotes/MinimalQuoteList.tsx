@@ -18,7 +18,8 @@ import {
   Send,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Trash2
 } from "lucide-react";
 import {
   Dialog,
@@ -322,7 +323,7 @@ export function MinimalQuoteList({ userId }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <ul className="space-y-3">
           {sortedQuotes.map(quote => {
             const client = clients.find(c => c.id === quote.clientId);
             const statusInfo = getStatusInfo(quote.status);
@@ -330,99 +331,103 @@ export function MinimalQuoteList({ userId }: Props) {
             const validUntil = formatDate(quote.validUntil);
             
             return (
-              <div key={quote.id} className="bg-white border rounded-lg p-3 shadow-sm">
-                <div className="flex justify-between mb-3">
-                  <div>
-                    <div className="font-medium">{quote.quoteNumber}</div>
-                    <div className="text-sm text-gray-500">{client?.name || "Cliente desconocido"}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">{formatCurrency(Number(quote.total))}</div>
-                    <div className={`text-xs px-2 py-0.5 rounded-full flex items-center inline-flex mt-1 ${statusInfo.className}`}>
+              <li key={quote.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200/80">
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium text-gray-800">#{quote.quoteNumber}</h3>
+                    <div className={`text-xs px-2 py-1 rounded-md ${statusInfo.className}`}>
                       {statusInfo.icon}
                       {statusInfo.label}
                     </div>
                   </div>
-                </div>
-                
-                <div className="text-xs text-gray-500 mb-3 flex items-center">
-                  <Calendar className="h-3 w-3 mr-1" /> 
-                  <span>Emitido: {issueDate} • Válido hasta: {validUntil}</span>
-                </div>
-                
-                <div className="flex gap-2 mt-3">
-                  <Link href={`/quotes/simple/edit/${quote.id}`} className="flex-1">
-                    <Button size="sm" className="w-full">Editar</Button>
-                  </Link>
                   
-                  {/* Actions menu */}
-                  <Select onValueChange={(value) => {
-                    switch (value) {
-                      case "pdf":
-                        handlePdf(quote.id);
-                        break;
-                      case "delete":
-                        setQuoteToDelete(quote.id);
-                        setIsDeleteDialogOpen(true);
-                        break;
-                      case "accept":
-                      case "reject":
-                      case "sent":
-                        updateQuoteStatus(quote.id, value);
-                        break;
-                    }
-                  }}>
-                    <SelectTrigger className="w-24">
-                      <span className="text-xs">Opciones</span>
-                    </SelectTrigger>
-                    <SelectContent align="end">
-                      <SelectItem value="pdf">
-                        <div className="flex items-center">
-                          <Download className="h-4 w-4 mr-2" />
-                          <span>Ver PDF</span>
-                        </div>
-                      </SelectItem>
+                  <div className="text-sm text-gray-600 mb-1">
+                    {client?.name || "Cliente desconocido"}
+                  </div>
+                  
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="text-xs text-gray-500 flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {issueDate}
+                    </div>
+                    <div className="font-semibold text-gray-900">
+                      {formatCurrency(Number(quote.total))}
+                    </div>
+                  </div>
+                  
+                  {/* Acciones rápidas */}
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handlePdf(quote.id)}
+                        className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-blue-600 transition-colors"
+                        aria-label="Descargar PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
                       
-                      {quote.status !== "sent" && (
-                        <SelectItem value="sent">
-                          <div className="flex items-center">
-                            <Send className="h-4 w-4 mr-2" />
-                            <span>Marcar enviado</span>
-                          </div>
-                        </SelectItem>
-                      )}
-                      
+                      {/* Botón para cambiar estado */}
                       {quote.status !== "accepted" && (
-                        <SelectItem value="accept">
-                          <div className="flex items-center">
-                            <Check className="h-4 w-4 mr-2 text-green-500" />
-                            <span>Aceptar</span>
-                          </div>
-                        </SelectItem>
+                        <button
+                          onClick={() => updateQuoteStatus(quote.id, "accepted")}
+                          className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-green-600 transition-colors"
+                          aria-label="Aceptar presupuesto"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
                       )}
                       
-                      {quote.status !== "rejected" && (
-                        <SelectItem value="reject">
-                          <div className="flex items-center">
-                            <X className="h-4 w-4 mr-2 text-red-500" />
-                            <span>Rechazar</span>
-                          </div>
-                        </SelectItem>
+                      {quote.status !== "sent" && quote.status !== "accepted" && (
+                        <button
+                          onClick={() => updateQuoteStatus(quote.id, "sent")}
+                          className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-blue-600 transition-colors"
+                          aria-label="Marcar como enviado"
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
                       )}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Link href={`/quotes/simple/edit/${quote.id}`}>
+                        <button
+                          className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-blue-600 transition-colors"
+                          aria-label="Editar presupuesto"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                      </Link>
                       
-                      <SelectItem value="delete" className="text-red-500">
-                        <div className="flex items-center text-red-500">
-                          <X className="h-4 w-4 mr-2" />
-                          <span>Eliminar</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <button
+                        onClick={() => {
+                          setQuoteToDelete(quote.id);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-red-600 transition-colors"
+                        aria-label="Eliminar presupuesto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
       
       {/* Floating action button */}
