@@ -783,32 +783,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Eliminar asignación de cliente a administrador (solo superadmin)
-  app.delete("/api/admin/assign-client", requireSuperAdmin, async (req, res) => {
-    try {
-      const { adminId, clientId } = req.body;
-      
-      if (!adminId || !clientId) {
-        return res.status(400).json({ message: "Se requieren adminId y clientId" });
-      }
-      
-      // Verificar que la relación existe
-      const isAssigned = await storage.isClientAssignedToAdmin(adminId, clientId);
-      if (!isAssigned) {
-        return res.status(404).json({ message: "Asignación no encontrada" });
-      }
-      
-      // Remover la asignación
-      await storage.removeClientFromAdmin(adminId, clientId);
-      
-      res.status(200).json({
-        message: "Asignación eliminada correctamente"
-      });
-    } catch (error) {
-      console.error("Error al eliminar asignación de cliente:", error);
-      res.status(500).json({ message: "Error al eliminar asignación de cliente" });
-    }
-  });
+  // Nota: La ruta para eliminar asignaciones es "/api/admin/remove-assignment", 
+  // definida más abajo en el archivo para mantener compatibilidad con el frontend
   
   // Obtener clientes asignados a un administrador (para administradores)
   app.get("/api/admin/assigned-clients", requireAdmin, async (req, res) => {
