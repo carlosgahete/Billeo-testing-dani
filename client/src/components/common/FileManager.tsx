@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Download, Eye, Upload, File, FilePlus2 } from 'lucide-react';
 import EnhancedFileUpload from './EnhancedFileUpload';
 import { useToast } from '@/hooks/use-toast';
-import fileStorageService from '@/lib/fileStorageService';
+import { fileStorageService } from '@/lib/fileStorageService';
 import {
   Dialog,
   DialogContent,
@@ -192,7 +192,7 @@ export default function FileManager({
     }
   };
 
-  // Función para manejar el archivo subido
+  // Función para manejar el archivo subido desde EnhancedFileUpload
   const handleFileAdded = (newFile: File) => {
     setUploadedFile(newFile);
   };

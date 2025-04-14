@@ -1,229 +1,149 @@
-/**
- * Servicio para gestionar el almacenamiento de archivos
- * Este servicio proporciona funciones para subir, descargar y visualizar archivos
- */
+import { apiRequest } from '@/lib/queryClient';
 
-import { toast } from "@/hooks/use-toast";
+// Verificamos si window está definido para manejar SSR
+const isClient = typeof window !== 'undefined';
 
-// Interfaces
-export interface FileMetadata {
-  filename: string;       // Nombre del archivo en el servidor
-  originalName: string;   // Nombre original del archivo
-  path: string;           // Ruta completa para acceder al archivo
-  size: number;           // Tamaño en bytes
-  mimeType: string;       // Tipo MIME
-  uploadDate: string;     // Fecha de subida
-  fileType: 'image' | 'pdf' | 'document' | 'other'; // Tipo categorizado
-  thumbnailPath?: string; // Ruta a la miniatura (si existe)
+interface FileMetadata {
+  id: number;
+  userId: number;
+  filename: string;
+  originalName: string;
+  path: string;
+  size: string;
+  mimeType: string;
+  fileType: string;
+  entityType: string | null;
+  entityId: number | null;
+  uploadDate: string;
+  thumbnailPath: string | null;
 }
 
-// Tipos de entidades asociables
-export type EntityType = 'expense' | 'invoice' | 'quote' | 'client' | 'company';
+export const fileStorageService = {
+  /**
+   * Sube un archivo al servidor
+   */
+  async uploadFile(formData: FormData): Promise<string> {
+    try {
+      // En este caso necesitamos usar fetch directamente para el FormData
+      const response = await fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        // No incluir Content-Type para que el navegador establezca el límite correcto para FormData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al subir el archivo');
+      }
+      
+      const data = await response.json();
+      return data.filePath;
+    } catch (error) {
+      console.error('Error en el servicio de subida de archivos:', error);
+      throw error;
+    }
+  },
 
-// Función para subir un archivo
-export const uploadFile = async (
-  file: File,
-  entityType?: EntityType,
-  entityId?: number
-): Promise<FileMetadata | null> => {
-  try {
-    // Verificación básica
-    if (!file) {
-      throw new Error('No se ha seleccionado ningún archivo');
+  /**
+   * Elimina un archivo del servidor
+   */
+  async deleteFile(filePath: string): Promise<void> {
+    try {
+      await apiRequest("DELETE", '/api/files/delete', { filePath });
+      // apiRequest ya maneja los errores internamente
+    } catch (error) {
+      console.error('Error en el servicio de eliminación de archivos:', error);
+      throw error;
     }
-    
-    // Verificar tamaño (5MB máximo)
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_SIZE) {
-      throw new Error('El archivo excede el tamaño máximo permitido (5MB)');
+  },
+
+  /**
+   * Descarga un archivo del servidor
+   */
+  async downloadFile(filePath: string): Promise<void> {
+    try {
+      // Crear una URL del archivo para descargar
+      const downloadUrl = `/api/files/download?filePath=${encodeURIComponent(filePath)}`;
+      
+      // Abrir la URL en una nueva pestaña o descargar directamente
+      if (isClient) {
+        window.open(downloadUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error en el servicio de descarga de archivos:', error);
+      throw error;
     }
-    
-    // Verificar tipo de archivo
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-    
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG), PDF y documentos Word.');
+  },
+
+  /**
+   * Obtiene la URL para previsualizar un archivo
+   */
+  async getFilePreviewUrl(filePath: string): Promise<string> {
+    try {
+      // Crear una URL del archivo para previsualizar
+      return `/api/files/preview?filePath=${encodeURIComponent(filePath)}`;
+    } catch (error) {
+      console.error('Error al obtener URL de previsualización:', error);
+      throw error;
     }
-    
-    // Crear FormData
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    // Añadir metadatos como parámetros
-    if (entityType) formData.append('entityType', entityType);
-    if (entityId) formData.append('entityId', entityId.toString());
-    
-    // Subir archivo
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include'
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Error al subir el archivo');
+  },
+
+  /**
+   * Versión sincrónica para obtener la URL de previsualización (útil para atributos src)
+   */
+  getFilePreviewUrlSync(filePath: string): string {
+    return `/api/files/preview?filePath=${encodeURIComponent(filePath)}`;
+  },
+
+  /**
+   * Obtiene los metadatos de un archivo
+   */
+  async getFileMetadata(filePath: string): Promise<FileMetadata | null> {
+    try {
+      // Usamos fetch directamente para manejar errores 404
+      const response = await fetch(`/api/files/metadata?filePath=${encodeURIComponent(filePath)}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // Archivo no encontrado
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al obtener metadatos del archivo');
+      }
+      
+      const data = await response.json();
+      return data.metadata;
+    } catch (error) {
+      console.error('Error al obtener metadatos del archivo:', error);
+      throw error;
     }
-    
-    const data = await response.json();
-    
-    // Determinar tipo de archivo
-    let fileType: 'image' | 'pdf' | 'document' | 'other' = 'other';
-    if (file.type.startsWith('image/')) {
-      fileType = 'image';
-    } else if (file.type === 'application/pdf') {
-      fileType = 'pdf';
-    } else if (file.type.includes('word') || file.type.includes('document')) {
-      fileType = 'document';
+  },
+
+  /**
+   * Obtiene todos los archivos asociados a una entidad
+   */
+  async getFilesByEntity(entityType: string, entityId: number): Promise<string[]> {
+    try {
+      // Como apiRequest ahora devuelve los datos JSON directamente
+      const response = await fetch(`/api/files/by-entity?entityType=${entityType}&entityId=${entityId}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al obtener archivos');
+      }
+      
+      const data = await response.json();
+      return data.files || [];
+    } catch (error) {
+      console.error('Error al obtener archivos por entidad:', error);
+      throw error;
     }
-    
-    // Crear y devolver metadata
-    const fileMetadata: FileMetadata = {
-      filename: data.filename,
-      originalName: file.name,
-      path: data.path,
-      size: file.size,
-      mimeType: file.type,
-      uploadDate: new Date().toISOString(),
-      fileType,
-      thumbnailPath: fileType === 'image' ? data.path : undefined
-    };
-    
-    return fileMetadata;
-    
-  } catch (error: any) {
-    console.error('Error al subir el archivo:', error);
-    toast({
-      title: 'Error al subir el archivo',
-      description: error.message || 'Ha ocurrido un error al subir el archivo',
-      variant: 'destructive'
-    });
-    return null;
-  }
+  },
 };
 
-// Función para visualizar un archivo
-export const viewFile = (filePath: string): void => {
-  try {
-    // Extraer solo el nombre del archivo sin la ruta
-    const filename = filePath.split('/').pop();
-    if (!filename) {
-      throw new Error('Ruta de archivo inválida');
-    }
-    
-    // Abrir archivo en nueva pestaña
-    window.open(`/api/view-file/${filename}`, '_blank');
-    
-  } catch (error: any) {
-    console.error('Error al visualizar el archivo:', error);
-    toast({
-      title: 'Error al visualizar el archivo',
-      description: error.message || 'No se pudo abrir el archivo',
-      variant: 'destructive'
-    });
-  }
-};
-
-// Función para descargar un archivo
-export const downloadFile = (filePath: string, customName?: string): void => {
-  try {
-    // Extraer solo el nombre del archivo sin la ruta
-    const filename = filePath.split('/').pop();
-    if (!filename) {
-      throw new Error('Ruta de archivo inválida');
-    }
-    
-    // Crear URL para descarga
-    const downloadUrl = `/api/download/${filename}`;
-    
-    // Si se proporciona un nombre personalizado, agregarlo como parámetro
-    const urlWithParams = customName 
-      ? `${downloadUrl}?customName=${encodeURIComponent(customName)}`
-      : downloadUrl;
-    
-    // Abrir en una nueva pestaña para descarga
-    window.open(urlWithParams, '_blank');
-    
-  } catch (error: any) {
-    console.error('Error al descargar el archivo:', error);
-    toast({
-      title: 'Error al descargar el archivo',
-      description: error.message || 'No se pudo descargar el archivo',
-      variant: 'destructive'
-    });
-  }
-};
-
-// Función para eliminar un archivo (solo marca para eliminación en el servidor)
-export const deleteFile = async (filePath: string): Promise<boolean> => {
-  try {
-    // Extraer solo el nombre del archivo sin la ruta
-    const filename = filePath.split('/').pop();
-    if (!filename) {
-      throw new Error('Ruta de archivo inválida');
-    }
-    
-    // Enviar solicitud para eliminar
-    const response = await fetch(`/api/files/${filename}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Error al eliminar el archivo');
-    }
-    
-    toast({
-      title: 'Archivo eliminado',
-      description: 'El archivo ha sido eliminado correctamente',
-    });
-    
-    return true;
-    
-  } catch (error: any) {
-    console.error('Error al eliminar el archivo:', error);
-    toast({
-      title: 'Error al eliminar el archivo',
-      description: error.message || 'No se pudo eliminar el archivo',
-      variant: 'destructive'
-    });
-    return false;
-  }
-};
-
-// Función para obtener una URL de vista previa para un archivo
-export const getPreviewUrl = (filePath: string): string => {
-  // Si es una ruta completa, extraer solo el nombre del archivo
-  const filename = filePath.startsWith('/uploads/') 
-    ? filePath.split('/').pop() || ''
-    : filePath;
-    
-  // Devolver URL para vista previa
-  return `/api/view-file/${filename}`;
-};
-
-// Función utilitaria para determinar si un archivo es una imagen
-export const isImageFile = (filename: string): boolean => {
-  const extension = filename.split('.').pop()?.toLowerCase();
-  return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '');
-};
-
-// Función utilitaria para determinar si un archivo es un PDF
-export const isPdfFile = (filename: string): boolean => {
-  const extension = filename.split('.').pop()?.toLowerCase();
-  return extension === 'pdf';
-};
-
-// Función para formatear el tamaño del archivo
-export const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
+export default fileStorageService;
