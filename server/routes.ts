@@ -4318,13 +4318,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obtener información del usuario actual para verificar su rol
       const currentUser = await storage.getUser(req.session.userId);
       
-      // Verificar si es un usuario autorizado (superadmin, SUPERADMIN, admin, o username "Superadmin")
-      if (!currentUser || (
-        currentUser.role !== 'superadmin' && 
-        currentUser.role !== 'SUPERADMIN' && 
-        currentUser.role !== 'admin' &&
-        currentUser.username !== 'Superadmin'
-      )) {
+      // Verificar si es un usuario autorizado (superadmin, SUPERADMIN, admin, o username "Superadmin" o "billeo_admin")
+      const isSuperAdmin = currentUser && (
+        currentUser.role === 'superadmin' || 
+        currentUser.role === 'SUPERADMIN' || 
+        currentUser.username === 'Superadmin' ||
+        currentUser.username === 'billeo_admin'
+      );
+      
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      
+      if (!currentUser || (!isSuperAdmin && !isAdmin)) {
         return res.status(403).json({ 
           success: false, 
           message: "Acceso denegado. Se requieren permisos de administrador" 
@@ -4338,6 +4342,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!targetUser) {
         return res.status(404).json({ success: false, message: "Usuario no encontrado" });
       }
+      
+      // Si es un administrador normal (no superadmin), verificar que tenga acceso a este usuario
+      if (isAdmin && !isSuperAdmin) {
+        // Obtener el cliente asociado a este usuario
+        const targetClient = await db.select().from(clients).where(eq(clients.userId, userId)).limit(1);
+        
+        if (targetClient.length === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: "El usuario no tiene cliente asociado" 
+          });
+        }
+        
+        // Verificar si el admin tiene asignado este cliente
+        const clientId = targetClient[0].id;
+        const hasAccess = await db.select()
+          .from(adminClientRelations)
+          .where(
+            and(
+              eq(adminClientRelations.adminId, currentUser.id),
+              eq(adminClientRelations.clientId, clientId)
+            )
+          )
+          .limit(1);
+          
+        if (hasAccess.length === 0) {
+          return res.status(403).json({ 
+            success: false, 
+            message: "No tiene permisos para ver el libro de registros de este usuario ya que no tiene acceso a su cliente asociado."
+          });
+        }
+      }
+      // Los superadmins tienen acceso a todos los usuarios, no necesitan verificación adicional
       
       // Aplicar filtros de fecha si existen
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
