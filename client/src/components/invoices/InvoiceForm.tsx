@@ -573,8 +573,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           items: formattedItems,
         });
       } else {
+        // Añadir una bandera explícita para crear transacción si la factura está pagada
+        const createTransaction = formattedData.status === 'paid';
         return apiRequest("POST", "/api/invoices", {
-          invoice: formattedData,
+          invoice: {
+            ...formattedData,
+            createTransaction // Agregar flag explícito para el backend
+          },
           items: formattedItems,
         });
       }
