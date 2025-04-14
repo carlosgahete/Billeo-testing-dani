@@ -873,7 +873,7 @@ export default function SimpleLibroRegistros() {
           <div className="flex items-end space-x-2">
             <Button 
               variant="outline" 
-              className="flex items-center bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700 px-5 min-w-[120px]"
+              className="flex items-center bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700 px-6 min-w-[140px]"
               onClick={handleDownloadPDF}
             >
               <FileText className="h-5 w-5 mr-2" />
@@ -881,7 +881,7 @@ export default function SimpleLibroRegistros() {
             </Button>
             <Button 
               variant="outline" 
-              className="flex items-center bg-green-50 border-green-200 hover:bg-green-100 text-green-700 px-5 min-w-[120px]"
+              className="flex items-center bg-green-50 border-green-200 hover:bg-green-100 text-green-700 px-6 min-w-[140px]"
               onClick={handleDownloadExcel}
             >
               <FileSpreadsheet className="h-5 w-5 mr-2" />
