@@ -1,4 +1,75 @@
 import React, { useState } from "react";
+
+// DeleteQuoteDialog component
+const DeleteQuoteDialog = ({ 
+  quoteId, 
+  quoteNumber, 
+  onConfirm 
+}: { 
+  quoteId: number; 
+  quoteNumber: string; 
+  onConfirm: () => void; 
+}) => {
+  const { toast } = useToast();
+  const [isPending, setIsPending] = useState(false);
+
+  const handleDelete = async () => {
+    setIsPending(true);
+    try {
+      // Eliminar el presupuesto
+      await apiRequest("DELETE", `/api/quotes/${quoteId}`);
+      
+      // Notificar al usuario
+      toast({
+        title: "Presupuesto eliminado",
+        description: `El presupuesto ${quoteNumber} ha sido eliminado con éxito`,
+      });
+      
+      // Cerrar el diálogo y actualizar datos
+      onConfirm();
+      
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `No se pudo eliminar el presupuesto: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-red-600 transition-colors"
+          aria-label="Eliminar presupuesto"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar presupuesto</AlertDialogTitle>
+          <AlertDialogDescription>
+            ¿Estás seguro de que quieres eliminar el presupuesto {quoteNumber}? Esta acción no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleDelete}
+            disabled={isPending}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            {isPending ? "Eliminando..." : "Eliminar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn, apiRequest } from "@/lib/queryClient";
@@ -28,6 +99,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
