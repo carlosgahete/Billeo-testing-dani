@@ -558,12 +558,71 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
   });
 
   // Versión simplificada para diagnóstico
-  const handleSubmit = (data: any) => {
-    console.log("Submit form data:", data);
-    toast({
-      title: "Formulario enviado",
-      description: "Datos recibidos correctamente"
-    });
+  const handleSubmit = async (data: any) => {
+    try {
+      console.log("Submit form data:", data);
+      
+      // Preparamos los datos para enviar al servidor
+      const payload = {
+        invoice: {
+          invoiceNumber: data.invoiceNumber,
+          clientId: data.clientId,
+          issueDate: data.issueDate,
+          dueDate: data.dueDate,
+          subtotal: data.subtotal,
+          tax: data.tax,
+          total: data.total,
+          status: data.status,
+          notes: data.notes || "",
+          additionalTaxes: data.additionalTaxes || [],
+          attachments: attachments.length > 0 ? attachments : data.attachments,
+        },
+        items: data.items.map((item: any) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          taxRate: item.taxRate,
+          subtotal: item.subtotal,
+        }))
+      };
+      
+      console.log("Enviando datos al servidor:", payload);
+      
+      // Determinamos la URL y método según si estamos editando o creando
+      const url = isEditMode ? `/api/invoices/${invoiceId}` : '/api/invoices';
+      const method = isEditMode ? "PATCH" : "POST";
+      
+      // Enviamos los datos al servidor
+      const response = await apiRequest(method, url, payload);
+      console.log("Respuesta del servidor:", response);
+      
+      // Mostrar mensaje de éxito
+      toast({
+        title: isEditMode ? "Factura actualizada" : "Factura creada",
+        description: isEditMode ? "Los cambios se han guardado correctamente" : "La factura se ha creado correctamente"
+      });
+      
+      // Limpiar los datos guardados en localStorage
+      if (!isEditMode) {
+        clearSavedFormState();
+      }
+      
+      // Actualizar la caché de consultas
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Redireccionar a la lista de facturas después de un breve retraso
+      setTimeout(() => {
+        navigate("/invoices");
+      }, 1500);
+      
+    } catch (error: any) {
+      console.error("Error al guardar la factura:", error);
+      toast({
+        title: "Error al guardar",
+        description: error.message || "Ha ocurrido un error al guardar la factura",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddItem = () => {
