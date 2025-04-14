@@ -1,0 +1,830 @@
+import React, { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Download, FileSpreadsheet } from "lucide-react";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { PageHeader } from "@/components/page-header";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+// Funciones de utilidades para formatear fecha y moneda
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return format(date, "dd/MM/yyyy", { locale: es });
+  } catch (e) {
+    return dateString;
+  }
+};
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2
+  }).format(amount);
+};
+
+// Tipo para todos los datos del libro de registros
+interface LibroRegistrosData {
+  user: {
+    id: number;
+    username: string;
+    name?: string;
+    email: string;
+  };
+  invoices: InvoiceRecord[];
+  transactions: TransactionRecord[];
+  quotes: QuoteRecord[];
+  summary: SummaryData;
+}
+
+// Tipo para facturas
+interface InvoiceRecord {
+  id: number;
+  number: string;
+  date: string;
+  clientName: string;
+  subtotal: string;
+  tax: string;
+  total: string;
+  status: string;
+}
+
+// Tipo para presupuestos
+interface QuoteRecord {
+  id: number;
+  number: string;
+  date: string;
+  clientName: string;
+  total: string;
+  status: string;
+}
+
+// Tipo para transacciones
+interface TransactionRecord {
+  id: number;
+  date: string;
+  description: string;
+  category?: string;
+  type: string;
+  amount: string;
+}
+
+// Tipo para los datos de resumen
+interface SummaryData {
+  totalInvoices: number;
+  totalTransactions: number;
+  totalQuotes: number;
+  incomeTotal: number;
+  expenseTotal: number;
+  balance: number;
+  vatCollected?: number;
+  vatPaid?: number;
+  vatBalance?: number;
+}
+
+// Componente principal
+export default function LibroRegistrosPage() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Estado para controlar la carga de datos
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<LibroRegistrosData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Estados para filtros
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  
+  // Datos filtrados
+  const [filteredInvoices, setFilteredInvoices] = useState<InvoiceRecord[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<TransactionRecord[]>([]);
+  const [filteredQuotes, setFilteredQuotes] = useState<QuoteRecord[]>([]);
+  const [summary, setSummary] = useState<SummaryData | null>(null);
+  
+  // Redirección si no hay usuario
+  useEffect(() => {
+    if (!user) {
+      setLocation("/auth");
+    }
+  }, [user, setLocation]);
+  
+  // Función para cargar datos del libro de registros
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const userId = user.id.toString();
+        const apiUrl = `/api/libro-registros/${userId}?year=${selectedYear}&quarter=${selectedQuarter}&month=${selectedMonth}`;
+        
+        const response = await fetch(apiUrl, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const jsonData = await response.json();
+        setData(jsonData);
+      } catch (err) {
+        console.error("Error al cargar datos del libro de registros:", err);
+        setError(`No se pudieron cargar los datos del libro de registros: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [user, selectedYear, selectedQuarter, selectedMonth]);
+  
+  // Filtrar datos cuando cambian los filtros o los datos
+  useEffect(() => {
+    if (!data) return;
+    
+    // Filtro de año
+    const year = parseInt(selectedYear);
+    
+    // Filtro de trimestre
+    let quarterMonths: number[] = [];
+    if (selectedQuarter === "Q1") quarterMonths = [1, 2, 3];
+    if (selectedQuarter === "Q2") quarterMonths = [4, 5, 6];
+    if (selectedQuarter === "Q3") quarterMonths = [7, 8, 9];
+    if (selectedQuarter === "Q4") quarterMonths = [10, 11, 12];
+    
+    // Filtro de mes específico
+    const month = selectedMonth !== "all" ? parseInt(selectedMonth) : null;
+    
+    // Filtrar facturas
+    const invoices = data.invoices.filter(invoice => {
+      const date = new Date(invoice.date);
+      const invoiceYear = date.getFullYear();
+      const invoiceMonth = date.getMonth() + 1;
+      
+      // Filtrar por año
+      if (invoiceYear !== year) return false;
+      
+      // Filtrar por trimestre si está seleccionado
+      if (selectedQuarter !== "all" && !quarterMonths.includes(invoiceMonth)) return false;
+      
+      // Filtrar por mes si está seleccionado
+      if (month !== null && invoiceMonth !== month) return false;
+      
+      return true;
+    });
+    
+    // Filtrar presupuestos
+    const quotes = data.quotes.filter(quote => {
+      const date = new Date(quote.date);
+      const quoteYear = date.getFullYear();
+      const quoteMonth = date.getMonth() + 1;
+      
+      // Filtrar por año
+      if (quoteYear !== year) return false;
+      
+      // Filtrar por trimestre si está seleccionado
+      if (selectedQuarter !== "all" && !quarterMonths.includes(quoteMonth)) return false;
+      
+      // Filtrar por mes si está seleccionado
+      if (month !== null && quoteMonth !== month) return false;
+      
+      return true;
+    });
+    
+    // Filtrar transacciones
+    const transactions = data.transactions.filter(transaction => {
+      const date = new Date(transaction.date);
+      const transactionYear = date.getFullYear();
+      const transactionMonth = date.getMonth() + 1;
+      
+      // Filtrar por año
+      if (transactionYear !== year) return false;
+      
+      // Filtrar por trimestre si está seleccionado
+      if (selectedQuarter !== "all" && !quarterMonths.includes(transactionMonth)) return false;
+      
+      // Filtrar por mes si está seleccionado
+      if (month !== null && transactionMonth !== month) return false;
+      
+      return true;
+    });
+    
+    // Calcular resumen
+    const incomeTransactions = transactions.filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+    const expenseTransactions = transactions.filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+    // Calcular totales de facturas
+    const invoiceTotal = invoices.reduce((sum, inv) => sum + parseFloat(inv.total), 0);
+    
+    // Actualizar estados
+    setFilteredInvoices(invoices);
+    setFilteredQuotes(quotes);
+    setFilteredTransactions(transactions);
+    
+    // Actualizar resumen
+    setSummary({
+      totalInvoices: invoices.length,
+      totalTransactions: transactions.length,
+      totalQuotes: quotes.length,
+      incomeTotal: invoiceTotal,
+      expenseTotal: expenseTransactions,
+      balance: invoiceTotal - expenseTransactions
+    });
+    
+  }, [data, selectedYear, selectedQuarter, selectedMonth]);
+  
+  // Función para exportar a PDF
+  const exportToPDF = () => {
+    if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
+      toast({
+        title: "Error",
+        description: "No hay datos para exportar",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const doc = new jsPDF();
+      
+      // Título
+      doc.setFontSize(18);
+      doc.text("Libro de Registros", 14, 20);
+      
+      // Filtros aplicados
+      doc.setFontSize(10);
+      let filterText = `Año: ${selectedYear}`;
+      if (selectedQuarter !== "all") filterText += `, Trimestre: ${selectedQuarter}`;
+      if (selectedMonth !== "all") {
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        filterText += `, Mes: ${monthNames[parseInt(selectedMonth) - 1]}`;
+      }
+      doc.text(filterText, 14, 28);
+      
+      // Resumen
+      doc.setFontSize(12);
+      doc.text("Resumen", 14, 38);
+      
+      doc.setFontSize(10);
+      doc.text(`Facturas: ${summary.totalInvoices} - Total: ${formatCurrency(summary.incomeTotal)}`, 14, 46);
+      doc.text(`Gastos: ${filteredTransactions.filter(t => t.type === 'expense').length} - Total: ${formatCurrency(summary.expenseTotal)}`, 14, 54);
+      doc.text(`Presupuestos: ${summary.totalQuotes}`, 14, 62);
+      doc.text(`Balance: ${formatCurrency(summary.balance)}`, 14, 70);
+      
+      // Facturas
+      doc.setFontSize(12);
+      doc.text("Facturas emitidas", 14, 82);
+      
+      // @ts-ignore - La biblioteca jspdf-autotable no está bien tipada con TypeScript
+      doc.autoTable({
+        startY: 86,
+        head: [['Número', 'Fecha', 'Cliente', 'Base imponible', 'IVA', 'Total', 'Estado']],
+        body: filteredInvoices.map(inv => [
+          inv.number,
+          formatDate(inv.date),
+          inv.clientName,
+          formatCurrency(parseFloat(inv.subtotal)),
+          formatCurrency(parseFloat(inv.tax)),
+          formatCurrency(parseFloat(inv.total)),
+          inv.status === 'paid' ? 'Pagada' : inv.status
+        ])
+      });
+      
+      // Presupuestos
+      // @ts-ignore
+      const finalY = doc.lastAutoTable.finalY || 150;
+      doc.setFontSize(12);
+      doc.text("Presupuestos", 14, finalY + 10);
+      
+      // @ts-ignore
+      doc.autoTable({
+        startY: finalY + 14,
+        head: [['Número', 'Fecha', 'Cliente', 'Total', 'Estado']],
+        body: filteredQuotes.map(quote => [
+          quote.number,
+          formatDate(quote.date),
+          quote.clientName,
+          formatCurrency(parseFloat(quote.total)),
+          quote.status === 'accepted' ? 'Aceptado' : 
+          quote.status === 'rejected' ? 'Rechazado' : quote.status
+        ])
+      });
+      
+      // Gastos y transacciones
+      // @ts-ignore
+      const finalY2 = doc.lastAutoTable.finalY || finalY + 60;
+      
+      // Verificar si necesitamos una nueva página
+      if (finalY2 > 240) {
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.text("Gastos y transacciones", 14, 20);
+        
+        // @ts-ignore
+        doc.autoTable({
+          startY: 24,
+          head: [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']],
+          body: filteredTransactions.map(t => [
+            formatDate(t.date),
+            t.description,
+            t.category || '',
+            t.type === 'income' ? 'Ingreso' : 'Gasto',
+            formatCurrency(parseFloat(t.amount))
+          ])
+        });
+      } else {
+        doc.setFontSize(12);
+        doc.text("Gastos y transacciones", 14, finalY2 + 10);
+        
+        // @ts-ignore
+        doc.autoTable({
+          startY: finalY2 + 14,
+          head: [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']],
+          body: filteredTransactions.map(t => [
+            formatDate(t.date),
+            t.description,
+            t.category || '',
+            t.type === 'income' ? 'Ingreso' : 'Gasto',
+            formatCurrency(parseFloat(t.amount))
+          ])
+        });
+      }
+      
+      doc.save(`libro-registros-${selectedYear}-${selectedQuarter}-${selectedMonth}.pdf`);
+      
+      toast({
+        title: "Éxito",
+        description: "El PDF se ha descargado correctamente",
+      });
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Función para exportar a Excel (en este ejemplo, como CSV)
+  const exportToExcel = () => {
+    if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
+      toast({
+        title: "Error",
+        description: "No hay datos para exportar",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Crear CSV para facturas
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      // Encabezados y resumen
+      csvContent += "LIBRO DE REGISTROS\\n";
+      csvContent += `Año: ${selectedYear}, `;
+      if (selectedQuarter !== "all") csvContent += `Trimestre: ${selectedQuarter}, `;
+      if (selectedMonth !== "all") {
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        csvContent += `Mes: ${monthNames[parseInt(selectedMonth) - 1]}`;
+      }
+      csvContent += "\\n\\n";
+      
+      // Resumen
+      csvContent += "RESUMEN\\n";
+      csvContent += `Facturas: ${summary.totalInvoices} - Total: ${formatCurrency(summary.incomeTotal)}\\n`;
+      csvContent += `Gastos: ${filteredTransactions.filter(t => t.type === 'expense').length} - Total: ${formatCurrency(summary.expenseTotal)}\\n`;
+      csvContent += `Presupuestos: ${summary.totalQuotes}\\n`;
+      csvContent += `Balance: ${formatCurrency(summary.balance)}\\n\\n`;
+      
+      // Facturas
+      csvContent += "FACTURAS EMITIDAS\\n";
+      csvContent += "Número,Fecha,Cliente,Base imponible,IVA,Total,Estado\\n";
+      
+      filteredInvoices.forEach(inv => {
+        csvContent += `${inv.number},${formatDate(inv.date)},${inv.clientName},${inv.subtotal},${inv.tax},${inv.total},${inv.status === 'paid' ? 'Pagada' : inv.status}\\n`;
+      });
+      
+      csvContent += "\\n";
+      
+      // Presupuestos
+      csvContent += "PRESUPUESTOS\\n";
+      csvContent += "Número,Fecha,Cliente,Total,Estado\\n";
+      
+      filteredQuotes.forEach(quote => {
+        const status = quote.status === 'accepted' ? 'Aceptado' : 
+                      quote.status === 'rejected' ? 'Rechazado' : quote.status;
+                      
+        csvContent += `${quote.number},${formatDate(quote.date)},${quote.clientName},${quote.total},${status}\\n`;
+      });
+      
+      csvContent += "\\n";
+      
+      // Gastos y transacciones
+      csvContent += "GASTOS Y TRANSACCIONES\\n";
+      csvContent += "Fecha,Descripción,Categoría,Tipo,Importe\\n";
+      
+      filteredTransactions.forEach(t => {
+        const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
+        csvContent += `${formatDate(t.date)},${t.description},${t.category || ''},${type},${t.amount}\\n`;
+      });
+      
+      // Crear un enlace para descargar el archivo
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `libro-registros-${selectedYear}-${selectedQuarter}-${selectedMonth}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Éxito",
+        description: "El archivo Excel se ha descargado correctamente",
+      });
+    } catch (error) {
+      console.error("Error al generar Excel:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar el archivo Excel",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Renderizar componente de carga
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <PageHeader
+          heading="Libro de Registros"
+          description="Consulta y exporta tu actividad financiera"
+        />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Renderizar mensaje de error
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <PageHeader
+          heading="Libro de Registros"
+          description="Consulta y exporta tu actividad financiera"
+        />
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="text-center text-red-500">{error}</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Si no hay datos después de cargar
+  if (!data || !summary) {
+    return (
+      <div className="container mx-auto py-6">
+        <PageHeader
+          heading="Libro de Registros"
+          description="Consulta y exporta tu actividad financiera"
+        />
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="text-center">No hay datos disponibles para mostrar.</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Renderizar componente principal
+  return (
+    <div className="container mx-auto py-6">
+      <PageHeader
+        heading="Libro de Registros"
+        description="Consulta y exporta tu actividad financiera"
+      />
+      
+      {/* Filtros y botones de exportación */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div>
+          <p className="text-sm mb-2 text-gray-500">Año</p>
+          <Select 
+            value={selectedYear} 
+            onValueChange={setSelectedYear}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar año" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <p className="text-sm mb-2 text-gray-500">Trimestre</p>
+          <Select 
+            value={selectedQuarter} 
+            onValueChange={setSelectedQuarter}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar trimestre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="Q1">1º Trimestre</SelectItem>
+              <SelectItem value="Q2">2º Trimestre</SelectItem>
+              <SelectItem value="Q3">3º Trimestre</SelectItem>
+              <SelectItem value="Q4">4º Trimestre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <p className="text-sm mb-2 text-gray-500">Mes</p>
+          <Select 
+            value={selectedMonth} 
+            onValueChange={setSelectedMonth}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar mes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="1">Enero</SelectItem>
+              <SelectItem value="2">Febrero</SelectItem>
+              <SelectItem value="3">Marzo</SelectItem>
+              <SelectItem value="4">Abril</SelectItem>
+              <SelectItem value="5">Mayo</SelectItem>
+              <SelectItem value="6">Junio</SelectItem>
+              <SelectItem value="7">Julio</SelectItem>
+              <SelectItem value="8">Agosto</SelectItem>
+              <SelectItem value="9">Septiembre</SelectItem>
+              <SelectItem value="10">Octubre</SelectItem>
+              <SelectItem value="11">Noviembre</SelectItem>
+              <SelectItem value="12">Diciembre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex gap-2 items-end">
+          <Button 
+            variant="outline" 
+            onClick={exportToPDF}
+            className="flex items-center gap-2"
+          >
+            <FileText size={16} />
+            Descargar PDF
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={exportToExcel}
+            className="flex items-center gap-2"
+          >
+            <FileSpreadsheet size={16} />
+            Descargar Excel
+          </Button>
+        </div>
+      </div>
+      
+      {/* Tarjetas de resumen */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-blue-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Facturas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalInvoices}</div>
+            <div className="text-sm text-gray-500">Total emitidas</div>
+            <div className="text-lg font-semibold mt-2">{formatCurrency(summary.incomeTotal)}</div>
+            <div className="text-sm text-gray-500">Importe total facturado</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-yellow-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Gastos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {filteredTransactions.filter(t => t.type === 'expense').length}
+            </div>
+            <div className="text-sm text-gray-500">Transacciones</div>
+            <div className="text-lg font-semibold mt-2">{formatCurrency(summary.expenseTotal)}</div>
+            <div className="text-sm text-gray-500">Importe total gastado</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-green-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Presupuestos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalQuotes}</div>
+            <div className="text-sm text-gray-500">Total presupuestos</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-purple-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(summary.balance)}</div>
+            <div className="text-sm text-gray-500">Resultado</div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Tabla de facturas */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">Facturas emitidas</h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Base</TableHead>
+                  <TableHead>IVA</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">No hay facturas en este período</TableCell>
+                  </TableRow>
+                ) : (
+                  filteredInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell>{invoice.number}</TableCell>
+                      <TableCell>{formatDate(invoice.date)}</TableCell>
+                      <TableCell>{invoice.clientName}</TableCell>
+                      <TableCell>{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
+                      <TableCell>{formatCurrency(parseFloat(invoice.tax))}</TableCell>
+                      <TableCell>{formatCurrency(parseFloat(invoice.total))}</TableCell>
+                      <TableCell>
+                        <Badge variant={invoice.status === 'paid' ? "success" : "default"}>
+                          {invoice.status === 'paid' ? 'Pagada' : invoice.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Tabla de gastos y transacciones */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">Gastos y transacciones</h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Importe</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No hay transacciones en este período</TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>{formatDate(transaction.date)}</TableCell>
+                      <TableCell>{transaction.description}</TableCell>
+                      <TableCell>{transaction.category || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={transaction.type === 'income' ? "success" : "destructive"}>
+                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatCurrency(parseFloat(transaction.amount))}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Tabla de presupuestos */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">Presupuestos</h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredQuotes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No hay presupuestos en este período</TableCell>
+                  </TableRow>
+                ) : (
+                  filteredQuotes.map((quote) => (
+                    <TableRow key={quote.id}>
+                      <TableCell>{quote.number}</TableCell>
+                      <TableCell>{formatDate(quote.date)}</TableCell>
+                      <TableCell>{quote.clientName}</TableCell>
+                      <TableCell>{formatCurrency(parseFloat(quote.total))}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            quote.status === 'accepted' ? "success" : 
+                            quote.status === 'rejected' ? "destructive" : 
+                            "default"
+                          }
+                        >
+                          {quote.status === 'accepted' ? 'Aceptado' : 
+                           quote.status === 'rejected' ? 'Rechazado' : 
+                           quote.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

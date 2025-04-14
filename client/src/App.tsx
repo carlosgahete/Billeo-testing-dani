@@ -42,7 +42,7 @@ import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
 import TestFormat from "@/test-format";
 import SimpleExpensePage from "@/pages/SimpleExpensePage";
-// Import de LibroRegistrosSelector eliminado
+import LibroRegistrosPage from "@/pages/libro-registros";
 import SimpleQuoteCreatePage from "@/pages/quotes/simple/create";
 import SimpleQuoteEditPage from "@/pages/quotes/simple/edit/[id]";
 import SimpleQuoteListPage from "@/pages/quotes/simple/list";
@@ -209,7 +209,7 @@ function Router() {
         <Layout>
           <ProtectedRoute 
             path="/libro-registros" 
-            component={SimpleExpensePage} 
+            component={LibroRegistrosPage} 
           />
         </Layout>
       </Route>
