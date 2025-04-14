@@ -4362,10 +4362,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const isAdmin = currentUser.role === 'admin';
       
-      if (!isSuperAdmin && !isAdmin) {
+      // Verificar si el usuario está intentando acceder a sus propios datos
+      const isViewingOwnData = currentUser.id === parseInt(req.params.userId);
+      
+      // Permitir acceso si es admin, superadmin o está viendo sus propios datos
+      if (!isSuperAdmin && !isAdmin && !isViewingOwnData) {
         return res.status(403).json({ 
           success: false, 
-          message: "Acceso denegado. Se requieren permisos de administrador" 
+          message: "Acceso denegado. No tiene permisos para ver estos registros" 
         });
       }
       
@@ -4421,6 +4425,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       // Los superadmins tienen acceso a todos los usuarios, no necesitan verificación adicional
+      
+      // Si el usuario no es admin ni superadmin, solo puede ver sus propios datos
+      if (!isAdmin && !isSuperAdmin && !isViewingOwnData) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Solo puede acceder a su propio libro de registros."
+        });
+      }
       
       // Aplicar filtros de fecha si existen
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
