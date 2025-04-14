@@ -311,6 +311,16 @@ export function MinimalQuoteList({ userId }: Props) {
 
   return (
     <div className="p-4 pb-32 overflow-y-auto min-h-full h-full">
+      {/* Título simple no fijo con botón de filtro */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold">Presupuestos</h1>
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          className="p-2 text-gray-500 hover:text-gray-700"
+        >
+          <Filter className="h-5 w-5" />
+        </button>
+      </div>
       
       {/* Filters section */}
       {showFilters && (
@@ -480,17 +490,7 @@ export function MinimalQuoteList({ userId }: Props) {
         </Link>
       </div>
       
-      {/* Botón flotante para filtros */}
-      <div className="fixed bottom-20 left-6">
-        <Button 
-          onClick={() => setShowFilters(!showFilters)}
-          size="icon"
-          variant="outline"
-          className="h-14 w-14 rounded-full shadow-lg bg-white"
-        >
-          <Filter className="h-6 w-6" />
-        </Button>
-      </div>
+
     </div>
   );
 }
