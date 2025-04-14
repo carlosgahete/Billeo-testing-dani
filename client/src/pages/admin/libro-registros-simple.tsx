@@ -128,8 +128,11 @@ export default function SimpleLibroRegistros() {
         
         const mappedUsers = usersList.map((u: any) => ({
           id: u.id,
-          username: u.username.toLowerCase(), // Convertir a minúsculas para facilitar búsqueda
-          name: u.name ? u.name.toLowerCase() : u.username.toLowerCase() // Convertir a minúsculas
+          username: u.username,
+          name: u.name || u.username,
+          // Añadimos campos para búsqueda en minúsculas
+          searchUsername: u.username.toLowerCase(),
+          searchName: u.name ? u.name.toLowerCase() : u.username.toLowerCase()
         }));
         
         console.log("Lista de usuarios procesada:", mappedUsers);
@@ -844,19 +847,21 @@ export default function SimpleLibroRegistros() {
                             // Si no hay término de búsqueda, mostrar todos
                             if (!searchTermLower) return true;
                             
-                            // Comprobar si el nombre o username contiene el término de búsqueda
-                            // Asegurar que no sea null o undefined antes de buscar
-                            const nameMatch = userOption.name 
-                              ? userOption.name.toLowerCase().includes(searchTermLower)
+                            // Usar los campos optimizados para búsqueda que ya están en minúsculas
+                            const nameMatch = userOption.searchName 
+                              ? userOption.searchName.includes(searchTermLower)
                               : false;
                             
-                            const usernameMatch = userOption.username
-                              ? userOption.username.toLowerCase().includes(searchTermLower)
+                            const usernameMatch = userOption.searchUsername
+                              ? userOption.searchUsername.includes(searchTermLower)
                               : false;
                             
                             // Log para depuración de por qué no encuentra resultados
                             if (searchTermLower.includes('javi')) {
                               console.log('Buscando "javi" en:', userOption);
+                              console.log('searchName:', userOption.searchName);
+                              console.log('searchUsername:', userOption.searchUsername);
+                              console.log('searchTerm:', searchTermLower);
                               console.log('Match nombre:', nameMatch);
                               console.log('Match username:', usernameMatch);
                             }
