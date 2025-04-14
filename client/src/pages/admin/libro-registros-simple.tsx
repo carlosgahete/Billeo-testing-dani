@@ -832,10 +832,21 @@ export default function SimpleLibroRegistros() {
                         
                         {/* Lista de todos los usuarios filtrados por búsqueda */}
                         {users
-                          .filter(userOption => 
-                            userOption.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                            userOption.username.toLowerCase().includes(userSearchTerm.toLowerCase())
-                          )
+                          .filter(userOption => {
+                            const searchTermLower = userSearchTerm.toLowerCase().trim();
+                            // Si no hay término de búsqueda, mostrar todos
+                            if (!searchTermLower) return true;
+                            
+                            // Comprobar si el nombre o username contiene el término de búsqueda
+                            const nameMatch = userOption.name 
+                              ? userOption.name.toLowerCase().includes(searchTermLower)
+                              : false;
+                            const usernameMatch = userOption.username
+                              ? userOption.username.toLowerCase().includes(searchTermLower)
+                              : false;
+                              
+                            return nameMatch || usernameMatch;
+                          })
                           .map((userOption) => (
                             <CommandItem
                               key={userOption.id}
