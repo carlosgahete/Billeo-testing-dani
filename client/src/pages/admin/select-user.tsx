@@ -68,8 +68,14 @@ export default function SelectUser() {
   };
 
   // Extraer parámetros de URL para redirección
+  const [location] = useLocation();
   const params = new URLSearchParams(window.location.search);
-  const redirectTarget = params.get('redirect');
+  let redirectTarget = params.get('redirect');
+  
+  // Si estamos accediendo desde la ruta de libro-registros, forzar el redirectTarget
+  if (location === '/admin/libro-registros' && !redirectTarget) {
+    redirectTarget = 'libro-registros';
+  }
 
   const handleLoginAsUser = async (userId: number) => {
     try {
@@ -137,9 +143,11 @@ export default function SelectUser() {
               className="h-8 mx-auto mb-4"
               loading="eager" 
             />
-            <h1 className="text-2xl font-bold mb-2">Seleccione el usuario</h1>
+            <h1 className="text-2xl font-bold mb-2">
+              {redirectTarget === 'libro-registros' ? "Libro de Registros" : "Seleccione el usuario"}
+            </h1>
             {redirectTarget === 'libro-registros' ? (
-              <p className="text-neutral-500">Elija el usuario para ver su libro de registros</p>
+              <p className="text-neutral-500">Seleccione el usuario para ver su libro de registros</p>
             ) : (
               <p className="text-neutral-500">Elija la cuenta a la que desea acceder</p>
             )}

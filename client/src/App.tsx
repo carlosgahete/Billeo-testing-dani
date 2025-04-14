@@ -191,6 +191,17 @@ function Router() {
       <Route path="/admin/select-user">
         <ProtectedAdminRoute path="/admin/select-user" component={SelectUserPage} />
       </Route>
+      
+      {/* Ruta principal para el Libro de Registros - Selector de usuarios */}
+      <Route path="/admin/libro-registros">
+        <Layout>
+          <ProtectedAdminRoute 
+            path="/admin/libro-registros" 
+            component={SelectUserPage} 
+          />
+        </Layout>
+      </Route>
+
       <Route path="/admin/libro-registros/:userId">
         {(params) => (
           <Layout>
