@@ -8,16 +8,16 @@ import { Separator } from '@/components/ui/separator';
 
 const LibroRegistrosSelector: React.FC = () => {
   const { user } = useAuth();
-  const isSuperAdmin = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN');
+  const hasAccess = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN' || user.role === 'admin');
 
-  if (!isSuperAdmin) {
+  if (!hasAccess) {
     return (
       <div className="container mx-auto py-10">
         <Card className="max-w-lg mx-auto">
           <CardHeader>
             <CardTitle>Acceso restringido</CardTitle>
             <CardDescription>
-              Sólo los superadministradores pueden acceder al Libro de Registros.
+              Sólo los administradores pueden acceder al Libro de Registros.
             </CardDescription>
           </CardHeader>
           <CardContent>
