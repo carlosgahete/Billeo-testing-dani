@@ -23,12 +23,9 @@ export default function MisRegistrosPage() {
   
   // Si hay usuario, mostramos su libro de registros pasando su propio ID como parámetro
   return (
-    <div className="px-4 py-6 md:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold mb-6">Mi Libro de Registros</h1>
-      <LibroRegistrosSimplePage 
-        params={{userId: user.id.toString()}} 
-        forceOwnUser={true} // Parámetro especial para forzar que solo vea sus propios datos
-      />
-    </div>
+    <LibroRegistrosSimplePage 
+      params={{userId: user.id.toString()}} 
+      forceOwnUser={true} // Parámetro especial para forzar que solo vea sus propios datos
+    />
   );
 }

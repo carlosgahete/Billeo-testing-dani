@@ -95,6 +95,7 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedCard, setSelectedCard] = useState<string>("all");
   
   // Usar los parámetros pasados por prop o por URL
   const params = propsParams || urlParams;
