@@ -342,7 +342,7 @@ export function MinimalQuoteList({ userId }: Props) {
       {/* Componente de filtro de presupuestos */}
       <div className="px-2">
         {/* 1. Barra de búsqueda estilo iOS */}
-        <div className="relative mb-1">
+        <div className="relative mb-3">
           <input
             type="text"
             placeholder="Buscar..."
@@ -364,7 +364,7 @@ export function MinimalQuoteList({ userId }: Props) {
         </div>
         
         {/* 2. Botones de filtro de estado */}
-        <div className="w-full bg-gray-100 p-1 rounded-lg flex mb-1">
+        <div className="w-full bg-gray-100 p-1 rounded-lg flex mb-4">
           <button 
             onClick={() => setStatusFilter('all')} 
             className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-center ${statusFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
