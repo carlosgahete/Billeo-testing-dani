@@ -243,6 +243,63 @@ export function MinimalQuoteList({ userId }: Props) {
     }
   };
   
+  // Función para enviar presupuesto por email
+  const handleSendByEmail = async (quoteId: number) => {
+    try {
+      // Mostrar un diálogo para introducir el email del destinatario
+      const email = prompt("Introduce el email del destinatario:");
+      
+      if (!email) {
+        return; // El usuario canceló
+      }
+      
+      // Validar email básico
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast({
+          title: "Error",
+          description: "Email no válido",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Mostrar notificación de envío
+      toast({
+        title: "Enviando email",
+        description: "Estamos enviando el presupuesto por email"
+      });
+      
+      // Llamar a la API para enviar el email
+      const response = await apiRequest("POST", `/api/quotes/${quoteId}/email`, { email });
+      
+      if (response.ok) {
+        toast({
+          title: "Email enviado",
+          description: `Presupuesto enviado a ${email}`
+        });
+        
+        // Actualizar el estado del presupuesto a enviado si no está ya enviado o aceptado
+        const quoteResponse = await apiRequest("GET", `/api/quotes/${quoteId}`);
+        const quoteData = await quoteResponse.json();
+        
+        if (quoteData.status !== "sent" && quoteData.status !== "accepted") {
+          await updateQuoteStatus(quoteId, "sent");
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al enviar el email");
+      }
+    } catch (error) {
+      console.error("Error al enviar email:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo enviar el presupuesto por email",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Handle summary download - Generamos un PDF con los datos actuales
   const handleDownloadSummary = async () => {
     try {
@@ -625,6 +682,28 @@ export function MinimalQuoteList({ userId }: Props) {
                         aria-label="Descargar PDF"
                       >
                         <Download className="h-4 w-4" />
+                      </button>
+                      
+                      {/* Botón para enviar por email */}
+                      <button
+                        onClick={() => handleSendByEmail(quote.id)}
+                        className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-blue-600 transition-colors"
+                        aria-label="Enviar por email"
+                      >
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                        </svg>
                       </button>
                       
                       {/* Botón para cambiar estado */}
