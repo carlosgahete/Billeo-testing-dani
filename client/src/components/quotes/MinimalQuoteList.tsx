@@ -145,8 +145,7 @@ export function MinimalQuoteList({ userId }: Props) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [quoteToDelete, setQuoteToDelete] = useState<number | null>(null);
+  // Estados para filtrado y ordenación
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilters, setShowFilters] = useState(false);
@@ -216,30 +215,7 @@ export function MinimalQuoteList({ userId }: Props) {
     }
   };
 
-  // Handle delete
-  const handleDelete = async () => {
-    if (quoteToDelete === null) return;
-    
-    try {
-      await apiRequest("DELETE", `/api/quotes/${quoteToDelete}`);
-      
-      toast({
-        title: "Presupuesto eliminado",
-        description: "El presupuesto ha sido eliminado correctamente"
-      });
-      
-      // Refresh the quotes list
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el presupuesto",
-        variant: "destructive"
-      });
-    }
-  };
+  // PDF and status update functions
 
   // Update quote status
   const updateQuoteStatus = async (quoteId: number, newStatus: string) => {
@@ -491,16 +467,11 @@ export function MinimalQuoteList({ userId }: Props) {
                         </button>
                       </Link>
                       
-                      <button
-                        onClick={() => {
-                          setQuoteToDelete(quote.id);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                        className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-red-600 transition-colors"
-                        aria-label="Eliminar presupuesto"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <DeleteQuoteDialog
+                        quoteId={quote.id}
+                        quoteNumber={quote.quoteNumber}
+                        onConfirm={() => queryClient.invalidateQueries({ queryKey: ["/api/quotes"] })}
+                      />
                     </div>
                   </div>
                 </div>
@@ -519,31 +490,7 @@ export function MinimalQuoteList({ userId }: Props) {
         </Link>
       </div>
       
-      {/* Delete confirmation dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Eliminar presupuesto</DialogTitle>
-            <DialogDescription>
-              ¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDelete}
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Botón flotante para añadir presupuestos */}
     </div>
   );
 }
