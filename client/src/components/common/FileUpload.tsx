@@ -9,6 +9,7 @@ interface FileUploadProps {
   accept?: string;
   compact?: boolean;
   buttonLabel?: string;
+  buttonClassName?: string;
 }
 
 const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false, buttonLabel }: FileUploadProps) => {
