@@ -238,6 +238,21 @@ function Router() {
       </Route>
       
       {/* Ruta mejorada del Libro de Registros protegida para admins y superadmins */}
+      
+      {/* Ruta para que los usuarios normales vean su propio libro de registros */}
+      <Route path="/mis-registros">
+        <Layout>
+          <ProtectedRoute
+            path="/mis-registros"
+            component={(props: any) => {
+              const { user } = useAuth();
+              return user ? (
+                <LibroRegistrosSimplePage params={{userId: user.id.toString()}} {...props} />
+              ) : <LoadingIndicator />;
+            }}
+          />
+        </Layout>
+      </Route>
       <Route path="/admin/libro-enhanced/:userId">
         {(params) => (
           <Layout>
