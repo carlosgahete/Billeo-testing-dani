@@ -408,8 +408,11 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
-  // Verificar si el documento contiene patrones que indiquen que es una factura con IRPF
-  const hasIrpfIndicators = /irpf|retencion|retención|profesional|autónomo|autonomo/i.test(normalizedText);
+  // Verificar si el documento contiene patrones EXPLÍCITOS que indiquen que es una factura con IRPF
+  // Esto es más restrictivo que la versión anterior - requiere menciones específicas de IRPF o retención
+  const hasIrpfIndicators = /irpf|retencion|retención/i.test(normalizedText);
+  
+  console.log(`¿Se encontraron indicadores explícitos de IRPF? ${hasIrpfIndicators ? 'SÍ' : 'NO'}`);
   
   // Inferencias si no se encontraron valores explícitos
   
@@ -420,10 +423,15 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     console.log(`IVA calculado: ${taxAmount.toFixed(2)}€ (${ivaRate}% de ${subtotal}€)`);
   }
   
-  // Si tenemos subtotal, posibles indicadores de IRPF, pero no monto de IRPF, calcularlo
+  // Ahora SOLO calculamos IRPF si hay indicadores EXPLÍCITOS en el documento
   if (subtotal > 0 && hasIrpfIndicators && irpfAmount === 0) {
     irpfAmount = subtotal * (irpfRate / 100);
     console.log(`IRPF calculado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal}€)`);
+  } else if (!hasIrpfIndicators) {
+    // Si NO hay indicadores de IRPF, aseguramos que no se aplique
+    irpfAmount = 0;
+    irpfRate = 0;
+    console.log(`No se encontraron menciones de IRPF en el documento - no se aplicará retención`);
   }
   
   // Si tenemos subtotal pero no importe total, calcular el total
@@ -447,10 +455,16 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       console.log(`Subtotal estimado: ${subtotal.toFixed(2)}€ (asumiendo IVA ${ivaRate}%)`);
       console.log(`IVA estimado: ${taxAmount.toFixed(2)}€`);
       
-      // Si hay indicadores de IRPF, estimar también el IRPF
-      if (hasIrpfIndicators) {
+      // Solo estimamos IRPF si hay indicadores EXPLÍCITOS de IRPF
+      // Ahora somos más estrictos para evitar asignar IRPF cuando no existe
+      if (hasIrpfIndicators && irpfRate > 0) {
         irpfAmount = subtotal * (irpfRate / 100);
         console.log(`IRPF estimado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal.toFixed(2)}€)`);
+      } else {
+        // Si no hay indicadores explícitos de IRPF, no aplicamos IRPF
+        irpfAmount = 0;
+        irpfRate = 0;
+        console.log(`No se encontraron menciones de IRPF, no se aplicará IRPF automáticamente`);
       }
     }
   }

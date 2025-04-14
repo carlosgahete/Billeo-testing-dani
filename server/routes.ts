@@ -2997,28 +2997,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Asegurarnos de que estamos trabajando con los datos correctos
       const processedData = extractedData.extractedData ? extractedData.extractedData : extractedData;
       
+      // Verificar si el documento realmente contiene indicadores de IRPF
+      const textContainsIRPF = processedData?.description?.toLowerCase().includes('irpf') ||
+                              processedData?.description?.toLowerCase().includes('retención') ||
+                              processedData?.provider?.toLowerCase().includes('profesional');
+      
+      console.log(`¿El documento contiene indicadores de IRPF?: ${textContainsIRPF ? 'SÍ' : 'NO'}`);
+      
       // Corregir valores numéricos de IRPF si son anormales (cuando el porcentaje viene como importe)
       if (processedData && typeof processedData === 'object') {
-        // Corregir valor del porcentaje de IRPF si es anormal
-        if (processedData.irpf && processedData.irpf > 100) {
-          console.log(`⚠️ Corrigiendo valor anormal de IRPF: ${processedData.irpf} -> -15`);
-          // Guardar el importe original antes de ajustar
-          const originalIrpfValue = processedData.irpf;
-          // Establecer el porcentaje de IRPF a un valor razonable (-15%)
-          processedData.irpf = -15;
-          
-          // Si irpfAmount no está establecido o es igual al porcentaje, calcularlo usando la base imponible
-          if (!processedData.irpfAmount || processedData.irpfAmount === originalIrpfValue) {
-            if (processedData.baseAmount) {
-              // Calcular el importe de IRPF como porcentaje de la base
-              processedData.irpfAmount = -(processedData.baseAmount * 0.15);
-              console.log(`⚠️ Recalculando importe IRPF basado en porcentaje: ${processedData.irpfAmount}`);
+        // Solo procesamos el IRPF si realmente hay indicadores en el documento
+        if (textContainsIRPF) {
+          // Corregir valor del porcentaje de IRPF si es anormal
+          if (processedData.irpf && processedData.irpf > 100) {
+            console.log(`⚠️ Corrigiendo valor anormal de IRPF: ${processedData.irpf} -> -15`);
+            // Guardar el importe original antes de ajustar
+            const originalIrpfValue = processedData.irpf;
+            // Establecer el porcentaje de IRPF a un valor razonable (-15%)
+            processedData.irpf = -15;
+            
+            // Si irpfAmount no está establecido o es igual al porcentaje, calcularlo usando la base imponible
+            if (!processedData.irpfAmount || processedData.irpfAmount === originalIrpfValue) {
+              if (processedData.baseAmount) {
+                // Calcular el importe de IRPF como porcentaje de la base
+                processedData.irpfAmount = -(processedData.baseAmount * 0.15);
+                console.log(`⚠️ Recalculando importe IRPF basado en porcentaje: ${processedData.irpfAmount}`);
+              }
             }
+          } else if (processedData.irpf && processedData.irpf > 0) {
+            // Si el IRPF es positivo pero razonable, lo convertimos a negativo
+            console.log(`⚠️ Corrigiendo signo de porcentaje IRPF: ${processedData.irpf} -> ${-processedData.irpf}`);
+            processedData.irpf = -Math.abs(processedData.irpf);
           }
-        } else if (processedData.irpf && processedData.irpf > 0) {
-          // Si el IRPF es positivo pero razonable, lo convertimos a negativo
-          console.log(`⚠️ Corrigiendo signo de porcentaje IRPF: ${processedData.irpf} -> ${-processedData.irpf}`);
-          processedData.irpf = -Math.abs(processedData.irpf);
+        } else {
+          // Si NO hay indicadores de IRPF en el documento, forzamos que no se aplique IRPF
+          console.log(`⚠️ No se detectaron indicadores de IRPF en el documento, eliminando cualquier valor de IRPF`);
+          processedData.irpf = 0;
+          processedData.irpfAmount = 0;
+          processedData.irpfRate = 0;
         }
         
         // Asegurar que el importe de IRPF es negativo (retención)
