@@ -36,6 +36,7 @@ import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
 import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
+import LibroRegistrosSimpleTest from "@/pages/admin/libro-registros-simple-test";
 import LibroRegistrosClientPage from "@/pages/admin/libro-registros-client";
 import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
@@ -246,6 +247,14 @@ function Router() {
             path="/admin/libro-registros-simple" 
             component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
           />
+        </Layout>
+      </Route>
+      
+      {/* Ruta del Libro de Registros para pruebas (sin autenticación) */}
+      <Route path="/admin/libro-registros-test">
+        <Layout>
+          {/* Componente de prueba sin protección de autenticación */}
+          <LibroRegistrosSimpleTest />
         </Layout>
       </Route>
       
