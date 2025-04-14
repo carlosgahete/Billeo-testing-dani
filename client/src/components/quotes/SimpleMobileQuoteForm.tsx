@@ -218,7 +218,13 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
               <select
                 className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 appearance-none text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
                 value={selectedClientId || ""}
-                onChange={(e) => setSelectedClientId(Number(e.target.value))}
+                onChange={(e) => {
+                  if (e.target.value === "new") {
+                    navigate("/clients/create");
+                    return;
+                  }
+                  setSelectedClientId(Number(e.target.value));
+                }}
                 required
               >
                 <option value="">Seleccionar cliente</option>
@@ -227,6 +233,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
                     {client.name} {client.taxId ? `(${client.taxId})` : ''}
                   </option>
                 ))}
+                <option value="new" className="text-[#007AFF] font-medium">+ Añadir nuevo cliente</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="m6 9 6 6 6-6"/></svg>
