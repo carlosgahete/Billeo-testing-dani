@@ -544,7 +544,7 @@ export default function LibroRegistrosPage() {
   return (
     <div className="container mx-auto py-6">
       <PageHeader
-        heading="Libro de Registros"
+        title="Libro de Registros"
         description="Consulta y exporta tu actividad financiera"
       />
       
@@ -723,7 +723,7 @@ export default function LibroRegistrosPage() {
                       <TableCell>{formatCurrency(parseFloat(invoice.tax))}</TableCell>
                       <TableCell>{formatCurrency(parseFloat(invoice.total))}</TableCell>
                       <TableCell>
-                        <Badge variant={invoice.status === 'paid' ? "success" : "default"}>
+                        <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}>
                           {invoice.status === 'paid' ? 'Pagada' : invoice.status}
                         </Badge>
                       </TableCell>
@@ -763,7 +763,7 @@ export default function LibroRegistrosPage() {
                       <TableCell>{transaction.description}</TableCell>
                       <TableCell>{transaction.category || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={transaction.type === 'income' ? "success" : "destructive"}>
+                        <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-red-100 text-red-800 hover:bg-red-100"}>
                           {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                         </Badge>
                       </TableCell>
@@ -806,10 +806,10 @@ export default function LibroRegistrosPage() {
                       <TableCell>{formatCurrency(parseFloat(quote.total))}</TableCell>
                       <TableCell>
                         <Badge 
-                          variant={
-                            quote.status === 'accepted' ? "success" : 
-                            quote.status === 'rejected' ? "destructive" : 
-                            "default"
+                          className={
+                            quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100" : 
+                            quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100" : 
+                            ""
                           }
                         >
                           {quote.status === 'accepted' ? 'Aceptado' : 
