@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { db } from './db';
 import { eq } from 'drizzle-orm';
-import { files } from '@shared/schema';
+import * as schema from '@shared/schema';
 
 // Configuración del directorio de uploads
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -155,8 +155,8 @@ export function configureFileRoutes(app: express.Express) {
         // Intentar insertar registro en la tabla de archivos
         // Esto depende de si tienes una tabla para archivos en tu esquema
         // Si no existe, simplemente se ignora esta parte
-        if (db && files) {
-          await db.insert(files).values({
+        if (db && schema.files) {
+          await db.insert(schema.files).values({
             userId: req.session.userId,
             filename: req.file.filename,
             originalName: req.file.originalname,
@@ -222,8 +222,8 @@ export function configureFileRoutes(app: express.Express) {
       
       // Si estamos usando base de datos, eliminar el registro
       try {
-        if (db && files) {
-          await db.delete(files).where(eq(files.filename, filename));
+        if (db && schema.files) {
+          await db.delete(schema.files).where(eq(schema.files.filename, filename));
         }
       } catch (dbError) {
         console.error('Error al eliminar registro de archivo:', dbError);
@@ -326,8 +326,8 @@ export function configureFileRoutes(app: express.Express) {
       // Intentar obtener metadatos de la base de datos si existe
       let dbMetadata = null;
       try {
-        if (db && files) {
-          const result = await db.select().from(files).where(eq(files.filename, filename));
+        if (db && schema.files) {
+          const result = await db.select().from(schema.files).where(eq(schema.files.filename, filename));
           if (result.length > 0) {
             dbMetadata = result[0];
           }

@@ -9,6 +9,7 @@ import { configureDirectExpenseRoutes } from "./routes-direct-expenses";
 import { configureOptionsRoutes } from "./routes-options";
 import { configureSimpleExpensesRoutes } from "./routes-simple-expenses";
 import { configureExpensesRoutes } from "./routes-expenses";
+import { configureFileRoutes } from "./routes-files";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Obtener el equivalente a __dirname en ESM
@@ -101,6 +102,9 @@ app.use((req, res, next) => {
   
   // Configurar ruta principal para el nuevo formulario de gastos con FormData
   configureExpensesRoutes(app);
+  
+  // Configurar rutas para gestión de archivos
+  configureFileRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
