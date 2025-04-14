@@ -246,14 +246,7 @@ const Sidebar = ({
   
   // Enlaces para administradores
   if (userIsSuperAdmin || userIsAdmin) {
-    // Libro de Registros (para superadmin y admin normal)
-    adminItems.push({
-      href: "/admin/libro-registros",  // Ruta general para el libro de registros
-      icon: <FileText size={20} />,
-      label: "Libro de Registros",
-    });
-    
-    // Enlace para asignación de clientes a administradores (solo superadmin)
+    // Primero "Asignar Clientes" (solo para superadmin)
     if (userIsSuperAdmin) {
       adminItems.push({
         href: "/admin/client-assignment",
@@ -261,6 +254,13 @@ const Sidebar = ({
         label: "Asignar Clientes",
       });
     }
+    
+    // Después "Libro de Registros" (para superadmin y admin normal)
+    adminItems.push({
+      href: "/admin/libro-registros",  // Ruta general para el libro de registros
+      icon: <FileText size={20} />,
+      label: "Libro de Registros",
+    });
   }
   
   console.log("Admin items:", adminItems);
