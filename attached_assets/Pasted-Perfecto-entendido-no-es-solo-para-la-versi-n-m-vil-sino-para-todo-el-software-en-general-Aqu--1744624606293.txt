@@ -1,0 +1,77 @@
+Perfecto, entendido: no es solo para la versión móvil, sino para todo el software en general.
+
+Aquí tienes el mensaje corregido y todo fusionado:
+
+⸻
+
+Solicitud de funcionalidad — Gestión de archivos subidos
+
+Importante:
+Esto es para todo el software (versión web y móvil), no solo móvil. Además, queremos que el almacenamiento sea gratuito a corto plazo.
+
+⸻
+
+Objetivo
+
+Cuando un usuario suba una imagen, un PDF o cualquier tipo de archivo relacionado con un gasto:
+	•	El archivo debe almacenarse de forma gratuita (al menos en los primeros meses).
+	•	El archivo debe quedar vinculado al gasto registrado en la base de datos.
+	•	El usuario debe poder descargar o ver el archivo más adelante a través de un botón.
+
+⸻
+
+Funcionalidad detallada
+
+1. Almacenamiento gratuito a corto plazo:
+	•	Utilizar una solución de hosting gratuito para almacenar archivos pequeños.
+	•	Opciones recomendadas:
+	•	Firebase Storage (plan gratuito suficiente para empezar).
+	•	Cloudinary (muy bueno para imágenes y PDFs ligeros, también con plan gratuito).
+	•	Uploadcare (otra opción válida en plan gratuito).
+
+Recomendación: empezar con Firebase Storage porque es muy fácil de integrar, seguro y escalable.
+
+2. Relacionar los archivos con los gastos:
+	•	Al subir el archivo, se debe almacenar su URL pública o su identificador en el sistema de archivos.
+	•	Esta URL debe guardarse en la base de datos del gasto correspondiente.
+
+3. Añadir botón de descarga o visualización:
+	•	En la vista de detalle de cada gasto, debe aparecer un botón que permita:
+	•	Descargar el archivo.
+	•	O abrirlo en una nueva pestaña si es una imagen o PDF.
+
+Ejemplo para descarga directa:
+
+<a href="URL_DEL_ARCHIVO" download>
+  <button>Descargar Archivo</button>
+</a>
+
+Ejemplo para visualización:
+
+<a href="URL_DEL_ARCHIVO" target="_blank">
+  <button>Ver Archivo</button>
+</a>
+
+
+
+⸻
+
+Consideraciones técnicas
+	•	Limitar tipos de archivos permitidos: imágenes (JPG, PNG), PDFs y documentos básicos.
+	•	Limitar el tamaño máximo de archivo (por ejemplo, 5 MB por archivo).
+	•	Asegurar que solo usuarios autorizados puedan acceder y descargar los archivos (configuración de reglas en el almacenamiento).
+	•	A futuro, cuando el volumen de archivos crezca, evaluar un plan de pago o migrar a otra solución si es necesario.
+
+⸻
+
+Resumen
+	•	Archivos subidos deben almacenarse en un hosting gratuito (Firebase Storage recomendado).
+	•	Cada gasto debe poder tener asociado su archivo subido.
+	•	El usuario debe poder descargar o visualizar el archivo fácilmente con un botón.
+	•	Esto aplica para todo el software: web y móvil.
+
+⸻
+
+¿Te preparo también ahora un pequeño esquema visual (tipo diagrama) para que tu IA o desarrollador vea el flujo?
+(Sería como: Subida archivo → Guardar URL → Mostrar botón).
+Te lo paso en 1 minuto si quieres. ¿Quieres que lo haga?
