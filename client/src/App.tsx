@@ -36,6 +36,7 @@ import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
 import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
+import LibroRegistrosClientPage from "@/pages/admin/libro-registros-client";
 import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
 import ForgotPasswordPage from "@/pages/forgot-password";
@@ -239,6 +240,16 @@ function Router() {
       
       {/* Ruta mejorada del Libro de Registros protegida para admins y superadmins */}
       
+      {/* Nueva ruta del Libro de Registros para Clientes */}
+      <Route path="/admin/libro-registros-client">
+        <Layout>
+          <ProtectedAdminRoute 
+            path="/admin/libro-registros-client" 
+            component={LibroRegistrosClientPage} 
+          />
+        </Layout>
+      </Route>
+      
       {/* Ruta para que los usuarios normales vean su propio libro de registros */}
       <Route path="/mis-registros">
         <Layout>
@@ -246,7 +257,7 @@ function Router() {
             path="/mis-registros"
             component={(props: any) => {
               // Usamos un componente que pasará automáticamente el ID del usuario conectado
-              return <LibroRegistrosSimplePage {...props} />;
+              return <LibroRegistrosClientPage forceOwnUser={true} {...props} />;
             }}
           />
         </Layout>
