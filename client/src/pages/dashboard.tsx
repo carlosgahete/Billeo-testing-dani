@@ -246,7 +246,7 @@ const Dashboard = () => {
   const isPositiveMargin = balanceTotal > 0;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-h-screen pb-10">
       <div className="flex flex-col gap-2 mt-4">
         <PageTitle 
           title="Resumen Contable"
