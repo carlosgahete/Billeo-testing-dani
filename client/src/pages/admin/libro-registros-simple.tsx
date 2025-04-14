@@ -122,11 +122,18 @@ export default function SimpleLibroRegistros() {
         }
         
         const usersList = await response.json();
-        setUsers(usersList.map((u: any) => ({
+        
+        // Log para depurar usuarios recibidos
+        console.log("Lista de usuarios recibida:", usersList);
+        
+        const mappedUsers = usersList.map((u: any) => ({
           id: u.id,
-          username: u.username,
-          name: u.name || u.username
-        })));
+          username: u.username.toLowerCase(), // Convertir a minúsculas para facilitar búsqueda
+          name: u.name ? u.name.toLowerCase() : u.username.toLowerCase() // Convertir a minúsculas
+        }));
+        
+        console.log("Lista de usuarios procesada:", mappedUsers);
+        setUsers(mappedUsers);
       } catch (err) {
         console.error('Error al cargar usuarios:', err);
       } finally {
