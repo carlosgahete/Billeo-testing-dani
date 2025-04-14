@@ -310,7 +310,7 @@ export function MinimalQuoteList({ userId }: Props) {
   }
 
   return (
-    <div className="p-4 pb-20 overflow-y-auto h-full">
+    <div className="p-4 pb-32 overflow-y-auto min-h-full h-full">
       {/* Header with filters */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Presupuestos</h1>

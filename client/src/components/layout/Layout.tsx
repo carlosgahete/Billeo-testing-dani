@@ -38,7 +38,7 @@ const Layout = ({ children }: LayoutProps) => {
         />
       )}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-auto">
         {/* Sidebar - Diseño fijo */}
         <Sidebar 
           sidebarOpen={sidebarOpen} 
@@ -71,9 +71,10 @@ const Layout = ({ children }: LayoutProps) => {
             ${isMobile ? 'pt-20' : ''}
             ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
+            h-[calc(100vh-64px)]
           `}
         >
-          <div className="w-full py-1 lg:py-6 px-0 sm:px-2 lg:px-8">
+          <div className="w-full h-full py-1 lg:py-6 px-0 sm:px-2 lg:px-8">
             {children}
           </div>
         </div>
