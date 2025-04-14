@@ -388,3 +388,27 @@ export const dashboardBlockSchema = z.object({
 export type DashboardBlock = z.infer<typeof dashboardBlockSchema>;
 export type InsertDashboardPreferences = z.infer<typeof insertDashboardPreferencesSchema>;
 export type DashboardPreferences = typeof dashboardPreferences.$inferSelect;
+
+// Tabla de archivos
+export const files = pgTable("files", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  path: text("path").notNull(),
+  size: integer("size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileType: text("file_type").notNull(), // 'image', 'pdf', 'document', 'other'
+  entityType: text("entity_type"), // 'expense', 'invoice', 'quote', 'client', 'company'
+  entityId: integer("entity_id"),
+  uploadDate: timestamp("upload_date").notNull().defaultNow(),
+  thumbnailPath: text("thumbnail_path"),
+  isDeleted: boolean("is_deleted").default(false),
+});
+
+// Esquema de inserción para archivos
+export const insertFileSchema = createInsertSchema(files)
+  .omit({ id: true });
+  
+export type InsertFile = z.infer<typeof insertFileSchema>;
+export type File = typeof files.$inferSelect;
