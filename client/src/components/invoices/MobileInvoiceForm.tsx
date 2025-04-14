@@ -557,32 +557,36 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     },
   });
 
-  // Versión simplificada para diagnóstico
-  const handleSubmit = async (data: any) => {
+  // Versión corregida y optimizada para garantizar que la factura se guarde correctamente
+  const handleSubmit = async (formData: any) => {
     try {
-      console.log("Submit form data:", data);
+      console.log("Submit form data:", formData);
+      
+      // Asegurarnos de que los totales estén calculados correctamente
+      calculateInvoiceTotals(form);
       
       // Preparamos los datos para enviar al servidor
       const payload = {
         invoice: {
-          invoiceNumber: data.invoiceNumber,
-          clientId: data.clientId,
-          issueDate: data.issueDate,
-          dueDate: data.dueDate,
-          subtotal: data.subtotal,
-          tax: data.tax,
-          total: data.total,
-          status: data.status,
-          notes: data.notes || "",
-          additionalTaxes: data.additionalTaxes || [],
-          attachments: attachments.length > 0 ? attachments : data.attachments,
+          invoiceNumber: formData.invoiceNumber,
+          clientId: formData.clientId,
+          issueDate: formData.issueDate,
+          dueDate: formData.dueDate,
+          // Convertir los valores numéricos a cadenas para que sean compatibles con el esquema
+          subtotal: formData.subtotal.toString(),
+          tax: formData.tax.toString(),
+          total: formData.total.toString(),
+          status: formData.status,
+          notes: formData.notes || "",
+          additionalTaxes: formData.additionalTaxes || [],
+          attachments: attachments.length > 0 ? attachments : formData.attachments,
         },
-        items: data.items.map((item: any) => ({
+        items: formData.items.map((item: any) => ({
           description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          taxRate: item.taxRate,
-          subtotal: item.subtotal,
+          quantity: item.quantity.toString(),
+          unitPrice: item.unitPrice.toString(),
+          taxRate: item.taxRate.toString(),
+          subtotal: item.subtotal.toString(),
         }))
       };
       
@@ -599,7 +603,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       // Mostrar mensaje de éxito
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
-        description: isEditMode ? "Los cambios se han guardado correctamente" : "La factura se ha creado correctamente"
+        description: isEditMode ? "Los cambios se han guardado correctamente" : "La factura se ha creada correctamente"
       });
       
       // Limpiar los datos guardados en localStorage
@@ -609,6 +613,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       
       // Actualizar la caché de consultas
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // Redireccionar a la lista de facturas después de un breve retraso
       setTimeout(() => {

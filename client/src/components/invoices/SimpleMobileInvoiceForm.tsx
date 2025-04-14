@@ -73,6 +73,7 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
     onSuccess: () => {
       // Invalidar consultas para actualizar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Importante para que aparezca en transacciones
       queryClient.invalidateQueries({ queryKey: ["/api/public/stats/dashboard"] });
       
       // Mostrar mensaje y redirigir
@@ -81,7 +82,10 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
         description: "La operación se ha completado con éxito",
       });
       
-      navigate("/invoices");
+      // Pequeño delay para asegurar que la navegación ocurra después de la actualización
+      setTimeout(() => {
+        navigate("/invoices");
+      }, 500);
     },
     onError: (error: any) => {
       console.error("Error al guardar factura:", error);
@@ -139,35 +143,44 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
     return total;
   };
   
-  // Submit handler
+  // Submit handler mejorado para asegurar formato correcto de datos
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Crear objeto de factura con los datos actualizados
+    // Calcular el total
     const total = calculateTotal();
     
-    const invoiceData = {
-      invoiceNumber,
-      status,
-      clientId: selectedClientId,
-      issueDate: initialData?.invoice?.issueDate || new Date().toISOString().split("T")[0],
-      dueDate: initialData?.invoice?.dueDate || new Date().toISOString().split("T")[0],
-      subtotal: subtotal,
-      tax: tax,
-      total: total,
-      additionalTaxes: additionalTaxes,
-      notes: initialData?.invoice?.notes || "",
+    // Estructura de datos que espera el servidor
+    const payload = {
+      // El formato debe coincidir con lo que espera el backend
+      invoice: {
+        invoiceNumber,
+        status,
+        clientId: selectedClientId,
+        issueDate: initialData?.invoice?.issueDate || new Date().toISOString().split("T")[0],
+        dueDate: initialData?.invoice?.dueDate || new Date().toISOString().split("T")[0],
+        // Convertimos los valores numéricos a strings
+        subtotal: subtotal.toString(),
+        tax: tax.toString(),
+        total: total.toString(),
+        additionalTaxes: additionalTaxes,
+        notes: initialData?.invoice?.notes || "",
+        attachments: initialData?.invoice?.attachments || []
+      },
+      // Incluir items de factura
       items: initialData?.items || [{
-        description: "Ítem ejemplo",
-        quantity: 1,
-        unitPrice: 100,
-        taxRate: 21,
-        subtotal: 100
+        description: "Servicio",
+        quantity: "1",
+        unitPrice: "100",
+        taxRate: "21",
+        subtotal: "100"
       }]
     };
     
-    console.log("Enviando datos:", invoiceData);
-    updateMutation.mutate(invoiceData);
+    console.log("Enviando datos al servidor:", payload);
+    
+    // Llamar a la mutación con los datos correctamente formateados
+    updateMutation.mutate(payload);
   };
   
   return (
