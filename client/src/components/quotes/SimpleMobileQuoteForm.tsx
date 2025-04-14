@@ -204,7 +204,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
             <span>Volver</span>
           </button>
           <h2 className="text-xl font-semibold text-center flex-1 -ml-20">
-            {quoteId ? "Editar presupuesto" : "Presupuesto"} 
+            {quoteId ? "Editar" : "Crear"}
           </h2>
         </div>
         
