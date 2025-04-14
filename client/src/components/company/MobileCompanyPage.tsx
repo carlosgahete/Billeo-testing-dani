@@ -155,23 +155,24 @@ const MobileCompanyPage = () => {
       </header>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="pb-24">
-        {/* Logo section */}
-        <div className="bg-white p-5 flex flex-col items-center border-b">
-          <div className="mb-2">
+        {/* Logo section - Versión con más vida */}
+        <div className="bg-gradient-to-br from-blue-50 to-white p-5 flex flex-col items-center border-b">
+          <div className="mb-3">
             {logo ? (
-              <div className="h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center bg-white border border-gray-100 shadow-sm">
+              <div className="h-24 w-24 rounded-xl overflow-hidden flex items-center justify-center bg-white border border-blue-100 shadow-md relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-transparent"></div>
                 <img 
                   src={logo} 
                   alt="Logo" 
-                  className="max-w-full max-h-full object-contain"
+                  className="max-w-full max-h-full object-contain relative z-10"
                   onError={(e) => {
                     e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23cccccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E";
                   }}
                 />
               </div>
             ) : (
-              <div className="h-20 w-20 rounded-xl border border-gray-200 flex items-center justify-center bg-gray-50">
-                <Camera className="h-8 w-8 text-gray-300" />
+              <div className="h-24 w-24 rounded-xl border border-blue-100 flex items-center justify-center bg-gradient-to-br from-blue-50 to-white shadow-md">
+                <Camera className="h-9 w-9 text-blue-400" />
               </div>
             )}
           </div>
@@ -180,154 +181,162 @@ const MobileCompanyPage = () => {
               onUpload={handleLogoUpload}
               accept=".jpg,.jpeg,.png,.svg"
               buttonLabel="Cambiar logo"
-              buttonClassName="bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#007AFF] rounded-full text-sm font-medium px-4 py-2 border-0 shadow-none"
+              buttonClassName="bg-[#007AFF] hover:bg-blue-600 text-white rounded-full text-sm font-medium px-5 py-2 border-0 shadow-sm"
             />
           </div>
         </div>
 
         {/* Info sections */}
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 space-y-3">
           {/* Información principal */}
-          <section className="bg-white px-5 py-4">
-            <div className="flex items-center mb-2 text-sm text-gray-500">
-              <Building2 className="h-4 w-4 mr-1" />
-              Información principal
+          <section className="bg-white px-5 py-5 rounded-lg shadow-sm">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mr-3">
+                <Building2 className="h-4 w-4 text-[#007AFF]" />
+              </div>
+              <h3 className="text-base font-medium text-gray-800">Información principal</h3>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre</label>
                 <input
                   {...form.register("name")}
                   placeholder="Nombre de la empresa"
-                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/20 shadow-sm"
                 />
                 {form.formState.errors.name && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.name.message}</p>
+                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.name.message}</p>
                 )}
               </div>
               
               <div>
-                <label className="block text-sm text-gray-700 mb-1">CIF/NIF</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">CIF/NIF</label>
                 <input
                   {...form.register("taxId")}
                   placeholder="B12345678"
-                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/20 shadow-sm"
                 />
                 {form.formState.errors.taxId && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.taxId.message}</p>
+                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.taxId.message}</p>
                 )}
               </div>
             </div>
           </section>
           
           {/* Contacto */}
-          <section className="bg-white px-5 py-4">
-            <div className="flex items-center mb-2 text-sm text-gray-500">
-              <Phone className="h-4 w-4 mr-1" />
-              Contacto
+          <section className="bg-white px-5 py-5 rounded-lg shadow-sm mt-3">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center mr-3">
+                <Phone className="h-4 w-4 text-green-500" />
+              </div>
+              <h3 className="text-base font-medium text-gray-800">Contacto</h3>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
                 <input
                   {...form.register("email")}
                   type="email"
                   placeholder="empresa@ejemplo.com"
-                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-100 shadow-sm"
                 />
                 {form.formState.errors.email && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.email.message}</p>
+                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.email.message}</p>
                 )}
               </div>
               
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Teléfono</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Teléfono</label>
                 <input
                   {...form.register("phone")}
                   placeholder="+34 123 456 789"
-                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-100 shadow-sm"
                 />
               </div>
             </div>
           </section>
           
           {/* Dirección */}
-          <section className="bg-white px-5 py-4">
-            <div className="flex items-center mb-2 text-sm text-gray-500">
-              <MapPin className="h-4 w-4 mr-1" />
-              Dirección fiscal
+          <section className="bg-white px-5 py-5 rounded-lg shadow-sm mt-3">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center mr-3">
+                <MapPin className="h-4 w-4 text-purple-500" />
+              </div>
+              <h3 className="text-base font-medium text-gray-800">Dirección fiscal</h3>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Dirección</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Dirección</label>
                 <input
                   {...form.register("address")}
                   placeholder="Calle, número, piso..."
-                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-100 shadow-sm"
                 />
                 {form.formState.errors.address && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.address.message}</p>
+                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.address.message}</p>
                 )}
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Ciudad</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Ciudad</label>
                   <input
                     {...form.register("city")}
                     placeholder="Madrid"
-                    className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                    className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-100 shadow-sm"
                   />
                   {form.formState.errors.city && (
-                    <p className="text-xs text-red-500 mt-1">{form.formState.errors.city.message}</p>
+                    <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.city.message}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">C.P.</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">C.P.</label>
                   <input
                     {...form.register("postalCode")}
                     placeholder="28001"
-                    className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                    className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-100 shadow-sm"
                   />
                   {form.formState.errors.postalCode && (
-                    <p className="text-xs text-red-500 mt-1">{form.formState.errors.postalCode.message}</p>
+                    <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.postalCode.message}</p>
                   )}
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm text-gray-700 mb-1">País</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">País</label>
                 <input
                   {...form.register("country")}
                   placeholder="España"
-                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-100 shadow-sm"
                 />
                 {form.formState.errors.country && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.country.message}</p>
+                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.country.message}</p>
                 )}
               </div>
             </div>
           </section>
           
           {/* Banco */}
-          <section className="bg-white px-5 py-4">
-            <div className="flex items-center mb-2 text-sm text-gray-500">
-              <CreditCard className="h-4 w-4 mr-1" />
-              Cuenta bancaria
+          <section className="bg-white px-5 py-5 rounded-lg shadow-sm mt-3">
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center mr-3">
+                <CreditCard className="h-4 w-4 text-amber-500" />
+              </div>
+              <h3 className="text-base font-medium text-gray-800">Cuenta bancaria</h3>
             </div>
             
             <div>
-              <label className="block text-sm text-gray-700 mb-1">IBAN</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">IBAN</label>
               <input
                 {...form.register("bankAccount")}
                 placeholder="ES12 3456 7890 1234 5678 9012"
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-100 shadow-sm"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-2 ml-1">
                 Se incluirá automáticamente en tus facturas
               </p>
             </div>

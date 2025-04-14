@@ -12,7 +12,7 @@ interface FileUploadProps {
   buttonClassName?: string;
 }
 
-const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false, buttonLabel }: FileUploadProps) => {
+const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false, buttonLabel, buttonClassName }: FileUploadProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -77,7 +77,7 @@ const FileUpload = ({ onUpload, accept = ".pdf,.jpg,.jpeg,.png", compact = false
           variant={compact ? "ghost" : "outline"}
           size="sm"
           disabled={isUploading}
-          className={`cursor-pointer whitespace-nowrap ${compact ? 'px-2 h-8' : ''}`}
+          className={`cursor-pointer whitespace-nowrap ${compact ? 'px-2 h-8' : ''} ${buttonClassName || ''}`}
           onClick={() => document.getElementById("file-upload")?.click()}
         >
           {compact ? (
