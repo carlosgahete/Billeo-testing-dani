@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { QuoteList } from "@/components/quotes/QuoteList";
+import { MinimalQuoteList } from "@/components/quotes/MinimalQuoteList";
 import { PageTitle } from "@/components/ui/page-title";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
@@ -64,6 +65,25 @@ export default function QuotesPage() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [filter, setFilter] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectar si es móvil al montar el componente y actualizar al cambiar el tamaño de la ventana
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Comprobar al cargar
+    checkIfMobile();
+    
+    // Añadir listener para cambios de tamaño
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Limpiar listener al desmontar
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   // Efecto para refrescar la lista cuando cambia el filtro
   useEffect(() => {
@@ -93,6 +113,15 @@ export default function QuotesPage() {
         <div className="flex justify-center items-center h-[calc(100vh-200px)]">
           <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
         </div>
+      </Layout>
+    );
+  }
+  
+  // Si es móvil, mostrar la vista minimalista
+  if (isMobile && user) {
+    return (
+      <Layout>
+        <MinimalQuoteList userId={user.id} />
       </Layout>
     );
   }
