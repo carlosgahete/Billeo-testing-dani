@@ -3166,31 +3166,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Intentar cargar el servicio real de visión
-      let visionService;
-      let useMockService = false;
+      // Siempre cargar primero el servicio simulado como respaldo
+      let mockVisionService;
+      try {
+        console.log("Cargando servicio de visión simulado como respaldo...");
+        mockVisionService = await import("./services/mockVisionService");
+        console.log("Servicio de visión simulado cargado correctamente");
+      } catch (mockError) {
+        console.error("Error crítico al cargar el servicio simulado:", mockError);
+        return res.status(500).json({ 
+          message: "Error al cargar los servicios de procesamiento de documentos",
+          error: String(mockError)
+        });
+      }
+      
+      // Intentar cargar y usar el servicio real de visión
+      let visionService = mockVisionService; // Por defecto, usar el servicio simulado
+      let useMockService = true;
       
       try {
         console.log("Intentando cargar el servicio de visión real...");
         // Intentar importar el servicio real de visión
-        visionService = await import("./services/visionService");
+        const realVisionService = await import("./services/visionService");
         console.log("Servicio de visión real cargado correctamente");
-      } catch (importError) {
-        // Si hay un error al cargar el servicio real, usar el servicio simulado
-        console.log("Error al cargar el servicio de visión real, usando servicio simulado:", importError);
         
-        try {
-          console.log("Cargando servicio de visión simulado...");
-          visionService = await import("./services/mockVisionService");
-          console.log("Servicio de visión simulado cargado correctamente");
-          useMockService = true;
-        } catch (mockError) {
-          console.error("Error crítico al cargar el servicio simulado:", mockError);
-          return res.status(500).json({ 
-            message: "Error al cargar los servicios de procesamiento de documentos",
-            error: String(mockError)
-          });
-        }
+        // Si se cargó correctamente, usarlo como primera opción
+        visionService = realVisionService;
+        useMockService = false;
+      } catch (importError) {
+        // Si hay un error al cargar el servicio real, usar el servicio simulado que ya tenemos
+        console.log("Error al cargar el servicio de visión real, usando servicio simulado:", importError);
       }
       
       // Extraer información del documento según el tipo de archivo
@@ -3199,10 +3204,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log(`Procesando archivo: ${filePath} con extensión: ${fileExtension}. Servicio mockup: ${useMockService ? 'Sí' : 'No'}`);
         
+        // Intentar con el servicio seleccionado (real o simulado)
         if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
-          extractedData = await visionService.processReceiptImage(filePath);
+          try {
+            extractedData = await visionService.processReceiptImage(filePath);
+          } catch (visionError) {
+            console.error("Error con el servicio de visión principal, fallback al simulado:", visionError);
+            if (!useMockService) {
+              // Si falló el servicio real, intentar con el simulado
+              extractedData = await mockVisionService.processReceiptImage(filePath);
+            } else {
+              // Si ya estábamos usando el simulado y falló, propagar el error
+              throw visionError;
+            }
+          }
         } else if (fileExtension === '.pdf') {
-          extractedData = await visionService.processReceiptPDF(filePath);
+          try {
+            extractedData = await visionService.processReceiptPDF(filePath);
+          } catch (visionError) {
+            console.error("Error con el servicio de visión principal, fallback al simulado:", visionError);
+            if (!useMockService) {
+              // Si falló el servicio real, intentar con el simulado
+              extractedData = await mockVisionService.processReceiptPDF(filePath);
+            } else {
+              // Si ya estábamos usando el simulado y falló, propagar el error
+              throw visionError;
+            }
+          }
         }
         
         console.log("Datos extraídos del documento:", JSON.stringify(extractedData, null, 2));
