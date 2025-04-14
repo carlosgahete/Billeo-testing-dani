@@ -28,7 +28,18 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   const [additionalTaxes, setAdditionalTaxes] = useState<any[]>([]);
   const [notes, setNotes] = useState("");
   const [showAddTaxDialog, setShowAddTaxDialog] = useState(false);
+  const [showAddClientDialog, setShowAddClientDialog] = useState(false);
   const [newTax, setNewTax] = useState({ name: "", amount: 0, isPercentage: true });
+  const [newClient, setNewClient] = useState({
+    name: "",
+    taxId: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "España",
+  });
   
   // Fechas
   const [issueDate, setIssueDate] = useState<string>(
@@ -114,6 +125,49 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
     }
   });
   
+  // Mutation para crear un nuevo cliente
+  const createClientMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/clients", data);
+    },
+    onSuccess: (data) => {
+      // Actualizar la lista de clientes
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      
+      // Seleccionar el cliente recién creado
+      if (data && data.id) {
+        setSelectedClientId(data.id);
+      }
+      
+      // Cerrar el diálogo y mostrar mensaje
+      setShowAddClientDialog(false);
+      toast({
+        title: "Cliente creado",
+        description: "El cliente se ha creado correctamente",
+      });
+      
+      // Limpiar el formulario
+      setNewClient({
+        name: "",
+        taxId: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        postalCode: "",
+        country: "España",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Error al crear cliente:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo crear el cliente. Verifica los datos e inténtalo nuevamente.",
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Funciones para manejar impuestos adicionales
   const handleAddTax = () => {
     setShowAddTaxDialog(true);
@@ -143,6 +197,23 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   
   const handleRemoveTax = (index: number) => {
     setAdditionalTaxes(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Función para guardar un nuevo cliente
+  const handleSaveClient = () => {
+    // Validar datos del cliente
+    if (!newClient.name.trim() || !newClient.taxId.trim() || !newClient.address.trim() || 
+        !newClient.city.trim() || !newClient.postalCode.trim() || !newClient.country.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor, completa todos los campos obligatorios",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Crear el cliente
+    createClientMutation.mutate(newClient);
   };
   
   // Calcular totales 
@@ -220,7 +291,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
                 value={selectedClientId || ""}
                 onChange={(e) => {
                   if (e.target.value === "new") {
-                    navigate("/clients/create");
+                    setShowAddClientDialog(true);
                     return;
                   }
                   setSelectedClientId(Number(e.target.value));
@@ -531,6 +602,151 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
               className="bg-[#007AFF] hover:bg-blue-600"
             >
               Añadir
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo para añadir nuevo cliente */}
+      <Dialog open={showAddClientDialog} onOpenChange={setShowAddClientDialog}>
+        <DialogContent className="sm:max-w-[425px] rounded-xl border-0 p-0 overflow-hidden">
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <DialogHeader>
+              <DialogTitle className="text-center text-base">Añadir nuevo cliente</DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="client-name" className="text-sm text-gray-600">
+                Nombre <span className="text-[#007AFF] text-xs">*</span>
+              </Label>
+              <input
+                id="client-name"
+                value={newClient.name}
+                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                placeholder="Nombre de la empresa o cliente"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client-taxId" className="text-sm text-gray-600">
+                CIF/NIF <span className="text-[#007AFF] text-xs">*</span>
+              </Label>
+              <input
+                id="client-taxId"
+                value={newClient.taxId}
+                onChange={(e) => setNewClient({...newClient, taxId: e.target.value})}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                placeholder="B12345678"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client-email" className="text-sm text-gray-600">
+                Email
+              </Label>
+              <input
+                id="client-email"
+                type="email"
+                value={newClient.email}
+                onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                placeholder="cliente@ejemplo.com"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client-phone" className="text-sm text-gray-600">
+                Teléfono
+              </Label>
+              <input
+                id="client-phone"
+                type="tel"
+                value={newClient.phone}
+                onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                placeholder="600123456"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client-address" className="text-sm text-gray-600">
+                Dirección <span className="text-[#007AFF] text-xs">*</span>
+              </Label>
+              <input
+                id="client-address"
+                value={newClient.address}
+                onChange={(e) => setNewClient({...newClient, address: e.target.value})}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                placeholder="Calle, número, piso..."
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="client-city" className="text-sm text-gray-600">
+                  Ciudad <span className="text-[#007AFF] text-xs">*</span>
+                </Label>
+                <input
+                  id="client-city"
+                  value={newClient.city}
+                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  placeholder="Madrid"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="client-postalCode" className="text-sm text-gray-600">
+                  Código Postal <span className="text-[#007AFF] text-xs">*</span>
+                </Label>
+                <input
+                  id="client-postalCode"
+                  value={newClient.postalCode}
+                  onChange={(e) => setNewClient({...newClient, postalCode: e.target.value})}
+                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  placeholder="28001"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client-country" className="text-sm text-gray-600">
+                País <span className="text-[#007AFF] text-xs">*</span>
+              </Label>
+              <input
+                id="client-country"
+                value={newClient.country}
+                onChange={(e) => setNewClient({...newClient, country: e.target.value})}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                placeholder="España"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowAddClientDialog(false)}
+              className="text-[#007AFF] hover:bg-blue-50"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleSaveClient}
+              className="bg-[#007AFF] hover:bg-blue-600"
+            >
+              Guardar Cliente
             </Button>
           </div>
         </DialogContent>
