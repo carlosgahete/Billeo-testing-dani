@@ -271,7 +271,11 @@ export function MinimalQuoteList({ userId }: Props) {
       });
       
       // Llamar a la API para enviar el email
-      const response = await apiRequest("POST", `/api/quotes/${quoteId}/email`, { email });
+      const response = await apiRequest("POST", `/api/quotes/${quoteId}/send-email`, { 
+        recipientEmail: email, 
+        // Generar PDF en el servidor
+        pdfBase64: null
+      });
       
       if (response.ok) {
         toast({
