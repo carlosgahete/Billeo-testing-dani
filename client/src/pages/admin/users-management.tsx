@@ -326,7 +326,7 @@ export default function UsersManagement() {
     );
   }
 
-  if (!user || user.role !== "admin") {
+  if (!user || (user.role !== "admin" && user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
     return <Redirect to="/" />;
   }
 
