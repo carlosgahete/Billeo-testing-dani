@@ -1,84 +1,87 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
-import { storage } from './storage';
+import { DatabaseStorage } from './storage';
 import { requireAuth } from './auth-middleware';
 
 const router = Router();
+const storage = new DatabaseStorage();
 
-// Configuración de multer para la subida de archivos
+// Configurar almacenamiento para multer
 const uploadDir = path.join(process.cwd(), 'uploads');
 
-// Asegurar que el directorio de uploads existe
+// Asegurarse de que el directorio de uploads exista
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('Directorio de uploads creado en:', uploadDir);
 }
 
-// Configurar el almacenamiento para multer
+// Configuración de multer para el almacenamiento de archivos
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = randomUUID();
-    const extension = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${uniqueSuffix}${extension}`);
-  }
+    // Crear un nombre de archivo único usando random UUID
+    const uniqueFilename = `${randomUUID()}${path.extname(file.originalname)}`;
+    cb(null, uniqueFilename);
+  },
 });
 
-// Función para validar tipos de archivo
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  // Lista de tipos MIME permitidos
-  const allowedMimeTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-    'text/csv',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  ];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Tipo de archivo no soportado. Por favor, sube una imagen, PDF o documento.'));
-  }
-};
-
-// Crear el middleware de subida configurado
+// Configurar multer con límites
 const upload = multer({
   storage: fileStorage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB tamaño máximo
+    fileSize: 5 * 1024 * 1024, // 5MB máximo
   },
-  fileFilter
+  fileFilter: (req, file, cb) => {
+    // Verificar tipos de archivo permitidos (imágenes, PDF, documentos)
+    const allowedMimetypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    ];
+
+    if (allowedMimetypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de archivo no permitido'), false);
+    }
+  },
 });
 
 // Ruta para subir archivos
-router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
+router.post('/upload', requireAuth, upload.single('file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No se ha subido ningún archivo'
+        message: 'No se recibió ningún archivo'
       });
     }
 
-    const { file } = req;
-    const userId = req.user.id;
+    const file = req.file;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
+
+    // Obtener la entidad relacionada (opcional)
     const entityType = req.body.entityType || null;
     const entityId = req.body.entityId ? parseInt(req.body.entityId) : null;
-    
+
     // Determinar el tipo de archivo
-    let fileType = 'document';
+    let fileType = 'other';
     if (file.mimetype.startsWith('image/')) {
       fileType = 'image';
     } else if (file.mimetype === 'application/pdf') {
@@ -122,7 +125,7 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
 router.delete('/delete', requireAuth, async (req, res) => {
   try {
     const { filePath } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
     if (!filePath) {
       return res.status(400).json({
@@ -142,7 +145,7 @@ router.delete('/delete', requireAuth, async (req, res) => {
     }
 
     // Verificar que el usuario tiene permisos para eliminar el archivo
-    if (fileRecord.userId !== userId && req.user.role !== 'admin') {
+    if (fileRecord.userId !== userId) {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para eliminar este archivo'
@@ -179,7 +182,7 @@ router.delete('/delete', requireAuth, async (req, res) => {
 router.get('/download', requireAuth, async (req, res) => {
   try {
     const { filePath } = req.query;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
     if (!filePath || typeof filePath !== 'string') {
       return res.status(400).json({

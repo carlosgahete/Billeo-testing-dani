@@ -33,7 +33,8 @@ import {
   dashboardPreferences,
   DashboardPreferences,
   InsertDashboardPreferences,
-  DashboardBlock
+  DashboardBlock,
+  files
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { db, sql } from "./db";
@@ -42,6 +43,8 @@ import connectPg from "connect-pg-simple";
 import { hashPassword, comparePasswords } from "./auth";
 
 const PostgresSessionStore = connectPg(session);
+
+// Estos tipos se eliminan porque ahora usamos los definidos en shared/schema.ts
 
 export interface IStorage {
   // User operations
@@ -128,6 +131,14 @@ export interface IStorage {
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
   
+  // File operations
+  createFile(file: InsertFile): Promise<File>;
+  getFile(id: number): Promise<File | undefined>;
+  getFileByPath(path: string): Promise<File | undefined>;
+  getFilesByUserId(userId: number): Promise<File[]>;
+  getFilesByEntity(entityType: string, entityId: number): Promise<File[]>;
+  markFileAsDeleted(id: number): Promise<boolean>;
+  
   // Session store
   sessionStore: session.Store;
   
@@ -136,6 +147,44 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Métodos para manejar archivos
+  async createFile(file: InsertFile): Promise<File> {
+    const result = await db.insert(files).values(file).returning();
+    return result[0];
+  }
+
+  async getFile(id: number): Promise<File | undefined> {
+    const result = await db.select().from(files).where(eq(files.id, id));
+    return result[0];
+  }
+
+  async getFileByPath(path: string): Promise<File | undefined> {
+    const result = await db.select().from(files).where(eq(files.path, path));
+    return result[0];
+  }
+
+  async getFilesByUserId(userId: number): Promise<File[]> {
+    return await db.select()
+      .from(files)
+      .where(eq(files.userId, userId))
+      .where(eq(files.isDeleted, false));
+  }
+
+  async getFilesByEntity(entityType: string, entityId: number): Promise<File[]> {
+    return await db.select()
+      .from(files)
+      .where(eq(files.entityType, entityType))
+      .where(eq(files.entityId, entityId))
+      .where(eq(files.isDeleted, false));
+  }
+
+  async markFileAsDeleted(id: number): Promise<boolean> {
+    const result = await db.update(files)
+      .set({ isDeleted: true })
+      .where(eq(files.id, id))
+      .returning();
+    return result.length > 0;
+  }
   public sessionStore: session.Store;
 
   constructor() {
