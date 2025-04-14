@@ -194,7 +194,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   return (
     <>
       <div className="bg-white min-h-screen pb-32 max-w-md mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-2 px-4 pt-6 -mt-28">
+        <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6 -mt-28">
           {/* Botón de volver estilo Apple iOS */}
           <div className="mb-0">
             <button 
@@ -207,8 +207,8 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
             </button>
           </div>
           {/* Selector de cliente con estilo iOS */}
-          <div className="form-group mb-4">
-            <div className="flex justify-between mb-1">
+          <div className="form-group mb-5">
+            <div className="flex justify-between mb-2">
               <label className="text-sm text-gray-600 font-medium">
                 Cliente
               </label>
@@ -235,8 +235,8 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
           </div>
           
           {/* Número de presupuesto */}
-          <div className="form-group mb-4">
-            <div className="flex justify-between mb-1">
+          <div className="form-group mb-5">
+            <div className="flex justify-between mb-2">
               <label className="text-sm text-gray-600 font-medium">
                 Número de presupuesto
               </label>
@@ -253,8 +253,8 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
           </div>
           
           {/* Fechas con estilo iOS */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-4">
-            <h3 className="text-sm text-gray-600 font-medium mb-2">Fechas</h3>
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <h3 className="text-sm text-gray-600 font-medium mb-3">Fechas</h3>
             <div className="space-y-3">
               <div className="form-group">
                 <label className="text-sm text-gray-600 block mb-1">
@@ -282,8 +282,8 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
           </div>
           
           {/* Estado del presupuesto */}
-          <div className="form-group mb-4">
-            <label className="text-sm text-gray-600 block mb-1">
+          <div className="form-group mb-5">
+            <label className="text-sm text-gray-600 block mb-2">
               Estado
             </label>
             <div className="relative">
