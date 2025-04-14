@@ -838,12 +838,21 @@ export default function SimpleLibroRegistros() {
                             if (!searchTermLower) return true;
                             
                             // Comprobar si el nombre o username contiene el término de búsqueda
+                            // Asegurar que no sea null o undefined antes de buscar
                             const nameMatch = userOption.name 
                               ? userOption.name.toLowerCase().includes(searchTermLower)
                               : false;
+                            
                             const usernameMatch = userOption.username
                               ? userOption.username.toLowerCase().includes(searchTermLower)
                               : false;
+                            
+                            // Log para depuración de por qué no encuentra resultados
+                            if (searchTermLower.includes('javi')) {
+                              console.log('Buscando "javi" en:', userOption);
+                              console.log('Match nombre:', nameMatch);
+                              console.log('Match username:', usernameMatch);
+                            }
                               
                             return nameMatch || usernameMatch;
                           })
