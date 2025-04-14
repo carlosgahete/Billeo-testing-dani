@@ -9,6 +9,23 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
+interface ClientData {
+  id: number;
+  name: string;
+  taxId: string;
+  email?: string;
+  phone?: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+interface ClientResponse {
+  id: number;
+  [key: string]: any;
+}
+
 interface SimpleMobileQuoteFormProps {
   quoteId?: number;
   initialData?: any;
@@ -126,17 +143,18 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   });
   
   // Mutation para crear un nuevo cliente
-  const createClientMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/clients", data);
+  const createClientMutation = useMutation<ClientResponse, Error, typeof newClient>({
+    mutationFn: async (data) => {
+      const response = await apiRequest("POST", "/api/clients", data);
+      return response as ClientResponse;
     },
-    onSuccess: (data) => {
+    onSuccess: (response) => {
       // Actualizar la lista de clientes
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       
       // Seleccionar el cliente recién creado
-      if (data && data.id) {
-        setSelectedClientId(data.id);
+      if (response && response.id) {
+        setSelectedClientId(response.id);
       }
       
       // Cerrar el diálogo y mostrar mensaje
