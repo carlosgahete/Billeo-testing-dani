@@ -625,149 +625,149 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
       </Dialog>
 
       {/* Diálogo para añadir nuevo cliente */}
-      <Dialog open={showAddClientDialog} onOpenChange={setShowAddClientDialog}>
-        <DialogContent className="sm:max-w-[425px] rounded-xl border-0 p-0 max-h-[90vh] flex flex-col">
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <DialogHeader>
-              <DialogTitle className="text-center text-base">Añadir nuevo cliente</DialogTitle>
-            </DialogHeader>
-          </div>
-          
-          <div className="p-6 space-y-4 overflow-y-auto flex-1">
-            <div className="space-y-2">
-              <Label htmlFor="client-name" className="text-sm text-gray-600">
-                Nombre <span className="text-[#007AFF] text-xs">*</span>
-              </Label>
-              <input
-                id="client-name"
-                value={newClient.name}
-                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                placeholder="Nombre de la empresa o cliente"
-                required
-              />
+      {showAddClientDialog && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+              <h3 className="text-center text-base font-medium">Añadir nuevo cliente</h3>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="client-taxId" className="text-sm text-gray-600">
-                CIF/NIF <span className="text-[#007AFF] text-xs">*</span>
-              </Label>
-              <input
-                id="client-taxId"
-                value={newClient.taxId}
-                onChange={(e) => setNewClient({...newClient, taxId: e.target.value})}
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                placeholder="B12345678"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="client-email" className="text-sm text-gray-600">
-                Email
-              </Label>
-              <input
-                id="client-email"
-                type="email"
-                value={newClient.email}
-                onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                placeholder="cliente@ejemplo.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="client-phone" className="text-sm text-gray-600">
-                Teléfono
-              </Label>
-              <input
-                id="client-phone"
-                type="tel"
-                value={newClient.phone}
-                onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                placeholder="600123456"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="client-address" className="text-sm text-gray-600">
-                Dirección <span className="text-[#007AFF] text-xs">*</span>
-              </Label>
-              <input
-                id="client-address"
-                value={newClient.address}
-                onChange={(e) => setNewClient({...newClient, address: e.target.value})}
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                placeholder="Calle, número, piso..."
-                required
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 space-y-4 overflow-y-auto" style={{maxHeight: "calc(90vh - 130px)"}}>
               <div className="space-y-2">
-                <Label htmlFor="client-city" className="text-sm text-gray-600">
-                  Ciudad <span className="text-[#007AFF] text-xs">*</span>
+                <Label htmlFor="client-name" className="text-sm text-gray-600">
+                  Nombre <span className="text-[#007AFF] text-xs">*</span>
                 </Label>
                 <input
-                  id="client-city"
-                  value={newClient.city}
-                  onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                  id="client-name"
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({...newClient, name: e.target.value})}
                   className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                  placeholder="Madrid"
+                  placeholder="Nombre de la empresa o cliente"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="client-postalCode" className="text-sm text-gray-600">
-                  Código Postal <span className="text-[#007AFF] text-xs">*</span>
+                <Label htmlFor="client-taxId" className="text-sm text-gray-600">
+                  CIF/NIF <span className="text-[#007AFF] text-xs">*</span>
                 </Label>
                 <input
-                  id="client-postalCode"
-                  value={newClient.postalCode}
-                  onChange={(e) => setNewClient({...newClient, postalCode: e.target.value})}
+                  id="client-taxId"
+                  value={newClient.taxId}
+                  onChange={(e) => setNewClient({...newClient, taxId: e.target.value})}
                   className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                  placeholder="28001"
+                  placeholder="B12345678"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="client-email" className="text-sm text-gray-600">
+                  Email
+                </Label>
+                <input
+                  id="client-email"
+                  type="email"
+                  value={newClient.email}
+                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  placeholder="cliente@ejemplo.com"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="client-phone" className="text-sm text-gray-600">
+                  Teléfono
+                </Label>
+                <input
+                  id="client-phone"
+                  type="tel"
+                  value={newClient.phone}
+                  onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  placeholder="600123456"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="client-address" className="text-sm text-gray-600">
+                  Dirección <span className="text-[#007AFF] text-xs">*</span>
+                </Label>
+                <input
+                  id="client-address"
+                  value={newClient.address}
+                  onChange={(e) => setNewClient({...newClient, address: e.target.value})}
+                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  placeholder="Calle, número, piso..."
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="client-city" className="text-sm text-gray-600">
+                    Ciudad <span className="text-[#007AFF] text-xs">*</span>
+                  </Label>
+                  <input
+                    id="client-city"
+                    value={newClient.city}
+                    onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                    className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                    placeholder="Madrid"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="client-postalCode" className="text-sm text-gray-600">
+                    Código Postal <span className="text-[#007AFF] text-xs">*</span>
+                  </Label>
+                  <input
+                    id="client-postalCode"
+                    value={newClient.postalCode}
+                    onChange={(e) => setNewClient({...newClient, postalCode: e.target.value})}
+                    className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                    placeholder="28001"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="client-country" className="text-sm text-gray-600">
+                  País <span className="text-[#007AFF] text-xs">*</span>
+                </Label>
+                <input
+                  id="client-country"
+                  value={newClient.country}
+                  onChange={(e) => setNewClient({...newClient, country: e.target.value})}
+                  className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  placeholder="España"
                   required
                 />
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="client-country" className="text-sm text-gray-600">
-                País <span className="text-[#007AFF] text-xs">*</span>
-              </Label>
-              <input
-                id="client-country"
-                value={newClient.country}
-                onChange={(e) => setNewClient({...newClient, country: e.target.value})}
-                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
-                placeholder="España"
-                required
-              />
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setShowAddClientDialog(false)}
+                className="text-[#007AFF] hover:bg-blue-50"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleSaveClient}
+                className="bg-[#007AFF] hover:bg-blue-600"
+              >
+                Guardar Cliente
+              </Button>
             </div>
           </div>
-          
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setShowAddClientDialog(false)}
-              className="text-[#007AFF] hover:bg-blue-50"
-            >
-              Cancelar
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleSaveClient}
-              className="bg-[#007AFF] hover:bg-blue-600"
-            >
-              Guardar Cliente
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   );
 };
