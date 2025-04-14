@@ -21,7 +21,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
-import * as XLSX from 'xlsx';
+
 
 // Definiciones de tipos igual que en el original
 interface LibroRegistrosData {
@@ -688,23 +688,40 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
   };
   
   // Función para descargar como Excel
+  // Función para escapar campos CSV para manejar comas y comillas
+  const escapeCsvField = (field: string | number) => {
+    const stringField = String(field);
+    // Si contiene comas, comillas o saltos de línea, envolvemos entre comillas y escapamos comillas internas
+    if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+      return `"${stringField.replace(/"/g, '""')}"`;
+    }
+    return stringField;
+  };
+
+  // Función que convierte un array de arrays a texto CSV
+  const convertToCSV = (rows: (string | number)[][]) => {
+    return rows.map(row => 
+      row.map(field => escapeCsvField(field)).join(',')
+    ).join('\n');
+  };
+
+  // Función para descargar como CSV (reemplaza a Excel)
   const handleDownloadExcel = () => {
     if (!filteredData) return;
     
-    // Crear un libro de trabajo (workbook) nuevo
-    const wb = XLSX.utils.book_new();
+    // Creamos un array para cada sección
     
-    // RESUMEN (Primera hoja)
-    const summaryData = [
+    // RESUMEN
+    const summaryRows = [
       ['LIBRO DE REGISTROS - RESUMEN'],
       [`Usuario ID: ${userId || 'Todos'}`],
       [`Generado: ${new Date().toLocaleString('es-ES')}`],
-      [],
+      [''],
       ['Filtros aplicados:'],
       [`Año: ${selectedYear !== 'all' ? selectedYear : 'Todos'}`],
       [`Trimestre: ${selectedQuarter !== 'all' ? selectedQuarter.replace('Q', '') : 'Todos'}`],
       [`Mes: ${selectedMonth !== 'all' ? selectedMonth : 'Todos'}`],
-      [],
+      [''],
       ['Concepto', 'Cantidad', 'Importe'],
       ['Facturas', filteredData.summary.totalInvoices, filteredData.summary.incomeTotal],
       ['Gastos', filteredData.transactions.filter(t => t.type === 'expense').length, filteredData.summary.expenseTotal],
@@ -712,99 +729,103 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
       ['Balance', '', filteredData.summary.incomeTotal - filteredData.summary.expenseTotal]
     ];
     
-    // Crear una hoja con los datos de resumen
-    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    // Convertir el resumen a CSV
+    let csvContent = convertToCSV(summaryRows);
     
-    // Aplicar formato a algunas celdas (si es posible)
-    const mergeStyles = { '!merges': [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }] };
-    
-    // Añadir la hoja al libro de trabajo
-    XLSX.utils.book_append_sheet(wb, summaryWs, 'Resumen');
-    
-    // FACTURAS (Segunda hoja)
+    // FACTURAS
     if (filteredData.invoices.length > 0) {
-      const invoicesData = [
+      // Separador
+      csvContent += '\n\n';
+      
+      // Encabezado
+      csvContent += convertToCSV([
         ['FACTURAS EMITIDAS'],
-        [],
+        [''],
         ['Número', 'Fecha', 'Cliente', 'Base', 'IVA', 'Total', 'Estado']
-      ];
+      ]);
       
-      // Añadir cada factura
-      filteredData.invoices.forEach((invoice) => {
-        invoicesData.push([
-          invoice.number,
-          formatDate(invoice.issueDate),
-          invoice.client,
-          invoice.baseAmount,
-          invoice.vatAmount,
-          invoice.total,
-          invoice.status === 'paid' ? 'Pagada' : 
-            invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
-        ]);
-      });
+      // Datos de facturas
+      const invoiceRows = filteredData.invoices.map(invoice => [
+        invoice.number,
+        formatDate(invoice.issueDate),
+        invoice.client,
+        invoice.baseAmount,
+        invoice.vatAmount,
+        invoice.total,
+        invoice.status === 'paid' ? 'Pagada' : 
+          invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'
+      ]);
       
-      // Crear una hoja con los datos de facturas
-      const invoicesWs = XLSX.utils.aoa_to_sheet(invoicesData);
-      
-      // Añadir la hoja al libro de trabajo
-      XLSX.utils.book_append_sheet(wb, invoicesWs, 'Facturas');
+      csvContent += '\n' + convertToCSV(invoiceRows);
     }
     
-    // TRANSACCIONES (Tercera hoja)
+    // TRANSACCIONES
     if (filteredData.transactions.length > 0) {
-      const transactionsData = [
+      // Separador
+      csvContent += '\n\n';
+      
+      // Encabezado
+      csvContent += convertToCSV([
         ['TRANSACCIONES'],
-        [],
+        [''],
         ['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']
-      ];
+      ]);
       
-      // Añadir cada transacción
-      filteredData.transactions.forEach((transaction) => {
-        transactionsData.push([
-          formatDate(transaction.date),
-          transaction.description,
-          transaction.category || 'Sin categoría',
-          transaction.type === 'income' ? 'Ingreso' : 'Gasto',
-          transaction.amount
-        ]);
-      });
+      // Datos de transacciones
+      const transactionRows = filteredData.transactions.map(transaction => [
+        formatDate(transaction.date),
+        transaction.description,
+        transaction.category || 'Sin categoría',
+        transaction.type === 'income' ? 'Ingreso' : 'Gasto',
+        transaction.amount
+      ]);
       
-      // Crear una hoja con los datos de transacciones
-      const transactionsWs = XLSX.utils.aoa_to_sheet(transactionsData);
-      
-      // Añadir la hoja al libro de trabajo
-      XLSX.utils.book_append_sheet(wb, transactionsWs, 'Transacciones');
+      csvContent += '\n' + convertToCSV(transactionRows);
     }
     
-    // PRESUPUESTOS (Cuarta hoja)
+    // PRESUPUESTOS
     if (filteredData.quotes.length > 0) {
-      const quotesData = [
+      // Separador
+      csvContent += '\n\n';
+      
+      // Encabezado
+      csvContent += convertToCSV([
         ['PRESUPUESTOS'],
-        [],
+        [''],
         ['Número', 'Fecha', 'Cliente', 'Total', 'Estado']
-      ];
+      ]);
       
-      // Añadir cada presupuesto
-      filteredData.quotes.forEach((quote) => {
-        quotesData.push([
-          quote.number,
-          formatDate(quote.issueDate),
-          quote.clientName,
-          quote.total,
-          quote.status === 'accepted' ? 'Aceptado' : 
-            quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
-        ]);
-      });
+      // Datos de presupuestos
+      const quoteRows = filteredData.quotes.map(quote => [
+        quote.number,
+        formatDate(quote.issueDate),
+        quote.clientName,
+        quote.total,
+        quote.status === 'accepted' ? 'Aceptado' : 
+          quote.status === 'pending' ? 'Pendiente' : 'Rechazado'
+      ]);
       
-      // Crear una hoja con los datos de presupuestos
-      const quotesWs = XLSX.utils.aoa_to_sheet(quotesData);
-      
-      // Añadir la hoja al libro de trabajo
-      XLSX.utils.book_append_sheet(wb, quotesWs, 'Presupuestos');
+      csvContent += '\n' + convertToCSV(quoteRows);
     }
     
-    // Generar el archivo y descargarlo
-    XLSX.writeFile(wb, `libro-registros-${userId || 'todos'}.xlsx`);
+    // Crear un Blob con el contenido CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Crear un objeto URL para el blob
+    const url = URL.createObjectURL(blob);
+    
+    // Crear un elemento 'a' para la descarga
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `libro-registros-${userId || 'todos'}.csv`);
+    
+    // Añadir el enlace al DOM, hacer clic en él y luego eliminarlo
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Liberar la URL del objeto
+    URL.revokeObjectURL(url);
   };
 
   // Estado para almacenar el usuario seleccionado para visualización
@@ -983,7 +1004,7 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
               className="flex items-center h-10 w-[150px]"
             >
               <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Descargar Excel
+              Descargar CSV
             </Button>
           </div>
         </div>
