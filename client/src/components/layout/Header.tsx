@@ -83,6 +83,7 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
             src={billeoLogo} 
             alt="Billeo Logo" 
             className="h-8"
+            loading="eager"
           />
         </div>
 

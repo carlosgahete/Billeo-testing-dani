@@ -131,7 +131,12 @@ export default function SelectUser() {
       <Card className="w-full max-w-lg shadow-xl">
         <CardContent className="p-6">
           <div className="text-center mb-6">
-            <img src={billeoLogo} alt="Billeo Logo" className="h-12 mx-auto mb-4" />
+            <img 
+              src={billeoLogo} 
+              alt="Billeo Logo" 
+              className="h-8 mx-auto mb-4"
+              loading="eager" 
+            />
             <h1 className="text-2xl font-bold mb-2">Seleccione el usuario</h1>
             {redirectTarget === 'libro-registros' ? (
               <p className="text-neutral-500">Elija el usuario para ver su libro de registros</p>
