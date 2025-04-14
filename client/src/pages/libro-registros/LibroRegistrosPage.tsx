@@ -631,13 +631,13 @@ export default function LibroRegistrosPage() {
       </div>
       
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="bg-blue-50 px-4 py-2 flex items-center">
-            <FileText className="h-5 w-5 text-blue-600 mr-2" />
-            <div className="text-sm font-medium">Facturas</div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 animate-in fade-in-50 slide-in-from-bottom-6 duration-700">
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 flex items-center">
+            <FileText className="h-5 w-5 text-white mr-2" />
+            <div className="text-sm font-medium text-white">Facturas</div>
           </div>
-          <div className="p-4">
+          <div className="p-4 bg-white">
             <div className="text-2xl font-semibold">{summary.totalInvoices}</div>
             <div className="text-xs text-gray-500">Total emitidas</div>
             <div className="mt-3 text-lg font-semibold">{formatCurrency(summary.incomeTotal)}</div>
