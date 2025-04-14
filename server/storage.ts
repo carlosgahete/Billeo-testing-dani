@@ -34,7 +34,9 @@ import {
   DashboardPreferences,
   InsertDashboardPreferences,
   DashboardBlock,
-  files
+  files,
+  File,
+  InsertFile
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { db, sql } from "./db";

@@ -5,6 +5,7 @@ import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { DatabaseStorage } from './storage';
 import { requireAuth } from './auth-middleware';
+import { File as FileModel } from '@shared/schema';
 
 const router = Router();
 const storage = new DatabaseStorage();
@@ -110,7 +111,7 @@ router.post('/upload', requireAuth, upload.single('file'), async (req: Request, 
       success: true,
       message: 'Archivo subido correctamente',
       filePath: file.path,
-      fileId: fileRecord.id
+      fileId: (fileRecord as any).id
     });
   } catch (error) {
     console.error('Error al subir archivo:', error);
@@ -145,7 +146,7 @@ router.delete('/delete', requireAuth, async (req, res) => {
     }
 
     // Verificar que el usuario tiene permisos para eliminar el archivo
-    if (fileRecord.userId !== userId) {
+    if ((fileRecord as any).userId !== userId) {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para eliminar este archivo'
@@ -153,7 +154,7 @@ router.delete('/delete', requireAuth, async (req, res) => {
     }
 
     // Marcar el archivo como eliminado en la base de datos
-    await storage.markFileAsDeleted(fileRecord.id);
+    await storage.markFileAsDeleted((fileRecord as any).id);
 
     // Eliminar el archivo físicamente (opcional, se puede mantener y solo ocultar en la interfaz)
     try {
@@ -213,8 +214,8 @@ router.get('/download', requireAuth, async (req, res) => {
     }
 
     // Configurar los headers para la descarga
-    res.setHeader('Content-Disposition', `attachment; filename="${fileRecord.originalName}"`);
-    res.setHeader('Content-Type', fileRecord.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${(fileRecord as any).originalName}"`);
+    res.setHeader('Content-Type', (fileRecord as any).mimeType);
 
     // Enviar el archivo
     const fileStream = fs.createReadStream(filePath);
@@ -259,14 +260,14 @@ router.get('/preview', requireAuth, async (req, res) => {
     }
 
     // Para imágenes, enviamos directamente
-    if (fileRecord.mimeType.startsWith('image/')) {
-      res.setHeader('Content-Type', fileRecord.mimeType);
+    if ((fileRecord as any).mimeType.startsWith('image/')) {
+      res.setHeader('Content-Type', (fileRecord as any).mimeType);
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
     } else {
       // Para otros tipos, enviamos un 'inline' Content-Disposition
-      res.setHeader('Content-Disposition', `inline; filename="${fileRecord.originalName}"`);
-      res.setHeader('Content-Type', fileRecord.mimeType);
+      res.setHeader('Content-Disposition', `inline; filename="${(fileRecord as any).originalName}"`);
+      res.setHeader('Content-Type', (fileRecord as any).mimeType);
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
     }
