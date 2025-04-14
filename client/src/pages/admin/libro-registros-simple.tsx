@@ -203,10 +203,13 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
         
         // La ruta debe coincidir con la API en el backend
         // Usando la ruta correcta que existe en el servidor
-        const apiUrl = `/api/public/libro-registros/${idToUse}`;
+        const apiUrl = `/api/libro-registros/${idToUse}`;
         console.log("Consultando datos del Libro de Registros desde:", apiUrl);
         
-        const response = await fetch(apiUrl);
+        // Enviamos las credenciales para que incluya cookies de sesión
+        const response = await fetch(apiUrl, {
+          credentials: 'include'
+        });
         
         if (!response.ok) {
           const errorText = await response.text();
