@@ -87,9 +87,9 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
   const mutation = useMutation({
     mutationFn: async (data: ClientFormValues) => {
       if (isEditMode) {
-        return apiRequest(`/api/clients/${clientToEdit.id}`, "PUT", data);
+        return apiRequest("PUT", `/api/clients/${clientToEdit.id}`, data);
       } else {
-        return apiRequest("/api/clients", "POST", data);
+        return apiRequest("POST", "/api/clients", data);
       }
     },
     onSuccess: (data) => {
