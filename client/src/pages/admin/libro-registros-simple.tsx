@@ -613,6 +613,8 @@ export default function SimpleLibroRegistros() {
   
   // Función para descargar como Excel (CSV mejorado)
   const handleDownloadExcel = () => {
+    // Obtener los datos filtrados actualizados
+    const filteredData = getFilteredData();
     if (!filteredData) return;
     
     // Información del encabezado
@@ -900,9 +902,9 @@ export default function SimpleLibroRegistros() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold">{filteredData?.summary.totalInvoices || 0}</p>
+            <p className="text-3xl font-bold">{getFilteredData()?.summary.totalInvoices || 0}</p>
             <p className="text-sm text-gray-500 mt-1">Total emitidas</p>
-            <p className="text-lg font-semibold mt-2">{formatCurrency(filteredData?.summary.incomeTotal || 0)}</p>
+            <p className="text-lg font-semibold mt-2">{formatCurrency(getFilteredData()?.summary.incomeTotal || 0)}</p>
             <p className="text-xs text-gray-500">Importe total facturado</p>
           </CardContent>
         </Card>
@@ -915,9 +917,9 @@ export default function SimpleLibroRegistros() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold">{filteredData?.summary.totalTransactions || 0}</p>
+            <p className="text-3xl font-bold">{getFilteredData()?.summary.totalTransactions || 0}</p>
             <p className="text-sm text-gray-500 mt-1">Transacciones</p>
-            <p className="text-lg font-semibold mt-2">{formatCurrency(filteredData?.summary.expenseTotal || 0)}</p>
+            <p className="text-lg font-semibold mt-2">{formatCurrency(getFilteredData()?.summary.expenseTotal || 0)}</p>
             <p className="text-xs text-gray-500">Importe total gastado</p>
           </CardContent>
         </Card>
@@ -930,7 +932,7 @@ export default function SimpleLibroRegistros() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-3xl font-bold">{filteredData?.summary.totalQuotes || 0}</p>
+            <p className="text-3xl font-bold">{getFilteredData()?.summary.totalQuotes || 0}</p>
             <p className="text-sm text-gray-500 mt-1">Total presupuestos</p>
           </CardContent>
         </Card>
@@ -944,7 +946,7 @@ export default function SimpleLibroRegistros() {
           </CardHeader>
           <CardContent className="pt-4">
             <p className="text-3xl font-bold">
-              {formatCurrency((filteredData?.summary.incomeTotal || 0) - (filteredData?.summary.expenseTotal || 0))}
+              {formatCurrency((getFilteredData()?.summary.incomeTotal || 0) - (getFilteredData()?.summary.expenseTotal || 0))}
             </p>
             <p className="text-sm text-gray-500 mt-1">Resultado</p>
           </CardContent>
@@ -964,7 +966,7 @@ export default function SimpleLibroRegistros() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {filteredData?.invoices && filteredData.invoices.length > 0 ? (
+              {getFilteredData()?.invoices && getFilteredData().invoices.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="w-full">
                     <TableHeader>
@@ -979,7 +981,7 @@ export default function SimpleLibroRegistros() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredData.invoices.slice(0, 6).map((invoice) => (
+                      {getFilteredData().invoices.slice(0, 6).map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell className="font-medium">{invoice.number}</TableCell>
                           <TableCell>{formatDate(invoice.issueDate)}</TableCell>
@@ -1001,9 +1003,9 @@ export default function SimpleLibroRegistros() {
                       ))}
                     </TableBody>
                   </Table>
-                  {filteredData.invoices.length > 6 && (
+                  {getFilteredData().invoices.length > 6 && (
                     <div className="p-3 text-center text-sm text-gray-500">
-                      Mostrando 6 de {filteredData.invoices.length} facturas
+                      Mostrando 6 de {getFilteredData().invoices.length} facturas
                     </div>
                   )}
                 </div>
@@ -1024,7 +1026,7 @@ export default function SimpleLibroRegistros() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {filteredData?.quotes && filteredData.quotes.length > 0 ? (
+              {getFilteredData()?.quotes && getFilteredData().quotes.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="w-full">
                     <TableHeader>
@@ -1037,7 +1039,7 @@ export default function SimpleLibroRegistros() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredData.quotes.slice(0, 6).map((quote) => (
+                      {getFilteredData().quotes.slice(0, 6).map((quote) => (
                         <TableRow key={quote.id}>
                           <TableCell className="font-medium">{quote.number}</TableCell>
                           <TableCell>{formatDate(quote.issueDate)}</TableCell>
@@ -1057,9 +1059,9 @@ export default function SimpleLibroRegistros() {
                       ))}
                     </TableBody>
                   </Table>
-                  {filteredData.quotes.length > 6 && (
+                  {getFilteredData().quotes.length > 6 && (
                     <div className="p-3 text-center text-sm text-gray-500">
-                      Mostrando 6 de {filteredData.quotes.length} presupuestos
+                      Mostrando 6 de {getFilteredData().quotes.length} presupuestos
                     </div>
                   )}
                 </div>
