@@ -552,14 +552,7 @@ export function MinimalQuoteList({ userId }: Props) {
         </ul>
       )}
       
-      {/* Floating action button - Crear */}
-      <div className="fixed bottom-6 right-6">
-        <Link href="/quotes/simple/create">
-          <Button className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center">
-            <Plus className="h-6 w-6" />
-          </Button>
-        </Link>
-      </div>
+      {/* Eliminamos el botón flotante ya que ahora tenemos el botón "Nuevo" arriba */}
       
 
     </div>
