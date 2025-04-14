@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ArrowLeft, FileText, Plus, Minus, Trash2, CalendarIcon, Pencil, ChevronDown } from "lucide-react";
 import { z } from "zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { 
+  MobileAccordion, 
+  MobileAccordionItem, 
+  MobileAccordionTrigger, 
+  MobileAccordionContent 
+} from "@/components/ui/accordion";
+import { ClientForm } from "@/components/clients/ClientForm";
+import FileUpload from "@/components/common/FileUpload";
 
 // Importamos la lógica de cálculo y schemas desde InvoiceForm
 function toNumber(value: any, defaultValue = 0): number {
