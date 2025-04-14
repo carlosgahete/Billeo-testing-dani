@@ -272,7 +272,7 @@ const Sidebar = ({
             <img 
               src={billeoLogoAlt} 
               alt="Billeo Logo" 
-              className="h-6"
+              className="h-6" loading="eager"
               onError={(e) => {
                 // Si hay error al cargar la imagen, intentamos con la otra versión
                 e.currentTarget.src = billeoLogo;
@@ -364,7 +364,7 @@ const Sidebar = ({
             <img 
               src={billeoLogoAlt} 
               alt="Billeo Logo" 
-              className="h-6"
+              className="h-6" loading="eager"
               onError={(e) => {
                 // Si hay error al cargar la imagen, intentamos con la otra versión
                 e.currentTarget.src = billeoLogo;
