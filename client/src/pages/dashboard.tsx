@@ -98,28 +98,24 @@ const Dashboard = () => {
     refetchOnWindowFocus: true,
     refetchOnMount: "always", // Siempre recarga al montar el componente
     refetchOnReconnect: true,
-    refetchInterval: 500, // Actualización cada 500ms para mayor reactividad e inmediatez
+    refetchInterval: 300, // Actualización más rápida para mayor fluidez al estilo Apple
     staleTime: 0, // Considerar los datos obsoletos inmediatamente
     gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
-    retry: 5, // Aumentar los reintentos para mayor fiabilidad
-    retryDelay: 200, // Tiempo más corto entre reintentos
+    retry: 2, // Menos reintentos para no bloquear la interfaz
+    retryDelay: 100, // Tiempo mucho más corto entre reintentos
     refetchIntervalInBackground: true, // Continuar actualizando incluso cuando la pestaña no está enfocada
     onSuccess: (data) => {
-      // Sistema de sincronización bidireccional
-      console.log("Dashboard actualizado con nuevos datos:", new Date().toISOString());
+      // Sistema de sincronización optimizado - más fluido al estilo Apple
+      // Controlamos si realmente necesitamos sincronizar para evitar renderizados innecesarios
+      const shouldSync = true; // Optimización futura: usar hash de datos para determinar si hay cambios
       
-      // Verificar si hay datos nuevos y forzar actualizaciones en cascada
-      if (data) {
-        // Invalidar todas las consultas relacionadas para sincronización completa
-        const invalidatePromises = [
+      if (data && shouldSync) {
+        // Usamos una Promise.all para realizar todas las actualizaciones en paralelo - más rápido
+        Promise.all([
           queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
-          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] }),
-          queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] })
-        ];
-        
-        // Ejecutar invalidaciones en paralelo para mayor eficiencia
-        Promise.all(invalidatePromises).then(() => {
-          console.log("Sincronización completa de datos entre dispositivos", new Date().toISOString());
+          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] })
+        ]).catch(() => {
+          // Manejo silencioso de errores para evitar bloqueos de interfaz
         });
       }
     }
@@ -127,23 +123,34 @@ const Dashboard = () => {
 
   const isLoading = userLoading || statsLoading;
 
+  // Optimizamos el estado de carga para mostrar esqueletos en lugar de un spinner
+  // Esto da la sensación de mayor fluidez al estilo Apple
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+      <div className="space-y-2 min-h-screen pb-48 mb-20">
+        <div className="flex flex-col gap-2 mt-4">
+          <div className="h-16 bg-gradient-to-r from-gray-200 to-gray-100 animate-pulse rounded-lg"></div>
+        </div>
+        
+        {/* Esqueleto de métricas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
+          <div className="h-40 bg-white rounded-lg animate-pulse shadow-sm"></div>
+          <div className="h-40 bg-white rounded-lg animate-pulse shadow-sm delay-75"></div>
+          <div className="h-40 bg-white rounded-lg animate-pulse shadow-sm delay-150"></div>
+        </div>
+        
+        {/* Esqueleto de tarjetas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-2 mt-4">
+          <div className="h-64 bg-white rounded-lg animate-pulse shadow-sm"></div>
+          <div className="h-64 bg-white rounded-lg animate-pulse shadow-sm delay-75"></div>
+          <div className="h-64 bg-white rounded-lg animate-pulse shadow-sm delay-150"></div>
+        </div>
       </div>
     );
   }
   
-  // Depurar datos cuando se cargan
-  debugData(stats);
-  
-  // DEPURACIÓN EXTENDIDA - Mostrar exactamente lo que está llegando en baseImponible
-  console.log("VALOR DE BASE IMPONIBLE:", {
-    directBaseImponible: stats?.baseImponible,
-    tipoBaseImponible: typeof stats?.baseImponible,
-    statsCompleto: stats
-  });
+  // Eliminamos la depuración para mejorar el rendimiento
+  // La reducción de operaciones de consola aumenta significativamente el rendimiento
   
   // Usar datos reales del sistema o valores por defecto si no hay datos
   const incomeTotal = stats?.income || 0;
@@ -213,27 +220,8 @@ const Dashboard = () => {
   // Resultado final después de impuestos
   const netProfit = beneficioAntesImpuestos - irpfTotal;
   
-  // Log para depuración
-  console.log("VALORES FINANCIEROS ACTUALIZADOS:", {
-    ingresos: {
-      baseImponible: baseIncomeSinIVA,
-      totalConIVA: totalBruto,
-      ivaRepercutido: ivaRepercutidoCorregido,
-      irpfRetenido: irpfRetencionIngresos
-    },
-    gastos: {
-      baseImponible: baseExpensesSinIVA,
-      totalConIVA: totalPagado,
-      ivaSoportado: ivaSoportadoCorregido,
-      irpfEnGastos: irpfGastos
-    },
-    resultados: {
-      beneficioAntesImpuestos,
-      ivaALiquidar: ivaALiquidarCorregido,
-      irpfTotal,
-      resultadoFinal: netProfit
-    }
-  });
+  // Eliminamos los logs para mejorar el rendimiento
+  // La depuración puede habilitarse selectivamente en desarrollo según sea necesario
   
   const financialData = {
     income: {
@@ -298,21 +286,21 @@ const Dashboard = () => {
       <DashboardMetrics userId={user?.user?.id || 0} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-2 mt-4">
-        {/* Primera columna: Tarjeta de Ingresos */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+        {/* Primera columna: Tarjeta de Ingresos - Con animaciones al estilo Apple */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.01]">
           {/* Tarjeta de Ingresos */}
-          <Card className="overflow-hidden flex-grow">
+          <Card className="overflow-hidden flex-grow shadow-sm hover:shadow-md transition-all duration-300">
             <CardHeader className="bg-emerald-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-emerald-700 flex items-center">
-                  <ArrowUpFromLine className="mr-2 h-5 w-5" />
+                  <ArrowUpFromLine className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
                   Ingresos
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
+                        <Info className="h-4 w-4 text-neutral-500 transition-opacity hover:opacity-80" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -323,14 +311,14 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <p className="text-2xl font-bold text-emerald-600">
+              <p className="text-2xl font-bold text-emerald-600 animate-in fade-in duration-500">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
                 }).format(financialData.income.totalWithoutVAT)} €
               </p>
               
-              <div className="mt-2 space-y-1 text-sm">
+              <div className="mt-2 space-y-1 text-sm animate-in fade-in duration-700 delay-200">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Facturas cobradas:</span>
                   <span className="font-medium">{stats?.invoiceStats?.paidCount || 0}</span>
@@ -341,22 +329,22 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-8 mb-2">
+              <div className="mt-8 mb-2 animate-in fade-in duration-700 delay-300">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50 transition-all duration-300"
                   onClick={() => navigate("/invoices")}
                 >
                   Ver facturas
                 </Button>
               </div>
               
-              <div className="mt-auto pt-2 mb-2">
+              <div className="mt-auto pt-2 mb-2 animate-in fade-in duration-700 delay-300">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-green-600 border-green-300 hover:bg-green-50"
+                  className="w-full text-green-600 border-green-300 hover:bg-green-50 transition-all duration-300"
                   onClick={() => navigate("/transactions?tab=income")}
                 >
                   Ver ingresos
@@ -366,21 +354,21 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Segunda columna: Tarjeta de Gastos */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
+        {/* Segunda columna: Tarjeta de Gastos - Con animaciones al estilo Apple */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.01]">
           {/* Tarjeta de Gastos */}
-          <Card className="overflow-hidden flex-grow">
+          <Card className="overflow-hidden flex-grow shadow-sm hover:shadow-md transition-all duration-300">
             <CardHeader className="bg-red-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-red-700 flex items-center">
-                  <ArrowDownToLine className="mr-2 h-5 w-5" />
+                  <ArrowDownToLine className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
                   Gastos
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
+                        <Info className="h-4 w-4 text-neutral-500 transition-opacity hover:opacity-80" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -391,14 +379,14 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-red-600 animate-in fade-in duration-500">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
                 }).format(financialData.expenses.totalWithoutVAT)} €
               </p>
               
-              <div className="mt-2 space-y-1 text-sm">
+              <div className="mt-2 space-y-1 text-sm animate-in fade-in duration-700 delay-200">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA incluido en los gastos:</span>
                   <span className="font-medium">{financialData.expenses.ivaSoportado.toLocaleString('es-ES')} €</span>
@@ -409,11 +397,11 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-auto pt-8 mb-2">
+              <div className="mt-auto pt-8 mb-2 animate-in fade-in duration-700 delay-300">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                  className="w-full text-red-600 border-red-300 hover:bg-red-50 transition-all duration-300"
                   onClick={() => navigate("/transactions?tab=expense")}
                 >
                   Ver gastos
@@ -424,20 +412,20 @@ const Dashboard = () => {
         </div>
         
 
-        {/* Cuarta columna: Tarjeta de Resultado Final */}
-        <div className="md:col-span-1 space-y-2 h-full flex flex-col">
-          <Card className="overflow-hidden flex-grow">
+        {/* Tercera columna: Tarjeta de Resultado Final - Con animaciones al estilo Apple */}
+        <div className="md:col-span-1 space-y-2 h-full flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.01]">
+          <Card className="overflow-hidden flex-grow shadow-sm hover:shadow-md transition-all duration-300">
             <CardHeader className="bg-blue-50 p-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg text-blue-700 flex items-center">
-                  <PiggyBank className="mr-2 h-5 w-5" />
+                  <PiggyBank className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
                   Resultado Final
                 </CardTitle>
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="cursor-pointer">
-                        <Info className="h-4 w-4 text-neutral-500" />
+                        <Info className="h-4 w-4 text-neutral-500 transition-opacity hover:opacity-80" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
@@ -448,14 +436,14 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-blue-600 animate-in fade-in duration-500">
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
                 }).format(financialData.income.totalWithoutVAT - financialData.expenses.totalWithoutVAT)} €
               </p>
               
-              <div className="mt-2 space-y-1 text-sm">
+              <div className="mt-2 space-y-1 text-sm animate-in fade-in duration-700 delay-200">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA a liquidar:</span>
                   <span className="font-medium text-red-600">{new Intl.NumberFormat('es-ES', { 
@@ -472,11 +460,11 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-auto pt-8 mb-2">
+              <div className="mt-auto pt-8 mb-2 animate-in fade-in duration-700 delay-300">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
+                  className="w-full text-blue-600 border-blue-300 hover:bg-blue-50 transition-all duration-300"
                   onClick={() => navigate("/reports")}
                 >
                   Ver informes
@@ -486,22 +474,28 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Fila para presupuestos, facturas y gráficos de comparación */}
-        <div className="md:col-span-3 mt-6">
+        {/* Fila para presupuestos, facturas y gráficos de comparación - Con animaciones al estilo Apple */}
+        <div className="md:col-span-3 mt-6 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-300">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Columna 1: Presupuestos (más estrecho) */}
-            <div className="lg:col-span-3">
-              <QuotesSummary />
+            <div className="lg:col-span-3 transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-md">
+              <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-400">
+                <QuotesSummary />
+              </div>
             </div>
             
             {/* Columna 2: Facturas (más estrecho) */}
-            <div className="lg:col-span-3">
-              <InvoicesSummary />
+            <div className="lg:col-span-3 transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-md">
+              <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-500">
+                <InvoicesSummary />
+              </div>
             </div>
             
             {/* Columna 3: Gráficos de Comparación (más ancha) */}
-            <div className="lg:col-span-6">
-              <ComparisonCharts />
+            <div className="lg:col-span-6 transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-md">
+              <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-600">
+                <ComparisonCharts />
+              </div>
             </div>
           </div>
         </div>
