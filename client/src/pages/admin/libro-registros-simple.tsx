@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, ShoppingCart, File, Users, FileSpreadsheet } from "lucide-react";
+import { Loader2, FileText, ShoppingCart, File, Users, FileSpreadsheet, Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -85,6 +88,10 @@ export default function SimpleLibroRegistros() {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const userId = params?.userId || '';
   const { user } = useAuth();
+  
+  // Estado para el selector de usuarios con búsqueda
+  const [userSearchTerm, setUserSearchTerm] = useState<string>("");
+  const [userPopoverOpen, setUserPopoverOpen] = useState(false);
   
   // Verificación adicional de seguridad: solo superadmin, admin o usuarios específicos pueden ver esto 
   // Esta es una protección redundante junto con la protección de ruta en App.tsx
