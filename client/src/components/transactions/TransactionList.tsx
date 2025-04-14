@@ -98,8 +98,12 @@ const DeleteTransactionDialog = ({
         title: "Movimiento eliminado",
         description: `El movimiento ha sido eliminado con éxito`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      // Invalidar todas las consultas relevantes para garantizar que el dashboard y otras vistas se actualicen correctamente
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] })
+      ]);
       onConfirm();
     } catch (error: any) {
       toast({
@@ -203,12 +207,17 @@ const TransactionList = () => {
         description: `Se han eliminado ${transactions.length} transacciones con éxito`,
       });
       
-      // Actualizar datos inmediatamente
+      // Actualizar datos inmediatamente en todas las vistas
       await Promise.all([
-        refetchTransactions(),
-        refetchInvoices(),
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] })
       ]);
+      
+      // Para garantizar que el UI se actualice completamente
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      }, 500);
       
     } catch (error: any) {
       toast({
