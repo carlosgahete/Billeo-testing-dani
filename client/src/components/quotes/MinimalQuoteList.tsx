@@ -508,7 +508,7 @@ export function MinimalQuoteList({ userId }: Props) {
       )}
       
       {/* Floating action button - Crear */}
-      <div className="fixed bottom-24 right-6">
+      <div className="fixed bottom-6 right-6">
         <Link href="/quotes/simple/create">
           <Button className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center">
             <Plus className="h-6 w-6" />
