@@ -58,10 +58,7 @@ const ClientAssignmentPage: React.FC = () => {
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [saving, setSaving] = useState<boolean>(false);
   
-  // Verificación de permisos - solo superadmin tiene acceso
-  if (!user || (user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
-    return <Redirect to="/auth" />;
-  }
+  // No hacemos verificación de permisos aquí porque ya la hace ProtectedAdminRoute
   
   // Cargar administradores, clientes y asignaciones actuales
   useEffect(() => {
