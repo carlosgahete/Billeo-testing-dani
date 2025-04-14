@@ -193,19 +193,8 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   
   return (
     <>
-      <div className="bg-white min-h-screen pt-2 pb-32 max-w-md mx-auto">
-        {/* Solo botón de retroceso sin título */}
-        <div className="px-4 mb-4">
-          <button 
-            onClick={() => navigate("/quotes")} 
-            className="text-[#007AFF] flex items-center"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span>Volver</span>
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6 px-4">
+      <div className="bg-white min-h-screen pb-32 max-w-md mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-6 px-4 pt-4">
           {/* Selector de cliente con estilo iOS */}
           <div className="form-group mb-6">
             <div className="flex justify-between mb-2">
