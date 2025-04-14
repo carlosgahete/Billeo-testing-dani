@@ -73,6 +73,8 @@ interface UserOption {
   id: number;
   username: string;
   name: string;
+  searchName?: string;      // Campo optimizado para búsqueda (nombre en minúsculas)
+  searchUsername?: string;  // Campo optimizado para búsqueda (username en minúsculas)
 }
 
 export default function SimpleLibroRegistros() {

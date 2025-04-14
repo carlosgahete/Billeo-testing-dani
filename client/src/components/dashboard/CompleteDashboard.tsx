@@ -286,7 +286,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4", className)}>
+    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4 pb-24", className)}>
       {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
       <div className="section-header px-0 pt-0 md:pt-1 pb-0 md:px-4 md:py-4">
         <div className="flex items-center justify-center md:justify-start mt-[-15px] md:mt-0">
