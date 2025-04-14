@@ -145,10 +145,11 @@ export function MinimalQuoteList({ userId }: Props) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  // Estados para filtrado y ordenación
+  // Estados para filtrado, ordenación y búsqueda
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch quotes
   const { data: quotes = [], isLoading: quotesLoading } = useQuery<Quote[]>({
@@ -162,10 +163,38 @@ export function MinimalQuoteList({ userId }: Props) {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  // Filtering quotes based on status
+  // Filtering quotes based on status and search query
   const filteredQuotes = quotes.filter(quote => {
-    if (statusFilter === "all") return true;
-    return quote.status === statusFilter;
+    // Filtro por estado
+    if (statusFilter !== "all" && quote.status !== statusFilter) {
+      return false;
+    }
+    
+    // Filtro por texto de búsqueda
+    if (searchQuery.trim() !== "") {
+      const client = clients.find(c => c.id === quote.clientId);
+      const searchLower = searchQuery.toLowerCase();
+      
+      // Buscar en número de presupuesto
+      if (quote.quoteNumber.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+      
+      // Buscar en nombre de cliente
+      if (client?.name?.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+      
+      // Buscar en fecha
+      if (new Date(quote.issueDate).toLocaleDateString("es-ES").includes(searchLower)) {
+        return true;
+      }
+      
+      // Si no coincide con ningún criterio de búsqueda
+      return false;
+    }
+    
+    return true;
   });
 
   // Sorting quotes by date
@@ -320,6 +349,30 @@ export function MinimalQuoteList({ userId }: Props) {
         >
           <Filter className="h-5 w-5" />
         </button>
+      </div>
+
+      {/* Barra de búsqueda estilo iOS */}
+      <div className="px-1 pb-2">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Buscar..."
+            className="w-full px-10 py-2 search-field-apple text-sm rounded-xl bg-gray-100/80 border-0"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          </div>
+          {searchQuery && (
+            <button 
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
       
       {/* Filters section */}
