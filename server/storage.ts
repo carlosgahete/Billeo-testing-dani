@@ -38,7 +38,7 @@ import {
   File,
   InsertFile
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db, sql } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -168,16 +168,20 @@ export class DatabaseStorage implements IStorage {
   async getFilesByUserId(userId: number): Promise<File[]> {
     return await db.select()
       .from(files)
-      .where(eq(files.userId, userId))
-      .where(eq(files.isDeleted, false));
+      .where(and(
+        eq(files.userId, userId),
+        eq(files.isDeleted, false)
+      ));
   }
 
   async getFilesByEntity(entityType: string, entityId: number): Promise<File[]> {
     return await db.select()
       .from(files)
-      .where(eq(files.entityType, entityType))
-      .where(eq(files.entityId, entityId))
-      .where(eq(files.isDeleted, false));
+      .where(and(
+        eq(files.entityType, entityType),
+        eq(files.entityId, entityId),
+        eq(files.isDeleted, false)
+      ));
   }
 
   async markFileAsDeleted(id: number): Promise<boolean> {
