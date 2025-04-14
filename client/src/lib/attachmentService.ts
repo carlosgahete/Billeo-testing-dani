@@ -76,16 +76,33 @@ export const downloadExpenseOriginal = (
       throw new Error('Nombre de archivo no válido');
     }
     
+    // Mostrar información de debug
+    console.log(`Intentando descargar archivo: ${filename} del gasto ID ${expense.id}`);
+    
+    // Obtener solo el nombre del archivo sin la ruta
+    const filenameOnly = filename.split('/').pop() || filename;
+    
+    console.log(`Nombre de archivo extraído: ${filenameOnly}`);
+    
     // Generar URL con parámetros para el nombre formateado
     const providerParam = encodeURIComponent(expense.title || expense.description || '');
     const dateParam = encodeURIComponent(new Date(expense.date).toISOString().split('T')[0]);
     const categoryParam = encodeURIComponent(category?.name || '');
     
     // Crear URL con los parámetros para el backend
-    const downloadUrl = `/api/download/${filename}?provider=${providerParam}&date=${dateParam}&category=${categoryParam}`;
+    const downloadUrl = `/api/download/${filenameOnly}?provider=${providerParam}&date=${dateParam}&category=${categoryParam}`;
+    
+    console.log(`URL de descarga: ${downloadUrl}`);
     
     // Abrir en una nueva pestaña
     window.open(downloadUrl, '_blank');
+    
+    // Mostrar notificación de éxito
+    toast({
+      title: "Descargando documento",
+      description: "El documento se está descargando",
+      variant: "default"
+    });
     
   } catch (error) {
     console.error('Error al descargar documento original del gasto:', error);
