@@ -714,15 +714,15 @@ export default function LibroRegistrosPage() {
                   filteredInvoices.map((invoice, index) => (
                     <TableRow 
                       key={invoice.id} 
-                      className={`hover:bg-gray-50 dark:hover:bg-gray-900/10 ${index < filteredInvoices.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}
+                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
                     >
-                      <TableCell className="py-3 px-4 text-sm">{invoice.number}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{formatDate(invoice.date)}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{invoice.clientName}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm font-medium">{formatCurrency(parseFloat(invoice.total))}</TableCell>
-                      <TableCell className="py-3 px-4">
+                      <TableCell className="py-2 px-4 text-sm">{invoice.number}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{formatDate(invoice.date)}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{invoice.clientName}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm font-medium">{formatCurrency(parseFloat(invoice.total))}</TableCell>
+                      <TableCell className="py-2 px-4">
                         <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : "bg-gray-100 text-gray-800 hover:bg-gray-100 px-2 py-0.5 rounded-md text-xs"}>
                           {invoice.status === 'paid' ? 'Pagada' : invoice.status}
                         </Badge>
@@ -765,17 +765,17 @@ export default function LibroRegistrosPage() {
                   filteredTransactions.map((transaction, index) => (
                     <TableRow 
                       key={transaction.id} 
-                      className={`hover:bg-gray-50 dark:hover:bg-gray-900/10 ${index < filteredTransactions.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}
+                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
                     >
-                      <TableCell className="py-3 px-4 text-sm">{formatDate(transaction.date)}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{transaction.description}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{transaction.category || '-'}</TableCell>
-                      <TableCell className="py-3 px-4">
+                      <TableCell className="py-2 px-4 text-sm">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{transaction.description}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{transaction.category || '-'}</TableCell>
+                      <TableCell className="py-2 px-4">
                         <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : "bg-red-100 text-red-800 hover:bg-red-100 px-2 py-0.5 rounded-md text-xs"}>
                           {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                         </Badge>
                       </TableCell>
-                      <TableCell className={`py-3 px-4 text-sm font-medium ${transaction.type === 'expense' ? "text-red-600" : ""}`}>
+                      <TableCell className={`py-2 px-4 text-sm font-medium ${transaction.type === 'expense' ? "text-red-600" : ""}`}>
                         {formatCurrency(parseFloat(transaction.amount))}
                       </TableCell>
                     </TableRow>
@@ -816,13 +816,13 @@ export default function LibroRegistrosPage() {
                   filteredQuotes.map((quote, index) => (
                     <TableRow 
                       key={quote.id} 
-                      className={`hover:bg-gray-50 dark:hover:bg-gray-900/10 ${index < filteredQuotes.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}
+                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
                     >
-                      <TableCell className="py-3 px-4 text-sm">{quote.number}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{formatDate(quote.date)}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm">{quote.clientName}</TableCell>
-                      <TableCell className="py-3 px-4 text-sm font-medium">{formatCurrency(parseFloat(quote.total))}</TableCell>
-                      <TableCell className="py-3 px-4">
+                      <TableCell className="py-2 px-4 text-sm">{quote.number}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{formatDate(quote.date)}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm">{quote.clientName}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm font-medium">{formatCurrency(parseFloat(quote.total))}</TableCell>
+                      <TableCell className="py-2 px-4">
                         <Badge 
                           className={
                             quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : 
