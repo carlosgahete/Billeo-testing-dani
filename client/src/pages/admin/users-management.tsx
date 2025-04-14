@@ -32,7 +32,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
@@ -200,37 +206,68 @@ export default function UsersManagement() {
   };
 
   // Función para promover a un usuario a superadmin
-  const handlePromoteToSuperAdmin = async (userId: number) => {
+  // Función para cambiar el rol de un usuario
+  const handleChangeRole = async (userId: number, newRole: string) => {
     try {
       setActionLoading(true);
-      const response = await apiRequest("POST", `/api/admin/users/${userId}/promote-to-superadmin`);
       
-      if (response.ok) {
-        const data = await response.json();
-        // Actualizar la lista de usuarios
-        setUsers(users.map(u => u.id === userId ? data.user : u));
-        toast({
-          title: "Éxito",
-          description: `Usuario promovido a superadmin correctamente`,
-        });
-        setConfirmPromoteUser(null);
+      if (newRole === 'superadmin') {
+        // Si el nuevo rol es superadmin, usar la ruta específica
+        const response = await apiRequest("POST", `/api/admin/users/${userId}/promote-to-superadmin`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Actualizar la lista de usuarios
+          setUsers(users.map(u => u.id === userId ? data.user : u));
+          toast({
+            title: "Éxito",
+            description: `Usuario promovido a superadmin correctamente`,
+          });
+          setConfirmPromoteUser(null);
+        } else {
+          const errorData = await response.json();
+          toast({
+            title: "Error",
+            description: errorData.message || "No se pudo promover al usuario a superadmin",
+            variant: "destructive",
+          });
+        }
       } else {
-        const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.message || "No se pudo promover al usuario a superadmin",
-          variant: "destructive",
+        // Para otros roles, actualizar normalmente
+        const response = await apiRequest("PUT", `/api/admin/users/${userId}`, {
+          role: newRole
         });
+        
+        if (response.ok) {
+          const updatedUser = await response.json();
+          setUsers(users.map(u => u.id === userId ? updatedUser : u));
+          toast({
+            title: "Éxito",
+            description: `Rol del usuario actualizado a ${newRole} correctamente`,
+          });
+        } else {
+          const errorData = await response.json();
+          toast({
+            title: "Error",
+            description: errorData.message || "No se pudo actualizar el rol del usuario",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo promover al usuario a superadmin",
+        description: "No se pudo actualizar el rol del usuario",
         variant: "destructive",
       });
     } finally {
       setActionLoading(false);
     }
+  };
+  
+  // Para mantener compatibilidad con el código existente
+  const handlePromoteToSuperAdmin = (userId: number) => {
+    handleChangeRole(userId, 'superadmin');
   };
 
   const handleCreateUser = async () => {
@@ -321,9 +358,13 @@ export default function UsersManagement() {
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                    user.role === 'admin' ? 'bg-red-100 text-red-800' : 
+                    (user.role === 'superadmin' || user.role === 'SUPERADMIN') ? 'bg-amber-100 text-amber-800' : 
+                    'bg-blue-100 text-blue-800'
                   }`}>
-                    {user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                    {user.role === 'admin' ? 'Administrador' : 
+                     (user.role === 'superadmin' || user.role === 'SUPERADMIN') ? 'Superadmin' : 
+                     'Usuario'}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
@@ -354,6 +395,45 @@ export default function UsersManagement() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    {/* Dropdown para cambiar rol del usuario */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          disabled={actionLoading}
+                          title="Cambiar rol"
+                          className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+                        >
+                          <UserCog className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleChangeRole(user.id, 'user')}
+                          disabled={user.role === 'user'}
+                          className={user.role === 'user' ? 'bg-blue-50 font-semibold' : ''}
+                        >
+                          <User className="mr-2 h-4 w-4" /> Usuario
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleChangeRole(user.id, 'admin')}
+                          disabled={user.role === 'admin'}
+                          className={user.role === 'admin' ? 'bg-red-50 font-semibold' : ''}
+                        >
+                          <UserCog className="mr-2 h-4 w-4" /> Administrador
+                        </DropdownMenuItem>
+                        {isSuperAdmin && (
+                          <DropdownMenuItem
+                            onClick={() => setConfirmPromoteUser(user.id)}
+                            disabled={user.role === 'superadmin' || user.role === 'SUPERADMIN'}
+                            className={(user.role === 'superadmin' || user.role === 'SUPERADMIN') ? 'bg-amber-50 font-semibold' : ''}
+                          >
+                            <ShieldCheck className="mr-2 h-4 w-4" /> Superadmin
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>
@@ -588,6 +668,36 @@ export default function UsersManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog para confirmar promoción a superadmin */}
+      <AlertDialog 
+        open={!!confirmPromoteUser} 
+        onOpenChange={(open) => !open && setConfirmPromoteUser(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Promover a Superadmin</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas promover a este usuario a Superadministrador?
+              <p className="mt-2 font-semibold text-amber-700">
+                Los Superadministradores tienen acceso total al sistema y pueden gestionar
+                a otros usuarios, incluyendo promover a otros a Superadministradores.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmPromoteUser && handlePromoteToSuperAdmin(confirmPromoteUser)}
+              disabled={actionLoading}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Promover a Superadmin
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
