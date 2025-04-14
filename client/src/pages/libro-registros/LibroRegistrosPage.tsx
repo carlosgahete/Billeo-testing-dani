@@ -542,286 +542,321 @@ export default function LibroRegistrosPage() {
   
   // Renderizar componente principal
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-8 px-4 max-w-7xl">
       <PageHeader
         title="Libro de Registros"
         description="Consulta y exporta tu actividad financiera"
+        className="mb-10"
       />
       
       {/* Filtros y botones de exportación */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div>
-          <p className="text-sm mb-2 text-gray-500">Año</p>
-          <Select 
-            value={selectedYear} 
-            onValueChange={setSelectedYear}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccionar año" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2023">2023</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <p className="text-sm mb-2 text-gray-500">Trimestre</p>
-          <Select 
-            value={selectedQuarter} 
-            onValueChange={setSelectedQuarter}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccionar trimestre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="Q1">1º Trimestre</SelectItem>
-              <SelectItem value="Q2">2º Trimestre</SelectItem>
-              <SelectItem value="Q3">3º Trimestre</SelectItem>
-              <SelectItem value="Q4">4º Trimestre</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <p className="text-sm mb-2 text-gray-500">Mes</p>
-          <Select 
-            value={selectedMonth} 
-            onValueChange={setSelectedMonth}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccionar mes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="1">Enero</SelectItem>
-              <SelectItem value="2">Febrero</SelectItem>
-              <SelectItem value="3">Marzo</SelectItem>
-              <SelectItem value="4">Abril</SelectItem>
-              <SelectItem value="5">Mayo</SelectItem>
-              <SelectItem value="6">Junio</SelectItem>
-              <SelectItem value="7">Julio</SelectItem>
-              <SelectItem value="8">Agosto</SelectItem>
-              <SelectItem value="9">Septiembre</SelectItem>
-              <SelectItem value="10">Octubre</SelectItem>
-              <SelectItem value="11">Noviembre</SelectItem>
-              <SelectItem value="12">Diciembre</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex gap-2 items-end">
-          <Button 
-            variant="outline" 
-            onClick={exportToPDF}
-            className="flex items-center gap-2"
-          >
-            <FileText size={16} />
-            Descargar PDF
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={exportToExcel}
-            className="flex items-center gap-2"
-          >
-            <FileSpreadsheet size={16} />
-            Descargar Excel
-          </Button>
+      <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-950/30 rounded-2xl p-6 mb-8 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div>
+            <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">Año</p>
+            <Select 
+              value={selectedYear} 
+              onValueChange={setSelectedYear}
+            >
+              <SelectTrigger className="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border-0 shadow-sm">
+                <SelectValue placeholder="Seleccionar año" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">Trimestre</p>
+            <Select 
+              value={selectedQuarter} 
+              onValueChange={setSelectedQuarter}
+            >
+              <SelectTrigger className="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border-0 shadow-sm">
+                <SelectValue placeholder="Seleccionar trimestre" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="Q1">1º Trimestre</SelectItem>
+                <SelectItem value="Q2">2º Trimestre</SelectItem>
+                <SelectItem value="Q3">3º Trimestre</SelectItem>
+                <SelectItem value="Q4">4º Trimestre</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">Mes</p>
+            <Select 
+              value={selectedMonth} 
+              onValueChange={setSelectedMonth}
+            >
+              <SelectTrigger className="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border-0 shadow-sm">
+                <SelectValue placeholder="Seleccionar mes" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="1">Enero</SelectItem>
+                <SelectItem value="2">Febrero</SelectItem>
+                <SelectItem value="3">Marzo</SelectItem>
+                <SelectItem value="4">Abril</SelectItem>
+                <SelectItem value="5">Mayo</SelectItem>
+                <SelectItem value="6">Junio</SelectItem>
+                <SelectItem value="7">Julio</SelectItem>
+                <SelectItem value="8">Agosto</SelectItem>
+                <SelectItem value="9">Septiembre</SelectItem>
+                <SelectItem value="10">Octubre</SelectItem>
+                <SelectItem value="11">Noviembre</SelectItem>
+                <SelectItem value="12">Diciembre</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex gap-3 items-end">
+            <Button 
+              variant="outline" 
+              onClick={exportToPDF}
+              className="flex items-center gap-2 rounded-xl h-10 px-4 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 border-0 shadow-sm transition-all"
+            >
+              <FileText size={16} />
+              PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={exportToExcel}
+              className="flex items-center gap-2 rounded-xl h-10 px-4 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 border-0 shadow-sm transition-all"
+            >
+              <FileSpreadsheet size={16} />
+              Excel
+            </Button>
+          </div>
         </div>
       </div>
       
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-blue-50">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <Card className="border-0 overflow-hidden rounded-2xl shadow-sm bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mb-2">
+              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <CardTitle className="text-base font-medium text-blue-700 dark:text-blue-300">
               Facturas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalInvoices}</div>
-            <div className="text-sm text-gray-500">Total emitidas</div>
-            <div className="text-lg font-semibold mt-2">{formatCurrency(summary.incomeTotal)}</div>
-            <div className="text-sm text-gray-500">Importe total facturado</div>
+            <div className="text-3xl font-bold text-blue-900 dark:text-white">{summary.totalInvoices}</div>
+            <div className="text-sm text-blue-700/70 dark:text-blue-300/70">Total emitidas</div>
+            <div className="text-xl font-semibold mt-3 text-blue-900 dark:text-white">{formatCurrency(summary.incomeTotal)}</div>
+            <div className="text-sm text-blue-700/70 dark:text-blue-300/70">Importe total facturado</div>
           </CardContent>
         </Card>
         
-        <Card className="bg-yellow-50">
+        <Card className="border-0 overflow-hidden rounded-2xl shadow-sm bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Download className="h-4 w-4" />
+            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-2">
+              <Download className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <CardTitle className="text-base font-medium text-amber-700 dark:text-amber-300">
               Gastos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold text-amber-900 dark:text-white">
               {filteredTransactions.filter(t => t.type === 'expense').length}
             </div>
-            <div className="text-sm text-gray-500">Transacciones</div>
-            <div className="text-lg font-semibold mt-2">{formatCurrency(summary.expenseTotal)}</div>
-            <div className="text-sm text-gray-500">Importe total gastado</div>
+            <div className="text-sm text-amber-700/70 dark:text-amber-300/70">Transacciones</div>
+            <div className="text-xl font-semibold mt-3 text-amber-900 dark:text-white">{formatCurrency(summary.expenseTotal)}</div>
+            <div className="text-sm text-amber-700/70 dark:text-amber-300/70">Importe total gastado</div>
           </CardContent>
         </Card>
         
-        <Card className="bg-green-50">
+        <Card className="border-0 overflow-hidden rounded-2xl shadow-sm bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-2">
+              <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <CardTitle className="text-base font-medium text-green-700 dark:text-green-300">
               Presupuestos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalQuotes}</div>
-            <div className="text-sm text-gray-500">Total presupuestos</div>
+            <div className="text-3xl font-bold text-green-900 dark:text-white">{summary.totalQuotes}</div>
+            <div className="text-sm text-green-700/70 dark:text-green-300/70">Total presupuestos</div>
           </CardContent>
         </Card>
         
-        <Card className="bg-purple-50">
+        <Card className="border-0 overflow-hidden rounded-2xl shadow-sm bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Balance</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mb-2">
+              <span className="text-xl font-bold text-purple-600 dark:text-purple-400">=</span>
+            </div>
+            <CardTitle className="text-base font-medium text-purple-700 dark:text-purple-300">
+              Balance
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.balance)}</div>
-            <div className="text-sm text-gray-500">Resultado</div>
+            <div className="text-3xl font-bold text-purple-900 dark:text-white">{formatCurrency(summary.balance)}</div>
+            <div className="text-sm text-purple-700/70 dark:text-purple-300/70">Resultado</div>
           </CardContent>
         </Card>
       </div>
       
       {/* Tabla de facturas */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Facturas emitidas</h3>
-        <Card>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Facturas emitidas</h3>
+          <div className="text-sm text-gray-500">{filteredInvoices.length} registros</div>
+        </div>
+        <Card className="border-0 rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Base</TableHead>
-                  <TableHead>IVA</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center">No hay facturas en este período</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50 dark:bg-gray-900/50">
+                  <TableRow className="border-b-0">
+                    <TableHead className="font-medium text-gray-500">Número</TableHead>
+                    <TableHead className="font-medium text-gray-500">Fecha</TableHead>
+                    <TableHead className="font-medium text-gray-500">Cliente</TableHead>
+                    <TableHead className="font-medium text-gray-500">Base</TableHead>
+                    <TableHead className="font-medium text-gray-500">IVA</TableHead>
+                    <TableHead className="font-medium text-gray-500">Total</TableHead>
+                    <TableHead className="font-medium text-gray-500">Estado</TableHead>
                   </TableRow>
-                ) : (
-                  filteredInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>{invoice.number}</TableCell>
-                      <TableCell>{formatDate(invoice.date)}</TableCell>
-                      <TableCell>{invoice.clientName}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(invoice.tax))}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(invoice.total))}</TableCell>
-                      <TableCell>
-                        <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}>
-                          {invoice.status === 'paid' ? 'Pagada' : invoice.status}
-                        </Badge>
+                </TableHeader>
+                <TableBody>
+                  {filteredInvoices.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        No hay facturas en este período
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredInvoices.map((invoice) => (
+                      <TableRow key={invoice.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                        <TableCell className="font-medium">{invoice.number}</TableCell>
+                        <TableCell>{formatDate(invoice.date)}</TableCell>
+                        <TableCell>{invoice.clientName}</TableCell>
+                        <TableCell>{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
+                        <TableCell>{formatCurrency(parseFloat(invoice.tax))}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(parseFloat(invoice.total))}</TableCell>
+                        <TableCell>
+                          <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 rounded-lg font-medium px-3 py-1" : "rounded-lg font-medium px-3 py-1"}>
+                            {invoice.status === 'paid' ? 'Pagada' : invoice.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
       
       {/* Tabla de gastos y transacciones */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Gastos y transacciones</h3>
-        <Card>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Gastos y transacciones</h3>
+          <div className="text-sm text-gray-500">{filteredTransactions.length} registros</div>
+        </div>
+        <Card className="border-0 rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Importe</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">No hay transacciones en este período</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50 dark:bg-gray-900/50">
+                  <TableRow className="border-b-0">
+                    <TableHead className="font-medium text-gray-500">Fecha</TableHead>
+                    <TableHead className="font-medium text-gray-500">Descripción</TableHead>
+                    <TableHead className="font-medium text-gray-500">Categoría</TableHead>
+                    <TableHead className="font-medium text-gray-500">Tipo</TableHead>
+                    <TableHead className="font-medium text-gray-500">Importe</TableHead>
                   </TableRow>
-                ) : (
-                  filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{formatDate(transaction.date)}</TableCell>
-                      <TableCell>{transaction.description}</TableCell>
-                      <TableCell>{transaction.category || '-'}</TableCell>
-                      <TableCell>
-                        <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-red-100 text-red-800 hover:bg-red-100"}>
-                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
-                        </Badge>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                        No hay transacciones en este período
                       </TableCell>
-                      <TableCell>{formatCurrency(parseFloat(transaction.amount))}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredTransactions.map((transaction) => (
+                      <TableRow key={transaction.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                        <TableCell>{formatDate(transaction.date)}</TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell>{transaction.category || '-'}</TableCell>
+                        <TableCell>
+                          <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 rounded-lg font-medium px-3 py-1" : "bg-red-100 text-red-800 hover:bg-red-100 rounded-lg font-medium px-3 py-1"}>
+                            {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{formatCurrency(parseFloat(transaction.amount))}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
       
       {/* Tabla de presupuestos */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Presupuestos</h3>
-        <Card>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Presupuestos</h3>
+          <div className="text-sm text-gray-500">{filteredQuotes.length} registros</div>
+        </div>
+        <Card className="border-0 rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredQuotes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">No hay presupuestos en este período</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50 dark:bg-gray-900/50">
+                  <TableRow className="border-b-0">
+                    <TableHead className="font-medium text-gray-500">Número</TableHead>
+                    <TableHead className="font-medium text-gray-500">Fecha</TableHead>
+                    <TableHead className="font-medium text-gray-500">Cliente</TableHead>
+                    <TableHead className="font-medium text-gray-500">Total</TableHead>
+                    <TableHead className="font-medium text-gray-500">Estado</TableHead>
                   </TableRow>
-                ) : (
-                  filteredQuotes.map((quote) => (
-                    <TableRow key={quote.id}>
-                      <TableCell>{quote.number}</TableCell>
-                      <TableCell>{formatDate(quote.date)}</TableCell>
-                      <TableCell>{quote.clientName}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(quote.total))}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          className={
-                            quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100" : 
-                            quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100" : 
-                            ""
-                          }
-                        >
-                          {quote.status === 'accepted' ? 'Aceptado' : 
-                           quote.status === 'rejected' ? 'Rechazado' : 
-                           quote.status}
-                        </Badge>
+                </TableHeader>
+                <TableBody>
+                  {filteredQuotes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                        No hay presupuestos en este período
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredQuotes.map((quote) => (
+                      <TableRow key={quote.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                        <TableCell className="font-medium">{quote.number}</TableCell>
+                        <TableCell>{formatDate(quote.date)}</TableCell>
+                        <TableCell>{quote.clientName}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(parseFloat(quote.total))}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            className={
+                              quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 rounded-lg font-medium px-3 py-1" : 
+                              quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100 rounded-lg font-medium px-3 py-1" : 
+                              "rounded-lg font-medium px-3 py-1"
+                            }
+                          >
+                            {quote.status === 'accepted' ? 'Aceptado' : 
+                             quote.status === 'rejected' ? 'Rechazado' : 
+                             quote.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
