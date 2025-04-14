@@ -72,6 +72,7 @@ export default function UsersManagement() {
   const [newUser, setNewUser] = useState({
     username: "",
     name: "",
+    lastName: "",
     email: "",
     password: "",
     role: "user",
@@ -273,7 +274,12 @@ export default function UsersManagement() {
   const handleCreateUser = async () => {
     try {
       setActionLoading(true);
-      const response = await apiRequest("POST", "/api/admin/users", newUser);
+      // Combinamos el nombre y apellido en un solo campo name
+      const userData = {
+        ...newUser,
+        name: newUser.name + (newUser.lastName ? " " + newUser.lastName : "")
+      };
+      const response = await apiRequest("POST", "/api/admin/users", userData);
       
       if (response.ok) {
         const createdUser = await response.json();
@@ -286,6 +292,7 @@ export default function UsersManagement() {
         setNewUser({
           username: "",
           name: "",
+          lastName: "",
           email: "",
           password: "",
           role: "user",
