@@ -850,13 +850,15 @@ export default function SimpleLibroRegistros() {
                             if (!searchTermLower) return true;
                             
                             // Usar los campos optimizados para búsqueda que ya están en minúsculas
+                            // Fallback a toLowerCase si searchName no existe
                             const nameMatch = userOption.searchName 
                               ? userOption.searchName.includes(searchTermLower)
-                              : false;
+                              : (userOption.name?.toLowerCase().includes(searchTermLower) || false);
                             
+                            // Fallback a toLowerCase si searchUsername no existe
                             const usernameMatch = userOption.searchUsername
                               ? userOption.searchUsername.includes(searchTermLower)
-                              : false;
+                              : (userOption.username?.toLowerCase().includes(searchTermLower) || false);
                             
                             // Log para depuración de por qué no encuentra resultados
                             if (searchTermLower.includes('javi')) {
