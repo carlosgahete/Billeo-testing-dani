@@ -4336,6 +4336,211 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
   
   // Endpoint para obtener datos del libro de registros (requiere autenticación y permisos de superadmin)
+  // Endpoint para obtener el libro de registros de un cliente específico
+  app.get("/api/libro-registros/client/:clientId", async (req: Request, res: Response) => {
+    try {
+      // Verificar que el usuario esté autenticado
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ success: false, message: "Usuario no autenticado" });
+      }
+      
+      // Obtener información del usuario actual para verificar su rol
+      const currentUser = await storage.getUser(req.session.userId);
+      
+      if (!currentUser) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Usuario no encontrado" 
+        });
+      }
+      
+      // Verificar si es un usuario autorizado
+      const isSuperAdmin = 
+        currentUser.role === 'superadmin' || 
+        currentUser.role === 'SUPERADMIN' || 
+        currentUser.username === 'Superadmin' ||
+        currentUser.username === 'billeo_admin';
+      
+      const isAdmin = currentUser.role === 'admin';
+      
+      // Obtener ID del cliente
+      const clientId = parseInt(req.params.clientId);
+      if (isNaN(clientId)) {
+        return res.status(400).json({ success: false, message: "ID de cliente inválido" });
+      }
+      
+      // Obtener cliente
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ success: false, message: "Cliente no encontrado" });
+      }
+      
+      // Verificar permisos:
+      // - Superadmin puede ver todo
+      // - Admin puede ver clientes asignados a él
+      // - Usuario normal solo puede ver sus propios clientes
+      if (!isSuperAdmin && isAdmin) {
+        // Verificar si el admin tiene asignado este cliente
+        const assignedClients = await storage.getClientsAssignedToAdmin(currentUser.id);
+        const isClientAssigned = assignedClients.some(c => c.id === clientId);
+        
+        if (!isClientAssigned) {
+          return res.status(403).json({ 
+            success: false, 
+            message: "No tiene permisos para ver este cliente" 
+          });
+        }
+      } else if (!isSuperAdmin && !isAdmin) {
+        // Usuarios normales solo pueden ver sus propios clientes
+        if (client.userId !== currentUser.id) {
+          return res.status(403).json({ 
+            success: false, 
+            message: "No tiene permisos para ver este cliente" 
+          });
+        }
+      }
+      
+      // Aplicar filtros de fecha si existen
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
+      // Consultas directas a la base de datos para facturas, transacciones y presupuestos del cliente
+      // Notar que para invoices y quotes, filtramos por clientId
+      // Para transactions, filtramos por userId del cliente
+      let invoicesQuery = db.select().from(invoices).where(eq(invoices.clientId, clientId));
+      let transactionsQuery = db.select().from(transactions).where(eq(transactions.userId, client.userId));
+      let quotesQuery = db.select().from(quotes).where(eq(quotes.clientId, clientId));
+      
+      // Aplicar filtros de fecha si existen
+      if (startDate) {
+        invoicesQuery = invoicesQuery.where(gte(invoices.issueDate, startDate));
+        transactionsQuery = transactionsQuery.where(gte(transactions.date, startDate));
+        quotesQuery = quotesQuery.where(gte(quotes.issueDate, startDate));
+      }
+      
+      if (endDate) {
+        const nextDay = new Date(endDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        invoicesQuery = invoicesQuery.where(lt(invoices.issueDate, nextDay));
+        transactionsQuery = transactionsQuery.where(lt(transactions.date, nextDay));
+        quotesQuery = quotesQuery.where(lt(quotes.issueDate, nextDay));
+      }
+      
+      // Ejecutar consultas
+      const dbInvoices = await invoicesQuery;
+      const dbTransactions = await transactionsQuery;
+      const dbQuotes = await quotesQuery;
+      
+      // Obtener nombres de categorías para transacciones
+      const categoryIds = [...new Set(dbTransactions.map(t => t.categoryId).filter(id => id !== null))] as number[];
+      const dbCategories = categoryIds.length > 0 
+        ? await db.select().from(categories).where(inArray(categories.id, categoryIds))
+        : [];
+      
+      // Crear un mapa de categorías para fácil acceso
+      const categoryMap = new Map();
+      dbCategories.forEach(cat => categoryMap.set(cat.id, cat.name));
+      
+      // Transformar los datos para la respuesta
+      const responseInvoices = dbInvoices.map(invoice => ({
+        id: invoice.id,
+        number: invoice.invoiceNumber,
+        issueDate: invoice.issueDate,
+        dueDate: invoice.dueDate,
+        client: client.name, 
+        total: parseFloat(invoice.total.toString()),
+        status: invoice.status,
+        baseAmount: parseFloat(invoice.subtotal.toString()),
+        vatAmount: parseFloat(invoice.tax.toString()),
+        vatRate: invoice.vatRate ? parseFloat(invoice.vatRate.toString()) : 21,
+        irpf: invoice.irpf ? parseFloat(invoice.irpf.toString()) : 0,
+        notes: invoice.notes
+      }));
+      
+      const responseTransactions = dbTransactions.map(transaction => ({
+        id: transaction.id,
+        date: transaction.date,
+        description: transaction.description,
+        amount: parseFloat(transaction.amount.toString()),
+        type: transaction.type,
+        category: transaction.categoryId && categoryMap.has(transaction.categoryId) 
+          ? categoryMap.get(transaction.categoryId) 
+          : 'Sin categoría',
+        categoryId: transaction.categoryId,
+        paymentMethod: transaction.paymentMethod,
+        notes: transaction.notes
+      }));
+      
+      const responseQuotes = dbQuotes.map(quote => ({
+        id: quote.id,
+        number: quote.quoteNumber,
+        issueDate: quote.issueDate,
+        expiryDate: quote.validUntil,
+        clientName: client.name,
+        total: parseFloat(quote.total.toString()),
+        baseAmount: parseFloat(quote.subtotal?.toString() || "0"),
+        vatAmount: parseFloat(quote.tax?.toString() || "0"),
+        status: quote.status,
+        notes: quote.notes
+      }));
+      
+      // Calcular totales
+      const incomeTotal = responseInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+      const expenseTotal = responseTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      // Calcular totales de IVA para facturas emitidas
+      const totalVatCollected = responseInvoices.reduce((sum, invoice) => sum + (invoice.vatAmount || 0), 0);
+      
+      // Calcular totales de IVA para gastos (estimado)
+      const totalVatPaid = responseTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => {
+          // Estimación de IVA (21% por defecto si no hay información detallada)
+          const vatEstimate = t.amount * 0.21;
+          return sum + vatEstimate;
+        }, 0);
+      
+      // Calcular balance de IVA
+      const vatBalance = totalVatCollected - totalVatPaid;
+      
+      // Crear objeto de respuesta
+      const response = {
+        client: {
+          id: client.id,
+          name: client.name,
+          taxId: client.taxId,
+          address: client.address,
+          email: client.email,
+          phone: client.phone
+        },
+        invoices: responseInvoices,
+        transactions: responseTransactions,
+        quotes: responseQuotes,
+        summary: {
+          totalInvoices: responseInvoices.length,
+          totalTransactions: responseTransactions.length,
+          totalQuotes: responseQuotes.length,
+          incomeTotal,
+          expenseTotal,
+          balance: incomeTotal - expenseTotal,
+          vatCollected: totalVatCollected,
+          vatPaid: totalVatPaid,
+          vatBalance: vatBalance
+        }
+      };
+      
+      return res.status(200).json(response);
+    } catch (error) {
+      console.error("Error al obtener datos del libro de registros del cliente:", error);
+      return res.status(500).json({ 
+        message: "Error interno del servidor",
+        error: (error as Error).toString()
+      });
+    }
+  });
+
   app.get("/api/public/libro-registros/:userId", async (req: Request, res: Response) => {
     try {
       // Verificar que el usuario esté autenticado
