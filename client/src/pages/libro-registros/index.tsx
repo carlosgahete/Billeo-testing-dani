@@ -243,16 +243,9 @@ const LibroRegistrosPage: React.FC = () => {
   const facturasCount = filteredData.invoices.length;
   const facturasTotal = filteredData.invoices.reduce((sum, invoice) => sum + invoice.total, 0);
   
-  const gastosCount = filteredData.transactions.filter(t => t.type === 'expense').length;
-  const gastosTotal = filteredData.transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-  
+  // Ya no necesitamos calcular los gastos, ya que los eliminamos
   // Supongamos que tenemos 5 presupuestos para mostrar (esto sería de otra consulta)
   const presupuestosCount = 5;
-  
-  // Calcular el balance (facturas - gastos)
-  const balanceTotal = facturasTotal - gastosTotal;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -347,7 +340,7 @@ const LibroRegistrosPage: React.FC = () => {
       </div>
 
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {/* Facturas */}
         <Card className="bg-blue-50 border-blue-100">
           <CardContent className="pt-6">
@@ -365,28 +358,6 @@ const LibroRegistrosPage: React.FC = () => {
                   }).format(facturasTotal)}
                 </p>
                 <p className="text-xs text-muted-foreground">Importe total facturado</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gastos */}
-        <Card className="bg-amber-50 border-amber-100">
-          <CardContent className="pt-6">
-            <div className="flex items-start">
-              <div className="rounded-md bg-amber-100 p-2 mr-4">
-                <Wallet className="h-6 w-6 text-amber-700" />
-              </div>
-              <div>
-                <p className="text-4xl font-bold">{gastosCount}</p>
-                <p className="text-sm text-muted-foreground">Transacciones</p>
-                <p className="text-lg font-semibold mt-1 text-amber-700">
-                  {new Intl.NumberFormat('es-ES', {
-                    style: 'currency',
-                    currency: 'EUR'
-                  }).format(gastosTotal)}
-                </p>
-                <p className="text-xs text-muted-foreground">Importe total gastado</p>
               </div>
             </div>
           </CardContent>
@@ -415,18 +386,18 @@ const LibroRegistrosPage: React.FC = () => {
         </Card>
 
         {/* Balance */}
-        <Card className={balanceTotal >= 0 ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"}>
+        <Card className="bg-green-50 border-green-100">
           <CardContent className="pt-6">
             <div className="flex items-start">
-              <div className={`rounded-md p-2 mr-4 ${balanceTotal >= 0 ? "bg-green-100" : "bg-red-100"}`}>
-                <BarChart2 className={`h-6 w-6 ${balanceTotal >= 0 ? "text-green-700" : "text-red-700"}`} />
+              <div className="rounded-md bg-green-100 p-2 mr-4">
+                <BarChart2 className="h-6 w-6 text-green-700" />
               </div>
               <div>
-                <p className={`text-4xl font-bold ${balanceTotal >= 0 ? "text-green-700" : "text-red-700"}`}>
+                <p className="text-4xl font-bold text-green-700">
                   {new Intl.NumberFormat('es-ES', {
                     style: 'currency',
                     currency: 'EUR'
-                  }).format(balanceTotal)}
+                  }).format(facturasTotal)}
                 </p>
                 <p className="text-sm text-muted-foreground">Resultado</p>
               </div>
@@ -437,8 +408,8 @@ const LibroRegistrosPage: React.FC = () => {
 
       {/* No necesitamos las tablas individuales ya que ahora las mostramos en conjunto */}
 
-      {/* Sección de tres tablas lado a lado (facturas, gastos y presupuestos) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      {/* Sección de dos tablas lado a lado (facturas y presupuestos) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Facturas emitidas */}
         <Card>
           <CardHeader className="py-4 px-6">
@@ -570,55 +541,6 @@ const LibroRegistrosPage: React.FC = () => {
                 </TableRow>
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-
-        {/* Gastos y transacciones */}
-        <Card>
-          <CardHeader className="py-4 px-6">
-            <div className="flex items-center">
-              <Wallet className="h-5 w-5 text-amber-700 mr-2" />
-              <CardTitle className="text-lg">Gastos y transacciones</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {filteredData.transactions.filter(t => t.type === 'expense').length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Importe</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.transactions
-                    .filter(t => t.type === 'expense')
-                    .map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
-                        <TableCell>{transaction.description}</TableCell>
-                        <TableCell>{transaction.category || 'Sin categoría'}</TableCell>
-                        <TableCell>
-                          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Gasto</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {new Intl.NumberFormat('es-ES', {
-                            style: 'currency',
-                            currency: 'EUR'
-                          }).format(parseFloat(transaction.amount))}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No hay gastos en el periodo seleccionado</p>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
