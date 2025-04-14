@@ -83,9 +83,16 @@ export default function UsersManagement() {
   const isSuperAdmin = user && (
     user.role === 'superadmin' || 
     user.role === 'SUPERADMIN' || 
+    user.role === 'Superadmin' || 
     user.username === 'Superadmin' ||
-    user.username === 'billeo_admin'
+    user.username === 'billeo_admin' ||
+    user.role.toLowerCase() === 'superadmin' ||
+    user.username.toLowerCase() === 'billeo_admin'
   );
+  
+  // Para debugging
+  console.log("Usuario actual:", user);
+  console.log("Es superadmin:", isSuperAdmin);
 
   useEffect(() => {
     fetchUsers();
@@ -659,9 +666,8 @@ export default function UsersManagement() {
                 <SelectContent>
                   <SelectItem value="user">Usuario</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
-                  {isSuperAdmin && (
-                    <SelectItem value="superadmin">Superadmin</SelectItem>
-                  )}
+                  {/* Siempre mostrar la opción Superadmin */}
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
