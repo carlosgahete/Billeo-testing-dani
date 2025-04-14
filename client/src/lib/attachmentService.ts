@@ -108,11 +108,23 @@ export const viewExpenseOriginal = (
       throw new Error('Nombre de archivo no válido');
     }
     
+    // Mostrar información de debug
+    console.log(`Intentando ver archivo: ${filename} del gasto ID ${expense.id}`);
+    
     // Obtener solo el nombre del archivo sin la ruta
     const filenameOnly = filename.split('/').pop() || filename;
     
+    console.log(`Nombre de archivo extraído: ${filenameOnly}`);
+    
     // Crear URL para visualizar
     window.open(`/api/view-file/${filenameOnly}`, '_blank');
+    
+    // Mostrar notificación de éxito
+    toast({
+      title: "Abriendo documento",
+      description: "El documento se está abriendo en una nueva pestaña",
+      variant: "default"
+    });
     
   } catch (error) {
     console.error('Error al visualizar documento original del gasto:', error);
@@ -135,9 +147,24 @@ export const downloadExpenseOriginalsAsZip = async (
     }
     
     // Filtrar gastos que tienen documentos adjuntos
-    const expensesWithAttachments = expenses.filter(e => 
-      e.attachments && e.attachments.length > 0
-    );
+    const expensesWithAttachments = expenses.filter(e => {
+      // Verificar si attachments existe
+      if (!e.attachments) return false;
+      
+      // Si es un string en lugar de un array, intentar parsearlo
+      if (typeof e.attachments === 'string') {
+        try {
+          const parsed = JSON.parse(e.attachments);
+          return Array.isArray(parsed) && parsed.length > 0;
+        } catch (err) {
+          // Si no es JSON válido, verificar si es un string no vacío
+          return e.attachments.trim() !== '';
+        }
+      }
+      
+      // Si ya es un array, verificar si tiene elementos
+      return Array.isArray(e.attachments) && e.attachments.length > 0;
+    });
     
     if (expensesWithAttachments.length === 0) {
       toast({
@@ -153,11 +180,33 @@ export const downloadExpenseOriginalsAsZip = async (
     // Recopilar todos los archivos adjuntos
     const allAttachments: string[] = [];
     for (const expense of expensesWithAttachments) {
-      if (expense.attachments && expense.attachments.length > 0) {
-        // Extraer solo el nombre del archivo sin la ruta
-        const cleanAttachments = expense.attachments.map(a => a.split('/').pop() || a);
-        allAttachments.push(...cleanAttachments);
+      // Normalizar attachments a un array de strings
+      let attachmentsArray: string[] = [];
+      
+      if (typeof expense.attachments === 'string') {
+        try {
+          // Intentar parsear el string como JSON
+          const parsed = JSON.parse(expense.attachments);
+          if (Array.isArray(parsed)) {
+            attachmentsArray = parsed;
+          } else {
+            attachmentsArray = [expense.attachments];
+          }
+        } catch (err) {
+          // Si no es JSON válido, tratar como un solo string
+          attachmentsArray = [expense.attachments];
+        }
+      } else if (Array.isArray(expense.attachments)) {
+        attachmentsArray = expense.attachments;
       }
+      
+      // Extraer solo el nombre del archivo sin la ruta para cada adjunto
+      const cleanAttachments = attachmentsArray.map(a => a.split('/').pop() || a);
+      allAttachments.push(...cleanAttachments);
+      
+      // Mostrar información de depuración
+      console.log(`Gasto ID ${expense.id} tiene adjuntos:`, attachmentsArray);
+      console.log(`Nombres de archivo limpios:`, cleanAttachments);
     }
     
     // Determinar el período para los nombres de archivo
