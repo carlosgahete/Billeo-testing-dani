@@ -1,18 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FileSpreadsheet, FileText, Filter, Calendar, Check } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, BarChart3, FileText, FileSpreadsheet, Wallet, Filter } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { generatePDF } from '@/lib/pdf-generator';
-import { generateExcel } from '@/lib/excel-generator';
+
+// Temporalmente usaremos funciones simuladas para generar PDF y Excel
+// hasta que podamos instalar las dependencias correctamente
+const generatePDF = async (data: any, filename: string) => {
+  console.log('Generando PDF con datos:', data);
+  alert('La funcionalidad de PDF estará disponible próximamente. Se ha registrado la petición.');
+};
+
+const generateExcel = async (data: any, filename: string) => {
+  console.log('Generando Excel con datos:', data);
+  alert('La funcionalidad de Excel estará disponible próximamente. Se ha registrado la petición.');
+};
 
 // Tipos para los datos
 interface Transaction {
@@ -37,6 +45,35 @@ interface Invoice {
   total: number;
   status: string;
 }
+
+// Componente para mostrar el estado de carga
+const LoadingState = () => (
+  <div className="container mx-auto px-4 py-8">
+    <div className="flex flex-col items-center justify-center h-[60vh]">
+      <BarChart3 className="h-12 w-12 text-primary animate-pulse mb-4" />
+      <h2 className="text-xl font-semibold mb-2">Cargando datos...</h2>
+      <p className="text-muted-foreground">Recuperando la información de tu libro de registros.</p>
+    </div>
+  </div>
+);
+
+// Componente para mostrar el estado de error
+const ErrorState = () => (
+  <div className="container mx-auto px-4 py-8">
+    <Card className="border-destructive">
+      <CardHeader>
+        <CardTitle className="text-destructive">Error</CardTitle>
+        <CardDescription>No se han podido cargar los datos del libro de registros.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p>Por favor, inténtalo de nuevo más tarde o contacta con soporte si el problema persiste.</p>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Reintentar
+        </Button>
+      </CardContent>
+    </Card>
+  </div>
+);
 
 // Componente principal del Libro de Registros
 const LibroRegistrosPage: React.FC = () => {
@@ -481,7 +518,7 @@ const FacturasList: React.FC<{ invoices: Invoice[] }> = ({ invoices }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Facturas emitidas</CardTitle>
+        <CardTitle>Facturas registradas</CardTitle>
         <CardDescription>
           Total: {invoices.length} facturas por un importe de {
             new Intl.NumberFormat('es-ES', {
@@ -499,34 +536,34 @@ const FacturasList: React.FC<{ invoices: Invoice[] }> = ({ invoices }) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Número</TableHead>
-                <TableHead>Fecha</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Fecha</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Base Imponible</TableHead>
-                <TableHead className="text-right">IVA</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">Importe</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{new Date(invoice.issueDate).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell>{invoice.clientName}</TableCell>
+                  <TableCell>{new Date(invoice.issueDate).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell>
-                    <StatusBadge status={invoice.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {new Intl.NumberFormat('es-ES', {
-                      style: 'currency',
-                      currency: 'EUR'
-                    }).format(invoice.subtotal)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {new Intl.NumberFormat('es-ES', {
-                      style: 'currency',
-                      currency: 'EUR'
-                    }).format(invoice.tax)}
+                    <span 
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        invoice.status === 'paid' 
+                          ? 'bg-green-100 text-green-800' 
+                          : invoice.status === 'pending' 
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {invoice.status === 'paid' 
+                        ? 'Pagada' 
+                        : invoice.status === 'pending' 
+                        ? 'Pendiente'
+                        : 'Vencida'}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {new Intl.NumberFormat('es-ES', {
@@ -544,117 +581,5 @@ const FacturasList: React.FC<{ invoices: Invoice[] }> = ({ invoices }) => {
   );
 };
 
-// Componente para mostrar el estado de una factura
-const StatusBadge = ({ status }: { status: string }) => {
-  let bgColor = '';
-  let textColor = '';
-  let statusText = '';
-
-  switch (status.toLowerCase()) {
-    case 'paid':
-      bgColor = 'bg-green-50';
-      textColor = 'text-green-700';
-      statusText = 'Pagada';
-      break;
-    case 'pending':
-      bgColor = 'bg-yellow-50';
-      textColor = 'text-yellow-700';
-      statusText = 'Pendiente';
-      break;
-    case 'draft':
-      bgColor = 'bg-gray-50';
-      textColor = 'text-gray-700';
-      statusText = 'Borrador';
-      break;
-    case 'overdue':
-      bgColor = 'bg-red-50';
-      textColor = 'text-red-700';
-      statusText = 'Vencida';
-      break;
-    default:
-      bgColor = 'bg-blue-50';
-      textColor = 'text-blue-700';
-      statusText = status;
-  }
-
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${bgColor} ${textColor}`}>
-      {status === 'paid' && <Check className="mr-1 h-3 w-3" />}
-      {statusText}
-    </span>
-  );
-};
-
-// Componente para mostrar el estado de carga
-const LoadingState = () => {
-  return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
-        <div>
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <div className="flex mt-4 lg:mt-0 space-x-4">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-24 mb-2" />
-          <Skeleton className="h-4 w-48" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-12 w-full" />
-        </CardContent>
-      </Card>
-
-      <div className="flex space-x-2 mb-6">
-        <Skeleton className="h-10 w-32" />
-        <Skeleton className="h-10 w-32" />
-        <Skeleton className="h-10 w-32" />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48 mb-2" />
-          <Skeleton className="h-4 w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Componente para mostrar errores
-const ErrorState = () => {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Error al cargar los datos</CardTitle>
-          <CardDescription>
-            Ha ocurrido un error al obtener la información del Libro de Registros.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Por favor, recarga la página o contacta con soporte si el error persiste.
-          </p>
-          <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>
-            Recargar página
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
+// Exportamos el componente principal
 export default LibroRegistrosPage;

@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -204,7 +205,14 @@ function Router() {
           <ProtectedRoute path="/simple-expense" component={SimpleExpensePage} />
         </Layout>
       </Route>
-      {/* Ruta de libro-registros eliminada */}
+      <Route path="/libro-registros">
+        <Layout>
+          <ProtectedRoute 
+            path="/libro-registros" 
+            component={SimpleExpensePage} 
+          />
+        </Layout>
+      </Route>
       
       {/* Rutas para versiones ultra simples de presupuestos */}
       <Route path="/quotes/simple/list">

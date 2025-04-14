@@ -144,6 +144,11 @@ const Sidebar = ({
       href: "/quotes", 
       icon: <FileText size={20} />, 
       label: "Presupuestos" 
+    },
+    { 
+      href: "/libro-registros", 
+      icon: <BarChart3 size={20} />, 
+      label: "Libro de Registros" 
     }
   ];
   
