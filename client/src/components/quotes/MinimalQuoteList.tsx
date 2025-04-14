@@ -338,11 +338,11 @@ export function MinimalQuoteList({ userId }: Props) {
   }
 
   return (
-    <div className="p-2 pt-1 pb-32 overflow-y-auto min-h-full h-full">
+    <div className="pt-0 pb-32 overflow-y-auto min-h-full h-full">
       {/* Componente de filtro de presupuestos */}
-      <div className="px-1 pb-2">
+      <div className="px-2">
         {/* 1. Barra de búsqueda estilo iOS */}
-        <div className="relative mb-2">
+        <div className="relative mb-1.5 mt-0.5">
           <input
             type="text"
             placeholder="Buscar..."
@@ -364,7 +364,7 @@ export function MinimalQuoteList({ userId }: Props) {
         </div>
         
         {/* 2. Botones de filtro de estado */}
-        <div className="w-full bg-gray-100 p-1 rounded-lg flex">
+        <div className="w-full bg-gray-100 p-1 rounded-lg flex mb-1">
           <button 
             onClick={() => setStatusFilter('all')} 
             className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-center ${statusFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
@@ -405,7 +405,7 @@ export function MinimalQuoteList({ userId }: Props) {
           </Link>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2 px-2">
           {sortedQuotes.map(quote => {
             const client = clients.find(c => c.id === quote.clientId);
             const statusInfo = getStatusInfo(quote.status);
