@@ -567,6 +567,9 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       // Asegurarnos de que los totales estén calculados correctamente
       calculateInvoiceTotals(form);
       
+      // Verificar si la factura está marcada como pagada para crear transacción automáticamente
+      const createTransaction = formData.status === 'paid';
+      
       // Preparamos los datos para enviar al servidor
       const payload = {
         invoice: {
@@ -582,6 +585,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
           notes: formData.notes || "",
           additionalTaxes: formData.additionalTaxes || [],
           attachments: attachments.length > 0 ? attachments : formData.attachments,
+          createTransaction, // Flag para crear transacción automáticamente
         },
         items: formData.items.map((item: any) => ({
           description: item.description,
@@ -613,10 +617,30 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
         clearSavedFormState();
       }
       
-      // Actualizar la caché de consultas
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      // Eliminar completamente las consultas relevantes para forzar una recarga completa 
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      queryClient.removeQueries({ queryKey: ["/api/transactions"] });
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
+      fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+      })
+      .then(() => {
+        console.log("⚡ Forzando recarga de datos para dashboard");
+        
+        // Refrescar explícitamente todas las consultas 
+        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+        queryClient.refetchQueries({ queryKey: ["/api/transactions"] });
+        
+        // Realizar una segunda actualización después de un breve retraso
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+          console.log("🔄 Segunda actualización del dashboard completada");
+        }, 500);
+      })
+      .catch(err => console.error("Error al recargar dashboard:", err));
       
       // Redireccionar a la lista de facturas después de un breve retraso
       setTimeout(() => {
