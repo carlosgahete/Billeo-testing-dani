@@ -242,6 +242,28 @@ export function MinimalQuoteList({ userId }: Props) {
       });
     }
   };
+  
+  // Handle summary download
+  const handleDownloadSummary = async () => {
+    try {
+      // Mostrar notificación de que se está generando el resumen
+      toast({
+        title: "Generando resumen",
+        description: "Estamos preparando el resumen de presupuestos"
+      });
+      
+      // Llamar a la API para generar el resumen (reemplazar con la ruta correcta)
+      window.open(`/api/quotes/summary`, "_blank");
+      
+    } catch (error) {
+      console.error("Error al generar resumen:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar el resumen de presupuestos",
+        variant: "destructive"
+      });
+    }
+  };
 
   // PDF and status update functions
 
@@ -341,6 +363,25 @@ export function MinimalQuoteList({ userId }: Props) {
     <div className="pb-32 overflow-y-auto min-h-full h-full -mt-16">
       {/* Componente de filtro de presupuestos */}
       <div className="px-2">
+        {/* Botones superiores - Nuevo y Descargar Resumen */}
+        <div className="flex justify-between mb-3">
+          <Link href="/quotes/simple/create">
+            <Button size="sm" variant="default" className="flex items-center gap-1">
+              <Plus className="h-4 w-4" />
+              Nuevo
+            </Button>
+          </Link>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={() => handleDownloadSummary()}
+          >
+            <Download className="h-4 w-4" />
+            Descargar resumen
+          </Button>
+        </div>
+        
         {/* 1. Barra de búsqueda estilo iOS */}
         <div className="relative mb-3">
           <input
