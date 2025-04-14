@@ -251,6 +251,13 @@ const Sidebar = ({
       icon: <FileText size={20} />,
       label: "Libro de Registros",
     });
+    
+    // Enlace para asignación de clientes a administradores (solo superadmin)
+    adminItems.push({
+      href: "/admin/client-assignment",
+      icon: <Users size={20} />,
+      label: "Asignar Clientes",
+    });
   }
   
   console.log("Admin items:", adminItems);
