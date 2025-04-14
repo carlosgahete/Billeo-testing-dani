@@ -193,15 +193,7 @@ function Router() {
       
       {/* Todas las rutas de Libro de Registros han sido eliminadas */}
       
-      {/* Esta ruta también estaba duplicada */}
-      <Route path="/admin/client-assignment">
-        <Layout>
-          <ProtectedAdminRoute 
-            path="/admin/client-assignment" 
-            component={ClientAssignmentPage} 
-          />
-        </Layout>
-      </Route>
+      {/* Ruta duplicada de client-assignment eliminada */}
       <Route path="/profile">
         <Layout>
           <ProtectedRoute path="/profile" component={ProfilePage} />
