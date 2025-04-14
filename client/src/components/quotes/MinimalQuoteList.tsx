@@ -360,9 +360,9 @@ export function MinimalQuoteList({ userId }: Props) {
   }
 
   return (
-    <div className="pb-32 overflow-y-auto min-h-full h-full -mt-16">
+    <div className="pb-32 overflow-y-auto min-h-full h-full -mt-16 max-w-md mx-auto">
       {/* Componente de filtro de presupuestos */}
-      <div className="px-2">
+      <div className="px-4">
         {/* Botones superiores - Nuevo y Descargar Resumen */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <Link href="/quotes/simple/create" className="w-full">
@@ -450,7 +450,7 @@ export function MinimalQuoteList({ userId }: Props) {
           </Link>
         </div>
       ) : (
-        <ul className="space-y-2 px-2">
+        <ul className="space-y-2 px-4">
           {sortedQuotes.map(quote => {
             const client = clients.find(c => c.id === quote.clientId);
             const statusInfo = getStatusInfo(quote.status);
