@@ -310,9 +310,9 @@ export function MinimalQuoteList({ userId }: Props) {
   }
 
   return (
-    <div className="p-4 pb-32 overflow-y-auto min-h-full h-full">
-      {/* Header with filters */}
-      <div className="flex justify-between items-center mb-4">
+    <div className="pt-16 px-4 pb-32 overflow-y-auto min-h-full h-full">
+      {/* Header en la navegación superior (fijo) */}
+      <div className="fixed top-16 left-0 right-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center shadow-sm">
         <h1 className="text-xl font-semibold">Presupuestos</h1>
         <button 
           onClick={() => setShowFilters(!showFilters)}
@@ -321,6 +321,9 @@ export function MinimalQuoteList({ userId }: Props) {
           <Filter className="h-5 w-5" />
         </button>
       </div>
+      
+      {/* Espacio para compensar el header fijo */}
+      <div className="h-14 mb-2"></div>
       
       {/* Filters section */}
       {showFilters && (
