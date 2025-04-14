@@ -552,7 +552,7 @@ export default function LibroRegistrosPage() {
               value={selectedYear} 
               onValueChange={setSelectedYear}
             >
-              <SelectTrigger className="h-10 w-[110px] bg-white dark:bg-gray-800">
+              <SelectTrigger className="h-10 w-[110px] rounded-xl bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 focus:ring-2 focus:ring-blue-200 transition-all">
                 <SelectValue placeholder="Año" />
               </SelectTrigger>
               <SelectContent>
@@ -569,7 +569,7 @@ export default function LibroRegistrosPage() {
               value={selectedQuarter} 
               onValueChange={setSelectedQuarter}
             >
-              <SelectTrigger className="h-10 w-[140px] bg-white dark:bg-gray-800">
+              <SelectTrigger className="h-10 w-[140px] rounded-xl bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 focus:ring-2 focus:ring-blue-200 transition-all">
                 <SelectValue placeholder="Trimestre" />
               </SelectTrigger>
               <SelectContent>
@@ -588,7 +588,7 @@ export default function LibroRegistrosPage() {
               value={selectedMonth} 
               onValueChange={setSelectedMonth}
             >
-              <SelectTrigger className="h-10 w-[130px] bg-white dark:bg-gray-800">
+              <SelectTrigger className="h-10 w-[130px] rounded-xl bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 focus:ring-2 focus:ring-blue-200 transition-all">
                 <SelectValue placeholder="Mes" />
               </SelectTrigger>
               <SelectContent>
@@ -614,7 +614,7 @@ export default function LibroRegistrosPage() {
           <Button 
             variant="outline" 
             onClick={exportToPDF}
-            className="flex items-center gap-2 h-10 px-4 text-sm"
+            className="flex items-center gap-2 h-10 px-4 text-sm bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-all rounded-full"
           >
             <FileText size={16} />
             Descargar PDF
@@ -622,7 +622,7 @@ export default function LibroRegistrosPage() {
           <Button 
             variant="outline" 
             onClick={exportToExcel}
-            className="flex items-center gap-2 h-10 px-4 text-sm"
+            className="flex items-center gap-2 h-10 px-4 text-sm bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800 transition-all rounded-full"
           >
             <FileSpreadsheet size={16} />
             Descargar Excel
@@ -725,7 +725,7 @@ export default function LibroRegistrosPage() {
                       <TableCell className="py-2 px-4 text-sm">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
                       <TableCell className="py-2 px-4 text-sm font-medium">{formatCurrency(parseFloat(invoice.total))}</TableCell>
                       <TableCell className="py-2 px-4">
-                        <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : "bg-gray-100 text-gray-800 hover:bg-gray-100 px-2 py-0.5 rounded-md text-xs"}>
+                        <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-gray-200"}>
                           {invoice.status === 'paid' ? 'Pagada' : invoice.status}
                         </Badge>
                       </TableCell>
@@ -773,7 +773,7 @@ export default function LibroRegistrosPage() {
                       <TableCell className="py-2 px-4 text-sm">{transaction.description}</TableCell>
                       <TableCell className="py-2 px-4 text-sm">{transaction.category || '-'}</TableCell>
                       <TableCell className="py-2 px-4">
-                        <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : "bg-red-100 text-red-800 hover:bg-red-100 px-2 py-0.5 rounded-md text-xs"}>
+                        <Badge className={transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-green-200" : "bg-red-100 text-red-800 hover:bg-red-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-red-200"}>
                           {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                         </Badge>
                       </TableCell>
@@ -827,9 +827,9 @@ export default function LibroRegistrosPage() {
                       <TableCell className="py-2 px-4">
                         <Badge 
                           className={
-                            quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 px-2 py-0.5 rounded-md text-xs" : 
-                            quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100 px-2 py-0.5 rounded-md text-xs" : 
-                            "bg-gray-100 text-gray-800 hover:bg-gray-100 px-2 py-0.5 rounded-md text-xs"
+                            quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-green-200" : 
+                            quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-red-200" : 
+                            "bg-gray-100 text-gray-800 hover:bg-gray-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-gray-200"
                           }
                         >
                           {quote.status === 'accepted' ? 'Aceptado' : 
