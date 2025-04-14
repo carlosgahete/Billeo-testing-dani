@@ -80,7 +80,12 @@ export default function UsersManagement() {
   });
   
   // Verificar si el usuario actual es superadmin
-  const isSuperAdmin = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN');
+  const isSuperAdmin = user && (
+    user.role === 'superadmin' || 
+    user.role === 'SUPERADMIN' || 
+    user.username === 'Superadmin' ||
+    user.username === 'billeo_admin'
+  );
 
   useEffect(() => {
     fetchUsers();
@@ -326,7 +331,14 @@ export default function UsersManagement() {
     );
   }
 
-  if (!user || (user.role !== "admin" && user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
+  // Permitir acceso a usuarios admin, superadmin o billeo_admin
+  if (!user || (
+    user.role !== "admin" && 
+    user.role !== "superadmin" && 
+    user.role !== "SUPERADMIN" && 
+    user.username !== "Superadmin" && 
+    user.username !== "billeo_admin"
+  )) {
     return <Redirect to="/" />;
   }
 
@@ -366,11 +378,11 @@ export default function UsersManagement() {
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     user.role === 'admin' ? 'bg-red-100 text-red-800' : 
-                    (user.role === 'superadmin' || user.role === 'SUPERADMIN') ? 'bg-amber-100 text-amber-800' : 
+                    (user.role === 'superadmin' || user.role === 'SUPERADMIN' || user.username === 'Superadmin' || user.username === 'billeo_admin') ? 'bg-amber-100 text-amber-800' : 
                     'bg-blue-100 text-blue-800'
                   }`}>
                     {user.role === 'admin' ? 'Administrador' : 
-                     (user.role === 'superadmin' || user.role === 'SUPERADMIN') ? 'Superadmin' : 
+                     (user.role === 'superadmin' || user.role === 'SUPERADMIN' || user.username === 'Superadmin' || user.username === 'billeo_admin') ? 'Superadmin' : 
                      'Usuario'}
                   </span>
                 </TableCell>
@@ -434,8 +446,8 @@ export default function UsersManagement() {
                         {isSuperAdmin && (
                           <DropdownMenuItem
                             onClick={() => setConfirmPromoteUser(user.id)}
-                            disabled={user.role === 'superadmin' || user.role === 'SUPERADMIN'}
-                            className={(user.role === 'superadmin' || user.role === 'SUPERADMIN') ? 'bg-amber-50 font-semibold' : ''}
+                            disabled={user.role === 'superadmin' || user.role === 'SUPERADMIN' || user.username === 'Superadmin' || user.username === 'billeo_admin'}
+                            className={(user.role === 'superadmin' || user.role === 'SUPERADMIN' || user.username === 'Superadmin' || user.username === 'billeo_admin') ? 'bg-amber-50 font-semibold' : ''}
                           >
                             <ShieldCheck className="mr-2 h-4 w-4" /> Superadmin
                           </DropdownMenuItem>
@@ -510,6 +522,9 @@ export default function UsersManagement() {
                   <SelectContent>
                     <SelectItem value="user">Usuario</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
+                    {isSuperAdmin && (
+                      <SelectItem value="superadmin">Superadmin</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -644,6 +659,9 @@ export default function UsersManagement() {
                 <SelectContent>
                   <SelectItem value="user">Usuario</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
+                  {isSuperAdmin && (
+                    <SelectItem value="superadmin">Superadmin</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
