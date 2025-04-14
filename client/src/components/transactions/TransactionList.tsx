@@ -738,48 +738,14 @@ const TransactionList = () => {
       cell: ({ row }) => {
         const transaction = row.original;
         
-        // Depuración para ver el estado de los attachments
-        console.log('TransactionID:', transaction.id, 'Type:', transaction.type, 'Tiene attachments:', !!transaction.attachments, transaction.attachments);
+        // Obtener información sobre documentos adjuntos
+        const hasAttachments = transaction.type === 'expense' && 
+                              transaction.attachments && 
+                              transaction.attachments.length > 0;
         
         return (
           <div className="flex justify-end space-x-1">
-            {/* Botones de visualización y descarga para gastos con adjuntos */}
-            {transaction.type === 'expense' && transaction.attachments && transaction.attachments.length > 0 && (
-              <>
-                {/* Botón de visualización */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    import('@/lib/attachmentService').then(({ viewExpenseOriginal }) => {
-                      const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
-                      viewExpenseOriginal(transaction.attachments[0], transaction as any, category);
-                    });
-                  }}
-                  title="Ver documento"
-                  className="text-blue-700 hover:text-blue-800 hover:bg-blue-50"
-                >
-                  <FileText className="h-4 w-4" />
-                </Button>
-                
-                {/* Botón de descarga */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
-                      const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
-                      downloadExpenseOriginal(transaction.attachments[0], transaction as any, category);
-                    });
-                  }}
-                  title="Descargar original"
-                  className="text-green-700 hover:text-green-800 hover:bg-green-50"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-            
+            {/* Botón de editar siempre visible */}
             <Button
               variant="ghost"
               size="icon"
@@ -788,6 +754,51 @@ const TransactionList = () => {
             >
               <Edit className="h-4 w-4" />
             </Button>
+            
+            {/* Botón de descarga - siempre visible pero deshabilitado si no hay adjuntos */}
+            <Button
+              variant={hasAttachments ? "ghost" : "outline"}
+              size="icon"
+              onClick={() => {
+                if (!hasAttachments) {
+                  toast({
+                    title: "Sin documentos",
+                    description: "Esta transacción no tiene documentos adjuntos",
+                    variant: "default"
+                  });
+                  return;
+                }
+                
+                import('@/lib/attachmentService').then(({ downloadExpenseOriginal }) => {
+                  const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
+                  downloadExpenseOriginal(transaction.attachments[0], transaction as any, category);
+                });
+              }}
+              title={hasAttachments ? "Descargar documento original" : "Sin documentos adjuntos"}
+              className={hasAttachments 
+                ? "text-green-700 hover:text-green-800 hover:bg-green-50" 
+                : "text-gray-400 hover:text-gray-500 cursor-help"}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            
+            {/* Botón de visualización solo si hay adjuntos */}
+            {hasAttachments && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  import('@/lib/attachmentService').then(({ viewExpenseOriginal }) => {
+                    const category = getCategory(transaction.categoryId) || { name: "Sin categoría", icon: "folder", color: "#ccc" };
+                    viewExpenseOriginal(transaction.attachments[0], transaction as any, category);
+                  });
+                }}
+                title="Ver documento original"
+                className="text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            )}
             
             <DeleteTransactionDialog
               transactionId={transaction.id}
