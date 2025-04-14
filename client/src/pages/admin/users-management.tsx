@@ -584,6 +584,17 @@ export default function UsersManagement() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-lastName" className="text-right">
+                Apellido
+              </Label>
+              <Input
+                id="new-lastName"
+                value={newUser.lastName}
+                onChange={(e) => setNewUser({...newUser, lastName: e.target.value})}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="new-username" className="text-right">
                 Usuario
               </Label>
@@ -635,26 +646,29 @@ export default function UsersManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="new-business-type" className="text-right">
-                Tipo de negocio
-              </Label>
-              <RadioGroup
-                id="new-business-type"
-                value={newUser.businessType}
-                onValueChange={(value) => setNewUser({...newUser, businessType: value})}
-                className="flex col-span-3 space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="autonomo" id="create-autonomo" />
-                  <Label htmlFor="create-autonomo" className="font-normal">Autónomo</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="empresa" id="create-empresa" />
-                  <Label htmlFor="create-empresa" className="font-normal">Empresa</Label>
-                </div>
-              </RadioGroup>
-            </div>
+            {/* Solo mostrar tipo de negocio para usuarios normales, no para administradores */}
+            {newUser.role === 'user' && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-business-type" className="text-right">
+                  Tipo de negocio
+                </Label>
+                <RadioGroup
+                  id="new-business-type"
+                  value={newUser.businessType}
+                  onValueChange={(value) => setNewUser({...newUser, businessType: value})}
+                  className="flex col-span-3 space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="autonomo" id="create-autonomo" />
+                    <Label htmlFor="create-autonomo" className="font-normal">Autónomo</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="empresa" id="create-empresa" />
+                    <Label htmlFor="create-empresa" className="font-normal">Empresa</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
