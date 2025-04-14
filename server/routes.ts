@@ -4385,8 +4385,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ success: false, message: "Usuario no encontrado" });
       }
       
-      // Si es un administrador normal (no superadmin), verificar que tenga acceso a este usuario
-      if (isAdmin && !isSuperAdmin) {
+      // Si el usuario está viendo sus propios datos, permitir siempre el acceso
+      if (isViewingOwnData) {
+        console.log("Usuario accediendo a su propio libro de registros - acceso permitido");
+        // No necesitamos realizar más verificaciones
+      }
+      // Si no está viendo sus propios datos, verificar permisos específicos
+      else if (isAdmin && !isSuperAdmin) {
         try {
           // Obtener el cliente asociado a este usuario
           const targetClients = await db.select().from(clients).where(eq(clients.userId, userId));
@@ -4425,9 +4430,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       // Los superadmins tienen acceso a todos los usuarios, no necesitan verificación adicional
-      
-      // Si el usuario no es admin ni superadmin, solo puede ver sus propios datos
-      if (!isAdmin && !isSuperAdmin && !isViewingOwnData) {
+      else if (!isAdmin && !isSuperAdmin && !isViewingOwnData) {
+        // Si no es admin ni superadmin y no está viendo sus propios datos, denegar acceso
         return res.status(403).json({ 
           success: false, 
           message: "Solo puede acceder a su propio libro de registros."
