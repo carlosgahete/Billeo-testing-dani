@@ -119,7 +119,7 @@ const LoginPage = () => {
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-12 drop-shadow-sm"
+              className="h-8 drop-shadow-sm"
               loading="eager"
             />
           </div>
@@ -284,7 +284,7 @@ const LoginPage = () => {
             <img 
               src={billeoLogo} 
               alt="Billeo Logo" 
-              className="h-10"
+              className="h-8"
               loading="eager"
             />
           </div>

@@ -99,7 +99,8 @@ export default function ResetPasswordPage() {
                 <img 
                   src={billeoLogo} 
                   alt="Billeo Logo" 
-                  className="h-11"
+                  className="h-8"
+                  loading="eager"
                 />
               </div>
               <CardTitle className="text-xl text-center">Enlace inválido</CardTitle>
