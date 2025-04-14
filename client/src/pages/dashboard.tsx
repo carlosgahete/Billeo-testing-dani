@@ -98,17 +98,29 @@ const Dashboard = () => {
     refetchOnWindowFocus: true,
     refetchOnMount: "always", // Siempre recarga al montar el componente
     refetchOnReconnect: true,
-    refetchInterval: 1000, // Actualizar cada segundo para mayor reactividad
+    refetchInterval: 500, // Actualización cada 500ms para mayor reactividad e inmediatez
     staleTime: 0, // Considerar los datos obsoletos inmediatamente
     gcTime: 0, // No almacenar en caché (antes era cacheTime en v4)
-    retry: 3, // Intentar 3 veces si falla
-    retryDelay: 300, // Tiempo más corto entre reintentos
+    retry: 5, // Aumentar los reintentos para mayor fiabilidad
+    retryDelay: 200, // Tiempo más corto entre reintentos
     refetchIntervalInBackground: true, // Continuar actualizando incluso cuando la pestaña no está enfocada
     onSuccess: (data) => {
-      // Verificar si hay datos nuevos y forzar una actualización de transacciones
-      if (data && data.income > 0) {
-        // Invalidar también las consultas de transacciones para asegurar todo esté actualizado
-        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      // Sistema de sincronización bidireccional
+      console.log("Dashboard actualizado con nuevos datos:", new Date().toISOString());
+      
+      // Verificar si hay datos nuevos y forzar actualizaciones en cascada
+      if (data) {
+        // Invalidar todas las consultas relacionadas para sincronización completa
+        const invalidatePromises = [
+          queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
+          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] }),
+          queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] })
+        ];
+        
+        // Ejecutar invalidaciones en paralelo para mayor eficiencia
+        Promise.all(invalidatePromises).then(() => {
+          console.log("Sincronización completa de datos entre dispositivos", new Date().toISOString());
+        });
       }
     }
   });
