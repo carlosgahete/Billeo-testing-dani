@@ -49,6 +49,52 @@ import {
 import { ClientForm } from "@/components/clients/ClientForm";
 import FileUpload from "@/components/common/FileUpload";
 
+// Funciones auxiliares para persistencia de formularios entre pestañas
+const INVOICE_FORM_STORAGE_KEY = "billeo_invoice_form_draft";
+
+// Función para guardar el estado del formulario en localStorage
+const saveFormState = (data: any, invoiceId?: number) => {
+  try {
+    // Solo guardamos borradores para facturas nuevas (sin ID)
+    if (!invoiceId) {
+      // Añadimos timestamp para saber cuándo se guardó
+      const dataToSave = {
+        ...data,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(INVOICE_FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+      console.log("💾 Formulario guardado en localStorage");
+    }
+  } catch (error) {
+    console.error("Error al guardar el formulario:", error);
+  }
+};
+
+// Función para recuperar el estado del formulario de localStorage
+const loadFormState = () => {
+  try {
+    const savedState = localStorage.getItem(INVOICE_FORM_STORAGE_KEY);
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      console.log("📂 Recuperando formulario guardado del", new Date(parsedState.savedAt).toLocaleString());
+      return parsedState;
+    }
+  } catch (error) {
+    console.error("Error al cargar el formulario guardado:", error);
+  }
+  return null;
+};
+
+// Función para limpiar el estado guardado
+const clearSavedFormState = () => {
+  try {
+    localStorage.removeItem(INVOICE_FORM_STORAGE_KEY);
+    console.log("🧹 Estado guardado del formulario eliminado");
+  } catch (error) {
+    console.error("Error al limpiar el formulario guardado:", error);
+  }
+};
+
 // Importamos la lógica de cálculo y schemas desde InvoiceForm
 function toNumber(value: any, defaultValue = 0): number {
   if (value === null || value === undefined || value === '') return defaultValue;
@@ -280,9 +326,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     ],
   };
 
+  // Intentar cargar datos guardados en localStorage si no estamos en modo edición
+  const savedFormState = !isEditMode ? loadFormState() : null;
+  
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
-    defaultValues: defaultFormValues,
+    // Si hay datos guardados y no estamos en modo edición, usarlos como valores iniciales
+    defaultValues: savedFormState || defaultFormValues,
   });
 
   // Efecto para añadir automáticamente el número de cuenta en las notas
@@ -932,8 +982,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                                   min="0"
                                   onChange={(e) => {
                                     field.onChange(e);
-                                    // Calculamos subtotal al cambiar la cantidad
-                                    setTimeout(() => calculateInvoiceTotals(form), 100);
+                                    // Guardamos estado actual del formulario para persistir entre pestañas
+                                    const formValues = form.getValues();
+                                    saveFormState(formValues, invoiceId);
+                                  }}
+                                  onBlur={() => {
+                                    // Calculamos subtotal solo al perder el foco para evitar pérdida de foco
+                                    calculateInvoiceTotals(form);
                                   }}
                                 />
                               </FormControl>
@@ -958,8 +1013,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                                   min="0"
                                   onChange={(e) => {
                                     field.onChange(e);
-                                    // Calculamos subtotal al cambiar el precio
-                                    setTimeout(() => calculateInvoiceTotals(form), 100);
+                                    // Guardamos estado actual del formulario para persistir entre pestañas
+                                    const formValues = form.getValues();
+                                    saveFormState(formValues, invoiceId);
+                                  }}
+                                  onBlur={() => {
+                                    // Calculamos subtotal solo al perder el foco para evitar pérdida de foco
+                                    calculateInvoiceTotals(form);
                                   }}
                                 />
                               </FormControl>
@@ -984,8 +1044,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
                                   min="0"
                                   onChange={(e) => {
                                     field.onChange(e);
-                                    // Calculamos subtotal al cambiar el IVA
-                                    setTimeout(() => calculateInvoiceTotals(form), 100);
+                                    // Guardamos estado actual del formulario para persistir entre pestañas
+                                    const formValues = form.getValues();
+                                    saveFormState(formValues, invoiceId);
+                                  }}
+                                  onBlur={() => {
+                                    // Calculamos subtotal solo al perder el foco para evitar pérdida de foco
+                                    calculateInvoiceTotals(form);
                                   }}
                                 />
                               </FormControl>
