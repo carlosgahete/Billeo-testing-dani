@@ -950,29 +950,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint para obtener datos del usuario actual (compatible con React Query)
-  app.get("/api/user", async (req, res) => {
-    // Verificar si el usuario está autenticado
-    if (req.isAuthenticated()) {
-      const { password, ...userWithoutPassword } = req.user as any;
-      return res.status(200).json(userWithoutPassword);
-    }
-    
-    // Si no está autenticado por passport, verificar si hay userId en la sesión
-    if (req.session && req.session.userId) {
-      try {
-        const user = await storage.getUser(req.session.userId);
-        if (user) {
-          const { password, ...userWithoutPassword } = user;
-          return res.status(200).json(userWithoutPassword);
-        }
-      } catch (error) {
-        console.error("Error getting user from userId:", error);
-      }
-    }
-    
-    return res.status(401).json({
-      message: "Not authenticated"
-    });
+  // Nota: Este endpoint ahora redirige al implementado en auth.ts para evitar duplicidad
+  app.get("/api/user", async (req, res, next) => {
+    console.log("Recibida petición a /api/user en routes.ts - redirigiendo al handler de auth.ts");
+    next();
   });
   
   // Endpoint para diagnóstico de la sesión

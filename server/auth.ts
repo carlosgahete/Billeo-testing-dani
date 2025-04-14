@@ -213,11 +213,33 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/user", async (req, res) => {
+    console.log("Recibida petición a /api/user en auth.ts");
     
-    // Omitir la contraseña en la respuesta
-    const { password, ...userWithoutPassword } = req.user as SelectUser;
-    res.json(userWithoutPassword);
+    // Verificar si el usuario está autenticado mediante passport
+    if (req.isAuthenticated()) {
+      const { password, ...userWithoutPassword } = req.user as SelectUser;
+      return res.status(200).json(userWithoutPassword);
+    }
+    
+    // Si no está autenticado por passport, verificar si hay userId en la sesión
+    if (req.session && req.session.userId) {
+      try {
+        console.log("Usuario no autenticado por passport, pero tiene userId en sesión:", req.session.userId);
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          const { password, ...userWithoutPassword } = user;
+          return res.status(200).json(userWithoutPassword);
+        }
+      } catch (error) {
+        console.error("Error getting user from userId:", error);
+      }
+    }
+    
+    // Si ninguna de las comprobaciones anteriores tuvo éxito, no está autenticado
+    console.log("Usuario no autenticado ni por passport ni por userId en sesión");
+    return res.status(401).json({
+      message: "Not authenticated"
+    });
   });
 }
