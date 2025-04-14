@@ -34,20 +34,14 @@ import CategoriesPage from "@/pages/settings/categories";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
-import LibroRegistrosPage from "@/pages/admin/libro-registros";
-import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
-import LibroRegistrosSimpleTest from "@/pages/admin/libro-registros-simple-test";
-import LibroRegistrosLibre from "@/pages/admin/libro-registros-libre";
-import LibroRegistrosPublico from "@/pages/admin/libro-registros-publico";
-import LibroRegistrosClientPage from "@/pages/admin/libro-registros-client";
-import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
+// Imports de Libro de Registros eliminados
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
 import TestFormat from "@/test-format";
 import SimpleExpensePage from "@/pages/SimpleExpensePage";
-import LibroRegistrosSelector from "@/pages/libro-registros-page";
+// Import de LibroRegistrosSelector eliminado
 import SimpleQuoteCreatePage from "@/pages/quotes/simple/create";
 import SimpleQuoteEditPage from "@/pages/quotes/simple/edit/[id]";
 import SimpleQuoteListPage from "@/pages/quotes/simple/list";
@@ -197,108 +191,9 @@ function Router() {
         <ProtectedAdminRoute path="/admin/select-user" component={SelectUserPage} />
       </Route>
       
-      {/* Ruta principal para el Libro de Registros - Selector de usuarios */}
-      <Route path="/admin/libro-registros">
-        <Layout>
-          <ProtectedAdminRoute 
-            path="/admin/libro-registros" 
-            component={SelectUserPage} 
-          />
-        </Layout>
-      </Route>
-
-      <Route path="/admin/libro-registros/:userId">
-        {(params) => (
-          <Layout>
-            <ProtectedAdminRoute 
-              path={`/admin/libro-registros/${params.userId}`} 
-              component={(props: any) => <LibroRegistrosPage params={{userId: params.userId}} {...props} />} 
-            />
-          </Layout>
-        )}
-      </Route>
+      {/* Todas las rutas de Libro de Registros han sido eliminadas */}
       
-      {/* Ruta simplificada del Libro de Registros protegida SOLO para superadmins (OBSOLETA) */}
-      <Route path="/admin/libro-simple/:userId">
-        {(params) => (
-          <Layout>
-            <ProtectedAdminRoute 
-              path={`/admin/libro-simple/${params.userId}`} 
-              component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
-            />
-          </Layout>
-        )}
-      </Route>
-      
-      {/* Ruta del Libro de Registros Simple (con userId) */}
-      <Route path="/admin/libro-registros-simple/:userId">
-        {(params) => (
-          <Layout>
-            <ProtectedAdminRoute 
-              path={`/admin/libro-registros-simple/${params.userId}`} 
-              component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
-            />
-          </Layout>
-        )}
-      </Route>
-
-      {/* Ruta del Libro de Registros Simple (sin userId) */}
-      <Route path="/admin/libro-registros-simple">
-        <Layout>
-          <ProtectedAdminRoute 
-            path="/admin/libro-registros-simple" 
-            component={(props: any) => <LibroRegistrosSimplePage {...props} />} 
-          />
-        </Layout>
-      </Route>
-      
-      {/* Ruta del Libro de Registros para pruebas (sin autenticación) */}
-      <Route path="/admin/libro-registros-test">
-        <Layout>
-          {/* Componente de prueba sin protección de autenticación */}
-          <LibroRegistrosSimpleTest />
-        </Layout>
-      </Route>
-      
-      {/* Ruta pública para el Libro de Registros - completamente libre sin autenticación */}
-      <Route path="/admin/libro-libre">
-        <Layout>
-          <LibroRegistrosLibre />
-        </Layout>
-      </Route>
-      
-      {/* Ruta pública que usa datos de DEMO completamente independiente */}
-      <Route path="/admin/libro-publico">
-        <Layout>
-          <LibroRegistrosPublico />
-        </Layout>
-      </Route>
-      
-      {/* Ruta mejorada del Libro de Registros protegida para admins y superadmins */}
-      
-{/* Ruta de libro-registros original eliminada para simplificar */}
-      {/* Ruta para que los usuarios normales vean su propio libro de registros */}
-      <Route path="/mis-registros">
-        <Layout>
-          <ProtectedRoute
-            path="/mis-registros"
-            component={(props: any) => {
-              // Usamos un componente que pasará automáticamente el ID del usuario conectado
-              return <LibroRegistrosSimplePage forceOwnUser={true} {...props} />;
-            }}
-          />
-        </Layout>
-      </Route>
-      <Route path="/admin/libro-enhanced/:userId">
-        {(params) => (
-          <Layout>
-            <ProtectedAdminRoute 
-              path={`/admin/libro-enhanced/${params.userId}`} 
-              component={(props: any) => <EnhancedLibroRegistros {...props} />} 
-            />
-          </Layout>
-        )}
-      </Route>
+      {/* Esta ruta también estaba duplicada */}
       <Route path="/admin/client-assignment">
         <Layout>
           <ProtectedAdminRoute 
@@ -317,11 +212,7 @@ function Router() {
           <ProtectedRoute path="/simple-expense" component={SimpleExpensePage} />
         </Layout>
       </Route>
-      <Route path="/libro-registros">
-        <Layout>
-          <ProtectedRoute path="/libro-registros" component={LibroRegistrosSelector} />
-        </Layout>
-      </Route>
+      {/* Ruta de libro-registros eliminada */}
       
       {/* Rutas para versiones ultra simples de presupuestos */}
       <Route path="/quotes/simple/list">

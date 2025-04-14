@@ -258,20 +258,11 @@ const Sidebar = ({
       });
     }
     
-    // Después "Libro de Registros" (para superadmin y admin normal)
-    adminItems.push({
-      href: "/admin/libro-registros",  // Ruta general para el libro de registros
-      icon: <FileText size={20} />,
-      label: "Libro de Registros",
-    });
+    // Elementos para administradores ya añadidos arriba
   } 
-  // Para usuarios normales, mostrar enlace a su propio libro de registros
+  // Para usuarios normales no necesitamos añadir nada extra
   else if (user) {
-    adminItems.push({
-      href: "/mis-registros",  // Ruta para usuarios normales
-      icon: <FileText size={20} />,
-      label: "Mi Libro de Registros",
-    });
+    // Elementos eliminados - Libro de Registros ya no está disponible
   }
   
   console.log("Admin items:", adminItems);
