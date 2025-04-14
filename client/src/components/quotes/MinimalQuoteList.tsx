@@ -338,7 +338,7 @@ export function MinimalQuoteList({ userId }: Props) {
   }
 
   return (
-    <div className="pb-32 overflow-y-auto min-h-full h-full -mt-14">
+    <div className="pb-32 overflow-y-auto min-h-full h-full -mt-16">
       {/* Componente de filtro de presupuestos */}
       <div className="px-2">
         {/* 1. Barra de búsqueda estilo iOS */}
