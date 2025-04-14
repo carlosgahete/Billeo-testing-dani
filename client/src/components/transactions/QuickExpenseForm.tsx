@@ -130,14 +130,34 @@ const QuickExpenseForm: React.FC<QuickExpenseFormProps> = ({ onSuccess }) => {
   // Usamos useMutation para gestionar la creación del gasto
   const createExpenseMutation = useMutation({
     mutationFn: simpleCreateExpense,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] });
+    onSuccess: (data) => {
+      console.log("Gasto registrado exitosamente:", data);
+      
+      // Invalidar todas las consultas relacionadas para actualización inmediata en múltiples dispositivos
+      const invalidatePromises = [
+        queryClient.invalidateQueries({ queryKey: ['/api/transactions'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/public/stats/dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/transactions/recent'] })
+      ];
+      
+      // Ejecutar todas las invalidaciones en paralelo
+      Promise.all(invalidatePromises).then(() => {
+        console.log("Sincronización completa tras nuevo gasto:", new Date().toISOString());
+        
+        // Forzar actualización adicional después de un breve retraso para garantizar que todos los datos estén frescos
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+        }, 500);
+      });
+      
       toast({
         title: 'Gasto registrado correctamente',
         description: 'Se ha registrado el gasto con su documento adjunto',
         variant: 'default',
       });
+      
       form.reset();
       setSelectedFile(null);
       if (fileInputRef.current) {
