@@ -20,6 +20,8 @@ import {
   InsertTransaction,
   Task,
   InsertTask,
+  AdminClientRelation,
+  InsertAdminClientRelation,
   users,
   companies,
   clients,
@@ -28,6 +30,7 @@ import {
   quotes,
   quoteItems,
   categories,
+  adminClientRelations,
   transactions,
   tasks,
   dashboardPreferences,
@@ -79,9 +82,21 @@ export interface IStorage {
   // Client operations
   getClient(id: number): Promise<Client | undefined>;
   getClientsByUserId(userId: number): Promise<Client[]>;
+  getClientsAssignedToAdmin(adminId: number): Promise<Client[]>;
+  getAllClientsAssignableToAdmin(superadminId: number): Promise<{
+    assignedClients: { clientId: number; adminId: number; }[];
+    allClients: Client[];
+  }>;
   createClient(client: InsertClient): Promise<Client>;
   updateClient(id: number, client: Partial<InsertClient>): Promise<Client | undefined>;
   deleteClient(id: number): Promise<boolean>;
+  
+  // Admin-Client relations operations
+  assignClientToAdmin(adminId: number, clientId: number, assignedBy: number): Promise<AdminClientRelation>;
+  removeClientFromAdmin(adminId: number, clientId: number): Promise<boolean>;
+  getAdminClientRelationsByAdminId(adminId: number): Promise<AdminClientRelation[]>;
+  getAdminClientRelationsByClientId(clientId: number): Promise<AdminClientRelation[]>;
+  isClientAssignedToAdmin(adminId: number, clientId: number): Promise<boolean>;
 
   // Invoice operations
   getInvoice(id: number): Promise<Invoice | undefined>;
@@ -728,6 +743,123 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(clients).set(clientData).where(eq(clients.id, id)).returning();
     return result[0];
   }
+  
+  // Funciones para gestionar la relación entre administradores y clientes
+  async getClientsAssignedToAdmin(adminId: number): Promise<Client[]> {
+    // Primero obtenemos todas las relaciones para este admin
+    const relations = await db.select()
+      .from(adminClientRelations)
+      .where(eq(adminClientRelations.adminId, adminId));
+    
+    if (relations.length === 0) {
+      return [];
+    }
+    
+    // Obtener los IDs de clientes asignados a este admin
+    const clientIds = relations.map(rel => rel.clientId);
+    
+    // Obtener los datos completos de esos clientes
+    const clientsData = await db.select()
+      .from(clients)
+      .where(sql`${clients.id} IN (${clientIds.join(', ')})`);
+    
+    return clientsData;
+  }
+  
+  async getAllClientsAssignableToAdmin(superadminId: number): Promise<{
+    assignedClients: { clientId: number; adminId: number; }[];
+    allClients: Client[];
+  }> {
+    // Obtener todos los clientes del superadmin
+    const allClients = await this.getClientsByUserId(superadminId);
+    
+    // Obtener todas las relaciones existentes para estos clientes
+    const clientIds = allClients.map(client => client.id);
+    
+    let assignedClients: { clientId: number; adminId: number; }[] = [];
+    
+    if (clientIds.length > 0) {
+      const relations = await db.select({
+        clientId: adminClientRelations.clientId,
+        adminId: adminClientRelations.adminId
+      })
+      .from(adminClientRelations)
+      .where(sql`${adminClientRelations.clientId} IN (${clientIds.join(', ')})`);
+      
+      assignedClients = relations;
+    }
+    
+    return {
+      assignedClients,
+      allClients
+    };
+  }
+  
+  async assignClientToAdmin(adminId: number, clientId: number, assignedBy: number): Promise<AdminClientRelation> {
+    // Crear el identificador único
+    const uniqueId = `${adminId}_${clientId}`;
+    
+    try {
+      const result = await db.insert(adminClientRelations)
+        .values({
+          adminId,
+          clientId,
+          assignedBy,
+          uniqueAdminClient: uniqueId
+        })
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      // Si ya existe, simplemente devolvemos la relación existente
+      const existing = await db.select()
+        .from(adminClientRelations)
+        .where(and(
+          eq(adminClientRelations.adminId, adminId),
+          eq(adminClientRelations.clientId, clientId)
+        ));
+      
+      if (existing.length > 0) {
+        return existing[0];
+      }
+      
+      throw error;
+    }
+  }
+  
+  async removeClientFromAdmin(adminId: number, clientId: number): Promise<boolean> {
+    const result = await db.delete(adminClientRelations)
+      .where(and(
+        eq(adminClientRelations.adminId, adminId),
+        eq(adminClientRelations.clientId, clientId)
+      ))
+      .returning();
+    
+    return result.length > 0;
+  }
+  
+  async getAdminClientRelationsByAdminId(adminId: number): Promise<AdminClientRelation[]> {
+    return await db.select()
+      .from(adminClientRelations)
+      .where(eq(adminClientRelations.adminId, adminId));
+  }
+  
+  async getAdminClientRelationsByClientId(clientId: number): Promise<AdminClientRelation[]> {
+    return await db.select()
+      .from(adminClientRelations)
+      .where(eq(adminClientRelations.clientId, clientId));
+  }
+  
+  async isClientAssignedToAdmin(adminId: number, clientId: number): Promise<boolean> {
+    const result = await db.select()
+      .from(adminClientRelations)
+      .where(and(
+        eq(adminClientRelations.adminId, adminId),
+        eq(adminClientRelations.clientId, clientId)
+      ));
+    
+    return result.length > 0;
+  }
 
   async deleteClient(id: number): Promise<boolean> {
     const result = await db.delete(clients).where(eq(clients.id, id)).returning();
@@ -1025,6 +1157,7 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private transactions: Map<number, Transaction>;
   private tasks: Map<number, Task>;
+  private adminClientRelations: Map<string, AdminClientRelation>;
   public sessionStore: session.Store;
 
   private userIdCounter: number;

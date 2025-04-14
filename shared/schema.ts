@@ -412,3 +412,21 @@ export const insertFileSchema = createInsertSchema(files)
   
 export type InsertFile = z.infer<typeof insertFileSchema>;
 export type File = typeof files.$inferSelect;
+
+// Tabla de relación entre administradores y clientes
+export const adminClientRelations = pgTable("admin_client_relations", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").notNull().references(() => users.id),
+  clientId: integer("client_id").notNull().references(() => clients.id),
+  assignedBy: integer("assigned_by").notNull().references(() => users.id), // ID del superadmin que hizo la asignación
+  assignedAt: timestamp("assigned_at").notNull().defaultNow(),
+  // Constraint para evitar duplicados de admin-cliente
+  uniqueAdminClient: text("unique_admin_client").notNull().unique()
+    .$defaultFn(() => ""), // Se llenará con adminId_clientId en el insert
+});
+
+export const insertAdminClientRelationSchema = createInsertSchema(adminClientRelations)
+  .omit({ id: true, assignedAt: true, uniqueAdminClient: true });
+
+export type InsertAdminClientRelation = z.infer<typeof insertAdminClientRelationSchema>;
+export type AdminClientRelation = typeof adminClientRelations.$inferSelect;
