@@ -706,7 +706,7 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
             <div className="md:col-span-2">
               <Label>Rango de fechas</Label>
               <DatePickerWithRange
-                value={dateRange || {from: undefined, to: undefined}}
+                date={dateRange}
                 onChange={setDateRange}
               />
             </div>

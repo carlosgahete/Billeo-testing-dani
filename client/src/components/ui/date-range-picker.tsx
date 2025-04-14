@@ -37,17 +37,17 @@ export function DatePickerWithRange({
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !currentDate && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
+            {currentDate?.from ? (
+              currentDate.to ? (
                 <>
-                  {format(date.from, "dd/MM/yyyy", { locale: es })} - {format(date.to, "dd/MM/yyyy", { locale: es })}
+                  {format(currentDate.from, "dd/MM/yyyy", { locale: es })} - {format(currentDate.to, "dd/MM/yyyy", { locale: es })}
                 </>
               ) : (
-                format(date.from, "dd/MM/yyyy", { locale: es })
+                format(currentDate.from, "dd/MM/yyyy", { locale: es })
               )
             ) : (
               <span>Seleccionar rango de fechas</span>
@@ -58,8 +58,8 @@ export function DatePickerWithRange({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
-            selected={date}
+            defaultMonth={currentDate?.from}
+            selected={currentDate}
             onSelect={onChange}
             numberOfMonths={2}
             locale={es}
