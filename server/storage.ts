@@ -1182,6 +1182,7 @@ export class MemStorage implements IStorage {
     this.categories = new Map();
     this.transactions = new Map();
     this.tasks = new Map();
+    this.adminClientRelations = new Map();
     
     // Usar MemoryStore para la sesión cuando se usa MemStorage
     const MemoryStore = require('memorystore')(session);
@@ -1385,6 +1386,96 @@ export class MemStorage implements IStorage {
 
   async deleteClient(id: number): Promise<boolean> {
     return this.clients.delete(id);
+  }
+  
+  // Funciones de relación admin-cliente
+  async getClientsAssignedToAdmin(adminId: number): Promise<Client[]> {
+    // Buscar todas las relaciones para este admin
+    const relations = Array.from(this.adminClientRelations.values())
+      .filter(relation => relation.adminId === adminId);
+    
+    if (relations.length === 0) {
+      return [];
+    }
+    
+    // Obtener los IDs de clientes asignados
+    const clientIds = relations.map(rel => rel.clientId);
+    
+    // Obtener los datos completos de esos clientes
+    return Array.from(this.clients.values())
+      .filter(client => clientIds.includes(client.id));
+  }
+  
+  async getAllClientsAssignableToAdmin(superadminId: number): Promise<{
+    assignedClients: { clientId: number; adminId: number; }[];
+    allClients: Client[];
+  }> {
+    // Obtener todos los clientes del superadmin
+    const allClients = await this.getClientsByUserId(superadminId);
+    
+    // Obtener todas las relaciones existentes para estos clientes
+    const clientIds = allClients.map(client => client.id);
+    
+    const assignedClients = Array.from(this.adminClientRelations.values())
+      .filter(relation => clientIds.includes(relation.clientId))
+      .map(relation => ({ 
+        clientId: relation.clientId, 
+        adminId: relation.adminId 
+      }));
+    
+    return {
+      assignedClients,
+      allClients
+    };
+  }
+  
+  async assignClientToAdmin(adminId: number, clientId: number, assignedBy: number): Promise<AdminClientRelation> {
+    // Crear un ID único para la relación
+    const uniqueId = `${adminId}_${clientId}`;
+    
+    // Verificar si ya existe la relación
+    const existingRelation = Array.from(this.adminClientRelations.values())
+      .find(relation => 
+        relation.adminId === adminId && 
+        relation.clientId === clientId
+      );
+    
+    if (existingRelation) {
+      return existingRelation;
+    }
+    
+    // Crear una nueva relación
+    const newRelation: AdminClientRelation = {
+      id: Date.now(), // Usar timestamp como ID
+      adminId,
+      clientId,
+      assignedBy,
+      assignedAt: new Date(),
+      uniqueAdminClient: uniqueId
+    };
+    
+    this.adminClientRelations.set(uniqueId, newRelation);
+    return newRelation;
+  }
+  
+  async removeClientFromAdmin(adminId: number, clientId: number): Promise<boolean> {
+    const uniqueId = `${adminId}_${clientId}`;
+    return this.adminClientRelations.delete(uniqueId);
+  }
+  
+  async getAdminClientRelationsByAdminId(adminId: number): Promise<AdminClientRelation[]> {
+    return Array.from(this.adminClientRelations.values())
+      .filter(relation => relation.adminId === adminId);
+  }
+  
+  async getAdminClientRelationsByClientId(clientId: number): Promise<AdminClientRelation[]> {
+    return Array.from(this.adminClientRelations.values())
+      .filter(relation => relation.clientId === clientId);
+  }
+  
+  async isClientAssignedToAdmin(adminId: number, clientId: number): Promise<boolean> {
+    const uniqueId = `${adminId}_${clientId}`;
+    return this.adminClientRelations.has(uniqueId);
   }
 
   // Invoice operations

@@ -724,6 +724,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ====== RUTAS DE ASIGNACIÓN DE CLIENTES A ADMINISTRADORES ======
+  
+  // Obtener todos los clientes asignables a un administrador (solo superadmin)
+  app.get("/api/admin/assignable-clients", requireSuperAdmin, async (req, res) => {
+    try {
+      const superadminId = (req.user as any).id;
+      
+      const data = await storage.getAllClientsAssignableToAdmin(superadminId);
+      res.status(200).json(data);
+    } catch (error) {
+      console.error("Error al obtener clientes asignables:", error);
+      res.status(500).json({ message: "Error al obtener clientes asignables" });
+    }
+  });
+  
+  // Asignar un cliente a un administrador (solo superadmin)
+  app.post("/api/admin/assign-client", requireSuperAdmin, async (req, res) => {
+    try {
+      const { adminId, clientId } = req.body;
+      
+      if (!adminId || !clientId) {
+        return res.status(400).json({ message: "Se requieren adminId y clientId" });
+      }
+      
+      // Verificar que el adminId corresponde a un usuario con rol admin
+      const adminUser = await storage.getUser(adminId);
+      if (!adminUser) {
+        return res.status(404).json({ message: "Administrador no encontrado" });
+      }
+      
+      if (adminUser.role !== 'admin' && adminUser.role !== 'superadmin') {
+        return res.status(400).json({ message: "El usuario debe tener rol de administrador" });
+      }
+      
+      // Verificar que el cliente existe
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Cliente no encontrado" });
+      }
+      
+      // Verificar que el cliente pertenece al superadmin
+      const superadminId = (req.user as any).id;
+      if (client.userId !== superadminId) {
+        return res.status(403).json({ message: "No tienes permiso para asignar este cliente" });
+      }
+      
+      // Asignar el cliente al administrador
+      const result = await storage.assignClientToAdmin(adminId, clientId, superadminId);
+      
+      res.status(200).json({
+        message: "Cliente asignado correctamente al administrador",
+        relation: result
+      });
+    } catch (error) {
+      console.error("Error al asignar cliente a administrador:", error);
+      res.status(500).json({ message: "Error al asignar cliente a administrador" });
+    }
+  });
+  
+  // Eliminar asignación de cliente a administrador (solo superadmin)
+  app.delete("/api/admin/assign-client", requireSuperAdmin, async (req, res) => {
+    try {
+      const { adminId, clientId } = req.body;
+      
+      if (!adminId || !clientId) {
+        return res.status(400).json({ message: "Se requieren adminId y clientId" });
+      }
+      
+      // Verificar que la relación existe
+      const isAssigned = await storage.isClientAssignedToAdmin(adminId, clientId);
+      if (!isAssigned) {
+        return res.status(404).json({ message: "Asignación no encontrada" });
+      }
+      
+      // Remover la asignación
+      await storage.removeClientFromAdmin(adminId, clientId);
+      
+      res.status(200).json({
+        message: "Asignación eliminada correctamente"
+      });
+    } catch (error) {
+      console.error("Error al eliminar asignación de cliente:", error);
+      res.status(500).json({ message: "Error al eliminar asignación de cliente" });
+    }
+  });
+  
+  // Obtener clientes asignados a un administrador (para administradores)
+  app.get("/api/admin/assigned-clients", requireAdmin, async (req, res) => {
+    try {
+      const adminId = (req.user as any).id;
+      const clients = await storage.getClientsAssignedToAdmin(adminId);
+      
+      res.status(200).json(clients);
+    } catch (error) {
+      console.error("Error al obtener clientes asignados:", error);
+      res.status(500).json({ message: "Error al obtener clientes asignados" });
+    }
+  });
+  
   // Keep compatibility with old auth endpoint
   app.get("/api/auth/session", async (req, res) => {
     // Verificar si el usuario está autenticado mediante passport
