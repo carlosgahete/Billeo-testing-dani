@@ -3050,7 +3050,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         categoryId: categoryIdNumeric,
         paymentMethod: transactionData.paymentMethod || 'other',
         notes: transactionData.notes,
-        additionalTaxes: transactionData.additionalTaxes
+        additionalTaxes: transactionData.additionalTaxes,
+        // Añadir el archivo adjunto - crucial para poder acceder al documento original
+        attachments: [filePath] // Guardar la ruta completa del archivo procesado
       };
       
       try {
