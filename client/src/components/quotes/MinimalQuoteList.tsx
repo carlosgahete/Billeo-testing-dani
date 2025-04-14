@@ -243,23 +243,157 @@ export function MinimalQuoteList({ userId }: Props) {
     }
   };
   
-  // Handle summary download
+  // Handle summary download - Generamos un PDF con los datos actuales
   const handleDownloadSummary = async () => {
     try {
       // Mostrar notificación de que se está generando el resumen
       toast({
-        title: "Generando resumen",
-        description: "Estamos preparando el resumen de presupuestos"
+        title: "Generando informe",
+        description: "Estamos preparando el informe de presupuestos"
       });
       
-      // Llamar a la API para generar el resumen (reemplazar con la ruta correcta)
-      window.open(`/api/quotes/summary`, "_blank");
+      // Generar un reporte simple cliente-side
+      // Obtener fecha actual formateada
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('es-ES');
+      
+      // Crear iframe temporal para impresión o generar PDF con browser
+      const printFrame = document.createElement('iframe');
+      printFrame.style.display = 'none';
+      document.body.appendChild(printFrame);
+      
+      // Crear contenido HTML para el reporte
+      let reportHTML = `
+        <html>
+        <head>
+          <title>Resumen de Presupuestos - ${dateStr}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+            h1 { color: #2563eb; text-align: center; }
+            .date { text-align: center; margin-bottom: 30px; color: #666; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background-color: #f1f5f9; text-align: left; padding: 10px; }
+            td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
+            .summary { margin-top: 30px; border-top: 2px solid #2563eb; padding-top: 20px; }
+            .total { font-weight: bold; color: #2563eb; }
+            .status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+            .status-draft { background-color: #f1f5f9; color: #64748b; }
+            .status-sent { background-color: #dbeafe; color: #2563eb; }
+            .status-accepted { background-color: #dcfce7; color: #16a34a; }
+            .status-rejected { background-color: #fee2e2; color: #dc2626; }
+          </style>
+        </head>
+        <body>
+          <h1>Resumen de Presupuestos</h1>
+          <div class="date">Generado el ${dateStr}</div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      // Añadir filas con los datos de los presupuestos
+      let totalAmount = 0;
+      let countByStatus = {
+        draft: 0,
+        sent: 0,
+        accepted: 0,
+        rejected: 0
+      };
+      
+      // Función para obtener clase de estado
+      const getStatusClass = (status) => {
+        switch(status) {
+          case 'draft': return 'status-draft';
+          case 'sent': return 'status-sent';
+          case 'accepted': return 'status-accepted';
+          case 'rejected': return 'status-rejected';
+          default: return 'status-draft';
+        }
+      };
+      
+      // Función para obtener texto de estado
+      const getStatusText = (status) => {
+        switch(status) {
+          case 'draft': return 'Borrador';
+          case 'sent': return 'Enviado';
+          case 'accepted': return 'Aceptado';
+          case 'rejected': return 'Rechazado';
+          default: return status;
+        }
+      };
+      
+      // Añadir filas de datos
+      sortedQuotes.forEach(quote => {
+        const client = clients.find(c => c.id === quote.clientId) || { name: 'Cliente desconocido' };
+        const dateFormatted = formatDate(quote.issueDate);
+        const statusText = getStatusText(quote.status);
+        const statusClass = getStatusClass(quote.status);
+        
+        // Contabilizar por estado
+        if (countByStatus.hasOwnProperty(quote.status)) {
+          countByStatus[quote.status]++;
+        }
+        
+        // Sumar al total
+        totalAmount += Number(quote.total);
+        
+        reportHTML += `
+          <tr>
+            <td>${quote.quoteNumber}</td>
+            <td>${client.name}</td>
+            <td>${dateFormatted}</td>
+            <td><span class="status ${statusClass}">${statusText}</span></td>
+            <td>${formatCurrency(Number(quote.total))}</td>
+          </tr>
+        `;
+      });
+      
+      // Añadir resumen
+      reportHTML += `
+            </tbody>
+          </table>
+          
+          <div class="summary">
+            <p><strong>Total Presupuestos:</strong> ${sortedQuotes.length}</p>
+            <p><strong>Borradores:</strong> ${countByStatus.draft}</p>
+            <p><strong>Enviados:</strong> ${countByStatus.sent}</p>
+            <p><strong>Aceptados:</strong> ${countByStatus.accepted}</p>
+            <p><strong>Rechazados:</strong> ${countByStatus.rejected}</p>
+            <p class="total"><strong>Valor total:</strong> ${formatCurrency(totalAmount)}</p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // Escribir HTML en el iframe y mandar a imprimir
+      const frameDoc = printFrame.contentWindow.document;
+      frameDoc.open();
+      frameDoc.write(reportHTML);
+      frameDoc.close();
+      
+      // Esperar un momento para que se cargue el contenido
+      setTimeout(() => {
+        printFrame.contentWindow.print();
+        // Eliminar el iframe después de imprimir
+        setTimeout(() => {
+          document.body.removeChild(printFrame);
+        }, 1000);
+      }, 500);
       
     } catch (error) {
-      console.error("Error al generar resumen:", error);
+      console.error("Error al generar informe:", error);
       toast({
         title: "Error",
-        description: "No se pudo generar el resumen de presupuestos",
+        description: "No se pudo generar el informe de presupuestos",
         variant: "destructive"
       });
     }
