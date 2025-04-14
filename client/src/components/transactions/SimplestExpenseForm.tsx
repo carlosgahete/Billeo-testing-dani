@@ -12,6 +12,7 @@ interface SimplestExpenseFormProps {
 
 const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -105,6 +106,28 @@ const SimplestExpenseForm: React.FC<SimplestExpenseFormProps> = ({ onSuccess }) 
       
       const jsonResponse = await response.json();
       console.log('Respuesta JSON:', jsonResponse);
+      
+      // Invalidar todas las consultas relacionadas para sincronización móvil-desktop
+      console.log("Iniciando sincronización tras registro de gasto móvil:", new Date().toISOString());
+      
+      const invalidatePromises = [
+        queryClient.invalidateQueries({ queryKey: ['/api/transactions'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/transactions/recent'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/public/stats/dashboard'] })
+      ];
+      
+      // Ejecutar todas las invalidaciones en paralelo
+      Promise.all(invalidatePromises).then(() => {
+        console.log("Primera fase de sincronización completada:", new Date().toISOString());
+        
+        // Forzar actualización adicional después de un breve retraso para garantizar datos frescos
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/stats/dashboard'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+          console.log("Segunda fase de sincronización completada:", new Date().toISOString());
+        }, 500);
+      });
       
       // 4. Notificar éxito
       toast({
