@@ -37,6 +37,7 @@ import SelectUserPage from "@/pages/admin/select-user";
 import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
 import LibroRegistrosSimpleTest from "@/pages/admin/libro-registros-simple-test";
+import LibroRegistrosLibre from "@/pages/admin/libro-registros-libre";
 import LibroRegistrosClientPage from "@/pages/admin/libro-registros-client";
 import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
@@ -255,6 +256,13 @@ function Router() {
         <Layout>
           {/* Componente de prueba sin protección de autenticación */}
           <LibroRegistrosSimpleTest />
+        </Layout>
+      </Route>
+      
+      {/* Ruta pública para el Libro de Registros - completamente libre sin autenticación */}
+      <Route path="/admin/libro-libre">
+        <Layout>
+          <LibroRegistrosLibre />
         </Layout>
       </Route>
       
