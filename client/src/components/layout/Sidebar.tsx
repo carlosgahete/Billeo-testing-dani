@@ -244,20 +244,23 @@ const Sidebar = ({
     });
   }
   
-  // Un único enlace al Libro de Registros (solo para superadmin)
-  if (userIsSuperAdmin) {
+  // Enlaces para administradores
+  if (userIsSuperAdmin || userIsAdmin) {
+    // Libro de Registros (para superadmin y admin normal)
     adminItems.push({
-      href: "/admin/libro-simple/1",  // ID 1 para datos de demo
+      href: "/admin/libro-registros",  // Ruta general para el libro de registros
       icon: <FileText size={20} />,
       label: "Libro de Registros",
     });
     
     // Enlace para asignación de clientes a administradores (solo superadmin)
-    adminItems.push({
-      href: "/admin/client-assignment",
-      icon: <Users size={20} />,
-      label: "Asignar Clientes",
-    });
+    if (userIsSuperAdmin) {
+      adminItems.push({
+        href: "/admin/client-assignment",
+        icon: <Users size={20} />,
+        label: "Asignar Clientes",
+      });
+    }
   }
   
   console.log("Admin items:", adminItems);
