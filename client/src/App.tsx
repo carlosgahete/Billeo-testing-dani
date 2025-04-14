@@ -37,6 +37,7 @@ import SelectUserPage from "@/pages/admin/select-user";
 import LibroRegistrosPage from "@/pages/admin/libro-registros";
 import LibroRegistrosSimplePage from "@/pages/admin/libro-registros-simple";
 import EnhancedLibroRegistros from "@/pages/admin/libro-registros-enhanced";
+import ClientAssignmentPage from "@/pages/admin/client-assignment";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import ProfilePage from "@/pages/profile-page";
@@ -180,6 +181,11 @@ function Router() {
       <Route path="/admin/users">
         <Layout>
           <ProtectedAdminRoute path="/admin/users" component={UsersManagementPage} />
+        </Layout>
+      </Route>
+      <Route path="/admin/client-assignment">
+        <Layout>
+          <ProtectedAdminRoute path="/admin/client-assignment" component={ClientAssignmentPage} />
         </Layout>
       </Route>
       <Route path="/admin/select-user">

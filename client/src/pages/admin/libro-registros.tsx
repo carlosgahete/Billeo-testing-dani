@@ -107,8 +107,64 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
     return <Redirect to="/auth" />;
   }
   
+  // Variable para determinar si el usuario actual es superadmin
+  const isSuperAdmin = user && (user.role === "superadmin" || user.role === "SUPERADMIN");
+  
+  // Estado para clientes asignados (solo para administradores no superadmin)
+  const [assignedClients, setAssignedClients] = useState<number[]>([]);
+  const [hasPermissionForUser, setHasPermissionForUser] = useState<boolean>(true);
+  const [userIsChecking, setUserIsChecking] = useState<boolean>(true);
+
+  // Primero verificar si el admin tiene acceso a este usuario
+  useEffect(() => {
+    const checkAssignedClients = async () => {
+      // Si es superadmin, tiene acceso a todos los clientes
+      if (isSuperAdmin) {
+        setHasPermissionForUser(true);
+        setUserIsChecking(false);
+        return;
+      }
+      
+      try {
+        // Obtener los clientes asignados al administrador actual
+        const response = await apiRequest("GET", "/api/admin/assigned-clients");
+        const assignedClientsData = await response.json();
+        
+        // Guardar los IDs de clientes asignados
+        const clientIds = assignedClientsData.map((client: any) => client.id);
+        setAssignedClients(clientIds);
+        
+        // Verificar si el usuario actual tiene permiso para ver este cliente
+        const targetUserResponse = await apiRequest("GET", `/api/client/by-user/${userId}`);
+        
+        if (targetUserResponse.ok) {
+          const userClient = await targetUserResponse.json();
+          
+          // Verificar si el cliente del usuario está en la lista de clientes asignados
+          const hasPermission = userClient && clientIds.includes(userClient.id);
+          setHasPermissionForUser(hasPermission);
+        } else {
+          // Si no hay cliente para el usuario o hay un error, no tiene permiso
+          setHasPermissionForUser(false);
+        }
+      } catch (error) {
+        console.error("Error al verificar clientes asignados:", error);
+        setHasPermissionForUser(false);
+      } finally {
+        setUserIsChecking(false);
+      }
+    };
+    
+    checkAssignedClients();
+  }, [userId, isSuperAdmin, user]);
+
   // Carga de datos
   useEffect(() => {
+    // No cargar datos si estamos verificando el permiso o si no hay permiso
+    if (userIsChecking || !hasPermissionForUser) {
+      return;
+    }
+    
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -181,7 +237,7 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
     };
     
     fetchData();
-  }, [userId]);
+  }, [userId, hasPermissionForUser, userIsChecking]);
   
   // Aplicar filtros
   useEffect(() => {
@@ -437,6 +493,33 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
     }
   };
   
+  // Mostrar mensaje cuando el admin no tiene permiso para ver este usuario
+  if (!userIsChecking && !hasPermissionForUser && !isSuperAdmin) {
+    return (
+      <div className="container mx-auto py-6 max-w-7xl">
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center">
+              <CircleAlert className="mr-2 h-5 w-5" />
+              Acceso Denegado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-700 mb-4">
+              No tiene permisos para ver el libro de registros de este usuario ya que no tiene acceso a su cliente asociado.
+            </p>
+            <Button
+              onClick={() => navigate("/admin/select-user")}
+              variant="outline"
+            >
+              Volver a selección de usuario
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-6 max-w-7xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
