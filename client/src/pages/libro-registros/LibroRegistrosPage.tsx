@@ -632,56 +632,52 @@ export default function LibroRegistrosPage() {
       
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-start mb-3">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-blue-50 px-4 py-2 flex items-center">
             <FileText className="h-5 w-5 text-blue-600 mr-2" />
             <div className="text-sm font-medium">Facturas</div>
           </div>
-          <div>
+          <div className="p-4">
             <div className="text-2xl font-semibold">{summary.totalInvoices}</div>
             <div className="text-xs text-gray-500">Total emitidas</div>
-          </div>
-          <div className="mt-3">
-            <div className="text-lg font-semibold">{formatCurrency(summary.incomeTotal)}</div>
+            <div className="mt-3 text-lg font-semibold">{formatCurrency(summary.incomeTotal)}</div>
             <div className="text-xs text-gray-500">Importe total facturado</div>
           </div>
         </div>
         
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-start mb-3">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-yellow-50 px-4 py-2 flex items-center">
             <Download className="h-5 w-5 text-yellow-600 mr-2" />
             <div className="text-sm font-medium">Gastos</div>
           </div>
-          <div>
+          <div className="p-4">
             <div className="text-2xl font-semibold">
               {filteredTransactions.filter(t => t.type === 'expense').length}
             </div>
             <div className="text-xs text-gray-500">Transacciones</div>
-          </div>
-          <div className="mt-3">
-            <div className="text-lg font-semibold">{formatCurrency(summary.expenseTotal)}</div>
+            <div className="mt-3 text-lg font-semibold text-red-600">{formatCurrency(summary.expenseTotal)}</div>
             <div className="text-xs text-gray-500">Importe total gastado</div>
           </div>
         </div>
         
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-start mb-3">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-green-50 px-4 py-2 flex items-center">
             <FileText className="h-5 w-5 text-green-600 mr-2" />
             <div className="text-sm font-medium">Presupuestos</div>
           </div>
-          <div>
+          <div className="p-4">
             <div className="text-2xl font-semibold">{summary.totalQuotes}</div>
             <div className="text-xs text-gray-500">Total presupuestos</div>
           </div>
         </div>
         
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="flex items-start mb-3">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-red-50 px-4 py-2 flex items-center">
             <span className="font-bold text-red-600 mr-2">=</span>
             <div className="text-sm font-medium">Balance</div>
           </div>
-          <div>
-            <div className="text-2xl font-semibold text-red-700">{formatCurrency(summary.balance)}</div>
+          <div className="p-4">
+            <div className="text-2xl font-semibold text-red-600">{formatCurrency(summary.balance)}</div>
             <div className="text-xs text-gray-500">Resultado</div>
           </div>
         </div>
@@ -698,13 +694,13 @@ export default function LibroRegistrosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Número</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Fecha</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Cliente</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Base</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">IVA</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Total</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Estado</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Número</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Cliente</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Base</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">IVA</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Total</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -751,11 +747,11 @@ export default function LibroRegistrosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Fecha</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Descripción</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Categoría</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Tipo</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Importe</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Descripción</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Categoría</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Tipo</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Importe</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -779,7 +775,9 @@ export default function LibroRegistrosPage() {
                           {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-sm font-medium">{formatCurrency(parseFloat(transaction.amount))}</TableCell>
+                      <TableCell className={`py-3 px-4 text-sm font-medium ${transaction.type === 'expense' ? "text-red-600" : ""}`}>
+                        {formatCurrency(parseFloat(transaction.amount))}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -800,11 +798,11 @@ export default function LibroRegistrosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Número</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Fecha</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Cliente</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Total</TableHead>
-                  <TableHead className="py-2 px-4 bg-white dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">Estado</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Número</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Fecha</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Cliente</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Total</TableHead>
+                  <TableHead className="py-2 px-4 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 font-medium border-b border-gray-200 dark:border-gray-700">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
