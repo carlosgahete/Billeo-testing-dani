@@ -15,15 +15,19 @@ import {
 
 interface DatePickerWithRangeProps {
   className?: string;
-  date: DateRange;
-  onChange: (date: DateRange) => void;
+  date?: DateRange;
+  value?: DateRange;
+  onChange: (date: DateRange | undefined) => void;
 }
 
 export function DatePickerWithRange({
   className,
   date,
+  value,
   onChange,
 }: DatePickerWithRangeProps) {
+  // Utilizar value si se proporciona, sino usar date
+  const currentDate = value || date;
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>

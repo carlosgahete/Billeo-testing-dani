@@ -12,7 +12,8 @@ import {
   Edit, 
   Trash2, 
   ChevronDown,
-  Info
+  Info,
+  AlertCircle
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -196,8 +197,8 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
       }
     };
     
-    checkAssignedClients();
-  }, [userId, isSuperAdmin, user]);
+    checkPermissionForClient();
+  }, [userId, isSuperAdmin, user, assignedClients]);
 
   // Carga de datos
   useEffect(() => {
@@ -534,6 +535,83 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
     }
   };
   
+  // Mostrar selector de clientes para administradores normales cuando no hay userId
+  if (!userIsChecking && user?.role === "admin" && (!userId || userId === '') && assignedClients.length > 0) {
+    return (
+      <div className="container mx-auto py-6 max-w-7xl">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <FileText className="mr-2 h-5 w-5 text-primary" />
+              Libro de Registros
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6">
+              <Label htmlFor="client-select" className="mb-2 block">
+                Selecciona un cliente para ver su libro de registros:
+              </Label>
+              <Select 
+                onValueChange={(value) => {
+                  // Encontrar el cliente seleccionado
+                  const selectedClient = assignedClients.find(c => c.id.toString() === value);
+                  if (selectedClient && selectedClient.userId) {
+                    // Navegar a la página con el ID del usuario asociado al cliente
+                    navigate(`/admin/libro-registros/${selectedClient.userId}`);
+                  }
+                }}
+              >
+                <SelectTrigger id="client-select" className="w-full md:w-80">
+                  <SelectValue placeholder="Selecciona un cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assignedClients.map((client) => (
+                    <SelectItem key={client.id} value={client.id.toString()}>
+                      {client.name} ({client.taxId})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-gray-500 mt-4">
+              Como administrador, puedes ver el libro de registros de los clientes que tienes asignados.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Mostrar mensaje cuando no hay clientes asignados para admins regulares
+  if (!userIsChecking && user?.role === "admin" && (!userId || userId === '') && assignedClients.length === 0) {
+    return (
+      <div className="container mx-auto py-6 max-w-7xl">
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="text-yellow-800 flex items-center">
+              <Info className="mr-2 h-5 w-5" />
+              Sin clientes asignados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-yellow-700 mb-4">
+              No tienes clientes asignados para ver su libro de registros.
+            </p>
+            <p className="text-sm text-yellow-800 mb-4">
+              Contacta con un superadministrador para que te asigne clientes.
+            </p>
+            <Button
+              onClick={() => navigate("/")}
+              variant="outline"
+            >
+              Volver al Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   // Mostrar mensaje cuando el admin no tiene permiso para ver este usuario
   if (!userIsChecking && !hasPermissionForUser && !isSuperAdmin) {
     return (
@@ -541,7 +619,7 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
             <CardTitle className="text-red-800 flex items-center">
-              <CircleAlert className="mr-2 h-5 w-5" />
+              <AlertCircle className="mr-2 h-5 w-5" />
               Acceso Denegado
             </CardTitle>
           </CardHeader>
@@ -550,10 +628,10 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
               No tiene permisos para ver el libro de registros de este usuario ya que no tiene acceso a su cliente asociado.
             </p>
             <Button
-              onClick={() => navigate("/admin/select-user")}
+              onClick={() => navigate("/admin/libro-registros")}
               variant="outline"
             >
-              Volver a selección de usuario
+              Volver a selección de cliente
             </Button>
           </CardContent>
         </Card>
