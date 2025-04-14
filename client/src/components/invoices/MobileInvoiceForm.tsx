@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// Declaración global para el ID del timeout
+declare global {
+  interface Window {
+    saveTimeoutId: ReturnType<typeof setTimeout>;
+  }
+}
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -521,6 +528,11 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
         description: `La factura se ha ${messageAction} correctamente`,
       });
       
+      // Limpiar el estado guardado en localStorage
+      if (!isEditMode) {
+        clearSavedFormState();
+      }
+      
       // Invalidar las consultas relacionadas
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/public/stats/dashboard"] });
@@ -616,12 +628,51 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
   // Efecto optimizado que se ejecuta solo una vez para configurar los listeners
   useEffect(() => {
     // Suscribirse a los cambios en items para recalcular subtotales
-    const { unsubscribe } = form.watch((_, { name }) => {
+    const { unsubscribe } = form.watch((formValues, { name }) => {
+      // Recalcular totales si es necesario
       recalculateTotals(name);
+      
+      // Guardar el estado del formulario si no estamos en modo edición
+      if (!isEditMode) {
+        // Usado timeout para evitar guardar demasiado frecuentemente
+        clearTimeout(window.saveTimeoutId);
+        window.saveTimeoutId = setTimeout(() => {
+          saveFormState(formValues, invoiceId);
+        }, 1000); // Guardar después de 1 segundo de inactividad
+      }
     });
     
-    // Limpiar la suscripción al desmontar el componente
-    return () => unsubscribe();
+    // Configurar evento para detectar cuando el usuario cambia de pestaña
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && !isEditMode) {
+        // El usuario está saliendo de la página, guardamos el estado
+        const currentValues = form.getValues();
+        saveFormState(currentValues, invoiceId);
+        console.log('🔄 Guardando estado del formulario al cambiar de pestaña');
+      }
+    };
+    
+    // Configurar autosave cada 30 segundos
+    const intervalId = setInterval(() => {
+      if (!isEditMode) {
+        const currentValues = form.getValues();
+        saveFormState(currentValues, invoiceId);
+        console.log('🔄 Autoguardado periódico del formulario');
+      }
+    }, 30000);
+    
+    // Escuchar eventos de visibilidad
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Limpiar suscripciones al desmontar el componente
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
+      if (window.saveTimeoutId) {
+        clearTimeout(window.saveTimeoutId);
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
