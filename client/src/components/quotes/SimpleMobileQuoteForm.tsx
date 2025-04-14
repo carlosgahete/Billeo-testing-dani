@@ -194,9 +194,9 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   return (
     <>
       <div className="bg-white min-h-screen pb-32 max-w-md mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6 px-4 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-6 px-4 pt-8 mt-6">
           {/* Botón de volver estilo Apple iOS */}
-          <div className="mb-2">
+          <div className="mb-3">
             <button 
               type="button"
               onClick={() => navigate("/quotes")} 
