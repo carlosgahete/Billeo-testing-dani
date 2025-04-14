@@ -613,9 +613,8 @@ export default function SimpleLibroRegistros() {
   
   // Función para descargar como Excel (CSV mejorado)
   const handleDownloadExcel = () => {
-    // Obtener los datos filtrados actualizados
-    const filteredData = getFilteredData();
-    if (!filteredData) return;
+    // Verificar que hay datos filtrados
+    if (!getFilteredData()) return;
     
     // Información del encabezado
     const titleRow = [`LIBRO DE REGISTROS - Usuario: ${userId || 'Todos'}`];
