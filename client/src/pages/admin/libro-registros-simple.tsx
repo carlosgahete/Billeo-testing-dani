@@ -636,23 +636,23 @@ export default function SimpleLibroRegistros() {
     const summaryHeaderRow = [`RESUMEN`];
     const summaryDataRows = [
       ['Concepto', 'Cantidad', 'Importe'],
-      ['Facturas', filteredData.summary.totalInvoices, formatCurrency(filteredData.summary.incomeTotal)],
-      ['Gastos', filteredData.summary.totalTransactions, formatCurrency(filteredData.summary.expenseTotal)],
-      ['Presupuestos', filteredData.summary.totalQuotes, ''],
-      ['Balance', '', formatCurrency(filteredData.summary.incomeTotal - filteredData.summary.expenseTotal)]
+      ['Facturas', getFilteredData().summary.totalInvoices, formatCurrency(getFilteredData().summary.incomeTotal)],
+      ['Gastos', getFilteredData().summary.totalTransactions, formatCurrency(getFilteredData().summary.expenseTotal)],
+      ['Presupuestos', getFilteredData().summary.totalQuotes, ''],
+      ['Balance', '', formatCurrency(getFilteredData().summary.incomeTotal - getFilteredData().summary.expenseTotal)]
     ];
     
     // Espaciador
     const emptyRow = [''];
     
     // Separar las transacciones por tipo
-    const incomeTransactions = filteredData.transactions.filter(transaction => transaction.type === 'income');
-    const expenseTransactions = filteredData.transactions.filter(transaction => transaction.type === 'expense');
+    const incomeTransactions = getFilteredData().transactions.filter(transaction => transaction.type === 'income');
+    const expenseTransactions = getFilteredData().transactions.filter(transaction => transaction.type === 'expense');
     
     // Sección de facturas
-    const invoiceHeaderRow = filteredData.invoices.length > 0 ? [`FACTURAS EMITIDAS`] : [];
-    const invoiceColumnsRow = filteredData.invoices.length > 0 ? [['Número', 'Fecha', 'Cliente/Proveedor', 'Base Imponible', 'IVA', 'Total', 'Estado']] : [];
-    const invoiceRows = filteredData.invoices.map(invoice => [
+    const invoiceHeaderRow = getFilteredData().invoices.length > 0 ? [`FACTURAS EMITIDAS`] : [];
+    const invoiceColumnsRow = getFilteredData().invoices.length > 0 ? [['Número', 'Fecha', 'Cliente/Proveedor', 'Base Imponible', 'IVA', 'Total', 'Estado']] : [];
+    const invoiceRows = getFilteredData().invoices.map(invoice => [
       invoice.number,
       formatDate(invoice.issueDate),
       invoice.client,
@@ -683,9 +683,9 @@ export default function SimpleLibroRegistros() {
     ]);
     
     // Sección de presupuestos
-    const quoteHeaderRow = filteredData.quotes.length > 0 ? [`PRESUPUESTOS`] : [];
-    const quoteColumnsRow = filteredData.quotes.length > 0 ? [['Número', 'Fecha', 'Cliente/Proveedor', 'Total', 'Estado']] : [];
-    const quoteRows = filteredData.quotes.map(quote => [
+    const quoteHeaderRow = getFilteredData().quotes.length > 0 ? [`PRESUPUESTOS`] : [];
+    const quoteColumnsRow = getFilteredData().quotes.length > 0 ? [['Número', 'Fecha', 'Cliente/Proveedor', 'Total', 'Estado']] : [];
+    const quoteRows = getFilteredData().quotes.map(quote => [
       quote.number,
       formatDate(quote.issueDate),
       quote.clientName,
@@ -1084,7 +1084,7 @@ export default function SimpleLibroRegistros() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {filteredData?.transactions && filteredData.transactions.length > 0 ? (
+              {getFilteredData()?.transactions && getFilteredData().transactions.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="w-full">
                     <TableHeader>
@@ -1097,7 +1097,7 @@ export default function SimpleLibroRegistros() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredData.transactions.slice(0, 14).map((transaction) => (
+                      {getFilteredData().transactions.slice(0, 14).map((transaction) => (
                         <TableRow key={transaction.id}>
                           <TableCell>{formatDate(transaction.date)}</TableCell>
                           <TableCell className="font-medium truncate max-w-[150px]">{transaction.description}</TableCell>
@@ -1117,9 +1117,9 @@ export default function SimpleLibroRegistros() {
                       ))}
                     </TableBody>
                   </Table>
-                  {filteredData.transactions.length > 14 && (
+                  {getFilteredData().transactions.length > 14 && (
                     <div className="p-3 text-center text-sm text-gray-500">
-                      Mostrando 14 de {filteredData.transactions.length} transacciones
+                      Mostrando 14 de {getFilteredData().transactions.length} transacciones
                     </div>
                   )}
                 </div>
