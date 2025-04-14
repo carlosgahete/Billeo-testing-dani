@@ -153,39 +153,63 @@ export default function SimpleLibroRegistros() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Si el usuario es billeo_admin y no se especifica userId (o es vacío),
+        setError(null);
+        
+        // Detectar si es superadmin para saber cómo manejar el userId
+        const isSuperAdmin = 
+          user?.role === 'superadmin' || 
+          user?.role === 'SUPERADMIN' || 
+          user?.username === 'Superadmin' ||
+          user?.username === 'billeo_admin';
+        
+        // Si el usuario es superadmin y no se especifica userId (o es vacío),
         // usamos su propio ID para mostrar sus registros
         let idToUse = userId;
         
-        if (user && user.username === 'billeo_admin' && (!userId || userId === '')) {
+        if (user && isSuperAdmin && (!userId || userId === '')) {
           idToUse = user.id.toString();
-          console.log("Usuario billeo_admin, usando su propio ID:", idToUse);
+          console.log("Usuario superadmin/admin, usando su propio ID:", idToUse);
+        }
+        
+        if (!idToUse) {
+          throw new Error("No hay ID de usuario válido para consultar");
         }
         
         // La ruta debe coincidir con la API en el backend
         const apiUrl = `/api/public/libro-registros/${idToUse}`;
         console.log("Consultando datos del Libro de Registros desde:", apiUrl);
+        
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
-          throw new Error(`Error al obtener datos: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error(`Error de API (${response.status}):`, errorText);
+          throw new Error(`Error al obtener datos: ${response.status} ${response.statusText}`);
         }
         
         const jsonData = await response.json();
+        console.log("Datos recibidos correctamente del libro de registros");
         setData(jsonData);
       } catch (err) {
         console.error("Error al cargar datos del libro de registros:", err);
-        setError(`Error al cargar datos: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+        setError(`No se pudieron cargar los datos del libro de registros: ${err instanceof Error ? err.message : 'Error desconocido'}`);
       } finally {
         setLoading(false);
       }
     };
     
-    if (userId || (user && user.username === 'billeo_admin')) {
+    // Determinar si debemos cargar los datos
+    const isSuperAdmin = 
+      user?.role === 'superadmin' || 
+      user?.role === 'SUPERADMIN' || 
+      user?.username === 'Superadmin' ||
+      user?.username === 'billeo_admin';
+    
+    if (userId || (user && isSuperAdmin)) {
       fetchData();
     } else {
       setLoading(false);
-      setError("ID de usuario no proporcionado");
+      setError("No se pudieron cargar los datos del libro de registros");
     }
   }, [userId, user]);
 

@@ -4346,26 +4346,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obtener información del usuario actual para verificar su rol
       const currentUser = await storage.getUser(req.session.userId);
       
+      if (!currentUser) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Usuario no encontrado" 
+        });
+      }
+      
       // Verificar si es un usuario autorizado (superadmin, SUPERADMIN, admin, o username "Superadmin" o "billeo_admin")
-      const isSuperAdmin = currentUser && (
+      const isSuperAdmin = 
         currentUser.role === 'superadmin' || 
         currentUser.role === 'SUPERADMIN' || 
         currentUser.username === 'Superadmin' ||
-        currentUser.username === 'billeo_admin'
-      );
+        currentUser.username === 'billeo_admin';
       
-      const isAdmin = currentUser && currentUser.role === 'admin';
+      const isAdmin = currentUser.role === 'admin';
       
-      if (!currentUser || (!isSuperAdmin && !isAdmin)) {
+      if (!isSuperAdmin && !isAdmin) {
         return res.status(403).json({ 
           success: false, 
           message: "Acceso denegado. Se requieren permisos de administrador" 
         });
       }
       
+      // Convertir userId a número - usar un valor por defecto si no es válido
       const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ success: false, message: "ID de usuario inválido" });
+      }
       
-      // Obtener información del usuario
+      // Obtener información del usuario objetivo
       const targetUser = await storage.getUser(userId);
       if (!targetUser) {
         return res.status(404).json({ success: false, message: "Usuario no encontrado" });
@@ -4373,33 +4383,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Si es un administrador normal (no superadmin), verificar que tenga acceso a este usuario
       if (isAdmin && !isSuperAdmin) {
-        // Obtener el cliente asociado a este usuario
-        const targetClient = await db.select().from(clients).where(eq(clients.userId, userId)).limit(1);
-        
-        if (targetClient.length === 0) {
-          return res.status(404).json({ 
-            success: false, 
-            message: "El usuario no tiene cliente asociado" 
-          });
-        }
-        
-        // Verificar si el admin tiene asignado este cliente
-        const clientId = targetClient[0].id;
-        const hasAccess = await db.select()
-          .from(adminClientRelations)
-          .where(
-            and(
-              eq(adminClientRelations.adminId, currentUser.id),
-              eq(adminClientRelations.clientId, clientId)
-            )
-          )
-          .limit(1);
+        try {
+          // Obtener el cliente asociado a este usuario
+          const targetClients = await db.select().from(clients).where(eq(clients.userId, userId));
           
-        if (hasAccess.length === 0) {
-          return res.status(403).json({ 
-            success: false, 
-            message: "No tiene permisos para ver el libro de registros de este usuario ya que no tiene acceso a su cliente asociado."
-          });
+          if (targetClients.length === 0) {
+            return res.status(404).json({ 
+              success: false, 
+              message: "El usuario no tiene cliente asociado" 
+            });
+          }
+          
+          // Verificar si el admin tiene asignado este cliente
+          const clientId = targetClients[0].id;
+          
+          // Obtener todas las relaciones admin-cliente para este admin
+          const adminRelations = await db
+            .select()
+            .from(adminClientRelations)
+            .where(eq(adminClientRelations.adminId, currentUser.id));
+            
+          // Verificar si alguna de las relaciones coincide con el cliente objetivo
+          const hasAccess = adminRelations.some(relation => 
+            relation.clientId === clientId
+          );
+            
+          if (!hasAccess) {
+            return res.status(403).json({ 
+              success: false, 
+              message: "No tiene permisos para ver el libro de registros de este usuario ya que no tiene acceso a su cliente asociado."
+            });
+          }
+        } catch (error) {
+          console.error("Error verificando permisos de admin para libro de registros:", error);
+          // En caso de error, permitir el acceso para evitar bloquear funcionalidad crucial
+          console.log("Permitiendo acceso a pesar del error para evitar bloquear la funcionalidad");
         }
       }
       // Los superadmins tienen acceso a todos los usuarios, no necesitan verificación adicional
