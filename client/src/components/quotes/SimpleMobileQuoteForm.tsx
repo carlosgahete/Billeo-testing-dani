@@ -194,7 +194,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   return (
     <>
       <div className="bg-white min-h-screen pb-32 max-w-md mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-3 px-4 pt-14 -mt-20">
+        <form onSubmit={handleSubmit} className="space-y-3 px-4 pt-12 -mt-24">
           {/* Botón de volver estilo Apple iOS */}
           <div className="mb-1">
             <button 
