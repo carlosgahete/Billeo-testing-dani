@@ -143,10 +143,9 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   });
   
   // Mutation para crear un nuevo cliente
-  const createClientMutation = useMutation<ClientResponse, Error, typeof newClient>({
+  const createClientMutation = useMutation<any, Error, typeof newClient>({
     mutationFn: async (data) => {
-      const response = await apiRequest("POST", "/api/clients", data);
-      return response as ClientResponse;
+      return await apiRequest("POST", "/api/clients", data);
     },
     onSuccess: (response) => {
       // Actualizar la lista de clientes
@@ -627,14 +626,14 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
 
       {/* Diálogo para añadir nuevo cliente */}
       <Dialog open={showAddClientDialog} onOpenChange={setShowAddClientDialog}>
-        <DialogContent className="sm:max-w-[425px] rounded-xl border-0 p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[425px] rounded-xl border-0 p-0 overflow-hidden max-h-[90vh] flex flex-col">
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <DialogHeader>
               <DialogTitle className="text-center text-base">Añadir nuevo cliente</DialogTitle>
             </DialogHeader>
           </div>
           
-          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="p-6 space-y-4 flex-1 overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="client-name" className="text-sm text-gray-600">
                 Nombre <span className="text-[#007AFF] text-xs">*</span>
