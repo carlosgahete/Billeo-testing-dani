@@ -193,143 +193,177 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
   
   return (
     <>
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">
-          {quoteId ? "Editar presupuesto" : "Nuevo presupuesto"} 
-          <span className="text-indigo-500 ml-2">Simple</span>
-        </h2>
-        
-        {/* Selector de cliente */}
-        <div className="form-group mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Cliente
-          </label>
-          <select
-            className="w-full p-2 border rounded"
-            value={selectedClientId || ""}
-            onChange={(e) => setSelectedClientId(Number(e.target.value))}
-            required
+      <div className="bg-white min-h-screen px-4 py-6 pb-32 max-w-md mx-auto">
+        {/* Header con botón de retroceso estilo iOS */}
+        <div className="flex items-center mb-6">
+          <button 
+            onClick={() => navigate("/quotes")} 
+            className="text-[#007AFF] flex items-center mr-auto"
           >
-            <option value="">Seleccionar cliente</option>
-            {clients.map((client: any) => (
-              <option key={client.id} value={client.id}>
-                {client.name} {client.taxId ? `(${client.taxId})` : ''}
-              </option>
-            ))}
-          </select>
+            <ChevronLeft className="h-5 w-5" />
+            <span>Volver</span>
+          </button>
+          <h2 className="text-xl font-semibold text-center flex-1 -ml-20">
+            {quoteId ? "Editar" : "Nuevo"} 
+          </h2>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">
-              Número de presupuesto
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Selector de cliente con estilo iOS */}
+          <div className="form-group mb-6">
+            <div className="flex justify-between mb-2">
+              <label className="text-sm text-gray-600 font-medium">
+                Cliente
+              </label>
+              <span className="text-xs text-[#007AFF]">Obligatorio</span>
+            </div>
+            <div className="relative">
+              <select
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 appearance-none text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                value={selectedClientId || ""}
+                onChange={(e) => setSelectedClientId(Number(e.target.value))}
+                required
+              >
+                <option value="">Seleccionar cliente</option>
+                {clients.map((client: any) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} {client.taxId ? `(${client.taxId})` : ''}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+          
+          {/* Número de presupuesto */}
+          <div className="form-group mb-6">
+            <div className="flex justify-between mb-2">
+              <label className="text-sm text-gray-600 font-medium">
+                Número de presupuesto
+              </label>
+              <span className="text-xs text-[#007AFF]">Obligatorio</span>
+            </div>
             <input
               type="text"
               value={quoteNumber}
               onChange={(e) => setQuoteNumber(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
               placeholder="P-2023-001"
               required
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
-            <div className="form-group">
-              <label className="block text-sm font-medium mb-1">
-                Fecha emisión
-              </label>
-              <input
-                type="date"
-                value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div className="form-group">
-              <label className="block text-sm font-medium mb-1">
-                Válido hasta
-              </label>
-              <input
-                type="date"
-                value={validUntil}
-                onChange={(e) => setValidUntil(e.target.value)}
-                className="w-full p-2 border rounded"
-              />
+          {/* Fechas con estilo iOS */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <h3 className="text-sm text-gray-600 font-medium mb-3">Fechas</h3>
+            <div className="space-y-4">
+              <div className="form-group">
+                <label className="text-sm text-gray-600 block mb-2">
+                  Fecha emisión
+                </label>
+                <input
+                  type="date"
+                  value={issueDate}
+                  onChange={(e) => setIssueDate(e.target.value)}
+                  className="w-full p-3 bg-white rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                />
+              </div>
+              <div className="form-group">
+                <label className="text-sm text-gray-600 block mb-2">
+                  Válido hasta
+                </label>
+                <input
+                  type="date"
+                  value={validUntil}
+                  onChange={(e) => setValidUntil(e.target.value)}
+                  className="w-full p-3 bg-white rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                />
+              </div>
             </div>
           </div>
           
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">
+          {/* Estado del presupuesto */}
+          <div className="form-group mb-6">
+            <label className="text-sm text-gray-600 block mb-2">
               Estado
             </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="draft">Borrador</option>
-              <option value="sent">Enviado</option>
-              <option value="accepted">Aceptado</option>
-              <option value="rejected">Rechazado</option>
-            </select>
+            <div className="relative">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 appearance-none text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+              >
+                <option value="draft">Borrador</option>
+                <option value="sent">Enviado</option>
+                <option value="accepted">Aceptado</option>
+                <option value="rejected">Rechazado</option>
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
           </div>
           
-          {/* Campos para subtotal e IVA */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="form-group">
-              <label className="block text-sm font-medium mb-1">
-                Subtotal (€)
-              </label>
-              <input
-                type="number"
-                value={subtotal}
-                onChange={(e) => setSubtotal(parseFloat(e.target.value) || 0)}
-                className="w-full p-2 border rounded"
-                step="0.01"
-              />
-            </div>
-            <div className="form-group">
-              <label className="block text-sm font-medium mb-1">
-                IVA (€)
-              </label>
-              <input
-                type="number"
-                value={tax}
-                onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
-                className="w-full p-2 border rounded"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-sm font-medium">Total estimado:</span>
-                <span className="text-indigo-600 font-semibold">{calculateTotal().toFixed(2)}€</span>
+          {/* Campos para importes */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <h3 className="text-sm text-gray-600 font-medium mb-3">Importes</h3>
+            <div className="space-y-4">
+              <div className="form-group">
+                <label className="text-sm text-gray-600 block mb-2">
+                  Subtotal (€)
+                </label>
+                <input
+                  type="number"
+                  value={subtotal}
+                  onChange={(e) => setSubtotal(parseFloat(e.target.value) || 0)}
+                  className="w-full p-3 bg-white rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  step="0.01"
+                />
+              </div>
+              <div className="form-group">
+                <label className="text-sm text-gray-600 block mb-2">
+                  IVA (€)
+                </label>
+                <input
+                  type="number"
+                  value={tax}
+                  onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
+                  className="w-full p-3 bg-white rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+                  step="0.01"
+                />
+              </div>
+              
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Total estimado:</span>
+                  <span className="text-lg font-semibold text-[#007AFF]">{calculateTotal().toFixed(2)}€</span>
+                </div>
               </div>
             </div>
           </div>
           
           {/* Impuestos adicionales */}
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-medium">Otros impuestos</h3>
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm text-gray-600 font-medium">Impuestos adicionales</h3>
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={handleAddTax}
-                className="h-7 px-2"
+                className="h-8 px-3 text-[#007AFF] hover:bg-blue-50"
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />
+                <Plus className="h-4 w-4 mr-1" />
                 <span className="text-xs">Añadir</span>
               </Button>
             </div>
             
             {additionalTaxes.length > 0 ? (
-              <div className="space-y-2 bg-gray-50 p-2 rounded">
+              <div className="space-y-2 bg-white p-3 rounded-xl">
                 {additionalTaxes.map((tax, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-sm p-1 border-b">
+                  <div key={idx} className="flex justify-between items-center text-sm py-2 px-1 border-b border-gray-100">
                     <div>
                       <span className="font-medium">{tax.name}:</span>
                       <span className="ml-1">
@@ -341,45 +375,47 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveTax(idx)}
-                      className="h-6 w-6 p-0"
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-red-500 hover:bg-transparent"
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500 italic">No hay impuestos adicionales</p>
+              <div className="bg-white p-4 rounded-xl flex items-center justify-center h-16">
+                <p className="text-sm text-gray-400">No hay impuestos adicionales</p>
+              </div>
             )}
           </div>
           
           {/* Notas */}
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">
+          <div className="form-group mb-6">
+            <label className="text-sm text-gray-600 block mb-2">
               Notas
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full p-2 border rounded"
-              rows={3}
+              className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
+              rows={4}
               placeholder="Información adicional para el cliente..."
             />
           </div>
           
           {/* Mostrar los ítems del presupuesto (solo lectura) */}
           {initialData?.items && initialData.items.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium mb-2">Ítems del presupuesto:</h3>
-              <div className="max-h-60 overflow-y-auto">
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <h3 className="text-sm text-gray-600 font-medium mb-3">Ítems del presupuesto</h3>
+              <div className="max-h-72 overflow-y-auto">
                 {initialData.items.map((item: any, idx: number) => (
-                  <div key={idx} className="p-2 border-b text-sm">
-                    <div className="font-medium">{item.description}</div>
+                  <div key={idx} className="p-3 mb-2 bg-white rounded-xl border border-gray-100 text-sm">
+                    <div className="font-medium mb-1">{item.description}</div>
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>{item.quantity} x {parseFloat(String(item.unitPrice || 0)).toFixed(2)}€</span>
                       <span>IVA: {parseFloat(String(item.taxRate || 0))}%</span>
                     </div>
-                    <div className="text-right text-xs font-medium">
+                    <div className="text-right text-xs font-medium mt-1">
                       Subtotal: {parseFloat(String(item.subtotal || 0)).toFixed(2)}€
                     </div>
                   </div>
@@ -388,53 +424,64 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
             </div>
           )}
           
-          <div className="mt-6 flex justify-between">
-            <Button 
-              type="button" 
-              variant="outline"
-              onClick={() => navigate("/quotes")}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Procesando...
-                </span>
-              ) : (
-                quoteId ? "Actualizar" : "Crear"
-              )}
-            </Button>
+          {/* Botones de acción */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white bg-opacity-95 backdrop-blur-sm py-4 px-4 border-t border-gray-100">
+            <div className="flex justify-between max-w-md mx-auto">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => navigate("/quotes")}
+                className="w-[48%] border-gray-300 text-gray-600"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateMutation.isPending}
+                className="w-[48%] bg-[#007AFF] hover:bg-blue-600"
+              >
+                {updateMutation.isPending ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Procesando...
+                  </span>
+                ) : (
+                  quoteId ? "Actualizar" : "Crear"
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
 
-      {/* Diálogo para añadir impuesto */}
+      {/* Diálogo para añadir impuesto con estilo iOS */}
       <Dialog open={showAddTaxDialog} onOpenChange={setShowAddTaxDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Añadir impuesto</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[425px] rounded-xl border-0 p-0 overflow-hidden">
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <DialogHeader>
+              <DialogTitle className="text-center text-base">Añadir impuesto</DialogTitle>
+            </DialogHeader>
+          </div>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="tax-name" className="text-right">
+          <div className="p-6 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="tax-name" className="text-sm text-gray-600">
                 Nombre
               </Label>
               <input
                 id="tax-name"
                 value={newTax.name}
                 onChange={(e) => handleTaxChange('name', e.target.value)}
-                className="col-span-3 p-2 border rounded"
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
                 placeholder="IRPF"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="tax-amount" className="text-right">
+            
+            <div className="space-y-2">
+              <Label htmlFor="tax-amount" className="text-sm text-gray-600">
                 Valor
               </Label>
               <input
@@ -442,40 +489,46 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
                 type="number"
                 value={newTax.amount}
                 onChange={(e) => handleTaxChange('amount', parseFloat(e.target.value) || 0)}
-                className="col-span-3 p-2 border rounded"
+                className="w-full p-3 bg-[#F7F9FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#007AFF]"
                 placeholder="15"
                 step="0.01"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="tax-percentage" className="text-right">
+            
+            <div className="flex items-center justify-between py-2">
+              <Label htmlFor="tax-percentage" className="text-sm text-gray-600">
                 Es porcentaje
               </Label>
-              <div className="col-span-3 flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Switch
                   id="tax-percentage"
                   checked={newTax.isPercentage}
                   onCheckedChange={(checked) => handleTaxChange('isPercentage', checked)}
                 />
-                <Label htmlFor="tax-percentage" className="cursor-pointer">
+                <Label htmlFor="tax-percentage" className="cursor-pointer text-sm">
                   {newTax.isPercentage ? "Sí" : "No"}
                 </Label>
               </div>
             </div>
           </div>
           
-          <DialogFooter>
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => setShowAddTaxDialog(false)}
+              className="text-[#007AFF] hover:bg-blue-50"
             >
               Cancelar
             </Button>
-            <Button type="button" onClick={handleSaveTax}>
-              Guardar
+            <Button 
+              type="button" 
+              onClick={handleSaveTax}
+              className="bg-[#007AFF] hover:bg-blue-600"
+            >
+              Añadir
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
