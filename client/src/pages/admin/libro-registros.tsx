@@ -108,16 +108,54 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
   }
   
   // Variable para determinar si el usuario actual es superadmin
-  const isSuperAdmin = user && (user.role === "superadmin" || user.role === "SUPERADMIN");
+  const isSuperAdmin = user && (user.role === "superadmin" || user.role === "SUPERADMIN" || user.username === "billeo_admin" || user.username === "Superadmin");
   
   // Estado para clientes asignados (solo para administradores no superadmin)
-  const [assignedClients, setAssignedClients] = useState<number[]>([]);
+  const [assignedClients, setAssignedClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [hasPermissionForUser, setHasPermissionForUser] = useState<boolean>(true);
   const [userIsChecking, setUserIsChecking] = useState<boolean>(true);
 
+  // Cargar clientes asignados al administrador
+  useEffect(() => {
+    const loadAssignedClients = async () => {
+      try {
+        // Obtener los clientes asignados al administrador actual
+        const response = await apiRequest("GET", "/api/admin/assigned-clients");
+        if (response.ok) {
+          const clientsData = await response.json();
+          setAssignedClients(clientsData);
+          
+          // Si hay clientes asignados y no hay un cliente seleccionado,
+          // seleccionar el primero por defecto
+          if (clientsData.length > 0 && !selectedClientId) {
+            setSelectedClientId(String(clientsData[0].id));
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar clientes asignados:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los clientes asignados",
+          variant: "destructive"
+        });
+      } finally {
+        setUserIsChecking(false);
+      }
+    };
+    
+    if (user?.role === "admin") {
+      loadAssignedClients();
+    } else {
+      // Para superadmin, no es necesario verificar permisos
+      setUserIsChecking(false);
+      setHasPermissionForUser(true);
+    }
+  }, [user]);
+
   // Primero verificar si el admin tiene acceso a este usuario
   useEffect(() => {
-    const checkAssignedClients = async () => {
+    const checkPermissionForClient = async () => {
       // Si es superadmin, tiene acceso a todos los clientes
       if (isSuperAdmin) {
         setHasPermissionForUser(true);
@@ -125,27 +163,30 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
         return;
       }
       
+      // Si no hay ID de usuario especificado pero hay clientes asignados,
+      // consideramos que tiene permiso (mostrará el selector de clientes)
+      if (!userId && assignedClients.length > 0) {
+        setHasPermissionForUser(true);
+        setUserIsChecking(false);
+        return;
+      }
+      
       try {
-        // Obtener los clientes asignados al administrador actual
-        const response = await apiRequest("GET", "/api/admin/assigned-clients");
-        const assignedClientsData = await response.json();
-        
-        // Guardar los IDs de clientes asignados
-        const clientIds = assignedClientsData.map((client: any) => client.id);
-        setAssignedClients(clientIds);
-        
         // Verificar si el usuario actual tiene permiso para ver este cliente
-        const targetUserResponse = await apiRequest("GET", `/api/client/by-user/${userId}`);
-        
-        if (targetUserResponse.ok) {
-          const userClient = await targetUserResponse.json();
+        if (userId) {
+          const targetUserResponse = await apiRequest("GET", `/api/client/by-user/${userId}`);
           
-          // Verificar si el cliente del usuario está en la lista de clientes asignados
-          const hasPermission = userClient && clientIds.includes(userClient.id);
-          setHasPermissionForUser(hasPermission);
-        } else {
-          // Si no hay cliente para el usuario o hay un error, no tiene permiso
-          setHasPermissionForUser(false);
+          if (targetUserResponse.ok) {
+            const userClient = await targetUserResponse.json();
+            
+            // Verificar si el cliente del usuario está en la lista de clientes asignados
+            const clientIds = assignedClients.map((client: any) => client.id);
+            const hasPermission = userClient && clientIds.includes(userClient.id);
+            setHasPermissionForUser(hasPermission);
+          } else {
+            // Si no hay cliente para el usuario o hay un error, no tiene permiso
+            setHasPermissionForUser(false);
+          }
         }
       } catch (error) {
         console.error("Error al verificar clientes asignados:", error);
