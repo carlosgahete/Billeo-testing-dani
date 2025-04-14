@@ -49,6 +49,7 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
   const irpfAmountRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const providerRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLInputElement>(null);
   
   // Inicializar los valores una sola vez al montar
   useEffect(() => {
@@ -74,6 +75,10 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
     
     if (providerRef.current) {
       providerRef.current.value = extractedData?.provider || '';
+    }
+    
+    if (descriptionRef.current) {
+      descriptionRef.current.value = transaction.description || '';
     }
     
     // Mostrar los montos de impuestos iniciales
@@ -153,7 +158,8 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
         tax: taxRef.current?.value ? parseFloat(taxRef.current.value) : null,
         irpf: irpfRef.current?.value ? parseFloat(irpfRef.current.value) : null,
         date: dateRef.current?.value ? new Date(dateRef.current.value) : new Date(transaction.date),
-        provider: providerRef.current?.value || ''
+        provider: providerRef.current?.value || '',
+        description: descriptionRef.current?.value || ''
       };
       
       // Calcular montos de impuestos
@@ -189,7 +195,7 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
       // Título y descripción
       const providerName = formData.provider || extractedData?.provider || 'Proveedor';
       const updatedTitle = transaction.title || `Factura - ${providerName}`;
-      const updatedDescription = transaction.description || "";
+      const updatedDescription = formData.description || "";
       
       // Crear el objeto de actualización
       const updatedTransaction = {
@@ -251,9 +257,10 @@ Proveedor: ${formData.provider || ""}`
         <Label htmlFor="transaction-description" className="text-sm">Descripción:</Label>
         <Input
           id="transaction-description"
-          value={transaction.description || ''}
-          disabled
+          ref={descriptionRef}
+          defaultValue={transaction.description || ''}
           className="w-full h-9"
+          placeholder="Añade una descripción para este gasto"
         />
       </div>
       
