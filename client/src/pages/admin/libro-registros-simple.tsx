@@ -77,8 +77,15 @@ interface UserOption {
   searchUsername?: string;  // Campo optimizado para búsqueda (username en minúsculas)
 }
 
-export default function SimpleLibroRegistros() {
-  const params = useParams<{ userId: string }>();
+interface LibroRegistrosSimpleProps {
+  params?: {
+    userId?: string;
+  };
+  forceOwnUser?: boolean; // Para forzar que solo vea sus propios datos
+}
+
+export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser = false }: LibroRegistrosSimpleProps) {
+  const urlParams = useParams<{ userId: string }>();
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<LibroRegistrosData | null>(null);
@@ -88,6 +95,9 @@ export default function SimpleLibroRegistros() {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  
+  // Usar los parámetros pasados por prop o por URL
+  const params = propsParams || urlParams;
   const userId = params?.userId || '';
   const { user } = useAuth();
   
@@ -104,14 +114,21 @@ export default function SimpleLibroRegistros() {
   // Verificar si el usuario está intentando acceder a su propio libro de registros
   const isViewingSelf = params?.userId && parseInt(params.userId) === user.id;
   
+  // Si se está forzando que solo vea sus propios datos (desde /mis-registros),
+  // no necesitamos más comprobaciones de seguridad
+  if (forceOwnUser) {
+    console.log("Forzando acceso a los propios datos del usuario");
+    // No redireccionamos ni bloqueamos - permitimos acceso
+  }
   // Si no es un admin ni está viendo su propio libro, redireccionar
-  if (!isViewingSelf && (
+  else if (!isViewingSelf && (
     user.role !== 'superadmin' && 
     user.role !== 'SUPERADMIN' && 
     user.role !== 'admin' &&
     user.username !== 'Superadmin' &&
     user.username !== 'billeo_admin'
   )) {
+    console.log("Acceso denegado - no es admin ni está viendo sus propios datos");
     return <Redirect to="/" />;
   }
 
