@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
-import { Loader2, Edit, Trash2, UserCheck, UserPlus } from "lucide-react";
+import { Loader2, Edit, Trash2, UserCheck, UserPlus, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -62,6 +62,7 @@ export default function UsersManagement() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [confirmPromoteUser, setConfirmPromoteUser] = useState<number | null>(null);
   const [newUser, setNewUser] = useState({
     username: "",
     name: "",
@@ -70,6 +71,9 @@ export default function UsersManagement() {
     role: "user",
     businessType: "autonomo"
   });
+  
+  // Verificar si el usuario actual es superadmin
+  const isSuperAdmin = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN');
 
   useEffect(() => {
     fetchUsers();
@@ -188,6 +192,40 @@ export default function UsersManagement() {
       toast({
         title: "Error",
         description: "No se pudo actualizar el usuario",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Función para promover a un usuario a superadmin
+  const handlePromoteToSuperAdmin = async (userId: number) => {
+    try {
+      setActionLoading(true);
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/promote-to-superadmin`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Actualizar la lista de usuarios
+        setUsers(users.map(u => u.id === userId ? data.user : u));
+        toast({
+          title: "Éxito",
+          description: `Usuario promovido a superadmin correctamente`,
+        });
+        setConfirmPromoteUser(null);
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.message || "No se pudo promover al usuario a superadmin",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo promover al usuario a superadmin",
         variant: "destructive",
       });
     } finally {

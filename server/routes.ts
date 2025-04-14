@@ -466,7 +466,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
   
+  // Middleware para verificar si el usuario es superadmin
+  const requireSuperAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "No autenticado" });
+      }
+      
+      const user = req.user as any;
+      if (user.role !== 'superadmin' && user.role !== 'SUPERADMIN') {
+        return res.status(403).json({ message: "No autorizado. Se requiere rol de superadministrador." });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Error en middleware requireSuperAdmin:", error);
+      return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  };
+  
   // ====== RUTAS DE ADMINISTRACIÓN DE USUARIOS ======
+  
+  // Promover un usuario a superadmin (solo superadmin)
+  app.post("/api/admin/users/:id/promote-to-superadmin", requireSuperAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+      
+      // Verificar que el usuario existe
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      // Actualizar el rol del usuario a superadmin
+      const updatedUser = await storage.updateUserProfile(userId, {
+        role: 'superadmin'
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Error al promover usuario a superadmin" });
+      }
+      
+      // Omitir la contraseña en la respuesta
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      console.log(`[ADMIN] Usuario ${(req.user as any).id} ha promovido al usuario ${userId} a superadmin`);
+      
+      res.status(200).json({
+        message: "Usuario promovido a superadmin correctamente",
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      console.error("Error al promover usuario a superadmin:", error);
+      res.status(500).json({ message: "Error al promover usuario a superadmin" });
+    }
+  });
+  
   // Obtener todos los usuarios (solo admin)
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     try {
