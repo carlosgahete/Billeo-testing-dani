@@ -1,0 +1,113 @@
+Claro, aquí tienes un prompt claro y completo para Mia, explicándole qué es un libro de registro y cómo debe diseñarlo basándose en la imagen que le enviaste:
+
+⸻
+
+Prompt para Mia:
+
+⸻
+
+Mia, importante:
+
+Estamos creando una sección que se llama Libro de Registro.
+Te explico exactamente lo que significa y cómo debe ser su diseño.
+
+⸻
+
+¿Qué es un Libro de Registro?
+
+El Libro de Registro es una sección donde los usuarios (o el SuperAdmin) pueden ver, gestionar y exportar toda su actividad financiera, incluyendo:
+	•	Facturas emitidas
+	•	Presupuestos creados
+	•	Gastos y transacciones
+
+El objetivo principal del Libro de Registro es que cada usuario (o el SuperAdmin viendo los usuarios) pueda consultar su información ordenada, filtrarla por periodos de tiempo (mes, trimestre o año) y descargarla fácilmente en formato PDF o Excel para su contabilidad o para su gestor.
+
+Cada usuario debe ver solamente su propia información, nunca mezclada con la de otros.
+
+⸻
+
+Diseño exacto basado en la imagen:
+
+Tienes que construir la pantalla igual que el ejemplo enviado. Respetando esta estructura:
+
+⸻
+
+1. Filtros arriba:
+	•	Año: seleccionar año concreto (por ejemplo, 2025).
+	•	Trimestre: seleccionar trimestre (Q1, Q2, Q3, Q4).
+	•	Mes: seleccionar mes concreto.
+
+Nota: Los filtros deben ser independientes pero combinables (por ejemplo, puedo querer ver “2025 - 2º trimestre - abril”).
+
+⸻
+
+2. Botones de Descarga:
+	•	Descargar PDF
+	•	Descargar Excel
+
+Al hacer clic, debe exportarse exactamente lo que esté filtrado en pantalla.
+
+⸻
+
+3. Cuatro tarjetas de resumen:
+
+Debajo de los filtros debes mostrar cuatro tarjetas con:
+	•	Facturas: número total e importe total facturado.
+	•	Gastos: número total e importe total gastado.
+	•	Presupuestos: número total de presupuestos creados.
+	•	Balance: resultado entre facturas y gastos (puede ser positivo o negativo).
+
+Cada tarjeta debe tener un color de fondo suave, tal como se ve en la imagen.
+
+⸻
+
+4. Tablas de datos:
+
+Tres bloques de tablas, debajo de las tarjetas:
+	1.	Facturas emitidas:
+	•	Número
+	•	Fecha
+	•	Cliente
+	•	Base imponible
+	•	IVA
+	•	Total
+	•	Estado (“Pagada”, etc.)
+	2.	Presupuestos:
+	•	Número
+	•	Fecha
+	•	Cliente
+	•	Total
+	•	Estado (“Aceptado”, “Rechazado”, etc.)
+	3.	Gastos y transacciones:
+	•	Fecha
+	•	Descripción
+	•	Categoría
+	•	Tipo (Gasto o Ingreso)
+	•	Importe
+
+Nota: Los estados (“Pagada”, “Aceptado”, “Gasto”, etc.) deben tener etiquetas de color (verde o rojo), igual que en el diseño.
+
+⸻
+
+5. Comportamiento:
+	•	El SuperAdmin podrá ver el registro de todos los usuarios.
+	•	Los usuarios normales verán únicamente su propio registro.
+	•	La información debe guardarse correctamente en la base de datos y no mezclarse entre usuarios.
+	•	Cada filtro que aplique el usuario debe afectar inmediatamente a los datos mostrados.
+	•	La descarga debe respetar los filtros activos.
+
+⸻
+
+6. Estilo:
+	•	Todo el diseño debe ser limpio, claro y profesional.
+	•	Respeta márgenes, colores, estructura y espaciados que se ven en la imagen.
+
+⸻
+
+Resumen:
+Tienes que crear un Libro de Registro funcional y visualmente igual al ejemplo enviado, filtrable por año/trimestre/mes, con datos separados por usuario, y con posibilidad de descargar la información filtrada en PDF o Excel.
+
+⸻
+
+¿Te preparo también una versión más breve por si prefieres mandarle primero un resumen y luego el desarrollo completo?
+Te lo paso si quieres. ¿Te gustaría?
