@@ -364,9 +364,13 @@ export function MinimalQuoteList({ userId }: Props) {
       {/* Componente de filtro de presupuestos */}
       <div className="px-2">
         {/* Botones superiores - Nuevo y Descargar Resumen */}
-        <div className="flex justify-between mb-3">
-          <Link href="/quotes/simple/create">
-            <Button size="sm" variant="default" className="flex items-center gap-1">
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <Link href="/quotes/simple/create" className="w-full">
+            <Button 
+              size="sm" 
+              variant="default" 
+              className="flex items-center justify-center gap-1 w-full bg-[#007AFF] hover:bg-blue-700"
+            >
               <Plus className="h-4 w-4" />
               Nuevo
             </Button>
@@ -374,7 +378,7 @@ export function MinimalQuoteList({ userId }: Props) {
           <Button 
             size="sm" 
             variant="outline" 
-            className="flex items-center gap-1"
+            className="flex items-center justify-center gap-1 w-full border-[#007AFF] text-[#007AFF] hover:bg-blue-50"
             onClick={() => handleDownloadSummary()}
           >
             <Download className="h-4 w-4" />
