@@ -820,9 +820,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const superadminId = (req.user as any).id;
       
+      // Comprobar si el usuario actual es un administrador especial (billeo_admin o Superadmin)
+      const currentUser = await storage.getUser(superadminId);
+      const isSpecialAdmin = currentUser && (currentUser.username === 'billeo_admin' || currentUser.username === 'Superadmin');
+      
       if (action === "assign") {
-        // Verificar que el cliente pertenece al superadmin
-        if (client.userId !== superadminId) {
+        // Solo verificar propiedad del cliente si NO es un admin especial
+        if (!isSpecialAdmin && client.userId !== superadminId) {
           return res.status(403).json({ message: "No tienes permiso para asignar este cliente" });
         }
         
