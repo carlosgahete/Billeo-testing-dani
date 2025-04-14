@@ -782,35 +782,79 @@ export default function SimpleLibroRegistros() {
           </p>
         </div>
         
-        {/* Selector de usuarios para administradores */}
+        {/* Selector de usuarios para administradores (con búsqueda) */}
         {user && (user.role === 'admin' || user.role === 'superadmin' || user.username === 'billeo_admin') && (
           <div className="mt-4 md:mt-0 w-full md:w-auto">
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-gray-500" />
-              <Select 
-                value={userId === '6' && user?.username === 'billeo_admin' ? 'self' : userId || ''} 
-                onValueChange={handleUserChange}
-                disabled={loadingUsers}
-              >
-                <SelectTrigger className="w-full md:w-[240px]">
-                  <SelectValue placeholder="Seleccionar usuario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {/* Opción para ver datos propios del admin */}
-                  {user.username === 'billeo_admin' && (
-                    <SelectItem value="self">
-                      Mis registros ({user.username})
-                    </SelectItem>
-                  )}
-                  
-                  {/* Lista de todos los usuarios */}
-                  {users.map((userOption) => (
-                    <SelectItem key={userOption.id} value={userOption.id.toString()}>
-                      {userOption.name} ({userOption.username})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={userPopoverOpen} onOpenChange={setUserPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full md:w-[240px] justify-between" 
+                    disabled={loadingUsers}
+                  >
+                    {userId === '6' && user?.username === 'billeo_admin' 
+                      ? `Mis registros (${user.username})`
+                      : userId 
+                        ? users.find(u => u.id.toString() === userId)
+                          ? `${users.find(u => u.id.toString() === userId)?.name} (${users.find(u => u.id.toString() === userId)?.username})`
+                          : "Seleccionar usuario"
+                        : "Seleccionar usuario"
+                    }
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0" align="end">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Buscar usuario..." 
+                      className="h-9" 
+                      value={userSearchTerm}
+                      onValueChange={setUserSearchTerm}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No se encontraron usuarios</CommandEmpty>
+                      <CommandGroup>
+                        {/* Opción para ver datos propios del admin */}
+                        {user.username === 'billeo_admin' && (
+                          <CommandItem
+                            value="self"
+                            onSelect={() => {
+                              handleUserChange('self');
+                              setUserPopoverOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            Mis registros ({user.username})
+                          </CommandItem>
+                        )}
+                        
+                        {/* Lista de todos los usuarios filtrados por búsqueda */}
+                        {users
+                          .filter(userOption => 
+                            userOption.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                            userOption.username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                          )
+                          .map((userOption) => (
+                            <CommandItem
+                              key={userOption.id}
+                              value={userOption.id.toString()}
+                              onSelect={(value) => {
+                                handleUserChange(value);
+                                setUserPopoverOpen(false);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              {userOption.name} ({userOption.username})
+                            </CommandItem>
+                          ))
+                        }
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         )}
