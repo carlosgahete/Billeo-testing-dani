@@ -74,6 +74,7 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
       // Invalidar consultas para actualizar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Importante para que aparezca en transacciones
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] }); // Actualizar dashboard
       queryClient.invalidateQueries({ queryKey: ["/api/public/stats/dashboard"] });
       
       // Mostrar mensaje y redirigir

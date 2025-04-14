@@ -363,6 +363,9 @@ const TransactionList = () => {
   const { data: transactions, isLoading, refetch: refetchTransactions } = useQuery({
     queryKey: ["/api/transactions"],
     refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
+    refetchOnMount: "always", // Recargar siempre al montar el componente
+    refetchInterval: 3000, // Recargar cada 3 segundos
+    refetchOnReconnect: true, // Recargar al reconectar
     staleTime: 0, // Considerar datos obsoletos inmediatamente
   });
 
@@ -373,6 +376,10 @@ const TransactionList = () => {
   const { data: invoices, refetch: refetchInvoices } = useQuery({
     queryKey: ["/api/invoices"],
     refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
+    refetchOnMount: "always", // Recargar siempre al montar el componente
+    refetchInterval: 3000, // Recargar cada 3 segundos
+    refetchOnReconnect: true, // Recargar al reconectar
+    staleTime: 0, // Considerar datos obsoletos inmediatamente
   });
 
   // Función para determinar qué datos mostrar según los filtros activos
