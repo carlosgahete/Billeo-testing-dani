@@ -626,13 +626,13 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
 
       {/* Diálogo para añadir nuevo cliente */}
       {showAddClientDialog && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <div className="fixed inset-0 z-50 bg-black/50 p-4" style={{overflowY: 'auto', WebkitOverflowScrolling: 'touch'}}>
+          <div className="bg-white rounded-xl w-full max-w-md mx-auto mb-10 mt-4">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 sticky top-0 rounded-t-xl">
               <h3 className="text-center text-base font-medium">Añadir nuevo cliente</h3>
             </div>
             
-            <div className="p-6 space-y-4 overflow-y-auto" style={{maxHeight: "calc(90vh - 130px)"}}>
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="client-name" className="text-sm text-gray-600">
                   Nombre <span className="text-[#007AFF] text-xs">*</span>
@@ -748,7 +748,7 @@ const SimpleMobileQuoteForm = ({ quoteId, initialData }: SimpleMobileQuoteFormPr
               </div>
             </div>
             
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-between sticky bottom-0 bg-white rounded-b-xl">
               <Button
                 type="button"
                 variant="ghost"
