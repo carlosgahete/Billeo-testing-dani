@@ -535,6 +535,8 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       
       // Invalidar las consultas relacionadas
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/public/stats/dashboard"] });
       
       // Redirigir a la página de detalles o lista según la acción
@@ -614,6 +616,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       // Actualizar la caché de consultas
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
       // Redireccionar a la lista de facturas después de un breve retraso
       setTimeout(() => {

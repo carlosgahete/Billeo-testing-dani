@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { 
   Loader2, 
@@ -74,6 +74,7 @@ const Dashboard = () => {
   const [, navigate] = useLocation();
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
+  const queryClient = useQueryClient();
   
   const { data: user, isLoading: userLoading } = useQuery<any>({
     queryKey: ["/api/auth/session"],
