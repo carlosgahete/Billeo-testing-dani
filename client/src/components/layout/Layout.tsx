@@ -63,18 +63,18 @@ const Layout = ({ children }: LayoutProps) => {
           </button>
         )}
 
-        {/* Main content - Contenido que ocupa todo el espacio disponible */}
+        {/* Main content - Dashboard wrapper con scroll ilimitado */}
         <div 
           className={`
             flex-1 
             overflow-y-auto 
+            dashboard-wrapper
             ${isMobile ? 'pt-20' : ''}
             ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
-            h-[calc(100vh-64px)]
           `}
         >
-          <div className="w-full h-full py-1 lg:py-6 px-0 sm:px-2 lg:px-8">
+          <div className="w-full min-h-screen py-1 lg:py-6 px-0 sm:px-2 lg:px-8 pb-20">
             {children}
           </div>
         </div>
