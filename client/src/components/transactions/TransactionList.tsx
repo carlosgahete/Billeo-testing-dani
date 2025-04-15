@@ -585,17 +585,17 @@ const TransactionList = () => {
       return true;
     });
     
-    // Filtrar facturas que ya tienen transacciones reales
-    const invoicesWithTransactions = transactions
-      .filter(t => t.invoiceId !== null && t.invoiceId !== undefined)
-      .map(t => t.invoiceId);
-      
-    console.log("🔍 Facturas que ya tienen transacciones:", invoicesWithTransactions);
-    console.log("📊 Total de facturas filtradas:", filteredInvoices.length);
+    // Ya no necesitamos filtrar las facturas que ya tienen transacciones,
+    // pues queremos mostrarlas todas. Solo filtramos por el estado "paid".
+    // Antes filtrábamos para no crear transacciones virtuales de facturas
+    // que ya tenían transacciones reales, pero ahora necesitamos mostrarlas todas.
     
-    // Solo crear transacciones virtuales para facturas pagadas sin transacción real
+    console.log("📊 Total de facturas filtradas:", filteredInvoices.length);
+    console.log("🔍 Transacciones:", transactions.filter(t => t.invoiceId !== null).length, "relacionadas con facturas");
+    
+    // Crear representaciones visuales de todas las facturas pagadas (sin importar si ya tienen transacción)
     return filteredInvoices
-      .filter(invoice => invoice.status === "paid" && !invoicesWithTransactions.includes(invoice.id))
+      .filter(invoice => invoice.status === "paid")
       .map((invoice) => {
         // Determinar categoría predeterminada para facturas
         const invoiceCategory = categories?.find((c) => c.type === "income" && c.name === "Ventas") || { id: 0, name: "Ventas", type: "income", icon: "receipt", color: "#4F46E5" };
