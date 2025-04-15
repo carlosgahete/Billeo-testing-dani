@@ -513,38 +513,48 @@ const TransactionList = () => {
   // No necesitamos más filterInvoicesByDate ya que el filtrado se hace en la API
 
   // Función para convertir facturas en transacciones virtuales (para visualización)
+  // Solo para facturas que NO tengan ya una transacción real asociada
   const convertInvoicesToTransactions = useCallback(() => {
-    if (!invoices) return [];
+    if (!invoices || !transactions) return [];
     
-    // Crear transacciones virtuales a partir de las facturas
-    return invoices.map((invoice) => {
-      // Determinar categoría predeterminada para facturas
-      const invoiceCategory = categories?.find((c) => c.type === "income" && c.name === "Ventas") || { id: 0, name: "Ventas", type: "income", icon: "receipt", color: "#4F46E5" };
+    // Filtrar facturas que ya tienen transacciones reales
+    const invoicesWithTransactions = transactions
+      .filter(t => t.invoiceId !== null && t.invoiceId !== undefined)
+      .map(t => t.invoiceId);
       
-      // Establecer fechas
-      const issueDate = new Date(invoice.issueDate);
-      
-      // Crear la transacción con datos de la factura
-      return {
-        id: `invoice-${invoice.id}`, // Prefijo para identificar que es una factura virtual
-        userId: invoice.userId,
-        title: `Factura ${invoice.invoiceNumber}`,
-        description: `Cliente: ${invoice.clientName || 'Sin nombre'}`,
-        amount: invoice.total,
-        date: issueDate,
-        categoryId: invoiceCategory.id,
-        type: "income",
-        paymentMethod: invoice.status === "paid" ? "card" : null,
-        notes: invoice.notes || null,
-        attachments: invoice.attachments || null,
-        additionalTaxes: invoice.additionalTaxes || null,
-        invoiceId: invoice.id,
-        invoiceStatus: invoice.status, // Campo adicional para almacenar el estado de la factura
-        // Añadimos marca para diferenciar de transacciones normales
-        isInvoiceTransaction: true
-      };
-    });
-  }, [invoices, categories]);
+    console.log("🔍 Facturas que ya tienen transacciones:", invoicesWithTransactions);
+    
+    // Solo crear transacciones virtuales para facturas sin transacción real
+    return invoices
+      .filter(invoice => !invoicesWithTransactions.includes(invoice.id))
+      .map((invoice) => {
+        // Determinar categoría predeterminada para facturas
+        const invoiceCategory = categories?.find((c) => c.type === "income" && c.name === "Ventas") || { id: 0, name: "Ventas", type: "income", icon: "receipt", color: "#4F46E5" };
+        
+        // Establecer fechas
+        const issueDate = new Date(invoice.issueDate);
+        
+        // Crear la transacción con datos de la factura
+        return {
+          id: `invoice-${invoice.id}`, // Prefijo para identificar que es una factura virtual
+          userId: invoice.userId,
+          title: `Factura ${invoice.invoiceNumber}`,
+          description: `Cliente: ${invoice.clientName || 'Sin nombre'}`,
+          amount: invoice.total,
+          date: issueDate,
+          categoryId: invoiceCategory.id,
+          type: "income",
+          paymentMethod: invoice.status === "paid" ? "card" : null,
+          notes: invoice.notes || null,
+          attachments: invoice.attachments || null,
+          additionalTaxes: invoice.additionalTaxes || null,
+          invoiceId: invoice.id,
+          invoiceStatus: invoice.status, // Campo adicional para almacenar el estado de la factura
+          // Añadimos marca para diferenciar de transacciones normales
+          isInvoiceTransaction: true
+        };
+      });
+  }, [invoices, categories, transactions]);
 
   const filteredTransactions = React.useMemo(() => {
     if (!transactions) return [];
