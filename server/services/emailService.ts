@@ -65,11 +65,13 @@ export async function initEmailService() {
   }
 }
 
-// URL y versión base64 del logo de Billeo para correos electrónicos (fallback si alguno falla)
-const logoUrl = 'https://app.billeo.es/images/billeo-logo.png';
+// URL para el logo de Billeo en correos electrónicos
+// Usamos URLs públicas para máxima compatibilidad con clientes de correo
+const logoUrl = 'https://billeo.es/logo.png'; // URL pública del sitio web
+const logoLocalUrl = 'http://localhost:5000/images/billeo-logo.png'; // URL local para desarrollo
 
-// Logo de Billeo en SVG convertido a base64 (más ligero y se ve bien en todos los clientes)
-const logoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTUwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxwYXRoIGQ9Ik0yOC4zNSA3LjgxaDkuMjRjNS4xNiAwIDguMTkgMi44MiA4LjE5IDcuNjggMCA0LjkyLTMuMDkgNy44My04LjMxIDcuODNoLTQuMnY3LjU2aC00LjkyVjcuODF6bTguODggMTEuMjhjMi42MSAwIDMuOTYtMS4zOCAzLjk2LTMuNTQgMC0yLjEzLTEuMzUtMy41MS0zLjkzLTMuNTFoLTMuOTl2Ny4wNWgzLjk2ek01NS4zNSA3LjgxaDUuMDFsOC44OCAyMy4wN2gtNS4xbC0xLjc3LTQuOTVoLTkuMTVsLTEuOCA0Ljk1aC00Ljk4bDguOTEtMjMuMDd6bTUuMTYgMTQuMDdsLTMuMjQtOS4wM2gtLjA5bC0zLjMgOS4wM2g2LjYzek03MS4zNyA3LjgxaDQuOTJ2MTguNzVoMTAuNTl2NC4zMkg3MS4zN1Y3Ljgxek04OC45OCA3LjgxaDQuOTJ2MTguNzVoMTAuNTl2NC4zMkg4OC45OFY3Ljgxek0xMDcuMjIgMTkuMzVjMC02Ljk5IDUuMjgtMTEuOTEgMTIuNDgtMTEuOTEgNy4xNyAwIDEyLjQ4IDQuOTIgMTIuNDggMTEuOTEgMCA2Ljk5LTUuMzEgMTEuOTEtMTIuNDggMTEuOTEtNy4yIDAtMTIuNDgtNC45Mi0xMi40OC0xMS45MXptMTkuOCAwYzAtNC4zOC0zLjA5LTcuNDQtNy4zMi03LjQ0LTQuMjYgMC03LjMyIDMuMDYtNy4zMiA3LjQ0IDAgNC4zOCAzLjA2IDcuNDQgNy4zMiA3LjQ0IDQuMjMgMCA3LjMyLTMuMDYgNy4zMi03LjQ0eiIgZmlsbD0iIzQyODVGNCIvPgo8L3N2Zz4=';
+// Seleccionamos la URL apropiada según el entorno
+const logoEmailUrl = process.env.NODE_ENV === 'production' ? logoUrl : logoLocalUrl;
 
 // Función para enviar correo de recuperación de contraseña
 export async function sendPasswordResetEmail(email: string, token: string, username: string) {
@@ -90,7 +92,7 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoBase64}" alt="Billeo" style="width: 150px; height: auto;">
+            <img src="${logoEmailUrl}" alt="Billeo" style="width: 150px; height: auto;">
           </div>
           
           <p>Hola <strong>${username}</strong>,</p>
