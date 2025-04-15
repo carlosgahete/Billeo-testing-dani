@@ -49,18 +49,22 @@ import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Mantenemos la definición Invoice propia de este componente
+// Definición de la interfaz Invoice para el componente
 interface Invoice {
   id: number;
   invoiceNumber: string;
   clientId: number;
+  clientName?: string;
   issueDate: string;
   dueDate: string;
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled" | "pending";
   subtotal: string;
   tax: string;
   total: string;
-  additionalTaxes?: string;
+  additionalTaxes?: any;
+  notes?: string;
+  attachments?: string[];
+  userId: number;
 }
 
 const PaymentMethodBadge = ({ method }: { method: string }) => {
@@ -526,11 +530,48 @@ const TransactionList = () => {
     });
   }, [selectedYear, selectedPeriod]);
 
+  // Función para convertir facturas en transacciones virtuales (para visualización)
+  const convertInvoicesToTransactions = useCallback(() => {
+    if (!invoices) return [];
+    
+    // Crear transacciones virtuales a partir de las facturas
+    return invoices.map((invoice) => {
+      // Determinar categoría predeterminada para facturas
+      const invoiceCategory = categories?.find((c) => c.type === "income" && c.name === "Ventas") || { id: 0, name: "Ventas", type: "income", icon: "receipt", color: "#4F46E5" };
+      
+      // Establecer fechas
+      const issueDate = new Date(invoice.issueDate);
+      
+      // Crear la transacción con datos de la factura
+      return {
+        id: `invoice-${invoice.id}`, // Prefijo para identificar que es una factura virtual
+        userId: invoice.userId,
+        title: `Factura ${invoice.invoiceNumber}`,
+        description: `Cliente: ${invoice.clientName || 'Sin nombre'}`,
+        amount: invoice.total,
+        date: issueDate,
+        categoryId: invoiceCategory.id,
+        type: "income",
+        paymentMethod: invoice.status === "paid" ? "card" : null,
+        notes: invoice.notes || null,
+        attachments: invoice.attachments || null,
+        additionalTaxes: invoice.additionalTaxes || null,
+        invoiceId: invoice.id,
+        invoiceStatus: invoice.status, // Campo adicional para almacenar el estado de la factura
+        // Añadimos marca para diferenciar de transacciones normales
+        isInvoiceTransaction: true
+      };
+    });
+  }, [invoices, categories]);
+
   const filteredTransactions = React.useMemo(() => {
     if (!transactions) return [];
     
     // Aplicamos primero los filtros de pestaña
     let result = [];
+    
+    // Obtenemos transacciones virtuales de facturas
+    const invoiceTransactions = convertInvoicesToTransactions();
     
     // Si estamos en la pestaña de gastos y hay filtros aplicados
     if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
@@ -539,19 +580,49 @@ const TransactionList = () => {
     // Si estamos en la pestaña de ingresos y hay filtros aplicados
     else if (currentTab === "income" && filteredIncomeTransactions.length > 0) {
       result = filteredIncomeTransactions;
+      
+      // Si estamos en ingresos, añadimos las facturas convertidas a transacciones
+      // (solo si no hay filtros específicos de ingresos activos que lo impidan)
+      if (!incomeFiltersApplied) {
+        result = [...result, ...invoiceTransactions];
+      }
     }
     // Si no hay filtros, filtramos por el tipo de la pestaña seleccionada
     else if (currentTab !== "all") {
       result = transactions.filter((t: Transaction) => t.type === currentTab);
+      
+      // Si estamos en ingresos, añadimos las facturas convertidas a transacciones
+      if (currentTab === "income") {
+        result = [...result, ...invoiceTransactions];
+      }
     }
     // En la pestaña "todos", mostramos todas las transacciones
     else {
       result = transactions;
+      
+      // Añadimos también las facturas como transacciones virtuales
+      result = [...result, ...invoiceTransactions];
     }
     
+    // Eliminar duplicados (en caso de que haya transacciones generadas para facturas)
+    const uniqueTransactions = result.reduce((acc, current) => {
+      // Si es una factura virtual, la incluimos siempre
+      if (current.isInvoiceTransaction) {
+        acc.push(current);
+        return acc;
+      }
+      
+      // Para transacciones normales, verificamos si ya existe una con el mismo ID
+      const exists = acc.find(item => !item.isInvoiceTransaction && item.id === current.id);
+      if (!exists) {
+        acc.push(current);
+      }
+      return acc;
+    }, []);
+    
     // Aplicamos los filtros de fecha sobre el resultado
-    return filterTransactionsByDate(result);
-  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions, filterTransactionsByDate]);
+    return filterTransactionsByDate(uniqueTransactions);
+  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions, filterTransactionsByDate, convertInvoicesToTransactions, incomeFiltersApplied]);
 
   // Obtener categoría por ID
   const getCategory = (categoryId: number) => {
@@ -905,6 +976,71 @@ const TransactionList = () => {
       cell: ({ row }) => {
         const transaction = row.original;
         
+        // Determinar si es una transacción de factura virtual
+        const isInvoiceTransaction = transaction.isInvoiceTransaction;
+        
+        // Para facturas virtuales, mostrar el estado con un color
+        if (isInvoiceTransaction) {
+          // Obtener el estado de la factura
+          const invoiceStatus = transaction.invoiceStatus;
+          
+          // Determinar el color según el estado de la factura
+          const getStatusColor = () => {
+            switch (invoiceStatus) {
+              case 'paid':
+                return 'bg-green-500 text-white';
+              case 'pending':
+                return 'bg-amber-500 text-white';
+              case 'overdue':
+                return 'bg-red-500 text-white';
+              case 'canceled':
+                return 'bg-gray-500 text-white';
+              default:
+                return 'bg-blue-500 text-white';
+            }
+          };
+          
+          // Texto del estado
+          const getStatusText = () => {
+            switch (invoiceStatus) {
+              case 'paid':
+                return 'Pagada';
+              case 'pending':
+                return 'Pendiente';
+              case 'overdue':
+                return 'Vencida';
+              case 'canceled':
+                return 'Cancelada';
+              default:
+                return 'Desconocido';
+            }
+          };
+          
+          return (
+            <div className="flex justify-end items-center space-x-2">
+              {/* Mostrar el estado como un badge con el color correspondiente */}
+              <Badge 
+                className={`rounded-full text-xs px-2 py-0.5 ${getStatusColor()}`}
+                title={`Factura ${getStatusText()}`}
+              >
+                {getStatusText()}
+              </Badge>
+              
+              {/* Botón para ver la factura */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(`/invoices/view/${transaction.invoiceId}`)}
+                title="Ver factura"
+                className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        }
+        
+        // Para transacciones normales, mostrar los botones estándar
         // Obtener información sobre documentos adjuntos
         const hasAttachments = transaction.type === 'expense' && 
                               transaction.attachments && 
@@ -988,6 +1124,9 @@ const TransactionList = () => {
         .filter((t: Transaction) => t.type === "income")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
+  
+  // La función filterInvoicesByDate está definida más arriba
+  // Eliminada duplicación
   
   // Para facturas usamos la función filterInvoicesByDate para tener consistencia en el filtrado
   const filteredInvoices = !isLoading && Array.isArray(invoices) 
