@@ -65,10 +65,13 @@ export async function initEmailService() {
   }
 }
 
+// Importamos las URLs del logo desde un archivo centralizado
+import { BILLEO_LOGO_URL, BILLEO_LOGO_URL_ALT1, BILLEO_LOGO_URL_ALT2 } from './billeo-logo-url';
+
 // URL para el logo de Billeo en correos electrónicos
 // Usando una URL pública externa garantizada (GitHub) para máxima compatibilidad
-const logoUrl = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blue%20circle/3D/blue_circle_3d.png';
-const logoLocalUrl = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blue%20circle/3D/blue_circle_3d.png';
+const logoUrl = BILLEO_LOGO_URL;
+const logoLocalUrl = BILLEO_LOGO_URL;
 
 // Siempre usamos una URL pública externa para máxima compatibilidad
 const logoEmailUrl = logoUrl;
