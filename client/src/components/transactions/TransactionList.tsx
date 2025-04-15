@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
+import React, { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
@@ -187,11 +187,29 @@ const TransactionList = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
   
-  // Eliminar múltiples transacciones
+  // Eliminar múltiples transacciones con mejor fluidez
   const handleDeleteSelectedTransactions = async (transactions: Transaction[]) => {
     if (transactions.length === 0) return;
     
-    // Mostrar mensaje de carga
+    // Guardamos los IDs de las transacciones que vamos a eliminar
+    const transactionIds = transactions.map(t => t.id);
+    
+    // Actualizamos el estado optimista antes de la petición para mejor UX
+    // Optimistic UI update - eliminar las transacciones del estado local inmediatamente
+    const currentTransactions = queryClient.getQueryData<Transaction[]>([getFilteredTransactionsUrl()]) || [];
+    
+    // Hacer un respaldo por si falla
+    const previousTransactions = [...currentTransactions];
+    
+    // Actualizar el cache local inmediatamente (antes de la petición al servidor)
+    queryClient.setQueryData<Transaction[]>([getFilteredTransactionsUrl()], 
+      currentTransactions.filter(t => !transactionIds.includes(t.id))
+    );
+    
+    // Limpiar selección
+    setSelectedTransactions([]);
+    
+    // Mostrar mensaje de carga con UI optimista
     toast({
       title: "Eliminando transacciones",
       description: `Eliminando ${transactions.length} transacciones...`,
@@ -223,12 +241,10 @@ const TransactionList = () => {
         queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] })
       ]);
       
-      // Para garantizar que el UI se actualice completamente
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-      }, 500);
-      
     } catch (error: any) {
+      // Revertir el cambio optimista si hay error
+      queryClient.setQueryData([getFilteredTransactionsUrl()], previousTransactions);
+      
       toast({
         title: "Error",
         description: `No se pudieron eliminar algunas transacciones: ${error.message}`,
@@ -1017,16 +1033,23 @@ const TransactionList = () => {
             </div>
           </div>
           
-          {/* Filtros de año y periodo */}
+          {/* Filtros de año y periodo estilo Apple */}
           <div className="flex items-center space-x-3 mr-6">
-            <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-md border border-gray-200">
+            <div className="flex items-center bg-[#F2F2F7] rounded-full overflow-hidden shadow-inner border border-gray-200/60">
               {/* Selector de Año */}
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="text-sm border-none bg-transparent focus:ring-0 py-1 pl-2 pr-8 rounded"
+                className="text-sm border-none bg-transparent focus:ring-0 focus:outline-none py-1.5 pl-3 pr-2 text-gray-700 font-medium appearance-none"
+                style={{ 
+                  WebkitAppearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'18\' height=\'18\' stroke=\'%238E8E93\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\' stroke-linejoin=\'round\' class=\'css-i6dzq1\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 6px center',
+                  paddingRight: '24px'
+                }}
               >
-                <option value="all">Todo</option>
+                <option value="all">Todos los años</option>
                 {availableYears.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -1038,9 +1061,16 @@ const TransactionList = () => {
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="text-sm border-none bg-transparent focus:ring-0 py-1 pl-2 pr-8 rounded"
+                className="text-sm border-none bg-transparent focus:ring-0 focus:outline-none py-1.5 pl-3 pr-2 text-gray-700 font-medium appearance-none"
+                style={{ 
+                  WebkitAppearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'18\' height=\'18\' stroke=\'%238E8E93\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\' stroke-linejoin=\'round\' class=\'css-i6dzq1\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 6px center',
+                  paddingRight: '24px'
+                }}
               >
-                <option value="all">Todos</option>
+                <option value="all">Todos los periodos</option>
                 <option value="Q1">T1 (Ene-Mar)</option>
                 <option value="Q2">T2 (Abr-Jun)</option>
                 <option value="Q3">T3 (Jul-Sep)</option>

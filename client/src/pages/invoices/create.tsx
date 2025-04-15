@@ -52,16 +52,18 @@ const CreateInvoicePage = () => {
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             <span>Volver</span>
           </button>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-800 flex items-center">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500 mr-3">
-                <Receipt className="h-5 w-5 text-white" />
-              </div>
-              {authLoading ? "Cargando..." : "Crear nueva factura"}
-            </h1>
-            <p className="text-gray-500 text-sm -mt-1 ml-1">
-              Completa los detalles para generar un documento profesional
-            </p>
+          <div className="flex items-start">
+            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500 mr-3 flex-shrink-0 mt-0.5">
+              <Receipt className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-800 flex items-center leading-tight">
+                {authLoading ? "Cargando..." : "Crear nueva factura"}
+              </h1>
+              <p className="text-gray-500 text-sm leading-tight">
+                Completa los detalles para generar un documento profesional
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -81,15 +83,19 @@ const CreateInvoicePage = () => {
             </a>
           </div>
           <div className="px-4 py-2">
-            <h1 className="text-2xl font-semibold text-gray-800 flex items-center">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500 mr-3">
+            <div className="flex items-start">
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500 mr-3 flex-shrink-0 mt-0.5">
                 <Receipt className="h-5 w-5 text-white" />
               </div>
-              Crear nueva factura
-            </h1>
-            <p className="text-gray-500 text-sm -mt-1 ml-1">
-              Completa los detalles para generar un documento profesional
-            </p>
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-800 leading-tight">
+                  Crear nueva factura
+                </h1>
+                <p className="text-gray-500 text-sm leading-tight">
+                  Completa los detalles para generar un documento profesional
+                </p>
+              </div>
+            </div>
           </div>
         </>
       )}
