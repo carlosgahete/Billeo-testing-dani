@@ -719,7 +719,7 @@ export default function LibroRegistrosPage() {
       }
       
       // SECCIÓN DE PRESUPUESTOS - COMPLETAMENTE REDISEÑADA
-      currentY += 55;
+      currentY += 90; // Aumentamos considerablemente el espacio entre secciones
       drawColorBox(currentY, 45, 'green', 'PRESUPUESTOS');
       
       // Rediseñamos también la sección de presupuestos para que siga el mismo patrón de las facturas
@@ -824,7 +824,7 @@ export default function LibroRegistrosPage() {
       }
       
       // SECCIÓN DE GASTOS (en la misma página)
-      currentY += 50;
+      currentY += 90; // También aumentamos el espacio antes de la sección de gastos
       
       drawColorBox(currentY, 60, 'amber', 'GASTOS Y TRANSACCIONES');
       
