@@ -220,6 +220,45 @@ export default function LibroRegistrosPage() {
     staleTime: 30000 // Comprobar cada 30 segundos
   });
 
+  // Verificar la autenticación periódicamente para detectar expiración de sesión
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          toast({
+            title: "Sesión expirada",
+            description: "Tu sesión ha expirado, presiona aquí para iniciar sesión de nuevo",
+            variant: "destructive",
+            action: (
+              <Button variant="secondary" size="sm" onClick={() => setLocation("/auth")}>
+                Iniciar sesión
+              </Button>
+            )
+          });
+          return false;
+        }
+        
+        const data = await response.json();
+        return data.authenticated === true;
+      } catch (error) {
+        console.error("Error al verificar autenticación:", error);
+        return false;
+      }
+    };
+    
+    // Verificar autenticación cada 5 minutos
+    const interval = setInterval(() => {
+      checkAuthentication();
+    }, 5 * 60 * 1000);
+    
+    // Limpiar intervalo al desmontar
+    return () => clearInterval(interval);
+  }, [toast, setLocation]);
+
   // Función para cargar datos del libro de registros usando React Query
   const { refetch: refetchLibroRegistros } = useQuery({
     queryKey: [`libro-registros-${selectedUserId || (user?.id?.toString() || '')}-${selectedYear}-${selectedQuarter}-${selectedMonth}`],
@@ -228,10 +267,14 @@ export default function LibroRegistrosPage() {
       if (!isUserAuthenticated.data) {
         toast({
           title: "Sesión expirada",
-          description: "Tu sesión ha expirado, serás redirigido a la página de login",
-          variant: "destructive"
+          description: "Tu sesión ha expirado, presiona aquí para iniciar sesión",
+          variant: "destructive",
+          action: (
+            <Button variant="secondary" size="sm" onClick={() => setLocation("/auth")}>
+              Iniciar sesión
+            </Button>
+          )
         });
-        setTimeout(() => setLocation("/auth"), 2000);
         return null;
       }
       

@@ -21,14 +21,14 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Configure session middleware con la configuración optimizada
+// Configure session middleware con la configuración optimizada y mayor tiempo de sesión
 app.use(session({
   secret: 'financial-app-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { 
     secure: false, // Set to true if using https
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en lugar de 24 horas
     httpOnly: true,
     sameSite: 'lax',
     path: '/'
