@@ -31,6 +31,7 @@ import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
 import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
 import ExpensesByCategorySimple from "@/components/dashboard/ExpensesByCategorySimple";
+import SimpleExpensesByCategory from "@/components/dashboard/SimpleExpensesByCategory";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -218,6 +219,14 @@ export const DASHBOARD_BLOCKS = {
     description: "Tarjeta con el balance final e impuestos a liquidar",
     component: FinalResultCard,
     icon: <PiggyBank className="h-8 w-8 text-blue-500" />,
+    type: "cards"
+  },
+  "expenses-by-category-card": {
+    id: "expenses-by-category-card",
+    title: "Gastos por Categoría (Tarjeta)",
+    description: "Gastos por categoría con tarjetas y barras de progreso",
+    component: SimpleExpensesByCategory,
+    icon: <PieChart className="h-8 w-8 text-red-600" />,
     type: "cards"
   }
 };
@@ -501,6 +510,43 @@ export const DASHBOARD_BLOCK_CATALOG = [
               <span>IVA liq:</span>
             </div>
             <span className="text-[7px] font-bold">48.300 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-card"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-red-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-red-600 mr-1" />
+          <span className="text-[10px] font-medium text-red-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex flex-col gap-1 justify-center">
+          <div className="flex items-center gap-1">
+            <span className="text-[6px]">📦</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-[6px]">Alquiler</span>
+                <span className="text-[6px] text-red-600">-2.700€</span>
+              </div>
+              <div className="bg-gray-100 h-[2px] w-full rounded-full overflow-hidden">
+                <div className="bg-red-500 h-full w-[60%]"></div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-[6px]">💡</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-[6px]">Suministros</span>
+                <span className="text-[6px] text-red-600">-240€</span>
+              </div>
+              <div className="bg-gray-100 h-[2px] w-full rounded-full overflow-hidden">
+                <div className="bg-blue-500 h-full w-[20%]"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
