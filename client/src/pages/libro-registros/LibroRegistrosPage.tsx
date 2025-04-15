@@ -485,6 +485,13 @@ export default function LibroRegistrosPage() {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       
+      // Posiciones horizontales para presupuestos
+      const numQuoteX = margin + 5;
+      const fechaQuoteX = margin + 30; 
+      const clienteQuoteX = margin + 55;
+      const totalQuoteX = pageWidth - margin - 40;
+      const estadoQuoteX = pageWidth - margin - 20;
+      
       let presupuestoY = currentY + 22;
       const maxPresupuestos = Math.min(5, filteredQuotes.length);
       
@@ -495,25 +502,25 @@ export default function LibroRegistrosPage() {
         for (let i = 0; i < maxPresupuestos; i++) {
           const quote = filteredQuotes[i];
           
-          // Limitar longitud de textos
-          const clienteText = quote.clientName.length > 30 ? quote.clientName.substring(0, 27) + "..." : quote.clientName;
+          // Limitar longitud de textos (acortar para evitar solapamiento)
+          const clienteText = quote.clientName.length > 20 ? quote.clientName.substring(0, 17) + "..." : quote.clientName;
           
           // Estado formateado
           const status = quote.status === 'accepted' ? 'Aceptado' : 
                          quote.status === 'rejected' ? 'Rechazado' : 
                          quote.status === 'pending' ? 'Pendiente' : quote.status;
           
-          doc.text(quote.number, margin + 5, presupuestoY);
-          doc.text(formatDate(quote.date), margin + 30, presupuestoY);
-          doc.text(clienteText, margin + 55, presupuestoY);
-          doc.text(formatCurrency(parseFloat(quote.total)), pageWidth - margin - 40, presupuestoY, { align: 'right' });
-          doc.text(status, pageWidth - margin - 20, presupuestoY);
+          doc.text(quote.number, numQuoteX, presupuestoY);
+          doc.text(formatDate(quote.date), fechaQuoteX, presupuestoY);
+          doc.text(clienteText, clienteQuoteX, presupuestoY);
+          doc.text(formatCurrency(parseFloat(quote.total)), totalQuoteX, presupuestoY, { align: 'right' });
+          doc.text(status, estadoQuoteX, presupuestoY);
           
-          presupuestoY += 5;
+          presupuestoY += 6; // Más espaciado entre filas
           
           // Líneas separadoras
           if (i < maxPresupuestos - 1) {
-            drawHorizontalLine(presupuestoY - 2, pageWidth - 2 * margin - 10);
+            drawHorizontalLine(presupuestoY - 3, pageWidth - 2 * margin - 10);
           }
         }
         
