@@ -298,7 +298,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         console.log("✅ Notas vacías para evitar duplicación con información bancaria");
       }
     }
-  }, [companyData, form, isEditMode]);
+  }, [companyData, isEditMode]); // Quitamos 'form' para evitar renderizados infinitos
 
   // Initialize form with invoice data when loaded - either from API or passed in
   // Función para formatear fechas al formato YYYY-MM-DD
@@ -432,7 +432,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         }, 200);
       }
     }
-  }, [invoiceData, initialData, isEditMode, form]);
+  }, [invoiceData, initialData, isEditMode]); // Quitamos 'form' de las dependencias para evitar renderizados infinitos
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
