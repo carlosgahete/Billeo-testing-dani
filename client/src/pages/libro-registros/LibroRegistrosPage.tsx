@@ -426,24 +426,37 @@ export default function LibroRegistrosPage() {
       let facturaY = currentY + 22;
       const maxFacturas = Math.min(8, filteredInvoices.length);
       
-      for (let i = 0; i < maxFacturas; i++) {
-        const inv = filteredInvoices[i];
-        
-        // Limitar longitud de textos
-        const clienteText = inv.clientName.length > 30 ? inv.clientName.substring(0, 27) + "..." : inv.clientName;
-        
-        doc.text(inv.number, margin + 5, facturaY);
-        doc.text(formatDate(inv.date), margin + 25, facturaY);
-        doc.text(clienteText, margin + 50, facturaY);
-        doc.text(formatCurrency(parseFloat(inv.subtotal)), pageWidth - margin - 55, facturaY, { align: 'right' });
-        doc.text(formatCurrency(parseFloat(inv.tax)), pageWidth - margin - 35, facturaY, { align: 'right' });
-        doc.text(formatCurrency(parseFloat(inv.total)), pageWidth - margin - 20, facturaY, { align: 'right' });
-        
-        facturaY += 5;
-        
-        // Líneas separadoras
-        if (i < maxFacturas - 1) {
-          drawHorizontalLine(facturaY - 2, pageWidth - 2 * margin - 10);
+      // Posiciones de las columnas de factura para mejor alineación
+      const numFactX = margin + 5;
+      const fechaFactX = margin + 25;
+      const clienteFactX = margin + 50;
+      const baseX = pageWidth - margin - 55;
+      const ivaX = pageWidth - margin - 35;
+      const totalFactX = pageWidth - margin - 20;
+      
+      if (filteredInvoices.length === 0) {
+        doc.setFont('helvetica', 'italic');
+        doc.text("No hay facturas en este período", margin + 5, facturaY);
+      } else {
+        for (let i = 0; i < maxFacturas; i++) {
+          const inv = filteredInvoices[i];
+          
+          // Limitar longitud de textos
+          const clienteText = inv.clientName.length > 20 ? inv.clientName.substring(0, 17) + "..." : inv.clientName;
+          
+          doc.text(inv.number, numFactX, facturaY);
+          doc.text(formatDate(inv.date), fechaFactX, facturaY);
+          doc.text(clienteText, clienteFactX, facturaY);
+          doc.text(formatCurrency(parseFloat(inv.subtotal)), baseX, facturaY, { align: 'right' });
+          doc.text(formatCurrency(parseFloat(inv.tax)), ivaX, facturaY, { align: 'right' });
+          doc.text(formatCurrency(parseFloat(inv.total)), totalFactX, facturaY, { align: 'right' });
+          
+          facturaY += 6; // Más espacio entre filas
+          
+          // Líneas separadoras
+          if (i < maxFacturas - 1) {
+            drawHorizontalLine(facturaY - 3, pageWidth - 2 * margin - 10);
+          }
         }
       }
       
@@ -516,14 +529,22 @@ export default function LibroRegistrosPage() {
       
       drawColorBox(currentY, 60, 'amber', 'GASTOS Y TRANSACCIONES');
       
-      // Cabecera de la tabla de gastos
+      // Cabecera de la tabla de gastos (mejor espaciado)
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.text("Fecha", margin + 5, currentY + 15);
-      doc.text("Descripción", margin + 30, currentY + 15);
-      doc.text("Categoría", pageWidth - margin - 60, currentY + 15);
-      doc.text("Tipo", pageWidth - margin - 35, currentY + 15);
-      doc.text("Importe", pageWidth - margin - 15, currentY + 15);
+      
+      // Posiciones ajustadas para evitar solapamiento
+      const fechaX = margin + 5;
+      const descripcionX = margin + 25;
+      const categoriaX = pageWidth - margin - 75;
+      const tipoX = pageWidth - margin - 35;
+      const importeX = pageWidth - margin - 15;
+      
+      doc.text("Fecha", fechaX, currentY + 15);
+      doc.text("Descripción", descripcionX, currentY + 15);
+      doc.text("Categoría", categoriaX, currentY + 15);
+      doc.text("Tipo", tipoX, currentY + 15);
+      doc.text("Importe", importeX, currentY + 15);
       
       drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
       
@@ -541,17 +562,18 @@ export default function LibroRegistrosPage() {
         for (let i = 0; i < maxGastos; i++) {
           const t = filteredTransactions[i];
           
-          // Limitar longitud de textos
-          const descripcionText = t.description.length > 30 ? t.description.substring(0, 27) + "..." : t.description;
-          const categoriaText = t.category ? (t.category.length > 15 ? t.category.substring(0, 12) + "..." : t.category) : "-";
+          // Limitar longitud de textos (más cortos para evitar solapamiento)
+          const descripcionText = t.description.length > 18 ? t.description.substring(0, 15) + "..." : t.description;
+          const categoriaText = t.category ? (t.category.length > 10 ? t.category.substring(0, 7) + "..." : t.category) : "-";
           
           // Tipo formateado
           const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
           
-          doc.text(formatDate(t.date), margin + 5, gastoY);
-          doc.text(descripcionText, margin + 30, gastoY);
-          doc.text(categoriaText, pageWidth - margin - 60, gastoY);
-          doc.text(type, pageWidth - margin - 35, gastoY);
+          // Usar las constantes definidas para mantener alineación
+          doc.text(formatDate(t.date), fechaX, gastoY);
+          doc.text(descripcionText, descripcionX, gastoY);
+          doc.text(categoriaText, categoriaX, gastoY);
+          doc.text(type, tipoX, gastoY);
           
           // Importe en rojo para gastos, verde para ingresos
           if (t.type === 'expense') {
@@ -560,14 +582,14 @@ export default function LibroRegistrosPage() {
             doc.setTextColor(34, 197, 94); // Verde para ingresos
           }
           
-          doc.text(formatCurrency(parseFloat(t.amount)), pageWidth - margin - 15, gastoY, { align: 'right' });
+          doc.text(formatCurrency(parseFloat(t.amount)), importeX, gastoY, { align: 'right' });
           doc.setTextColor(0, 0, 0); // Restaurar color negro
           
-          gastoY += 5;
+          gastoY += 6; // Más espacio entre líneas
           
           // Líneas separadoras
           if (i < maxGastos - 1) {
-            drawHorizontalLine(gastoY - 2, pageWidth - 2 * margin - 10);
+            drawHorizontalLine(gastoY - 3, pageWidth - 2 * margin - 10);
           }
         }
         
