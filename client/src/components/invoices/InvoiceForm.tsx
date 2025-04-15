@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -632,17 +632,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // Ya tenemos calculateInvoiceTotals definida globalmente
 
-  const handleSubmit = (data: InvoiceFormValues) => {
-    // Debido a problemas con los bucles de renderizado, ya no usamos calculateInvoiceTotals aquí,
-    // en su lugar calculamos los valores directamente para evitar problemas
-    const items = form.getValues("items") || [];
-    const additionalTaxes = form.getValues("additionalTaxes") || [];
-    
-    // Las notas no necesitan incluir información bancaria, ya que aparece en otra parte del PDF
-    // Dejamos las notas como están si el usuario las ha introducido manualmente
-    
+  // Usamos useMemo para memorizar los cálculos y prevenir bucles de renderizado
+  const { items, additionalTaxes } = form.getValues();
+  
+  // Memoizamos los cálculos para evitar re-renders excesivos
+  const calculatedTotals = useMemo(() => {
     // Calculamos subtotales
-    const updatedItems = items.map((item: any) => {
+    const updatedItems = (items || []).map((item: any) => {
       const quantity = toNumber(item.quantity, 0);
       const unitPrice = toNumber(item.unitPrice, 0);
       const subtotal = quantity * unitPrice;
@@ -663,7 +659,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     // Calculamos impuestos adicionales
     let additionalTaxesTotal = 0;
-    additionalTaxes.forEach((taxItem: any) => {
+    (additionalTaxes || []).forEach((taxItem: any) => {
       if (taxItem.isPercentage) {
         const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
         additionalTaxesTotal += percentageTax;
@@ -675,10 +671,23 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     const total = subtotal + tax + additionalTaxesTotal;
     const safeTotal = Math.max(0, total);
     
-    // Actualizamos los datos antes de enviar
-    data.subtotal = subtotal;
-    data.tax = tax;
-    data.total = safeTotal;
+    return { 
+      updatedItems, 
+      subtotal, 
+      tax, 
+      additionalTaxesTotal, 
+      total: safeTotal 
+    };
+  }, [items, additionalTaxes]);
+  
+  const handleSubmit = (data: InvoiceFormValues) => {
+    // Las notas no necesitan incluir información bancaria, ya que aparece en otra parte del PDF
+    // Dejamos las notas como están si el usuario las ha introducido manualmente
+    
+    // Actualizamos los datos antes de enviar usando los valores memoizados
+    data.subtotal = calculatedTotals.subtotal;
+    data.tax = calculatedTotals.tax;
+    data.total = calculatedTotals.total;
     
     console.log("🚀 Enviando factura con totales calculados:", {
       subtotal: data.subtotal,
@@ -1428,7 +1437,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             {form.getValues(`additionalTaxes.${index}.name`) || "Impuesto"}: 
                             <span className="font-medium ml-1">
                               {form.getValues(`additionalTaxes.${index}.isPercentage`) 
-                                ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(form.getValues("subtotal") * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
+                                ? `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)}% (${(calculatedTotals.subtotal * Number(form.getValues(`additionalTaxes.${index}.amount`)) / 100).toFixed(2)} €)`
                                 : `${Number(form.getValues(`additionalTaxes.${index}.amount`)).toFixed(2)} €`
                               }
                             </span>
@@ -1445,13 +1454,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   <div className="flex justify-between mb-2">
                     <span className="text-sm text-slate-600">Subtotal:</span>
                     <span className="font-medium">
-                      {form.getValues("subtotal").toFixed(2)} €
+                      {calculatedTotals.subtotal.toFixed(2)} €
                     </span>
                   </div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm text-slate-600">IVA:</span>
                     <span className="font-medium">
-                      {form.getValues("tax").toFixed(2)} €
+                      {calculatedTotals.tax.toFixed(2)} €
                     </span>
                   </div>
                   
