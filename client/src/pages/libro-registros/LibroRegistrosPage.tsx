@@ -407,32 +407,32 @@ export default function LibroRegistrosPage() {
       currentY += 45;
       drawColorBox(currentY, 50, 'blue', 'FACTURAS EMITIDAS');
       
-      // Cabecera de la tabla de facturas
+      // Posiciones optimizadas de las columnas de factura para mejor alineación (valores absolutos)
+      const numFactX = margin + 5;
+      const fechaFactX = margin + 30;    // Más espacio para el número
+      const clienteFactX = margin + 65;  // Más espacio para la fecha
+      const baseX = margin + 140;        // Más espacio para el cliente
+      const ivaX = margin + 170;         // Valor absoluto, no relativo al margen derecho
+      const totalFactX = margin + 200;   // Valor absoluto, no relativo al margen derecho
+      
+      // Cabecera de la tabla de facturas - alineadas con los nuevos valores
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.text("Número", margin + 5, currentY + 15);
-      doc.text("Fecha", margin + 25, currentY + 15);
-      doc.text("Cliente", margin + 50, currentY + 15);
-      doc.text("Base", pageWidth - margin - 55, currentY + 15);
-      doc.text("IVA", pageWidth - margin - 35, currentY + 15);
-      doc.text("Total", pageWidth - margin - 20, currentY + 15);
+      doc.text("Número", numFactX, currentY + 15);
+      doc.text("Fecha", fechaFactX, currentY + 15);
+      doc.text("Cliente", clienteFactX, currentY + 15);
+      doc.text("Base", baseX, currentY + 15, { align: 'center' });
+      doc.text("IVA", ivaX, currentY + 15, { align: 'center' });
+      doc.text("Total", totalFactX, currentY + 15, { align: 'center' });
       
       drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
       
       // Datos de facturas
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(7); // Fuente más pequeña para evitar solapamiento
       
       let facturaY = currentY + 22;
       const maxFacturas = Math.min(8, filteredInvoices.length);
-      
-      // Posiciones de las columnas de factura para mejor alineación
-      const numFactX = margin + 5;
-      const fechaFactX = margin + 25;
-      const clienteFactX = margin + 50;
-      const baseX = pageWidth - margin - 55;
-      const ivaX = pageWidth - margin - 35;
-      const totalFactX = pageWidth - margin - 20;
       
       if (filteredInvoices.length === 0) {
         doc.setFont('helvetica', 'italic');
@@ -536,28 +536,28 @@ export default function LibroRegistrosPage() {
       
       drawColorBox(currentY, 60, 'amber', 'GASTOS Y TRANSACCIONES');
       
-      // Cabecera de la tabla de gastos (mejor espaciado)
+      // Cabecera de la tabla de gastos (espaciado optimizado)
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       
-      // Posiciones ajustadas para evitar solapamiento
+      // Posiciones ajustadas para evitar solapamiento - mayor separación entre columnas
       const fechaX = margin + 5;
-      const descripcionX = margin + 25;
-      const categoriaX = pageWidth - margin - 75;
-      const tipoX = pageWidth - margin - 35;
-      const importeX = pageWidth - margin - 15;
+      const descripcionX = margin + 30; // Más separado de la fecha
+      const categoriaX = margin + 90;   // Definido desde el margen izquierdo, no derecho
+      const tipoX = margin + 130;       // Definido desde el margen izquierdo, no derecho
+      const importeX = pageWidth - margin - 10; // Solo el importe alineado a la derecha
       
       doc.text("Fecha", fechaX, currentY + 15);
       doc.text("Descripción", descripcionX, currentY + 15);
       doc.text("Categoría", categoriaX, currentY + 15);
       doc.text("Tipo", tipoX, currentY + 15);
-      doc.text("Importe", importeX, currentY + 15);
+      doc.text("Importe", importeX, currentY + 15, { align: 'right' }); // Alineado a la derecha
       
       drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
       
       // Datos de gastos y transacciones
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(7); // Texto más pequeño para evitar solapamiento
       
       let gastoY = currentY + 22;
       const maxGastos = Math.min(8, filteredTransactions.length);
@@ -570,8 +570,8 @@ export default function LibroRegistrosPage() {
           const t = filteredTransactions[i];
           
           // Limitar longitud de textos (más cortos para evitar solapamiento)
-          const descripcionText = t.description.length > 18 ? t.description.substring(0, 15) + "..." : t.description;
-          const categoriaText = t.category ? (t.category.length > 10 ? t.category.substring(0, 7) + "..." : t.category) : "-";
+          const descripcionText = t.description.length > 14 ? t.description.substring(0, 11) + "..." : t.description;
+          const categoriaText = t.category ? (t.category.length > 8 ? t.category.substring(0, 5) + "..." : t.category) : "-";
           
           // Tipo formateado
           const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
@@ -592,11 +592,11 @@ export default function LibroRegistrosPage() {
           doc.text(formatCurrency(parseFloat(t.amount)), importeX, gastoY, { align: 'right' });
           doc.setTextColor(0, 0, 0); // Restaurar color negro
           
-          gastoY += 6; // Más espacio entre líneas
+          gastoY += 7; // Más espacio entre líneas
           
           // Líneas separadoras
           if (i < maxGastos - 1) {
-            drawHorizontalLine(gastoY - 3, pageWidth - 2 * margin - 10);
+            drawHorizontalLine(gastoY - 3.5, pageWidth - 2 * margin - 10);
           }
         }
         
@@ -629,7 +629,7 @@ export default function LibroRegistrosPage() {
     }
   };
   
-  // Función para exportar a Excel (en este ejemplo, como CSV) - Formato vertical mejorado
+  // Función para exportar a Excel usando formato CSV estándar y bien estructurado
   const exportToExcel = () => {
     if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
       toast({
@@ -641,14 +641,14 @@ export default function LibroRegistrosPage() {
     }
     
     try {
-      // Crear CSV para facturas con mejor formato visual
-      let csvContent = "data:text/csv;charset=utf-8,";
+      // Usamos separador de tabulaciones (\\t) para mejor compatibilidad con Excel
+      const rows: string[] = [];
       
-      // Título y cabecera
-      csvContent += "BILLEO - LIBRO DE REGISTROS\\n";
+      // Encabezado principal con título y fecha
+      rows.push("BILLEO - LIBRO DE REGISTROS");
       
       // Período seleccionado
-      csvContent += "PERÍODO: " + selectedYear;
+      let periodoText = `PERÍODO: ${selectedYear}`;
       if (selectedQuarter !== "all") {
         const quarterNames = {
           "Q1": "1er Trimestre",
@@ -656,35 +656,33 @@ export default function LibroRegistrosPage() {
           "Q3": "3er Trimestre",
           "Q4": "4to Trimestre"
         };
-        csvContent += " - " + quarterNames[selectedQuarter as keyof typeof quarterNames];
+        periodoText += ` - ${quarterNames[selectedQuarter as keyof typeof quarterNames]}`;
       }
       
       if (selectedMonth !== "all") {
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        csvContent += " - " + monthNames[parseInt(selectedMonth) - 1];
+        periodoText += ` - ${monthNames[parseInt(selectedMonth) - 1]}`;
       }
-      csvContent += "\\n\\n";
+      rows.push(periodoText);
+      rows.push(`Fecha de generación: ${formatDate(new Date().toISOString())}`);
+      rows.push("");
       
-      // Resumen en formato vertical para mejor visualización
-      csvContent += "RESUMEN\\n";
-      csvContent += "---------------------------------------------\\n";
-      csvContent += `Facturas emitidas: ${summary.totalInvoices}\\n`;
-      csvContent += `Importe total facturado: ${formatCurrency(summary.incomeTotal)}\\n`;
-      csvContent += `Gastos registrados: ${filteredTransactions.filter(t => t.type === 'expense').length}\\n`;
-      csvContent += `Importe total de gastos: ${formatCurrency(summary.expenseTotal)}\\n`;
-      csvContent += `Presupuestos: ${summary.totalQuotes}\\n`;
-      csvContent += `Balance: ${formatCurrency(summary.balance)}\\n\\n`;
+      // RESUMEN
+      rows.push("RESUMEN");
+      rows.push(`Concepto\\tCantidad\\tImporte`);
+      rows.push(`Facturas emitidas\\t${summary.totalInvoices}\\t${formatCurrency(summary.incomeTotal)}`);
+      rows.push(`Gastos\\t${filteredTransactions.filter(t => t.type === 'expense').length}\\t${formatCurrency(summary.expenseTotal)}`);
+      rows.push(`Presupuestos\\t${summary.totalQuotes}\\t`);
+      rows.push(`BALANCE\\t\\t${formatCurrency(summary.balance)}`);
+      rows.push("");
+      rows.push("");
       
-      // Facturas con formato de tabla vertical
-      csvContent += "FACTURAS EMITIDAS\\n";
-      csvContent += "---------------------------------------------\\n";
-      
-      if (filteredInvoices.length === 0) {
-        csvContent += "No hay facturas en este período\\n\\n";
-      } else {
-        // Cabecera de facturas en formato de tabla
-        csvContent += "Número,Fecha,Cliente,Base imponible,IVA,Total,Estado\\n";
+      // SECCIÓN DE FACTURAS
+      rows.push("FACTURAS EMITIDAS");
+      if (filteredInvoices.length > 0) {
+        // Cabecera de tabla
+        rows.push(`Número\\tFecha\\tCliente\\tBase imponible\\tIVA\\tTotal\\tEstado`);
         
         // Datos de facturas
         filteredInvoices.forEach(inv => {
@@ -692,21 +690,22 @@ export default function LibroRegistrosPage() {
                          inv.status === 'pending' ? 'Pendiente' : 
                          inv.status === 'overdue' ? 'Vencida' : inv.status;
           
-          // Usar comas para Excel
-          csvContent += `${inv.number},${formatDate(inv.date)},${inv.clientName.replace(/,/g, ' ')},${inv.subtotal},${inv.tax},${inv.total},${status}\\n`;
+          // Usar tabuladores y sanitizar textos
+          rows.push(
+            `${inv.number}\\t${formatDate(inv.date)}\\t${inv.clientName.replace(/\\t/g, ' ')}\\t${inv.subtotal}\\t${inv.tax}\\t${inv.total}\\t${status}`
+          );
         });
-        csvContent += "\\n";
-      }
-      
-      // Presupuestos
-      csvContent += "PRESUPUESTOS\\n";
-      csvContent += "---------------------------------------------\\n";
-      
-      if (filteredQuotes.length === 0) {
-        csvContent += "No hay presupuestos en este período\\n\\n";
       } else {
-        // Cabecera de presupuestos
-        csvContent += "Número,Fecha,Cliente,Total,Estado\\n";
+        rows.push("No hay facturas en este período");
+      }
+      rows.push("");
+      rows.push("");
+      
+      // SECCIÓN DE PRESUPUESTOS
+      rows.push("PRESUPUESTOS");
+      if (filteredQuotes.length > 0) {
+        // Cabecera de tabla
+        rows.push(`Número\\tFecha\\tCliente\\tTotal\\tEstado`);
         
         // Datos de presupuestos
         filteredQuotes.forEach(quote => {
@@ -714,39 +713,44 @@ export default function LibroRegistrosPage() {
                        quote.status === 'rejected' ? 'Rechazado' : 
                        quote.status === 'pending' ? 'Pendiente' : quote.status;
                         
-          csvContent += `${quote.number},${formatDate(quote.date)},${quote.clientName.replace(/,/g, ' ')},${quote.total},${status}\\n`;
+          rows.push(
+            `${quote.number}\\t${formatDate(quote.date)}\\t${quote.clientName.replace(/\\t/g, ' ')}\\t${quote.total}\\t${status}`
+          );
         });
-        csvContent += "\\n";
-      }
-      
-      // Gastos y transacciones
-      csvContent += "GASTOS Y TRANSACCIONES\\n";
-      csvContent += "---------------------------------------------\\n";
-      
-      if (filteredTransactions.length === 0) {
-        csvContent += "No hay transacciones en este período\\n\\n";
       } else {
-        // Cabecera de transacciones
-        csvContent += "Fecha,Descripción,Categoría,Tipo,Importe\\n";
+        rows.push("No hay presupuestos en este período");
+      }
+      rows.push("");
+      rows.push("");
+      
+      // SECCIÓN DE GASTOS Y TRANSACCIONES
+      rows.push("GASTOS Y TRANSACCIONES");
+      if (filteredTransactions.length > 0) {
+        // Cabecera de tabla
+        rows.push(`Fecha\\tDescripción\\tCategoría\\tTipo\\tImporte`);
         
-        // Datos de gastos con formato para identificar tipo (Ingreso/Gasto)
+        // Datos de transacciones
         filteredTransactions.forEach(t => {
           const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
-          csvContent += `${formatDate(t.date)},${t.description.replace(/,/g, ' ')},${(t.category || '').replace(/,/g, ' ')},${type},${t.amount}\\n`;
+          rows.push(
+            `${formatDate(t.date)}\\t${t.description.replace(/\\t/g, ' ')}\\t${(t.category || '').replace(/\\t/g, ' ')}\\t${type}\\t${t.amount}`
+          );
         });
-        csvContent += "\\n";
+      } else {
+        rows.push("No hay transacciones en este período");
       }
+      rows.push("");
       
-      // Nota informativa al pie
-      csvContent += "---------------------------------------------\\n";
-      csvContent += "Documento generado por Billeo\\n";
-      csvContent += `Fecha de generación: ${formatDate(new Date().toISOString())}\\n`;
+      // Pie de documento
+      rows.push("Documento generado por Billeo");
       
-      // Exportar archivo con formato .xls para mejor compatibilidad con Excel
-      const encodedUri = encodeURI(csvContent);
+      // Convertir todo a CSV 
+      const excelContent = "data:text/csv;charset=utf-8," + encodeURIComponent(rows.join("\\r\\n"));
+      
+      // Descargar como archivo con extensión .xlsx
       const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.xls`);
+      link.setAttribute("href", excelContent);
+      link.setAttribute("download", `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.xlsx`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
