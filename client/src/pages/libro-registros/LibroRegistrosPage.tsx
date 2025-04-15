@@ -642,13 +642,26 @@ export default function LibroRegistrosPage() {
       doc.setFontSize(7); // Fuente más pequeña para evitar solapamiento
       
       let facturaY = currentY + 22;
-      const maxFacturas = Math.min(8, filteredInvoices.length);
+      // Ya no limitamos el número de facturas
       
       if (filteredInvoices.length === 0) {
         doc.setFont('helvetica', 'italic');
         doc.text("No hay facturas en este período", margin + 5, facturaY);
       } else {
-        for (let i = 0; i < maxFacturas; i++) {
+        // Añadir página si es necesario
+        const checkNeedNewPage = (currentY: number, rowHeight: number = 10, maxY: number = 260) => {
+          if (currentY + rowHeight > maxY) {
+            doc.addPage();
+            return 20; // Volver a la parte superior de la página
+          }
+          return currentY;
+        };
+        
+        // Mostrar todas las facturas
+        for (let i = 0; i < filteredInvoices.length; i++) {
+          // Comprobar si necesitamos una nueva página
+          facturaY = checkNeedNewPage(facturaY);
+          
           const inv = filteredInvoices[i];
           
           // Limitar longitud de textos
@@ -666,16 +679,10 @@ export default function LibroRegistrosPage() {
           facturaY += 6; // Más espacio entre filas
           
           // Líneas separadoras
-          if (i < maxFacturas - 1) {
+          if (i < filteredInvoices.length - 1) {
             drawHorizontalLine(facturaY - 3, pageWidth - 2 * margin - 10);
           }
         }
-      }
-      
-      // Si hay más facturas de las que se muestran
-      if (filteredInvoices.length > maxFacturas) {
-        doc.setFont('helvetica', 'italic');
-        doc.text(`... y ${filteredInvoices.length - maxFacturas} más`, margin + 5, facturaY + 3);
       }
       
       // SECCIÓN DE PRESUPUESTOS - COMPLETAMENTE REDISEÑADA
@@ -717,13 +724,48 @@ export default function LibroRegistrosPage() {
       doc.setFontSize(7); // Mantener texto pequeño
       
       let presupuestoY = currentY + 22;
-      const maxPresupuestos = Math.min(5, filteredQuotes.length);
       
       if (filteredQuotes.length === 0) {
         doc.setFont('helvetica', 'italic');
         doc.text("No hay presupuestos en este período", margin + tablePaddingLeft, presupuestoY);
       } else {
-        for (let i = 0; i < maxPresupuestos; i++) {
+        // Función reutilizable para comprobar y añadir página nueva si es necesario
+        const checkNeedNewPage = (currentY: number, rowHeight: number = 10, maxY: number = 260) => {
+          if (currentY + rowHeight > maxY) {
+            doc.addPage();
+            // Añadir nueva cabecera en página nueva
+            doc.setFillColor(34, 197, 94); // Verde para presupuestos
+            doc.rect(margin, 20, pageWidth - 2 * margin, 8, 'F');
+            
+            // Título en blanco
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text("PRESUPUESTOS (continuación)", margin + 5, 25.5);
+            
+            // Cabecera de columnas
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.text("Número", col1X, 40);
+            doc.text("Fecha", col2X, 40);
+            doc.text("Cliente", col3X, 40);
+            doc.text("Total", col4X, 40);
+            doc.text("Estado", col5X, 40);
+            
+            drawHorizontalLine(42, tableWidth);
+            
+            return 47; // Nueva posición Y después de la cabecera
+          }
+          return currentY;
+        };
+        
+        // Mostrar todos los presupuestos
+        for (let i = 0; i < filteredQuotes.length; i++) {
+          // Comprobar si necesitamos una nueva página
+          presupuestoY = checkNeedNewPage(presupuestoY);
+          
           const quote = filteredQuotes[i];
           
           // Limitar longitud de textos con máximo riguroso
@@ -752,15 +794,9 @@ export default function LibroRegistrosPage() {
           presupuestoY += 6; // Más espaciado entre filas
           
           // Líneas separadoras
-          if (i < maxPresupuestos - 1) {
+          if (i < filteredQuotes.length - 1) {
             drawHorizontalLine(presupuestoY - 3, tableWidth);
           }
-        }
-        
-        // Si hay más presupuestos de los que se muestran
-        if (filteredQuotes.length > maxPresupuestos) {
-          doc.setFont('helvetica', 'italic');
-          doc.text(`... y ${filteredQuotes.length - maxPresupuestos} más`, margin + tablePaddingLeft, presupuestoY + 3);
         }
       }
       
@@ -793,13 +829,48 @@ export default function LibroRegistrosPage() {
       doc.setFontSize(7); // Texto más pequeño para evitar solapamiento
       
       let gastoY = currentY + 22;
-      const maxGastos = Math.min(8, filteredTransactions.length);
       
       if (filteredTransactions.length === 0) {
         doc.setFont('helvetica', 'italic');
         doc.text("No hay transacciones en este período", margin + 5, gastoY);
       } else {
-        for (let i = 0; i < maxGastos; i++) {
+        // Función reutilizable para comprobar y añadir página nueva si es necesario
+        const checkNewTransactionPage = (currentY: number, rowHeight: number = 10, maxY: number = 260) => {
+          if (currentY + rowHeight > maxY) {
+            doc.addPage();
+            // Añadir nueva cabecera en página nueva
+            doc.setFillColor(245, 158, 11); // Ámbar para gastos
+            doc.rect(margin, 20, pageWidth - 2 * margin, 8, 'F');
+            
+            // Título en blanco
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text("GASTOS Y TRANSACCIONES (continuación)", margin + 5, 25.5);
+            
+            // Cabecera de columnas
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.text("Fecha", fechaX, 40);
+            doc.text("Descripción", descripcionX, 40);
+            doc.text("Categoría", categoriaX, 40);
+            doc.text("Tipo", tipoX, 40);
+            doc.text("Importe", importeX, 40, { align: 'right' });
+            
+            drawHorizontalLine(42, pageWidth - 2 * margin - 10);
+            
+            return 47; // Nueva posición Y después de la cabecera
+          }
+          return currentY;
+        };
+        
+        // Mostrar todas las transacciones
+        for (let i = 0; i < filteredTransactions.length; i++) {
+          // Comprobar si necesitamos nueva página
+          gastoY = checkNewTransactionPage(gastoY);
+          
           const t = filteredTransactions[i];
           
           // Limitar longitud de textos (más cortos para evitar solapamiento)
@@ -829,15 +900,9 @@ export default function LibroRegistrosPage() {
           gastoY += 7; // Más espacio entre líneas
           
           // Líneas separadoras
-          if (i < maxGastos - 1) {
+          if (i < filteredTransactions.length - 1) {
             drawHorizontalLine(gastoY - 3.5, pageWidth - 2 * margin - 10);
           }
-        }
-        
-        // Si hay más gastos de los que se muestran
-        if (filteredTransactions.length > maxGastos) {
-          doc.setFont('helvetica', 'italic');
-          doc.text(`... y ${filteredTransactions.length - maxGastos} más`, margin + 5, gastoY + 3);
         }
       }
       
