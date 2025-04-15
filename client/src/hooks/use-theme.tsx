@@ -11,30 +11,27 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Inicializa el tema desde localStorage o usa 'light' por defecto
-  const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme;
-    return savedTheme || "light";
-  });
+  // Siempre usamos el tema claro, eliminamos el modo oscuro
+  const [theme, setTheme] = useState<Theme>("light");
 
-  // Actualiza el DOM cuando cambia el tema
+  // Actualiza el DOM para asegurar que siempre estamos en modo claro
   useEffect(() => {
-    // Guarda el tema en localStorage
-    localStorage.setItem("theme", theme);
+    // Forzar tema claro en localStorage
+    localStorage.setItem("theme", "light");
     
-    // Actualiza el atributo data-theme en el elemento html
+    // Actualiza el elemento html para usar siempre el tema claro
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
+    root.classList.remove("dark");
+    root.classList.add("light");
     
-    // Actualiza también el color-scheme para que las barras de desplazamiento y otros elementos
-    // del navegador utilicen el tema correcto
-    root.style.colorScheme = theme;
-  }, [theme]);
+    // Asegurar que color-scheme es light
+    root.style.colorScheme = "light";
+  }, []);
 
-  // Función para alternar entre temas
+  // Función que no hace nada efectivamente, solo mantiene la compatibilidad de la API
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    // No hacemos nada, siempre permanecemos en tema claro
+    setTheme("light");
   };
 
   return (
