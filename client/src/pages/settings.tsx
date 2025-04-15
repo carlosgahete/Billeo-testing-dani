@@ -226,24 +226,54 @@ const SettingsPage = () => {
     updatePasswordMutation.mutate(passwordForm);
   };
   
+  const savePreferencesMutation = useMutation({
+    mutationFn: async (preferences: { emailNotifications: boolean }) => {
+      return apiRequest("POST", "/api/dashboard/preferences", preferences);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Preferencias guardadas",
+        description: "Tus preferencias han sido guardadas correctamente",
+        variant: "default",
+      });
+      // Refrescar datos del usuario para actualizar preferencias
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/preferences"] });
+    },
+    onError: (error) => {
+      console.error("Error al guardar preferencias:", error);
+      toast({
+        title: "Error al guardar",
+        description: "No se pudieron guardar tus preferencias. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSavePreferences = () => {
     // Guarda el tema en localStorage
     localStorage.setItem("theme", theme);
     
-    // Aquí podrías guardar otras preferencias como las notificaciones por email en el servidor
-    // Ejemplo hipotético: apiRequest("PUT", "/api/user/preferences", { emailNotifications: isEmailNotificationsEnabled })
-    
-    toast({
-      title: "Preferencias guardadas",
-      description: "Tus preferencias han sido guardadas correctamente",
-      variant: "default",
+    // Guardar preferencias en el servidor
+    savePreferencesMutation.mutate({ 
+      emailNotifications: isEmailNotificationsEnabled 
     });
   };
 
+  // Cargar preferencias existentes
+  const { data: userPreferences, isLoading: preferencesLoading } = useQuery({
+    queryKey: ["/api/dashboard/preferences"],
+    enabled: !!user,
+    onSuccess: (data) => {
+      if (data && data.emailNotifications !== undefined) {
+        setIsEmailNotificationsEnabled(data.emailNotifications);
+      }
+    }
+  });
+  
   // Verificar si estamos en vista móvil
   const isMobile = useMediaQuery("(max-width: 768px)");
   
-  if (userLoading) {
+  if (userLoading || preferencesLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
         <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
@@ -253,7 +283,13 @@ const SettingsPage = () => {
   
   // Renderizar versión móvil
   if (isMobile) {
-    return <MobileSettingsPage />;
+    return (
+      <MobileSettingsPage 
+        isEmailNotificationsEnabled={isEmailNotificationsEnabled} 
+        setIsEmailNotificationsEnabled={setIsEmailNotificationsEnabled}
+        onSavePreferences={handleSavePreferences}
+      />
+    );
   }
   
   return (

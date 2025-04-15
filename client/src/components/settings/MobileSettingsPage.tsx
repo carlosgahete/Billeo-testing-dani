@@ -36,16 +36,25 @@ interface UserSession {
   };
 }
 
-const MobileSettingsPage = () => {
+interface MobileSettingsPageProps {
+  isEmailNotificationsEnabled: boolean;
+  setIsEmailNotificationsEnabled: (value: boolean) => void;
+  onSavePreferences: () => void;
+}
+
+const MobileSettingsPage = ({
+  isEmailNotificationsEnabled,
+  setIsEmailNotificationsEnabled,
+  onSavePreferences
+}: MobileSettingsPageProps) => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { refreshUser, logout } = useAuth();
+  const { refreshUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>("general");
   
-  // Estados para configuraciones
+  // Estado para configuración de tema
   const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(theme === "dark");
-  const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(true);
   
   // Estados para el formulario de perfil
   const [name, setName] = useState("");
