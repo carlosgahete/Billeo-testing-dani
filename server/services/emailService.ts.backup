@@ -76,7 +76,7 @@ const logoHtml = `
 </div>
 `;
 
-// Definimos un valor vacío por compatibilidad
+// Para antigua referencia, pero ya no se usa
 const logoEmailUrl = "";
 
 // Función para enviar correo de recuperación de contraseña
@@ -174,7 +174,9 @@ ${companyName}
       `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-          ${logoHtml}
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${logoEmailUrl}" alt="${companyName}" style="width: 150px; height: auto;">
+          </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
           
@@ -315,7 +317,9 @@ export async function sendAlertNotification(
 
     const htmlMessage = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-        ${logoHtml}
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${logoEmailUrl}" alt="${companyName}" style="width: 150px; height: auto;">
+        </div>
         
         <p>Hola <strong>${recipientName}</strong>,</p>
         
@@ -441,7 +445,9 @@ ${companyName}
       `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-          ${logoHtml}
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${logoEmailUrl}" alt="${companyName}" style="width: 150px; height: auto;">
+          </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
           
