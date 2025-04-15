@@ -148,6 +148,15 @@ const DeleteTransactionDialog = ({
 const TransactionList = () => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // Estado para los filtros de año y periodo
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  
+  // Años disponibles para el filtro (últimos 5 años)
+  const availableYears = Array.from({ length: 5 }, (_, i) => 
+    (new Date().getFullYear() - i).toString()
+  );
   const [currentTab, setCurrentTab] = useState("all");
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
   const [filteredIncomeTransactions, setFilteredIncomeTransactions] = useState<Transaction[]>([]);
@@ -359,9 +368,35 @@ const TransactionList = () => {
     }
   }, []);
 
+  // Función para construir la URL con los filtros de año y periodo
+  const getFilteredTransactionsUrl = () => {
+    let url = "/api/transactions";
+    const params = new URLSearchParams();
+    
+    if (selectedYear !== "all") {
+      params.append("year", selectedYear);
+    }
+    
+    if (selectedPeriod !== "all") {
+      // Determinar si es trimestre o mes
+      if (selectedPeriod.startsWith("Q")) {
+        params.append("quarter", selectedPeriod.replace("Q", ""));
+      } else {
+        params.append("month", selectedPeriod);
+      }
+    }
+    
+    const queryString = params.toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
+    
+    return url;
+  };
+
   // Estados de las consultas
   const { data: transactions, isLoading, refetch: refetchTransactions } = useQuery({
-    queryKey: ["/api/transactions"],
+    queryKey: [getFilteredTransactionsUrl()],
     refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
     refetchOnMount: "always", // Recargar siempre al montar el componente
     refetchInterval: 3000, // Recargar cada 3 segundos
