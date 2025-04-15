@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -1176,10 +1176,12 @@ const TransactionList = () => {
   const handleRepairInvoiceTransactions = async () => {
     if (isRepairing) return;
     
+    const currentPath = location; // La variable location contiene la ruta actual
+    
     setIsRepairing(true);
     try {
       // Realizar la petición POST para reparar las transacciones
-      await fetch('/api/repair/invoice-transactions', {
+      const response = await fetch('/api/repair/invoice-transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1187,14 +1189,26 @@ const TransactionList = () => {
         body: JSON.stringify({})
       });
       
+      const result = await response.json();
+      
       // Refrescar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
-      // Mostrar confirmación de éxito
+      // Navegar a la pestaña de transacciones (todas)
+      if (currentPath !== "/transactions") {
+        navigate("/transactions");
+      }
+      
+      // Resetear filtros
+      if (currentTab !== "all") {
+        setCurrentTab("all");
+      }
+      
+      // Mostrar confirmación de éxito con información del resultado
       toast({
         title: "Reparación completada",
-        description: "Se han procesado las facturas pagadas y generado las transacciones faltantes.",
+        description: result.message || "Se han procesado las facturas pagadas y generado las transacciones faltantes.",
         variant: "default"
       });
     } catch (error: any) {
