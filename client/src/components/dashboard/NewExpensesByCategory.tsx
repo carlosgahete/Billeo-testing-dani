@@ -651,43 +651,41 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
         )}
         
         {/* Layout en dos columnas con elementos centrados */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
-          {/* Columna izquierda: Gráfico de donut - movida hacia la flecha de la izquierda */}
-          <div className="relative md:col-span-2 p-0">
-            <div className="absolute" style={{ top: "50px", left: "-120px" }}>
-              <ResponsiveContainer width={300} height={300}>
-                <PieChart>
-                  <Pie
-                    data={displayData}
-                    cx={150}
-                    cy={150}
-                    innerRadius={60}
-                    outerRadius={95}
-                    paddingAngle={1}
-                    dataKey="value"
-                  >
-                    {displayData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{ 
-                      borderRadius: '8px',
-                      boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                      border: 'none',
-                      padding: '6px',
-                      fontSize: '10px'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Columna izquierda: Gráfico de donut */}
+          <div className="flex items-center h-[280px]">
+            <div className="relative" style={{ marginLeft: "-80px", marginTop: "0px" }}>
+              <PieChart width={280} height={280}>
+                <Pie
+                  data={displayData}
+                  cx={80}
+                  cy={140}
+                  innerRadius={60}
+                  outerRadius={95}
+                  paddingAngle={1}
+                  dataKey="value"
+                >
+                  {displayData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value: number) => formatCurrency(value)}
+                  contentStyle={{ 
+                    borderRadius: '8px',
+                    boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
+                    border: 'none',
+                    padding: '6px',
+                    fontSize: '10px'
+                  }}
+                />
+              </PieChart>
             </div>
           </div>
           
           {/* Columna derecha: Lista de categorías */}
           <div 
-            className="flex justify-start md:col-span-3 p-2 pl-0 pr-3 overflow-y-auto h-[280px]"
+            className="flex justify-start p-2 pl-0 pr-3 overflow-y-auto h-[280px]"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
