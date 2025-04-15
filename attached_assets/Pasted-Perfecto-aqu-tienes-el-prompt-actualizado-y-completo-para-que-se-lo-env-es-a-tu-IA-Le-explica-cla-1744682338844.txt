@@ -1,0 +1,55 @@
+Perfecto, aquí tienes el prompt actualizado y completo para que se lo envíes a tu IA. Le explica claramente el problema del recorte inferior que aparece en todas las pantallas accedidas desde el sidebar:
+
+⸻
+
+Prompt para Mia — Problema de recorte inferior en el diseño
+
+Mia, necesito que corrijas un problema visual que se repite en todas las pantallas que se abren desde el sidebar.
+
+¿Qué está pasando?
+
+En todas esas pantallas, aparece un bloque gris con bordes redondeados en la parte inferior, como si el contenido estuviera siendo recortado por un rectángulo fijo. Este elemento no forma parte del diseño original ni es necesario.
+
+¿Qué quiero que cambies?
+	1.	Ese bloque inferior no debe aparecer si no hay contenido que lo justifique.
+	2.	El diseño debe permitir que el contenido se extienda hacia abajo sin límites.
+	3.	No debe haber ningún rectángulo decorativo, sombra o contenedor con color de fondo fijo que actúe como una “tapa visual”.
+	4.	El contenido debe ser scrollable verticalmente si excede la altura de la pantalla.
+
+⸻
+
+Instrucciones técnicas:
+
+Asegúrate de que:
+	•	Todos los componentes principales estén dentro de un contenedor como este:
+
+<div class="dashboard-wrapper">
+  <!-- Aquí va todo el contenido real -->
+</div>
+
+Y en CSS o Tailwind, aplica:
+
+.dashboard-wrapper {
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 40px; /* Espacio de seguridad para evitar recortes visuales */
+  background-color: #f9f9f9; /* Color neutro, no un bloque sólido gris */
+}
+
+footer, .bottom-block {
+  display: none; /* Si hay algún componente innecesario que esté causando el problema */
+}
+
+	•	Verifica que ningún contenedor padre tenga overflow: hidden.
+	•	Asegúrate de que no haya elementos con position: fixed pegados al fondo, como decorativos o de fondo, que estén sobresaliendo o recortando el contenido.
+
+⸻
+
+Resultado esperado
+	•	El diseño debe verse limpio, sin un bloque extraño al final.
+	•	Las pantallas deben tener continuidad visual hacia abajo como en el estilo Apple, con márgenes suaves, sin bordes abruptos ni bloques fijos al fondo.
+	•	El contenido se debe comportar como en cualquier aplicación moderna: si hay más, se hace scroll; si no, el fondo queda limpio.
+
+⸻
+
+¿Quieres que te prepare también el prompt completo del libro de registros junto con este, todo en uno?
