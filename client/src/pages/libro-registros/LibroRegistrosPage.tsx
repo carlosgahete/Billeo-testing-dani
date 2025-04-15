@@ -1033,15 +1033,21 @@ export default function LibroRegistrosPage() {
             <Select 
               value={selectedUserId} 
               onValueChange={setSelectedUserId}
-              disabled={false}
+              disabled={loadingUsers}
             >
               <SelectTrigger className="h-10 w-[200px] rounded-xl bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 text-purple-700 hover:bg-purple-100 hover:text-purple-800 focus:ring-2 focus:ring-purple-200 transition-all">
                 <SelectValue placeholder="Seleccionar cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Cliente Demo</SelectItem>
-                <SelectItem value="2">Cliente Prueba</SelectItem>
-                <SelectItem value="3">Autónomo Test</SelectItem>
+                {!usersList || usersList.length === 0 ? (
+                  <SelectItem value="" disabled>No hay usuarios disponibles</SelectItem>
+                ) : (
+                  usersList.map((userOption: UserOption) => (
+                    <SelectItem key={userOption.id} value={userOption.id.toString()}>
+                      {userOption.name || userOption.username}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
