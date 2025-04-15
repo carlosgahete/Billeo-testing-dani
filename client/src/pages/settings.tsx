@@ -500,33 +500,7 @@ const SettingsPage = () => {
                 </div>
               </div>
               
-              {/* Tema */}
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="theme" className="text-gray-700 font-medium flex items-center space-x-2">
-                      {isDarkModeEnabled ? (
-                        <Moon className="h-4 w-4 text-indigo-500" />
-                      ) : (
-                        <Sun className="h-4 w-4 text-amber-500" />
-                      )}
-                      <span>Modo oscuro</span>
-                    </Label>
-                    <p className="text-sm text-gray-500">
-                      Activa el modo oscuro para reducir la fatiga visual
-                    </p>
-                  </div>
-                  <Switch
-                    id="theme"
-                    checked={isDarkModeEnabled}
-                    onCheckedChange={(checked) => {
-                      setIsDarkModeEnabled(checked);
-                      setTheme(checked ? "dark" : "light");
-                    }}
-                    className="data-[state=checked]:bg-indigo-500"
-                  />
-                </div>
-              </div>
+              {/* Opción de tema oscuro eliminada */}
               
               <div className="pt-4 flex justify-end">
                 <Button 

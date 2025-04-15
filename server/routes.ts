@@ -4352,19 +4352,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para obtener datos del libro de registros (requiere autenticación y permisos de superadmin)
   // Endpoint para libro-registros de cliente removido para simplificar
 
-  // Endpoint para libro de registros (cambiado para consistencia en rutas)
-  app.get("/api/libro-registros/:userId", async (req: Request, res: Response) => {
+  // Endpoint para libro de registros (con autenticación requerida)
+  app.get("/api/libro-registros/:userId", requireAuth, async (req: Request, res: Response) => {
     try {
-      console.log("Recibida petición a /api/libro-registros/:userId");
+      console.log("Recibida petición autenticada a /api/libro-registros/:userId");
       console.log("Parámetros de la URL:", req.params);
-      console.log("Estado de la sesión:", !!req.session);
       console.log("userId en sesión:", req.session?.userId);
-      console.log("¿Está autenticado?:", req.isAuthenticated());
       
-      // NOTA: Para propósitos de depuración, permitimos el acceso aún sin autenticación
-      // Esto es temporal hasta que resolvamos los problemas de autenticación
-      
-      // Convertir userId a número - usar un valor por defecto si no es válido
+      // Convertir userId a número
       const userId = parseInt(req.params.userId);
       if (isNaN(userId)) {
         return res.status(400).json({ success: false, message: "ID de usuario inválido" });
@@ -4376,38 +4371,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ success: false, message: "Usuario no encontrado" });
       }
       
-      // Variables para el control de acceso - temporalmente configuradas para permitir acceso
-      let isSuperAdmin = true; // Temporalmente asumimos que es admin
-      let isAdmin = true; // Temporalmente asumimos que es admin
-      let isViewingOwnData = true; // Temporalmente asumimos que es sus propios datos
-      let currentUser = targetUser; // Usamos el usuario objetivo como usuario actual
+      // Obtener información del usuario autenticado (sabemos que existe porque pasó requireAuth)
+      const currentUser = req.user || await storage.getUser(req.session!.userId);
       
-      // Si hay sesión, verificamos permisos reales (pero no bloqueamos acceso aún)
-      if (req.session && req.session.userId) {
-        // Obtener información del usuario actual para verificar su rol
-        const loggedInUser = await storage.getUser(req.session.userId);
-        
-        if (loggedInUser) {
-          currentUser = loggedInUser;
-          
-          // Verificar si es un usuario autorizado
-          isSuperAdmin = 
-            loggedInUser.role === 'superadmin' || 
-            loggedInUser.role === 'SUPERADMIN' || 
-            loggedInUser.username === 'Superadmin' ||
-            loggedInUser.username === 'billeo_admin';
-          
-          isAdmin = loggedInUser.role === 'admin';
-          
-          // Verificar si el usuario está intentando acceder a sus propios datos
-          isViewingOwnData = loggedInUser.id === userId;
-          
-          console.log("Usuario actual:", loggedInUser.username);
-          console.log("¿Es superadmin?:", isSuperAdmin);
-          console.log("¿Es admin?:", isAdmin);
-          console.log("¿Ve sus propios datos?:", isViewingOwnData);
-        }
+      if (!currentUser) {
+        return res.status(401).json({ success: false, message: "No autorizado" });
       }
+      
+      // Verificar permisos basados en roles
+      const isSuperAdmin = 
+        currentUser.role === 'superadmin' || 
+        currentUser.role === 'SUPERADMIN' || 
+        currentUser.username === 'Superadmin' ||
+        currentUser.username === 'billeo_admin';
+      
+      const isAdmin = currentUser.role === 'admin' || currentUser.role === 'ADMIN';
+      
+      // Verificar si el usuario está intentando acceder a sus propios datos
+      const isViewingOwnData = currentUser.id === userId;
+      
+      console.log("Usuario actual:", currentUser.username);
+      console.log("¿Es superadmin?:", isSuperAdmin);
+      console.log("¿Es admin?:", isAdmin);
+      console.log("¿Ve sus propios datos?:", isViewingOwnData);
       
       // Si el usuario está viendo sus propios datos, permitir siempre el acceso
       if (isViewingOwnData) {

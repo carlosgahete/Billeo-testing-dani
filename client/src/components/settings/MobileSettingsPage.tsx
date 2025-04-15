@@ -387,26 +387,7 @@ const MobileSettingsPage = () => {
           </div>
           
           {/* Tema */}
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center">
-                {isDarkModeEnabled ? (
-                  <Moon className="h-4 w-4 text-indigo-500" />
-                ) : (
-                  <Sun className="h-4 w-4 text-amber-500" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-800">Modo oscuro</h3>
-                <p className="text-xs text-gray-500">Reduce la fatiga visual</p>
-              </div>
-            </div>
-            <Switch
-              checked={isDarkModeEnabled}
-              onCheckedChange={handleThemeChange}
-              className="data-[state=checked]:bg-[#007AFF]"
-            />
-          </div>
+          {/* Opción de modo oscuro eliminada */}
         </div>
         
         {/* Cerrar sesión */}
