@@ -418,24 +418,72 @@ const TransactionList = () => {
   });
 
   // Función para determinar qué datos mostrar según los filtros activos
+  // Función para filtrar transacciones por año y periodo
+  const filterTransactionsByDate = useCallback((transactions: Transaction[]) => {
+    if (!transactions || transactions.length === 0) return [];
+    
+    return transactions.filter((transaction: Transaction) => {
+      const transactionDate = new Date(transaction.date);
+      const transactionYear = transactionDate.getFullYear().toString();
+      const transactionMonth = (transactionDate.getMonth() + 1).toString().padStart(2, '0');
+      
+      // Filtro por año
+      if (selectedYear !== 'all' && transactionYear !== selectedYear) {
+        return false;
+      }
+      
+      // Filtro por periodo (trimestre o mes)
+      if (selectedPeriod !== 'all') {
+        // Filtros trimestrales
+        if (selectedPeriod === 'Q1' && !['01', '02', '03'].includes(transactionMonth)) {
+          return false;
+        }
+        if (selectedPeriod === 'Q2' && !['04', '05', '06'].includes(transactionMonth)) {
+          return false;
+        }
+        if (selectedPeriod === 'Q3' && !['07', '08', '09'].includes(transactionMonth)) {
+          return false;
+        }
+        if (selectedPeriod === 'Q4' && !['10', '11', '12'].includes(transactionMonth)) {
+          return false;
+        }
+        
+        // Filtros mensuales
+        if (selectedPeriod.length === 2 && selectedPeriod !== transactionMonth) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [selectedYear, selectedPeriod]);
+
   const filteredTransactions = React.useMemo(() => {
     if (!transactions) return [];
     
+    // Aplicamos primero los filtros de pestaña
+    let result = [];
+    
     // Si estamos en la pestaña de gastos y hay filtros aplicados
     if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
-      return filteredExpenseTransactions;
+      result = filteredExpenseTransactions;
     }
     // Si estamos en la pestaña de ingresos y hay filtros aplicados
     else if (currentTab === "income" && filteredIncomeTransactions.length > 0) {
-      return filteredIncomeTransactions;
+      result = filteredIncomeTransactions;
     }
     // Si no hay filtros, filtramos por el tipo de la pestaña seleccionada
     else if (currentTab !== "all") {
-      return transactions.filter((t: Transaction) => t.type === currentTab);
+      result = transactions.filter((t: Transaction) => t.type === currentTab);
     }
     // En la pestaña "todos", mostramos todas las transacciones
-    return transactions;
-  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions]);
+    else {
+      result = transactions;
+    }
+    
+    // Aplicamos los filtros de fecha sobre el resultado
+    return filterTransactionsByDate(result);
+  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions, filterTransactionsByDate]);
 
   // Obtener categoría por ID
   const getCategory = (categoryId: number) => {
@@ -969,8 +1017,49 @@ const TransactionList = () => {
             </div>
           </div>
           
-          {/* Espacio para mantener la alineación */}
-          <div className="mr-6"></div>
+          {/* Filtros de año y periodo */}
+          <div className="flex items-center space-x-3 mr-6">
+            <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-md border border-gray-200">
+              {/* Selector de Año */}
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="text-sm border-none bg-transparent focus:ring-0 py-1 pl-2 pr-8 rounded"
+              >
+                <option value="all">Todo</option>
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Selector de Periodo */}
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="text-sm border-none bg-transparent focus:ring-0 py-1 pl-2 pr-8 rounded"
+              >
+                <option value="all">Todos</option>
+                <option value="Q1">T1 (Ene-Mar)</option>
+                <option value="Q2">T2 (Abr-Jun)</option>
+                <option value="Q3">T3 (Jul-Sep)</option>
+                <option value="Q4">T4 (Oct-Dic)</option>
+                <option value="01">Enero</option>
+                <option value="02">Febrero</option>
+                <option value="03">Marzo</option>
+                <option value="04">Abril</option>
+                <option value="05">Mayo</option>
+                <option value="06">Junio</option>
+                <option value="07">Julio</option>
+                <option value="08">Agosto</option>
+                <option value="09">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+          </div>
         </div>
       )}
 
