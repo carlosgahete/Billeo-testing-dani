@@ -993,6 +993,16 @@ const TransactionList = () => {
   const filteredInvoices = !isLoading && Array.isArray(invoices) 
     ? filterInvoicesByDate(invoices)
     : [];
+    
+  // Log de depuración para entender la discrepancia entre facturas y transacciones
+  console.log("🔍 Detalles de facturas y transacciones:", {
+    totalFacturas: invoices?.length || 0,
+    facturasEnFiltro: filteredInvoices.length,
+    totalTransacciones: transactions?.length || 0,
+    transaccionesIngresos: transactions?.filter((t: any) => t.type === 'income').length || 0,
+    transaccionesGastos: transactions?.filter((t: any) => t.type === 'expense').length || 0,
+    filtro: { año: selectedYear, periodo: selectedPeriod }
+  });
   
   // Ingresos de facturas pagadas filtradas
   const invoiceIncomeTotal = filteredInvoices.length > 0
@@ -1001,8 +1011,10 @@ const TransactionList = () => {
         .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0)
     : 0;
   
-  // Si las transacciones están vacías (0), usamos el total de facturas pagadas
-  const incomeTotal = transactionIncomeTotal > 0 ? transactionIncomeTotal : invoiceIncomeTotal;
+  // Combinamos ambos ingresos: los de transacciones directas y los de facturas
+  // Esto garantiza que el total refleje correctamente todos los ingresos, tanto
+  // los registrados manualmente como los generados por facturas
+  const incomeTotal = transactionIncomeTotal + invoiceIncomeTotal;
     
   // Gastos usando filteredTransactions para reflejar los filtros
   const expenseTotal = !isLoading && Array.isArray(filteredTransactions)
