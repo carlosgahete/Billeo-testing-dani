@@ -35,7 +35,7 @@ export default function TestEmailPage() {
   useEffect(() => {
     const fetchEmailTypes = async () => {
       try {
-        const response = await fetch("/api/test-email-types");
+        const response = await fetch("/api/test-email/test-email-types");
         const data = await response.json();
         
         if (data.success && data.types) {
@@ -66,7 +66,7 @@ export default function TestEmailPage() {
 
     setIsSending(true);
     try {
-      const response = await fetch("/api/send-test-email", {
+      const response = await fetch("/api/test-email/send-test-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
