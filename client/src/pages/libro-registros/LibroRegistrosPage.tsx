@@ -354,8 +354,7 @@ export default function LibroRegistrosPage() {
       });
       
       // Gastos y transacciones
-      // @ts-ignore
-      const finalY2 = doc.lastAutoTable.finalY || finalY + 60;
+      const finalY2 = doc.lastAutoTable?.finalY || finalY + 60;
       
       // Verificar si necesitamos una nueva página
       if (finalY2 > 240) {
@@ -363,7 +362,6 @@ export default function LibroRegistrosPage() {
         doc.setFontSize(12);
         doc.text("Gastos y transacciones", 14, 20);
         
-        // @ts-ignore
         doc.autoTable({
           startY: 24,
           head: [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']],
@@ -379,7 +377,6 @@ export default function LibroRegistrosPage() {
         doc.setFontSize(12);
         doc.text("Gastos y transacciones", 14, finalY2 + 10);
         
-        // @ts-ignore
         doc.autoTable({
           startY: finalY2 + 14,
           head: [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']],
