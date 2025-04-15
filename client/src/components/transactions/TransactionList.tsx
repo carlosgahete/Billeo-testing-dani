@@ -445,6 +445,7 @@ const TransactionList = () => {
       
       // Filtro por año
       if (selectedYear !== 'all' && transactionYear !== selectedYear) {
+        console.log(`Filtrado por año: ${transactionYear} != ${selectedYear}`);
         return false;
       }
       
@@ -452,20 +453,71 @@ const TransactionList = () => {
       if (selectedPeriod !== 'all') {
         // Filtros trimestrales
         if (selectedPeriod === 'Q1' && !['01', '02', '03'].includes(transactionMonth)) {
+          console.log(`Filtrado por Q1: ${transactionMonth} no está en [01,02,03]`);
           return false;
         }
         if (selectedPeriod === 'Q2' && !['04', '05', '06'].includes(transactionMonth)) {
+          console.log(`Filtrado por Q2: ${transactionMonth} no está en [04,05,06]`);
           return false;
         }
         if (selectedPeriod === 'Q3' && !['07', '08', '09'].includes(transactionMonth)) {
+          console.log(`Filtrado por Q3: ${transactionMonth} no está en [07,08,09]`);
           return false;
         }
         if (selectedPeriod === 'Q4' && !['10', '11', '12'].includes(transactionMonth)) {
+          console.log(`Filtrado por Q4: ${transactionMonth} no está en [10,11,12]`);
           return false;
         }
         
         // Filtros mensuales
         if (selectedPeriod.length === 2 && selectedPeriod !== transactionMonth) {
+          console.log(`Filtrado por mes: ${transactionMonth} != ${selectedPeriod}`);
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [selectedYear, selectedPeriod]);
+  
+  // Función para filtrar facturas por año y periodo
+  const filterInvoicesByDate = React.useCallback((invoices: Invoice[]) => {
+    if (!invoices || invoices.length === 0) return [];
+    
+    return invoices.filter((invoice) => {
+      const invoiceDate = new Date(invoice.issueDate);
+      const invoiceYear = invoiceDate.getFullYear().toString();
+      const invoiceMonth = (invoiceDate.getMonth() + 1).toString().padStart(2, '0');
+      
+      // Filtro por año
+      if (selectedYear !== 'all' && invoiceYear !== selectedYear) {
+        console.log(`Filtrado factura por año: ${invoiceYear} != ${selectedYear}`);
+        return false;
+      }
+      
+      // Filtro por periodo (trimestre o mes)
+      if (selectedPeriod !== 'all') {
+        // Filtros trimestrales
+        if (selectedPeriod === 'Q1' && !['01', '02', '03'].includes(invoiceMonth)) {
+          console.log(`Filtrado factura por Q1: ${invoiceMonth} no está en [01,02,03]`);
+          return false;
+        }
+        if (selectedPeriod === 'Q2' && !['04', '05', '06'].includes(invoiceMonth)) {
+          console.log(`Filtrado factura por Q2: ${invoiceMonth} no está en [04,05,06]`);
+          return false;
+        }
+        if (selectedPeriod === 'Q3' && !['07', '08', '09'].includes(invoiceMonth)) {
+          console.log(`Filtrado factura por Q3: ${invoiceMonth} no está en [07,08,09]`);
+          return false;
+        }
+        if (selectedPeriod === 'Q4' && !['10', '11', '12'].includes(invoiceMonth)) {
+          console.log(`Filtrado factura por Q4: ${invoiceMonth} no está en [10,11,12]`);
+          return false;
+        }
+        
+        // Filtros mensuales
+        if (selectedPeriod.length === 2 && selectedPeriod !== invoiceMonth) {
+          console.log(`Filtrado factura por mes: ${invoiceMonth} != ${selectedPeriod}`);
           return false;
         }
       }
@@ -937,43 +989,9 @@ const TransactionList = () => {
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
   
-  // Para facturas usamos el filtro de año/periodo directamente
+  // Para facturas usamos la función filterInvoicesByDate para tener consistencia en el filtrado
   const filteredInvoices = !isLoading && Array.isArray(invoices) 
-    ? invoices.filter((inv: any) => {
-        if (!inv.issueDate) return false;
-        const invDate = new Date(inv.issueDate);
-        const invYear = invDate.getFullYear().toString();
-        const invMonth = (invDate.getMonth() + 1).toString().padStart(2, '0');
-        
-        // Filtro por año
-        if (selectedYear !== 'all' && invYear !== selectedYear) {
-          return false;
-        }
-        
-        // Filtro por periodo (trimestre o mes)
-        if (selectedPeriod !== 'all') {
-          // Filtros trimestrales
-          if (selectedPeriod === 'Q1' && !['01', '02', '03'].includes(invMonth)) {
-            return false;
-          }
-          if (selectedPeriod === 'Q2' && !['04', '05', '06'].includes(invMonth)) {
-            return false;
-          }
-          if (selectedPeriod === 'Q3' && !['07', '08', '09'].includes(invMonth)) {
-            return false;
-          }
-          if (selectedPeriod === 'Q4' && !['10', '11', '12'].includes(invMonth)) {
-            return false;
-          }
-          
-          // Filtros mensuales
-          if (selectedPeriod.length === 2 && selectedPeriod !== invMonth) {
-            return false;
-          }
-        }
-        
-        return true;
-      })
+    ? filterInvoicesByDate(invoices)
     : [];
   
   // Ingresos de facturas pagadas filtradas
