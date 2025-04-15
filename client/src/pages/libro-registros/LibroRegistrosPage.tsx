@@ -631,74 +631,89 @@ export default function LibroRegistrosPage() {
         doc.text(`... y ${filteredInvoices.length - maxFacturas} más`, margin + 5, facturaY + 3);
       }
       
-      // SECCIÓN DE PRESUPUESTOS
+      // SECCIÓN DE PRESUPUESTOS - COMPLETAMENTE REDISEÑADA
       currentY += 55;
       drawColorBox(currentY, 45, 'green', 'PRESUPUESTOS');
       
-      // Cabecera de la tabla de presupuestos con posiciones mejoradas
+      // Variables para controlar la tabla - diseñada para no tener overflows
+      const tablePaddingLeft = 10;
+      const tableWidth = pageWidth - 2 * margin - 20; // 20px de margen total (10px a cada lado)
+      const maxColumnsWidth = [
+        tableWidth * 0.15, // Número (15%)
+        tableWidth * 0.15, // Fecha (15%)
+        tableWidth * 0.25, // Cliente (25%)
+        tableWidth * 0.25, // Total (25%) 
+        tableWidth * 0.20  // Estado (20%)
+      ];
+      
+      // Posiciones exactas para cada columna (desde el margen izquierdo)
+      const col1X = margin + tablePaddingLeft;
+      const col2X = col1X + maxColumnsWidth[0];
+      const col3X = col2X + maxColumnsWidth[1];
+      const col4X = col3X + maxColumnsWidth[2];
+      const col5X = col4X + maxColumnsWidth[3];
+      
+      // Cabecera con posiciones fijas para evitar cualquier desbordamiento
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
+      doc.setFontSize(7); // Texto más pequeño para caber mejor
       
-      // Nuevas posiciones para evitar desbordamiento
-      const colWidth = (pageWidth - 2 * margin) / 5; // Dividir el ancho disponible en 5 columnas
-      const numQuoteX = margin + 5;
-      const fechaQuoteX = margin + colWidth;
-      const clienteQuoteX = margin + 2 * colWidth;
-      const totalQuoteX = margin + 3.5 * colWidth;
-      const estadoQuoteX = margin + 4.5 * colWidth;
+      doc.text("Número", col1X, currentY + 15);
+      doc.text("Fecha", col2X, currentY + 15);
+      doc.text("Cliente", col3X, currentY + 15);
+      doc.text("Total", col4X, currentY + 15);
+      doc.text("Estado", col5X, currentY + 15);
       
-      doc.text("Número", numQuoteX, currentY + 15);
-      doc.text("Fecha", fechaQuoteX, currentY + 15);
-      doc.text("Cliente", clienteQuoteX, currentY + 15);
-      doc.text("Total", totalQuoteX, currentY + 15, { align: 'right' });
-      doc.text("Estado", estadoQuoteX, currentY + 15, { align: 'right' });
-      
-      drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
+      drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 20);
       
       // Datos de presupuestos
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(7); // Mantener texto pequeño
       
       let presupuestoY = currentY + 22;
       const maxPresupuestos = Math.min(5, filteredQuotes.length);
       
       if (filteredQuotes.length === 0) {
         doc.setFont('helvetica', 'italic');
-        doc.text("No hay presupuestos en este período", margin + 5, presupuestoY);
+        doc.text("No hay presupuestos en este período", margin + tablePaddingLeft, presupuestoY);
       } else {
         for (let i = 0; i < maxPresupuestos; i++) {
           const quote = filteredQuotes[i];
           
-          // Limitar longitud de textos aún más para evitar solapamiento
-          const clienteText = quote.clientName.length > 15 ? quote.clientName.substring(0, 12) + "..." : quote.clientName;
-          const numberText = quote.number.length > 8 ? quote.number.substring(0, 5) + "..." : quote.number;
+          // Limitar longitud de textos con máximo riguroso
+          const maxLength = 10; // máximo de caracteres por campo
+          const clienteText = quote.clientName.length > maxLength ? quote.clientName.substring(0, maxLength - 3) + "..." : quote.clientName;
+          const numberText = quote.number.length > maxLength ? quote.number.substring(0, maxLength - 3) + "..." : quote.number;
           
-          // Estado formateado - mantenerlo corto
+          // Estado también acortado drásticamente
           let status = quote.status === 'accepted' ? 'Acept.' : 
                        quote.status === 'rejected' ? 'Rech.' : 
                        quote.status === 'pending' ? 'Pend.' : quote.status;
           
-          // Asegurar que el estado no exceda cierta longitud
+          // Asegurar longitud máxima absoluta del estado
           if (status.length > 6) status = status.substring(0, 5) + '.';
           
-          doc.text(numberText, numQuoteX, presupuestoY);
-          doc.text(formatDate(quote.date), fechaQuoteX, presupuestoY);
-          doc.text(clienteText, clienteQuoteX, presupuestoY);
-          doc.text(formatCurrency(parseFloat(quote.total)), totalQuoteX, presupuestoY, { align: 'right' });
-          doc.text(status, estadoQuoteX, presupuestoY, { align: 'right' });
+          // Total formateado sin símbolo € para ahorrar espacio
+          const totalText = formatCurrency(parseFloat(quote.total)).replace('€', '');
+          
+          // Renderizar cada celda en su posición específica, sin alineaciones especiales
+          doc.text(numberText, col1X, presupuestoY);
+          doc.text(formatDate(quote.date), col2X, presupuestoY);
+          doc.text(clienteText, col3X, presupuestoY);
+          doc.text(totalText, col4X, presupuestoY);
+          doc.text(status, col5X, presupuestoY);
           
           presupuestoY += 6; // Más espaciado entre filas
           
           // Líneas separadoras
           if (i < maxPresupuestos - 1) {
-            drawHorizontalLine(presupuestoY - 3, pageWidth - 2 * margin - 10);
+            drawHorizontalLine(presupuestoY - 3, tableWidth);
           }
         }
         
         // Si hay más presupuestos de los que se muestran
         if (filteredQuotes.length > maxPresupuestos) {
           doc.setFont('helvetica', 'italic');
-          doc.text(`... y ${filteredQuotes.length - maxPresupuestos} más`, margin + 5, presupuestoY + 3);
+          doc.text(`... y ${filteredQuotes.length - maxPresupuestos} más`, margin + tablePaddingLeft, presupuestoY + 3);
         }
       }
       
