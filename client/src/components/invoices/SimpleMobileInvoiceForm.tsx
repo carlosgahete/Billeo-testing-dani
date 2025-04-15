@@ -145,27 +145,29 @@ const SimpleMobileInvoiceForm = ({ invoiceId, initialData }: SimpleMobileInvoice
     setAdditionalTaxes(prev => prev.filter((_, i) => i !== index));
   };
   
-  // Calcular totales 
-  const calculateTotal = () => {
-    let total = subtotal + tax;
+  // Calcular totales - usando useMemo para evitar recálculos innecesarios
+  const total = React.useMemo(() => {
+    let calculatedTotal = subtotal + tax;
     
     additionalTaxes.forEach(taxItem => {
       if (taxItem.isPercentage) {
-        total += subtotal * (parseFloat(String(taxItem.amount)) / 100);
+        calculatedTotal += subtotal * (parseFloat(String(taxItem.amount)) / 100);
       } else {
-        total += parseFloat(String(taxItem.amount));
+        calculatedTotal += parseFloat(String(taxItem.amount));
       }
     });
     
-    return total;
-  };
+    return calculatedTotal;
+  }, [subtotal, tax, additionalTaxes]);
+  
+  // Función wrapper para mantener compatibilidad con el código existente
+  const calculateTotal = () => total;
   
   // Submit handler mejorado para asegurar formato correcto de datos
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Calcular el total
-    const total = calculateTotal();
+    // Usamos el total ya calculado mediante useMemo
     
     // Estructura de datos que espera el servidor
     const payload = {
