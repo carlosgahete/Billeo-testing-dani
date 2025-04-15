@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import type { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { Info } from "lucide-react";
+import { BarChart, Rectangle, Bar, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
+import { Info, TrendingDown } from "lucide-react";
 
 // Los iconos para cada categoría se asignarán según el nombre
-// Esto se puede ampliar según las categorías que tengan los usuarios
 const CATEGORY_ICONS: Record<string, string> = {
   "Sin categoría": "💰",
   "Suministros": "💡",
@@ -59,12 +58,6 @@ interface ExpenseByCategoryData {
   categoryId?: number | string | null;
 }
 
-interface ExpensesByCategoryProps {
-  transactions: any[];
-  categories: any[];
-  period?: string;
-}
-
 // Función para formatear moneda
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-ES', {
@@ -73,6 +66,24 @@ const formatCurrency = (value: number) => {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2
   }).format(value);
+};
+
+// Componente para tooltip personalizado
+const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+  if (active && payload && payload.length > 0) {
+    const value = payload[0]?.value;
+    const name = payload[0]?.name;
+    
+    if (value !== undefined && name !== undefined) {
+      return (
+        <div className="bg-white p-2 border shadow-sm rounded-md text-xs">
+          <p className="font-medium">{String(name)}</p>
+          <p className="text-red-600">{formatCurrency(-(value as number))}</p>
+        </div>
+      );
+    }
+  }
+  return null;
 };
 
 const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
@@ -103,13 +114,9 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
       });
 
       // Filtramos las transacciones por tipo (gasto)
-      const filteredTransactions = transactions.filter(transaction => {
-        // Solo incluir gastos
-        if (transaction.type !== 'expense') return false;
-        
-        // Considerar todas las transacciones de gastos (podrías agregar filtros adicionales aquí)
-        return true;
-      });
+      const filteredTransactions = transactions.filter(transaction => 
+        transaction.type === 'expense'
+      );
 
       // Agrupamos por categoría
       const expensesByCategory: Record<string, { 
@@ -169,16 +176,6 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
       setIsProcessing(false);
     }
   }, [transactions, categories]);
-
-  // Datos para el gráfico circular
-  const chartData = processedCategories.map(cat => ({
-    name: cat.name,
-    value: cat.value,
-    color: cat.color
-  }));
-
-  // Mostrar solo las 5 categorías principales para el gráfico
-  const topCategoriesForChart = chartData.slice(0, 5);
   
   // Determinar si está cargando
   const isLoading = dashboardLoading || transactionsLoading || categoriesLoading || isProcessing;
@@ -192,13 +189,12 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
           <Skeleton className="h-6 w-32" />
         </div>
         <div className="p-4">
-          <div className="flex justify-center mb-2">
-            <Skeleton className="h-40 w-40 rounded-full" />
-          </div>
-          <div className="space-y-2 mt-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-11/12" />
-            <Skeleton className="h-4 w-10/12" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-11/12" />
+            <Skeleton className="h-8 w-10/12" />
+            <Skeleton className="h-8 w-9/12" />
+            <Skeleton className="h-8 w-8/12" />
           </div>
         </div>
       </div>
@@ -223,28 +219,16 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
     );
   }
 
-  // Renderizador personalizado para la leyenda
-  const renderLegend = (props: any) => {
-    const { payload } = props;
-    
-    return (
-      <ul className="flex flex-col gap-1 mt-2 pl-2">
-        {payload.map((entry: any, index: number) => (
-          <li key={`item-${index}`} className="flex items-center text-xs">
-            <span style={{ 
-              backgroundColor: entry.color,
-              width: '8px',
-              height: '8px',
-              display: 'inline-block',
-              marginRight: '5px',
-              borderRadius: '2px'
-            }}></span>
-            <span className="truncate max-w-[100px]">{entry.name}</span>
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  // Tomar solo las 5 principales categorías para el gráfico
+  const topCategories = processedCategories.slice(0, 5);
+  
+  // Datos para el gráfico de barras
+  const chartData = topCategories.map(cat => ({
+    name: cat.name,
+    value: cat.value,
+    color: cat.color,
+    icon: cat.icon
+  }));
 
   return (
     <div className="rounded-lg border overflow-hidden bg-white">
@@ -258,62 +242,86 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
       </div>
       
       <div className="p-4">
-        <div className="flex flex-col items-center justify-center">
-          {/* Gráfico de sectores en el centro */}
-          <div className="flex justify-center items-center">
-            <PieChart width={300} height={190}>
-              <Pie
-                data={topCategoriesForChart}
-                cx={95}
-                cy={95}
-                innerRadius={40}
-                outerRadius={70}
-                paddingAngle={1}
-                dataKey="value"
-                startAngle={90}
-                endAngle={450}
-              >
-                {topCategoriesForChart.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Legend 
-                content={renderLegend}
+        <div className="flex flex-col">
+          {/* Gráfico de barras horizontales */}
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
                 layout="vertical"
-                verticalAlign="middle"
-                align="right"
-                wrapperStyle={{ right: 10, top: 30 }}
-              />
-            </PieChart>
+                data={chartData}
+                margin={{ top: 5, right: 40, bottom: 5, left: 5 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  tick={{ fontSize: 10, fill: '#666' }}
+                  width={80}
+                  tickMargin={5}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => value.length > 10 ? `${value.substring(0, 8)}...` : value}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar 
+                  dataKey="value" 
+                  background={{ fill: '#f5f5f5' }}
+                  radius={[0, 4, 4, 0]}
+                  barSize={20}
+                  shape={<Rectangle radius={3} />}
+                  label={{ 
+                    position: 'right', 
+                    fill: '#666',
+                    fontSize: 10,
+                    formatter: (value: number) => formatCurrency(-value).replace('€', '')
+                  }}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
           
           {/* Lista de categorías con porcentajes */}
-          <div className="w-full mt-3 space-y-1.5">
-            {processedCategories.slice(0, 4).map((category, index) => (
-              <div key={index} className="flex justify-between items-center py-1">
-                <div className="flex items-center">
-                  <span className="text-lg mr-2">{category.icon}</span>
-                  <span className="text-sm font-medium">{category.name}</span>
+          <div className="w-full space-y-2 mt-2">
+            {topCategories.map((category, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="w-7 text-center flex-shrink-0">
+                  <span className="text-lg">{category.icon}</span>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-red-600">
-                    {formatCurrency(-category.value)}
-                  </p>
-                  <p className="text-xs text-gray-500">{category.percentage}%</p>
+                
+                <div className="flex-grow">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium truncate">{category.name}</span>
+                    <span className="text-sm font-semibold text-red-600">
+                      {formatCurrency(-category.value)}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div 
+                      className="h-1.5 rounded-full" 
+                      style={{ 
+                        width: `${category.percentage}%`,
+                        backgroundColor: category.color 
+                      }}
+                    ></div>
+                  </div>
                 </div>
               </div>
             ))}
             
-            {/* Mostrar "Otros" si hay más de 4 categorías */}
-            {processedCategories.length > 4 && (
-              <div className="flex justify-between items-center py-1 border-t pt-2">
+            {/* Mostrar "Otros" si hay más de 5 categorías */}
+            {processedCategories.length > 5 && (
+              <div className="flex justify-between items-center py-1 mt-1 border-t pt-2">
                 <div className="flex items-center">
                   <span className="text-lg mr-2">📦</span>
-                  <span className="text-sm font-medium">Otros ({processedCategories.length - 4})</span>
+                  <span className="text-sm font-medium">Otros ({processedCategories.length - 5})</span>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-red-600">
-                    {formatCurrency(-processedCategories.slice(4).reduce((sum, cat) => sum + cat.value, 0))}
+                    {formatCurrency(-processedCategories.slice(5).reduce((sum, cat) => sum + cat.value, 0))}
                   </p>
                 </div>
               </div>
