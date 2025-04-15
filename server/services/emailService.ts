@@ -66,7 +66,7 @@ export async function initEmailService() {
 }
 
 // URL para el logo de Billeo en correos electrónicos
-// Usamos URLs públicas para máxima compatibilidad con clientes de correo
+// Usamos URLs absolutas para máxima compatibilidad con clientes de correo
 const logoUrl = 'https://billeo.es/logo.png'; // URL pública del sitio web
 const logoLocalUrl = 'http://localhost:5000/images/billeo-logo.png'; // URL local para desarrollo
 
@@ -171,7 +171,7 @@ ${companyName}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoBase64}" alt="${companyName}" style="width: 150px; height: auto;">
+            <img src="${logoEmailUrl}" alt="${companyName}" style="width: 150px; height: auto;">
           </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
@@ -314,7 +314,7 @@ export async function sendAlertNotification(
     const htmlMessage = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="${logoBase64}" alt="${companyName}" style="width: 150px; height: auto;">
+          <img src="${logoEmailUrl}" alt="${companyName}" style="width: 150px; height: auto;">
         </div>
         
         <p>Hola <strong>${recipientName}</strong>,</p>
@@ -442,7 +442,7 @@ ${companyName}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoBase64}" alt="${companyName}" style="width: 150px; height: auto;">
+            <img src="${logoEmailUrl}" alt="${companyName}" style="width: 150px; height: auto;">
           </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
