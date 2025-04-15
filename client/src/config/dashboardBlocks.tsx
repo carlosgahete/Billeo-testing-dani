@@ -20,7 +20,8 @@ import {
   ReceiptText,
   ArrowUpFromLine,
   ArrowDownToLine,
-  PiggyBank
+  PiggyBank,
+  ListChecks
 } from "lucide-react";
 import ResultSummary from "@/components/dashboard/blocks/ResultSummary";
 import QuotesSummary from "@/components/dashboard/blocks/QuotesSummary";
@@ -33,6 +34,7 @@ import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpens
 import ExpensesByCategorySimple from "@/components/dashboard/ExpensesByCategorySimple";
 import SimpleExpensesByCategory from "@/components/dashboard/SimpleExpensesByCategory";
 import DonutExpensesByCategory from "@/components/dashboard/DonutExpensesByCategory";
+import BasicExpensesList from "@/components/dashboard/BasicExpensesList";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -237,6 +239,14 @@ export const DASHBOARD_BLOCKS = {
     component: DonutExpensesByCategory,
     icon: <PieChart className="h-8 w-8 text-purple-600" />,
     type: "charts"
+  },
+  "expenses-by-category-list": {
+    id: "expenses-by-category-list",
+    title: "Gastos por Categoría (Lista)",
+    description: "Lista simple y clara de gastos agrupados por categoría con iconos",
+    component: BasicExpensesList,
+    icon: <ListFilter className="h-8 w-8 text-amber-600" />,
+    type: "lists"
   }
 };
 
@@ -579,6 +589,37 @@ export const DASHBOARD_BLOCK_CATALOG = [
               <path d="M 50 50 L 50 10 A 40 40 0 0 1 90 50 Z" fill="#f59e0b" />
               <circle cx="50" cy="50" r="25" fill="white" />
             </svg>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-list"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-amber-50 py-1 px-2 flex items-center border-b">
+          <ListFilter className="h-3 w-3 text-amber-600 mr-1" />
+          <span className="text-[10px] font-medium text-amber-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex flex-col justify-center gap-1">
+          <div className="flex items-center">
+            <span className="text-[6px] mr-1">🏢</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-[6px]">Alquiler</span>
+                <span className="text-[6px] text-red-600">-2.700€</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <span className="text-[6px] mr-1">💡</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-[6px]">Suministros</span>
+                <span className="text-[6px] text-red-600">-235€</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
