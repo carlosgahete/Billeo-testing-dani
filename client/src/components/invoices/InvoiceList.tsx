@@ -216,15 +216,27 @@ const MarkAsPaidButton = ({
       const invoiceData = await response.json();
       console.log("Datos de factura obtenidos:", invoiceData);
       
+      // Preparar objeto de factura para actualizar
+      const invoiceToUpdate = {
+        // Copiar los datos originales
+        ...invoiceData.invoice,
+      };
+      
+      // Asegurarnos que additionalTaxes sea un array
+      if (invoiceToUpdate.additionalTaxes && 
+          typeof invoiceToUpdate.additionalTaxes === 'object' && 
+          !Array.isArray(invoiceToUpdate.additionalTaxes) &&
+          invoiceToUpdate.additionalTaxes.additionalTaxes) {
+        // Si es un objeto con propiedad additionalTaxes, extraer el array
+        invoiceToUpdate.additionalTaxes = invoiceToUpdate.additionalTaxes.additionalTaxes;
+      }
+      
+      // Sobrescribir el estado a paid
+      invoiceToUpdate.status = "paid";
+      
       // Actualizar el estado de la factura a "paid"
       const updateResponse = await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
-        invoice: { 
-          status: "paid",
-          // Mantener todos los datos originales de la factura
-          ...invoiceData.invoice,
-          // Pero forzar el estado a 'paid'
-          status: "paid" 
-        },
+        invoice: invoiceToUpdate,
         items: invoiceData.items || []
       });
       
@@ -1198,15 +1210,27 @@ const InvoiceList = () => {
       const invoiceData = await response.json();
       console.log("[Móvil] Datos de factura obtenidos:", invoiceData);
       
+      // Preparar objeto de factura para actualizar
+      const invoiceToUpdate = {
+        // Copiar los datos originales
+        ...invoiceData.invoice,
+      };
+      
+      // Asegurarnos que additionalTaxes sea un array
+      if (invoiceToUpdate.additionalTaxes && 
+          typeof invoiceToUpdate.additionalTaxes === 'object' && 
+          !Array.isArray(invoiceToUpdate.additionalTaxes) &&
+          invoiceToUpdate.additionalTaxes.additionalTaxes) {
+        // Si es un objeto con propiedad additionalTaxes, extraer el array
+        invoiceToUpdate.additionalTaxes = invoiceToUpdate.additionalTaxes.additionalTaxes;
+      }
+      
+      // Sobrescribir el estado a paid
+      invoiceToUpdate.status = "paid";
+      
       // Actualizar el estado de la factura a "paid"
       const updateResponse = await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
-        invoice: { 
-          status: "paid",
-          // Mantener todos los datos originales de la factura
-          ...invoiceData.invoice,
-          // Pero forzar el estado a 'paid'
-          status: "paid" 
-        },
+        invoice: invoiceToUpdate,
         items: invoiceData.items || []
       });
       
