@@ -29,12 +29,7 @@ import InvoicesSummary from "@/components/dashboard/blocks/InvoicesSummary";
 import ComparativeChart from "@/components/dashboard/blocks/ComparativeChart";
 import ExpensesSummary from "@/components/dashboard/blocks/ExpensesSummary";
 import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
-import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
-import ExpensesByCategorySimple from "@/components/dashboard/ExpensesByCategorySimple";
-import SimpleExpensesByCategory from "@/components/dashboard/SimpleExpensesByCategory";
-import DonutExpensesByCategory from "@/components/dashboard/DonutExpensesByCategory";
-import BasicExpensesList from "@/components/dashboard/BasicExpensesList";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -238,7 +233,6 @@ export const DASHBOARD_BLOCK_CATALOG = [
       </div>
     )
   },
-  // Componente de gastos por categoría eliminado a petición del usuario
   {
     ...DASHBOARD_BLOCKS["result-summary"],
     preview: (
@@ -340,7 +334,6 @@ export const DASHBOARD_BLOCK_CATALOG = [
       </div>
     )
   },
-  // Componente de gastos por categoría eliminado a petición del usuario
   {
     ...DASHBOARD_BLOCKS["tax-summary"],
     preview: (
@@ -362,7 +355,6 @@ export const DASHBOARD_BLOCK_CATALOG = [
       </div>
     )
   },
-  // Componente de gastos por categoría simple eliminado a petición del usuario
   {
     ...DASHBOARD_BLOCKS["income-card"],
     preview: (
@@ -432,7 +424,5 @@ export const DASHBOARD_BLOCK_CATALOG = [
       </div>
     )
   },
-  // Componente de gastos por categoría con tarjeta eliminado a petición del usuario
-  // Componente de gastos por categoría con donut eliminado a petición del usuario
-  // Componente de gastos por categoría con lista eliminado a petición del usuario
+  // Todos los componentes de gastos por categoría han sido eliminados a petición del usuario
 ];
