@@ -303,40 +303,35 @@ export async function sendAlertNotification(
   let messageContent = '';
   let actionText = '';
   let bgColor = '';
-  let iconEmoji = '';
   
   switch (alertType.toLowerCase()) {
     case 'factura_vencida':
-      subject = `⚠️ Alerta: Factura vencida - ${alertDetails.entityNumber || ''}`;
+      subject = `Alerta: Factura vencida - ${alertDetails.entityNumber || ''}`;
       messageTitle = 'Factura vencida';
       messageContent = `La factura ${alertDetails.entityNumber || ''} de ${alertDetails.entityName || ''} por importe de ${alertDetails.amount ? alertDetails.amount.toFixed(2) + '€' : ''} ha vencido el ${alertDetails.dueDate || ''}.`;
       actionText = 'Revisar factura';
       bgColor = '#FFEBEE';
-      iconEmoji = '⚠️';
       break;
     case 'factura_proxima_vencer':
-      subject = `🔔 Recordatorio: Factura próxima a vencer - ${alertDetails.entityNumber || ''}`;
+      subject = `Recordatorio: Factura próxima a vencer - ${alertDetails.entityNumber || ''}`;
       messageTitle = 'Factura próxima a vencer';
       messageContent = `La factura ${alertDetails.entityNumber || ''} de ${alertDetails.entityName || ''} por importe de ${alertDetails.amount ? alertDetails.amount.toFixed(2) + '€' : ''} vencerá el ${alertDetails.dueDate || ''}.`;
       actionText = 'Ver detalles';
       bgColor = '#FFF8E1';
-      iconEmoji = '🔔';
       break;
     case 'impuestos_proximos':
-      subject = `📋 Recordatorio: Próximo pago de impuestos`;
+      subject = `Recordatorio: Próximo pago de impuestos`;
       messageTitle = 'Próximo pago de impuestos';
       messageContent = `Recuerda que el próximo pago de ${alertDetails.title || 'impuestos'} debe realizarse antes del ${alertDetails.dueDate || ''}.`;
       actionText = 'Ver calendario fiscal';
       bgColor = '#E3F2FD';
-      iconEmoji = '📋';
       break;
     case 'test_notification':
-      subject = `🧪 ${alertDetails.title || 'Correo de prueba'} - Billeo`;
+      subject = `${alertDetails.title || 'Correo de prueba'} - Billeo`;
       messageTitle = alertDetails.title || 'Correo de prueba';
       messageContent = alertDetails.message || 'Este es un correo de prueba para verificar el sistema de notificaciones.';
       actionText = 'Ir a Billeo';
       bgColor = '#E8F5E9';
-      iconEmoji = '✉️';
       break;
     default:
       subject = `${alertDetails.title || 'Notificación importante'} - Billeo`;
@@ -344,7 +339,6 @@ export async function sendAlertNotification(
       messageContent = alertDetails.message || '';
       actionText = 'Ver detalles';
       bgColor = '#F1F8E9';
-      iconEmoji = '📢';
   }
   
   try {
@@ -363,7 +357,7 @@ export async function sendAlertNotification(
         <p>Hola <strong>${recipientName}</strong>,</p>
         
         <div style="background-color: ${bgColor}; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px;">
-          <h2 style="margin-top: 0; color: #2563eb;">${iconEmoji} ${messageTitle}</h2>
+          <h2 style="margin-top: 0; color: #2563eb;">${messageTitle}</h2>
           <p>${messageContent}</p>
           ${alertDetails.date ? `<p><strong>Fecha:</strong> ${alertDetails.date}</p>` : ''}
         </div>
