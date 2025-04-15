@@ -536,6 +536,74 @@ const SettingsPage = () => {
                 </div>
               </div>
               
+              {/* Prueba de correo electrónico */}
+              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <Label className="text-gray-700 font-medium flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                        <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                      </svg>
+                      <span>Probar notificaciones por email</span>
+                    </Label>
+                    <p className="text-sm text-gray-500">
+                      Envía un correo de prueba para comprobar que el sistema de notificaciones funciona correctamente
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="email"
+                      placeholder="Introduce tu email"
+                      className="flex-1"
+                      value={user?.email || ''}
+                      readOnly
+                    />
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          setIsSendingTestEmail(true);
+                          const response = await apiRequest('/api/test-email', {
+                            method: 'POST',
+                            body: JSON.stringify({ email: user?.email }),
+                          });
+                          
+                          if (response.success) {
+                            toast({
+                              title: "Correo enviado",
+                              description: "Se ha enviado un correo de prueba correctamente",
+                              variant: "success",
+                            });
+                          } else {
+                            throw new Error(response.message || "Error al enviar el correo de prueba");
+                          }
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: error.message || "No se pudo enviar el correo de prueba",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setIsSendingTestEmail(false);
+                        }
+                      }}
+                      className="shadow-sm bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                      disabled={isSendingTestEmail || !user?.email}
+                    >
+                      {isSendingTestEmail ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        "Enviar prueba"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
               {/* Opción de tema oscuro eliminada */}
               
               <div className="pt-4 flex justify-end">

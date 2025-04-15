@@ -4682,6 +4682,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Error al procesar alertas" });
     }
   });
+  
+  // Ruta para enviar un correo de prueba (accesible sin autenticación para pruebas)
+  app.post("/api/test-email", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, message: "Se requiere una dirección de correo electrónico" });
+      }
+      
+      // Importación dinámica para evitar problemas de inicialización circular
+      const { sendAlertNotification } = await import('./services/emailService');
+      
+      // Enviar correo de prueba
+      const result = await sendAlertNotification(
+        email,
+        "Usuario de Prueba",
+        "test_notification",
+        {
+          title: "Correo de prueba - Sistema de Alertas",
+          message: "Este es un correo de prueba para confirmar que el sistema de alertas está funcionando correctamente.",
+          date: new Date().toLocaleDateString('es-ES'),
+          entityName: "Sistema de Alertas Billeo",
+          entityNumber: "TEST-001"
+        }
+      );
+      
+      if (result.success) {
+        return res.json({
+          success: true,
+          message: "Correo de prueba enviado correctamente",
+          emailSent: true,
+          previewUrl: result.previewUrl || null
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          message: "Error al enviar el correo de prueba",
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error("Error al enviar correo de prueba:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error al enviar el correo de prueba",
+        error: error.message || "Error desconocido"
+      });
+    }
+  });
 
   return httpServer;
 }
