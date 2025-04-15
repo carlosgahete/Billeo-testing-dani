@@ -659,8 +659,8 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
                 <PieChart>
                   <Pie
                     data={displayData}
-                    cx="50%"
-                    cy="50%"
+                    cx={150}
+                    cy={150}
                     innerRadius={60}
                     outerRadius={95}
                     paddingAngle={1}
