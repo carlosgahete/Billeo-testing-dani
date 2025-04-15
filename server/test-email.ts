@@ -87,8 +87,8 @@ function getTestEmailTemplate(emailType: string = 'general'): string {
   <body>
     <div class="container">
       <div class="header">
-        <h1>Billeo</h1>
-        <img src="${billeoLogoUrl}" alt="Billeo Logo" class="logo" />
+        <h1 style="color: #007bff; font-size: 38px; margin-bottom: 5px;">BILLEO</h1>
+        <div style="color: #555; font-size: 16px;">Tu asistente financiero</div>
       </div>
       <div class="content">
   `;

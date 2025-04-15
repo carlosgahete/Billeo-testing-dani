@@ -112,13 +112,11 @@ export async function initEmailService() {
 // Importamos las URLs del logo desde un archivo centralizado
 import { BILLEO_LOGO_DATA_URI, BILLEO_LOGO_URL, BILLEO_LOGO_URL_ALT, BILLEO_LOGO_URL_BACKUP } from './billeo-logo-url';
 
-// Para correos electrónicos, definimos un logo con imagen y fallback como texto para máxima compatibilidad
+// Para correos electrónicos, definimos un logo de texto para máxima compatibilidad
 const logoHtml = `
-<div style="text-align: center; margin: 20px auto; color: #333; line-height: 1;">
-  <img src="${BILLEO_LOGO_URL}" alt="Billeo Logo" style="max-width: 150px; height: auto;" />
-  <div style="margin-top: 10px;">
-    <span style="font-weight: bold; font-size: 32px;">BILLEO</span>
-  </div>
+<div style="text-align: center; margin: 30px auto; color: #007bff; line-height: 1.2;">
+  <div style="font-weight: bold; font-size: 38px; letter-spacing: 1px;">BILLEO</div>
+  <div style="margin-top: 5px; font-size: 16px; color: #555;">Tu asistente financiero</div>
 </div>
 `;
 
