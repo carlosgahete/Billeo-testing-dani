@@ -4,6 +4,7 @@ import session from "express-session";
 import express from "express";
 import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { requireAuth, requireAdmin } from './auth-middleware';
 
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
@@ -4640,6 +4641,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error en redireccionamiento de libro de registros:", error);
       return res.status(500).json({ success: false, message: "Error interno del servidor" });
+    }
+  });
+  
+  // Ruta para la API de alertas (detección y notificación)
+  app.post("/api/alerts/check", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id || Number(req.session.userId);
+      if (!userId) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      
+      // Importación dinámica para evitar problemas de inicialización circular
+      const { alertService } = await import('./services/alertService');
+      
+      // Ejecutar el servicio de alertas para el usuario actual
+      const result = await alertService.checkAndSendAlerts(userId);
+      
+      return res.json(result);
+    } catch (error) {
+      console.error("Error al comprobar alertas:", error);
+      return res.status(500).json({ message: "Error al procesar alertas" });
+    }
+  });
+  
+  // Ruta para ejecutar la comprobación de alertas para todos los usuarios (admin)
+  app.post("/api/alerts/check-all", requireAdmin, async (req, res) => {
+    try {
+      // No es necesario verificar autenticación o rol aquí, ya lo hace requireAdmin
+      
+      // Importación dinámica para evitar problemas de inicialización circular
+      const { checkAndSendAlertsForAllUsers } = await import('./services/alertService');
+      
+      // Ejecutar el servicio de alertas para todos los usuarios
+      const result = await checkAndSendAlertsForAllUsers();
+      
+      return res.json(result);
+    } catch (error) {
+      console.error("Error al comprobar alertas para todos los usuarios:", error);
+      return res.status(500).json({ message: "Error al procesar alertas" });
     }
   });
 

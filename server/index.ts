@@ -76,6 +76,49 @@ app.use((req, res, next) => {
     console.error('Error al inicializar el servicio de email, continuando sin él:', error);
   }
   
+  // Inicializar el servicio de alertas después del correo electrónico
+  try {
+    // Importar el servicio de alertas
+    const { alertService, checkAndSendAlertsForAllUsers } = await import('./services/alertService');
+    console.log('Servicio de alertas inicializado correctamente');
+    
+    // Configurar un programador para ejecutar las comprobaciones de alertas periódicamente
+    // Este es un reemplazo simple para node-cron usando setInterval
+    const ONE_HOUR = 60 * 60 * 1000; // 1 hora en milisegundos
+    
+    // Primera ejecución después de 5 minutos (para dar tiempo a que el sistema se inicialice completamente)
+    setTimeout(async () => {
+      console.log('Ejecutando primera comprobación de alertas programada...');
+      try {
+        const result = await checkAndSendAlertsForAllUsers();
+        console.log(`Comprobación de alertas completada: ${result.alertsSent} alertas enviadas a ${result.processedUsers} usuarios`);
+        if (result.errors.length > 0) {
+          console.error(`Ocurrieron ${result.errors.length} errores durante la comprobación de alertas`);
+        }
+      } catch (error) {
+        console.error('Error al ejecutar la comprobación de alertas programada:', error);
+      }
+      
+      // Configurar ejecuciones periódicas (cada 1 hora)
+      setInterval(async () => {
+        console.log('Ejecutando comprobación de alertas programada...');
+        try {
+          const result = await checkAndSendAlertsForAllUsers();
+          console.log(`Comprobación de alertas completada: ${result.alertsSent} alertas enviadas a ${result.processedUsers} usuarios`);
+          if (result.errors.length > 0) {
+            console.error(`Ocurrieron ${result.errors.length} errores durante la comprobación de alertas`);
+          }
+        } catch (error) {
+          console.error('Error al ejecutar la comprobación de alertas programada:', error);
+        }
+      }, ONE_HOUR);
+      
+    }, 5 * 60 * 1000); // 5 minutos
+    
+  } catch (error) {
+    console.error('Error al inicializar el servicio de alertas:', error);
+  }
+  
   // Configurar middleware para CORS y opciones comunes
   configureOptionsRoutes(app);
   
