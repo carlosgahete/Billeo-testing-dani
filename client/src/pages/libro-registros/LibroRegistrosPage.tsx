@@ -195,10 +195,11 @@ export default function LibroRegistrosPage() {
     }
   }, [user, setLocation]);
   
-  // Función para cargar datos del libro de registros
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
+  // Función para cargar datos del libro de registros usando React Query
+  const { refetch: refetchLibroRegistros } = useQuery({
+    queryKey: [`libro-registros-${selectedUserId || (user?.id?.toString() || '')}-${selectedYear}-${selectedQuarter}-${selectedMonth}`],
+    queryFn: async () => {
+      if (!user) return null;
       
       // Si no hay userId seleccionado, usar el actual
       const userId = selectedUserId || user.id.toString();
@@ -209,7 +210,7 @@ export default function LibroRegistrosPage() {
       if (userId !== user.id.toString() && user.role !== 'superadmin') {
         setError('No tienes permisos para ver datos de otros usuarios');
         setLoading(false);
-        return;
+        return null;
       }
       */
       
@@ -218,9 +219,15 @@ export default function LibroRegistrosPage() {
         setError(null);
         
         const apiUrl = `/api/libro-registros/${userId}?year=${selectedYear}&quarter=${selectedQuarter}&month=${selectedMonth}`;
+        console.log(`Cargando datos de Libro de Registros: ${apiUrl}`);
         
         const response = await fetch(apiUrl, {
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
         });
         
         if (!response.ok) {
@@ -229,16 +236,26 @@ export default function LibroRegistrosPage() {
         
         const jsonData = await response.json();
         setData(jsonData);
+        return jsonData;
       } catch (err) {
         console.error("Error al cargar datos del libro de registros:", err);
         setError(`No se pudieron cargar los datos del libro de registros: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+        return null;
       } finally {
         setLoading(false);
       }
-    };
-    
-    fetchData();
-  }, [user, selectedYear, selectedQuarter, selectedMonth, selectedUserId]);
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0
+  });
+  
+  // Efecto para cargar datos cuando cambian los filtros
+  useEffect(() => {
+    if (user) {
+      refetchLibroRegistros();
+    }
+  }, [user, selectedYear, selectedQuarter, selectedMonth, selectedUserId, refetchLibroRegistros]);
   
   // Filtrar datos cuando cambian los filtros o los datos
   useEffect(() => {
