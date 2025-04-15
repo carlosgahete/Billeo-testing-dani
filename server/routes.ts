@@ -1516,9 +1516,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      // Extraer parámetros de filtro del query string
+      const year = req.query.year as string;
+      const month = req.query.month as string;
+      const quarter = req.query.quarter as string;
+      
+      // Obtener todas las facturas del usuario
+      let invoices = await storage.getInvoicesByUserId(req.session.userId);
+      
+      // Aplicar filtros si es necesario
+      if (year || month || quarter) {
+        invoices = invoices.filter(invoice => {
+          const invoiceDate = new Date(invoice.issueDate);
+          const invoiceYear = invoiceDate.getFullYear().toString();
+          const invoiceMonth = (invoiceDate.getMonth() + 1).toString().padStart(2, '0');
+          
+          // Filtro por año
+          if (year && year !== 'all' && invoiceYear !== year) {
+            return false;
+          }
+          
+          // Filtro por mes específico
+          if (month && month !== 'all') {
+            return invoiceMonth === month;
+          }
+          
+          // Filtro por trimestre
+          if (quarter && quarter !== 'all') {
+            const quarterMonths = {
+              '1': ['01', '02', '03'],
+              '2': ['04', '05', '06'],
+              '3': ['07', '08', '09'],
+              '4': ['10', '11', '12']
+            };
+            
+            return quarterMonths[quarter].includes(invoiceMonth);
+          }
+          
+          return true;
+        });
+        
+        // Log de depuración para verificar el filtrado
+        console.log(`Facturas filtradas: año=${year || 'todos'}, trimestre=${quarter || 'todos'}, mes=${month || 'todos'}. Resultado: ${invoices.length} facturas`);
+      }
+      
       return res.status(200).json(invoices);
     } catch (error) {
+      console.error("Error al obtener facturas filtradas:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
