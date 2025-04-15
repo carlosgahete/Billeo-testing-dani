@@ -570,16 +570,19 @@ const SettingsPage = () => {
                             type: 'general'
                           });
                           
-                          if (response.success) {
+                          const responseData = await response.json();
+                          
+                          if (responseData.success) {
                             toast({
                               title: "Correo enviado",
                               description: "Se ha enviado un correo de prueba correctamente",
                               variant: "success",
                             });
                           } else {
-                            throw new Error(response.message || "Error al enviar el correo de prueba");
+                            throw new Error(responseData.message || "Error al enviar el correo de prueba");
                           }
-                        } catch (error) {
+                        } catch (error: any) {
+                          console.error("Error al enviar correo:", error);
                           toast({
                             title: "Error",
                             description: error.message || "No se pudo enviar el correo de prueba",
