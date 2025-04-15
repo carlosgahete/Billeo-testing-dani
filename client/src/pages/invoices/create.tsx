@@ -59,7 +59,7 @@ const CreateInvoicePage = () => {
               </div>
               {authLoading ? "Cargando..." : "Crear nueva factura"}
             </h1>
-            <p className="text-gray-500 text-sm mt-0 ml-1">
+            <p className="text-gray-500 text-sm -mt-1 ml-1">
               Completa los detalles para generar un documento profesional
             </p>
           </div>
@@ -87,7 +87,7 @@ const CreateInvoicePage = () => {
               </div>
               Crear nueva factura
             </h1>
-            <p className="text-gray-500 text-sm mt-0 ml-1">
+            <p className="text-gray-500 text-sm -mt-1 ml-1">
               Completa los detalles para generar un documento profesional
             </p>
           </div>
