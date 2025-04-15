@@ -20,8 +20,7 @@ import {
   ReceiptText,
   ArrowUpFromLine,
   ArrowDownToLine,
-  PiggyBank,
-  ListChecks
+  PiggyBank
 } from "lucide-react";
 import ResultSummary from "@/components/dashboard/blocks/ResultSummary";
 import QuotesSummary from "@/components/dashboard/blocks/QuotesSummary";
@@ -29,7 +28,10 @@ import InvoicesSummary from "@/components/dashboard/blocks/InvoicesSummary";
 import ComparativeChart from "@/components/dashboard/blocks/ComparativeChart";
 import ExpensesSummary from "@/components/dashboard/blocks/ExpensesSummary";
 import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
+import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
+import ExpensesByCategorySimple from "@/components/dashboard/ExpensesByCategorySimple";
+import SimpleExpensesByCategory from "@/components/dashboard/SimpleExpensesByCategory";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -155,7 +157,22 @@ export const DASHBOARD_BLOCKS = {
     icon: <BarChart className="h-8 w-8 text-indigo-500" />,
     type: "charts"
   },
-  // Componentes de gastos por categoría eliminados a petición del usuario
+  "expenses-by-category": {
+    id: "expenses-by-category",
+    title: "Gastos por Categoría",
+    description: "Distribución de gastos clasificados por categoría.",
+    component: ExpensesSummary,
+    icon: <PieChart className="h-8 w-8 text-yellow-500" />,
+    type: "charts"
+  },
+  "expenses-by-category-chart": {
+    id: "expenses-by-category-chart",
+    title: "Pagos por Categoría",
+    description: "Análisis detallado de pagos con gráfico de sectores.",
+    component: ExpensesByCategory,
+    icon: <Filter className="h-8 w-8 text-gray-800" />,
+    type: "charts"
+  },
   "recent-expenses": {
     id: "recent-expenses",
     title: "Gastos Recientes",
@@ -172,7 +189,14 @@ export const DASHBOARD_BLOCKS = {
     icon: <DollarSign className="h-8 w-8 text-emerald-500" />,
     type: "charts"
   },
-  // El componente "Gastos por Categoría (Simple)" ha sido eliminado a petición del usuario
+  "expenses-by-category-simple": {
+    id: "expenses-by-category-simple",
+    title: "Gastos por Categoría (Simple)",
+    description: "Distribución de gastos con gráfico de rosquilla simplificado y bien posicionado.",
+    component: ExpensesByCategorySimple,
+    icon: <PieChart className="h-8 w-8 text-red-500" />,
+    type: "charts"
+  },
   "income-card": {
     id: "income-card",
     title: "Tarjeta de Ingresos",
@@ -197,7 +221,14 @@ export const DASHBOARD_BLOCKS = {
     icon: <PiggyBank className="h-8 w-8 text-blue-500" />,
     type: "cards"
   },
-  // Los componentes de visualización de gastos por categoría han sido eliminados a petición del usuario
+  "expenses-by-category-card": {
+    id: "expenses-by-category-card",
+    title: "Gastos por Categoría (Tarjeta)",
+    description: "Gastos por categoría con tarjetas y barras de progreso",
+    component: SimpleExpensesByCategory,
+    icon: <PieChart className="h-8 w-8 text-red-600" />,
+    type: "cards"
+  }
 };
 
 // Versión para el catálogo que incluye previsualizaciones
@@ -229,6 +260,26 @@ export const DASHBOARD_BLOCK_CATALOG = [
             </div>
             <span className="text-[6px] font-medium text-red-600">-42,10 €</span>
           </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-chart"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-gray-50 py-1 px-2 flex items-center border-b">
+          <Filter className="h-3 w-3 text-gray-600 mr-1" />
+          <span className="text-[10px] font-medium text-gray-800">Pagos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <svg width="35" height="35" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="25" fill="white" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000000" strokeWidth="20" strokeDasharray="180 252" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#4355b9" strokeWidth="20" strokeDasharray="30 252" strokeDashoffset="-180" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#6f42c1" strokeWidth="20" strokeDasharray="15 252" strokeDashoffset="-210" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#3355b9" strokeWidth="20" strokeDasharray="10 252" strokeDashoffset="-225" />
+          </svg>
         </div>
       </div>
     )
@@ -335,6 +386,26 @@ export const DASHBOARD_BLOCK_CATALOG = [
     )
   },
   {
+    ...DASHBOARD_BLOCKS["expenses-by-category"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-yellow-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-yellow-600 mr-1" />
+          <span className="text-[10px] font-medium text-yellow-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <svg width="35" height="35" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ddd" strokeWidth="20" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#FBBF24" strokeWidth="20" strokeDasharray="50 200" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#34D399" strokeWidth="20" strokeDasharray="75 200" strokeDashoffset="-50" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#60A5FA" strokeWidth="20" strokeDasharray="40 200" strokeDashoffset="-125" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F87171" strokeWidth="20" strokeDasharray="25 200" strokeDashoffset="-165" />
+          </svg>
+        </div>
+      </div>
+    )
+  },
+  {
     ...DASHBOARD_BLOCKS["tax-summary"],
     preview: (
       <div className="w-full h-full flex flex-col">
@@ -351,6 +422,26 @@ export const DASHBOARD_BLOCK_CATALOG = [
             <span className="text-[7px]">IRPF a Pagar</span>
             <span className="text-[7px] font-semibold">30.000 €</span>
           </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-simple"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-red-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-red-600 mr-1" />
+          <span className="text-[10px] font-medium text-red-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <svg width="35" height="35" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="25" fill="white" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000000" strokeWidth="20" strokeDasharray="180 252" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ef4444" strokeWidth="20" strokeDasharray="30 252" strokeDashoffset="-180" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="20" strokeDasharray="15 252" strokeDashoffset="-210" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8b5cf6" strokeWidth="20" strokeDasharray="10 252" strokeDashoffset="-225" />
+          </svg>
         </div>
       </div>
     )
@@ -424,5 +515,41 @@ export const DASHBOARD_BLOCK_CATALOG = [
       </div>
     )
   },
-  // Todos los componentes de gastos por categoría han sido eliminados a petición del usuario
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-card"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-red-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-red-600 mr-1" />
+          <span className="text-[10px] font-medium text-red-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex flex-col gap-1 justify-center">
+          <div className="flex items-center gap-1">
+            <span className="text-[6px]">📦</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-[6px]">Alquiler</span>
+                <span className="text-[6px] text-red-600">-2.700€</span>
+              </div>
+              <div className="bg-gray-100 h-[2px] w-full rounded-full overflow-hidden">
+                <div className="bg-red-500 h-full w-[60%]"></div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-[6px]">💡</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-[6px]">Suministros</span>
+                <span className="text-[6px] text-red-600">-240€</span>
+              </div>
+              <div className="bg-gray-100 h-[2px] w-full rounded-full overflow-hidden">
+                <div className="bg-blue-500 h-full w-[20%]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 ];

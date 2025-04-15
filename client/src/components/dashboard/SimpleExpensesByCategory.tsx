@@ -19,7 +19,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Formación": "📚",
   "Asesoría": "📋",
   "Impuestos": "📊",
-  "Alquiler": "🏢",
   "Otros": "📦"
 };
 
@@ -39,7 +38,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Formación": "#26a69a",
   "Asesoría": "#8d6e63",
   "Impuestos": "#ef5350",
-  "Alquiler": "#8e44ad",
   "Otros": "#78909c"
 };
 
@@ -67,19 +65,6 @@ interface CategoryData {
   percentage: number;
   icon?: string;
 }
-
-// Función para identificar categoría basada en descripción
-const detectCategory = (description: string): string => {
-  const descriptionLower = description.toLowerCase();
-  
-  if (descriptionLower.includes('alquiler')) return 'Alquiler';
-  if (descriptionLower.includes('material') && (descriptionLower.includes('oficina') || descriptionLower.includes('informático'))) return 'Material oficina';
-  if (descriptionLower.includes('luz') || descriptionLower.includes('agua') || descriptionLower.includes('electricidad')) return 'Suministros';
-  if (descriptionLower.includes('teléfono') || descriptionLower.includes('móvil') || descriptionLower.includes('movil')) return 'Telefonía';
-  if (descriptionLower.includes('internet') || descriptionLower.includes('fibra')) return 'Internet';
-  
-  return 'Sin categoría';
-};
 
 // Componente principal
 const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
@@ -123,17 +108,9 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
 
       // Procesar cada transacción
       expenseTransactions.forEach(tx => {
-        let categoryName;
         const categoryId = tx.categoryId;
-        
-        // Si tiene ID de categoría, usamos ese
-        if (categoryId && categoryMap.has(categoryId)) {
-          categoryName = categoryMap.get(categoryId).name;
-        } else {
-          // Si no tiene ID, intentamos detectar por la descripción
-          categoryName = detectCategory(tx.description || '');
-        }
-        
+        const category = categoryId ? categoryMap.get(categoryId) : null;
+        const categoryName = category ? category.name : "Sin categoría";
         const amount = parseFloat(tx.amount);
 
         // Inicializar categoría si no existe
@@ -141,7 +118,7 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
           expensesByCategory[categoryName] = {
             total: 0,
             count: 0,
-            color: CATEGORY_COLORS[categoryName] || getRandomColor()
+            color: category?.color || CATEGORY_COLORS[categoryName] || getRandomColor()
           };
         }
 
@@ -185,7 +162,7 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
   // Mostrar skeleton durante la carga
   if (isLoading) {
     return (
-      <div className="rounded-lg border overflow-hidden shadow-sm">
+      <div className="rounded-lg border overflow-hidden">
         <div className="flex items-center p-3 bg-red-50 border-b">
           <div className="h-5 w-5 bg-gray-200 rounded-md animate-pulse mr-2"></div>
           <div className="h-5 w-40 bg-gray-200 rounded-md animate-pulse"></div>
@@ -205,7 +182,7 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
   // Mostrar mensaje si no hay datos
   if (categories.length === 0) {
     return (
-      <div className="rounded-lg border overflow-hidden shadow-sm">
+      <div className="rounded-lg border overflow-hidden">
         <div className="flex items-center p-3 bg-red-50 border-b">
           <div className="text-xl mr-2">📊</div>
           <h3 className="text-lg font-medium text-red-800">Gastos por Categoría</h3>
@@ -221,7 +198,7 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
   const topCategories = categories.slice(0, 5);
   
   return (
-    <div className="rounded-lg border overflow-hidden bg-white shadow-sm">
+    <div className="rounded-lg border overflow-hidden bg-white">
       <div className="flex items-center justify-between p-3 bg-red-50 border-b">
         <div className="flex items-center">
           <div className="text-xl mr-2">📊</div>
@@ -236,7 +213,7 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
         <div className="space-y-4">
           {topCategories.map((category, index) => (
             <div key={index} className="flex items-center">
-              <div className="flex items-center w-8 mr-3 justify-center">
+              <div className="flex items-center w-7 mr-3">
                 <span className="text-xl">{category.icon}</span>
               </div>
               <div className="flex-1">
@@ -246,7 +223,7 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
                     {formatCurrency(-category.value)}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                   <div 
                     className="h-full rounded-full"
                     style={{ 
@@ -264,8 +241,8 @@ const SimpleExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
           
           {/* Mostrar "Otros" si hay más de 5 categorías */}
           {categories.length > 5 && (
-            <div className="flex items-center pt-2 mt-2 border-t border-gray-100">
-              <div className="flex items-center w-8 mr-3 justify-center">
+            <div className="flex items-center pt-2 mt-2 border-t">
+              <div className="flex items-center w-7 mr-3">
                 <span className="text-xl">📦</span>
               </div>
               <div className="flex-1">
