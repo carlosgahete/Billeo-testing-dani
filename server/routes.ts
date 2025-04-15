@@ -4666,10 +4666,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Ruta para ejecutar la comprobación de alertas para todos los usuarios (admin)
-  // NOTA: Eliminado temporalmente requireAdmin para pruebas
-  app.post("/api/alerts/check-all", async (req, res) => {
+  app.post("/api/alerts/check-all", requireAdmin, async (req, res) => {
     try {
-      // TEMP: Se ha eliminado la verificación de admin para pruebas
+      // No es necesario verificar autenticación o rol aquí, ya lo hace requireAdmin
       
       // Importación dinámica para evitar problemas de inicialización circular
       const { checkAndSendAlertsForAllUsers } = await import('./services/alertService');
