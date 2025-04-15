@@ -860,10 +860,23 @@ const TransactionList = () => {
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
     
-  // Calcular el balance neto (ingresos netos - gastos netos)
-  const netIncomeTotal = incomeTotal * 0.85; // Ingresos después de impuestos (15% de IRPF)
-  const netExpenseTotal = expenseTotal * 0.95; // Gastos después de recuperar IVA (aprox 5%)
-  const balance = netIncomeTotal - netExpenseTotal;
+  // Calcular los valores netos utilizando las mismas fórmulas exactas del dashboard
+  // Para ingresos: Aplicamos la base imponible (sin IVA) en lugar del porcentaje aproximado
+  const baseIncomeSinIVA = Math.round(incomeTotal / 1.21); // Exactamente igual que en dashboard.tsx
+  const irpfRetencionIngresos = Math.round(baseIncomeSinIVA * 0.15); // 15% IRPF sobre base imponible
+  
+  // Para gastos: Base imponible y recuperación de IVA
+  const baseExpensesSinIVA = expenseTotal;
+  const ivaSoportado = Math.round(baseExpensesSinIVA * 0.21); // IVA soportado (se recupera)
+  
+  // Beneficio antes de impuestos
+  const beneficioAntesImpuestos = baseIncomeSinIVA - baseExpensesSinIVA;
+  const irpfTotal = irpfRetencionIngresos; // No hay retenciones en gastos que compensen
+  
+  // Beneficio neto y balance
+  const netIncomeTotal = baseIncomeSinIVA - irpfRetencionIngresos; // Ingresos después de impuestos
+  const netExpenseTotal = baseExpensesSinIVA - ivaSoportado; // Gastos después de recuperar IVA
+  const balance = netIncomeTotal - netExpenseTotal; // Balance neto real
 
   // Función para reparar las transacciones de facturas pagadas
   
@@ -944,7 +957,7 @@ const TransactionList = () => {
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#007AFF] pt-1">
-                {formatCurrency(incomeTotal * 0.85, "income")}
+                {formatCurrency(netIncomeTotal, "income")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
@@ -967,7 +980,7 @@ const TransactionList = () => {
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF3B30] pt-1">
-                {formatCurrency(expenseTotal * 0.95, "expense")}
+                {formatCurrency(netExpenseTotal, "expense")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
