@@ -10,7 +10,6 @@ import { configureOptionsRoutes } from "./routes-options";
 import { configureSimpleExpensesRoutes } from "./routes-simple-expenses";
 import { configureExpensesRoutes } from "./routes-expenses";
 import { configureFileRoutes } from "./routes-files-new";
-import downloadRoutes from "./download-routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Obtener el equivalente a __dirname en ESM
@@ -89,11 +88,6 @@ app.use((req, res, next) => {
   app.get('/super-light-quotes', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/public/quotes-super-light.html'));
   });
-  
-  // Ruta para el catálogo de iconos
-  app.get('/icons', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/icons-catalog.html'));
-  });
 
   const server = await registerRoutes(app);
   
@@ -111,9 +105,6 @@ app.use((req, res, next) => {
   
   // Configurar rutas para gestión de archivos
   configureFileRoutes(app);
-  
-  // Configurar rutas para descarga de iconos
-  app.use('/download', downloadRoutes);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
