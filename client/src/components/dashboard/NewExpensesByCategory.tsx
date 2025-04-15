@@ -652,14 +652,14 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
         
         {/* Layout en dos columnas con elementos centrados */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Columna izquierda: Gráfico de donut - movida hacia la izquierda */}
-          <div className="flex justify-end pr-6 p-2 h-[280px]">
-            <div className="flex items-start pt-2 mr-3">
+          {/* Columna izquierda: Gráfico de donut - movida más a la izquierda */}
+          <div className="flex justify-start ml-8 p-2 h-[280px]">
+            <div className="flex items-start pt-2">
               <ResponsiveContainer width={210} height={220}>
-                <PieChart margin={{ right: 20 }}>
+                <PieChart margin={{ right: 40 }}>
                   <Pie
                     data={displayData}
-                    cx="40%"
+                    cx="30%"
                     cy="50%"
                     innerRadius={60}
                     outerRadius={105}
