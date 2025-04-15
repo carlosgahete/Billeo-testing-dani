@@ -428,8 +428,34 @@ const TransactionList = () => {
     queryKey: ["/api/categories"],
   });
 
+  // Función para construir la URL con los filtros para facturas (similar al de transacciones)
+  const getFilteredInvoicesUrl = () => {
+    let url = "/api/invoices";
+    const params = new URLSearchParams();
+    
+    if (selectedYear !== "all") {
+      params.append("year", selectedYear);
+    }
+    
+    if (selectedPeriod !== "all") {
+      // Determinar si es trimestre o mes
+      if (selectedPeriod.startsWith("Q")) {
+        params.append("quarter", selectedPeriod.replace("Q", ""));
+      } else {
+        params.append("month", selectedPeriod);
+      }
+    }
+    
+    const queryString = params.toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
+    
+    return url;
+  };
+
   const { data: invoices, refetch: refetchInvoices } = useQuery({
-    queryKey: ["/api/invoices"],
+    queryKey: [getFilteredInvoicesUrl()],
     refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
     refetchOnMount: "always", // Recargar siempre al montar el componente
     refetchInterval: 3000, // Recargar cada 3 segundos
