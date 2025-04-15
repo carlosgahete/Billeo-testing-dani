@@ -513,12 +513,77 @@ const TransactionList = () => {
   // No necesitamos más filterInvoicesByDate ya que el filtrado se hace en la API
 
   // Función para convertir facturas en transacciones virtuales (para visualización)
+  // Función para filtrar facturas por fecha basado en los filtros actuales
+  const filterInvoicesByDate = (invoiceList: any[]) => {
+    if (!invoiceList || invoiceList.length === 0) return [];
+    
+    return invoiceList.filter(invoice => {
+      const invoiceDate = new Date(invoice.issueDate);
+      const invoiceYear = invoiceDate.getFullYear().toString();
+      const invoiceMonth = (invoiceDate.getMonth() + 1).toString(); // Meses en JS son 0-11
+            
+      // Filtrar por año si está seleccionado
+      if (selectedYear !== "all" && invoiceYear !== selectedYear) {
+        return false;
+      }
+      
+      // Filtrar por período (trimestre o mes) si está seleccionado
+      if (selectedPeriod !== "all") {
+        if (selectedPeriod.startsWith("Q")) {
+          // Filtro por trimestre
+          const quarter = selectedPeriod.replace("Q", "");
+          const quarterMonths = {
+            "1": ["1", "2", "3"],
+            "2": ["4", "5", "6"],
+            "3": ["7", "8", "9"],
+            "4": ["10", "11", "12"]
+          };
+          return quarterMonths[quarter as keyof typeof quarterMonths].includes(invoiceMonth);
+        } else {
+          // Filtro por mes específico
+          return invoiceMonth === selectedPeriod;
+        }
+      }
+      
+      return true;
+    });
+  };
+  
   // Solo para facturas que NO tengan ya una transacción real asociada
   const convertInvoicesToTransactions = useCallback(() => {
     if (!invoices || !transactions) return [];
     
     // Aplicar los filtros de fecha actuales a las facturas
-    const filteredInvoices = filterInvoicesByDate(invoices);
+    const filteredInvoices = invoices.filter(invoice => {
+      const invoiceDate = new Date(invoice.issueDate);
+      const invoiceYear = invoiceDate.getFullYear().toString();
+      const invoiceMonth = (invoiceDate.getMonth() + 1).toString();
+            
+      // Filtrar por año si está seleccionado
+      if (selectedYear !== "all" && invoiceYear !== selectedYear) {
+        return false;
+      }
+      
+      // Filtrar por período (trimestre o mes) si está seleccionado
+      if (selectedPeriod !== "all") {
+        if (selectedPeriod.startsWith("Q")) {
+          // Filtro por trimestre
+          const quarter = selectedPeriod.replace("Q", "");
+          const quarterMonths = {
+            "1": ["1", "2", "3"],
+            "2": ["4", "5", "6"],
+            "3": ["7", "8", "9"],
+            "4": ["10", "11", "12"]
+          };
+          return quarterMonths[quarter as keyof typeof quarterMonths].includes(invoiceMonth);
+        } else {
+          // Filtro por mes específico
+          return invoiceMonth === selectedPeriod;
+        }
+      }
+      
+      return true;
+    });
     
     // Filtrar facturas que ya tienen transacciones reales
     const invoicesWithTransactions = transactions
