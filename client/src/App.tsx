@@ -239,6 +239,13 @@ function Router() {
         <UltraSimpleQuotesPage />
       </Route>
       
+      {/* Ruta para pruebas de correo */}
+      <Route path="/test-email">
+        <Layout>
+          <ProtectedRoute path="/test-email" component={TestEmailPage} />
+        </Layout>
+      </Route>
+      
       <Route path="*" component={NotFound} />
     </Switch>
   );
