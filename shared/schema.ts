@@ -361,6 +361,7 @@ export const dashboardPreferences = pgTable("dashboard_preferences", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().unique(),
   layout: jsonb("layout").notNull(), // Layout completo con configuración detallada
+  emailNotifications: boolean("email_notifications").default(true), // Preferencia de notificaciones por email
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

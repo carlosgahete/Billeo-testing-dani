@@ -4325,18 +4325,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/dashboard/preferences", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = req.session.userId;
-      const { blocks } = req.body;
+      const { blocks, emailNotifications } = req.body;
       
-      if (!blocks) {
-        return res.status(400).json({ message: "Se requieren bloques válidos" });
+      // Objeto para almacenar las actualizaciones
+      const updates: { layout?: { blocks: any[] }, emailNotifications?: boolean } = {};
+      
+      // Si se proporcionan bloques, actualizamos el layout
+      if (blocks !== undefined) {
+        updates.layout = {
+          blocks: blocks
+        };
       }
       
-      // Verificar si blocks es un array (formato antiguo) o un objeto más complejo (nuevo formato)
-      const layout = {
-        blocks: blocks
-      };
+      // Si se proporciona la configuración de notificaciones por email, la actualizamos
+      if (emailNotifications !== undefined) {
+        updates.emailNotifications = Boolean(emailNotifications);
+      }
       
-      const preferences = await storage.saveDashboardPreferences(userId, layout);
+      // Si no hay actualizaciones, devolvemos un error
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: "No se proporcionaron datos válidos para actualizar" });
+      }
+      
+      const preferences = await storage.saveDashboardPreferences(userId, updates);
       return res.status(200).json(preferences);
     } catch (error) {
       console.error("Error al guardar preferencias del dashboard:", error);

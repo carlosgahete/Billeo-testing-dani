@@ -71,7 +71,7 @@ export interface IStorage {
   
   // Dashboard preferences operations
   getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
-  saveDashboardPreferences(userId: number, layout: { blocks: any[] }): Promise<DashboardPreferences>;
+  saveDashboardPreferences(userId: number, data: { layout?: { blocks: any[] }, emailNotifications?: boolean }): Promise<DashboardPreferences>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -597,28 +597,44 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async saveDashboardPreferences(userId: number, layout: { blocks: any[] }): Promise<DashboardPreferences> {
+  async saveDashboardPreferences(userId: number, data: { layout?: { blocks: any[] }, emailNotifications?: boolean }): Promise<DashboardPreferences> {
     try {
       // Comprobar si ya existen preferencias para este usuario
       const existingPrefs = await this.getDashboardPreferences(userId);
       
+      // Preparar objeto para actualización
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      // Añadir sólo los campos que han sido proporcionados
+      if (data.layout !== undefined) {
+        updateData.layout = data.layout;
+      }
+      
+      if (data.emailNotifications !== undefined) {
+        updateData.emailNotifications = data.emailNotifications;
+      }
+      
       if (existingPrefs) {
         // Actualizar las preferencias existentes
         const result = await db.update(dashboardPreferences)
-          .set({
-            layout: layout,
-            updatedAt: new Date()
-          })
+          .set(updateData)
           .where(eq(dashboardPreferences.userId, userId))
           .returning();
         
         return result[0];
       } else {
+        // Para nuevas preferencias, asegurarse de que tenemos un layout por defecto
+        if (!updateData.layout) {
+          updateData.layout = { blocks: [] };
+        }
+        
         // Crear nuevas preferencias
         const result = await db.insert(dashboardPreferences)
           .values({
             userId: userId,
-            layout: layout
+            ...updateData
           })
           .returning();
         
