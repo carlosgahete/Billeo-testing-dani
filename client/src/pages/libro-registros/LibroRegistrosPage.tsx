@@ -629,7 +629,7 @@ export default function LibroRegistrosPage() {
     }
   };
   
-  // Función para exportar a Excel usando formato CSV estándar y bien estructurado
+  // Función para exportar a Excel usando formato HTML que se abre correctamente en Excel
   const exportToExcel = () => {
     if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
       toast({
@@ -641,14 +641,86 @@ export default function LibroRegistrosPage() {
     }
     
     try {
-      // Usamos separador de tabulaciones (\\t) para mejor compatibilidad con Excel
-      const rows: string[] = [];
-      
-      // Encabezado principal con título y fecha
-      rows.push("BILLEO - LIBRO DE REGISTROS");
+      // Crear un contenido HTML compatible con Excel
+      let html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="ProgId" content="Excel.Sheet">
+          <meta name="Generator" content="Microsoft Excel 15">
+          <style>
+            table {
+              border-collapse: collapse;
+              margin-bottom: 20px;
+              width: 100%;
+              page-break-inside: avoid;
+            }
+            th, td {
+              padding: 5px;
+              text-align: left;
+              border: 1px solid #ddd;
+            }
+            th {
+              background-color: #f2f2f2;
+              font-weight: bold;
+            }
+            .header {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              color: #1a66ff;
+            }
+            .subheader {
+              font-size: 14px;
+              font-weight: bold;
+              margin-top: 15px;
+              margin-bottom: 5px;
+              background-color: #1a66ff;
+              color: white;
+              padding: 5px;
+            }
+            .resumen-header {
+              background-color: #9f5afd;
+              color: white;
+              padding: 5px;
+            }
+            .facturas-header {
+              background-color: #1a66ff;
+              color: white;
+              padding: 5px;
+            }
+            .presupuestos-header {
+              background-color: #22c55e;
+              color: white;
+              padding: 5px;
+            }
+            .gastos-header {
+              background-color: #f59e0b;
+              color: white;
+              padding: 5px;
+            }
+            .negative {
+              color: #dc2626;
+            }
+            .positive {
+              color: #16a34a;
+            }
+            .footer {
+              margin-top: 20px;
+              font-size: 12px;
+              color: #666;
+            }
+            .spacer {
+              height: 15px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">BILLEO - LIBRO DE REGISTROS</div>
+      `;
       
       // Período seleccionado
-      let periodoText = `PERÍODO: ${selectedYear}`;
+      let periodoText = `Período: ${selectedYear}`;
       if (selectedQuarter !== "all") {
         const quarterNames = {
           "Q1": "1er Trimestre",
@@ -664,96 +736,177 @@ export default function LibroRegistrosPage() {
           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         periodoText += ` - ${monthNames[parseInt(selectedMonth) - 1]}`;
       }
-      rows.push(periodoText);
-      rows.push(`Fecha de generación: ${formatDate(new Date().toISOString())}`);
-      rows.push("");
       
-      // RESUMEN
-      rows.push("RESUMEN");
-      rows.push(`Concepto\\tCantidad\\tImporte`);
-      rows.push(`Facturas emitidas\\t${summary.totalInvoices}\\t${formatCurrency(summary.incomeTotal)}`);
-      rows.push(`Gastos\\t${filteredTransactions.filter(t => t.type === 'expense').length}\\t${formatCurrency(summary.expenseTotal)}`);
-      rows.push(`Presupuestos\\t${summary.totalQuotes}\\t`);
-      rows.push(`BALANCE\\t\\t${formatCurrency(summary.balance)}`);
-      rows.push("");
-      rows.push("");
+      html += `<div>${periodoText}</div>`;
+      html += `<div>Fecha de generación: ${formatDate(new Date().toISOString())}</div>`;
+      html += `<div class="spacer"></div>`;
+      
+      // SECCIÓN DE RESUMEN
+      html += `<div class="subheader resumen-header">RESUMEN</div>`;
+      html += `
+        <table>
+          <tr>
+            <th>Concepto</th>
+            <th>Cantidad</th>
+            <th>Importe</th>
+          </tr>
+          <tr>
+            <td>Facturas emitidas</td>
+            <td>${summary.totalInvoices}</td>
+            <td>${formatCurrency(summary.incomeTotal)}</td>
+          </tr>
+          <tr>
+            <td>Gastos</td>
+            <td>${filteredTransactions.filter(t => t.type === 'expense').length}</td>
+            <td class="negative">${formatCurrency(summary.expenseTotal)}</td>
+          </tr>
+          <tr>
+            <td>Presupuestos</td>
+            <td>${summary.totalQuotes}</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><strong>BALANCE</strong></td>
+            <td></td>
+            <td class="${summary.balance < 0 ? 'negative' : 'positive'}"><strong>${formatCurrency(summary.balance)}</strong></td>
+          </tr>
+        </table>
+      `;
       
       // SECCIÓN DE FACTURAS
-      rows.push("FACTURAS EMITIDAS");
+      html += `<div class="subheader facturas-header">FACTURAS EMITIDAS</div>`;
+      
       if (filteredInvoices.length > 0) {
-        // Cabecera de tabla
-        rows.push(`Número\\tFecha\\tCliente\\tBase imponible\\tIVA\\tTotal\\tEstado`);
+        html += `
+          <table>
+            <tr>
+              <th>Número</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Base imponible</th>
+              <th>IVA</th>
+              <th>Total</th>
+              <th>Estado</th>
+            </tr>
+        `;
         
-        // Datos de facturas
         filteredInvoices.forEach(inv => {
           const status = inv.status === 'paid' ? 'Pagada' : 
-                         inv.status === 'pending' ? 'Pendiente' : 
-                         inv.status === 'overdue' ? 'Vencida' : inv.status;
+                        inv.status === 'pending' ? 'Pendiente' : 
+                        inv.status === 'overdue' ? 'Vencida' : inv.status;
           
-          // Usar tabuladores y sanitizar textos
-          rows.push(
-            `${inv.number}\\t${formatDate(inv.date)}\\t${inv.clientName.replace(/\\t/g, ' ')}\\t${inv.subtotal}\\t${inv.tax}\\t${inv.total}\\t${status}`
-          );
+          html += `
+            <tr>
+              <td>${inv.number}</td>
+              <td>${formatDate(inv.date)}</td>
+              <td>${inv.clientName}</td>
+              <td>${inv.subtotal}€</td>
+              <td>${inv.tax}€</td>
+              <td>${inv.total}€</td>
+              <td>${status}</td>
+            </tr>
+          `;
         });
+        
+        html += `</table>`;
       } else {
-        rows.push("No hay facturas en este período");
+        html += `<div>No hay facturas en este período</div>`;
       }
-      rows.push("");
-      rows.push("");
       
       // SECCIÓN DE PRESUPUESTOS
-      rows.push("PRESUPUESTOS");
+      html += `<div class="subheader presupuestos-header">PRESUPUESTOS</div>`;
+      
       if (filteredQuotes.length > 0) {
-        // Cabecera de tabla
-        rows.push(`Número\\tFecha\\tCliente\\tTotal\\tEstado`);
+        html += `
+          <table>
+            <tr>
+              <th>Número</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Total</th>
+              <th>Estado</th>
+            </tr>
+        `;
         
-        // Datos de presupuestos
         filteredQuotes.forEach(quote => {
           const status = quote.status === 'accepted' ? 'Aceptado' : 
-                       quote.status === 'rejected' ? 'Rechazado' : 
-                       quote.status === 'pending' ? 'Pendiente' : quote.status;
-                        
-          rows.push(
-            `${quote.number}\\t${formatDate(quote.date)}\\t${quote.clientName.replace(/\\t/g, ' ')}\\t${quote.total}\\t${status}`
-          );
+                        quote.status === 'rejected' ? 'Rechazado' : 
+                        quote.status === 'pending' ? 'Pendiente' : quote.status;
+          
+          html += `
+            <tr>
+              <td>${quote.number}</td>
+              <td>${formatDate(quote.date)}</td>
+              <td>${quote.clientName}</td>
+              <td>${quote.total}€</td>
+              <td>${status}</td>
+            </tr>
+          `;
         });
+        
+        html += `</table>`;
       } else {
-        rows.push("No hay presupuestos en este período");
+        html += `<div>No hay presupuestos en este período</div>`;
       }
-      rows.push("");
-      rows.push("");
       
       // SECCIÓN DE GASTOS Y TRANSACCIONES
-      rows.push("GASTOS Y TRANSACCIONES");
+      html += `<div class="subheader gastos-header">GASTOS Y TRANSACCIONES</div>`;
+      
       if (filteredTransactions.length > 0) {
-        // Cabecera de tabla
-        rows.push(`Fecha\\tDescripción\\tCategoría\\tTipo\\tImporte`);
+        html += `
+          <table>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Categoría</th>
+              <th>Tipo</th>
+              <th>Importe</th>
+            </tr>
+        `;
         
-        // Datos de transacciones
         filteredTransactions.forEach(t => {
           const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
-          rows.push(
-            `${formatDate(t.date)}\\t${t.description.replace(/\\t/g, ' ')}\\t${(t.category || '').replace(/\\t/g, ' ')}\\t${type}\\t${t.amount}`
-          );
+          const colorClass = t.type === 'expense' ? 'negative' : 'positive';
+          
+          html += `
+            <tr>
+              <td>${formatDate(t.date)}</td>
+              <td>${t.description}</td>
+              <td>${t.category || '-'}</td>
+              <td>${type}</td>
+              <td class="${colorClass}">${t.amount}€</td>
+            </tr>
+          `;
         });
+        
+        html += `</table>`;
       } else {
-        rows.push("No hay transacciones en este período");
+        html += `<div>No hay transacciones en este período</div>`;
       }
-      rows.push("");
       
       // Pie de documento
-      rows.push("Documento generado por Billeo");
+      html += `
+          <div class="footer">Documento generado por Billeo</div>
+        </body>
+        </html>
+      `;
       
-      // Convertir todo a CSV 
-      const excelContent = "data:text/csv;charset=utf-8," + encodeURIComponent(rows.join("\\r\\n"));
+      // Crear un blob con el contenido HTML
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
       
-      // Descargar como archivo con extensión .xlsx
-      const link = document.createElement("a");
-      link.setAttribute("href", excelContent);
-      link.setAttribute("download", `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.xlsx`);
+      // Crear un enlace para descargar
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.xls`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      
+      // Limpiar
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
       
       toast({
         title: "Éxito",
