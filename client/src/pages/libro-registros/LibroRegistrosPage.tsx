@@ -621,10 +621,10 @@ export default function LibroRegistrosPage() {
       const clienteFactX = margin + 65;  // Más espacio para la fecha
       
       // Dejamos más espacio para las columnas numéricas y ajustamos hacia la izquierda para evitar recorte
-      // Mejoramos significativamente la posición de las columnas para garantizar que los valores no se salgan
-      const baseX = margin + 110;        // Más espacio para el cliente
-      const ivaX = margin + 145;         // Más espacio entre columnas
-      const totalFactX = margin + 180;   // La columna total necesita más espacio
+      // Rediseñamos completamente el espaciado de las columnas para adaptarse al contenido
+      const baseX = pageWidth - 80;       // Posicionado desde la derecha de la página
+      const ivaX = pageWidth - 45;        // Posicionado desde la derecha de la página
+      const totalFactX = pageWidth - 10;  // Posicionado desde la derecha de la página
       
       // Cabecera de la tabla de facturas - alineadas con los nuevos valores
       doc.setFont('helvetica', 'bold');
@@ -704,9 +704,10 @@ export default function LibroRegistrosPage() {
           const ivaFormateado = formatCurrency(parseFloat(inv.tax)).replace(' ', '');
           const totalFormateado = formatCurrency(parseFloat(inv.total)).replace(' ', '');
           
-          doc.text(subtotalFormateado, baseX + 30, facturaY, { align: 'right' });
-          doc.text(ivaFormateado, ivaX + 30, facturaY, { align: 'right' });
-          doc.text(totalFormateado, totalFactX + 35, facturaY, { align: 'right' });
+          // Alineamos todos a la derecha para que queden bien posicionados
+          doc.text(subtotalFormateado, baseX, facturaY, { align: 'right' });
+          doc.text(ivaFormateado, ivaX, facturaY, { align: 'right' });
+          doc.text(totalFormateado, totalFactX, facturaY, { align: 'right' });
           
           facturaY += 6; // Más espacio entre filas
           
@@ -925,8 +926,9 @@ export default function LibroRegistrosPage() {
             doc.setTextColor(34, 197, 94); // Verde para ingresos
           }
           
-          // Ajustamos el importe para que tenga más espacio a la derecha y no se corte
-          doc.text(formatCurrency(parseFloat(t.amount)), importeX - 5, gastoY, { align: 'right' });
+          // Utilizamos la misma técnica que con las facturas para evitar que se corte
+          const importeFormateado = formatCurrency(parseFloat(t.amount)).replace(' ', '');
+          doc.text(importeFormateado, importeX, gastoY, { align: 'right' });
           doc.setTextColor(0, 0, 0); // Restaurar color negro
           
           gastoY += 7; // Más espacio entre líneas
