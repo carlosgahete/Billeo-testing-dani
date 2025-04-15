@@ -679,7 +679,7 @@ export default function LibroRegistrosPage() {
           doc.text(formatDate(quote.date), fechaQuoteX, presupuestoY);
           doc.text(clienteText, clienteQuoteX, presupuestoY);
           doc.text(formatCurrency(parseFloat(quote.total)), totalQuoteX, presupuestoY, { align: 'right' });
-          doc.text(status, estadoQuoteX, presupuestoY);
+          doc.text(status, estadoQuoteX, presupuestoY, { align: 'right' });
           
           presupuestoY += 6; // Más espaciado entre filas
           
