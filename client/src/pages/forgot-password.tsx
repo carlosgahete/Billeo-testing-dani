@@ -212,34 +212,7 @@ export default function ForgotPasswordPage() {
                     <p>
                       Si el email existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña.
                     </p>
-                    {/* En desarrollo, mostrar el token y vista previa para pruebas */}
-                    {process.env.NODE_ENV !== 'production' && (
-                      <div className="mt-4 p-2 bg-gray-100 rounded text-xs overflow-auto">
-                        {forgotPasswordMutation.data?.token && (
-                          <p className="font-mono break-all">
-                            <span className="font-semibold">Token:</span> {forgotPasswordMutation.data.token}
-                          </p>
-                        )}
-                        
-                        {previewUrl && (
-                          <div className="mt-2">
-                            <p className="font-semibold text-blue-600">Vista previa del email:</p>
-                            <a 
-                              href={previewUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 underline break-all"
-                            >
-                              {previewUrl}
-                            </a>
-                          </div>
-                        )}
-                        
-                        <p className="mt-2 text-orange-600 text-xs">
-                          (Solo visible en desarrollo)
-                        </p>
-                      </div>
-                    )}
+                    {/* El bloque de desarrollo ha sido eliminado para la versión de producción */}
                   </div>
                 )}
               </TabsContent>

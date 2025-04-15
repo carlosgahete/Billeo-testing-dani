@@ -634,7 +634,7 @@ export default function LibroRegistrosPage() {
       doc.text("Cliente", clienteFactX, currentY + 15);
       doc.text("Base", baseX, currentY + 15, { align: 'center' });
       doc.text("IVA", ivaX, currentY + 15, { align: 'center' });
-      doc.text("Total", totalFactX, currentY + 15, { align: 'center' });
+      doc.text("Total", totalFactX, currentY + 15, { align: 'right' });
       
       drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
       
@@ -674,7 +674,7 @@ export default function LibroRegistrosPage() {
             doc.text("Cliente", clienteFactX, 40);
             doc.text("Base", baseX, 40, { align: 'center' });
             doc.text("IVA", ivaX, 40, { align: 'center' });
-            doc.text("Total", totalFactX, 40, { align: 'center' });
+            doc.text("Total", totalFactX, 40, { align: 'right' });
             
             drawHorizontalLine(42, pageWidth - 2 * margin - 10);
             
