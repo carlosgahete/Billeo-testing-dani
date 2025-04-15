@@ -624,7 +624,7 @@ export default function LibroRegistrosPage() {
       // Rediseñamos completamente el espaciado de las columnas para adaptarse al contenido
       const baseX = pageWidth - 80;       // Posicionado desde la derecha de la página
       const ivaX = pageWidth - 45;        // Posicionado desde la derecha de la página
-      const totalFactX = pageWidth - 10;  // Posicionado desde la derecha de la página
+      const totalFactX = pageWidth - 20;  // Posicionado desde la derecha de la página (movido más a la izquierda)
       
       // Cabecera de la tabla de facturas - alineadas con los nuevos valores
       doc.setFont('helvetica', 'bold');
@@ -727,7 +727,7 @@ export default function LibroRegistrosPage() {
       const numQuoteX = margin + 5;        // Número
       const fechaQuoteX = margin + 30;     // Fecha
       const clienteQuoteX = margin + 65;   // Cliente
-      const totalQuoteX = pageWidth - 45;  // Total (alineado desde la derecha)
+      const totalQuoteX = pageWidth - 60;  // Total (alineado desde la derecha, movido más a la izquierda)
       const estadoQuoteX = pageWidth - 10; // Estado (alineado desde la derecha)
       
       // Cabecera con posiciones fijas para evitar cualquier desbordamiento
