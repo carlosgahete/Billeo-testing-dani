@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { DashboardBlockProps } from "@/types/dashboard";
+import type { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
@@ -56,7 +56,7 @@ interface ExpenseByCategoryData {
   color: string;
   percentage: number;
   icon?: string;
-  categoryId?: number | string;
+  categoryId?: number | string | null;
 }
 
 interface ExpensesByCategoryProps {
