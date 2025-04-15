@@ -182,12 +182,15 @@ export default function LibroRegistrosPage() {
       // Si no hay userId seleccionado, usar el actual
       const userId = selectedUserId || user.id.toString();
       
+      // Comentado temporalmente para pruebas
+      /*
       // Solo permitir ver datos de otros usuarios si es superadmin
       if (userId !== user.id.toString() && user.role !== 'superadmin') {
         setError('No tienes permisos para ver datos de otros usuarios');
         setLoading(false);
         return;
       }
+      */
       
       try {
         setLoading(true);
@@ -1022,30 +1025,26 @@ export default function LibroRegistrosPage() {
       {/* Filtros y botones de exportación */}
       <div className="flex flex-wrap items-center justify-between mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
         <div className="flex flex-wrap gap-4 items-center">
-          {/* Selector de cliente para superadmin */}
-          {user?.role === 'superadmin' && (
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
-                <Users size={12} /> Cliente
-              </label>
-              <Select 
-                value={selectedUserId} 
-                onValueChange={setSelectedUserId}
-                disabled={loadingUsers}
-              >
-                <SelectTrigger className="h-10 w-[200px] rounded-xl bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 focus:ring-2 focus:ring-blue-200 transition-all">
-                  <SelectValue placeholder="Seleccionar cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {usersList?.map((clientUser: UserOption) => (
-                    <SelectItem key={clientUser.id} value={clientUser.id.toString()}>
-                      {clientUser.name || clientUser.username}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Selector de cliente para superadmin - Temporalmente visible para todos para pruebas */}
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
+              <Users size={12} /> Cliente
+            </label>
+            <Select 
+              value={selectedUserId} 
+              onValueChange={setSelectedUserId}
+              disabled={false}
+            >
+              <SelectTrigger className="h-10 w-[200px] rounded-xl bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 text-purple-700 hover:bg-purple-100 hover:text-purple-800 focus:ring-2 focus:ring-purple-200 transition-all">
+                <SelectValue placeholder="Seleccionar cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Cliente Demo</SelectItem>
+                <SelectItem value="2">Cliente Prueba</SelectItem>
+                <SelectItem value="3">Autónomo Test</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Año</label>
