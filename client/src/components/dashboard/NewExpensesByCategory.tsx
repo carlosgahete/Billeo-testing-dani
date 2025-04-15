@@ -650,41 +650,40 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
           </div>
         )}
         
-        {/* Layout con posición absoluta para la gráfica */}
-        <div className="relative w-full h-[280px] overflow-visible">
-          {/* Gráfico de donut posición absoluta */}
-          <div className="absolute" style={{ left: "-150px", top: "10px" }}>
-            <PieChart width={350} height={280}>
+        {/* Layout con diseño equilibrado en dos columnas */}
+        <div className="flex items-center justify-between h-[280px]">
+          {/* Columna izquierda: Gráfico de donut centrado */}
+          <div className="w-1/2 flex justify-center items-center">
+            <PieChart width={250} height={250}>
               <Pie
                 data={displayData}
-                cx={0}
-                cy={140}
+                cx={125}
+                cy={125}
                 innerRadius={60}
                 outerRadius={95}
                 paddingAngle={1}
                 dataKey="value"
               >
-                  {displayData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
-                  contentStyle={{ 
-                    borderRadius: '8px',
-                    boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                    border: 'none',
-                    padding: '6px',
-                    fontSize: '10px'
-                  }}
-                />
-              </PieChart>
-            </div>
+                {displayData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => formatCurrency(value)}
+                contentStyle={{ 
+                  borderRadius: '8px',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
+                  border: 'none',
+                  padding: '6px',
+                  fontSize: '10px'
+                }}
+              />
+            </PieChart>
           </div>
           
-          {/* Lista de categorías en el resto del espacio */}
+          {/* Columna derecha: Lista de categorías */}
           <div 
-            className="absolute right-0 top-0 w-3/4 pt-2 pr-3 overflow-y-auto h-[280px]"
+            className="w-1/2 pl-4 overflow-y-auto h-full"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
