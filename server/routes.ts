@@ -4511,63 +4511,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       dbCategories.forEach(cat => categoryMap.set(cat.id, cat.name));
       
       // Transformar los datos para la respuesta
-      const responseInvoices = dbInvoices.map(invoice => ({
-        id: invoice.id,
-        number: invoice.invoiceNumber,
-        issueDate: invoice.issueDate,
-        dueDate: invoice.dueDate,
-        client: invoice.clientName || "Cliente", 
-        total: parseFloat(invoice.total.toString()),
-        status: invoice.status,
-        baseAmount: parseFloat(invoice.subtotal.toString()),
-        vatAmount: parseFloat(invoice.tax.toString()),
-        vatRate: invoice.vatRate ? parseFloat(invoice.vatRate.toString()) : 21,
-        irpf: invoice.irpf ? parseFloat(invoice.irpf.toString()) : 0,
-        notes: invoice.notes
-      }));
+      const responseInvoices = dbInvoices.map(invoice => {
+        // Primero obtenemos el cliente asociado a esta factura
+        const clientInfo = async () => {
+          try {
+            if (invoice.clientId) {
+              const clientData = await db.select().from(clients).where(eq(clients.id, invoice.clientId)).limit(1);
+              return clientData.length > 0 ? clientData[0].name : "Cliente";
+            }
+            return "Cliente";
+          } catch (err) {
+            console.error("Error al obtener datos del cliente para factura:", err);
+            return "Cliente";
+          }
+        };
+        
+        const clientName = invoice.clientName || "Cliente";
+        
+        return {
+          id: invoice.id,
+          number: invoice.invoiceNumber,
+          date: invoice.issueDate.toISOString(), // Convertir a string para el formato esperado por el frontend
+          clientName: clientName,
+          subtotal: invoice.subtotal,
+          tax: invoice.tax,
+          total: invoice.total,
+          status: invoice.status
+        };
+      });
       
       const responseTransactions = dbTransactions.map(transaction => ({
         id: transaction.id,
-        date: transaction.date,
+        date: transaction.date.toISOString(), // Convertir a string para el formato esperado por el frontend
         description: transaction.description,
-        amount: parseFloat(transaction.amount.toString()),
+        amount: transaction.amount,
         type: transaction.type,
         category: transaction.categoryId && categoryMap.has(transaction.categoryId) 
           ? categoryMap.get(transaction.categoryId) 
-          : 'Sin categoría',
-        categoryId: transaction.categoryId,
-        paymentMethod: transaction.paymentMethod,
-        notes: transaction.notes
+          : 'Sin categoría'
       }));
       
-      const responseQuotes = dbQuotes.map(quote => ({
-        id: quote.id,
-        number: quote.quoteNumber,
-        issueDate: quote.issueDate,
-        expiryDate: quote.validUntil,
-        clientName: quote.clientName || "Cliente",
-        total: parseFloat(quote.total.toString()),
-        baseAmount: parseFloat(quote.subtotal?.toString() || "0"),
-        vatAmount: parseFloat(quote.tax?.toString() || "0"),
-        status: quote.status,
-        notes: quote.notes
-      }));
+      const responseQuotes = dbQuotes.map(quote => {
+        // Obtener el cliente asociado a esta factura (por ahora usamos un valor predeterminado)
+        const clientName = "Cliente";
+        
+        return {
+          id: quote.id,
+          number: quote.quoteNumber,
+          date: quote.issueDate.toISOString(), // Convertir a string para el formato esperado por el frontend
+          clientName: clientName,
+          total: quote.total,
+          status: quote.status
+        };
+      });
       
       // Calcular totales
-      const incomeTotal = responseInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+      const incomeTotal = responseInvoices.reduce((sum, invoice) => {
+        const totalValue = parseFloat(invoice.total.toString());
+        return sum + (isNaN(totalValue) ? 0 : totalValue);
+      }, 0);
+      
       const expenseTotal = responseTransactions
         .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum, t) => {
+          const amountValue = parseFloat(t.amount.toString());
+          return sum + (isNaN(amountValue) ? 0 : amountValue);
+        }, 0);
       
-      // Calcular totales de IVA para facturas emitidas
-      const totalVatCollected = responseInvoices.reduce((sum, invoice) => sum + (invoice.vatAmount || 0), 0);
+      // Calcular totales de IVA para facturas emitidas (estimado al 21%)
+      const totalVatCollected = responseInvoices.reduce((sum, invoice) => {
+        const taxValue = parseFloat(invoice.tax.toString());
+        return sum + (isNaN(taxValue) ? 0 : taxValue);
+      }, 0);
       
       // Calcular totales de IVA para gastos (estimado)
       const totalVatPaid = responseTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => {
           // Estimación de IVA (21% por defecto si no hay información detallada)
-          const vatEstimate = t.amount * 0.21;
+          const amountValue = parseFloat(t.amount.toString());
+          const vatEstimate = isNaN(amountValue) ? 0 : amountValue * 0.21;
           return sum + vatEstimate;
         }, 0);
       

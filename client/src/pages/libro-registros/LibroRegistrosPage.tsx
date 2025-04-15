@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, FileSpreadsheet, Users } from "lucide-react";
+import { FileText, Download, FileSpreadsheet, Users, XCircle, RefreshCcw, AlertCircle, User } from "lucide-react";
 // Importar solo jsPDF sin autoTable (enfoque simple)
 import { jsPDF } from "jspdf";
 import { PageHeader } from "@/components/page-header";
