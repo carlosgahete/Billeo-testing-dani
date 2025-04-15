@@ -650,21 +650,20 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
           </div>
         )}
         
-        {/* Layout en dos columnas con elementos centrados */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Columna izquierda: Gráfico de donut */}
-          <div className="flex items-center h-[280px]">
-            <div className="relative" style={{ marginLeft: "-80px", marginTop: "0px" }}>
-              <PieChart width={280} height={280}>
-                <Pie
-                  data={displayData}
-                  cx={80}
-                  cy={140}
-                  innerRadius={60}
-                  outerRadius={95}
-                  paddingAngle={1}
-                  dataKey="value"
-                >
+        {/* Layout con posición absoluta para la gráfica */}
+        <div className="relative w-full h-[280px] overflow-visible">
+          {/* Gráfico de donut posición absoluta */}
+          <div className="absolute" style={{ left: "-150px", top: "10px" }}>
+            <PieChart width={350} height={280}>
+              <Pie
+                data={displayData}
+                cx={0}
+                cy={140}
+                innerRadius={60}
+                outerRadius={95}
+                paddingAngle={1}
+                dataKey="value"
+              >
                   {displayData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -683,9 +682,9 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
             </div>
           </div>
           
-          {/* Columna derecha: Lista de categorías */}
+          {/* Lista de categorías en el resto del espacio */}
           <div 
-            className="flex justify-start p-2 pl-0 pr-3 overflow-y-auto h-[280px]"
+            className="absolute right-0 top-0 w-3/4 pt-2 pr-3 overflow-y-auto h-[280px]"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
