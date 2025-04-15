@@ -544,6 +544,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Obtener lista de usuarios para selector (solo superadmin)
+  app.get("/api/users", async (req, res) => {
+    try {
+      // Verificar que el usuario está autenticado y es superadmin
+      if (!req.isAuthenticated() || (req.user as any)?.role !== 'superadmin') {
+        console.log("Usuario NO superadmin accediendo a lista de usuarios:", (req.user as any)?.username);
+        // Si no se cumplen los requisitos, devolver lista vacía
+        return res.json([]);
+      }
+      
+      console.log("Usuario superadmin accediendo a lista de usuarios:", (req.user as any)?.username);
+      
+      const users = await storage.getAllUsers();
+      
+      // Filtrar solo los campos necesarios para el selector
+      const simplifiedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        name: user.name || user.username,
+        email: user.email || '',
+      }));
+      
+      res.json(simplifiedUsers);
+    } catch (error) {
+      console.error("Error al obtener usuarios para selector:", error);
+      res.status(500).json({ message: "Error al obtener usuarios" });
+    }
+  });
+  
   // Crear un nuevo usuario (solo admin)
   app.post("/api/admin/users", requireAdmin, async (req, res) => {
     try {
