@@ -7,6 +7,20 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 
+// Interfaz para las estadísticas del dashboard
+interface DashboardStats {
+  income: number;
+  expenses: number;
+  pendingInvoices: number;
+  pendingCount: number;
+  issuedCount: number;
+  yearCount: number;
+  yearIncome: number;
+  quarterCount: number;
+  quarterIncome: number;
+  [key: string]: any;
+}
+
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
   const isMobile = useIsMobile();
@@ -16,7 +30,7 @@ const InvoicesPage = () => {
     queryKey: ["/api/auth/session"],
   });
   
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/stats/dashboard"],
   });
   
@@ -27,7 +41,12 @@ const InvoicesPage = () => {
       issuedCount: stats.yearCount, // Si se filtra por año, usar datos del año
       income: stats.yearIncome
     }) : 
-    stats;
+    {} as DashboardStats;
+    
+  // Manejar cambio de año desde InvoiceList
+  const handleYearFilterChange = (year: string) => {
+    setSelectedYear(year);
+  };
 
   if (authLoading) {
     return (
@@ -87,16 +106,21 @@ const InvoicesPage = () => {
                 <CalendarDays className="h-4 w-4 text-[#34C759]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Este Año ({new Date().getFullYear()})</p>
+                <p className="text-sm text-gray-600">
+                  Este Año {selectedYear === "all" && <span>({new Date().getFullYear()})</span>}
+                  {selectedYear !== "all" && <span>({selectedYear})</span>}
+                </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#34C759] pt-1">
-                {stats?.yearCount || 0}
+                {selectedYear === "all" ? stats?.yearCount || 0 : filteredStats?.issuedCount || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.yearIncome || 0)}
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
+                  selectedYear === "all" ? stats?.yearIncome || 0 : filteredStats?.income || 0
+                )}
               </div>
             </div>
           </div>
@@ -109,16 +133,24 @@ const InvoicesPage = () => {
                 <Calendar className="h-4 w-4 text-[#FF9500]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Este Trimestre</p>
+                <p className="text-sm text-gray-600">
+                  Este Trimestre {selectedYear !== "all" && <span>({selectedYear})</span>}
+                </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF9500] pt-1">
-                {stats?.quarterCount || 0}
+                {selectedYear === "all" ? stats?.quarterCount || 0 : 
+                 stats?.quarterCount && selectedYear === new Date().getFullYear().toString() ? 
+                 stats.quarterCount : 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.quarterIncome || 0)}
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
+                  selectedYear === "all" ? stats?.quarterIncome || 0 : 
+                  stats?.quarterIncome && selectedYear === new Date().getFullYear().toString() ? 
+                  stats.quarterIncome : 0
+                )}
               </div>
             </div>
           </div>
@@ -131,16 +163,18 @@ const InvoicesPage = () => {
                 <AlertTriangle className="h-4 w-4 text-[#FF3B30]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Pendientes de Cobro</p>
+                <p className="text-sm text-gray-600">
+                  Pendientes de Cobro {selectedYear !== "all" && <span>({selectedYear})</span>}
+                </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF3B30] pt-1">
-                {stats?.pendingCount || 0}
+                {filteredStats?.pendingCount || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.pendingInvoices || 0)}
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(filteredStats?.pendingInvoices || 0)}
               </div>
             </div>
           </div>
@@ -148,7 +182,7 @@ const InvoicesPage = () => {
       </div>
       
       {/* Lista de facturas */}
-      <InvoiceList />
+      <InvoiceList onYearFilterChange={handleYearFilterChange} />
     </div>
   );
 };
