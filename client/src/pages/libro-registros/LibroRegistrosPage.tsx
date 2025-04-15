@@ -290,11 +290,22 @@ export default function LibroRegistrosPage() {
     }
     
     try {
-      const doc = new jsPDF();
+      // Crear nuevo documento PDF con orientación vertical
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+      
+      // Función para evitar que el texto se salga de los límites de la página
+      const wrapText = (text: string, maxLength: number): string => {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + "...";
+      };
       
       // Título
       doc.setFontSize(18);
-      doc.text("Libro de Registros", 14, 20);
+      doc.text("Libro de Registros", 15, 20);
       
       // Filtros aplicados
       doc.setFontSize(10);
@@ -305,52 +316,66 @@ export default function LibroRegistrosPage() {
           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         filterText += `, Mes: ${monthNames[parseInt(selectedMonth) - 1]}`;
       }
-      doc.text(filterText, 14, 28);
+      doc.text(filterText, 15, 28);
       
       // Resumen
       doc.setFontSize(12);
-      doc.text("Resumen", 14, 38);
+      doc.text("Resumen", 15, 38);
       
       doc.setFontSize(10);
-      doc.text(`Facturas: ${summary.totalInvoices} - Total: ${formatCurrency(summary.incomeTotal)}`, 14, 46);
-      doc.text(`Gastos: ${filteredTransactions.filter(t => t.type === 'expense').length} - Total: ${formatCurrency(summary.expenseTotal)}`, 14, 54);
-      doc.text(`Presupuestos: ${summary.totalQuotes}`, 14, 62);
-      doc.text(`Balance: ${formatCurrency(summary.balance)}`, 14, 70);
+      doc.text(`Facturas: ${summary.totalInvoices} - Total: ${formatCurrency(summary.incomeTotal)}`, 15, 46);
+      doc.text(`Gastos: ${filteredTransactions.filter(t => t.type === 'expense').length} - Total: ${formatCurrency(summary.expenseTotal)}`, 15, 54);
+      doc.text(`Presupuestos: ${summary.totalQuotes}`, 15, 62);
+      doc.text(`Balance: ${formatCurrency(summary.balance)}`, 15, 70);
       
       // Facturas
       doc.setFontSize(12);
-      doc.text("Facturas emitidas", 14, 82);
+      doc.text("Facturas emitidas", 15, 82);
       
+      // Configuración de tablas
+      const tableConfig = {
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        bodyStyles: { fontSize: 8 },
+        alternateRowStyles: { fillColor: [245, 250, 254] },
+        margin: { top: 86 }
+      };
+      
+      // Tabla facturas
       doc.autoTable({
         startY: 86,
         head: [['Número', 'Fecha', 'Cliente', 'Base imponible', 'IVA', 'Total', 'Estado']],
         body: filteredInvoices.map(inv => [
           inv.number,
           formatDate(inv.date),
-          inv.clientName,
+          wrapText(inv.clientName, 20),
           formatCurrency(parseFloat(inv.subtotal)),
           formatCurrency(parseFloat(inv.tax)),
           formatCurrency(parseFloat(inv.total)),
           inv.status === 'paid' ? 'Pagada' : inv.status
-        ])
+        ]),
+        ...tableConfig
       });
       
       // Presupuestos
       const finalY = doc.lastAutoTable?.finalY || 150;
       doc.setFontSize(12);
-      doc.text("Presupuestos", 14, finalY + 10);
+      doc.text("Presupuestos", 15, finalY + 10);
       
+      // Tabla presupuestos
       doc.autoTable({
         startY: finalY + 14,
         head: [['Número', 'Fecha', 'Cliente', 'Total', 'Estado']],
         body: filteredQuotes.map(quote => [
           quote.number,
           formatDate(quote.date),
-          quote.clientName,
+          wrapText(quote.clientName, 20),
           formatCurrency(parseFloat(quote.total)),
           quote.status === 'accepted' ? 'Aceptado' : 
           quote.status === 'rejected' ? 'Rechazado' : quote.status
-        ])
+        ]),
+        headStyles: { fillColor: [34, 197, 94], textColor: 255 },
+        bodyStyles: { fontSize: 8 },
+        alternateRowStyles: { fillColor: [245, 250, 247] }
       });
       
       // Gastos y transacciones
@@ -360,36 +385,45 @@ export default function LibroRegistrosPage() {
       if (finalY2 > 240) {
         doc.addPage();
         doc.setFontSize(12);
-        doc.text("Gastos y transacciones", 14, 20);
+        doc.text("Gastos y transacciones", 15, 20);
         
+        // Tabla gastos en nueva página
         doc.autoTable({
           startY: 24,
           head: [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']],
           body: filteredTransactions.map(t => [
             formatDate(t.date),
-            t.description,
+            wrapText(t.description, 30),
             t.category || '',
             t.type === 'income' ? 'Ingreso' : 'Gasto',
             formatCurrency(parseFloat(t.amount))
-          ])
+          ]),
+          headStyles: { fillColor: [245, 158, 11], textColor: 255 },
+          bodyStyles: { fontSize: 8 },
+          alternateRowStyles: { fillColor: [254, 249, 231] }
         });
       } else {
         doc.setFontSize(12);
-        doc.text("Gastos y transacciones", 14, finalY2 + 10);
+        doc.text("Gastos y transacciones", 15, finalY2 + 10);
         
+        // Tabla gastos en página actual
         doc.autoTable({
           startY: finalY2 + 14,
           head: [['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Importe']],
           body: filteredTransactions.map(t => [
             formatDate(t.date),
-            t.description,
+            wrapText(t.description, 30),
             t.category || '',
             t.type === 'income' ? 'Ingreso' : 'Gasto',
             formatCurrency(parseFloat(t.amount))
-          ])
+          ]),
+          headStyles: { fillColor: [245, 158, 11], textColor: 255 },
+          bodyStyles: { fontSize: 8 },
+          alternateRowStyles: { fillColor: [254, 249, 231] }
         });
       }
       
+      // Guardar documento
       doc.save(`libro-registros-${selectedYear}-${selectedQuarter}-${selectedMonth}.pdf`);
       
       toast({
