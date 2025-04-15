@@ -110,18 +110,17 @@ export async function initEmailService() {
 }
 
 // Importamos las URLs del logo desde un archivo centralizado
-import { BILLEO_LOGO_DATA_URI, BILLEO_LOGO_URL, BILLEO_LOGO_LOCAL_URL, BILLEO_LOGO_URL_ALT1, BILLEO_LOGO_URL_ALT2 } from './billeo-logo-url';
+import { BILLEO_LOGO_DATA_URI, BILLEO_LOGO_URL, BILLEO_LOGO_URL_ALT, BILLEO_LOGO_URL_BACKUP } from './billeo-logo-url';
 
-// Para correos electrónicos, definimos un logo compatible con texto para máxima compatibilidad
+// Para correos electrónicos, definimos un logo con imagen y fallback como texto para máxima compatibilidad
 const logoHtml = `
-<div style="text-align: center; margin: 20px auto; font-size: 40px; color: #333; line-height: 1;">
-  <span style="color: #FF0000; font-size: 48px; margin-right: 10px;">📊</span>
-  <span style="font-weight: bold; font-size: 32px;">BILLEO</span>
+<div style="text-align: center; margin: 20px auto; color: #333; line-height: 1;">
+  <img src="${BILLEO_LOGO_URL}" alt="Billeo Logo" style="max-width: 150px; height: auto;" />
+  <div style="margin-top: 10px;">
+    <span style="font-weight: bold; font-size: 32px;">BILLEO</span>
+  </div>
 </div>
 `;
-
-// Definimos un valor vacío por compatibilidad
-const logoEmailUrl = "";
 
 // Función para enviar correo de recuperación de contraseña
 export async function sendPasswordResetEmail(email: string, token: string, username: string) {
