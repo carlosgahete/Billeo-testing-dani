@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { getEmailService } from './services/emailService';
+import { initEmailService } from './services/emailService';
 import { BILLEO_LOGO_URL } from './services/billeo-logo-url';
 import { User } from '../shared/schema';
 import type { Request, Response } from 'express';
@@ -209,8 +209,8 @@ router.post('/send-test-email', async (req: Request, res: Response) => {
       });
     }
 
-    // Importar el servicio de email
-    const emailService = await getEmailService();
+    // Inicializar el servicio de email
+    const emailService = await initEmailService();
     
     // Obtener la plantilla según el tipo
     const emailTemplate = getTestEmailTemplate(type);

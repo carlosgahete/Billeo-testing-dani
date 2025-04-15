@@ -58,10 +58,54 @@ export async function initEmailService() {
     }
     
     console.log('Servicio de email inicializado correctamente');
-    return true;
+    return {
+      send: async (options: {
+        to: string;
+        subject: string;
+        html: string;
+        text?: string;
+        cc?: string;
+        bcc?: string;
+        attachments?: any[];
+      }) => {
+        try {
+          if (!transporter) {
+            await initEmailService();
+          }
+          
+          const mailOptions = {
+            from: `"Billeo" <${process.env.SMTP_USERNAME || 'noreply@billeo.app'}>`,
+            ...options
+          };
+          
+          const info = await transporter.sendMail(mailOptions);
+          console.log('Email enviado: %s', info.messageId);
+          
+          // Para cuentas de prueba, mostrar URL de vista previa
+          if (process.env.NODE_ENV !== 'production' && info.messageId) {
+            const previewUrl = nodemailer.getTestMessageUrl(info);
+            console.log('URL de vista previa: %s', previewUrl);
+            return {
+              success: true,
+              previewUrl
+            };
+          }
+          
+          return { success: true };
+        } catch (error) {
+          console.error('Error al enviar correo:', error);
+          return { success: false, error };
+        }
+      }
+    };
   } catch (error) {
     console.error('Error al inicializar servicio de email:', error);
-    return false;
+    return {
+      send: async () => {
+        console.error('El servicio de email no está inicializado correctamente.');
+        return { success: false, error: 'Servicio de email no inicializado' };
+      }
+    };
   }
 }
 
