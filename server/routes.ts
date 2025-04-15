@@ -283,8 +283,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sendPasswordResetEmail } = await import('./services/emailService');
       
       // Enviar email de recuperación
+      console.log(`Intentando enviar email de recuperación a ${user.email}`);
       const emailResult = await sendPasswordResetEmail(user.email, token, user.username);
       
+      console.log(`Resultado del envío:`, emailResult);
       console.log(`Email de recuperación para ${user.email}: ${token}`);
       
       // En desarrollo, podemos incluir información adicional para depuración
