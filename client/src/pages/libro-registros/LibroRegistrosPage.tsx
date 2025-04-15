@@ -195,11 +195,49 @@ export default function LibroRegistrosPage() {
     }
   }, [user, setLocation]);
   
+  // Función para comprobar la autenticación
+  const isUserAuthenticated = useQuery({
+    queryKey: ['user-auth-check'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          setLocation("/auth");
+          return false;
+        }
+        
+        const data = await response.json();
+        return data.authenticated === true;
+      } catch (error) {
+        console.error("Error al verificar autenticación:", error);
+        setLocation("/auth");
+        return false;
+      }
+    },
+    staleTime: 30000 // Comprobar cada 30 segundos
+  });
+
   // Función para cargar datos del libro de registros usando React Query
   const { refetch: refetchLibroRegistros } = useQuery({
     queryKey: [`libro-registros-${selectedUserId || (user?.id?.toString() || '')}-${selectedYear}-${selectedQuarter}-${selectedMonth}`],
     queryFn: async () => {
-      if (!user) return null;
+      // Validaciones previas
+      if (!isUserAuthenticated.data) {
+        toast({
+          title: "Sesión expirada",
+          description: "Tu sesión ha expirado, serás redirigido a la página de login",
+          variant: "destructive"
+        });
+        setTimeout(() => setLocation("/auth"), 2000);
+        return null;
+      }
+      
+      if (!user) {
+        return null;
+      }
       
       // Si no hay userId seleccionado, usar el actual
       const userId = selectedUserId || user.id.toString();
@@ -230,9 +268,29 @@ export default function LibroRegistrosPage() {
           }
         });
         
+        // Si el error es 401 (No autenticado), redirigir a /auth
+        if (response.status === 401) {
+          toast({
+            title: "Sesión expirada",
+            description: "Tu sesión ha expirado, serás redirigido a la página de login",
+            variant: "destructive"
+          });
+          setTimeout(() => setLocation("/auth"), 2000);
+          throw new Error("Sesión expirada");
+        }
+        
         if (!response.ok) {
-          const errorData = await response.json();
-          const errorMessage = errorData?.message || `Error ${response.status}: ${response.statusText}`;
+          let errorMessage = `Error ${response.status}: ${response.statusText}`;
+          
+          try {
+            const errorData = await response.json();
+            if (errorData?.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (e) {
+            // Si no se puede parsear la respuesta como JSON, usar el mensaje por defecto
+          }
+          
           throw new Error(errorMessage);
         }
         
@@ -267,7 +325,8 @@ export default function LibroRegistrosPage() {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 0,
-    retry: 1 // Solo intentar una vez, no reintentar en caso de error 404
+    retry: 1, // Solo intentar una vez, no reintentar en caso de error 404
+    enabled: !!user && isUserAuthenticated.data === true // Solo ejecutar si el usuario está autenticado
   });
   
   // Efecto para cargar datos cuando cambian los filtros
@@ -1053,7 +1112,34 @@ export default function LibroRegistrosPage() {
         />
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center p-8">
+              <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-6 shadow-sm">
+                <XCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Error al cargar datos</h3>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4">
+                  {error}
+                </p>
+                <div className="flex justify-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => refetchLibroRegistros()}
+                    className="bg-white hover:bg-gray-100"
+                  >
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Reintentar
+                  </Button>
+                  
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setSelectedUserId(user?.id.toString() || "");
+                      setTimeout(() => refetchLibroRegistros(), 500);
+                    }}
+                  >
+                    <User className="mr-2 h-4 w-4" /> Ver mis datos
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -1070,7 +1156,23 @@ export default function LibroRegistrosPage() {
         />
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="text-center">No hay datos disponibles para mostrar.</div>
+            <div className="text-center p-8">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay datos disponibles</h3>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4">
+                  No se encontraron registros financieros para mostrar en el período seleccionado. 
+                  Por favor, verifica la conexión o selecciona otro período.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => refetchLibroRegistros()}
+                  className="bg-white hover:bg-gray-100"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" /> Reintentar
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
