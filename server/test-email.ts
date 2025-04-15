@@ -86,9 +86,8 @@ function getTestEmailTemplate(emailType: string = 'general'): string {
   </head>
   <body>
     <div class="container">
-      <div class="header">
-        <h1 style="color: #007bff; font-size: 38px; margin-bottom: 5px;">BILLEO</h1>
-        <div style="color: #555; font-size: 16px;">Tu asistente financiero</div>
+      <div style="text-align: left; margin: 10px 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+        <div style="font-weight: 500; font-size: 20px; color: #333;">Billeo</div>
       </div>
       <div class="content">
   `;
