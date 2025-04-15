@@ -615,13 +615,15 @@ export default function LibroRegistrosPage() {
       currentY += 45;
       drawColorBox(currentY, 50, 'blue', 'FACTURAS EMITIDAS');
       
-      // Posiciones optimizadas de las columnas de factura para mejor alineación (valores absolutos)
+      // Posiciones optimizadas de las columnas de factura con más espacio para los números a la derecha
       const numFactX = margin + 5;
       const fechaFactX = margin + 30;    // Más espacio para el número
       const clienteFactX = margin + 65;  // Más espacio para la fecha
-      const baseX = margin + 140;        // Más espacio para el cliente
-      const ivaX = margin + 170;         // Valor absoluto, no relativo al margen derecho
-      const totalFactX = margin + 200;   // Valor absoluto, no relativo al margen derecho
+      
+      // Dejamos más espacio para las columnas numéricas y ajustamos hacia la izquierda para evitar recorte
+      const baseX = margin + 130;        // Movido 10px a la izquierda
+      const ivaX = margin + 160;         // Movido 10px a la izquierda
+      const totalFactX = margin + 190;   // Movido 10px a la izquierda
       
       // Cabecera de la tabla de facturas - alineadas con los nuevos valores
       doc.setFont('helvetica', 'bold');
@@ -655,9 +657,11 @@ export default function LibroRegistrosPage() {
           doc.text(inv.number, numFactX, facturaY);
           doc.text(formatDate(inv.date), fechaFactX, facturaY);
           doc.text(clienteText, clienteFactX, facturaY);
-          doc.text(formatCurrency(parseFloat(inv.subtotal)), baseX, facturaY, { align: 'right' });
-          doc.text(formatCurrency(parseFloat(inv.tax)), ivaX, facturaY, { align: 'right' });
-          doc.text(formatCurrency(parseFloat(inv.total)), totalFactX, facturaY, { align: 'right' });
+          // Ajustamos los valores de moneda para moverlos un poco más a la izquierda y darles más espacio
+          // align: 'right' significa que el punto de anclaje es el extremo derecho del texto
+          doc.text(formatCurrency(parseFloat(inv.subtotal)), baseX + 25, facturaY, { align: 'right' });
+          doc.text(formatCurrency(parseFloat(inv.tax)), ivaX + 25, facturaY, { align: 'right' });
+          doc.text(formatCurrency(parseFloat(inv.total)), totalFactX + 25, facturaY, { align: 'right' });
           
           facturaY += 6; // Más espacio entre filas
           
@@ -818,7 +822,8 @@ export default function LibroRegistrosPage() {
             doc.setTextColor(34, 197, 94); // Verde para ingresos
           }
           
-          doc.text(formatCurrency(parseFloat(t.amount)), importeX, gastoY, { align: 'right' });
+          // Ajustamos el importe para que tenga más espacio a la derecha y no se corte
+          doc.text(formatCurrency(parseFloat(t.amount)), importeX - 5, gastoY, { align: 'right' });
           doc.setTextColor(0, 0, 0); // Restaurar color negro
           
           gastoY += 7; // Más espacio entre líneas
