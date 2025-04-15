@@ -66,15 +66,11 @@ export async function initEmailService() {
 }
 
 // Importamos las URLs del logo desde un archivo centralizado
-import { BILLEO_LOGO_URL, BILLEO_LOGO_LOCAL_URL, BILLEO_LOGO_URL_ALT1, BILLEO_LOGO_URL_ALT2 } from './billeo-logo-url';
+import { BILLEO_LOGO_DATA_URI, BILLEO_LOGO_URL, BILLEO_LOGO_LOCAL_URL, BILLEO_LOGO_URL_ALT1, BILLEO_LOGO_URL_ALT2 } from './billeo-logo-url';
 
-// URL para el logo de Billeo en correos electrónicos
-// Usamos una URL pública externa para máxima compatibilidad
-const logoUrl = BILLEO_LOGO_URL;
-const logoLocalUrl = BILLEO_LOGO_LOCAL_URL; // URL local para entorno de desarrollo
-
-// Seleccionamos la URL apropiada según el entorno
-const logoEmailUrl = process.env.NODE_ENV === 'production' ? logoUrl : logoLocalUrl;
+// Para correos electrónicos, usamos el Data URI como método principal
+// Esta técnica es la más fiable y compatible con todos los clientes de correo
+const logoEmailUrl = BILLEO_LOGO_DATA_URI;
 
 // Función para enviar correo de recuperación de contraseña
 export async function sendPasswordResetEmail(email: string, token: string, username: string) {
