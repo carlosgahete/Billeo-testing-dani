@@ -146,24 +146,38 @@ export default function LibroRegistrosPage() {
     queryKey: ['users-list'],
     queryFn: async () => {
       try {
-        if (!user || user.role !== 'superadmin') return [];
+        // Temporalmente habilitado para todos los usuarios para pruebas
+        // if (!user || user.role !== 'superadmin') return [];
         
+        console.log('Intentando cargar usuarios...');
         const response = await fetch('/api/users', {
           credentials: 'include'
         });
         
         if (!response.ok) {
           console.error('Error al cargar usuarios:', response.status);
+          toast({
+            title: "Error al cargar usuarios",
+            description: `Error ${response.status}: ${response.statusText}`,
+            variant: "destructive"
+          });
           return [];
         }
         
-        return response.json();
+        const data = await response.json();
+        console.log('Usuarios cargados:', data);
+        return data;
       } catch (error) {
         console.error('Error al cargar usuarios:', error);
+        toast({
+          title: "Error al cargar usuarios",
+          description: error instanceof Error ? error.message : "Error desconocido",
+          variant: "destructive"
+        });
         return [];
       }
     },
-    // Solo ejecutar si el usuario es superadmin, pero temporalmente habilitado para todos para pruebas
+    // Temporalmente habilitado para todos - comentamos la restricción para pruebas
     // enabled: user?.role === 'superadmin'
   });
   
