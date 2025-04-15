@@ -30,6 +30,7 @@ import ExpensesSummary from "@/components/dashboard/blocks/ExpensesSummary";
 import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
 import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
+import ExpensesByCategorySimple from "@/components/dashboard/ExpensesByCategorySimple";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -185,6 +186,14 @@ export const DASHBOARD_BLOCKS = {
     description: "Resumen de impuestos a pagar y retenciones a favor.",
     component: TaxSummary,
     icon: <DollarSign className="h-8 w-8 text-emerald-500" />,
+    type: "charts"
+  },
+  "expenses-by-category-simple": {
+    id: "expenses-by-category-simple",
+    title: "Gastos por Categoría (Simple)",
+    description: "Distribución de gastos con gráfico de rosquilla simplificado y bien posicionado.",
+    component: ExpensesByCategorySimple,
+    icon: <PieChart className="h-8 w-8 text-red-500" />,
     type: "charts"
   },
   "income-card": {
@@ -404,6 +413,26 @@ export const DASHBOARD_BLOCK_CATALOG = [
             <span className="text-[7px]">IRPF a Pagar</span>
             <span className="text-[7px] font-semibold">30.000 €</span>
           </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-simple"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-red-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-red-600 mr-1" />
+          <span className="text-[10px] font-medium text-red-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <svg width="35" height="35" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="25" fill="white" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000000" strokeWidth="20" strokeDasharray="180 252" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ef4444" strokeWidth="20" strokeDasharray="30 252" strokeDashoffset="-180" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f97316" strokeWidth="20" strokeDasharray="15 252" strokeDashoffset="-210" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8b5cf6" strokeWidth="20" strokeDasharray="10 252" strokeDashoffset="-225" />
+          </svg>
         </div>
       </div>
     )

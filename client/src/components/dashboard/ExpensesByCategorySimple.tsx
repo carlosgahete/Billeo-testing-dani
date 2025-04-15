@@ -1,28 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Filter, TrendingDown } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip } from 'recharts';
+import React, { useState, useEffect } from "react";
+import { DashboardBlockProps } from "@/types/dashboard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { Info } from "lucide-react";
 
-// Colores predefinidos para las categorías
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CF5', '#FF6B6B', '#4ECDC4'];
+// Los iconos para cada categoría se asignarán según el nombre
+// Esto se puede ampliar según las categorías que tengan los usuarios
+const CATEGORY_ICONS: Record<string, string> = {
+  "Sin categoría": "💰",
+  "Suministros": "💡",
+  "Material oficina": "📎",
+  "Software y suscripciones": "🔒",
+  "Marketing": "📣",
+  "Transporte": "🚗",
+  "Alimentación": "🍔",
+  "Alojamiento": "🏨",
+  "Telefonía": "📱",
+  "Internet": "🌐",
+  "Seguros": "🛡️",
+  "Formación": "📚",
+  "Asesoría": "📋",
+  "Impuestos": "📊",
+  "Otros": "📦"
+};
+
+// Los colores para cada categoría
+const CATEGORY_COLORS: Record<string, string> = {
+  "Sin categoría": "#718096",
+  "Suministros": "#4355b9",
+  "Material oficina": "#5c6bc0",
+  "Software y suscripciones": "#6f42c1",
+  "Marketing": "#3355b9",
+  "Transporte": "#42a5f5",
+  "Alimentación": "#26a69a",
+  "Alojamiento": "#66bb6a",
+  "Telefonía": "#ec407a",
+  "Internet": "#7e57c2",
+  "Seguros": "#5c6bc0",
+  "Formación": "#26a69a",
+  "Asesoría": "#8d6e63",
+  "Impuestos": "#ef5350",
+  "Otros": "#78909c"
+};
+
+// Función para obtener un color aleatorio para categorías sin color predefinido
+const getRandomColor = () => {
+  return "#" + Math.floor(Math.random()*16777215).toString(16);
+};
 
 interface ExpenseByCategoryData {
   name: string;
@@ -40,255 +65,262 @@ interface ExpensesByCategoryProps {
   period?: string;
 }
 
-const ExpensesByCategorySimple: React.FC<ExpensesByCategoryProps> = ({ 
-  transactions,
-  categories,
-  period = '2025-all'
-}) => {
-  const [periodLabel, setPeriodLabel] = useState("Año 2025 completo");
-  const [data, setData] = useState<ExpenseByCategoryData[]>([]);
+// Función para formatear moneda
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2
+  }).format(value);
+};
+
+const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
+  // Estado para guardar las categorías procesadas
+  const [processedCategories, setProcessedCategories] = useState<ExpenseByCategoryData[]>([]);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
+  // Obtener las transacciones
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/transactions"],
+  });
   
-  // Procesamiento de datos
+  // Obtener las categorías
+  const { data: categories, isLoading: categoriesLoading } = useQuery<any[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  // Efecto para procesar las transacciones cuando cambia alguna dependencia
   useEffect(() => {
-    // Filtrar solo los gastos
-    const expenses = transactions.filter(t => t.type === 'expense');
-    
-    if (expenses.length === 0) {
-      setData([]);
-      return;
-    }
-    
-    const totalExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    // Agrupar gastos por categoría
-    const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
-    
-    // Añadir categoría "Sin categoría"
-    expensesByCategory['uncategorized'] = { 
-      amount: 0, 
-      count: 0,
-      name: 'Sin categoría'
-    };
-    
-    // Procesar todas las transacciones de gasto
-    expenses.forEach((transaction) => {
-      // Si no tiene categoría, añadir a "Sin categoría"
-      if (!transaction.categoryId) {
-        expensesByCategory['uncategorized'].amount += Number(transaction.amount);
-        expensesByCategory['uncategorized'].count += 1;
-        return;
-      }
-      
-      // Buscar la categoría
-      const category = categories.find(c => c.id === transaction.categoryId);
-      
-      if (category) {
-        // Si la categoría existe en nuestro agrupamiento, actualizar
-        if (expensesByCategory[category.id]) {
-          expensesByCategory[category.id].amount += Number(transaction.amount);
-          expensesByCategory[category.id].count += 1;
-        } else {
-          // Si no existe, crear nueva entrada
-          expensesByCategory[category.id] = {
-            amount: Number(transaction.amount),
-            count: 1,
-            name: category.name
+    // Solo procesar si tenemos transacciones y categorías
+    if (transactions && categories) {
+      setIsProcessing(true);
+
+      // Creamos un mapa de categorías por ID para acceso rápido
+      const categoryMap = new Map<number, any>();
+      categories.forEach(category => {
+        categoryMap.set(category.id, category);
+      });
+
+      // Filtramos las transacciones por tipo (gasto)
+      const filteredTransactions = transactions.filter(transaction => {
+        // Solo incluir gastos
+        if (transaction.type !== 'expense') return false;
+        
+        // Considerar todas las transacciones de gastos (podrías agregar filtros adicionales aquí)
+        return true;
+      });
+
+      // Agrupamos por categoría
+      const expensesByCategory: Record<string, { 
+        total: number, 
+        count: number, 
+        categoryId: number | null,
+        categoryName: string,
+        color: string
+      }> = {};
+
+      filteredTransactions.forEach(tx => {
+        const categoryId = tx.categoryId;
+        const category = categoryId ? categoryMap.get(categoryId) : null;
+        const categoryName = category ? category.name : "Sin categoría";
+        const amount = parseFloat(tx.amount);
+
+        // Inicializar si no existe
+        if (!expensesByCategory[categoryName]) {
+          expensesByCategory[categoryName] = {
+            total: 0,
+            count: 0,
+            categoryId: categoryId,
+            categoryName: categoryName,
+            color: category?.color || CATEGORY_COLORS[categoryName] || getRandomColor()
           };
         }
-      } else {
-        // Si no se encuentra la categoría, añadir a "Sin categoría"
-        expensesByCategory['uncategorized'].amount += Number(transaction.amount);
-        expensesByCategory['uncategorized'].count += 1;
-      }
-    });
-    
-    // Convertir a array y ordenar por monto (de mayor a menor)
-    const processedData = Object.entries(expensesByCategory)
-      .map(([id, data], index) => {
-        // Buscar la categoría para obtener el icono
-        const category = id !== 'uncategorized'
-          ? categories.find(c => c.id.toString() === id.toString())
-          : null;
-        
-        return {
-          name: data.name,
-          value: data.amount,
-          count: data.count,
-          color: id === 'uncategorized' ? '#999999' : category?.color || COLORS[index % COLORS.length],
-          percentage: (data.amount / totalExpenses) * 100,
-          icon: category?.icon || '📊', // Emoji por defecto si no se encuentra
-          categoryId: id
-        };
-      })
-      .filter(item => item.value > 0) // Eliminar categorías sin gastos
-      .sort((a, b) => b.value - a.value); // Ordenar de mayor a menor
-    
-    setData(processedData);
+
+        // Acumular
+        expensesByCategory[categoryName].total += Math.abs(amount);
+        expensesByCategory[categoryName].count += 1;
+      });
+
+      // Calcular el total de gastos
+      const totalExpense = Object.values(expensesByCategory)
+        .reduce((sum, cat) => sum + cat.total, 0);
+
+      // Convertir a array y calcular porcentajes
+      const categoriesArray: ExpenseByCategoryData[] = Object.entries(expensesByCategory)
+        .map(([name, data]) => {
+          const percentage = totalExpense > 0 
+            ? parseFloat(((data.total * 100) / totalExpense).toFixed(1))
+            : 0;
+            
+          return {
+            name,
+            value: data.total,
+            count: data.count,
+            color: data.color,
+            percentage,
+            icon: CATEGORY_ICONS[name] || "📦",
+            categoryId: data.categoryId
+          };
+        })
+        .sort((a, b) => b.value - a.value);  // Ordenar de mayor a menor
+
+      setProcessedCategories(categoriesArray);
+      setIsProcessing(false);
+    }
   }, [transactions, categories]);
+
+  // Datos para el gráfico circular
+  const chartData = processedCategories.map(cat => ({
+    name: cat.name,
+    value: cat.value,
+    color: cat.color
+  }));
+
+  // Mostrar solo las 5 categorías principales para el gráfico
+  const topCategoriesForChart = chartData.slice(0, 5);
   
-  // Formatear moneda
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  // Determinar si está cargando
+  const isLoading = dashboardLoading || transactionsLoading || categoriesLoading || isProcessing;
   
-  // Renderizado condicional si no hay datos
-  if (!data.length) {
+  // Si está cargando, mostrar skeleton
+  if (isLoading) {
     return (
-      <Card className="h-full overflow-hidden fade-in dashboard-card">
-        <CardHeader className="bg-red-50 p-3 flex flex-row justify-between items-center">
-          <CardTitle className="text-base text-red-700 flex items-center">
-            <TrendingDown className="mr-2 h-4 w-4" />
-            Gastos por Categoría
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 flex items-center justify-center h-[280px]">
-          <div className="text-center text-gray-500">
-            <p>No hay datos de gastos para mostrar en este período</p>
+      <div className="rounded-lg overflow-hidden border">
+        <div className="flex items-center p-3 bg-gray-50 border-b">
+          <Skeleton className="h-5 w-5 mr-2" />
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="p-4">
+          <div className="flex justify-center mb-2">
+            <Skeleton className="h-40 w-40 rounded-full" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-2 mt-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-11/12" />
+            <Skeleton className="h-4 w-10/12" />
+          </div>
+        </div>
+      </div>
     );
   }
-  
-  // Mostrar solo las 5 primeras categorías para simplificar
-  const displayData = data.slice(0, 5);
-  
-  return (
-    <Card className="h-full overflow-hidden fade-in dashboard-card">
-      <CardHeader className="bg-red-50 p-3 flex flex-row justify-between items-center">
-        <CardTitle className="text-base text-red-700 flex items-center">
-          <TrendingDown className="mr-2 h-4 w-4" />
-          Gastos por Categoría
-        </CardTitle>
-        
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 px-2 text-xs bg-white border-gray-200 hover:bg-gray-50"
-            >
-              <Filter className="h-3.5 w-3.5 mr-1" />
-              Filtrar
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 p-2" align="end">
-            <div className="space-y-2">
-              <div className="tabs w-full mb-2">
-                <div className="tab active">
-                  <div className="text-sm font-semibold">Período</div>
-                  <div className="mt-2 space-y-2">
-                    <Select 
-                      value="2025-all"
-                      onValueChange={(value) => console.log(value)}
-                    >
-                      <SelectTrigger className="w-full h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar período" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2025-all">Año 2025 completo</SelectItem>
-                        <SelectItem value="2025-q1">Q1 2025 (Ene-Mar)</SelectItem>
-                        <SelectItem value="2025-q2">Q2 2025 (Abr-Jun)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs"
-                >
-                  Limpiar
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="h-8 text-xs"
-                >
-                  Aplicar
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </CardHeader>
-      <CardContent className="p-4">
-        {periodLabel && (
-          <div className="text-sm text-gray-500 mb-2 font-medium">
-            {periodLabel}
-          </div>
-        )}
-        
-        {/* Layout con dos columnas perfectamente balanceado */}
-        <div className="flex">
-          {/* Columna izquierda: Gráfico donut (50% del ancho) */}
-          <div className="w-1/2 flex justify-center items-center">
-            <div className="donut-chart-container">
-              <PieChart width={220} height={220}>
-                <Pie
-                  data={displayData}
-                  cx={110}
-                  cy={110}
-                  innerRadius={55}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {displayData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
-                  contentStyle={{ 
-                    borderRadius: '8px',
-                    boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                    border: 'none',
-                    padding: '6px',
-                    fontSize: '10px'
-                  }}
-                />
-              </PieChart>
-            </div>
-          </div>
-          
-          {/* Columna derecha: Lista de categorías (50% del ancho) */}
-          <div className="w-1/2 overflow-y-auto h-[250px] pl-4">
-            <div className="space-y-3">
-              {displayData.map((item, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" 
-                    style={{ 
-                      backgroundColor: `${item.color}15`, // Color con 15% de opacidad
-                      color: item.color
-                    }}>
-                    <span className="text-base">{item.icon}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                      <span className="font-medium text-gray-900 text-sm">{formatCurrency(item.value)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>{item.count} transacciones</span>
-                      <span>{item.percentage.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+
+  if (processedCategories.length === 0) {
+    return (
+      <div className="rounded-lg overflow-hidden border">
+        <div className="flex items-center justify-between p-3 bg-red-50 border-b">
+          <div className="flex items-center">
+            <div className="text-2xl mr-2">📊</div>
+            <div>
+              <h3 className="text-lg font-medium text-red-800">Gastos por Categoría</h3>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="p-6 text-center">
+          <p className="text-gray-500">No hay gastos registrados para mostrar</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Renderizador personalizado para la leyenda
+  const renderLegend = (props: any) => {
+    const { payload } = props;
+    
+    return (
+      <ul className="flex flex-col gap-1 mt-2">
+        {payload.map((entry: any, index: number) => (
+          <li key={`item-${index}`} className="flex items-center text-xs">
+            <span style={{ 
+              backgroundColor: entry.color,
+              width: '8px',
+              height: '8px',
+              display: 'inline-block',
+              marginRight: '5px',
+              borderRadius: '2px'
+            }}></span>
+            <span className="truncate max-w-[150px]">{entry.value}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  return (
+    <div className="rounded-lg border overflow-hidden bg-white">
+      <div className="flex items-center justify-between p-3 bg-red-50 border-b">
+        <div className="flex items-center">
+          <div className="text-xl mr-2">📊</div>
+          <div>
+            <h3 className="text-base font-medium text-red-800">Gastos por Categoría</h3>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <div className="flex flex-col items-center justify-center">
+          {/* Gráfico de sectores en el centro */}
+          <div className="flex justify-center items-center" style={{ width: '100%', height: 180 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={topCategoriesForChart}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={70}
+                  paddingAngle={1}
+                  dataKey="value"
+                >
+                  {topCategoriesForChart.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Legend 
+                  content={renderLegend}
+                  layout="vertical"
+                  verticalAlign="middle"
+                  align="right"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          
+          {/* Lista de categorías con porcentajes */}
+          <div className="w-full mt-3 space-y-1.5">
+            {processedCategories.slice(0, 4).map((category, index) => (
+              <div key={index} className="flex justify-between items-center py-1">
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">{category.icon}</span>
+                  <span className="text-sm font-medium">{category.name}</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-red-600">
+                    {formatCurrency(-category.value)}
+                  </p>
+                  <p className="text-xs text-gray-500">{category.percentage}%</p>
+                </div>
+              </div>
+            ))}
+            
+            {/* Mostrar "Otros" si hay más de 4 categorías */}
+            {processedCategories.length > 4 && (
+              <div className="flex justify-between items-center py-1 border-t pt-2">
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">📦</span>
+                  <span className="text-sm font-medium">Otros ({processedCategories.length - 4})</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-red-600">
+                    {formatCurrency(-processedCategories.slice(4).reduce((sum, cat) => sum + cat.value, 0))}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
