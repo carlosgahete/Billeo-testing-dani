@@ -476,7 +476,7 @@ export default function LibroRegistrosPage() {
       const maxPresupuestos = Math.min(5, filteredQuotes.length);
       
       if (filteredQuotes.length === 0) {
-        doc.setFontStyle('italic');
+        doc.setFont('helvetica', 'italic');
         doc.text("No hay presupuestos en este período", margin + 5, presupuestoY);
       } else {
         for (let i = 0; i < maxPresupuestos; i++) {
@@ -511,13 +511,8 @@ export default function LibroRegistrosPage() {
         }
       }
       
-      // SECCIÓN DE GASTOS (posiblemente en nueva página si no hay espacio)
-      if (currentY + 100 > doc.internal.pageSize.height) {
-        doc.addPage();
-        currentY = 20;
-      } else {
-        currentY += 50;
-      }
+      // SECCIÓN DE GASTOS (en la misma página)
+      currentY += 50;
       
       drawColorBox(currentY, 60, 'amber', 'GASTOS Y TRANSACCIONES');
       
@@ -540,7 +535,7 @@ export default function LibroRegistrosPage() {
       const maxGastos = Math.min(8, filteredTransactions.length);
       
       if (filteredTransactions.length === 0) {
-        doc.setFontStyle('italic');
+        doc.setFont('helvetica', 'italic');
         doc.text("No hay transacciones en este período", margin + 5, gastoY);
       } else {
         for (let i = 0; i < maxGastos; i++) {
@@ -583,14 +578,10 @@ export default function LibroRegistrosPage() {
         }
       }
       
-      // Pie de página
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`Billeo - Página ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
-      }
+      // Pie de página simplificado (solo en la página actual)
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Billeo - Generado ${formatDate(new Date().toISOString())}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
       
       // Guardar documento
       doc.save(`Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.pdf`);
