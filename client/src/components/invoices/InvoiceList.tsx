@@ -1508,9 +1508,11 @@ const InvoiceList = () => {
               <FileCheck className="h-4 w-4 text-[#007AFF]" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-800 mb-0.5">Facturas emitidas</h3>
+              <h3 className="font-medium text-gray-800 mb-0.5">
+                Facturas emitidas {yearFilter !== "all" && <span>({yearFilter})</span>}
+              </h3>
               <p className="text-sm text-gray-500">
-                {invoicesData?.length || 0} facturas en total
+                {filteredInvoices.length} de {invoicesData?.length || 0} facturas
               </p>
             </div>
           </div>
@@ -1801,6 +1803,12 @@ const InvoiceList = () => {
           
           {/* Versión móvil: Estilo lista iOS */}
           <div className="block md:hidden">
+            {/* Resumen del filtro aplicado */}
+            {yearFilter !== "all" && (
+              <div className="px-4 py-2 bg-blue-50/70 text-center text-xs text-blue-700">
+                Mostrando facturas del año <span className="font-medium">{yearFilter}</span> ({filteredInvoices.length} de {invoicesData?.length})
+              </div>
+            )}
             <div className="px-4 pb-16">
               {filteredInvoices.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
