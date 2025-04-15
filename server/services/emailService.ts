@@ -146,6 +146,9 @@ export async function sendInvoiceEmail(
     pdfStream.push(pdfBuffer);
     pdfStream.push(null); // Señal de fin de stream
     
+    const appUrl = process.env.APP_URL || 'https://app.billeo.es';
+    const logoUrl = `${appUrl}/images/billeo-logo.svg`;
+    
     const emailOptions: nodemailer.SendMailOptions = {
       from: `"${companyName}" <${senderEmail}>`,
       to: recipientEmail,
@@ -163,7 +166,7 @@ ${companyName}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #2563eb;">${companyName}</h1>
+            <img src="${logoUrl}" alt="${companyName}" style="width: 150px; height: auto;">
           </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
@@ -293,10 +296,13 @@ export async function sendAlertNotification(
       year: 'numeric'
     });
     
+    const appUrl = process.env.APP_URL || 'https://app.billeo.es';
+    const logoUrl = `${appUrl}/images/billeo-logo.svg`;
+
     const htmlMessage = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #2563eb;">${companyName}</h1>
+          <img src="${logoUrl}" alt="${companyName}" style="width: 150px; height: auto;">
         </div>
         
         <p>Hola <strong>${recipientName}</strong>,</p>
@@ -310,7 +316,7 @@ export async function sendAlertNotification(
         <p>Por favor, revisa esta información en tu cuenta de Billeo.</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.APP_URL || 'https://app.billeo.es'}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">${actionText}</a>
+          <a href="${appUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">${actionText}</a>
         </div>
         
         <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
@@ -407,6 +413,9 @@ export async function sendQuoteEmail(
       validityMessage = `\nEste presupuesto es válido hasta el ${formattedDate}.`;
     }
     
+    const appUrl = process.env.APP_URL || 'https://app.billeo.es';
+    const logoUrl = `${appUrl}/images/billeo-logo.svg`;
+    
     const emailOptions: nodemailer.SendMailOptions = {
       from: `"${companyName}" <${senderEmail}>`,
       to: recipientEmail,
@@ -424,7 +433,7 @@ ${companyName}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #2563eb;">${companyName}</h1>
+            <img src="${logoUrl}" alt="${companyName}" style="width: 150px; height: auto;">
           </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
