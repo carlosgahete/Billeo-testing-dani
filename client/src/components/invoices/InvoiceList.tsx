@@ -204,15 +204,38 @@ const MarkAsPaidButton = ({
   const handleMarkAsPaid = async () => {
     setIsPending(true);
     try {
-      // Primero obtener los ítems actuales de la factura
+      console.log(`Marcando como pagada la factura ID ${invoice.id} (${invoice.invoiceNumber})`);
+      
+      // Primero obtener los ítems actuales de la factura y sus datos completos
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error al obtener datos de la factura: ${response.status}`);
+      }
+      
       const invoiceData = await response.json();
+      console.log("Datos de factura obtenidos:", invoiceData);
       
       // Actualizar el estado de la factura a "paid"
-      await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
-        invoice: { status: "paid" },
-        items: invoiceData?.items || [] // Mantener los items existentes
+      const updateResponse = await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
+        invoice: { 
+          status: "paid",
+          // Mantener todos los datos originales de la factura
+          ...invoiceData.invoice,
+          // Pero forzar el estado a 'paid'
+          status: "paid" 
+        },
+        items: invoiceData.items || []
       });
+      
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        throw new Error(`Error al actualizar: ${errorData.message || updateResponse.status}`);
+      }
+      
+      // Invalidar queries para actualizar datos en la UI
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
       toast({
         title: "Factura marcada como pagada",
@@ -224,6 +247,7 @@ const MarkAsPaidButton = ({
         window.location.href = '/invoices';
       }, 500);
     } catch (error: any) {
+      console.error("Error al marcar como pagada:", error);
       toast({
         title: "Error",
         description: `No se pudo marcar la factura como pagada: ${error.message}`,
@@ -1162,19 +1186,42 @@ const InvoiceList = () => {
   // Función para manejar "Marcar como pagada" en el menú móvil
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
-      // Primero obtener los ítems actuales de la factura
+      console.log(`[Móvil] Marcando como pagada la factura ID ${invoice.id} (${invoice.invoiceNumber})`);
+      
+      // Primero obtener los ítems actuales de la factura y sus datos completos
       const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error al obtener datos de la factura: ${response.status}`);
+      }
+      
       const invoiceData = await response.json();
+      console.log("[Móvil] Datos de factura obtenidos:", invoiceData);
       
       // Actualizar el estado de la factura a "paid"
-      await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
-        invoice: { status: "paid" },
-        items: invoiceData?.items || []
+      const updateResponse = await apiRequest("PUT", `/api/invoices/${invoice.id}`, {
+        invoice: { 
+          status: "paid",
+          // Mantener todos los datos originales de la factura
+          ...invoiceData.invoice,
+          // Pero forzar el estado a 'paid'
+          status: "paid" 
+        },
+        items: invoiceData.items || []
       });
+      
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        throw new Error(`Error al actualizar: ${errorData.message || updateResponse.status}`);
+      }
+      
+      // Invalidar queries para actualizar datos en la UI
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
       toast({
         title: "Factura marcada como pagada",
-        description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada`,
+        description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
       
       // Redireccionar a la página de facturas
@@ -1182,6 +1229,7 @@ const InvoiceList = () => {
         window.location.href = '/invoices';
       }, 500);
     } catch (error: any) {
+      console.error("[Móvil] Error al marcar como pagada:", error);
       toast({
         title: "Error",
         description: `No se pudo marcar la factura como pagada: ${error.message}`,
