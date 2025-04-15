@@ -228,7 +228,7 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
     const { payload } = props;
     
     return (
-      <ul className="flex flex-col gap-1 mt-2">
+      <ul className="flex flex-col gap-1 mt-2 pl-2">
         {payload.map((entry: any, index: number) => (
           <li key={`item-${index}`} className="flex items-center text-xs">
             <span style={{ 
@@ -239,7 +239,7 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
               marginRight: '5px',
               borderRadius: '2px'
             }}></span>
-            <span className="truncate max-w-[150px]">{entry.value}</span>
+            <span className="truncate max-w-[100px]">{entry.name}</span>
           </li>
         ))}
       </ul>
@@ -260,30 +260,31 @@ const ExpensesByCategorySimple: React.FC<DashboardBlockProps> = ({ data, isLoadi
       <div className="p-4">
         <div className="flex flex-col items-center justify-center">
           {/* Gráfico de sectores en el centro */}
-          <div className="flex justify-center items-center" style={{ width: '100%', height: 180 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={topCategoriesForChart}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={70}
-                  paddingAngle={1}
-                  dataKey="value"
-                >
-                  {topCategoriesForChart.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Legend 
-                  content={renderLegend}
-                  layout="vertical"
-                  verticalAlign="middle"
-                  align="right"
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex justify-center items-center">
+            <PieChart width={300} height={190}>
+              <Pie
+                data={topCategoriesForChart}
+                cx={95}
+                cy={95}
+                innerRadius={40}
+                outerRadius={70}
+                paddingAngle={1}
+                dataKey="value"
+                startAngle={90}
+                endAngle={450}
+              >
+                {topCategoriesForChart.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Legend 
+                content={renderLegend}
+                layout="vertical"
+                verticalAlign="middle"
+                align="right"
+                wrapperStyle={{ right: 10, top: 30 }}
+              />
+            </PieChart>
           </div>
           
           {/* Lista de categorías con porcentajes */}
