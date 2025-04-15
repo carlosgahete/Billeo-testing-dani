@@ -25,12 +25,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, FileSpreadsheet } from "lucide-react";
+import { FileText, Download, FileSpreadsheet, Users } from "lucide-react";
 // Importar solo jsPDF sin autoTable (enfoque simple)
 import { jsPDF } from "jspdf";
 import { PageHeader } from "@/components/page-header";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
 
 // Funciones de utilidades para formatear fecha y moneda
 const formatDate = (dateString: string): string => {
@@ -109,6 +110,14 @@ interface SummaryData {
   vatBalance?: number;
 }
 
+// Tipo para usuario simple (para selector)
+interface UserOption {
+  id: number;
+  username: string;
+  name?: string;
+  email: string;
+}
+
 // Componente principal
 export default function LibroRegistrosPage() {
   const [, setLocation] = useLocation();
@@ -124,12 +133,39 @@ export default function LibroRegistrosPage() {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   
   // Datos filtrados
   const [filteredInvoices, setFilteredInvoices] = useState<InvoiceRecord[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<TransactionRecord[]>([]);
   const [filteredQuotes, setFilteredQuotes] = useState<QuoteRecord[]>([]);
   const [summary, setSummary] = useState<SummaryData | null>(null);
+  
+  // Consulta para obtener la lista de usuarios si el usuario actual es superadmin
+  const { data: usersList, isLoading: loadingUsers } = useQuery({
+    queryKey: ['users-list'],
+    queryFn: async () => {
+      if (!user || user.role !== 'superadmin') return null;
+      
+      const response = await fetch('/api/users', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar los usuarios');
+      }
+      
+      return response.json();
+    },
+    enabled: user?.role === 'superadmin' // Solo ejecutar si el usuario es superadmin
+  });
+  
+  // Cuando el usuario cambia, establecer el userId seleccionado
+  useEffect(() => {
+    if (user && !selectedUserId) {
+      setSelectedUserId(user.id.toString());
+    }
+  }, [user, selectedUserId]);
   
   // Redirección si no hay usuario
   useEffect(() => {
@@ -143,11 +179,20 @@ export default function LibroRegistrosPage() {
     const fetchData = async () => {
       if (!user) return;
       
+      // Si no hay userId seleccionado, usar el actual
+      const userId = selectedUserId || user.id.toString();
+      
+      // Solo permitir ver datos de otros usuarios si es superadmin
+      if (userId !== user.id.toString() && user.role !== 'superadmin') {
+        setError('No tienes permisos para ver datos de otros usuarios');
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         setError(null);
         
-        const userId = user.id.toString();
         const apiUrl = `/api/libro-registros/${userId}?year=${selectedYear}&quarter=${selectedQuarter}&month=${selectedMonth}`;
         
         const response = await fetch(apiUrl, {
@@ -169,7 +214,7 @@ export default function LibroRegistrosPage() {
     };
     
     fetchData();
-  }, [user, selectedYear, selectedQuarter, selectedMonth]);
+  }, [user, selectedYear, selectedQuarter, selectedMonth, selectedUserId]);
   
   // Filtrar datos cuando cambian los filtros o los datos
   useEffect(() => {
@@ -977,6 +1022,31 @@ export default function LibroRegistrosPage() {
       {/* Filtros y botones de exportación */}
       <div className="flex flex-wrap items-center justify-between mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
         <div className="flex flex-wrap gap-4 items-center">
+          {/* Selector de cliente para superadmin */}
+          {user?.role === 'superadmin' && (
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
+                <Users size={12} /> Cliente
+              </label>
+              <Select 
+                value={selectedUserId} 
+                onValueChange={setSelectedUserId}
+                disabled={loadingUsers}
+              >
+                <SelectTrigger className="h-10 w-[200px] rounded-xl bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 focus:ring-2 focus:ring-blue-200 transition-all">
+                  <SelectValue placeholder="Seleccionar cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {usersList?.map((clientUser: UserOption) => (
+                    <SelectItem key={clientUser.id} value={clientUser.id.toString()}>
+                      {clientUser.name || clientUser.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Año</label>
             <Select 
