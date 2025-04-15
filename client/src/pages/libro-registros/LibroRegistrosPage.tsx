@@ -635,27 +635,29 @@ export default function LibroRegistrosPage() {
       currentY += 55;
       drawColorBox(currentY, 45, 'green', 'PRESUPUESTOS');
       
-      // Cabecera de la tabla de presupuestos
+      // Cabecera de la tabla de presupuestos con posiciones mejoradas
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.text("Número", margin + 5, currentY + 15);
-      doc.text("Fecha", margin + 30, currentY + 15);
-      doc.text("Cliente", margin + 55, currentY + 15);
-      doc.text("Total", pageWidth - margin - 40, currentY + 15);
-      doc.text("Estado", pageWidth - margin - 20, currentY + 15);
+      
+      // Nuevas posiciones para evitar desbordamiento
+      const colWidth = (pageWidth - 2 * margin) / 5; // Dividir el ancho disponible en 5 columnas
+      const numQuoteX = margin + 5;
+      const fechaQuoteX = margin + colWidth;
+      const clienteQuoteX = margin + 2 * colWidth;
+      const totalQuoteX = margin + 3.5 * colWidth;
+      const estadoQuoteX = margin + 4.5 * colWidth;
+      
+      doc.text("Número", numQuoteX, currentY + 15);
+      doc.text("Fecha", fechaQuoteX, currentY + 15);
+      doc.text("Cliente", clienteQuoteX, currentY + 15);
+      doc.text("Total", totalQuoteX, currentY + 15, { align: 'right' });
+      doc.text("Estado", estadoQuoteX, currentY + 15, { align: 'right' });
       
       drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
       
       // Datos de presupuestos
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
-      
-      // Posiciones horizontales para presupuestos
-      const numQuoteX = margin + 5;
-      const fechaQuoteX = margin + 30; 
-      const clienteQuoteX = margin + 55;
-      const totalQuoteX = pageWidth - margin - 40;
-      const estadoQuoteX = pageWidth - margin - 20;
       
       let presupuestoY = currentY + 22;
       const maxPresupuestos = Math.min(5, filteredQuotes.length);
@@ -667,15 +669,19 @@ export default function LibroRegistrosPage() {
         for (let i = 0; i < maxPresupuestos; i++) {
           const quote = filteredQuotes[i];
           
-          // Limitar longitud de textos (acortar para evitar solapamiento)
-          const clienteText = quote.clientName.length > 20 ? quote.clientName.substring(0, 17) + "..." : quote.clientName;
+          // Limitar longitud de textos aún más para evitar solapamiento
+          const clienteText = quote.clientName.length > 15 ? quote.clientName.substring(0, 12) + "..." : quote.clientName;
+          const numberText = quote.number.length > 8 ? quote.number.substring(0, 5) + "..." : quote.number;
           
-          // Estado formateado
-          const status = quote.status === 'accepted' ? 'Aceptado' : 
-                         quote.status === 'rejected' ? 'Rechazado' : 
-                         quote.status === 'pending' ? 'Pendiente' : quote.status;
+          // Estado formateado - mantenerlo corto
+          let status = quote.status === 'accepted' ? 'Acept.' : 
+                       quote.status === 'rejected' ? 'Rech.' : 
+                       quote.status === 'pending' ? 'Pend.' : quote.status;
           
-          doc.text(quote.number, numQuoteX, presupuestoY);
+          // Asegurar que el estado no exceda cierta longitud
+          if (status.length > 6) status = status.substring(0, 5) + '.';
+          
+          doc.text(numberText, numQuoteX, presupuestoY);
           doc.text(formatDate(quote.date), fechaQuoteX, presupuestoY);
           doc.text(clienteText, clienteQuoteX, presupuestoY);
           doc.text(formatCurrency(parseFloat(quote.total)), totalQuoteX, presupuestoY, { align: 'right' });
