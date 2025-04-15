@@ -621,9 +621,10 @@ export default function LibroRegistrosPage() {
       const clienteFactX = margin + 65;  // Más espacio para la fecha
       
       // Dejamos más espacio para las columnas numéricas y ajustamos hacia la izquierda para evitar recorte
-      const baseX = margin + 130;        // Movido 10px a la izquierda
-      const ivaX = margin + 160;         // Movido 10px a la izquierda
-      const totalFactX = margin + 190;   // Movido 10px a la izquierda
+      // Mejoramos significativamente la posición de las columnas para garantizar que los valores no se salgan
+      const baseX = margin + 110;        // Más espacio para el cliente
+      const ivaX = margin + 145;         // Más espacio entre columnas
+      const totalFactX = margin + 180;   // La columna total necesita más espacio
       
       // Cabecera de la tabla de facturas - alineadas con los nuevos valores
       doc.setFont('helvetica', 'bold');
@@ -648,11 +649,36 @@ export default function LibroRegistrosPage() {
         doc.setFont('helvetica', 'italic');
         doc.text("No hay facturas en este período", margin + 5, facturaY);
       } else {
-        // Añadir página si es necesario
+        // Añadir página si es necesario para facturas
         const checkNeedNewPage = (currentY: number, rowHeight: number = 10, maxY: number = 260) => {
           if (currentY + rowHeight > maxY) {
             doc.addPage();
-            return 20; // Volver a la parte superior de la página
+            
+            // Añadir nueva cabecera en página nueva para facturas
+            doc.setFillColor(26, 102, 255); // Azul para facturas
+            doc.rect(margin, 20, pageWidth - 2 * margin, 8, 'F');
+            
+            // Título en blanco
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text("FACTURAS EMITIDAS (continuación)", margin + 5, 25.5);
+            
+            // Cabecera de columnas
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.text("Número", numFactX, 40);
+            doc.text("Fecha", fechaFactX, 40);
+            doc.text("Cliente", clienteFactX, 40);
+            doc.text("Base", baseX, 40, { align: 'center' });
+            doc.text("IVA", ivaX, 40, { align: 'center' });
+            doc.text("Total", totalFactX, 40, { align: 'center' });
+            
+            drawHorizontalLine(42, pageWidth - 2 * margin - 10);
+            
+            return 47; // Nueva posición Y después de la cabecera
           }
           return currentY;
         };
@@ -672,9 +698,15 @@ export default function LibroRegistrosPage() {
           doc.text(clienteText, clienteFactX, facturaY);
           // Ajustamos los valores de moneda para moverlos un poco más a la izquierda y darles más espacio
           // align: 'right' significa que el punto de anclaje es el extremo derecho del texto
-          doc.text(formatCurrency(parseFloat(inv.subtotal)), baseX + 25, facturaY, { align: 'right' });
-          doc.text(formatCurrency(parseFloat(inv.tax)), ivaX + 25, facturaY, { align: 'right' });
-          doc.text(formatCurrency(parseFloat(inv.total)), totalFactX + 25, facturaY, { align: 'right' });
+          // Aumentamos el espacio para los valores de moneda
+          // Reducimos la longitud del formato para que no se salga (eliminamos espacios)
+          const subtotalFormateado = formatCurrency(parseFloat(inv.subtotal)).replace(' ', '');
+          const ivaFormateado = formatCurrency(parseFloat(inv.tax)).replace(' ', '');
+          const totalFormateado = formatCurrency(parseFloat(inv.total)).replace(' ', '');
+          
+          doc.text(subtotalFormateado, baseX + 30, facturaY, { align: 'right' });
+          doc.text(ivaFormateado, ivaX + 30, facturaY, { align: 'right' });
+          doc.text(totalFormateado, totalFactX + 35, facturaY, { align: 'right' });
           
           facturaY += 6; // Más espacio entre filas
           
