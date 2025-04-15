@@ -5,6 +5,7 @@ import express from "express";
 import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { requireAuth, requireAdmin } from './auth-middleware';
+import testEmailRoutes from './test-email';
 
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {

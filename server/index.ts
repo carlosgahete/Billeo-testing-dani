@@ -148,6 +148,14 @@ app.use((req, res, next) => {
   
   // Configurar rutas para gestión de archivos
   configureFileRoutes(app);
+  
+  // Añadir endpoint para pruebas de correo
+  import('./test-email').then((module) => {
+    app.use('/api', module.default);
+    console.log('Rutas de prueba de correo configuradas');
+  }).catch(err => {
+    console.error('Error al cargar el módulo de prueba de correo:', err);
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

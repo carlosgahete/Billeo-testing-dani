@@ -47,6 +47,7 @@ import SimpleQuoteCreatePage from "@/pages/quotes/simple/create";
 import SimpleQuoteEditPage from "@/pages/quotes/simple/edit/[id]";
 import SimpleQuoteListPage from "@/pages/quotes/simple/list";
 import UltraSimpleQuotesPage from "@/pages/quotes/ultra-simple";
+import TestEmailPage from "@/pages/test-email";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
