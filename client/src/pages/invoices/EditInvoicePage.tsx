@@ -193,11 +193,13 @@ export default function EditInvoicePage() {
       {invoiceData && (
         isMobile ? (
           <SimpleMobileInvoiceForm 
+            key={`mobile-invoice-form-${invoiceId}`} 
             invoiceId={invoiceId} 
             initialData={invoiceData} 
           />
         ) : (
           <InvoiceForm 
+            key={`desktop-invoice-form-${invoiceId}`}
             invoiceId={invoiceId} 
             initialData={invoiceData} 
           />
