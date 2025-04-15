@@ -600,7 +600,7 @@ export default function LibroRegistrosPage() {
     }
   };
   
-  // Función para exportar a Excel (en este ejemplo, como CSV) - Mejorado visualmente
+  // Función para exportar a Excel (en este ejemplo, como CSV) - Formato vertical mejorado
   const exportToExcel = () => {
     if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
       toast({
@@ -615,11 +615,11 @@ export default function LibroRegistrosPage() {
       // Crear CSV para facturas con mejor formato visual
       let csvContent = "data:text/csv;charset=utf-8,";
       
-      // Encabezados con formato mejorado
-      csvContent += "BILLEO - LIBRO DE REGISTROS;;;;;;;\\n";
+      // Título y cabecera
+      csvContent += "BILLEO - LIBRO DE REGISTROS\\n";
       
-      // Período con formato
-      let periodoText = `PERÍODO:;${selectedYear}`;
+      // Período seleccionado
+      csvContent += "PERÍODO: " + selectedYear;
       if (selectedQuarter !== "all") {
         const quarterNames = {
           "Q1": "1er Trimestre",
@@ -627,76 +627,97 @@ export default function LibroRegistrosPage() {
           "Q3": "3er Trimestre",
           "Q4": "4to Trimestre"
         };
-        periodoText += `;${quarterNames[selectedQuarter as keyof typeof quarterNames]}`;
+        csvContent += " - " + quarterNames[selectedQuarter as keyof typeof quarterNames];
       }
       
       if (selectedMonth !== "all") {
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        periodoText += `;${monthNames[parseInt(selectedMonth) - 1]}`;
+        csvContent += " - " + monthNames[parseInt(selectedMonth) - 1];
       }
-      csvContent += periodoText + ";;;;;;\\n\\n";
+      csvContent += "\\n\\n";
       
-      // Resumen con formato tipo tabla
-      csvContent += "RESUMEN;;;;;;;\\n";
-      csvContent += "Concepto;Cantidad;Total;;;;;\\n";
-      csvContent += `Facturas emitidas;${summary.totalInvoices};${formatCurrency(summary.incomeTotal)};;;;;\\n`;
-      csvContent += `Gastos;${filteredTransactions.filter(t => t.type === 'expense').length};${formatCurrency(summary.expenseTotal)};;;;;\\n`;
-      csvContent += `Presupuestos;${summary.totalQuotes};;;;;;\\n`;
-      csvContent += `BALANCE;;${formatCurrency(summary.balance)};;;;;\\n\\n`;
+      // Resumen en formato vertical para mejor visualización
+      csvContent += "RESUMEN\\n";
+      csvContent += "---------------------------------------------\\n";
+      csvContent += `Facturas emitidas: ${summary.totalInvoices}\\n`;
+      csvContent += `Importe total facturado: ${formatCurrency(summary.incomeTotal)}\\n`;
+      csvContent += `Gastos registrados: ${filteredTransactions.filter(t => t.type === 'expense').length}\\n`;
+      csvContent += `Importe total de gastos: ${formatCurrency(summary.expenseTotal)}\\n`;
+      csvContent += `Presupuestos: ${summary.totalQuotes}\\n`;
+      csvContent += `Balance: ${formatCurrency(summary.balance)}\\n\\n`;
       
-      // Facturas con cabecera destacada
-      csvContent += "FACTURAS EMITIDAS;;;;;;;\\n";
-      csvContent += "Número;Fecha;Cliente;Base imponible;IVA;Total;Estado;\\n";
+      // Facturas con formato de tabla vertical
+      csvContent += "FACTURAS EMITIDAS\\n";
+      csvContent += "---------------------------------------------\\n";
       
-      // Datos de facturas
-      filteredInvoices.forEach(inv => {
-        const status = inv.status === 'paid' ? 'Pagada' : 
-                     inv.status === 'pending' ? 'Pendiente' : 
-                     inv.status === 'overdue' ? 'Vencida' : inv.status;
+      if (filteredInvoices.length === 0) {
+        csvContent += "No hay facturas en este período\\n\\n";
+      } else {
+        // Cabecera de facturas en formato de tabla
+        csvContent += "Número,Fecha,Cliente,Base imponible,IVA,Total,Estado\\n";
         
-        csvContent += `${inv.number};${formatDate(inv.date)};${inv.clientName.replace(/;/g, ',')};${inv.subtotal};${inv.tax};${inv.total};${status};\\n`;
-      });
+        // Datos de facturas
+        filteredInvoices.forEach(inv => {
+          const status = inv.status === 'paid' ? 'Pagada' : 
+                         inv.status === 'pending' ? 'Pendiente' : 
+                         inv.status === 'overdue' ? 'Vencida' : inv.status;
+          
+          // Usar comas para Excel
+          csvContent += `${inv.number},${formatDate(inv.date)},${inv.clientName.replace(/,/g, ' ')},${inv.subtotal},${inv.tax},${inv.total},${status}\\n`;
+        });
+        csvContent += "\\n";
+      }
       
-      // Añadir separador
-      csvContent += ";;;;;;;\\n";
+      // Presupuestos
+      csvContent += "PRESUPUESTOS\\n";
+      csvContent += "---------------------------------------------\\n";
       
-      // Presupuestos con cabecera destacada
-      csvContent += "PRESUPUESTOS;;;;;;;\\n";
-      csvContent += "Número;Fecha;Cliente;Total;Estado;;;\\n";
+      if (filteredQuotes.length === 0) {
+        csvContent += "No hay presupuestos en este período\\n\\n";
+      } else {
+        // Cabecera de presupuestos
+        csvContent += "Número,Fecha,Cliente,Total,Estado\\n";
+        
+        // Datos de presupuestos
+        filteredQuotes.forEach(quote => {
+          const status = quote.status === 'accepted' ? 'Aceptado' : 
+                       quote.status === 'rejected' ? 'Rechazado' : 
+                       quote.status === 'pending' ? 'Pendiente' : quote.status;
+                        
+          csvContent += `${quote.number},${formatDate(quote.date)},${quote.clientName.replace(/,/g, ' ')},${quote.total},${status}\\n`;
+        });
+        csvContent += "\\n";
+      }
       
-      // Datos de presupuestos
-      filteredQuotes.forEach(quote => {
-        const status = quote.status === 'accepted' ? 'Aceptado' : 
-                     quote.status === 'rejected' ? 'Rechazado' : 
-                     quote.status === 'pending' ? 'Pendiente' : quote.status;
-                      
-        csvContent += `${quote.number};${formatDate(quote.date)};${quote.clientName.replace(/;/g, ',')};${quote.total};${status};;;\\n`;
-      });
+      // Gastos y transacciones
+      csvContent += "GASTOS Y TRANSACCIONES\\n";
+      csvContent += "---------------------------------------------\\n";
       
-      // Añadir separador
-      csvContent += ";;;;;;;\\n";
+      if (filteredTransactions.length === 0) {
+        csvContent += "No hay transacciones en este período\\n\\n";
+      } else {
+        // Cabecera de transacciones
+        csvContent += "Fecha,Descripción,Categoría,Tipo,Importe\\n";
+        
+        // Datos de gastos con formato para identificar tipo (Ingreso/Gasto)
+        filteredTransactions.forEach(t => {
+          const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
+          csvContent += `${formatDate(t.date)},${t.description.replace(/,/g, ' ')},${(t.category || '').replace(/,/g, ' ')},${type},${t.amount}\\n`;
+        });
+        csvContent += "\\n";
+      }
       
-      // Gastos y transacciones con cabecera destacada
-      csvContent += "GASTOS Y TRANSACCIONES;;;;;;;\\n";
-      csvContent += "Fecha;Descripción;Categoría;Tipo;Importe;;;\\n";
+      // Nota informativa al pie
+      csvContent += "---------------------------------------------\\n";
+      csvContent += "Documento generado por Billeo\\n";
+      csvContent += `Fecha de generación: ${formatDate(new Date().toISOString())}\\n`;
       
-      // Datos de gastos con formato para identificar tipo (Ingreso/Gasto)
-      filteredTransactions.forEach(t => {
-        const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
-        csvContent += `${formatDate(t.date)};${t.description.replace(/;/g, ',')};${(t.category || '').replace(/;/g, ',')};${type};${t.amount};;;\\n`;
-      });
-      
-      // Nota informativa
-      csvContent += ";;;;;;;\\n";
-      csvContent += "Generado por Billeo;;;;;;;\\n";
-      csvContent += `Fecha de generación;${formatDate(new Date().toISOString())};;;;;;\\n`;
-      
-      // Usar punto y coma como separador para mejor compatibilidad con Excel en español
+      // Exportar archivo con formato .xls para mejor compatibilidad con Excel
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.csv`);
+      link.setAttribute("download", `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.xls`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
