@@ -16,14 +16,11 @@ import { LineChart, AreaChart } from "lucide-react";
 const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
   // Formato para moneda
   const formatCurrency = (value: number) => {
-    // Aseguramos que 0 sea mostrado como "0,00 €" y no como "-0 €"
-    if (value === 0) return "0,00 €";
-    
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
-      maximumFractionDigits: 2
-    }).format(value);
+      maximumFractionDigits: 0
+    }).format(value / 100);
   };
   
   // Opciones de periodo
@@ -48,46 +45,33 @@ const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) =>
     );
   }
 
-  // Obtenemos los datos de trimestres reales si están disponibles
-  const hasQuarterlyData = data.quarterlyData && Object.keys(data.quarterlyData).length > 0;
-  
-  // Datos para el gráfico - usamos datos reales de trimestres si están disponibles
-  const chartData = hasQuarterlyData ? 
-    // Usar datos reales
-    Object.keys(data.quarterlyData || {}).map(quarter => ({
-      name: quarter,
-      ingresos: data.quarterlyData[quarter].Ingresos || 0,
-      gastos: data.quarterlyData[quarter].Gastos || 0,
-      resultado: data.quarterlyData[quarter].Resultado || 0
-    }))
-    :
-    // Distribuir datos totales proporcionalmente si no hay datos trimestrales específicos
-    [
-      {
-        name: "Q1",
-        ingresos: Math.round(data.income * 0.25) || 0,
-        gastos: Math.round(data.expenses * 0.25) || 0,
-        resultado: Math.round((data.income * 0.25) - (data.expenses * 0.25)) || 0
-      },
-      {
-        name: "Q2",
-        ingresos: Math.round(data.income * 0.25) || 0,
-        gastos: Math.round(data.expenses * 0.25) || 0,
-        resultado: Math.round((data.income * 0.25) - (data.expenses * 0.25)) || 0
-      },
-      {
-        name: "Q3",
-        ingresos: Math.round(data.income * 0.25) || 0,
-        gastos: Math.round(data.expenses * 0.25) || 0,
-        resultado: Math.round((data.income * 0.25) - (data.expenses * 0.25)) || 0
-      },
-      {
-        name: "Q4",
-        ingresos: Math.round(data.income * 0.25) || 0,
-        gastos: Math.round(data.expenses * 0.25) || 0,
-        resultado: Math.round((data.income * 0.25) - (data.expenses * 0.25)) || 0
-      },
-    ];
+  // Datos para el gráfico
+  const chartData = [
+    {
+      name: "Q1",
+      ingresos: data.income * 0.25 || 0,
+      gastos: data.expenses * 0.24 || 0,
+      resultado: (data.income * 0.25) - (data.expenses * 0.24) || 0
+    },
+    {
+      name: "Q2",
+      ingresos: data.income * 0.35 || 0,
+      gastos: data.expenses * 0.26 || 0,
+      resultado: (data.income * 0.35) - (data.expenses * 0.26) || 0
+    },
+    {
+      name: "Q3",
+      ingresos: data.income * 0.3 || 0,
+      gastos: data.expenses * 0.3 || 0,
+      resultado: (data.income * 0.3) - (data.expenses * 0.3) || 0
+    },
+    {
+      name: "Q4",
+      ingresos: data.income * 0.1 || 0,
+      gastos: data.expenses * 0.2 || 0,
+      resultado: (data.income * 0.1) - (data.expenses * 0.2) || 0
+    },
+  ];
 
   return (
     <div className="border rounded-lg overflow-hidden">

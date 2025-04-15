@@ -338,25 +338,8 @@ const InvoiceList = () => {
   const [quarterFilter, setQuarterFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  // Mostramos los filtros por defecto para hacerlos más accesibles
-  const [isFilterVisible, setIsFilterVisible] = useState(true);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  
-  // Generar años disponibles desde 2020 hasta el año actual
-  const currentYear = new Date().getFullYear();
-  const availableYears = [];
-  for (let year = currentYear; year >= 2020; year--) {
-    availableYears.push(year.toString());
-  }
-  
-  // Función para determinar el trimestre actual
-  const getCurrentQuarter = () => {
-    const month = new Date().getMonth() + 1; // getMonth() devuelve 0-11
-    if (month <= 3) return "Q1";
-    if (month <= 6) return "Q2";
-    if (month <= 9) return "Q3";
-    return "Q4";
-  };
 
   const { data: invoicesData = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],

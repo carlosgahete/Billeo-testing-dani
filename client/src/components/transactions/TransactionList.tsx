@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from "react";
+import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation, useRoute } from "wouter";
+import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -49,22 +49,18 @@ import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Definición de la interfaz Invoice para el componente
+// Mantenemos la definición Invoice propia de este componente
 interface Invoice {
   id: number;
   invoiceNumber: string;
   clientId: number;
-  clientName?: string;
   issueDate: string;
   dueDate: string;
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled" | "pending";
   subtotal: string;
   tax: string;
   total: string;
-  additionalTaxes?: any;
-  notes?: string;
-  attachments?: string[];
-  userId: number;
+  additionalTaxes?: string;
 }
 
 const PaymentMethodBadge = ({ method }: { method: string }) => {
@@ -152,15 +148,6 @@ const DeleteTransactionDialog = ({
 const TransactionList = () => {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
-  
-  // Estado para los filtros de año y periodo
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
-  
-  // Años disponibles para el filtro (últimos 5 años)
-  const availableYears = Array.from({ length: 5 }, (_, i) => 
-    (new Date().getFullYear() - i).toString()
-  );
   const [currentTab, setCurrentTab] = useState("all");
   const [filteredExpenseTransactions, setFilteredExpenseTransactions] = useState<Transaction[]>([]);
   const [filteredIncomeTransactions, setFilteredIncomeTransactions] = useState<Transaction[]>([]);
@@ -191,29 +178,11 @@ const TransactionList = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
   
-  // Eliminar múltiples transacciones con mejor fluidez
+  // Eliminar múltiples transacciones
   const handleDeleteSelectedTransactions = async (transactions: Transaction[]) => {
     if (transactions.length === 0) return;
     
-    // Guardamos los IDs de las transacciones que vamos a eliminar
-    const transactionIds = transactions.map(t => t.id);
-    
-    // Actualizamos el estado optimista antes de la petición para mejor UX
-    // Optimistic UI update - eliminar las transacciones del estado local inmediatamente
-    const currentTransactions = queryClient.getQueryData<Transaction[]>([getFilteredTransactionsUrl()]) || [];
-    
-    // Hacer un respaldo por si falla
-    const previousTransactions = [...currentTransactions];
-    
-    // Actualizar el cache local inmediatamente (antes de la petición al servidor)
-    queryClient.setQueryData<Transaction[]>([getFilteredTransactionsUrl()], 
-      currentTransactions.filter(t => !transactionIds.includes(t.id))
-    );
-    
-    // Limpiar selección
-    setSelectedTransactions([]);
-    
-    // Mostrar mensaje de carga con UI optimista
+    // Mostrar mensaje de carga
     toast({
       title: "Eliminando transacciones",
       description: `Eliminando ${transactions.length} transacciones...`,
@@ -245,10 +214,12 @@ const TransactionList = () => {
         queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] })
       ]);
       
-    } catch (error: any) {
-      // Revertir el cambio optimista si hay error
-      queryClient.setQueryData([getFilteredTransactionsUrl()], previousTransactions);
+      // Para garantizar que el UI se actualice completamente
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      }, 500);
       
+    } catch (error: any) {
       toast({
         title: "Error",
         description: `No se pudieron eliminar algunas transacciones: ${error.message}`,
@@ -388,35 +359,9 @@ const TransactionList = () => {
     }
   }, []);
 
-  // Función para construir la URL con los filtros de año y periodo
-  const getFilteredTransactionsUrl = () => {
-    let url = "/api/transactions";
-    const params = new URLSearchParams();
-    
-    if (selectedYear !== "all") {
-      params.append("year", selectedYear);
-    }
-    
-    if (selectedPeriod !== "all") {
-      // Determinar si es trimestre o mes
-      if (selectedPeriod.startsWith("Q")) {
-        params.append("quarter", selectedPeriod.replace("Q", ""));
-      } else {
-        params.append("month", selectedPeriod);
-      }
-    }
-    
-    const queryString = params.toString();
-    if (queryString) {
-      url += `?${queryString}`;
-    }
-    
-    return url;
-  };
-
   // Estados de las consultas
   const { data: transactions, isLoading, refetch: refetchTransactions } = useQuery({
-    queryKey: [getFilteredTransactionsUrl()],
+    queryKey: ["/api/transactions"],
     refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
     refetchOnMount: "always", // Recargar siempre al montar el componente
     refetchInterval: 3000, // Recargar cada 3 segundos
@@ -428,34 +373,8 @@ const TransactionList = () => {
     queryKey: ["/api/categories"],
   });
 
-  // Función para construir la URL con los filtros para facturas (similar al de transacciones)
-  const getFilteredInvoicesUrl = () => {
-    let url = "/api/invoices";
-    const params = new URLSearchParams();
-    
-    if (selectedYear !== "all") {
-      params.append("year", selectedYear);
-    }
-    
-    if (selectedPeriod !== "all") {
-      // Determinar si es trimestre o mes
-      if (selectedPeriod.startsWith("Q")) {
-        params.append("quarter", selectedPeriod.replace("Q", ""));
-      } else {
-        params.append("month", selectedPeriod);
-      }
-    }
-    
-    const queryString = params.toString();
-    if (queryString) {
-      url += `?${queryString}`;
-    }
-    
-    return url;
-  };
-
   const { data: invoices, refetch: refetchInvoices } = useQuery({
-    queryKey: [getFilteredInvoicesUrl()],
+    queryKey: ["/api/invoices"],
     refetchOnWindowFocus: true, // Recargar datos cuando la ventana recupera el foco
     refetchOnMount: "always", // Recargar siempre al montar el componente
     refetchInterval: 3000, // Recargar cada 3 segundos
@@ -464,244 +383,24 @@ const TransactionList = () => {
   });
 
   // Función para determinar qué datos mostrar según los filtros activos
-  // Función para filtrar transacciones por año y periodo
-  const filterTransactionsByDate = React.useCallback((transactions: Transaction[]) => {
-    if (!transactions || transactions.length === 0) return [];
-    
-    return transactions.filter((transaction: Transaction) => {
-      const transactionDate = new Date(transaction.date);
-      const transactionYear = transactionDate.getFullYear().toString();
-      const transactionMonth = (transactionDate.getMonth() + 1).toString().padStart(2, '0');
-      
-      // Filtro por año
-      if (selectedYear !== 'all' && transactionYear !== selectedYear) {
-        console.log(`Filtrado por año: ${transactionYear} != ${selectedYear}`);
-        return false;
-      }
-      
-      // Filtro por periodo (trimestre o mes)
-      if (selectedPeriod !== 'all') {
-        // Filtros trimestrales
-        if (selectedPeriod === 'Q1' && !['01', '02', '03'].includes(transactionMonth)) {
-          console.log(`Filtrado por Q1: ${transactionMonth} no está en [01,02,03]`);
-          return false;
-        }
-        if (selectedPeriod === 'Q2' && !['04', '05', '06'].includes(transactionMonth)) {
-          console.log(`Filtrado por Q2: ${transactionMonth} no está en [04,05,06]`);
-          return false;
-        }
-        if (selectedPeriod === 'Q3' && !['07', '08', '09'].includes(transactionMonth)) {
-          console.log(`Filtrado por Q3: ${transactionMonth} no está en [07,08,09]`);
-          return false;
-        }
-        if (selectedPeriod === 'Q4' && !['10', '11', '12'].includes(transactionMonth)) {
-          console.log(`Filtrado por Q4: ${transactionMonth} no está en [10,11,12]`);
-          return false;
-        }
-        
-        // Filtros mensuales
-        if (selectedPeriod.length === 2 && selectedPeriod !== transactionMonth) {
-          console.log(`Filtrado por mes: ${transactionMonth} != ${selectedPeriod}`);
-          return false;
-        }
-      }
-      
-      return true;
-    });
-  }, [selectedYear, selectedPeriod]);
-  
-  // No necesitamos más filterInvoicesByDate ya que el filtrado se hace en la API
-
-  // Función para convertir facturas en transacciones virtuales (para visualización)
-  // Función para filtrar facturas por fecha basado en los filtros actuales
-  const filterInvoicesByDate = (invoiceList: any[]) => {
-    if (!invoiceList || invoiceList.length === 0) return [];
-    
-    return invoiceList.filter(invoice => {
-      const invoiceDate = new Date(invoice.issueDate);
-      const invoiceYear = invoiceDate.getFullYear().toString();
-      const invoiceMonth = (invoiceDate.getMonth() + 1).toString(); // Meses en JS son 0-11
-            
-      // Filtrar por año si está seleccionado
-      if (selectedYear !== "all" && invoiceYear !== selectedYear) {
-        return false;
-      }
-      
-      // Filtrar por período (trimestre o mes) si está seleccionado
-      if (selectedPeriod !== "all") {
-        if (selectedPeriod.startsWith("Q")) {
-          // Filtro por trimestre
-          const quarter = selectedPeriod.replace("Q", "");
-          const quarterMonths = {
-            "1": ["01", "02", "03"],
-            "2": ["04", "05", "06"],
-            "3": ["07", "08", "09"],
-            "4": ["10", "11", "12"]
-          };
-          return quarterMonths[quarter as keyof typeof quarterMonths].includes(invoiceMonth);
-        } else {
-          // Filtro por mes específico
-          return invoiceMonth === selectedPeriod;
-        }
-      }
-      
-      return true;
-    });
-  };
-  
-  // Solo para facturas que NO tengan ya una transacción real asociada
-  const convertInvoicesToTransactions = useCallback(() => {
-    if (!invoices || !transactions || !categories) return [];
-    
-    // Aplicar los filtros de fecha actuales a las facturas
-    const filteredInvoices = invoices.filter(invoice => {
-      const invoiceDate = new Date(invoice.issueDate);
-      const invoiceYear = invoiceDate.getFullYear().toString();
-      const invoiceMonth = (invoiceDate.getMonth() + 1).toString();
-            
-      // Filtrar por año si está seleccionado
-      if (selectedYear !== "all" && invoiceYear !== selectedYear) {
-        return false;
-      }
-      
-      // Filtrar por período (trimestre o mes) si está seleccionado
-      if (selectedPeriod !== "all") {
-        if (selectedPeriod.startsWith("Q")) {
-          // Filtro por trimestre (corregido para usar el mismo formato que el servidor)
-          const quarter = selectedPeriod.replace("Q", "");
-          const quarterMonths = {
-            "1": ["01", "02", "03"],
-            "2": ["04", "05", "06"],
-            "3": ["07", "08", "09"],
-            "4": ["10", "11", "12"]
-          };
-          return quarterMonths[quarter as keyof typeof quarterMonths].includes(invoiceMonth);
-        } else {
-          // Filtro por mes específico
-          return invoiceMonth === selectedPeriod;
-        }
-      }
-      
-      return true;
-    });
-    
-    // Identificar facturas que ya tienen transacciones reales
-    const invoicesWithRealTransactions = new Map();
-    
-    // Recopilar todas las transacciones reales asociadas a facturas
-    transactions.forEach(t => {
-      if (t.invoiceId) {
-        invoicesWithRealTransactions.set(t.invoiceId, t);
-      }
-    });
-    
-    console.log("📊 Total de facturas filtradas:", filteredInvoices.length);
-    console.log("🔍 Transacciones:", transactions.filter(t => t.invoiceId !== null).length, "relacionadas con facturas");
-    console.log("💼 Facturas con transacciones reales:", invoicesWithRealTransactions.size);
-    
-    // Solo procesar facturas pagadas
-    const paidInvoices = filteredInvoices.filter(invoice => invoice.status === "paid");
-    
-    // Ahora mapeamos las facturas a transacciones (o usamos las reales si existen)
-    return paidInvoices.map((invoice) => {
-      // Determinar categoría predeterminada para facturas
-      const invoiceCategory = categories?.find((c) => c.type === "income" && c.name === "Ventas") || 
-                              { id: 0, name: "Ventas", type: "income", icon: "receipt", color: "#4F46E5" };
-      
-      // Establecer fechas
-      const issueDate = new Date(invoice.issueDate);
-      
-      // Si la factura ya tiene una transacción real, priorizamos mostrarla
-      if (invoicesWithRealTransactions.has(invoice.id)) {
-        const realTransaction = invoicesWithRealTransactions.get(invoice.id);
-        return {
-          ...realTransaction,
-          title: `Factura ${invoice.invoiceNumber}`,
-          description: `Cliente: ${invoice.clientName || 'Sin nombre'}`,
-          isRealInvoiceTransaction: true
-        };
-      }
-      
-      // Si no tiene transacción real, creamos una virtual
-      return {
-        id: `invoice-${invoice.id}`, // Prefijo para identificar que es una factura virtual
-        userId: invoice.userId,
-        title: `Factura ${invoice.invoiceNumber}`,
-        description: `Cliente: ${invoice.clientName || 'Sin nombre'}`,
-        amount: invoice.total,
-        date: issueDate,
-        categoryId: invoiceCategory.id,
-        type: "income",
-        paymentMethod: invoice.status === "paid" ? "card" : null,
-        notes: invoice.notes || null,
-        attachments: invoice.attachments || null,
-        additionalTaxes: invoice.additionalTaxes || null,
-        invoiceId: invoice.id,
-        invoiceStatus: invoice.status,
-        isInvoiceTransaction: true
-      };
-    });
-  }, [invoices, categories, transactions]);
-
   const filteredTransactions = React.useMemo(() => {
     if (!transactions) return [];
     
-    // Aplicamos primero los filtros de pestaña
-    let result = [];
-    
-    // Obtenemos transacciones virtuales de facturas
-    const invoiceTransactions = convertInvoicesToTransactions();
-    
     // Si estamos en la pestaña de gastos y hay filtros aplicados
     if (currentTab === "expense" && filteredExpenseTransactions.length > 0) {
-      result = filteredExpenseTransactions;
+      return filteredExpenseTransactions;
     }
     // Si estamos en la pestaña de ingresos y hay filtros aplicados
     else if (currentTab === "income" && filteredIncomeTransactions.length > 0) {
-      result = filteredIncomeTransactions;
-      
-      // Si estamos en ingresos, añadimos las facturas convertidas a transacciones
-      // (solo si no hay filtros específicos de ingresos activos que lo impidan)
-      if (!incomeFiltersApplied) {
-        result = [...result, ...invoiceTransactions];
-      }
+      return filteredIncomeTransactions;
     }
     // Si no hay filtros, filtramos por el tipo de la pestaña seleccionada
     else if (currentTab !== "all") {
-      result = transactions.filter((t: Transaction) => t.type === currentTab);
-      
-      // Si estamos en ingresos, añadimos las facturas convertidas a transacciones
-      if (currentTab === "income") {
-        result = [...result, ...invoiceTransactions];
-      }
+      return transactions.filter((t: Transaction) => t.type === currentTab);
     }
     // En la pestaña "todos", mostramos todas las transacciones
-    else {
-      result = transactions;
-      
-      // Añadimos también las facturas como transacciones virtuales
-      result = [...result, ...invoiceTransactions];
-    }
-    
-    // Eliminar duplicados (en caso de que haya transacciones generadas para facturas)
-    const uniqueTransactions = result.reduce((acc, current) => {
-      // Si es una factura virtual, la incluimos siempre
-      if (current.isInvoiceTransaction) {
-        acc.push(current);
-        return acc;
-      }
-      
-      // Para transacciones normales, verificamos si ya existe una con el mismo ID
-      const exists = acc.find(item => !item.isInvoiceTransaction && item.id === current.id);
-      if (!exists) {
-        acc.push(current);
-      }
-      return acc;
-    }, []);
-    
-    // Aplicamos los filtros de fecha sobre el resultado
-    return filterTransactionsByDate(uniqueTransactions);
-  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions, filterTransactionsByDate, convertInvoicesToTransactions, incomeFiltersApplied]);
+    return transactions;
+  }, [transactions, currentTab, filteredExpenseTransactions, filteredIncomeTransactions]);
 
   // Obtener categoría por ID
   const getCategory = (categoryId: number) => {
@@ -1055,71 +754,6 @@ const TransactionList = () => {
       cell: ({ row }) => {
         const transaction = row.original;
         
-        // Determinar si es una transacción de factura virtual
-        const isInvoiceTransaction = transaction.isInvoiceTransaction;
-        
-        // Para facturas virtuales, mostrar el estado con un color
-        if (isInvoiceTransaction) {
-          // Obtener el estado de la factura
-          const invoiceStatus = transaction.invoiceStatus;
-          
-          // Determinar el color según el estado de la factura
-          const getStatusColor = () => {
-            switch (invoiceStatus) {
-              case 'paid':
-                return 'bg-green-500 text-white';
-              case 'pending':
-                return 'bg-amber-500 text-white';
-              case 'overdue':
-                return 'bg-red-500 text-white';
-              case 'canceled':
-                return 'bg-gray-500 text-white';
-              default:
-                return 'bg-blue-500 text-white';
-            }
-          };
-          
-          // Texto del estado
-          const getStatusText = () => {
-            switch (invoiceStatus) {
-              case 'paid':
-                return 'Pagada';
-              case 'pending':
-                return 'Pendiente';
-              case 'overdue':
-                return 'Vencida';
-              case 'canceled':
-                return 'Cancelada';
-              default:
-                return 'Desconocido';
-            }
-          };
-          
-          return (
-            <div className="flex justify-end items-center space-x-2">
-              {/* Mostrar el estado como un badge con el color correspondiente */}
-              <Badge 
-                className={`rounded-full text-xs px-2 py-0.5 ${getStatusColor()}`}
-                title={`Factura ${getStatusText()}`}
-              >
-                {getStatusText()}
-              </Badge>
-              
-              {/* Botón para ver la factura */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(`/invoices/view/${transaction.invoiceId}`)}
-                title="Ver factura"
-                className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
-          );
-        }
-        
-        // Para transacciones normales, mostrar los botones estándar
         // Obtener información sobre documentos adjuntos
         const hasAttachments = transaction.type === 'expense' && 
                               transaction.attachments && 
@@ -1196,82 +830,47 @@ const TransactionList = () => {
   ];
 
   // Calculate totals for the summary cards
-  // Para mantener consistencia, usamos las transacciones originales (no filtradas por pestaña)
-  // de igual forma que hicimos con los gastos
-  // Ingresos de transacciones - USANDO TRANSACTIONS ORIGINALES, NO FILTRADAS POR PESTAÑA
+  // Ingresos de transacciones
   const transactionIncomeTotal = !isLoading && Array.isArray(transactions)
     ? transactions
         .filter((t: Transaction) => t.type === "income")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
   
-  // Ya no necesitamos filterInvoicesByDate porque filtramos del lado del servidor
-  
-  // Como ahora el API retorna facturas filtradas, ya no es necesario filtrarlas en el cliente
-  const filteredInvoices = !isLoading && Array.isArray(invoices) 
+  // Ingresos de facturas pagadas - para mostrar en el panel de facturas, pero no para el total
+  const invoiceIncomeTotal = !isLoading && Array.isArray(invoices)
     ? invoices
-    : [];
-    
-  // Log de depuración para entender la discrepancia entre facturas y transacciones
-  console.log("🔍 Detalles de facturas y transacciones:", {
-    totalFacturas: invoices?.length || 0,
-    facturasEnFiltro: filteredInvoices.length,
-    totalTransacciones: transactions?.length || 0,
-    transaccionesIngresos: transactions?.filter((t: any) => t.type === 'income').length || 0,
-    transaccionesGastos: transactions?.filter((t: any) => t.type === 'expense').length || 0,
-    filtro: { año: selectedYear, periodo: selectedPeriod }
-  });
-  
-  // Ingresos de facturas pagadas filtradas
-  const invoiceIncomeTotal = filteredInvoices.length > 0
-    ? filteredInvoices
         .filter((inv: Invoice) => inv.status === "paid")
         .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0)
     : 0;
   
-  // Combinamos ambos ingresos: los de transacciones directas y los de facturas
-  // Esto garantiza que el total refleje correctamente todos los ingresos, tanto
-  // los registrados manualmente como los generados por facturas
-  const incomeTotal = transactionIncomeTotal + invoiceIncomeTotal;
+  // Si las transacciones están vacías (0), usamos el total de facturas pagadas
+  // Este cambio es necesario porque las facturas pagadas deberían generar transacciones automáticamente,
+  // pero parece que esto no está ocurriendo correctamente
+  console.log("Cálculo de ingresos totales:", {
+    transactionIncomeTotal,
+    invoiceIncomeTotal
+  });
+  
+  const incomeTotal = transactionIncomeTotal > 0 ? transactionIncomeTotal : invoiceIncomeTotal;
     
-  // Gastos usando las transacciones originales, no filtradas por la pestaña actual
-  // Esto es importante para mantener consistente la cantidad total de gastos
-  // sin importar en qué pestaña esté el usuario
   const expenseTotal = !isLoading && Array.isArray(transactions)
     ? transactions
         .filter((t: Transaction) => t.type === "expense")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
     
-  // Calcular los valores netos utilizando las mismas fórmulas exactas del dashboard
-  // Para ingresos: Aplicamos la base imponible (sin IVA) en lugar del porcentaje aproximado
-  const baseIncomeSinIVA = Math.round(incomeTotal / 1.21); // Exactamente igual que en dashboard.tsx
-  const irpfRetencionIngresos = Math.round(baseIncomeSinIVA * 0.15); // 15% IRPF sobre base imponible
-  
-  // Para gastos: Base imponible y recuperación de IVA
-  const baseExpensesSinIVA = expenseTotal;
-  const ivaSoportado = Math.round(baseExpensesSinIVA * 0.21); // IVA soportado (se recupera)
-  
-  // Beneficio antes de impuestos
-  const beneficioAntesImpuestos = baseIncomeSinIVA - baseExpensesSinIVA;
-  const irpfTotal = irpfRetencionIngresos; // No hay retenciones en gastos que compensen
-  
-  // Beneficio neto y balance
-  const netIncomeTotal = baseIncomeSinIVA - irpfRetencionIngresos; // Ingresos después de impuestos
-  const netExpenseTotal = baseExpensesSinIVA - ivaSoportado; // Gastos después de recuperar IVA
-  const balance = netIncomeTotal - netExpenseTotal; // Balance neto real
+  const balance = incomeTotal - expenseTotal;
 
   // Función para reparar las transacciones de facturas pagadas
   
   const handleRepairInvoiceTransactions = async () => {
     if (isRepairing) return;
     
-    const currentPath = location; // La variable location contiene la ruta actual
-    
     setIsRepairing(true);
     try {
       // Realizar la petición POST para reparar las transacciones
-      const response = await fetch('/api/repair/invoice-transactions', {
+      await fetch('/api/repair/invoice-transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1279,26 +878,14 @@ const TransactionList = () => {
         body: JSON.stringify({})
       });
       
-      const result = await response.json();
-      
       // Refrescar los datos
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
-      // Navegar a la pestaña de transacciones (todas)
-      if (currentPath !== "/transactions") {
-        navigate("/transactions");
-      }
-      
-      // Resetear filtros
-      if (currentTab !== "all") {
-        setCurrentTab("all");
-      }
-      
-      // Mostrar confirmación de éxito con información del resultado
+      // Mostrar confirmación de éxito
       toast({
         title: "Reparación completada",
-        description: result.message || "Se han procesado las facturas pagadas y generado las transacciones faltantes.",
+        description: "Se han procesado las facturas pagadas y generado las transacciones faltantes.",
         variant: "default"
       });
     } catch (error: any) {
@@ -1331,70 +918,15 @@ const TransactionList = () => {
             </div>
           </div>
           
-          {/* Filtros de año y periodo estilo Apple */}
-          <div className="flex items-center space-x-3 mr-6">
-            <div className="flex items-center bg-[#F2F2F7] rounded-full overflow-hidden shadow-inner border border-gray-200/60">
-              {/* Selector de Año */}
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="text-sm border-none bg-transparent focus:ring-0 focus:outline-none py-1.5 pl-3 pr-2 text-gray-700 font-medium appearance-none"
-                style={{ 
-                  WebkitAppearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'18\' height=\'18\' stroke=\'%238E8E93\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\' stroke-linejoin=\'round\' class=\'css-i6dzq1\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 6px center',
-                  paddingRight: '24px'
-                }}
-              >
-                <option value="all">Todos los años</option>
-                {availableYears.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              
-              {/* Selector de Periodo */}
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="text-sm border-none bg-transparent focus:ring-0 focus:outline-none py-1.5 pl-3 pr-2 text-gray-700 font-medium appearance-none"
-                style={{ 
-                  WebkitAppearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'18\' height=\'18\' stroke=\'%238E8E93\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\' stroke-linejoin=\'round\' class=\'css-i6dzq1\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 6px center',
-                  paddingRight: '24px'
-                }}
-              >
-                <option value="all">Todos los periodos</option>
-                <option value="Q1">T1 (Ene-Mar)</option>
-                <option value="Q2">T2 (Abr-Jun)</option>
-                <option value="Q3">T3 (Jul-Sep)</option>
-                <option value="Q4">T4 (Oct-Dic)</option>
-                <option value="01">Enero</option>
-                <option value="02">Febrero</option>
-                <option value="03">Marzo</option>
-                <option value="04">Abril</option>
-                <option value="05">Mayo</option>
-                <option value="06">Junio</option>
-                <option value="07">Julio</option>
-                <option value="08">Agosto</option>
-                <option value="09">Septiembre</option>
-                <option value="10">Octubre</option>
-                <option value="11">Noviembre</option>
-                <option value="12">Diciembre</option>
-              </select>
-            </div>
-          </div>
+          {/* Espacio para mantener la alineación */}
+          <div className="mr-6"></div>
         </div>
       )}
 
       {/* El resumen para dispositivos móviles ha sido eliminado completamente para un diseño más minimalista */}
       
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
-      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-5 mb-8 mx-2 w-full">
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
         {/* Tarjeta de Ingresos Totales */}
         <div className="dashboard-card fade-in">
           <div className="p-5">
@@ -1403,16 +935,16 @@ const TransactionList = () => {
                 <ArrowUp className="h-4 w-4 text-[#007AFF]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Ingresos netos</p>
+                <p className="text-sm text-gray-600">Ingresos totales</p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#007AFF] pt-1">
-                {formatCurrency(netIncomeTotal, "income")}
+                {formatCurrency(incomeTotal, "income")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                {filteredInvoices.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
+                {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
               </div>
             </div>
           </div>
@@ -1426,16 +958,16 @@ const TransactionList = () => {
                 <TrendingDown className="h-4 w-4 text-[#FF3B30]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Gastos netos</p>
+                <p className="text-sm text-gray-600">Gastos totales</p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF3B30] pt-1">
-                {formatCurrency(netExpenseTotal, "expense")}
+                {formatCurrency(expenseTotal, "expense")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                {filteredTransactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
+                {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
               </div>
             </div>
           </div>
@@ -1478,7 +1010,7 @@ const TransactionList = () => {
         </div>
         
         {/* Tarjeta de Reparar si es necesario */}
-        {filteredTransactions?.filter(t => t.type === 'income').length === 0 && filteredInvoices?.filter(inv => inv.status === 'paid').length > 0 ? (
+        {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
@@ -1508,7 +1040,7 @@ const TransactionList = () => {
       </div>
       
       {/* Alerta móvil si se necesita reparación - versión más compacta */}
-      {filteredTransactions?.filter(t => t.type === 'income').length === 0 && filteredInvoices?.filter(inv => inv.status === 'paid').length > 0 ? (
+      {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
         <div className="sm:hidden mx-1 mb-2 p-1.5 bg-amber-50 border border-amber-100 rounded-lg flex items-center">
           <AlertTriangle className="h-3 w-3 text-amber-500 mr-1.5 flex-shrink-0" />
           <span className="text-xs text-amber-700 flex-grow">Faltan ingresos</span>
