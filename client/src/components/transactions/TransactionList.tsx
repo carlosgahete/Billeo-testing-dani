@@ -1233,9 +1233,11 @@ const TransactionList = () => {
   // los registrados manualmente como los generados por facturas
   const incomeTotal = transactionIncomeTotal + invoiceIncomeTotal;
     
-  // Gastos usando filteredTransactions para reflejar los filtros
-  const expenseTotal = !isLoading && Array.isArray(filteredTransactions)
-    ? filteredTransactions
+  // Gastos usando las transacciones originales, no filtradas por la pestaña actual
+  // Esto es importante para mantener consistente la cantidad total de gastos
+  // sin importar en qué pestaña esté el usuario
+  const expenseTotal = !isLoading && Array.isArray(transactions)
+    ? transactions
         .filter((t: Transaction) => t.type === "expense")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
