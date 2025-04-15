@@ -126,12 +126,16 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
   }
   
   // URL base de la aplicación
-  const baseUrl = process.env.APP_URL || 'http://localhost:5000';
+  const baseUrl = process.env.APP_URL || window.location.origin || 'http://localhost:5000';
   const resetUrl = `${baseUrl}/reset-password/${token}`;
+  
+  console.log(`Enviando email de recuperación a ${email}`);
+  console.log(`URL de restablecimiento: ${resetUrl}`);
+  console.log(`Username: ${username}`);
   
   try {
     const info = await transporter.sendMail({
-      from: `"Billeo" <${process.env.SMTP_USERNAME || 'noreply@billeo.app'}>`,
+      from: `"Billeo" <${process.env.SMTP_USERNAME || 'contacto@billeo.es'}>`,
       to: email,
       subject: "Recuperación de contraseña - Billeo",
       text: `Hola ${username},\n\nHas solicitado restablecer tu contraseña. Para continuar, haz clic en el siguiente enlace:\n\n${resetUrl}\n\nEste enlace expirará en 1 hora.\n\nSi no solicitaste este cambio, puedes ignorar este correo.\n\nSaludos,\nEquipo de Billeo`,

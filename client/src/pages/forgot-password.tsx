@@ -212,7 +212,19 @@ export default function ForgotPasswordPage() {
                     <p>
                       Si el email existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña.
                     </p>
-                    {/* El bloque de desarrollo ha sido eliminado para la versión de producción */}
+                    {previewUrl && (
+                      <div className="mt-4 p-3 border rounded border-blue-200 bg-blue-50">
+                        <p className="text-sm font-medium mb-2">Vista previa del email (solo en desarrollo):</p>
+                        <a 
+                          href={previewUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm inline-block"
+                        >
+                          Abrir vista previa
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </TabsContent>
