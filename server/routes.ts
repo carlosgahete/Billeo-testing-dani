@@ -1543,6 +1543,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Filtro por trimestre
           if (quarter && quarter !== 'all') {
+            // FORMATEO CORRECTO DE TRIMESTRES
+            // Primero se elimina "Q" si existe
+            const trimmedQuarter = quarter.replace('Q', '');
+            
             const quarterMonths = {
               '1': ['01', '02', '03'],
               '2': ['04', '05', '06'],
@@ -1550,7 +1554,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               '4': ['10', '11', '12']
             };
             
-            return quarterMonths[quarter].includes(invoiceMonth);
+            // Uso el trimmedQuarter para asegurar que funciona tanto con "2" como con "Q2"
+            if (!quarterMonths[trimmedQuarter as keyof typeof quarterMonths]) {
+              console.error(`Trimestre inválido: ${quarter}, formateado: ${trimmedQuarter}`);
+              return false;
+            }
+            
+            return quarterMonths[trimmedQuarter as keyof typeof quarterMonths].includes(invoiceMonth);
           }
           
           return true;
