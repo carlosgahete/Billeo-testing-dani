@@ -27,7 +27,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, FileSpreadsheet } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import 'jspdf-autotable';
+// Extender el tipo jsPDF con autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
+}
 import { PageHeader } from "@/components/page-header";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -312,7 +321,6 @@ export default function LibroRegistrosPage() {
       doc.setFontSize(12);
       doc.text("Facturas emitidas", 14, 82);
       
-      // @ts-ignore - La biblioteca jspdf-autotable no está bien tipada con TypeScript
       doc.autoTable({
         startY: 86,
         head: [['Número', 'Fecha', 'Cliente', 'Base imponible', 'IVA', 'Total', 'Estado']],
@@ -328,12 +336,10 @@ export default function LibroRegistrosPage() {
       });
       
       // Presupuestos
-      // @ts-ignore
-      const finalY = doc.lastAutoTable.finalY || 150;
+      const finalY = doc.lastAutoTable?.finalY || 150;
       doc.setFontSize(12);
       doc.text("Presupuestos", 14, finalY + 10);
       
-      // @ts-ignore
       doc.autoTable({
         startY: finalY + 14,
         head: [['Número', 'Fecha', 'Cliente', 'Total', 'Estado']],
