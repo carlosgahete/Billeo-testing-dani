@@ -517,16 +517,20 @@ const TransactionList = () => {
   const convertInvoicesToTransactions = useCallback(() => {
     if (!invoices || !transactions) return [];
     
+    // Aplicar los filtros de fecha actuales a las facturas
+    const filteredInvoices = filterInvoicesByDate(invoices);
+    
     // Filtrar facturas que ya tienen transacciones reales
     const invoicesWithTransactions = transactions
       .filter(t => t.invoiceId !== null && t.invoiceId !== undefined)
       .map(t => t.invoiceId);
       
     console.log("🔍 Facturas que ya tienen transacciones:", invoicesWithTransactions);
+    console.log("📊 Total de facturas filtradas:", filteredInvoices.length);
     
-    // Solo crear transacciones virtuales para facturas sin transacción real
-    return invoices
-      .filter(invoice => !invoicesWithTransactions.includes(invoice.id))
+    // Solo crear transacciones virtuales para facturas pagadas sin transacción real
+    return filteredInvoices
+      .filter(invoice => invoice.status === "paid" && !invoicesWithTransactions.includes(invoice.id))
       .map((invoice) => {
         // Determinar categoría predeterminada para facturas
         const invoiceCategory = categories?.find((c) => c.type === "income" && c.name === "Ventas") || { id: 0, name: "Ventas", type: "income", icon: "receipt", color: "#4F46E5" };
