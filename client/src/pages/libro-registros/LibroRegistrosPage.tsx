@@ -269,7 +269,7 @@ export default function LibroRegistrosPage() {
     
   }, [data, selectedYear, selectedQuarter, selectedMonth]);
   
-  // Función para exportar a PDF - versión muy simple sin tablas
+  // Función para exportar a PDF - versión mejorada con diseño atractivo
   const exportToPDF = () => {
     if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
       toast({
@@ -281,93 +281,319 @@ export default function LibroRegistrosPage() {
     }
     
     try {
-      // Crear documento PDF básico
-      const doc = new jsPDF();
+      // Crear documento PDF en formato A4
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
       
-      // Título
-      doc.setFontSize(18);
-      doc.text("Libro de Registros", 14, 20);
+      const pageWidth = doc.internal.pageSize.width;
+      const margin = 15;
       
-      // Filtros aplicados
-      doc.setFontSize(10);
-      let filterText = `Año: ${selectedYear}`;
-      if (selectedQuarter !== "all") filterText += `, Trimestre: ${selectedQuarter}`;
+      // Función para crear rectángulos con colores
+      const drawColorBox = (y: number, height: number, color: string, title: string) => {
+        // Convertir color de tailwind a rgb
+        let rgb = [59, 130, 246]; // blue-500 por defecto
+        
+        if (color === 'blue') rgb = [59, 130, 246];
+        if (color === 'amber') rgb = [245, 158, 11];
+        if (color === 'green') rgb = [34, 197, 94];
+        if (color === 'purple') rgb = [168, 85, 247];
+        
+        // Dibujar cabecera de color
+        doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+        doc.rect(margin, y, pageWidth - 2 * margin, 8, 'F');
+        
+        // Título en blanco
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(title, margin + 5, y + 5.5);
+        
+        // Dibujar cuerpo blanco
+        doc.setFillColor(255, 255, 255);
+        doc.rect(margin, y + 8, pageWidth - 2 * margin, height - 8, 'F');
+        
+        // Resetear color de texto a negro
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+      };
+      
+      // Función para dibujar líneas horizontales finas
+      const drawHorizontalLine = (y: number, width: number) => {
+        doc.setDrawColor(230, 230, 230);
+        doc.setLineWidth(0.1);
+        doc.line(margin, y, margin + width, y);
+      };
+      
+      // CABECERA Y TÍTULO
+      // Título principal con logo
+      doc.setFillColor(28, 100, 242);
+      doc.rect(0, 0, pageWidth, 15, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text("BILLEO - LIBRO DE REGISTROS", margin, 10);
+      
+      // Fecha de generación
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generado: ${formatDate(new Date().toISOString())}`, pageWidth - margin - 35, 10);
+      
+      // Parámetros del período
+      let periodoTitle = `Período: ${selectedYear}`;
+      if (selectedQuarter !== "all") {
+        const quarterNames = {
+          "Q1": "1er Trimestre",
+          "Q2": "2do Trimestre", 
+          "Q3": "3er Trimestre",
+          "Q4": "4to Trimestre"
+        };
+        periodoTitle += ` - ${quarterNames[selectedQuarter as keyof typeof quarterNames]}`;
+      }
+      
       if (selectedMonth !== "all") {
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        filterText += `, Mes: ${monthNames[parseInt(selectedMonth) - 1]}`;
+        periodoTitle += ` - ${monthNames[parseInt(selectedMonth) - 1]}`;
       }
-      doc.text(filterText, 14, 28);
       
-      // Resumen
-      doc.setFontSize(12);
-      doc.text("Resumen", 14, 38);
-      
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
-      doc.text(`Facturas: ${summary.totalInvoices} - Total: ${formatCurrency(summary.incomeTotal)}`, 14, 46);
-      doc.text(`Gastos: ${filteredTransactions.filter(t => t.type === 'expense').length} - Total: ${formatCurrency(summary.expenseTotal)}`, 14, 54);
-      doc.text(`Presupuestos: ${summary.totalQuotes}`, 14, 62);
-      doc.text(`Balance: ${formatCurrency(summary.balance)}`, 14, 70);
+      doc.setFont('helvetica', 'bold');
+      doc.text(periodoTitle, margin, 22);
       
-      // Texto simple en lugar de tablas
-      let y = 85;
+      // TARJETAS DE RESUMEN (similar al diseño de la web)
+      let currentY = 30;
       
-      // Lista de facturas
-      doc.setFontSize(12);
-      doc.text("Facturas emitidas", 14, y);
-      y += 8;
+      // Dibujar el recuadro para el resumen
+      drawColorBox(currentY, 40, 'purple', 'RESUMEN');
       
-      doc.setFontSize(8);
-      filteredInvoices.slice(0, 10).forEach(inv => {
-        const text = `${inv.number} - ${formatDate(inv.date)} - ${inv.clientName} - ${formatCurrency(parseFloat(inv.total))}`;
-        doc.text(text, 14, y);
-        y += 5;
-      });
+      // Datos del resumen
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text("Facturas emitidas:", margin + 5, currentY + 15);
+      doc.text("Gastos registrados:", margin + 5, currentY + 22);
+      doc.text("Presupuestos:", margin + 5, currentY + 29);
+      doc.text("Balance:", margin + 5, currentY + 36);
       
-      if (filteredInvoices.length > 10) {
-        doc.text(`... y ${filteredInvoices.length - 10} más`, 14, y);
-        y += 8;
+      // Valores en negrita
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${summary.totalInvoices}`, margin + 40, currentY + 15);
+      doc.text(`${formatCurrency(summary.incomeTotal)}`, pageWidth - margin - 25, currentY + 15);
+      
+      doc.text(`${filteredTransactions.filter(t => t.type === 'expense').length}`, margin + 40, currentY + 22);
+      
+      // Gastos en rojo
+      doc.setTextColor(220, 38, 38); // Rojo para gastos
+      doc.text(`${formatCurrency(summary.expenseTotal)}`, pageWidth - margin - 25, currentY + 22);
+      doc.setTextColor(0, 0, 0); // Restaurar color negro
+      
+      doc.text(`${summary.totalQuotes}`, margin + 40, currentY + 29);
+      
+      // Balance en color según sea positivo o negativo
+      if (summary.balance < 0) {
+        doc.setTextColor(220, 38, 38); // Rojo para balance negativo
       } else {
-        y += 8;
+        doc.setTextColor(34, 197, 94); // Verde para balance positivo
+      }
+      doc.setFontSize(11);
+      doc.text(`${formatCurrency(summary.balance)}`, pageWidth - margin - 25, currentY + 36);
+      doc.setTextColor(0, 0, 0); // Restaurar color negro
+      
+      // SECCIÓN DE FACTURAS
+      currentY += 45;
+      drawColorBox(currentY, 50, 'blue', 'FACTURAS EMITIDAS');
+      
+      // Cabecera de la tabla de facturas
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.text("Número", margin + 5, currentY + 15);
+      doc.text("Fecha", margin + 25, currentY + 15);
+      doc.text("Cliente", margin + 50, currentY + 15);
+      doc.text("Base", pageWidth - margin - 55, currentY + 15);
+      doc.text("IVA", pageWidth - margin - 35, currentY + 15);
+      doc.text("Total", pageWidth - margin - 20, currentY + 15);
+      
+      drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
+      
+      // Datos de facturas
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      
+      let facturaY = currentY + 22;
+      const maxFacturas = Math.min(8, filteredInvoices.length);
+      
+      for (let i = 0; i < maxFacturas; i++) {
+        const inv = filteredInvoices[i];
+        
+        // Limitar longitud de textos
+        const clienteText = inv.clientName.length > 30 ? inv.clientName.substring(0, 27) + "..." : inv.clientName;
+        
+        doc.text(inv.number, margin + 5, facturaY);
+        doc.text(formatDate(inv.date), margin + 25, facturaY);
+        doc.text(clienteText, margin + 50, facturaY);
+        doc.text(formatCurrency(parseFloat(inv.subtotal)), pageWidth - margin - 55, facturaY, { align: 'right' });
+        doc.text(formatCurrency(parseFloat(inv.tax)), pageWidth - margin - 35, facturaY, { align: 'right' });
+        doc.text(formatCurrency(parseFloat(inv.total)), pageWidth - margin - 20, facturaY, { align: 'right' });
+        
+        facturaY += 5;
+        
+        // Líneas separadoras
+        if (i < maxFacturas - 1) {
+          drawHorizontalLine(facturaY - 2, pageWidth - 2 * margin - 10);
+        }
       }
       
-      // Lista de presupuestos
-      doc.setFontSize(12);
-      doc.text("Presupuestos", 14, y);
-      y += 8;
-      
-      doc.setFontSize(8);
-      filteredQuotes.slice(0, 10).forEach(quote => {
-        const text = `${quote.number} - ${formatDate(quote.date)} - ${quote.clientName} - ${formatCurrency(parseFloat(quote.total))}`;
-        doc.text(text, 14, y);
-        y += 5;
-      });
-      
-      if (filteredQuotes.length > 10) {
-        doc.text(`... y ${filteredQuotes.length - 10} más`, 14, y);
-        y += 8;
-      } else {
-        y += 8;
+      // Si hay más facturas de las que se muestran
+      if (filteredInvoices.length > maxFacturas) {
+        doc.setFont('helvetica', 'italic');
+        doc.text(`... y ${filteredInvoices.length - maxFacturas} más`, margin + 5, facturaY + 3);
       }
       
-      // Lista de gastos y transacciones
-      doc.setFontSize(12);
-      doc.text("Gastos y transacciones", 14, y);
-      y += 8;
+      // SECCIÓN DE PRESUPUESTOS
+      currentY += 55;
+      drawColorBox(currentY, 45, 'green', 'PRESUPUESTOS');
       
+      // Cabecera de la tabla de presupuestos
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      filteredTransactions.slice(0, 10).forEach(t => {
-        const text = `${formatDate(t.date)} - ${t.description.substring(0, 40)} - ${t.type === 'income' ? 'Ingreso' : 'Gasto'} - ${formatCurrency(parseFloat(t.amount))}`;
-        doc.text(text, 14, y);
-        y += 5;
-      });
+      doc.text("Número", margin + 5, currentY + 15);
+      doc.text("Fecha", margin + 30, currentY + 15);
+      doc.text("Cliente", margin + 55, currentY + 15);
+      doc.text("Total", pageWidth - margin - 40, currentY + 15);
+      doc.text("Estado", pageWidth - margin - 20, currentY + 15);
       
-      if (filteredTransactions.length > 10) {
-        doc.text(`... y ${filteredTransactions.length - 10} más`, 14, y);
+      drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
+      
+      // Datos de presupuestos
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      
+      let presupuestoY = currentY + 22;
+      const maxPresupuestos = Math.min(5, filteredQuotes.length);
+      
+      if (filteredQuotes.length === 0) {
+        doc.setFontStyle('italic');
+        doc.text("No hay presupuestos en este período", margin + 5, presupuestoY);
+      } else {
+        for (let i = 0; i < maxPresupuestos; i++) {
+          const quote = filteredQuotes[i];
+          
+          // Limitar longitud de textos
+          const clienteText = quote.clientName.length > 30 ? quote.clientName.substring(0, 27) + "..." : quote.clientName;
+          
+          // Estado formateado
+          const status = quote.status === 'accepted' ? 'Aceptado' : 
+                         quote.status === 'rejected' ? 'Rechazado' : 
+                         quote.status === 'pending' ? 'Pendiente' : quote.status;
+          
+          doc.text(quote.number, margin + 5, presupuestoY);
+          doc.text(formatDate(quote.date), margin + 30, presupuestoY);
+          doc.text(clienteText, margin + 55, presupuestoY);
+          doc.text(formatCurrency(parseFloat(quote.total)), pageWidth - margin - 40, presupuestoY, { align: 'right' });
+          doc.text(status, pageWidth - margin - 20, presupuestoY);
+          
+          presupuestoY += 5;
+          
+          // Líneas separadoras
+          if (i < maxPresupuestos - 1) {
+            drawHorizontalLine(presupuestoY - 2, pageWidth - 2 * margin - 10);
+          }
+        }
+        
+        // Si hay más presupuestos de los que se muestran
+        if (filteredQuotes.length > maxPresupuestos) {
+          doc.setFont('helvetica', 'italic');
+          doc.text(`... y ${filteredQuotes.length - maxPresupuestos} más`, margin + 5, presupuestoY + 3);
+        }
+      }
+      
+      // SECCIÓN DE GASTOS (posiblemente en nueva página si no hay espacio)
+      if (currentY + 100 > doc.internal.pageSize.height) {
+        doc.addPage();
+        currentY = 20;
+      } else {
+        currentY += 50;
+      }
+      
+      drawColorBox(currentY, 60, 'amber', 'GASTOS Y TRANSACCIONES');
+      
+      // Cabecera de la tabla de gastos
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.text("Fecha", margin + 5, currentY + 15);
+      doc.text("Descripción", margin + 30, currentY + 15);
+      doc.text("Categoría", pageWidth - margin - 60, currentY + 15);
+      doc.text("Tipo", pageWidth - margin - 35, currentY + 15);
+      doc.text("Importe", pageWidth - margin - 15, currentY + 15);
+      
+      drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 10);
+      
+      // Datos de gastos y transacciones
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      
+      let gastoY = currentY + 22;
+      const maxGastos = Math.min(8, filteredTransactions.length);
+      
+      if (filteredTransactions.length === 0) {
+        doc.setFontStyle('italic');
+        doc.text("No hay transacciones en este período", margin + 5, gastoY);
+      } else {
+        for (let i = 0; i < maxGastos; i++) {
+          const t = filteredTransactions[i];
+          
+          // Limitar longitud de textos
+          const descripcionText = t.description.length > 30 ? t.description.substring(0, 27) + "..." : t.description;
+          const categoriaText = t.category ? (t.category.length > 15 ? t.category.substring(0, 12) + "..." : t.category) : "-";
+          
+          // Tipo formateado
+          const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
+          
+          doc.text(formatDate(t.date), margin + 5, gastoY);
+          doc.text(descripcionText, margin + 30, gastoY);
+          doc.text(categoriaText, pageWidth - margin - 60, gastoY);
+          doc.text(type, pageWidth - margin - 35, gastoY);
+          
+          // Importe en rojo para gastos, verde para ingresos
+          if (t.type === 'expense') {
+            doc.setTextColor(220, 38, 38); // Rojo para gastos
+          } else {
+            doc.setTextColor(34, 197, 94); // Verde para ingresos
+          }
+          
+          doc.text(formatCurrency(parseFloat(t.amount)), pageWidth - margin - 15, gastoY, { align: 'right' });
+          doc.setTextColor(0, 0, 0); // Restaurar color negro
+          
+          gastoY += 5;
+          
+          // Líneas separadoras
+          if (i < maxGastos - 1) {
+            drawHorizontalLine(gastoY - 2, pageWidth - 2 * margin - 10);
+          }
+        }
+        
+        // Si hay más gastos de los que se muestran
+        if (filteredTransactions.length > maxGastos) {
+          doc.setFont('helvetica', 'italic');
+          doc.text(`... y ${filteredTransactions.length - maxGastos} más`, margin + 5, gastoY + 3);
+        }
+      }
+      
+      // Pie de página
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Billeo - Página ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
       }
       
       // Guardar documento
-      doc.save(`libro-registros-${selectedYear}-${selectedQuarter}-${selectedMonth}.pdf`);
+      doc.save(`Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.pdf`);
       
       toast({
         title: "Éxito",
@@ -383,7 +609,7 @@ export default function LibroRegistrosPage() {
     }
   };
   
-  // Función para exportar a Excel (en este ejemplo, como CSV)
+  // Función para exportar a Excel (en este ejemplo, como CSV) - Mejorado visualmente
   const exportToExcel = () => {
     if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
       toast({
@@ -395,64 +621,91 @@ export default function LibroRegistrosPage() {
     }
     
     try {
-      // Crear CSV para facturas
+      // Crear CSV para facturas con mejor formato visual
       let csvContent = "data:text/csv;charset=utf-8,";
       
-      // Encabezados y resumen
-      csvContent += "LIBRO DE REGISTROS\\n";
-      csvContent += `Año: ${selectedYear}, `;
-      if (selectedQuarter !== "all") csvContent += `Trimestre: ${selectedQuarter}, `;
+      // Encabezados con formato mejorado
+      csvContent += "BILLEO - LIBRO DE REGISTROS;;;;;;;\\n";
+      
+      // Período con formato
+      let periodoText = `PERÍODO:;${selectedYear}`;
+      if (selectedQuarter !== "all") {
+        const quarterNames = {
+          "Q1": "1er Trimestre",
+          "Q2": "2do Trimestre", 
+          "Q3": "3er Trimestre",
+          "Q4": "4to Trimestre"
+        };
+        periodoText += `;${quarterNames[selectedQuarter as keyof typeof quarterNames]}`;
+      }
+      
       if (selectedMonth !== "all") {
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        csvContent += `Mes: ${monthNames[parseInt(selectedMonth) - 1]}`;
+        periodoText += `;${monthNames[parseInt(selectedMonth) - 1]}`;
       }
-      csvContent += "\\n\\n";
+      csvContent += periodoText + ";;;;;;\\n\\n";
       
-      // Resumen
-      csvContent += "RESUMEN\\n";
-      csvContent += `Facturas: ${summary.totalInvoices} - Total: ${formatCurrency(summary.incomeTotal)}\\n`;
-      csvContent += `Gastos: ${filteredTransactions.filter(t => t.type === 'expense').length} - Total: ${formatCurrency(summary.expenseTotal)}\\n`;
-      csvContent += `Presupuestos: ${summary.totalQuotes}\\n`;
-      csvContent += `Balance: ${formatCurrency(summary.balance)}\\n\\n`;
+      // Resumen con formato tipo tabla
+      csvContent += "RESUMEN;;;;;;;\\n";
+      csvContent += "Concepto;Cantidad;Total;;;;;\\n";
+      csvContent += `Facturas emitidas;${summary.totalInvoices};${formatCurrency(summary.incomeTotal)};;;;;\\n`;
+      csvContent += `Gastos;${filteredTransactions.filter(t => t.type === 'expense').length};${formatCurrency(summary.expenseTotal)};;;;;\\n`;
+      csvContent += `Presupuestos;${summary.totalQuotes};;;;;;\\n`;
+      csvContent += `BALANCE;;${formatCurrency(summary.balance)};;;;;\\n\\n`;
       
-      // Facturas
-      csvContent += "FACTURAS EMITIDAS\\n";
-      csvContent += "Número,Fecha,Cliente,Base imponible,IVA,Total,Estado\\n";
+      // Facturas con cabecera destacada
+      csvContent += "FACTURAS EMITIDAS;;;;;;;\\n";
+      csvContent += "Número;Fecha;Cliente;Base imponible;IVA;Total;Estado;\\n";
       
+      // Datos de facturas
       filteredInvoices.forEach(inv => {
-        csvContent += `${inv.number},${formatDate(inv.date)},${inv.clientName},${inv.subtotal},${inv.tax},${inv.total},${inv.status === 'paid' ? 'Pagada' : inv.status}\\n`;
+        const status = inv.status === 'paid' ? 'Pagada' : 
+                     inv.status === 'pending' ? 'Pendiente' : 
+                     inv.status === 'overdue' ? 'Vencida' : inv.status;
+        
+        csvContent += `${inv.number};${formatDate(inv.date)};${inv.clientName.replace(/;/g, ',')};${inv.subtotal};${inv.tax};${inv.total};${status};\\n`;
       });
       
-      csvContent += "\\n";
+      // Añadir separador
+      csvContent += ";;;;;;;\\n";
       
-      // Presupuestos
-      csvContent += "PRESUPUESTOS\\n";
-      csvContent += "Número,Fecha,Cliente,Total,Estado\\n";
+      // Presupuestos con cabecera destacada
+      csvContent += "PRESUPUESTOS;;;;;;;\\n";
+      csvContent += "Número;Fecha;Cliente;Total;Estado;;;\\n";
       
+      // Datos de presupuestos
       filteredQuotes.forEach(quote => {
         const status = quote.status === 'accepted' ? 'Aceptado' : 
-                      quote.status === 'rejected' ? 'Rechazado' : quote.status;
+                     quote.status === 'rejected' ? 'Rechazado' : 
+                     quote.status === 'pending' ? 'Pendiente' : quote.status;
                       
-        csvContent += `${quote.number},${formatDate(quote.date)},${quote.clientName},${quote.total},${status}\\n`;
+        csvContent += `${quote.number};${formatDate(quote.date)};${quote.clientName.replace(/;/g, ',')};${quote.total};${status};;;\\n`;
       });
       
-      csvContent += "\\n";
+      // Añadir separador
+      csvContent += ";;;;;;;\\n";
       
-      // Gastos y transacciones
-      csvContent += "GASTOS Y TRANSACCIONES\\n";
-      csvContent += "Fecha,Descripción,Categoría,Tipo,Importe\\n";
+      // Gastos y transacciones con cabecera destacada
+      csvContent += "GASTOS Y TRANSACCIONES;;;;;;;\\n";
+      csvContent += "Fecha;Descripción;Categoría;Tipo;Importe;;;\\n";
       
+      // Datos de gastos con formato para identificar tipo (Ingreso/Gasto)
       filteredTransactions.forEach(t => {
         const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
-        csvContent += `${formatDate(t.date)},${t.description},${t.category || ''},${type},${t.amount}\\n`;
+        csvContent += `${formatDate(t.date)};${t.description.replace(/;/g, ',')};${(t.category || '').replace(/;/g, ',')};${type};${t.amount};;;\\n`;
       });
       
-      // Crear un enlace para descargar el archivo
+      // Nota informativa
+      csvContent += ";;;;;;;\\n";
+      csvContent += "Generado por Billeo;;;;;;;\\n";
+      csvContent += `Fecha de generación;${formatDate(new Date().toISOString())};;;;;;\\n`;
+      
+      // Usar punto y coma como separador para mejor compatibilidad con Excel en español
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `libro-registros-${selectedYear}-${selectedQuarter}-${selectedMonth}.csv`);
+      link.setAttribute("download", `Billeo-Libro-Registros-${selectedYear}${selectedQuarter !== 'all' ? '-' + selectedQuarter : ''}${selectedMonth !== 'all' ? '-' + selectedMonth : ''}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -465,7 +718,7 @@ export default function LibroRegistrosPage() {
       console.error("Error al generar Excel:", error);
       toast({
         title: "Error",
-        description: "No se pudo generar el archivo Excel",
+        description: "No se pudo generar el archivo Excel: " + (error instanceof Error ? error.message : String(error)),
         variant: "destructive"
       });
     }
