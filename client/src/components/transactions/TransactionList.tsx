@@ -928,33 +928,67 @@ const TransactionList = () => {
     },
   ];
 
-  // Calculate totals for the summary cards
+  // Calculate totals for the summary cards (ahora usando las transacciones filtradas)
+  // Usamos filteredTransactions en lugar de transactions para reflejar los filtros de año/periodo
   // Ingresos de transacciones
-  const transactionIncomeTotal = !isLoading && Array.isArray(transactions)
-    ? transactions
+  const transactionIncomeTotal = !isLoading && Array.isArray(filteredTransactions)
+    ? filteredTransactions
         .filter((t: Transaction) => t.type === "income")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
   
-  // Ingresos de facturas pagadas - para mostrar en el panel de facturas, pero no para el total
-  const invoiceIncomeTotal = !isLoading && Array.isArray(invoices)
-    ? invoices
+  // Para facturas usamos el filtro de año/periodo directamente
+  const filteredInvoices = !isLoading && Array.isArray(invoices) 
+    ? invoices.filter((inv: any) => {
+        if (!inv.issueDate) return false;
+        const invDate = new Date(inv.issueDate);
+        const invYear = invDate.getFullYear().toString();
+        const invMonth = (invDate.getMonth() + 1).toString().padStart(2, '0');
+        
+        // Filtro por año
+        if (selectedYear !== 'all' && invYear !== selectedYear) {
+          return false;
+        }
+        
+        // Filtro por periodo (trimestre o mes)
+        if (selectedPeriod !== 'all') {
+          // Filtros trimestrales
+          if (selectedPeriod === 'Q1' && !['01', '02', '03'].includes(invMonth)) {
+            return false;
+          }
+          if (selectedPeriod === 'Q2' && !['04', '05', '06'].includes(invMonth)) {
+            return false;
+          }
+          if (selectedPeriod === 'Q3' && !['07', '08', '09'].includes(invMonth)) {
+            return false;
+          }
+          if (selectedPeriod === 'Q4' && !['10', '11', '12'].includes(invMonth)) {
+            return false;
+          }
+          
+          // Filtros mensuales
+          if (selectedPeriod.length === 2 && selectedPeriod !== invMonth) {
+            return false;
+          }
+        }
+        
+        return true;
+      })
+    : [];
+  
+  // Ingresos de facturas pagadas filtradas
+  const invoiceIncomeTotal = filteredInvoices.length > 0
+    ? filteredInvoices
         .filter((inv: Invoice) => inv.status === "paid")
         .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0)
     : 0;
   
   // Si las transacciones están vacías (0), usamos el total de facturas pagadas
-  // Este cambio es necesario porque las facturas pagadas deberían generar transacciones automáticamente,
-  // pero parece que esto no está ocurriendo correctamente
-  console.log("Cálculo de ingresos totales:", {
-    transactionIncomeTotal,
-    invoiceIncomeTotal
-  });
-  
   const incomeTotal = transactionIncomeTotal > 0 ? transactionIncomeTotal : invoiceIncomeTotal;
     
-  const expenseTotal = !isLoading && Array.isArray(transactions)
-    ? transactions
+  // Gastos usando filteredTransactions para reflejar los filtros
+  const expenseTotal = !isLoading && Array.isArray(filteredTransactions)
+    ? filteredTransactions
         .filter((t: Transaction) => t.type === "expense")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
@@ -1114,7 +1148,7 @@ const TransactionList = () => {
                 {formatCurrency(netIncomeTotal, "income")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
+                {filteredInvoices.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
               </div>
             </div>
           </div>
@@ -1137,7 +1171,7 @@ const TransactionList = () => {
                 {formatCurrency(netExpenseTotal, "expense")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
+                {filteredTransactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
               </div>
             </div>
           </div>
@@ -1180,7 +1214,7 @@ const TransactionList = () => {
         </div>
         
         {/* Tarjeta de Reparar si es necesario */}
-        {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
+        {filteredTransactions?.filter(t => t.type === 'income').length === 0 && filteredInvoices?.filter(inv => inv.status === 'paid').length > 0 ? (
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
@@ -1210,7 +1244,7 @@ const TransactionList = () => {
       </div>
       
       {/* Alerta móvil si se necesita reparación - versión más compacta */}
-      {transactions?.filter(t => t.type === 'income').length === 0 && invoices?.filter(inv => inv.status === 'paid').length > 0 ? (
+      {filteredTransactions?.filter(t => t.type === 'income').length === 0 && filteredInvoices?.filter(inv => inv.status === 'paid').length > 0 ? (
         <div className="sm:hidden mx-1 mb-2 p-1.5 bg-amber-50 border border-amber-100 rounded-lg flex items-center">
           <AlertTriangle className="h-3 w-3 text-amber-500 mr-1.5 flex-shrink-0" />
           <span className="text-xs text-amber-700 flex-grow">Faltan ingresos</span>
