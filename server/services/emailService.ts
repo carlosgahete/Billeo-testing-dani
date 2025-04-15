@@ -65,6 +65,9 @@ export async function initEmailService() {
   }
 }
 
+// Logo de Billeo en base64 para asegurar que aparece en todos los clientes de email
+const logoBase64 = 'data:image/png;base64,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';
+
 // Función para enviar correo de recuperación de contraseña
 export async function sendPasswordResetEmail(email: string, token: string, username: string) {
   if (!transporter) {
@@ -84,7 +87,7 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #2563eb;">Billeo</h1>
+            <img src="${logoBase64}" alt="Billeo" style="width: 150px; height: auto;">
           </div>
           
           <p>Hola <strong>${username}</strong>,</p>
@@ -146,9 +149,6 @@ export async function sendInvoiceEmail(
     pdfStream.push(pdfBuffer);
     pdfStream.push(null); // Señal de fin de stream
     
-    const appUrl = process.env.APP_URL || 'https://app.billeo.es';
-    const logoUrl = `${appUrl}/images/billeo-logo.svg`;
-    
     const emailOptions: nodemailer.SendMailOptions = {
       from: `"${companyName}" <${senderEmail}>`,
       to: recipientEmail,
@@ -166,7 +166,7 @@ ${companyName}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoUrl}" alt="${companyName}" style="width: 150px; height: auto;">
+            <img src="${logoBase64}" alt="${companyName}" style="width: 150px; height: auto;">
           </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
@@ -297,12 +297,11 @@ export async function sendAlertNotification(
     });
     
     const appUrl = process.env.APP_URL || 'https://app.billeo.es';
-    const logoUrl = `${appUrl}/images/billeo-logo.svg`;
 
     const htmlMessage = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="${logoUrl}" alt="${companyName}" style="width: 150px; height: auto;">
+          <img src="${logoBase64}" alt="${companyName}" style="width: 150px; height: auto;">
         </div>
         
         <p>Hola <strong>${recipientName}</strong>,</p>
@@ -413,9 +412,6 @@ export async function sendQuoteEmail(
       validityMessage = `\nEste presupuesto es válido hasta el ${formattedDate}.`;
     }
     
-    const appUrl = process.env.APP_URL || 'https://app.billeo.es';
-    const logoUrl = `${appUrl}/images/billeo-logo.svg`;
-    
     const emailOptions: nodemailer.SendMailOptions = {
       from: `"${companyName}" <${senderEmail}>`,
       to: recipientEmail,
@@ -433,7 +429,7 @@ ${companyName}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoUrl}" alt="${companyName}" style="width: 150px; height: auto;">
+            <img src="${logoBase64}" alt="${companyName}" style="width: 150px; height: auto;">
           </div>
           
           <p>Estimado/a <strong>${recipientName}</strong>,</p>
