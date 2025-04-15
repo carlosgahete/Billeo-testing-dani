@@ -32,6 +32,7 @@ import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
 import ExpensesByCategorySimple from "@/components/dashboard/ExpensesByCategorySimple";
 import SimpleExpensesByCategory from "@/components/dashboard/SimpleExpensesByCategory";
+import DonutExpensesByCategory from "@/components/dashboard/DonutExpensesByCategory";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -228,6 +229,14 @@ export const DASHBOARD_BLOCKS = {
     component: SimpleExpensesByCategory,
     icon: <PieChart className="h-8 w-8 text-red-600" />,
     type: "cards"
+  },
+  "expenses-by-category-donut": {
+    id: "expenses-by-category-donut",
+    title: "Gastos por Categoría (Rosquilla)",
+    description: "Visualización de gastos con gráfico de rosquilla pequeño y centrado",
+    component: DonutExpensesByCategory,
+    icon: <PieChart className="h-8 w-8 text-purple-600" />,
+    type: "charts"
   }
 };
 
@@ -547,6 +556,29 @@ export const DASHBOARD_BLOCK_CATALOG = [
                 <div className="bg-blue-500 h-full w-[20%]"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-donut"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-purple-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-purple-600 mr-1" />
+          <span className="text-[10px] font-medium text-purple-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <div className="relative w-[28px] h-[28px]">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <circle cx="50" cy="50" r="40" fill="#f3f4f6" />
+              <path d="M 50 50 L 90 50 A 40 40 0 0 1 50 90 Z" fill="#8b5cf6" />
+              <path d="M 50 50 L 50 90 A 40 40 0 0 1 10 50 Z" fill="#ec4899" />
+              <path d="M 50 50 L 10 50 A 40 40 0 0 1 50 10 Z" fill="#ef4444" />
+              <path d="M 50 50 L 50 10 A 40 40 0 0 1 90 50 Z" fill="#f59e0b" />
+              <circle cx="50" cy="50" r="25" fill="white" />
+            </svg>
           </div>
         </div>
       </div>
