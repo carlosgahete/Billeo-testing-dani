@@ -651,12 +651,12 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
         )}
         
         {/* Layout en dos columnas con elementos centrados */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Columna izquierda: Gráfico de donut - movida más a la izquierda */}
-          <div className="flex justify-start p-2 h-[280px]">
-            <div className="pt-2" style={{ marginLeft: "-100px" }}>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
+          {/* Columna izquierda: Gráfico de donut - movida hacia la A de Año */}
+          <div className="flex md:col-span-2 p-0 h-[280px]">
+            <div className="pt-0" style={{ marginTop: "-20px", marginLeft: "-40px" }}>
               <ResponsiveContainer width={210} height={220}>
-                <PieChart>
+                <PieChart margin={{ top: 0, left: 0 }}>
                   <Pie
                     data={displayData}
                     cx="50%"
@@ -687,7 +687,7 @@ const NewExpensesByCategory: React.FC<ExpensesByCategoryProps> = ({
           
           {/* Columna derecha: Lista de categorías */}
           <div 
-            className="flex justify-start p-2 pl-0 pr-3 overflow-y-auto h-[280px]"
+            className="flex justify-start md:col-span-3 p-2 pl-0 pr-3 overflow-y-auto h-[280px]"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: '#d1d5db #f3f4f6',
