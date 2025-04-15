@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Iconos Billeo</title>
+  <style>
+    :root {
+      --primary-color: #0051ff;
+      --accent-color: #007aff;
+      --background-color: #f5f7fa;
+      --card-background: #ffffff;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+      --text-color: #333333;
+      --text-muted: #6e6e73;
+      --border-radius: 12px;
+      --spacing: 24px;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.5;
+    }
+    
+    header {
+      background: linear-gradient(to right, #0051ff, #007aff);
+      color: white;
+      padding: var(--spacing);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    
+    h1 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 2rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing);
+    }
+    
+    .card {
+      background-color: var(--card-background);
+      border-radius: var(--border-radius);
+      padding: var(--spacing);
+      box-shadow: var(--shadow);
+      margin-bottom: var(--spacing);
+    }
+    
+    .info-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .downloads {
+      display: flex;
+      gap: var(--spacing);
+      margin-bottom: var(--spacing);
+    }
+    
+    .download-btn {
+      display: inline-block;
+      background-color: var(--accent-color);
+      color: white;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    
+    .download-btn:hover {
+      background-color: var(--primary-color);
+    }
+    
+    .icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: var(--spacing);
+    }
+    
+    .icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 16px;
+      background-color: var(--card-background);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    
+    .icon-item:hover {
+      transform: translateY(-5px);
+    }
+    
+    .icon-svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+    }
+    
+    .icon-name {
+      font-size: 0.85rem;
+      color: var(--text-color);
+      margin-bottom: 8px;
+    }
+    
+    .icon-download {
+      display: inline-block;
+      font-size: 0.75rem;
+      background-color: #f5f5f7;
+      color: var(--accent-color);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 12px;
+      transition: background-color 0.2s;
+    }
+    
+    .icon-download:hover {
+      background-color: #e5e5ea;
+    }
+    
+    footer {
+      text-align: center;
+      padding: var(--spacing);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Catálogo de Iconos Billeo</h1>
+  </header>
+  
+  <div class="container">
+    <div class="card">
+      <h2>Descargas de Colecciones</h2>
+      <p class="info-text">Descarga todos los iconos en un único archivo, organizados en una cuadrícula con etiquetas.</p>
+      
+      <div class="downloads">
+        <a href="/download/icons/ai" class="download-btn">Descargar colección .ai</a>
+        <a href="/download/icons/svg" class="download-btn">Descargar colección SVG</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Iconos Individuales</h2>
+      <p class="info-text">Haz clic en cualquier icono para descargarlo individualmente en formato SVG.</p>
+      
+      <div class="icons-grid" id="icons-container">
+        <!-- Los iconos se cargarán dinámicamente aquí -->
+        <div class="icon-item">
+          <div class="icon-svg">⌛</div>
+          <div class="icon-name">Cargando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <p>© 2025 Billeo - Iconos por <a href="https://lucide.dev/" target="_blank">Lucide</a></p>
+  </footer>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        // Obtener la lista de iconos disponibles
+        const response = await fetch('/download/icons');
+        const data = await response.json();
+        
+        // Obtener el contenedor de iconos
+        const iconsContainer = document.getElementById('icons-container');
+        
+        // Limpiar el contenedor
+        iconsContainer.innerHTML = '';
+        
+        // Generar un elemento para cada icono
+        if (data.icons && data.icons.length > 0) {
+          data.icons.forEach(iconName => {
+            const iconUrl = `/download/icons/${iconName}`;
+            
+            // Crear el elemento para el icono
+            const iconElement = document.createElement('div');
+            iconElement.className = 'icon-item';
+            
+            // Contenido del elemento
+            iconElement.innerHTML = `
+              <div class="icon-svg">
+                <img src="${iconUrl}" alt="${iconName}" width="48" height="48">
+              </div>
+              <div class="icon-name">${iconName}</div>
+              <a href="${iconUrl}" download="${iconName}.svg" class="icon-download">Descargar</a>
+            `;
+            
+            // Añadir al contenedor
+            iconsContainer.appendChild(iconElement);
+          });
+        } else {
+          iconsContainer.innerHTML = '<p>No se encontraron iconos disponibles.</p>';
+        }
+      } catch (error) {
+        console.error('Error al cargar los iconos:', error);
+        document.getElementById('icons-container').innerHTML = '<p>Error al cargar los iconos. Por favor, intenta de nuevo más tarde.</p>';
+      }
+    });
+  </script>
+</body>
+</html>
