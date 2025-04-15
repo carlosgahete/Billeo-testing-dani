@@ -68,9 +68,16 @@ export async function initEmailService() {
 // Importamos las URLs del logo desde un archivo centralizado
 import { BILLEO_LOGO_DATA_URI, BILLEO_LOGO_URL, BILLEO_LOGO_LOCAL_URL, BILLEO_LOGO_URL_ALT1, BILLEO_LOGO_URL_ALT2 } from './billeo-logo-url';
 
-// Para correos electrónicos, usamos el Data URI como método principal
-// Esta técnica es la más fiable y compatible con todos los clientes de correo
-const logoEmailUrl = BILLEO_LOGO_DATA_URI;
+// Para correos electrónicos, definimos un logo compatible con texto para máxima compatibilidad
+const logoHtml = `
+<div style="text-align: center; margin: 20px auto; font-size: 40px; color: #333; line-height: 1;">
+  <span style="color: #FF0000; font-size: 48px; margin-right: 10px;">📊</span>
+  <span style="font-weight: bold; font-size: 32px;">BILLEO</span>
+</div>
+`;
+
+// Para antigua referencia, pero ya no se usa
+const logoEmailUrl = "";
 
 // Función para enviar correo de recuperación de contraseña
 export async function sendPasswordResetEmail(email: string, token: string, username: string) {
@@ -90,9 +97,7 @@ export async function sendPasswordResetEmail(email: string, token: string, usern
       text: `Hola ${username},\n\nHas solicitado restablecer tu contraseña. Para continuar, haz clic en el siguiente enlace:\n\n${resetUrl}\n\nEste enlace expirará en 1 hora.\n\nSi no solicitaste este cambio, puedes ignorar este correo.\n\nSaludos,\nEquipo de Billeo`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoEmailUrl}" alt="Billeo" style="width: 150px; height: auto;">
-          </div>
+          ${logoHtml}
           
           <p>Hola <strong>${username}</strong>,</p>
           
