@@ -860,7 +860,10 @@ const TransactionList = () => {
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
     
-  const balance = incomeTotal - expenseTotal;
+  // Calcular el balance neto (ingresos netos - gastos netos)
+  const netIncomeTotal = incomeTotal * 0.85; // Ingresos después de impuestos (15% de IRPF)
+  const netExpenseTotal = expenseTotal * 0.95; // Gastos después de recuperar IVA (aprox 5%)
+  const balance = netIncomeTotal - netExpenseTotal;
 
   // Función para reparar las transacciones de facturas pagadas
   
@@ -926,7 +929,7 @@ const TransactionList = () => {
       {/* El resumen para dispositivos móviles ha sido eliminado completamente para un diseño más minimalista */}
       
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
-      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-5 mb-8 mx-2 w-full">
         {/* Tarjeta de Ingresos Totales */}
         <div className="dashboard-card fade-in">
           <div className="p-5">
@@ -935,13 +938,13 @@ const TransactionList = () => {
                 <ArrowUp className="h-4 w-4 text-[#007AFF]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Ingresos totales</p>
+                <p className="text-sm text-gray-600">Ingresos netos</p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#007AFF] pt-1">
-                {formatCurrency(incomeTotal, "income")}
+                {formatCurrency(incomeTotal * 0.85, "income")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 {invoices?.filter(inv => inv.status === 'paid').length || 0} facturas cobradas
@@ -958,13 +961,13 @@ const TransactionList = () => {
                 <TrendingDown className="h-4 w-4 text-[#FF3B30]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Gastos totales</p>
+                <p className="text-sm text-gray-600">Gastos netos</p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF3B30] pt-1">
-                {formatCurrency(expenseTotal, "expense")}
+                {formatCurrency(expenseTotal * 0.95, "expense")}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 {transactions?.filter(t => t.type === 'expense').length || 0} gastos registrados
