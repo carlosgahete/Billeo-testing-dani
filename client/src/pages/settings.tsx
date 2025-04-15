@@ -47,6 +47,7 @@ const SettingsPage = () => {
   const { theme, setTheme, toggleTheme } = useTheme();
   const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(true);
   const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(theme === "dark");
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   
   // Escuchar cambios en el tema global
   useEffect(() => {
@@ -564,9 +565,9 @@ const SettingsPage = () => {
                       onClick={async () => {
                         try {
                           setIsSendingTestEmail(true);
-                          const response = await apiRequest('/api/test-email', {
-                            method: 'POST',
-                            body: JSON.stringify({ email: user?.email }),
+                          const response = await apiRequest('POST', '/api/test-email/send-test-email', {
+                            email: user?.email,
+                            type: 'general'
                           });
                           
                           if (response.success) {
