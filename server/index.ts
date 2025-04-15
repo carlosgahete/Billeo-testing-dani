@@ -151,7 +151,7 @@ app.use((req, res, next) => {
   
   // Añadir endpoint para pruebas de correo
   import('./test-email').then((module) => {
-    app.use('/api', module.default);
+    app.use('/api/test-email', module.default);
     console.log('Rutas de prueba de correo configuradas');
   }).catch(err => {
     console.error('Error al cargar el módulo de prueba de correo:', err);

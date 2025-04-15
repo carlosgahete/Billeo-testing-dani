@@ -197,6 +197,14 @@ function getTestEmailTemplate(emailType: string = 'general'): string {
 // Configuración del router
 const router = Router();
 
+// Punto de entrada principal para probar que la ruta funciona
+router.get('/', (_req: Request, res: Response) => {
+  return res.json({
+    success: true,
+    message: 'API de prueba de correo funcionando correctamente'
+  });
+});
+
 // Ruta para enviar un correo de prueba
 router.post('/send-test-email', async (req: Request, res: Response) => {
   try {
