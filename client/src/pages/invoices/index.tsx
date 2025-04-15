@@ -1,11 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import InvoiceList from "@/components/invoices/InvoiceList";
-import { Loader2, Receipt, ArrowUpRight, FileCheck, Calendar, AlertTriangle, CalendarDays, Plus } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Receipt, FileCheck, Calendar, AlertTriangle, CalendarDays } from "lucide-react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState, useEffect } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { DashboardStats } from "@/types/dashboard";
 
@@ -37,6 +34,14 @@ const InvoicesPage = () => {
     );
   }
 
+  // Formatear valores monetarios en euros
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', { 
+      style: 'currency', 
+      currency: 'EUR' 
+    }).format(value || 0);
+  };
+
   return (
     <div className="w-full pl-0 pr-2 md:px-2 space-y-0 sm:space-y-6 mt-0 sm:mt-2 max-w-full">
       {/* El encabezado solo se muestra en desktop, NUNCA en móvil */}
@@ -56,6 +61,7 @@ const InvoicesPage = () => {
       
       {/* Tarjetas de resumen estilo Apple - Solo visibles en desktop */}
       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 mx-2">
+        {/* Tarjeta 1: Facturas Emitidas */}
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
@@ -64,22 +70,23 @@ const InvoicesPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  Facturas Emitidas {selectedYear !== "all" && <span>({selectedYear})</span>}
+                  Facturas Emitidas {filters?.year !== "all" && <span>({filters?.year})</span>}
                 </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#007AFF] pt-1">
-                {filteredStats?.issuedCount || 0}
+                {stats?.issuedCount || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(filteredStats?.income || 0)}
+                Valor: {formatCurrency(stats?.income || 0)}
               </div>
             </div>
           </div>
         </div>
         
+        {/* Tarjeta 2: Este Año */}
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
@@ -88,25 +95,26 @@ const InvoicesPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  Este Año {selectedYear === "all" && <span>({new Date().getFullYear()})</span>}
-                  {selectedYear !== "all" && <span>({selectedYear})</span>}
+                  Este Año {filters?.year === "all" && <span>({new Date().getFullYear()})</span>}
+                  {filters?.year !== "all" && <span>({filters?.year})</span>}
                 </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#34C759] pt-1">
-                {selectedYear === "all" ? stats?.yearCount || 0 : filteredStats?.issuedCount || 0}
+                {filters?.year === "all" ? stats?.yearCount || 0 : stats?.issuedCount || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
-                  selectedYear === "all" ? stats?.yearIncome || 0 : filteredStats?.income || 0
+                Valor: {formatCurrency(
+                  filters?.year === "all" ? stats?.yearIncome || 0 : stats?.income || 0
                 )}
               </div>
             </div>
           </div>
         </div>
         
+        {/* Tarjeta 3: Este Trimestre */}
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
@@ -115,28 +123,29 @@ const InvoicesPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  Este Trimestre {selectedYear !== "all" && <span>({selectedYear})</span>}
+                  Este Trimestre {filters?.year !== "all" && <span>({filters?.year})</span>}
                 </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF9500] pt-1">
-                {selectedYear === "all" ? stats?.quarterCount || 0 : 
-                 stats?.quarterCount && selectedYear === new Date().getFullYear().toString() ? 
-                 stats.quarterCount : 0}
+                {filters?.year === "all" ? stats?.quarterCount || 0 : 
+                 (stats?.quarterCount && filters?.year === new Date().getFullYear().toString() ? 
+                 stats.quarterCount : 0)}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
-                  selectedYear === "all" ? stats?.quarterIncome || 0 : 
-                  stats?.quarterIncome && selectedYear === new Date().getFullYear().toString() ? 
-                  stats.quarterIncome : 0
+                Valor: {formatCurrency(
+                  filters?.year === "all" ? stats?.quarterIncome || 0 : 
+                  (stats?.quarterIncome && filters?.year === new Date().getFullYear().toString() ? 
+                  stats.quarterIncome : 0)
                 )}
               </div>
             </div>
           </div>
         </div>
         
+        {/* Tarjeta 4: Pendientes de Cobro */}
         <div className="dashboard-card fade-in">
           <div className="p-5">
             <div className="flex items-center mb-4">
@@ -145,17 +154,17 @@ const InvoicesPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  Pendientes de Cobro {selectedYear !== "all" && <span>({selectedYear})</span>}
+                  Pendientes de Cobro {filters?.year !== "all" && <span>({filters?.year})</span>}
                 </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF3B30] pt-1">
-                {filteredStats?.pendingCount || 0}
+                {stats?.pendingCount || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(filteredStats?.pendingInvoices || 0)}
+                Valor: {formatCurrency(stats?.pendingInvoices || 0)}
               </div>
             </div>
           </div>
