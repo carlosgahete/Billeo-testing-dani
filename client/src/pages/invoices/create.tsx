@@ -66,17 +66,28 @@ const CreateInvoicePage = () => {
       
       {/* Botón de volver para móvil sin título */}
       {isMobile && (
-        <div className="mt-1 mb-3 ml-2">
-          <a 
-            href="#" 
-            onClick={(e) => { e.preventDefault(); navigate("/invoices"); }} 
-            className="text-blue-500 no-underline"
-            style={{ display: 'inline-flex', alignItems: 'center' }}
-          >
-            <ChevronLeft size={16} style={{ marginRight: 1 }} />
-            Volver
-          </a>
-        </div>
+        <>
+          <div className="mt-1 mb-1 ml-2">
+            <a 
+              href="#" 
+              onClick={(e) => { e.preventDefault(); navigate("/invoices"); }} 
+              className="text-blue-500 no-underline"
+              style={{ display: 'inline-flex', alignItems: 'center' }}
+            >
+              <ChevronLeft size={16} style={{ marginRight: 1 }} />
+              Volver
+            </a>
+          </div>
+          <div className="px-4 py-2">
+            <h1 className="text-2xl font-semibold text-gray-800 flex items-center">
+              <Receipt className="h-5 w-5 mr-2 text-blue-500" />
+              Crear nueva factura
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Completa los detalles para generar un documento profesional
+            </p>
+          </div>
+        </>
       )}
       
       {/* Renderiza el formulario adecuado según el dispositivo */}
