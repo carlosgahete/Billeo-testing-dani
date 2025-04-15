@@ -223,7 +223,157 @@ ${companyName}
   }
 }
 
-// Función para enviar presupuestos por correo electrónico
+// Función para enviar notificaciones de alerta
+export async function sendAlertNotification(
+  recipientEmail: string,
+  recipientName: string,
+  alertType: string,
+  alertDetails: {
+    title: string;
+    message: string;
+    date?: string;
+    amount?: number;
+    dueDate?: string;
+    entityName?: string;
+    entityNumber?: string;
+  },
+  companyName: string = 'Billeo',
+  senderEmail: string = 'contacto@billeo.es'
+) {
+  if (!transporter) {
+    await initEmailService();
+  }
+  
+  // Preparar contenido basado en el tipo de alerta
+  let subject = '';
+  let messageTitle = '';
+  let messageContent = '';
+  let actionText = '';
+  let bgColor = '';
+  let iconEmoji = '';
+  
+  switch (alertType.toLowerCase()) {
+    case 'factura_vencida':
+      subject = `⚠️ Alerta: Factura vencida - ${alertDetails.entityNumber || ''}`;
+      messageTitle = 'Factura vencida';
+      messageContent = `La factura ${alertDetails.entityNumber || ''} de ${alertDetails.entityName || ''} por importe de ${alertDetails.amount ? alertDetails.amount.toFixed(2) + '€' : ''} ha vencido el ${alertDetails.dueDate || ''}.`;
+      actionText = 'Revisar factura';
+      bgColor = '#FFEBEE';
+      iconEmoji = '⚠️';
+      break;
+    case 'factura_proxima_vencer':
+      subject = `🔔 Recordatorio: Factura próxima a vencer - ${alertDetails.entityNumber || ''}`;
+      messageTitle = 'Factura próxima a vencer';
+      messageContent = `La factura ${alertDetails.entityNumber || ''} de ${alertDetails.entityName || ''} por importe de ${alertDetails.amount ? alertDetails.amount.toFixed(2) + '€' : ''} vencerá el ${alertDetails.dueDate || ''}.`;
+      actionText = 'Ver detalles';
+      bgColor = '#FFF8E1';
+      iconEmoji = '🔔';
+      break;
+    case 'impuestos_proximos':
+      subject = `📋 Recordatorio: Próximo pago de impuestos`;
+      messageTitle = 'Próximo pago de impuestos';
+      messageContent = `Recuerda que el próximo pago de ${alertDetails.title || 'impuestos'} debe realizarse antes del ${alertDetails.dueDate || ''}.`;
+      actionText = 'Ver calendario fiscal';
+      bgColor = '#E3F2FD';
+      iconEmoji = '📋';
+      break;
+    default:
+      subject = `${alertDetails.title || 'Notificación importante'} - Billeo`;
+      messageTitle = alertDetails.title || 'Notificación importante';
+      messageContent = alertDetails.message || '';
+      actionText = 'Ver detalles';
+      bgColor = '#F1F8E9';
+      iconEmoji = '📢';
+  }
+  
+  try {
+    const currentDate = new Date().toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const htmlMessage = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #2563eb;">${companyName}</h1>
+        </div>
+        
+        <p>Hola <strong>${recipientName}</strong>,</p>
+        
+        <div style="background-color: ${bgColor}; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <h2 style="margin-top: 0; color: #2563eb;">${iconEmoji} ${messageTitle}</h2>
+          <p>${messageContent}</p>
+          ${alertDetails.date ? `<p><strong>Fecha:</strong> ${alertDetails.date}</p>` : ''}
+        </div>
+        
+        <p>Por favor, revisa esta información en tu cuenta de Billeo.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.APP_URL || 'https://app.billeo.es'}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">${actionText}</a>
+        </div>
+        
+        <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+        
+        <p>Saludos cordiales,<br>${companyName}</p>
+        
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8em; color: #888; text-align: center;">
+          <p>© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.</p>
+          <p>Este correo fue enviado el ${currentDate}</p>
+        </div>
+      </div>
+    `;
+    
+    const textMessage = `
+Hola ${recipientName},
+
+${messageTitle}
+
+${messageContent}
+${alertDetails.date ? `Fecha: ${alertDetails.date}` : ''}
+
+Por favor, revisa esta información en tu cuenta de Billeo.
+
+Si tienes alguna pregunta, no dudes en contactarnos.
+
+Saludos cordiales,
+${companyName}
+
+© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.
+Este correo fue enviado el ${currentDate}
+    `;
+    
+    const emailOptions: nodemailer.SendMailOptions = {
+      from: `"${companyName}" <${senderEmail}>`,
+      to: recipientEmail,
+      subject: subject,
+      text: textMessage,
+      html: htmlMessage
+    };
+    
+    console.log(`Enviando notificación de alerta a: ${recipientEmail}`);
+    console.log(`Tipo de alerta: ${alertType}`);
+    
+    const info = await transporter.sendMail(emailOptions);
+    console.log('Email de alerta enviado: %s', info.messageId);
+    
+    // Para cuentas de prueba, mostrar URL de vista previa
+    if (process.env.NODE_ENV !== 'production' && info.messageId && nodemailer.getTestMessageUrl) {
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log('URL de vista previa: %s', previewUrl);
+      return {
+        success: true,
+        previewUrl
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error al enviar notificación de alerta:', error);
+    return { success: false, error };
+  }
+}
+
 export async function sendQuoteEmail(
   recipientEmail: string, 
   recipientName: string, 
