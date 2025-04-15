@@ -722,33 +722,23 @@ export default function LibroRegistrosPage() {
       currentY += 55;
       drawColorBox(currentY, 45, 'green', 'PRESUPUESTOS');
       
-      // Variables para controlar la tabla - diseñada para no tener overflows
-      const tablePaddingLeft = 10;
-      const tableWidth = pageWidth - 2 * margin - 20; // 20px de margen total (10px a cada lado)
-      const maxColumnsWidth = [
-        tableWidth * 0.15, // Número (15%)
-        tableWidth * 0.15, // Fecha (15%)
-        tableWidth * 0.25, // Cliente (25%)
-        tableWidth * 0.25, // Total (25%) 
-        tableWidth * 0.20  // Estado (20%)
-      ];
-      
-      // Posiciones exactas para cada columna (desde el margen izquierdo)
-      const col1X = margin + tablePaddingLeft;
-      const col2X = col1X + maxColumnsWidth[0];
-      const col3X = col2X + maxColumnsWidth[1];
-      const col4X = col3X + maxColumnsWidth[2];
-      const col5X = col4X + maxColumnsWidth[3];
+      // Rediseñamos también la sección de presupuestos para que siga el mismo patrón de las facturas
+      // Definimos las posiciones de manera absoluta, no relativa, para evitar problemas de alineación
+      const numQuoteX = margin + 5;        // Número
+      const fechaQuoteX = margin + 30;     // Fecha
+      const clienteQuoteX = margin + 65;   // Cliente
+      const totalQuoteX = pageWidth - 45;  // Total (alineado desde la derecha)
+      const estadoQuoteX = pageWidth - 10; // Estado (alineado desde la derecha)
       
       // Cabecera con posiciones fijas para evitar cualquier desbordamiento
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7); // Texto más pequeño para caber mejor
       
-      doc.text("Número", col1X, currentY + 15);
-      doc.text("Fecha", col2X, currentY + 15);
-      doc.text("Cliente", col3X, currentY + 15);
-      doc.text("Total", col4X, currentY + 15);
-      doc.text("Estado", col5X, currentY + 15);
+      doc.text("Número", numQuoteX, currentY + 15);
+      doc.text("Fecha", fechaQuoteX, currentY + 15);
+      doc.text("Cliente", clienteQuoteX, currentY + 15);
+      doc.text("Total", totalQuoteX, currentY + 15, { align: 'right' });
+      doc.text("Estado", estadoQuoteX, currentY + 15, { align: 'right' });
       
       drawHorizontalLine(currentY + 17, pageWidth - 2 * margin - 20);
       
@@ -760,7 +750,7 @@ export default function LibroRegistrosPage() {
       
       if (filteredQuotes.length === 0) {
         doc.setFont('helvetica', 'italic');
-        doc.text("No hay presupuestos en este período", margin + tablePaddingLeft, presupuestoY);
+        doc.text("No hay presupuestos en este período", margin + 10, presupuestoY);
       } else {
         // Función reutilizable para comprobar y añadir página nueva si es necesario
         const checkNeedNewPage = (currentY: number, rowHeight: number = 10, maxY: number = 260) => {
@@ -781,13 +771,13 @@ export default function LibroRegistrosPage() {
             doc.setFontSize(7);
             doc.setTextColor(0, 0, 0);
             
-            doc.text("Número", col1X, 40);
-            doc.text("Fecha", col2X, 40);
-            doc.text("Cliente", col3X, 40);
-            doc.text("Total", col4X, 40);
-            doc.text("Estado", col5X, 40);
+            doc.text("Número", numQuoteX, 40);
+            doc.text("Fecha", fechaQuoteX, 40);
+            doc.text("Cliente", clienteQuoteX, 40);
+            doc.text("Total", totalQuoteX, 40, { align: 'right' });
+            doc.text("Estado", estadoQuoteX, 40, { align: 'right' });
             
-            drawHorizontalLine(42, tableWidth);
+            drawHorizontalLine(42, pageWidth - 2 * margin - 10);
             
             return 47; // Nueva posición Y después de la cabecera
           }
@@ -815,20 +805,20 @@ export default function LibroRegistrosPage() {
           if (status.length > 6) status = status.substring(0, 5) + '.';
           
           // Total formateado sin símbolo € para ahorrar espacio
-          const totalText = formatCurrency(parseFloat(quote.total)).replace('€', '');
+          const totalText = formatCurrency(parseFloat(quote.total)).replace(' ', '');
           
-          // Renderizar cada celda en su posición específica, sin alineaciones especiales
-          doc.text(numberText, col1X, presupuestoY);
-          doc.text(formatDate(quote.date), col2X, presupuestoY);
-          doc.text(clienteText, col3X, presupuestoY);
-          doc.text(totalText, col4X, presupuestoY);
-          doc.text(status, col5X, presupuestoY);
+          // Renderizar cada celda en su posición específica con alineaciones apropiadas
+          doc.text(numberText, numQuoteX, presupuestoY);
+          doc.text(formatDate(quote.date), fechaQuoteX, presupuestoY);
+          doc.text(clienteText, clienteQuoteX, presupuestoY);
+          doc.text(totalText, totalQuoteX, presupuestoY, { align: 'right' });
+          doc.text(status, estadoQuoteX, presupuestoY, { align: 'right' });
           
           presupuestoY += 6; // Más espaciado entre filas
           
           // Líneas separadoras
           if (i < filteredQuotes.length - 1) {
-            drawHorizontalLine(presupuestoY - 3, tableWidth);
+            drawHorizontalLine(presupuestoY - 3, pageWidth - 2 * margin - 10);
           }
         }
       }
