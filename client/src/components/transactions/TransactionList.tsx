@@ -1195,11 +1195,12 @@ const TransactionList = () => {
     },
   ];
 
-  // Calculate totals for the summary cards (ahora usando las transacciones filtradas)
-  // Usamos filteredTransactions en lugar de transactions para reflejar los filtros de año/periodo
-  // Ingresos de transacciones
-  const transactionIncomeTotal = !isLoading && Array.isArray(filteredTransactions)
-    ? filteredTransactions
+  // Calculate totals for the summary cards
+  // Para mantener consistencia, usamos las transacciones originales (no filtradas por pestaña)
+  // de igual forma que hicimos con los gastos
+  // Ingresos de transacciones - USANDO TRANSACTIONS ORIGINALES, NO FILTRADAS POR PESTAÑA
+  const transactionIncomeTotal = !isLoading && Array.isArray(transactions)
+    ? transactions
         .filter((t: Transaction) => t.type === "income")
         .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
     : 0;
