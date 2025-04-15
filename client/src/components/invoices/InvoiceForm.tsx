@@ -1469,8 +1469,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     const taxName = form.getValues(`additionalTaxes.${index}.name`);
                     const taxAmount = form.getValues(`additionalTaxes.${index}.amount`);
                     const isPercentage = form.getValues(`additionalTaxes.${index}.isPercentage`);
-                    const subtotal = form.getValues("subtotal");
-                    const calculatedAmount = isPercentage ? (subtotal * taxAmount / 100) : taxAmount;
+                    // Usar el subtotal calculado y memoizado
+                    const calculatedAmount = isPercentage ? (calculatedTotals.subtotal * taxAmount / 100) : taxAmount;
                     const isNegative = calculatedAmount < 0;
                     
                     return (
@@ -1487,7 +1487,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   
                   <div className="flex justify-between mt-3 pt-3 border-t">
                     <span className="font-semibold">Total:</span>
-                    <span className="font-bold text-lg text-blue-700">{form.getValues("total").toFixed(2)} €</span>
+                    <span className="font-bold text-lg text-blue-700">{calculatedTotals.total.toFixed(2)} €</span>
                   </div>
                 </div>
               </div>
