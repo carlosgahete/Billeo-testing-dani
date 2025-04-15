@@ -435,7 +435,7 @@ const TransactionList = () => {
 
   // Función para determinar qué datos mostrar según los filtros activos
   // Función para filtrar transacciones por año y periodo
-  const filterTransactionsByDate = useCallback((transactions: Transaction[]) => {
+  const filterTransactionsByDate = React.useCallback((transactions: Transaction[]) => {
     if (!transactions || transactions.length === 0) return [];
     
     return transactions.filter((transaction: Transaction) => {
