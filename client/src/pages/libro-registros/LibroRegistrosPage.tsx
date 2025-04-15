@@ -145,19 +145,26 @@ export default function LibroRegistrosPage() {
   const { data: usersList, isLoading: loadingUsers } = useQuery({
     queryKey: ['users-list'],
     queryFn: async () => {
-      if (!user || user.role !== 'superadmin') return null;
-      
-      const response = await fetch('/api/users', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('No se pudieron cargar los usuarios');
+      try {
+        if (!user || user.role !== 'superadmin') return [];
+        
+        const response = await fetch('/api/users', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          console.error('Error al cargar usuarios:', response.status);
+          return [];
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+        return [];
       }
-      
-      return response.json();
     },
-    enabled: user?.role === 'superadmin' // Solo ejecutar si el usuario es superadmin
+    // Solo ejecutar si el usuario es superadmin, pero temporalmente habilitado para todos para pruebas
+    // enabled: user?.role === 'superadmin'
   });
   
   // Cuando el usuario cambia, establecer el userId seleccionado
@@ -1040,7 +1047,7 @@ export default function LibroRegistrosPage() {
               </SelectTrigger>
               <SelectContent>
                 {!usersList || usersList.length === 0 ? (
-                  <SelectItem value="" disabled>No hay usuarios disponibles</SelectItem>
+                  <SelectItem value="no_users" disabled>No hay usuarios disponibles</SelectItem>
                 ) : (
                   usersList.map((userOption: UserOption) => (
                     <SelectItem key={userOption.id} value={userOption.id.toString()}>
