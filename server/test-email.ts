@@ -88,7 +88,7 @@ function getTestEmailTemplate(emailType: string = 'general'): string {
     <div class="container">
       <div class="header">
         <h1>Billeo</h1>
-        <div>📊</div>
+        <img src="${billeoLogoUrl}" alt="Billeo Logo" class="logo" />
       </div>
       <div class="content">
   `;
@@ -245,16 +245,22 @@ router.post('/send-test-email', async (req: Request, res: Response) => {
     });
 
     if (result.success) {
-      return res.status(200).json({ 
+      const response: any = { 
         success: true, 
-        message: 'Correo de prueba enviado correctamente',
-        previewUrl: result.previewUrl // Si hay una URL de vista previa (en desarrollo)
-      });
+        message: 'Correo de prueba enviado correctamente'
+      };
+      
+      // Añadir previewUrl solo si existe en el resultado
+      if ('previewUrl' in result && result.previewUrl) {
+        response.previewUrl = result.previewUrl;
+      }
+      
+      return res.status(200).json(response);
     } else {
       return res.status(500).json({ 
         success: false, 
         message: 'Error al enviar el correo de prueba',
-        error: result.error
+        error: result.error || 'Error desconocido'
       });
     }
   } catch (error) {
