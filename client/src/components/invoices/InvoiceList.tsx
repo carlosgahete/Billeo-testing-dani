@@ -365,12 +365,23 @@ const DeleteInvoiceDialog = ({
   );
 };
 
-const InvoiceList = () => {
+interface InvoiceListProps {
+  onYearFilterChange?: (year: string) => void;
+}
+
+const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
   // Estados para los filtros
   const [yearFilter, setYearFilter] = useState<string>("all");
+  
+  // Notificar al componente padre cuando cambia el filtro de año
+  useEffect(() => {
+    if (onYearFilterChange) {
+      onYearFilterChange(yearFilter);
+    }
+  }, [yearFilter, onYearFilterChange]);
   const [quarterFilter, setQuarterFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");

@@ -5,10 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useEffect } from "react";
 
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
   const isMobile = useIsMobile();
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  
   const { isLoading: authLoading } = useQuery({
     queryKey: ["/api/auth/session"],
   });
@@ -16,6 +19,15 @@ const InvoicesPage = () => {
   const { data: stats } = useQuery({
     queryKey: ["/api/stats/dashboard"],
   });
+  
+  // Para filtrar estadísticas por año
+  const filteredStats = stats ? 
+    (selectedYear === "all" ? stats : {
+      ...stats,
+      issuedCount: stats.yearCount, // Si se filtra por año, usar datos del año
+      income: stats.yearIncome
+    }) : 
+    stats;
 
   if (authLoading) {
     return (
@@ -51,16 +63,18 @@ const InvoicesPage = () => {
                 <FileCheck className="h-4 w-4 text-[#007AFF]" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Facturas Emitidas</p>
+                <p className="text-sm text-gray-600">
+                  Facturas Emitidas {selectedYear !== "all" && <span>({selectedYear})</span>}
+                </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#007AFF] pt-1">
-                {stats?.issuedCount || 0}
+                {filteredStats?.issuedCount || 0}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(stats?.income || 0)}
+                Valor: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(filteredStats?.income || 0)}
               </div>
             </div>
           </div>
