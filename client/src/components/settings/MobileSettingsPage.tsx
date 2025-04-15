@@ -215,6 +215,15 @@ const MobileSettingsPage = ({
     }
   };
   
+  // Función para guardar las preferencias
+  const handleSavePreferences = () => {
+    onSavePreferences();
+    toast({
+      title: "Preferencias guardadas",
+      description: "Tus preferencias han sido actualizadas correctamente.",
+    });
+  };
+  
   // Manejar carga de imagen de perfil
   const handleProfileImageUpload = (path: string) => {
     setProfileImage(path);
@@ -398,6 +407,14 @@ const MobileSettingsPage = ({
           {/* Tema */}
           {/* Opción de modo oscuro eliminada */}
         </div>
+        
+        {/* Botón para guardar preferencias */}
+        <Button 
+          onClick={handleSavePreferences}
+          className="w-full bg-[#007AFF] hover:bg-blue-600 rounded-xl h-12 shadow-sm"
+        >
+          Guardar preferencias
+        </Button>
         
         {/* Cerrar sesión */}
         <Button
