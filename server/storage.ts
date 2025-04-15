@@ -1185,6 +1185,7 @@ export class MemStorage implements IStorage {
   private transactions: Map<number, Transaction>;
   private tasks: Map<number, Task>;
   private adminClientRelations: Map<string, AdminClientRelation>;
+  private dashboardPreferences: Map<number, DashboardPreferences>;
   public sessionStore: session.Store;
 
   private userIdCounter: number;
@@ -1210,6 +1211,7 @@ export class MemStorage implements IStorage {
     this.transactions = new Map();
     this.tasks = new Map();
     this.adminClientRelations = new Map();
+    this.dashboardPreferences = new Map();
     
     // Usar MemoryStore para la sesión cuando se usa MemStorage
     const MemoryStore = require('memorystore')(session);
@@ -1710,6 +1712,41 @@ export class MemStorage implements IStorage {
 
   async deleteTask(id: number): Promise<boolean> {
     return this.tasks.delete(id);
+  }
+  
+  // Dashboard preferences operations
+  async getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined> {
+    return this.dashboardPreferences.get(userId);
+  }
+  
+  async saveDashboardPreferences(userId: number, data: { layout?: { blocks: any[] }, emailNotifications?: boolean }): Promise<DashboardPreferences> {
+    const existingPrefs = this.dashboardPreferences.get(userId);
+    
+    const now = new Date();
+    let updatedPrefs: DashboardPreferences;
+    
+    if (existingPrefs) {
+      // Actualizar preferencias existentes
+      updatedPrefs = {
+        ...existingPrefs,
+        layout: data.layout !== undefined ? data.layout : existingPrefs.layout,
+        emailNotifications: data.emailNotifications !== undefined ? data.emailNotifications : existingPrefs.emailNotifications,
+        updatedAt: now
+      };
+    } else {
+      // Crear nuevas preferencias
+      updatedPrefs = {
+        id: Date.now(), // Usar timestamp como ID
+        userId,
+        layout: data.layout || { blocks: [] },
+        emailNotifications: data.emailNotifications !== undefined ? data.emailNotifications : false,
+        createdAt: now,
+        updatedAt: now
+      };
+    }
+    
+    this.dashboardPreferences.set(userId, updatedPrefs);
+    return updatedPrefs;
   }
   
   // Quote operations
