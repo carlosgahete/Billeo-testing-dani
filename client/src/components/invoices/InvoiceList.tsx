@@ -558,19 +558,23 @@ const InvoiceList = () => {
     return date.toLocaleDateString("es-ES");
   };
   
-  // Funciones para obtener años y trimestres disponibles
+  // Funciones para obtener años disponibles ordenados de más reciente a más antiguo
   const getAvailableYears = () => {
     if (!invoicesData || invoicesData.length === 0) return ["all"];
     
     const yearsSet = new Set<string>();
-    yearsSet.add("all");
     
+    // Extraer años de las facturas
     invoicesData.forEach(invoice => {
       const date = new Date(invoice.issueDate);
       yearsSet.add(date.getFullYear().toString());
     });
     
-    return Array.from(yearsSet).sort();
+    // Convertir a array y ordenar de más reciente a más antiguo
+    const years = Array.from(yearsSet).sort((a, b) => parseInt(b) - parseInt(a));
+    
+    // Asegurar que "all" sea siempre el primer elemento
+    return ["all", ...years];
   };
   
   const getQuarterFromMonth = (month: number) => {
@@ -1555,31 +1559,53 @@ const InvoiceList = () => {
         </button>
       </div>
 
-      {/* Panel de filtros - Botón integrado en la interfaz de DataTable */}
+      {/* Filtro por año - Siempre visible */}
+      <div className="mb-4 mx-2 hidden md:flex items-center space-x-4">
+        {/* Filtro rápido por año - Siempre visible */}
+        <div className="flex items-center space-x-2 border border-gray-200 bg-white rounded-lg px-3 py-2 shadow-sm">
+          <Calendar className="h-4 w-4 text-blue-500" />
+          <span className="text-sm font-medium text-gray-700">Año:</span>
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="border-0 min-h-0 h-auto p-0 px-1 rounded-none bg-transparent shadow-none focus:ring-0">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los años</SelectItem>
+              {getAvailableYears().filter(year => year !== "all").map(year => (
+                <SelectItem key={year} value={year}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Botón de filtros avanzados */}
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-1"
+          onClick={() => setIsFilterVisible(!isFilterVisible)}
+        >
+          <Filter className="h-4 w-4" />
+          {isFilterVisible ? "Ocultar filtros" : "Filtros avanzados"}
+        </Button>
+        
+        {/* Indicador de filtros activos */}
+        {(clientFilter !== "all" || quarterFilter !== "all" || statusFilter !== "all") && (
+          <div className="flex items-center text-sm text-blue-600">
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+              Filtros activos
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Panel de filtros avanzados */}
       <div className="mb-4 mx-2 hidden md:block">
         {isFilterVisible && (
           <Card className="p-4 mb-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/60">
             <CardContent className="p-0">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Filtro por año */}
-                <div className="space-y-1">
-                  <label className="text-sm font-medium flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                    Año
-                  </label>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un año" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los años</SelectItem>
-                      {getAvailableYears().filter(year => year !== "all").map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Filtro por trimestre */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium flex items-center gap-1">
@@ -1715,26 +1741,50 @@ const InvoiceList = () => {
             </div>
             
             {/* Filtros rápidos tipo segmentos de iOS */}
-            <div className="px-4 mb-2 flex justify-center">
-              <div className="w-full max-w-[320px] bg-gray-100 p-1 rounded-lg flex">
-                <button 
-                  onClick={() => setStatusFilter('all')} 
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
-                >
-                  Todas
-                </button>
-                <button 
-                  onClick={() => setStatusFilter('paid')} 
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'paid' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
-                >
-                  Pagadas
-                </button>
-                <button 
-                  onClick={() => setStatusFilter('pending')} 
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'pending' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
-                >
-                  Pendientes
-                </button>
+            <div className="px-4 mb-2 flex flex-col space-y-2">
+              {/* Filtro por estado */}
+              <div className="w-full flex justify-center">
+                <div className="w-full max-w-[320px] bg-gray-100 p-1 rounded-lg flex">
+                  <button 
+                    onClick={() => setStatusFilter('all')} 
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                  >
+                    Todas
+                  </button>
+                  <button 
+                    onClick={() => setStatusFilter('paid')} 
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'paid' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                  >
+                    Pagadas
+                  </button>
+                  <button 
+                    onClick={() => setStatusFilter('pending')} 
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${statusFilter === 'pending' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                  >
+                    Pendientes
+                  </button>
+                </div>
+              </div>
+              
+              {/* Filtro por año - Segmentos de iOS para móvil */}
+              <div className="w-full flex justify-center">
+                <div className="w-full max-w-[320px] bg-gray-100 p-1 rounded-lg flex overflow-x-auto">
+                  <button 
+                    onClick={() => setYearFilter('all')} 
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${yearFilter === 'all' ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                  >
+                    Todos los años
+                  </button>
+                  {getAvailableYears().filter(year => year !== "all").map(year => (
+                    <button 
+                      key={year}
+                      onClick={() => setYearFilter(year)} 
+                      className={`flex-1 min-w-16 py-1.5 text-xs font-medium rounded-md transition-colors ${yearFilter === year ? 'bg-white shadow-sm text-[#007AFF]' : 'text-gray-600'}`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
