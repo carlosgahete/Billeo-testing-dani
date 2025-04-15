@@ -6,46 +6,27 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
-
-// Interfaz para las estadísticas del dashboard
-interface DashboardStats {
-  income: number;
-  expenses: number;
-  pendingInvoices: number;
-  pendingCount: number;
-  issuedCount: number;
-  yearCount: number;
-  yearIncome: number;
-  quarterCount: number;
-  quarterIncome: number;
-  [key: string]: any;
-}
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { DashboardStats } from "@/types/dashboard";
 
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
   const isMobile = useIsMobile();
-  const [selectedYear, setSelectedYear] = useState<string>("all");
   
   const { isLoading: authLoading } = useQuery({
     queryKey: ["/api/auth/session"],
   });
   
-  const { data: stats } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"],
-  });
+  // Usar el hook personalizado para obtener los datos del dashboard
+  const { 
+    data: stats, 
+    isLoading: statsLoading,
+    filters
+  } = useDashboardData();
   
-  // Para filtrar estadísticas por año
-  const filteredStats = stats ? 
-    (selectedYear === "all" ? stats : {
-      ...stats,
-      issuedCount: stats.yearCount, // Si se filtra por año, usar datos del año
-      income: stats.yearIncome
-    }) : 
-    {} as DashboardStats;
-    
   // Manejar cambio de año desde InvoiceList
   const handleYearFilterChange = (year: string) => {
-    setSelectedYear(year);
+    filters.changeYear(year);
   };
 
   if (authLoading) {
