@@ -280,6 +280,14 @@ export async function sendAlertNotification(
       bgColor = '#E3F2FD';
       iconEmoji = '📋';
       break;
+    case 'test_notification':
+      subject = `🧪 ${alertDetails.title || 'Correo de prueba'} - Billeo`;
+      messageTitle = alertDetails.title || 'Correo de prueba';
+      messageContent = alertDetails.message || 'Este es un correo de prueba para verificar el sistema de notificaciones.';
+      actionText = 'Ir a Billeo';
+      bgColor = '#E8F5E9';
+      iconEmoji = '✉️';
+      break;
     default:
       subject = `${alertDetails.title || 'Notificación importante'} - Billeo`;
       messageTitle = alertDetails.title || 'Notificación importante';
