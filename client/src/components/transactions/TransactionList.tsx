@@ -533,9 +533,9 @@ const TransactionList = () => {
           // Filtro por trimestre
           const quarter = selectedPeriod.replace("Q", "");
           const quarterMonths = {
-            "1": ["1", "2", "3"],
-            "2": ["4", "5", "6"],
-            "3": ["7", "8", "9"],
+            "1": ["01", "02", "03"],
+            "2": ["04", "05", "06"],
+            "3": ["07", "08", "09"],
             "4": ["10", "11", "12"]
           };
           return quarterMonths[quarter as keyof typeof quarterMonths].includes(invoiceMonth);
