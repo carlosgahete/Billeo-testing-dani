@@ -66,12 +66,12 @@ export async function initEmailService() {
 }
 
 // URL para el logo de Billeo en correos electrónicos
-// Usamos URLs absolutas para máxima compatibilidad con clientes de correo
-const logoUrl = 'https://billeo.es/logo.png'; // URL pública del sitio web
-const logoLocalUrl = 'http://localhost:5000/images/billeo-logo.png'; // URL local para desarrollo
+// Usando una URL pública externa garantizada (GitHub) para máxima compatibilidad
+const logoUrl = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blue%20circle/3D/blue_circle_3d.png';
+const logoLocalUrl = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blue%20circle/3D/blue_circle_3d.png';
 
-// Seleccionamos la URL apropiada según el entorno
-const logoEmailUrl = process.env.NODE_ENV === 'production' ? logoUrl : logoLocalUrl;
+// Siempre usamos una URL pública externa para máxima compatibilidad
+const logoEmailUrl = logoUrl;
 
 // Función para enviar correo de recuperación de contraseña
 export async function sendPasswordResetEmail(email: string, token: string, username: string) {
