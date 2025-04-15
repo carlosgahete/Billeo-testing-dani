@@ -26,17 +26,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, FileSpreadsheet } from "lucide-react";
-import jsPDF from "jspdf";
-import 'jspdf-autotable';
-// Extender el tipo jsPDF con autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: {
-      finalY: number;
-    };
-  }
-}
+// Importar solo jsPDF sin autoTable (enfoque simple)
+import { jsPDF } from "jspdf";
 import { PageHeader } from "@/components/page-header";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -278,7 +269,7 @@ export default function LibroRegistrosPage() {
     
   }, [data, selectedYear, selectedQuarter, selectedMonth]);
   
-  // Función para exportar a PDF - versión simplificada
+  // Función para exportar a PDF - versión muy simple sin tablas
   const exportToPDF = () => {
     if (!filteredInvoices || !filteredTransactions || !filteredQuotes || !summary) {
       toast({
@@ -318,47 +309,62 @@ export default function LibroRegistrosPage() {
       doc.text(`Presupuestos: ${summary.totalQuotes}`, 14, 62);
       doc.text(`Balance: ${formatCurrency(summary.balance)}`, 14, 70);
       
-      // Tablas simples sin complicaciones
+      // Texto simple en lugar de tablas
+      let y = 85;
       
-      // Tabla de facturas
-      doc.autoTable({
-        startY: 80,
-        head: [['Número', 'Fecha', 'Cliente', 'Total']],
-        body: filteredInvoices.map(inv => [
-          inv.number,
-          formatDate(inv.date),
-          inv.clientName,
-          formatCurrency(parseFloat(inv.total))
-        ])
+      // Lista de facturas
+      doc.setFontSize(12);
+      doc.text("Facturas emitidas", 14, y);
+      y += 8;
+      
+      doc.setFontSize(8);
+      filteredInvoices.slice(0, 10).forEach(inv => {
+        const text = `${inv.number} - ${formatDate(inv.date)} - ${inv.clientName} - ${formatCurrency(parseFloat(inv.total))}`;
+        doc.text(text, 14, y);
+        y += 5;
       });
       
-      // Tabla de presupuestos
-      const finalY = doc.lastAutoTable?.finalY || 150;
+      if (filteredInvoices.length > 10) {
+        doc.text(`... y ${filteredInvoices.length - 10} más`, 14, y);
+        y += 8;
+      } else {
+        y += 8;
+      }
       
-      doc.autoTable({
-        startY: finalY + 10,
-        head: [['Número', 'Fecha', 'Cliente', 'Total']],
-        body: filteredQuotes.map(quote => [
-          quote.number,
-          formatDate(quote.date),
-          quote.clientName,
-          formatCurrency(parseFloat(quote.total))
-        ])
+      // Lista de presupuestos
+      doc.setFontSize(12);
+      doc.text("Presupuestos", 14, y);
+      y += 8;
+      
+      doc.setFontSize(8);
+      filteredQuotes.slice(0, 10).forEach(quote => {
+        const text = `${quote.number} - ${formatDate(quote.date)} - ${quote.clientName} - ${formatCurrency(parseFloat(quote.total))}`;
+        doc.text(text, 14, y);
+        y += 5;
       });
       
-      // Tabla de gastos
-      const finalY2 = doc.lastAutoTable?.finalY || finalY + 60;
+      if (filteredQuotes.length > 10) {
+        doc.text(`... y ${filteredQuotes.length - 10} más`, 14, y);
+        y += 8;
+      } else {
+        y += 8;
+      }
       
-      doc.autoTable({
-        startY: finalY2 + 10,
-        head: [['Fecha', 'Descripción', 'Tipo', 'Importe']],
-        body: filteredTransactions.map(t => [
-          formatDate(t.date),
-          t.description,
-          t.type === 'income' ? 'Ingreso' : 'Gasto',
-          formatCurrency(parseFloat(t.amount))
-        ])
+      // Lista de gastos y transacciones
+      doc.setFontSize(12);
+      doc.text("Gastos y transacciones", 14, y);
+      y += 8;
+      
+      doc.setFontSize(8);
+      filteredTransactions.slice(0, 10).forEach(t => {
+        const text = `${formatDate(t.date)} - ${t.description.substring(0, 40)} - ${t.type === 'income' ? 'Ingreso' : 'Gasto'} - ${formatCurrency(parseFloat(t.amount))}`;
+        doc.text(text, 14, y);
+        y += 5;
       });
+      
+      if (filteredTransactions.length > 10) {
+        doc.text(`... y ${filteredTransactions.length - 10} más`, 14, y);
+      }
       
       // Guardar documento
       doc.save(`libro-registros-${selectedYear}-${selectedQuarter}-${selectedMonth}.pdf`);
