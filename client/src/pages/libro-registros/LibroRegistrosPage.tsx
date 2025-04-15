@@ -231,15 +231,34 @@ export default function LibroRegistrosPage() {
         });
         
         if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
+          const errorData = await response.json();
+          const errorMessage = errorData?.message || `Error ${response.status}: ${response.statusText}`;
+          throw new Error(errorMessage);
         }
         
         const jsonData = await response.json();
         setData(jsonData);
+        
+        // Si hay datos, mostrar confirmación
+        toast({
+          title: "Datos cargados correctamente",
+          description: `Se han cargado ${jsonData.invoices.length} facturas, ${jsonData.transactions.length} transacciones y ${jsonData.quotes.length} presupuestos`,
+          variant: "default"
+        });
+        
         return jsonData;
       } catch (err) {
         console.error("Error al cargar datos del libro de registros:", err);
-        setError(`No se pudieron cargar los datos del libro de registros: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError(`No se pudieron cargar los datos del libro de registros: ${errorMessage}`);
+        
+        // Mostrar notificación de error
+        toast({
+          title: "Error al cargar datos",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
         return null;
       } finally {
         setLoading(false);
@@ -247,7 +266,8 @@ export default function LibroRegistrosPage() {
     },
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 0
+    staleTime: 0,
+    retry: 1 // Solo intentar una vez, no reintentar en caso de error 404
   });
   
   // Efecto para cargar datos cuando cambian los filtros
