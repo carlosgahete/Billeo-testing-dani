@@ -1493,6 +1493,13 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                             title: "Factura eliminada",
                             description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
                           });
+                          
+                          // Disparar eventos personalizados para actualizar los datos en toda la app
+                          window.dispatchEvent(new CustomEvent('invoice-deleted', { 
+                            detail: { invoiceId: invoice.id }
+                          }));
+                          console.log(`🔔 Evento invoice-deleted disparado para factura ${invoice.id}`);
+                          
                           // Actualizar la lista de facturas y estadísticas
                           queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
                           queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });

@@ -81,10 +81,16 @@ export function useDashboardData() {
       setTimeout(refreshDashboardData, 300);
     };
     
+    const handleDashboardRefreshRequired = () => {
+      console.log('🔄 Solicitud explícita de actualización de dashboard recibida...');
+      refreshDashboardData();
+    };
+    
     // Escuchar eventos personalizados del DOM
     window.addEventListener('invoice-created', handleInvoiceCreated);
     window.addEventListener('invoice-updated', handleInvoiceChange);
     window.addEventListener('invoice-deleted', handleInvoiceDeleted);
+    window.addEventListener('dashboard-refresh-required', handleDashboardRefreshRequired);
     
     // Escuchar invalidaciones de consultas relacionadas con facturas
     const unsubscribeInvoices = queryClient.getQueryCache().subscribe((event) => {
@@ -112,6 +118,7 @@ export function useDashboardData() {
       window.removeEventListener('invoice-created', handleInvoiceCreated);
       window.removeEventListener('invoice-updated', handleInvoiceChange);
       window.removeEventListener('invoice-deleted', handleInvoiceDeleted);
+      window.removeEventListener('dashboard-refresh-required', handleDashboardRefreshRequired);
       unsubscribeInvoices();
     };
   }, [queryClient, refreshDashboardData]);
