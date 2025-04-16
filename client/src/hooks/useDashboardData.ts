@@ -138,44 +138,58 @@ export function useDashboardData() {
     };
   }, [queryClient, refreshDashboardData]);
   
-  // Funciones para cambiar filtros - implementación directa y forzada
+  // Funciones para cambiar filtros - implementación directa y de un solo paso
   const changeYear = useCallback((newYear: string) => {
     console.log('🔄 Cambiando año a:', newYear);
     
-    // Primero actualizamos el estado local
+    // Actualizamos el estado local
     setYear(newYear);
     
-    // Forzar invalidación de la caché para esta query
+    // Invalidar inmediatamente la query exacta
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard']
+      queryKey: ['/api/stats/dashboard', year, period],
+      exact: true
     });
     
-    // Después de un pequeño tiempo, forzar la recarga
+    // Forzar actualización inmediata
+    queryClient.refetchQueries({
+      queryKey: ['/api/stats/dashboard', newYear, period],
+      exact: true,
+      type: 'active'
+    });
+    
+    // Garantizar la actualización con un refresco manual
     setTimeout(() => {
-      console.log('⚡ Forzando recarga inmediata del dashboard después de cambiar año');
-      window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+      console.log('⚡ Forzando recarga manual con año:', newYear);
       refetch();
-    }, 10);
-  }, [refetch, queryClient]);
+    }, 50);
+  }, [refetch, queryClient, year, period]);
   
   const changePeriod = useCallback((newPeriod: string) => {
     console.log('🔄 Cambiando periodo a:', newPeriod);
     
-    // Primero actualizamos el estado local
+    // Actualizamos el estado local
     setPeriod(newPeriod);
     
-    // Forzar invalidación de la caché para esta query
+    // Invalidar inmediatamente la query exacta
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard']
+      queryKey: ['/api/stats/dashboard', year, period],
+      exact: true
     });
     
-    // Después de un pequeño tiempo, forzar la recarga
+    // Forzar actualización inmediata
+    queryClient.refetchQueries({
+      queryKey: ['/api/stats/dashboard', year, newPeriod],
+      exact: true,
+      type: 'active'
+    });
+    
+    // Garantizar la actualización con un refresco manual
     setTimeout(() => {
-      console.log('⚡ Forzando recarga inmediata del dashboard después de cambiar periodo');
-      window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+      console.log('⚡ Forzando recarga manual con periodo:', newPeriod);
       refetch();
-    }, 10);
-  }, [refetch, queryClient]);
+    }, 50);
+  }, [refetch, queryClient, year, period]);
   
   return {
     data,
