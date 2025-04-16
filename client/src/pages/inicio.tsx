@@ -37,11 +37,11 @@ export default function InicioPage() {
         </div>
       </div>
       
-      {/* Tarjetas principales - Estilo Apple */}
+      {/* Tarjetas principales - Estilo Apple con medidas iguales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Tarjeta de Ingresos */}
-        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md">
-          <div className="p-6">
+        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[340px] flex flex-col">
+          <div className="p-6 flex-grow">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                 <ArrowUpCircle className="h-6 w-6 text-green-500" />
@@ -69,10 +69,10 @@ export default function InicioPage() {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50">
+          <div className="px-6 py-4 bg-gray-50 mt-auto">
             <Button 
               variant="ghost" 
-              className="w-full h-10 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors duration-300"
+              className="w-full h-10 rounded-xl text-green-600 hover:bg-green-50 transition-colors duration-300"
             >
               Ver facturas
             </Button>
@@ -80,8 +80,8 @@ export default function InicioPage() {
         </Card>
         
         {/* Tarjeta de Gastos */}
-        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md">
-          <div className="p-6">
+        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[340px] flex flex-col">
+          <div className="p-6 flex-grow">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                 <ArrowDownCircle className="h-6 w-6 text-red-500" />
@@ -109,7 +109,7 @@ export default function InicioPage() {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50">
+          <div className="px-6 py-4 bg-gray-50 mt-auto">
             <Button 
               variant="ghost" 
               className="w-full h-10 rounded-xl text-red-600 hover:bg-red-50 transition-colors duration-300"
@@ -120,8 +120,8 @@ export default function InicioPage() {
         </Card>
         
         {/* Tarjeta de Resultado */}
-        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md">
-          <div className="p-6">
+        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[340px] flex flex-col">
+          <div className="p-6 flex-grow">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <BarChart3 className="h-6 w-6 text-blue-500" />
@@ -149,7 +149,7 @@ export default function InicioPage() {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50">
+          <div className="px-6 py-4 bg-gray-50 mt-auto">
             <Button 
               variant="ghost" 
               className="w-full h-10 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors duration-300"
