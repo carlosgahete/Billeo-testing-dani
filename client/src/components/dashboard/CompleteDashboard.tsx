@@ -154,7 +154,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Usamos los valores directos de la API que provienen directamente del cálculo del backend
   const baseImponibleIngresos = dashboardStats.baseImponible || 0;
   const ivaRepercutido = dashboardStats.ivaRepercutido || 0;
-  const baseImponibleGastos = Math.round(dashboardStats.expenses / 1.21);
+  const baseImponibleGastos = dashboardStats.baseImponibleGastos || Math.round(dashboardStats.expenses / 1.21);
   const ivaSoportado = dashboardStats.ivaSoportado || 0;
   const ivaALiquidar = dashboardStats.taxes?.ivaLiquidar || 0;
   const retencionesIrpf = dashboardStats.irpfRetenidoIngresos || 0;

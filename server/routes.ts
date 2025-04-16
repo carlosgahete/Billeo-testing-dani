@@ -4079,8 +4079,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Cálculo del IRPF según el sistema español para autónomos
       // El IRPF se calcula como un % (15-20%) sobre el beneficio (ingresos - gastos)
       const irpfRate = 0.15; // Usamos 15% como tipo estándar de IRPF
-      // Base imponible: es la suma de los subtotales de las facturas (sin IVA)
+      // Base imponible para ingresos: es la suma de los subtotales de las facturas (sin IVA)
       const baseImponible = paidInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
+      
+      // Base imponible para gastos: calculamos a partir del total y los impuestos
+      // Para un gasto típico, la base imponible sería: monto total / (1 + IVA)
+      // Por ejemplo, si expenses=106 con IVA=21%, la base sería 106/1.21 ≈ 87.60
+      const baseImponibleGastos = Math.round(expenses / 1.21); // Asumimos IVA estándar del 21%
+      
       const irpfTotalEstimated = Math.max(0, Math.round(baseImponible * irpfRate * 100) / 100);
       
       // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas en facturas
@@ -4213,6 +4219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         balance,
         result,
         baseImponible, // Base imponible (suma de subtotales de facturas, sin IVA)
+        baseImponibleGastos, // Base imponible para gastos calculada a partir del total
         totalWithholdings: totalIrpfFromExpensesInvoices,
         irpfRetenidoIngresos, // IRPF retenido en ingresos
         ivaRepercutido, // IVA repercutido (cobrado)

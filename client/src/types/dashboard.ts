@@ -40,7 +40,8 @@ export interface DashboardStats {
   pendingQuotesCount: number;
   
   // Información impositiva
-  baseImponible?: number;
+  baseImponible?: number;      // Base imponible para ingresos
+  baseImponibleGastos?: number; // Base imponible para gastos
   ivaRepercutido?: number;
   ivaSoportado?: number;
   irpfRetenidoIngresos?: number;

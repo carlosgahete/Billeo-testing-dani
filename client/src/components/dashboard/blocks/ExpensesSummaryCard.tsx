@@ -28,9 +28,9 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
   const ivaSoportado = data?.ivaSoportado || 0;
   const irpfLiquidar = data?.totalWithholdings || 0;
   
-  // Usar la base imponible proporcionada por el servidor
-  // No intentamos calcularla pues ya viene desde el backend
-  const baseImponible = data?.baseImponible || 0;
+  // Usar la base imponible para gastos proporcionada por el servidor
+  // El backend calcula esto específicamente para gastos
+  const baseImponible = data?.baseImponibleGastos || 0;
   
   // Formatear números para mostrar
   const formatCurrency = (value: number) => {
