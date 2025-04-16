@@ -36,6 +36,7 @@ import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
 import InicioPage from "@/pages/inicio";
+import Dashboard from "@/pages/dashboard";
 // Imports de Libro de Registros eliminados
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
 import ForgotPasswordPage from "@/pages/forgot-password";
@@ -65,7 +66,7 @@ function Router() {
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
         <Layout>
-          <ProtectedRoute path="/" component={InicioPage} />
+          <ProtectedRoute path="/" component={Dashboard} />
         </Layout>
       </Route>
       <Route path="/invoices">

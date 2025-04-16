@@ -126,7 +126,7 @@ const Sidebar = ({
   // Crear items de navegación base
   const baseNavigationItems: NavItem[] = [
     { 
-      href: "/complete-dashboard", 
+      href: "/", 
       icon: <LayoutDashboard size={20} />, 
       label: "Dashboard" 
     },
