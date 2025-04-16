@@ -128,6 +128,11 @@ const Sidebar = ({
     { 
       href: "/", 
       icon: <LayoutDashboard size={20} />, 
+      label: "Inicio" 
+    },
+    { 
+      href: "/dashboard", 
+      icon: <PieChart size={20} />, 
       label: "Dashboard" 
     },
     { 
