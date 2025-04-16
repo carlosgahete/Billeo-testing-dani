@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useInteractionGuard } from '@/utils/useInteractionGuard';
+import { ComponentStabilizer } from '@/components/ui/component-stabilizer';
 import { 
   Card, 
   CardContent, 
@@ -106,12 +106,6 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
   
-  // Aplicamos protección de interacción global para prevenir eventos fantasma
-  const { guard } = useInteractionGuard({
-    throttleTime: 500, // Medio segundo entre eventos del mismo tipo
-    debug: true, // Activamos logs para depuración
-  });
-  
   // Obtener datos del dashboard usando el hook centralizado
   const { data: dashboardData } = useDashboardData();
   
@@ -176,14 +170,14 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     }).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)); // Ordenar por valor absoluto descendente
   }, [expensesByCategory]);
 
-  // Manejar el cambio de período con protección contra eventos fantasma
-  const handlePeriodChange = guard('period-change', (value: string) => {
+  // Manejar el cambio de período
+  const handlePeriodChange = (value: string) => {
     console.log('✅ Cambiando período a:', value);
     setSelectedPeriod(value);
     if (onPeriodChange) {
       onPeriodChange(value);
     }
-  });
+  };
 
   // Añadir un log para depurar la carga de datos
   useEffect(() => {
@@ -331,9 +325,9 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
                         fill="transparent"
                         stroke="transparent"
                         style={{ cursor: 'pointer' }}
-                        onMouseEnter={guard('hover-start', () => setHoverIndex(idx))}
-                        onMouseLeave={guard('hover-end', () => setHoverIndex(null))}
-                        onClick={guard('segment-click', () => setActiveIndex(idx === activeIndex ? null : idx))}
+                        onMouseEnter={() => setHoverIndex(idx)}
+                        onMouseLeave={() => setHoverIndex(null)}
+                        onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
                       />
                     </g>
                   );
@@ -359,13 +353,13 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
               <div 
                 key={item.categoryId} 
                 className={`flex items-center py-2.5 cursor-pointer transition-all duration-200 ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-50 rounded-lg' : ''}`}
-                onMouseOver={guard('list-hover-start', () => {
+                onMouseOver={() => {
                   if (idx < 10) setHoverIndex(idx);
-                })}
-                onMouseOut={guard('list-hover-end', () => setHoverIndex(null))}
-                onClick={guard('list-item-click', () => {
+                }}
+                onMouseOut={() => setHoverIndex(null)}
+                onClick={() => {
                   if (idx < 10) setActiveIndex(idx === activeIndex ? null : idx);
-                })}
+                }}
               >
                 {/* Círculo con icono (estilo Apple con tamaño perfecto) */}
                 <div className="relative mr-3">
@@ -406,4 +400,13 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   );
 };
 
-export default ExpensesByCategoryApple;
+// Versión final con estabilizador para evitar eventos fantasma
+const StabilizedExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = (props) => {
+  return (
+    <ComponentStabilizer stabilityDelay={2000} showDebugInfo={true}>
+      <ExpensesByCategoryApple {...props} />
+    </ComponentStabilizer>
+  );
+};
+
+export default StabilizedExpensesByCategoryApple;
