@@ -80,19 +80,21 @@ const categoryNames: Record<number, string> = {
 };
 
 interface ExpensesByCategoryProps {
-  expensesByCategory: Record<number, { amount: number; count: number }>;
+  expensesByCategory?: Record<number, { amount: number; count: number }>;
+  period?: string;
   periodLabel?: string;
   onPeriodChange?: (period: string) => void;
 }
 
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
-  expensesByCategory, 
+  expensesByCategory = {}, 
+  period = "2025-all",
   periodLabel = "Año 2025 completo", 
   onPeriodChange 
 }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>(`${CURRENT_YEAR}-all`);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
 
   // Procesar los datos para el gráfico
   const data = useMemo(() => {

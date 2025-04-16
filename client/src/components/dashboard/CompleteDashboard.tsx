@@ -16,7 +16,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import ExpensesByCategory from "@/components/dashboard/ExpensesByCategoryNew";
+import ExpensesByCategory from "@/components/dashboard/ExpensesByCategoryApple";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 interface CompleteDashboardProps {
