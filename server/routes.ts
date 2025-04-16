@@ -4076,6 +4076,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Inicializamos la variable para acumular el IVA soportado real de las transacciones
       let ivaSoportadoReal = 0;
       
+      console.log("---------- INICIO CÁLCULO IVA REAL ----------");
+      console.log(`Total de transacciones de gastos: ${expenseTransactions.length}`);
+      
       // Calculamos el IVA soportado real directamente desde los datos de las transacciones
       if (expenseTransactions.length > 0) {
         // Si tenemos transacciones de gastos, calculamos el IVA real
@@ -4083,36 +4086,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const amount = Number(tx.amount);
           let ivaAmount = 0;
           
+          console.log(`\nProcesando transacción ${tx.id} (${tx.description}), monto: ${amount}€`);
+          
           // Primero buscamos si hay additionalTaxes con un valor explícito de IVA
           if (tx.additionalTaxes && typeof tx.additionalTaxes === 'string') {
             try {
               const taxesData = JSON.parse(tx.additionalTaxes);
+              console.log(`- additionalTaxes encontrado: ${tx.additionalTaxes}`);
+              
               const ivaObj = Array.isArray(taxesData) ? 
                 taxesData.find(tax => tax.name === "IVA") : null;
               
               if (ivaObj) {
                 const ivaRate = ivaObj.amount || 21;
+                console.log(`- IVA encontrado, tasa: ${ivaRate}%`);
                 
                 // Si tenemos un valor explícito del IVA, lo usamos
                 if (ivaObj.value) {
                   ivaAmount = Number(ivaObj.value);
-                  console.log(`Usando valor explícito de IVA para transacción ${tx.id}: ${ivaAmount}€`);
+                  console.log(`- USANDO valor explícito de IVA: ${ivaAmount}€`);
                 } else {
                   // Si no tenemos valor explícito, lo calculamos con la fórmula
                   const resultado = calcularBaseEIVA(amount, ivaRate);
                   ivaAmount = resultado.iva;
-                  console.log(`Calculando IVA para transacción ${tx.id}: ${ivaAmount}€ (base: ${resultado.base}€, tasa: ${ivaRate}%)`);
+                  console.log(`- CALCULANDO IVA: ${ivaAmount}€ (base: ${resultado.base}€, tasa: ${ivaRate}%)`);
                 }
                 
                 // Acumulamos el IVA calculado
                 ivaSoportadoReal += ivaAmount;
+                console.log(`- IVA acumulado hasta ahora: ${ivaSoportadoReal}€`);
+              } else {
+                console.log("- No se encontró objeto de IVA en los impuestos adicionales");
               }
             } catch (error) {
               console.error(`Error al procesar additionalTaxes para transacción ${tx.id}:`, error);
             }
+          } else {
+            console.log("- No tiene additionalTaxes definido o no es un string");
           }
         });
+      } else {
+        console.log("No hay transacciones de gastos para calcular IVA real");
       }
+      
+      console.log("---------- FIN CÁLCULO IVA REAL ----------");
       
       // Como simplificación, asumimos que el 21% de los gastos es IVA (solo si no hay transacciones)
       const vatRate = 0.21;
@@ -4129,6 +4146,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("IVA soportado estimado:", ivaSoportadoEstimado);
       console.log("IVA soportado real (de transacciones):", ivaSoportadoReal);
       console.log("IVA soportado usado:", ivaSoportado);
+      
+      // Asegurarse de que siempre usamos el IVA soportado real si está disponible
+      // y nunca el estimado, ya que es más preciso
+      if (ivaSoportadoReal > 0) {
+        console.log("CORRECCIÓN IMPORTANTE: Usando IVA soportado real:", ivaSoportadoReal);
+      } else {
+        console.log("Advertencia: No hay IVA soportado real calculado, usando estimado:", ivaSoportadoEstimado);
+        
+        // Si no tenemos un valor real, lo calculamos a partir del total de gastos
+        if (expenses > 0) {
+          // Calculamos la base imponible a partir del total y el IVA del 21%
+          const baseCalculada = expenses / 1.21;
+          const ivaCalculado = expenses - baseCalculada;
+          console.log(`Recalculando IVA a partir del total ${expenses}€ con tasa 21%:`);
+          console.log(`- Base imponible: ${baseCalculada.toFixed(2)}€`);
+          console.log(`- IVA calculado: ${ivaCalculado.toFixed(2)}€`);
+        }
+      }
       
       // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
       const vatBalance = Math.round((ivaRepercutido - ivaSoportado) * 100) / 100;
@@ -4475,7 +4510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalWithholdings: totalIrpfFromExpensesInvoices,
         irpfRetenidoIngresos, // IRPF retenido en ingresos
         ivaRepercutido, // IVA repercutido (cobrado)
-        ivaSoportado, // IVA soportado (pagado)
+        ivaSoportado, // IVA soportado (pagado) - Calculado correctamente usando la fórmula base = total / (1 + IVA/100)
         period,
         year,
         

@@ -1,0 +1,67 @@
+¡Ahora sí lo pillo! 🔍
+
+Gracias por aclararlo. El problema no está en el cálculo, sino en que el valor correcto (ivaSoportadoReal) se calcula pero no se usa. Y como no se usa, el sistema cae por defecto en ivaSoportadoEstimado, que es incorrecto porque hace simplemente total * tasaIVA / 100, sin considerar la base imponible real.
+
+✅ Lo que deberías hacer para corregirlo:
+
+1. Verifica dónde se está sumando ivaSoportadoReal
+
+Parece que tu código tiene algo como esto:
+
+let ivaSoportadoReal = 0;
+let ivaSoportadoEstimado = 0;
+
+transacciones.forEach(tx => {
+  // Extraer impuestos
+  const impuestos = JSON.parse(tx.additionalTaxes || '[]');
+  const iva = impuestos.find(i => i.name === 'IVA');
+
+  if (iva) {
+    // Calcular base imponible
+    const base = tx.amount / (1 + iva.amount / 100);
+    const ivaCalculado = tx.amount - base;
+
+    ivaSoportadoReal += ivaCalculado;
+
+    // Este valor está bien calculado, PERO...
+  }
+
+  // Pero más abajo estás usando:
+  ivaSoportadoEstimado += tx.amount * 0.21;
+});
+
+2. ✅ Reemplaza el uso de ivaSoportadoEstimado por ivaSoportadoReal
+
+Es muy probable que en la parte donde devuelves el objeto al frontend, tengas algo como:
+
+res.json({
+  expenses: baseImponibleTotal,
+  ivaSoportado: ivaSoportadoEstimado, // ❌ Este es el error
+});
+
+🔧 Solución:
+
+res.json({
+  expenses: baseImponibleTotal,
+  ivaSoportado: ivaSoportadoReal, // ✅ Aquí debe usarse el valor correcto
+});
+
+🧪 Cómo comprobar que funciona:
+
+Haz un console.log justo antes de enviar la respuesta:
+
+console.log("IVA soportado real:", ivaSoportadoReal);
+console.log("Enviando al dashboard:", {
+  expenses: baseImponibleTotal,
+  ivaSoportado: ivaSoportadoReal
+});
+
+Luego prueba con una factura como:
+	•	Total: 530€
+	•	IVA: 21%
+	•	Base: 438.02€
+	•	IVA real: 91.98€
+
+Y verifica que eso es lo que llega al dashboard.
+
+¿Quieres que te ayude a modificar el bloque exacto de código donde se hace esta corrección? Pásame ese route.ts o la función que construye la respuesta del dashboard y te la ajusto directamente.
