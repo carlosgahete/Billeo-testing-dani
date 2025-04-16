@@ -393,11 +393,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       {/* Segunda fila: Widgets secundarios - Row 2 - De 2 columnas en tablet, 1 columna en móvil */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-3 md:mt-8">
         {/* Widget de Facturas pendientes - Col-span-1 siempre */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-purple-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E9F3FF] md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <FileText className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
+              <div className="bg-purple-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <FileText className="md:h-5 md:w-5 h-4 w-4 text-purple-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Facturas pendientes</h3>
@@ -405,9 +405,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(stats.pendingInvoices)}</div>
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-purple-600">{formatCurrency(stats.pendingInvoices)}</div>
               <div className="text-sm text-gray-500">{stats.pendingCount} {stats.pendingCount === 1 ? 'factura' : 'facturas'}</div>
-              <Link href="/invoices" className="text-sm text-primary mt-2 flex items-center hover:underline">
+              <Link href="/invoices" className="text-sm text-purple-600 mt-2 flex items-center hover:text-purple-800 hover:underline">
                 <span>Ver facturas</span>
                 <ExternalLink className="h-3 w-3 ml-1" />
               </Link>
@@ -416,11 +416,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Presupuestos pendientes - Col-span-1 siempre */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-amber-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E9F3FF] md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <FileText className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
+              <div className="bg-amber-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <FileText className="md:h-5 md:w-5 h-4 w-4 text-amber-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Presupuestos pendientes</h3>
@@ -428,9 +428,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(stats.pendingQuotes)}</div>
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-amber-600">{formatCurrency(stats.pendingQuotes)}</div>
               <div className="text-sm text-gray-500">{stats.pendingQuotesCount} {stats.pendingQuotesCount === 1 ? 'presupuesto' : 'presupuestos'}</div>
-              <Link href="/quotes" className="text-sm text-primary mt-2 flex items-center hover:underline">
+              <Link href="/quotes" className="text-sm text-amber-600 mt-2 flex items-center hover:text-amber-800 hover:underline">
                 <span>Ver presupuestos</span>
                 <ExternalLink className="h-3 w-3 ml-1" />
               </Link>
@@ -439,11 +439,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Impuestos - Col-span-1 siempre */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-emerald-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E9F3FF] md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <FileText className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
+              <div className="bg-emerald-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <FileText className="md:h-5 md:w-5 h-4 w-4 text-emerald-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Impuestos</h3>
@@ -453,17 +453,17 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="flex flex-col">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm text-gray-700">IVA a liquidar:</span>
-                <span className="text-sm font-semibold">{formatCurrency(stats.taxes?.ivaALiquidar || 0)}</span>
+                <span className="text-sm font-semibold text-emerald-600">{formatCurrency(stats.taxes?.ivaALiquidar || 0)}</span>
               </div>
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm text-gray-700">IRPF retenido en facturas:</span>
-                <span className="text-sm font-semibold">{formatCurrency(retencionesIrpf)}</span>
+                <span className="text-sm font-semibold text-emerald-600">{formatCurrency(retencionesIrpf)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-700">IRPF a pagar (est.):</span>
-                <span className="text-sm font-semibold">{formatCurrency(stats.taxes?.incomeTax || 0)}</span>
+                <span className="text-sm font-semibold text-emerald-600">{formatCurrency(stats.taxes?.incomeTax || 0)}</span>
               </div>
-              <Link href="/taxes" className="text-sm text-primary mt-2 flex items-center hover:underline">
+              <Link href="/taxes" className="text-sm text-emerald-600 mt-2 flex items-center hover:text-emerald-800 hover:underline">
                 <span>Ver detalle impuestos</span>
                 <ExternalLink className="h-3 w-3 ml-1" />
               </Link>
