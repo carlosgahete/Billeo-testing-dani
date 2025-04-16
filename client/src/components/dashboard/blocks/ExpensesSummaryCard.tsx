@@ -28,10 +28,9 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
   const ivaSoportado = data?.ivaSoportado || 0;
   const irpfLiquidar = data?.totalWithholdings || 0;
   
-  // Calcular la base imponible dinámicamente
-  // Para un gasto de 106€ con IVA 21%, la base imponible sería aproximadamente 87.60€
-  // Redondeamos para obtener valores enteros en céntimos
-  const baseImponible = data?.baseImponible || Math.round(expenses / 1.21);
+  // Usar la base imponible proporcionada por el servidor
+  // No intentamos calcularla pues ya viene desde el backend
+  const baseImponible = data?.baseImponible || 0;
   
   // Formatear números para mostrar
   const formatCurrency = (value: number) => {
