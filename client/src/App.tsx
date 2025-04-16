@@ -35,7 +35,6 @@ import CategoriesPage from "@/pages/settings/categories";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
-import InicioPage from "@/pages/inicio";
 import Dashboard from "@/pages/dashboard";
 // Imports de Libro de Registros eliminados
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
