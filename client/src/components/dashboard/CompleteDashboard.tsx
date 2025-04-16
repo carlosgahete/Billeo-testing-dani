@@ -537,14 +537,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Gastos por Categoría - Estilo Apple */}
+        {/* Gastos por Categoría - Estilo Apple (sin título) */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
-          <div className="p-6">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="h-5 w-5 text-blue-500 mr-3" strokeWidth={1.5} />
-              <h3 className="text-lg font-medium text-gray-800">Gastos por Categoría</h3>
-            </div>
-            <div className="h-64">
+          <div className="p-0">
+            <div className="h-[400px]">
               {/* Usamos consultas directas para transacciones y categorías */}
               <ExpensesByCategory 
                 period={`${selectedYear}-${selectedPeriod}`}
