@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page"; // Esta página la mantenemos sin lazy
 import { ProtectedRoute, ProtectedAdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { initAutoLogin } from "./utils/auto-login"; // Sistema de auto-login para desarrollo
 
 // Por problemas de compatibilidad con tipos, volvemos a los import normales
 // La optimización la haremos a nivel de API y de caché
@@ -263,6 +264,15 @@ function Router() {
 }
 
 function App() {
+  // Iniciar auto-login para desarrollo cuando el componente se monta
+  useEffect(() => {
+    // Solo activar en entorno de desarrollo
+    if (import.meta.env.DEV) {
+      console.log('🚀 Inicializando auto-login para desarrollo...');
+      initAutoLogin();
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
