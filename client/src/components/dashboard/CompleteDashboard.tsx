@@ -67,69 +67,27 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     };
   }, []);
   
-  // Función para refrescar los datos del dashboard
-  const { refetch } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"],
-  });
-  
+  // Variables temporales para desarrollo - se reemplazarán con datos reales
   const refreshDashboard = () => {
-    refetch();
+    console.log("Función de refresco del dashboard - ahora vacía");
+    // Esta función será implementada después con la nueva lógica
   };
-
-  // Obtener los datos de las estadísticas
-  const { data: stats, isLoading: statsLoading, refetch: refetchDashboardStats } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard", { year, period }],
-    queryFn: async () => {
-      const timestamp = Date.now(); // Timestamp para evitar cache
-      console.log("Fetching dashboard stats with timestamp:", timestamp);
-      const res = await fetch(`/api/stats/dashboard?year=${year}&period=${period}&nocache=${timestamp}`, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-      if (!res.ok) throw new Error("Error al cargar estadísticas");
-      const data = await res.json();
-      console.log("Dashboard stats received:", data);
-      return data;
-    },
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
-    refetchOnReconnect: true,
-    refetchInterval: 1000, // Refrescar cada segundo automáticamente para mayor reactividad
-    staleTime: 0, // Sin tiempo de caducidad - siempre considerar los datos obsoletos
-    gcTime: 0, // Sin tiempo de recolección de basura - limpiar inmediatamente
-    retry: 3, // Intentar 3 veces si falla la petición
-    retryDelay: 500, // Esperar 500ms entre reintentos
-    refetchIntervalInBackground: true // Seguir actualizando incluso cuando la pestaña no está activa
-  });
   
-  // Forzar un refresco al cargar el componente
+  // Estados simplificados - sin lógica de fetch de datos
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  
+  // Estado de carga simulado
+  const statsLoading = false;
+  const transactionsLoading = false;
+  const categoriesLoading = false;
+  
+  // Este useEffect se mantendrá para futura implementación
   useEffect(() => {
-    console.log("Forzando refresco de datos del dashboard");
-    refetchDashboardStats();
-  }, []);
-  
-  // Obtener las transacciones para el análisis de gastos por categoría
-  const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
-    queryKey: ["/api/transactions", { year }],
-    queryFn: async () => {
-      const res = await fetch(`/api/transactions?year=${year}`);
-      if (!res.ok) throw new Error("Error al cargar transacciones");
-      return res.json();
-    }
-  });
-  
-  // Obtener las categorías
-  const { data: categories, isLoading: categoriesLoading } = useQuery<any[]>({
-    queryKey: ["/api/categories"],
-    queryFn: async () => {
-      const res = await fetch("/api/categories");
-      if (!res.ok) throw new Error("Error al cargar categorías");
-      return res.json();
-    }
-  });
+    console.log("Dashboard montado - la lógica de carga de datos será implementada aquí");
+    // La nueva lógica de carga de datos se implementará aquí
+  }, [year, period]);
 
   // Definir datos predeterminados si no hay datos
   const defaultStats: DashboardStats = {
