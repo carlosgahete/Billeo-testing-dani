@@ -372,7 +372,6 @@ const ExpensesByCategoryNew: React.FC<{
         </CardHeader>
         <CardContent className="p-6 flex flex-col items-center justify-center h-[300px]">
           <div className="text-center text-gray-500">
-            <p className="text-base font-medium mb-2">{periodLabel}</p>
             <p>No hay gastos registrados para este período</p>
             <p className="text-sm mt-2">Selecciona otro período o añade gastos</p>
           </div>
@@ -419,10 +418,6 @@ const ExpensesByCategoryNew: React.FC<{
       </CardHeader>
       
       <CardContent className="p-2 sm:p-4">
-        {/* Título del periodo */}
-        <div className="mb-3 text-gray-700 text-sm font-medium">
-          {periodLabel}
-        </div>
         
         {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
