@@ -5,8 +5,13 @@ import { toast } from '@/hooks/use-toast';
 
 // Hook para obtener y refrescar los datos del dashboard
 export function useDashboardData() {
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  // Usar el año actual como predeterminado
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear.toString());
   const [period, setPeriod] = useState('all');
+  
+  // Registrar en consola para diagnóstico
+  console.log(`📊 Dashboard: Inicializando con año=${year}, periodo=${period}`);
   
   const {
     data,

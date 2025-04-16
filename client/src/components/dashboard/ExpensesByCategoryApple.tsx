@@ -96,8 +96,8 @@ interface ExpensesByCategoryProps {
 
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
   expensesByCategory: propExpensesByCategory, 
-  period = "2025-all",
-  periodLabel = "Año 2025 completo", 
+  period = `${new Date().getFullYear()}-all`,
+  periodLabel = `Año ${new Date().getFullYear()} completo`, 
   onPeriodChange 
 }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);

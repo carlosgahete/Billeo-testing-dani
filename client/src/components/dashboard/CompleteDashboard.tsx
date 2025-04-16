@@ -31,7 +31,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
   
   // Estados locales para UI
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  // Aseguramos que siempre se use el año actual (2025) como predeterminado
+const currentYear = new Date().getFullYear();
+const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
+// Debug para diagnóstico
+console.log(`📊 CompleteDashboard: Inicializando con año=${currentYear}`);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   
   // Sincronizamos nuestro estado local con el hook
