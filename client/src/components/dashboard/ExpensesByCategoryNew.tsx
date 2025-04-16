@@ -421,8 +421,8 @@ const ExpensesByCategoryNew: React.FC<{
         
         {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
-          {/* Gráfico donut más grande (movido a la derecha) */}
-          <div className="w-1/2 flex items-center justify-center pl-4 sm:pl-10 pt-1">
+          {/* Gráfico donut (alineado correctamente) */}
+          <div className="w-1/2 flex items-center justify-center pl-0 sm:pl-5 pt-1">
             {/* Gráfico de donut (anillo) - con tamaño aumentado */}
             <div className="relative w-40 h-40 sm:w-52 sm:h-52">
               {/* Círculo base (agujero blanco del centro) */}
