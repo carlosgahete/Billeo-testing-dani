@@ -73,11 +73,21 @@ const COLORS = [
 ];
 
 const ExpensesByCategoryNew: React.FC<{
-  transactions: any[];
-  categories: any[];
   period?: string;
   onPeriodChange?: (period: string) => void;
-}> = ({ transactions, categories, period, onPeriodChange }) => {
+}> = ({ period, onPeriodChange }) => {
+  // Obtener las transacciones directamente
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/transactions"],
+    refetchInterval: 5000, // Refrescar cada 5 segundos
+    refetchOnWindowFocus: true,
+  });
+  
+  // Obtener las categorías directamente
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<any[]>({
+    queryKey: ["/api/categories"],
+    refetchOnWindowFocus: true,
+  });
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);

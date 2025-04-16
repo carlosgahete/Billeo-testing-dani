@@ -545,10 +545,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <h3 className="text-lg font-medium text-gray-800">Gastos por Categoría</h3>
             </div>
             <div className="h-64">
-              {/* Componente de gastos por categoría con datos del año y periodo seleccionados */}
+              {/* Usamos consultas directas para transacciones y categorías */}
               <ExpensesByCategory 
-                transactions={dashboardData.transactions || []} 
-                categories={dashboardData.categories || []}
                 period={`${selectedYear}-${selectedPeriod}`}
                 onPeriodChange={(period) => {
                   const [year, newPeriod] = period.split('-');
