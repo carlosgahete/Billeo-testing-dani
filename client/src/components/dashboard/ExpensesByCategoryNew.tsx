@@ -350,27 +350,25 @@ const ExpensesByCategoryNew: React.FC<{
               </SelectTrigger>
               <SelectContent>
                 {/* Generar opciones para cada año disponible */}
-                {availableYears.map(year => (
-                  <React.Fragment key={year}>
-                    <SelectItem value={`${year}-all`}>Año {year} completo</SelectItem>
-                    <SelectItem value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>
-                    <SelectItem value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>
-                    <SelectItem value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>
-                    <SelectItem value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>
-                    <SelectItem value={`${year}-1`}>Enero {year}</SelectItem>
-                    <SelectItem value={`${year}-2`}>Febrero {year}</SelectItem>
-                    <SelectItem value={`${year}-3`}>Marzo {year}</SelectItem>
-                    <SelectItem value={`${year}-4`}>Abril {year}</SelectItem>
-                    <SelectItem value={`${year}-5`}>Mayo {year}</SelectItem>
-                    <SelectItem value={`${year}-6`}>Junio {year}</SelectItem>
-                    <SelectItem value={`${year}-7`}>Julio {year}</SelectItem>
-                    <SelectItem value={`${year}-8`}>Agosto {year}</SelectItem>
-                    <SelectItem value={`${year}-9`}>Septiembre {year}</SelectItem>
-                    <SelectItem value={`${year}-10`}>Octubre {year}</SelectItem>
-                    <SelectItem value={`${year}-11`}>Noviembre {year}</SelectItem>
-                    <SelectItem value={`${year}-12`}>Diciembre {year}</SelectItem>
-                  </React.Fragment>
-                ))}
+                {availableYears.map(year => [
+                    <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
+                    <SelectItem key={`${year}-q1`} value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>,
+                    <SelectItem key={`${year}-q2`} value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>,
+                    <SelectItem key={`${year}-q3`} value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>,
+                    <SelectItem key={`${year}-q4`} value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>,
+                    <SelectItem key={`${year}-1`} value={`${year}-1`}>Enero {year}</SelectItem>,
+                    <SelectItem key={`${year}-2`} value={`${year}-2`}>Febrero {year}</SelectItem>,
+                    <SelectItem key={`${year}-3`} value={`${year}-3`}>Marzo {year}</SelectItem>,
+                    <SelectItem key={`${year}-4`} value={`${year}-4`}>Abril {year}</SelectItem>,
+                    <SelectItem key={`${year}-5`} value={`${year}-5`}>Mayo {year}</SelectItem>,
+                    <SelectItem key={`${year}-6`} value={`${year}-6`}>Junio {year}</SelectItem>,
+                    <SelectItem key={`${year}-7`} value={`${year}-7`}>Julio {year}</SelectItem>,
+                    <SelectItem key={`${year}-8`} value={`${year}-8`}>Agosto {year}</SelectItem>,
+                    <SelectItem key={`${year}-9`} value={`${year}-9`}>Septiembre {year}</SelectItem>,
+                    <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
+                    <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
+                    <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
+                ])}
               </SelectContent>
             </Select>
           </div>
@@ -405,27 +403,25 @@ const ExpensesByCategoryNew: React.FC<{
             </SelectTrigger>
             <SelectContent>
               {/* Generar opciones para cada año disponible */}
-              {availableYears.map(year => (
-                <React.Fragment key={year}>
-                  <SelectItem value={`${year}-all`}>Año {year} completo</SelectItem>
-                  <SelectItem value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>
-                  <SelectItem value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>
-                  <SelectItem value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>
-                  <SelectItem value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>
-                  <SelectItem value={`${year}-1`}>Enero {year}</SelectItem>
-                  <SelectItem value={`${year}-2`}>Febrero {year}</SelectItem>
-                  <SelectItem value={`${year}-3`}>Marzo {year}</SelectItem>
-                  <SelectItem value={`${year}-4`}>Abril {year}</SelectItem>
-                  <SelectItem value={`${year}-5`}>Mayo {year}</SelectItem>
-                  <SelectItem value={`${year}-6`}>Junio {year}</SelectItem>
-                  <SelectItem value={`${year}-7`}>Julio {year}</SelectItem>
-                  <SelectItem value={`${year}-8`}>Agosto {year}</SelectItem>
-                  <SelectItem value={`${year}-9`}>Septiembre {year}</SelectItem>
-                  <SelectItem value={`${year}-10`}>Octubre {year}</SelectItem>
-                  <SelectItem value={`${year}-11`}>Noviembre {year}</SelectItem>
-                  <SelectItem value={`${year}-12`}>Diciembre {year}</SelectItem>
-                </React.Fragment>
-              ))}
+              {availableYears.map(year => [
+                  <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
+                  <SelectItem key={`${year}-q1`} value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>,
+                  <SelectItem key={`${year}-q2`} value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>,
+                  <SelectItem key={`${year}-q3`} value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>,
+                  <SelectItem key={`${year}-q4`} value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>,
+                  <SelectItem key={`${year}-1`} value={`${year}-1`}>Enero {year}</SelectItem>,
+                  <SelectItem key={`${year}-2`} value={`${year}-2`}>Febrero {year}</SelectItem>,
+                  <SelectItem key={`${year}-3`} value={`${year}-3`}>Marzo {year}</SelectItem>,
+                  <SelectItem key={`${year}-4`} value={`${year}-4`}>Abril {year}</SelectItem>,
+                  <SelectItem key={`${year}-5`} value={`${year}-5`}>Mayo {year}</SelectItem>,
+                  <SelectItem key={`${year}-6`} value={`${year}-6`}>Junio {year}</SelectItem>,
+                  <SelectItem key={`${year}-7`} value={`${year}-7`}>Julio {year}</SelectItem>,
+                  <SelectItem key={`${year}-8`} value={`${year}-8`}>Agosto {year}</SelectItem>,
+                  <SelectItem key={`${year}-9`} value={`${year}-9`}>Septiembre {year}</SelectItem>,
+                  <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
+                  <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
+                  <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
+                ])}
             </SelectContent>
           </Select>
         </div>
