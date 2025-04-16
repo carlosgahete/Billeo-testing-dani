@@ -1,117 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import Layout from '@/components/layout/Layout';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSimpleDashboardFilters } from '@/hooks/useSimpleDashboardFilters';
-import { formatCurrency } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-const FilterTestSimplePage: React.FC = () => {
-  const filters = useSimpleDashboardFilters();
-  const [data, setData] = useState<any>(null);
+// Componente que implementa un enfoque simplificado para el filtrado
+const FilterTestSimple = () => {
+  // Usamos el hook simplificado personalizado para los filtros
+  const { 
+    filters, 
+    handleChangeYear, 
+    handleChangePeriod 
+  } = useSimpleDashboardFilters();
+
+  // Estado para simular la carga de datos
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Función para cargar datos
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/stats/dashboard?year=${filters.year}&period=${filters.period}&nocache=true`);
-      if (!response.ok) {
-        throw new Error('Error al cargar datos');
-      }
-      const result = await response.json();
-      setData(result);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Cargar datos iniciales
+  const [data, setData] = useState<string>("Datos iniciales");
+
+  // Simulamos la carga de datos cada vez que cambian los filtros
   useEffect(() => {
-    fetchData();
-  }, [filters.year, filters.period]);
-  
+    const loadData = async () => {
+      setIsLoading(true);
+      
+      // Simulamos una carga de datos que tarda 500ms
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Actualizamos los datos según los filtros actuales
+      setData(`Datos filtrados para el año ${filters.year} y periodo ${filters.period}`);
+      
+      setIsLoading(false);
+    };
+    
+    loadData();
+  }, [filters]);
+
   return (
-    <Layout>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Prueba Simple de Filtros</h1>
-        <p className="mb-6 text-gray-600">Esta página usa un enfoque simplificado para probar el funcionamiento de los filtros.</p>
-        
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="flex flex-col">
-            <label className="mb-2 text-sm font-medium">Año</label>
-            <select 
-              className="border rounded p-2 min-w-[120px]"
-              value={filters.year}
-              onChange={(e) => filters.changeYear(e.target.value)}
-            >
-              <option value="2023">2023</option>
-              <option value="2024">2024</option>
-              <option value="2025">2025</option>
-            </select>
-          </div>
-          
-          <div className="flex flex-col">
-            <label className="mb-2 text-sm font-medium">Periodo</label>
-            <select 
-              className="border rounded p-2 min-w-[120px]"
-              value={filters.period}
-              onChange={(e) => filters.changePeriod(e.target.value)}
-            >
-              <option value="all">Todo el año</option>
-              <option value="q1">Trimestre 1</option>
-              <option value="q2">Trimestre 2</option>
-              <option value="q3">Trimestre 3</option>
-              <option value="q4">Trimestre 4</option>
-            </select>
-          </div>
-          
-          <div className="flex flex-col">
-            <label className="mb-2 text-sm font-medium">Acciones</label>
-            <Button onClick={fetchData}>Refrescar Datos</Button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Prueba de Filtros Simplificada</h1>
+      
+      <div className="flex gap-4 mb-6">
+        {/* Selector de Año */}
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold">Año:</span>
+          <div className="flex gap-2">
+            {["2023", "2024", "2025"].map(year => (
+              <Button
+                key={year}
+                variant={filters.year === year ? "default" : "outline"}
+                onClick={() => handleChangeYear(year)}
+                disabled={isLoading}
+              >
+                {year}
+              </Button>
+            ))}
           </div>
         </div>
         
-        {isLoading ? (
-          <div className="flex justify-center my-10">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        {/* Selector de Periodo */}
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold">Periodo:</span>
+          <div className="flex gap-2">
+            <Button
+              variant={filters.period === "all" ? "default" : "outline"}
+              onClick={() => handleChangePeriod("all")}
+              disabled={isLoading}
+            >
+              Todo el año
+            </Button>
+            {["q1", "q2", "q3", "q4"].map(quarter => (
+              <Button
+                key={quarter}
+                variant={filters.period === quarter ? "default" : "outline"}
+                onClick={() => handleChangePeriod(quarter)}
+                disabled={isLoading}
+              >
+                T{quarter.substring(1)}
+              </Button>
+            ))}
           </div>
-        ) : data ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-green-50 p-6 rounded-lg">
-              <h3 className="text-lg font-medium text-green-800 mb-2">Ingresos</h3>
-              <p className="text-3xl font-bold text-green-600">{formatCurrency(data.income)}</p>
-            </div>
-            
-            <div className="bg-red-50 p-6 rounded-lg">
-              <h3 className="text-lg font-medium text-red-800 mb-2">Gastos</h3>
-              <p className="text-3xl font-bold text-red-600">{formatCurrency(data.expenses)}</p>
-            </div>
-            
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">Resultado</h3>
-              <p className="text-3xl font-bold text-blue-600">{formatCurrency(data.income - data.expenses)}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center p-6 bg-gray-50 rounded-lg">
-            No hay datos disponibles
-          </div>
-        )}
-        
-        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium mb-2">Estado Actual</h3>
-          <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-[400px]">
-            {JSON.stringify({
-              filters,
-              data
-            }, null, 2)}
-          </pre>
         </div>
       </div>
-    </Layout>
+      
+      {/* Tarjeta de visualización de datos */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Datos para {filters.year} - {filters.period === "all" ? "Todo el año" : `Trimestre ${filters.period.substring(1)}`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-24">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div>
+              {data}
+              <p className="mt-4 text-sm text-gray-500">
+                Estado actual de filtros: {JSON.stringify(filters)}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <div className="mt-8 bg-gray-100 p-4 rounded-md">
+        <h2 className="text-lg font-semibold mb-2">Instrucciones</h2>
+        <p>
+          Este componente utiliza el hook <code>useSimpleDashboardFilters</code> para gestionar
+          los filtros de forma reactiva. Cada vez que se cambia un filtro, se desencadena
+          automáticamente una actualización de los datos.
+        </p>
+        <p className="mt-2">
+          Características principales:
+        </p>
+        <ul className="list-disc ml-8 mt-2">
+          <li>No requiere un botón "Aplicar filtros" separado</li>
+          <li>Gestión de estado simplificada en un solo hook</li>
+          <li>Actualización inmediata cuando cambian los filtros</li>
+          <li>Sin problemas de doble clic ni temporización</li>
+        </ul>
+      </div>
+    </div>
   );
 };
 
-export default FilterTestSimplePage;
+export default FilterTestSimple;

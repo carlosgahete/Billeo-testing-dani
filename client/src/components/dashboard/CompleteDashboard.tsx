@@ -27,6 +27,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [comparisonViewType, setComparisonViewType] = useState<"quarterly" | "yearly">("quarterly");
   const [_, navigate] = useLocation();
   
+  // Año actual como string para uso en cálculos
+  const currentYearStr = new Date().getFullYear().toString();
+  
   // Usamos el hook centralizado para obtener datos del dashboard
   const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
   

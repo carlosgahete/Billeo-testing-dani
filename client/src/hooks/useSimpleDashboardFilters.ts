@@ -39,9 +39,13 @@ export function useSimpleDashboardFilters() {
   }, [year, queryClient]);
   
   return {
-    year,
-    period,
-    changeYear,
-    changePeriod
+    filters: {
+      year,
+      period,
+      changeYear,
+      changePeriod
+    },
+    handleChangeYear: changeYear,
+    handleChangePeriod: changePeriod
   };
 }
