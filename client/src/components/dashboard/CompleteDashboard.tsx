@@ -234,27 +234,39 @@ console.log(`📊 CompleteDashboard: Inicializando con año=${currentYear}`);
             {/* Dropdown años */}
             <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
               <button
-                onClick={() => {
-                  setSelectedYear("2025");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                onClick={(e) => {
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    setSelectedYear("2025");
+                    document.getElementById('year-dropdown')?.classList.add('hidden');
+                    console.log("✓ Año seleccionado: 2025");
+                  }
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2025
               </button>
               <button
-                onClick={() => {
-                  setSelectedYear("2024");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                onClick={(e) => {
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    setSelectedYear("2024");
+                    document.getElementById('year-dropdown')?.classList.add('hidden');
+                    console.log("✓ Año seleccionado: 2024");
+                  }
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2024
               </button>
               <button
-                onClick={() => {
-                  setSelectedYear("2023");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                onClick={(e) => {
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    setSelectedYear("2023");
+                    document.getElementById('year-dropdown')?.classList.add('hidden');
+                    console.log("✓ Año seleccionado: 2023");
+                  }
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -286,9 +298,13 @@ console.log(`📊 CompleteDashboard: Inicializando con año=${currentYear}`);
             {/* Dropdown periodos - Ancho completo en móvil */}
             <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
               <button
-                onClick={() => {
-                  setSelectedPeriod("all");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                onClick={(e) => {
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    setSelectedPeriod("all");
+                    document.getElementById('period-dropdown')?.classList.add('hidden');
+                    console.log("✓ Período seleccionado: Todo el año");
+                  }
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
