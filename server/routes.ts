@@ -4537,35 +4537,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
 
       return res.status(200).json({
-        // Valores brutos (anteriores)
-        income: baseImponible, // Ahora mostramos la base imponible de ingresos en lugar del total
-        expenses: baseImponibleGastos, // Ahora mostramos la base imponible de gastos en lugar del total
+        // Valores principales (se usa la base imponible como valor principal)
+        income: baseImponible,           // Base imponible de ingresos (sin IVA)
+        expenses: baseImponibleGastos,   // Base imponible de gastos (sin IVA)
         pendingInvoices,
         pendingCount,
         pendingQuotes: pendingQuotesTotal,
         pendingQuotesCount,
         balance,
         result,
-        baseImponible, // Base imponible (suma de subtotales de facturas, sin IVA)
-        baseImponibleGastos, // Base imponible para gastos calculada a partir del total
-        totalWithholdings: totalIrpfFromExpensesInvoices,
-        irpfRetenidoIngresos, // IRPF retenido en ingresos
-        ivaRepercutido, // IVA repercutido (cobrado)
-        ivaSoportado, // IVA soportado (pagado) - Calculado correctamente usando la fórmula base = total / (1 + IVA/100)
+        
+        // Estos valores se mantienen por compatibilidad
+        baseImponible,                   // Base imponible (suma de subtotales de facturas, sin IVA)
+        baseImponibleGastos,             // Base imponible para gastos calculada a partir del total
+        
+        // Impuestos principales (visibles al usuario)
+        ivaRepercutido,                  // IVA repercutido (cobrado)
+        ivaSoportado,                    // IVA soportado (pagado)
+        irpfRetenidoIngresos,            // IRPF retenido en facturas de ingresos
+        
+        // Datos para filtrado
         period,
         year,
         
-        // Nuevos valores netos para dashboard
-        netIncome,       // Ingresos netos (descontando IRPF)
-        netExpenses,     // Gastos netos (descontando IRPF)
-        netResult,       // Resultado neto final
+        // Datos internos (no mostrados directamente)
+        totalWithholdings: totalIrpfFromExpensesInvoices,  // IRPF en gastos (solo para cálculos)
         
+        // Valores netos para dashboard y componentes específicos
+        netIncome,                       // Ingresos netos (descontando IRPF)
+        netExpenses,                     // Gastos netos (considerando IRPF)
+        netResult,                       // Resultado neto final
+        
+        // Estructura simplificada para impuestos
         taxes: {
           vat: vatBalance,
           incomeTax,
           ivaALiquidar: ivaRepercutido - ivaSoportado
         },
-        // Datos fiscales estructurados para el panel de impuestos
+        
+        // Datos fiscales estructurados completos (para componentes avanzados)
         taxStats: {
           ivaRepercutido,
           ivaSoportado,
