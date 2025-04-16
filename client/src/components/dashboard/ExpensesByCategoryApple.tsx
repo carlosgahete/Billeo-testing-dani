@@ -21,9 +21,7 @@ import {
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
 
-const CURRENT_YEAR = new Date().getFullYear();
-// Generamos los últimos 3 años para seleccionar
-const availableYears = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
+// Ya no necesitamos estos valores porque los filtros vienen del dashboard principal
 
 type ExpenseCategory = {
   categoryId: number;
@@ -89,28 +87,17 @@ interface ExpenseCategoryItem {
 // Definimos la interfaz de props
 interface ExpensesByCategoryProps {
   expensesByCategory?: Record<string | number, ExpenseCategoryItem>;
-  period?: string;
-  periodLabel?: string;
-  onPeriodChange?: (period: string) => void;
+  // Eliminamos las props específicas de filtrado para usar el filtro global
 }
 
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
-  expensesByCategory: propExpensesByCategory, 
-  period = "2025-all",
-  periodLabel = "Año 2025 completo", 
-  onPeriodChange 
+  expensesByCategory: propExpensesByCategory
 }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
   
   // Obtener datos del dashboard usando el hook centralizado
   const { data: dashboardData } = useDashboardData();
-  
-  // Actualizar el período seleccionado cuando cambie el prop period
-  useEffect(() => {
-    setSelectedPeriod(period);
-  }, [period]);
   
   // Usamos los datos de categorías que vienen del prop si están disponibles,
   // o los del dashboardData si el prop está vacío
@@ -171,51 +158,12 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     }).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)); // Ordenar por valor absoluto descendente
   }, [expensesByCategory]);
 
-  // Manejar el cambio de período
-  const handlePeriodChange = (value: string) => {
-    // Protección contra eventos fantasma
-    if (typeof document !== 'undefined' && document.hasFocus()) {
-      setSelectedPeriod(value);
-      if (onPeriodChange) {
-        onPeriodChange(value);
-      }
-    }
-  };
-
   // Si no hay datos, mostrar un mensaje con estilo Apple
   if (data.length === 0 || Object.keys(expensesByCategory).length === 0) {
     return (
       <Card className="h-full overflow-hidden fade-in dashboard-card">
-        <CardHeader className="p-3 sm:p-4 flex justify-end">
-          <Select 
-            value={selectedPeriod}
-            onValueChange={handlePeriodChange}
-          >
-            <SelectTrigger className="w-44 h-8 text-xs bg-gray-50 border-0 rounded-full shadow-sm hover:bg-gray-100 transition-colors">
-              <SelectValue placeholder="Seleccionar período" />
-            </SelectTrigger>
-            <SelectContent className="rounded-lg shadow-md">
-              {availableYears.map(year => [
-                <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
-                <SelectItem key={`${year}-q1`} value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>,
-                <SelectItem key={`${year}-q2`} value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>,
-                <SelectItem key={`${year}-q3`} value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>,
-                <SelectItem key={`${year}-q4`} value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>,
-                <SelectItem key={`${year}-1`} value={`${year}-1`}>Enero {year}</SelectItem>,
-                <SelectItem key={`${year}-2`} value={`${year}-2`}>Febrero {year}</SelectItem>,
-                <SelectItem key={`${year}-3`} value={`${year}-3`}>Marzo {year}</SelectItem>,
-                <SelectItem key={`${year}-4`} value={`${year}-4`}>Abril {year}</SelectItem>,
-                <SelectItem key={`${year}-5`} value={`${year}-5`}>Mayo {year}</SelectItem>,
-                <SelectItem key={`${year}-6`} value={`${year}-6`}>Junio {year}</SelectItem>,
-                <SelectItem key={`${year}-7`} value={`${year}-7`}>Julio {year}</SelectItem>,
-                <SelectItem key={`${year}-8`} value={`${year}-8`}>Agosto {year}</SelectItem>,
-                <SelectItem key={`${year}-9`} value={`${year}-9`}>Septiembre {year}</SelectItem>,
-                <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
-                <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
-                <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
-              ])}
-            </SelectContent>
-          </Select>
+        <CardHeader className="p-3 sm:p-4">
+          <h3 className="text-lg font-medium">Gastos por Categoría</h3>
         </CardHeader>
         <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center h-[300px]">
           <div className="text-center">
@@ -223,7 +171,7 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <p className="text-gray-600 font-medium text-lg">No hay gastos registrados</p>
-            <p className="text-sm mt-2 text-gray-400">Selecciona otro período o añade gastos</p>
+            <p className="text-sm mt-2 text-gray-400">No hay transacciones en este periodo</p>
           </div>
         </CardContent>
       </Card>
@@ -391,4 +339,5 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   );
 };
 
+// Versión centralizada que ahora usa los filtros globales del dashboard
 export default ExpensesByCategoryApple;

@@ -545,17 +545,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="p-0">
             <div className="h-[400px]">
-              {/* Usamos consultas directas para transacciones y categorías */}
-              <ExpensesByCategory 
-                period={`${filters?.year}-${filters?.period}`}
-                onPeriodChange={(period) => {
-                  const [year, newPeriod] = period.split('-');
-                  if (year && newPeriod) {
-                    handleChangeYear(year);
-                    handleChangePeriod(newPeriod);
-                  }
-                }}
-              />
+              {/* Usamos el componente Apple sin filtros propios */}
+              <ExpensesByCategoryApple />
             </div>
           </div>
         </div>
