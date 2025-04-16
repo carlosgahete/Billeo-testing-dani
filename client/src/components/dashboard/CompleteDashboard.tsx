@@ -368,11 +368,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
 
         {/* Widget de Resultado - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-blue-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className={`${isPositiveResult ? 'bg-[#E2F6ED]' : 'bg-[#FFECEC]'} md:p-3 p-2 rounded-full mr-3 md:mr-3`}>
-                <PiggyBank className={`md:h-5 md:w-5 h-4 w-4 ${isPositiveResult ? 'text-[#34C759]' : 'text-[#FF3B30]'}`} strokeWidth={1.5} />
+              <div className="bg-blue-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-blue-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado</h3>
@@ -380,7 +380,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
             </div>
             <div className="flex flex-col">
-              <div className={`text-3xl md:text-4xl font-bold mb-1 ${isPositiveResult ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-blue-600">
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
               <div className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(ivaALiquidar)}</div>
