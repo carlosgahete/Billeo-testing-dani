@@ -60,34 +60,58 @@ export function useDashboardData() {
     // Suscribirse a eventos de facturación (creación, edición, eliminación)
     const handleInvoiceChange = () => {
       console.log('📝 Factura modificada, actualizando dashboard...');
-      refreshDashboardData();
+      // Pequeño retardo para asegurar que la transacción en bd se completó
+      setTimeout(refreshDashboardData, 300);
     };
     
     // Suscribirse a eventos de transacciones (creación, edición, eliminación)
     const handleTransactionChange = () => {
       console.log('💰 Transacción modificada, actualizando dashboard...');
-      refreshDashboardData();
+      setTimeout(refreshDashboardData, 300);
     };
+
+    // Escuchar eventos del DOM para actualización inmediata
+    const handleInvoiceCreated = () => {
+      console.log('✨ Nueva factura creada, actualizando dashboard inmediatamente...');
+      setTimeout(refreshDashboardData, 300);
+    };
+
+    const handleInvoiceDeleted = () => {
+      console.log('🗑️ Factura eliminada, actualizando dashboard inmediatamente...');
+      setTimeout(refreshDashboardData, 300);
+    };
+    
+    // Escuchar eventos personalizados del DOM
+    window.addEventListener('invoice-created', handleInvoiceCreated);
+    window.addEventListener('invoice-updated', handleInvoiceChange);
+    window.addEventListener('invoice-deleted', handleInvoiceDeleted);
     
     // Escuchar invalidaciones de consultas relacionadas con facturas
     const unsubscribeInvoices = queryClient.getQueryCache().subscribe((event) => {
       if (event?.query?.queryKey && Array.isArray(event.query.queryKey)) {
         const key = event.query.queryKey[0];
+        
+        // Verificar si es un cambio o invalidación en facturas
         if (typeof key === 'string' && 
-            (key.includes('/invoices') || 
-             key.includes('/api/invoices'))) {
+            (key.includes('/invoice') || 
+             key.includes('/api/invoice'))) {
           handleInvoiceChange();
         }
         
+        // Verificar si es un cambio o invalidación en transacciones
         if (typeof key === 'string' && 
-            (key.includes('/transactions') || 
-             key.includes('/api/transactions'))) {
+            (key.includes('/transaction') || 
+             key.includes('/api/transaction'))) {
           handleTransactionChange();
         }
       }
     });
     
     return () => {
+      // Limpieza de todos los event listeners
+      window.removeEventListener('invoice-created', handleInvoiceCreated);
+      window.removeEventListener('invoice-updated', handleInvoiceChange);
+      window.removeEventListener('invoice-deleted', handleInvoiceDeleted);
       unsubscribeInvoices();
     };
   }, [queryClient, refreshDashboardData]);

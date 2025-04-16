@@ -19,6 +19,7 @@ export interface BlockPosition {
 
 // Tamaño de widget: pequeño, mediano o grande
 export type WidgetSizeType = 'small' | 'medium' | 'large';
+export type WidgetSize = WidgetSizeType;
 
 // Interfaz para un bloque de dashboard
 export interface DashboardBlock {

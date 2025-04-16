@@ -12,6 +12,12 @@ const InvoicesWidget: React.FC<InvoicesWidgetProps> = ({ data, size }) => {
     return <div className="flex items-center justify-center h-full">Cargando datos...</div>;
   }
 
+  // Verificación para debugging
+  console.log('InvoicesWidget rendering with data:', {
+    income: data.income,
+    full: data
+  });
+
   // Renderizado según tamaño
   if (size === 'small') {
     return (
