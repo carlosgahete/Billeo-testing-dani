@@ -21,7 +21,8 @@ import {
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
 
-const CURRENT_YEAR = new Date().getFullYear();
+// Año predeterminado fijo para facilitar desarrollo y pruebas
+const CURRENT_YEAR = 2025;
 // Generamos los últimos 3 años para seleccionar
 const availableYears = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 
@@ -96,8 +97,8 @@ interface ExpensesByCategoryProps {
 
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
   expensesByCategory: propExpensesByCategory, 
-  period = `${new Date().getFullYear()}-all`,
-  periodLabel = `Año ${new Date().getFullYear()} completo`, 
+  period = `${CURRENT_YEAR}-all`,
+  periodLabel = `Año ${CURRENT_YEAR} completo`, 
   onPeriodChange 
 }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);

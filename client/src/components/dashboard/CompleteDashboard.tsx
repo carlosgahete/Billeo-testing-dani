@@ -558,7 +558,13 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => setComparisonViewType("yearly")}
+                  onClick={(e) => {
+                    // Protección contra eventos fantasma
+                    if (typeof document !== 'undefined' && document.hasFocus()) {
+                      setComparisonViewType("yearly");
+                      console.log("✓ Vista comparativa: Anual");
+                    }
+                  }}
                   className={`px-2 py-1 rounded-md ${comparisonViewType === "yearly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
                 >
                   Anual
