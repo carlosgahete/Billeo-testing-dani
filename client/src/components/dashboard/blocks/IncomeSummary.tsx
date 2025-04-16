@@ -26,20 +26,30 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
     );
   }
 
-  // Obtenemos los datos calculados
-  const income = data?.income || 0;
+  // Obtenemos los datos calculados según las especificaciones actualizadas
+  
+  // 1. Base Imponible (número grande del Dashboard) = La suma de los subtotales de las facturas
+  //    La API ya nos envía este valor directamente en 'income'
+  const baseImponible = data?.income || 0;
+  
+  // 2. IVA = Importe del IVA en las facturas
+  //    La API nos envía este valor en 'ivaRepercutido'
+  const ivaRepercutido = data?.ivaRepercutido || 0;
+  
+  // 3. IRPF = Importe del IRPF retenido en facturas
+  //    La API nos envía este valor en 'irpfRetenidoIngresos'
+  const irpfRetenido = data?.irpfRetenidoIngresos || 0;
+  
+  // Facturas pendientes (no cambia)
   const pendingAmount = data?.pendingInvoices || 0;
-  const baseImponible = data?.baseImponible || Math.round(income / 1.21);
-  const ivaRepercutido = data?.ivaRepercutido || data?.taxStats?.ivaRepercutido || income - baseImponible;
-  const irpfRetenido = data?.irpfRetenidoIngresos || data?.taxStats?.irpfRetenido || 0;
   
   // Imprimir los datos para debug
-  console.log("IncomeSummary rendering with data:", {
+  console.log("IncomeSummary rendering with updated data:", {
     rawData: data,
-    income,
-    pendingAmount,
     baseImponible,
-    ivaRepercutido
+    ivaRepercutido,
+    irpfRetenido,
+    pendingAmount
   });
 
   // Formatear valores monetarios con el formato español
@@ -70,16 +80,12 @@ const IncomeSummary: React.FC<IncomeSummaryProps> = ({ data, isLoading }) => {
         </div>
         
         <div className="space-y-2">
-          {/* Monto principal */}
+          {/* Monto principal - Ahora muestra directamente la base imponible como valor principal */}
           <div>
-            <h3 className="text-2xl font-bold text-green-600">{formatCurrency(income)} €</h3>
+            <h3 className="text-2xl font-bold text-green-600">{formatCurrency(baseImponible)} €</h3>
             
             {/* Info detallada con responsive para ocultar en móvil o mostrar más compacta */}
             <div className="flex flex-col md:block">
-              <p className="text-sm text-gray-500 md:block">
-                <span className="md:inline">Base imponible: </span>
-                <span>{formatCurrency(baseImponible)} €</span>
-              </p>
               <p className="text-sm text-gray-500 md:block">
                 <span className="md:inline">IVA repercutido: </span>
                 <span>{formatCurrency(ivaRepercutido)} €</span>
