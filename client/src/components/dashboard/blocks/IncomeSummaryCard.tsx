@@ -88,7 +88,7 @@ const IncomeSummaryCard: React.FC<IncomeSummaryCardProps> = ({ data, isLoading }
             {/* IRPF */}
             <div className="flex justify-between">
               <span className="text-neutral-600">IRPF:</span>
-              <span className="font-medium text-red-600">-{(irpfRetenido / 100).toLocaleString('es-ES')} €</span>
+              <span className="font-medium text-red-600">-{formatCurrency(irpfRetenido)} €</span>
             </div>
             
             {/* Línea divisoria */}
@@ -97,7 +97,7 @@ const IncomeSummaryCard: React.FC<IncomeSummaryCardProps> = ({ data, isLoading }
             {/* Total */}
             <div className="flex justify-between">
               <span className="font-medium">Total:</span>
-              <span className="font-bold">{(income / 100).toLocaleString('es-ES')} €</span>
+              <span className="font-bold">{formatCurrency(income)} €</span>
             </div>
           </div>
         </div>
