@@ -4250,11 +4250,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               baseAmount = Number(tx.subtotal);
               console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
             } else {
-              // Calculamos la base imponible a partir del monto total asumiendo un IVA estándar del 21%
+              // Ya NO calculamos base imponible, usamos el importe total
               const amount = Number(tx.amount);
-              const ivaRate = 21; // Valor por defecto del IVA en España
-              baseAmount = Math.round((amount / (1 + (ivaRate / 100))) * 100) / 100;
-              console.log(`Calculando base imponible a partir del monto ${amount}€ y tasa IVA ${ivaRate}%: ${baseAmount}€`);
+              baseAmount = amount; // Usamos el importe completo como base imponible
+              console.log(`NO CALCULAMOS BASE IMPONIBLE - usando el monto total como base imponible: ${amount}€`);
             }
             
             // Calculamos el IVA como la diferencia entre el total y la base imponible
@@ -4275,12 +4274,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Si no se encontró ninguna base imponible, usamos 100€ para cada gasto
+      // Si no hay gastos directamente registrados, usamos la suma de todos los montos de transacciones como base imponible
       if (baseImponibleGastos === 0 && allTransactions.some(tx => tx.type === 'expense')) {
-        // Contamos cuántos gastos hay y multiplicamos por 100€
-        const totalExpenseCount = allTransactions.filter(tx => tx.type === 'expense').length;
-        baseImponibleGastos = totalExpenseCount * 100; // 100€ por cada gasto
-        console.log(`No se encontró base imponible directa, asignamos ${totalExpenseCount} gastos * 100€ = ${baseImponibleGastos}€`);
+        // Sumamos todos los montos totales de transacciones tipo expense
+        baseImponibleGastos = allTransactions
+          .filter(tx => tx.type === 'expense')
+          .reduce((sum, tx) => sum + Number(tx.amount), 0);
+        console.log(`NO CALCULAR BASE IMPONIBLE, usamos el total de gastos directamente: ${baseImponibleGastos}€`);
       }
       
       const irpfTotalEstimated = Math.max(0, Math.round(baseImponible * irpfRate * 100) / 100);
