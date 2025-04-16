@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function InicioPage() {
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+    <div className="w-full p-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 max-w-[1800px] mx-auto">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         
         {/* Filtros */}
@@ -38,13 +38,13 @@ export default function InicioPage() {
       </div>
       
       {/* Tarjetas principales - Estilo Apple con medidas iguales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 lg:gap-8 max-w-[1800px] mx-auto">
         {/* Tarjeta de Ingresos */}
-        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[400px] flex flex-col">
-          <div className="p-6 flex-grow">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <ArrowUpCircle className="h-7 w-7 text-green-500" />
+        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[400px] flex flex-col w-full">
+          <div className="p-8 flex-grow">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                <ArrowUpCircle className="h-8 w-8 text-green-500" />
               </div>
               <div>
                 <h3 className="text-xl font-medium text-gray-900">Ingresos</h3>
@@ -53,11 +53,11 @@ export default function InicioPage() {
             </div>
             
             <div className="mt-6 mb-6">
-              <p className="text-4xl font-bold text-green-600">—</p>
+              <p className="text-5xl font-bold text-green-600">—</p>
               <p className="text-sm text-gray-500 mt-1">Ingresos totales (sin IVA)</p>
             </div>
             
-            <div className="space-y-3 border-t border-gray-100 pt-4 mt-4">
+            <div className="space-y-3 border-t border-gray-100 pt-5 mt-5">
               <div className="flex justify-between">
                 <p className="text-sm text-gray-500">IVA repercutido:</p>
                 <p className="text-sm font-medium text-gray-900">—</p>
@@ -69,7 +69,7 @@ export default function InicioPage() {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50 mt-auto">
+          <div className="px-8 py-5 bg-gray-50 mt-auto">
             <Button 
               variant="ghost" 
               className="w-full h-12 rounded-xl text-green-600 hover:bg-green-50 transition-colors duration-300 text-base"
@@ -80,11 +80,11 @@ export default function InicioPage() {
         </Card>
         
         {/* Tarjeta de Gastos */}
-        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[400px] flex flex-col">
-          <div className="p-6 flex-grow">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <ArrowDownCircle className="h-7 w-7 text-red-500" />
+        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[400px] flex flex-col w-full">
+          <div className="p-8 flex-grow">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                <ArrowDownCircle className="h-8 w-8 text-red-500" />
               </div>
               <div>
                 <h3 className="text-xl font-medium text-gray-900">Gastos</h3>
@@ -93,11 +93,11 @@ export default function InicioPage() {
             </div>
             
             <div className="mt-6 mb-6">
-              <p className="text-4xl font-bold text-red-600">—</p>
+              <p className="text-5xl font-bold text-red-600">—</p>
               <p className="text-sm text-gray-500 mt-1">Gastos totales</p>
             </div>
             
-            <div className="space-y-3 border-t border-gray-100 pt-4 mt-4">
+            <div className="space-y-3 border-t border-gray-100 pt-5 mt-5">
               <div className="flex justify-between">
                 <p className="text-sm text-gray-500">IVA soportado:</p>
                 <p className="text-sm font-medium text-gray-900">—</p>
@@ -109,7 +109,7 @@ export default function InicioPage() {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50 mt-auto">
+          <div className="px-8 py-5 bg-gray-50 mt-auto">
             <Button 
               variant="ghost" 
               className="w-full h-12 rounded-xl text-red-600 hover:bg-red-50 transition-colors duration-300 text-base"
@@ -120,11 +120,11 @@ export default function InicioPage() {
         </Card>
         
         {/* Tarjeta de Resultado */}
-        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[400px] flex flex-col">
-          <div className="p-6 flex-grow">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <BarChart3 className="h-7 w-7 text-blue-500" />
+        <Card className="bg-white rounded-3xl shadow-sm border-0 overflow-hidden transition-all duration-300 hover:shadow-md h-[400px] flex flex-col w-full">
+          <div className="p-8 flex-grow">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+                <BarChart3 className="h-8 w-8 text-blue-500" />
               </div>
               <div>
                 <h3 className="text-xl font-medium text-gray-900">Resultado Final</h3>
@@ -133,11 +133,11 @@ export default function InicioPage() {
             </div>
             
             <div className="mt-6 mb-6">
-              <p className="text-4xl font-bold text-blue-600">—</p>
+              <p className="text-5xl font-bold text-blue-600">—</p>
               <p className="text-sm text-gray-500 mt-1">Beneficio neto</p>
             </div>
             
-            <div className="space-y-3 border-t border-gray-100 pt-4 mt-4">
+            <div className="space-y-3 border-t border-gray-100 pt-5 mt-5">
               <div className="flex justify-between">
                 <p className="text-sm text-gray-500">IVA a pagar:</p>
                 <p className="text-sm font-medium text-gray-900">—</p>
@@ -149,7 +149,7 @@ export default function InicioPage() {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50 mt-auto">
+          <div className="px-8 py-5 bg-gray-50 mt-auto">
             <Button 
               variant="ghost" 
               className="w-full h-12 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors duration-300 text-base"
