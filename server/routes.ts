@@ -3750,7 +3750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Ahora usamos el total en lugar del subtotal para reflejar correctamente todos los impuestos (IVA, IRPF, etc.)
       // Ahora sumamos todas las facturas, no solo las pagadas
-      const invoiceIncome = dbInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
+      const invoiceIncome = allInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
       console.log(`Total de ingresos calculado desde facturas (incluyendo pendientes): ${invoiceIncome}€`);
         
       // Registro detallado para depuración
