@@ -4543,7 +4543,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       allTransactions
         .filter(t => t.type === "expense")
         .forEach(transaction => {
-          const categoryId = transaction.categoryId.toString();
+          // Manejar correctamente las transacciones sin categoría
+          const categoryId = transaction.categoryId === null ? "Sin categoría" : transaction.categoryId.toString();
+          
           if (!expensesByCategory[categoryId]) {
             expensesByCategory[categoryId] = { amount: 0, count: 0 };
           }

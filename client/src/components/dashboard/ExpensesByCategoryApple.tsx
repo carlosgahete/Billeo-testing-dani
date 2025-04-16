@@ -143,14 +143,45 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     return Object.entries(typedExpenses).map(([categoryId, item]) => {
       const amount = item.amount;
       const count = item.count;
-      const numericId = parseInt(categoryId);
+      
+      // Manejar correctamente "Sin categoría" o valores nulos/undefined
+      let numericId: number;
+      let categoryName: string;
+      let categoryIcon: React.ReactNode;
+      let categoryColor: string;
+      
+      console.log("Procesando categoría:", categoryId, typeof categoryId);
+      
+      // Si es "null", "undefined", o "Sin categoría"
+      if (categoryId === "null" || categoryId === "undefined" || categoryId === "Sin categoría") {
+        numericId = 0;
+        categoryName = "Sin categoría";
+        categoryIcon = <MdMoreHoriz />;
+        categoryColor = "#6B705C"; // Color para "Sin categoría"
+      } else {
+        // Intentar convertir a número
+        numericId = parseInt(categoryId);
+        
+        // Si no es un número válido, usar ID 0 (Otros/Sin categoría)
+        if (isNaN(numericId)) {
+          numericId = 0;
+          categoryName = categoryId; // Usar el ID como nombre
+          categoryIcon = <MdMoreHoriz />;
+          categoryColor = "#888888";
+        } else {
+          categoryName = categoryNames[numericId] || 'Categoría desconocida';
+          categoryIcon = categoryIcons[numericId] || <MdMoreHoriz />;
+          categoryColor = categoryColors[numericId] || '#888888';
+        }
+      }
+      
       const absAmount = Math.abs(amount); // Asegurar que el valor sea positivo para cálculos
       
       return {
         categoryId: numericId,
-        name: categoryNames[numericId] || 'Categoría desconocida',
-        icon: categoryIcons[numericId] || <MdMoreHoriz />,
-        color: categoryColors[numericId] || '#888888',
+        name: categoryName,
+        icon: categoryIcon,
+        color: categoryColor,
         value: amount, // Mantener el valor original con signo para la visualización
         percentage: totalExpenses ? (absAmount / totalExpenses) * 100 : 0,
         count,
