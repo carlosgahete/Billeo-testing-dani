@@ -1,0 +1,77 @@
+Perfecto, vamos a explicarle a tu IA cómo construir un dashboard contable como el que aparece en la imagen, tanto en diseño como en lógica de cálculo. Imaginaremos que los valores aún no están calculados y que el dashboard debe actualizarse automáticamente en base a los datos de facturas y gastos.
+
+🧠 Explicación para la IA: Cómo crear este dashboard
+
+📊 SECCIONES DEL DASHBOARD
+
+El dashboard se divide en 3 tarjetas principales:
+	1.	Ingresos
+	2.	Gastos
+	3.	Resultado Final
+
+🎨 DISEÑO VISUAL
+
+Estilo general:
+	•	Diseño en tarjetas con bordes redondeados y sombra sutil.
+	•	Tipografía clara y jerárquica.
+	•	Colores por categoría:
+	•	Ingresos: Verde (#00C851 o similar)
+	•	Gastos: Rojo (#ff4444)
+	•	Resultado final: Azul (#4285f4)
+	•	Botones destacados al final de cada tarjeta:
+	•	Verde para “Ver facturas”
+	•	Rojo para “Ver gastos”
+	•	Azul para “Ver informes”
+
+🧮 CÁLCULOS Y LÓGICA
+
+1. 🟢 Ingresos
+
+Datos que necesita:
+	•	Lista de facturas emitidas
+
+Cálculos:
+	•	Ingresos totales (sin IVA) = Suma de bases imponibles de todas las facturas
+	•	IVA repercutido = Suma del IVA de todas las facturas emitidas
+	•	IRPF = Suma del IRPF retenido en las facturas (si aplica)
+
+ingresos_totales = SUMA(factura.base_imponible for factura in facturas)
+iva_repercutido = SUMA(factura.iva for factura in facturas)
+irpf_ingresos = SUMA(factura.irpf for factura in facturas)
+
+2. 🔴 Gastos
+
+Datos que necesita:
+	•	Lista de gastos/recibos
+
+Cálculos:
+	•	Gastos totales = Suma de bases imponibles de los gastos
+	•	IVA soportado = Suma del IVA pagado en los gastos
+	•	IRPF (de los gastos) = Generalmente 0 para autónomos, a menos que se aplique retención
+
+gastos_totales = SUMA(gasto.base_imponible for gasto in gastos)
+iva_soportado = SUMA(gasto.iva for gasto in gastos)
+irpf_gastos = SUMA(gasto.irpf for gasto in gastos)  // opcional
+
+3. 🔵 Resultado Final
+
+Cálculo del beneficio neto:
+
+beneficio_neto = ingresos_totales - gastos_totales
+
+IVA a pagar = IVA repercutido - IVA soportado
+
+iva_a_pagar = iva_repercutido - iva_soportado
+
+IRPF a pagar = IRPF total de ingresos
+(Si se ha retenido IRPF en facturas, ya se ha adelantado ese pago, por eso puede salir 0)
+
+📅 FILTRO POR AÑO Y PERÍODO
+	•	El dashboard permite seleccionar el año (ej. 2025) y el período (ej. “Todo el año”, “Enero”, etc.)
+	•	Filtrar facturas y gastos por ese rango antes de hacer los cálculos.
+
+filtrar_por_periodo(fecha_inicio, fecha_fin)
+facturas_filtradas = filtrar(facturas, entre(fecha_inicio, fecha_fin))
+gastos_filtrados = filtrar(gastos, entre(fecha_inicio, fecha_fin))
+
+¿Quieres que te genere el código base en HTML/CSS/JS o en algún framework (React, Vue, etc.) para este dashboard? ¿O prefieres que te lo integre en tu app actual?
