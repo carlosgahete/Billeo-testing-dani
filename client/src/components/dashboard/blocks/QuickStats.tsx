@@ -28,32 +28,32 @@ const QuickStats: React.FC<QuickStatsProps> = ({ data, isLoading }) => {
     );
   }
 
-  // No utilizamos datos reales, usamos los valores fijos del ejemplo
+  // Definición de las tarjetas estadísticas utilizando guiones en lugar de valores fijos
   const stats = [
     {
       title: "Ingresos totales",
-      value: "1.000,00 €",
+      value: "—",
       description: "Base imponible sin IVA",
       icon: <ArrowUp className="h-6 w-6 text-emerald-500" />,
       color: "bg-emerald-50",
     },
     {
       title: "Gastos totales",
-      value: "100,00 €",
+      value: "—",
       description: "Base imponible sin IVA",
       icon: <ArrowDown className="h-6 w-6 text-red-500" />,
       color: "bg-red-50",
     },
     {
       title: "Resultado Neto",
-      value: "765,00 €",
+      value: "—",
       description: "Después de impuestos",
       icon: <FileCheck className="h-6 w-6 text-blue-500" />,
       color: "bg-blue-50",
     },
     {
       title: "IVA a Liquidar",
-      value: "189,00 €",
+      value: "—",
       description: "IVA repercutido - soportado",
       icon: <Clock className="h-6 w-6 text-purple-500" />,
       color: "bg-purple-50",
