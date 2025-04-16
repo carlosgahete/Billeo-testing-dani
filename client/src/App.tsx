@@ -35,6 +35,7 @@ import CategoriesPage from "@/pages/settings/categories";
 import IncomeExpensePage from "@/pages/income-expense";
 import UsersManagementPage from "@/pages/admin/users-management";
 import SelectUserPage from "@/pages/admin/select-user";
+import InicioPage from "@/pages/inicio";
 // Imports de Libro de Registros eliminados
 import ClientAssignmentPage from "@/pages/admin/client-assignment";
 import ForgotPasswordPage from "@/pages/forgot-password";
@@ -64,7 +65,7 @@ function Router() {
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/">
         <Layout>
-          <ProtectedRoute path="/" component={CompleteDashboardPage} />
+          <ProtectedRoute path="/" component={InicioPage} />
         </Layout>
       </Route>
       <Route path="/invoices">
