@@ -1,22 +1,20 @@
 import React from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpCircle, ArrowDownCircle, BarChart3, FileText, ReceiptText, FileBarChart } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, BarChart3, Info, PiggyBank } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function InicioPage() {
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <div className="flex items-center">
-          <BarChart3 className="h-6 w-6 text-blue-500 mr-2" />
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-        </div>
+    <div className="container mx-auto p-4 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-5">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
         
         {/* Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
           <Select>
-            <SelectTrigger className="w-[120px] bg-white shadow-sm">
+            <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="2025" />
             </SelectTrigger>
             <SelectContent>
@@ -26,7 +24,7 @@ export default function InicioPage() {
           </Select>
           
           <Select>
-            <SelectTrigger className="w-[150px] bg-white shadow-sm">
+            <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Todo el año" />
             </SelectTrigger>
             <SelectContent>
@@ -40,107 +38,167 @@ export default function InicioPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Tarjeta de Ingresos */}
-        <Card className="shadow-sm bg-white rounded-2xl overflow-hidden border-0">
-          <CardContent className="p-6 pt-7">
-            <div className="flex items-start">
-              <ArrowUpCircle className="h-6 w-6 text-green-500 mr-2 mt-0.5" />
-              <div>
-                <span className="text-gray-800 font-medium text-lg">Ingresos</span>
-                <p className="text-gray-500 text-sm mt-1">Entradas totales</p>
-              </div>
+        <Card className="overflow-hidden flex-grow">
+          <CardHeader className="bg-emerald-50 p-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg text-emerald-700 flex items-center">
+                <ArrowUpCircle className="mr-2 h-5 w-5" />
+                Ingresos
+              </CardTitle>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-pointer">
+                      <Info className="h-4 w-4 text-neutral-500" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                    <p className="w-[200px] text-xs">Ingresos totales sin IVA con desglose de impuestos</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <div className="mt-7 mb-1">
-              <div className="text-4xl font-semibold text-green-500">—</div>
-              <div className="text-sm text-gray-500 mt-1">Ingresos totales (sin IVA)</div>
+          </CardHeader>
+          <CardContent className="p-3">
+            {/* Base imponible */}
+            <div className="mb-2">
+              <h3 className="text-sm font-medium text-emerald-700">Entradas totales</h3>
+              <p className="text-2xl font-bold text-emerald-600">—</p>
+              <p className="text-xs text-gray-500 mt-1">Ingresos totales (sin IVA)</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-6 border-t border-gray-100 pt-4">
-              <div>
-                <div className="text-gray-500 text-sm">IVA repercutido:</div>
-                <div className="text-gray-800 font-medium mt-1">—</div>
+            {/* Impuestos desglosados */}
+            <div className="mb-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">IVA repercutido:</span>
+                <span className="font-medium text-emerald-600">—</span>
               </div>
-              <div>
-                <div className="text-gray-500 text-sm">IRPF:</div>
-                <div className="text-gray-800 font-medium mt-1">—</div>
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="text-neutral-500">IRPF:</span>
+                <span className="font-medium text-red-600">—</span>
               </div>
             </div>
+            
+            <div className="mt-auto pt-3 mb-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+              >
+                Ver facturas
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter className="bg-gray-50 p-0">
-            <Button variant="ghost" className="w-full rounded-none h-12 text-blue-500 font-medium hover:text-blue-600 hover:bg-gray-100 flex items-center justify-center gap-2">
-              <FileText className="h-4 w-4" />
-              Ver facturas
-            </Button>
-          </CardFooter>
         </Card>
         
         {/* Tarjeta de Gastos */}
-        <Card className="shadow-sm bg-white rounded-2xl overflow-hidden border-0">
-          <CardContent className="p-6 pt-7">
-            <div className="flex items-start">
-              <ArrowDownCircle className="h-6 w-6 text-red-500 mr-2 mt-0.5" />
-              <div>
-                <span className="text-gray-800 font-medium text-lg">Gastos</span>
-                <p className="text-gray-500 text-sm mt-1">Salidas totales</p>
-              </div>
+        <Card className="overflow-hidden flex-grow">
+          <CardHeader className="bg-red-50 p-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg text-red-700 flex items-center">
+                <ArrowDownCircle className="mr-2 h-5 w-5" />
+                Gastos
+              </CardTitle>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-pointer">
+                      <Info className="h-4 w-4 text-neutral-500" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                    <p className="w-[200px] text-xs">Gastos totales sin IVA con desglose de impuestos</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <div className="mt-7 mb-1">
-              <div className="text-4xl font-semibold text-red-500">—</div>
-              <div className="text-sm text-gray-500 mt-1">Gastos totales</div>
+          </CardHeader>
+          <CardContent className="p-3">
+            {/* Base imponible */}
+            <div className="mb-2">
+              <h3 className="text-sm font-medium text-red-700">Salidas totales</h3>
+              <p className="text-2xl font-bold text-red-600">—</p>
+              <p className="text-xs text-gray-500 mt-1">Gastos totales</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-6 border-t border-gray-100 pt-4">
-              <div>
-                <div className="text-gray-500 text-sm">IVA soportado:</div>
-                <div className="text-gray-800 font-medium mt-1">—</div>
+            {/* Impuestos desglosados */}
+            <div className="mb-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">IVA soportado:</span>
+                <span className="font-medium text-red-600">—</span>
               </div>
-              <div>
-                <div className="text-gray-500 text-sm">IRPF:</div>
-                <div className="text-gray-800 font-medium mt-1">—</div>
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="text-neutral-500">IRPF:</span>
+                <span className="font-medium text-emerald-600">—</span>
               </div>
             </div>
+            
+            <div className="mt-auto pt-3 mb-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-red-600 border-red-300 hover:bg-red-50"
+              >
+                Ver gastos
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter className="bg-gray-50 p-0">
-            <Button variant="ghost" className="w-full rounded-none h-12 text-red-500 font-medium hover:text-red-600 hover:bg-gray-100 flex items-center justify-center gap-2">
-              <ReceiptText className="h-4 w-4" />
-              Ver gastos
-            </Button>
-          </CardFooter>
         </Card>
         
         {/* Tarjeta de Resultado */}
-        <Card className="shadow-sm bg-white rounded-2xl overflow-hidden border-0">
-          <CardContent className="p-6 pt-7">
-            <div className="flex items-start">
-              <BarChart3 className="h-6 w-6 text-blue-500 mr-2 mt-0.5" />
-              <div>
-                <span className="text-gray-800 font-medium text-lg">Resultado Final</span>
-                <p className="text-gray-500 text-sm mt-1">Ingresos - Gastos</p>
-              </div>
+        <Card className="overflow-hidden flex-grow">
+          <CardHeader className="bg-blue-50 p-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg text-blue-700 flex items-center">
+                <PiggyBank className="mr-2 h-5 w-5" />
+                Resultado Final
+              </CardTitle>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-pointer">
+                      <Info className="h-4 w-4 text-neutral-500" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={5} className="bg-white z-50 shadow-lg">
+                    <p className="w-[200px] text-xs">Beneficio neto e impuestos a pagar</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <div className="mt-7 mb-1">
-              <div className="text-4xl font-semibold text-blue-500">—</div>
-              <div className="text-sm text-gray-500 mt-1">Beneficio neto</div>
+          </CardHeader>
+          <CardContent className="p-3">
+            {/* Ingresos - Gastos */}
+            <div className="mb-2">
+              <h3 className="text-sm font-medium text-blue-700">Ingresos - Gastos</h3>
+              <p className="text-2xl font-bold text-blue-600">—</p>
+              <p className="text-xs text-gray-500 mt-1">Beneficio neto</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-6 border-t border-gray-100 pt-4">
-              <div>
-                <div className="text-gray-500 text-sm">IVA a pagar:</div>
-                <div className="text-gray-800 font-medium mt-1">—</div>
+            {/* Impuestos a pagar */}
+            <div className="mb-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">IVA a pagar:</span>
+                <span className="font-medium text-blue-600">—</span>
               </div>
-              <div>
-                <div className="text-gray-500 text-sm">IRPF a pagar:</div>
-                <div className="text-gray-800 font-medium mt-1">—</div>
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="text-neutral-500">IRPF a pagar:</span>
+                <span className="font-medium text-blue-600">—</span>
               </div>
             </div>
+            
+            <div className="mt-auto pt-3 mb-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
+              >
+                Ver informes
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter className="bg-gray-50 p-0">
-            <Button variant="ghost" className="w-full rounded-none h-12 text-blue-500 font-medium hover:text-blue-600 hover:bg-gray-100 flex items-center justify-center gap-2">
-              <FileBarChart className="h-4 w-4" />
-              Ver informes
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     </div>
