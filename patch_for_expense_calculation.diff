@@ -1,0 +1,25 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index old..new 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -4121,9 +4121,9 @@
+                   // *** CAMBIO RADICAL: USAMOS EL MONTO TOTAL COMO BASE IMPONIBLE ***
+                   // SIMPLEMENTE USAMOS EL VALOR TOTAL
+-                  baseAmount = amount;
+-                  console.log(`USANDO DIRECTAMENTE EL MONTO TOTAL COMO BASE IMPONIBLE: ${amount}€`);
+-                  
++                  baseAmount = Math.round((amount / 1.21) * 100) / 100;
++                  console.log(`Calculando base imponible a partir del monto total con IVA estándar del 21%: ${baseAmount}€`);
++                 
+                   // Dejamos un espacio IF falso para mantener la estructura del código 
+                   if (false) {
+                     // Si no hay base imponible explícita en los metadatos, intentar encontrar el valor en el objeto principal
+@@ -4251,8 +4251,8 @@
+               console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
+             } else {
+               // USAMOS DIRECTAMENTE EL MONTO TOTAL COMO BASE IMPONIBLE
+-              baseAmount = Number(tx.amount); // Usamos el importe completo como base imponible
+-              console.log(`MISMO TRATAMIENTO: USANDO DIRECTAMENTE EL MONTO TOTAL COMO BASE IMPONIBLE: ${baseAmount}€`);
++              baseAmount = Math.round((Number(tx.amount) / 1.21) * 100) / 100;
++              console.log(`Calculando base imponible a partir del total ${tx.amount}€ con IVA estándar del 21%: ${baseAmount}€`);
+             }
