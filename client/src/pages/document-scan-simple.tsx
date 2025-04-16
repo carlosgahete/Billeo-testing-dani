@@ -248,63 +248,58 @@ const DocumentScanPage = () => {
     }
   };
   
-  // Función para actualizar la categoría de la transacción
-  const handleUpdateCategory = async (categoryId: string | null) => {
+  // Función para actualizar la categoría de la transacción (solo en el estado local)
+  const handleUpdateCategory = (categoryId: string | null) => {
     if (!transaction) return;
     
     // Convertir string a number o null
     const numericCategoryId = categoryId === "null" ? null : 
                               categoryId ? parseInt(categoryId) : null;
     
+    // Solo actualizamos el estado local sin enviar petición al servidor
+    setTransaction({
+      ...transaction,
+      categoryId: numericCategoryId
+    });
+  };
+  
+  // Función para guardar los cambios realizados
+  const handleSaveChanges = async () => {
+    if (!transaction) return;
+    
     try {
+      // Ahora hacemos una sola petición al servidor con todos los datos, incluida la categoría
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...transaction,
-          categoryId: numericCategoryId
-        }),
+        body: JSON.stringify(transaction),
         credentials: 'include'
       });
       
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      
-      // Actualizar la transacción en el estado
-      setTransaction({
-        ...transaction,
-        categoryId: numericCategoryId
-      });
-      
+
       // Invalidar consultas
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
       toast({
-        title: "Categoría actualizada",
-        description: "La categoría del gasto se ha actualizado correctamente",
+        title: "Cambios guardados",
+        description: "Los cambios en el gasto se han guardado correctamente",
       });
+      
+      return true;
     } catch (error: any) {
       toast({
-        title: "Error al actualizar la categoría",
+        title: "Error al guardar los cambios",
         description: error.message,
         variant: "destructive",
       });
+      return false;
     }
-  };
-  
-  // Función para guardar los cambios realizados
-  const handleSaveChanges = async () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-    
-    toast({
-      title: "Cambios guardados",
-      description: "Los cambios en el gasto se han guardado correctamente",
-    });
   };
   
   // Manejador para el envío del formulario de categoría

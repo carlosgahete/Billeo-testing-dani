@@ -406,7 +406,11 @@ Proveedor: ${formData.provider || ""}`
         <div className="flex items-center space-x-2">
           <Select
             value={transaction.categoryId ? String(transaction.categoryId) : "null"}
-            onValueChange={(value) => onUpdateCategory(value)}
+            onValueChange={(value) => {
+              // Solo actualizamos el estado local de la transacción
+              // La actualización real se hará cuando el usuario guarde el formulario
+              onUpdateCategory(value);
+            }}
           >
             <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="Seleccionar categoría" />
