@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ComponentStabilizer } from '@/components/ui/component-stabilizer';
 import { 
   Card, 
   CardContent, 
@@ -22,8 +21,7 @@ import {
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
 
-// Año predeterminado fijo para facilitar desarrollo y pruebas
-const CURRENT_YEAR = 2025;
+const CURRENT_YEAR = new Date().getFullYear();
 // Generamos los últimos 3 años para seleccionar
 const availableYears = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 
@@ -98,8 +96,8 @@ interface ExpensesByCategoryProps {
 
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
   expensesByCategory: propExpensesByCategory, 
-  period = `${CURRENT_YEAR}-all`,
-  periodLabel = `Año ${CURRENT_YEAR} completo`, 
+  period = "2025-all",
+  periodLabel = "Año 2025 completo", 
   onPeriodChange 
 }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -117,17 +115,13 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   // Usamos los datos de categorías que vienen del prop si están disponibles,
   // o los del dashboardData si el prop está vacío
   const expensesByCategory = useMemo(() => {
-    console.log("📊 ExpensesByCategoryApple: Actualizando datos para período", selectedPeriod);
     if (propExpensesByCategory && Object.keys(propExpensesByCategory).length > 0) {
-      console.log("📊 ExpensesByCategoryApple: Usando datos de prop");
       return propExpensesByCategory;
     } else if (dashboardData?.expensesByCategory) {
-      console.log("📊 ExpensesByCategoryApple: Usando datos de dashboardData");
       return dashboardData.expensesByCategory;
     }
-    console.log("📊 ExpensesByCategoryApple: No hay datos disponibles");
     return {};
-  }, [propExpensesByCategory, dashboardData?.expensesByCategory, selectedPeriod]);
+  }, [propExpensesByCategory, dashboardData?.expensesByCategory]);
 
   // Procesar los datos para el gráfico
   const data = useMemo(() => {
@@ -172,21 +166,14 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
 
   // Manejar el cambio de período
   const handlePeriodChange = (value: string) => {
-    console.log('✅ Cambiando período a:', value);
-    setSelectedPeriod(value);
-    if (onPeriodChange) {
-      onPeriodChange(value);
+    // Protección contra eventos fantasma
+    if (typeof document !== 'undefined' && document.hasFocus()) {
+      setSelectedPeriod(value);
+      if (onPeriodChange) {
+        onPeriodChange(value);
+      }
     }
   };
-
-  // Añadir un log para depurar la carga de datos
-  useEffect(() => {
-    console.log("ExpensesByCategoryApple - Estado actual:", {
-      periodo: selectedPeriod, 
-      hayDatos: Object.keys(expensesByCategory).length > 0,
-      datosTransformados: data.length
-    });
-  }, [selectedPeriod, expensesByCategory, data]);
 
   // Si no hay datos, mostrar un mensaje con estilo Apple
   if (data.length === 0 || Object.keys(expensesByCategory).length === 0) {
@@ -325,9 +312,24 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
                         fill="transparent"
                         stroke="transparent"
                         style={{ cursor: 'pointer' }}
-                        onMouseEnter={() => setHoverIndex(idx)}
-                        onMouseLeave={() => setHoverIndex(null)}
-                        onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                        onMouseEnter={() => {
+                          // Protección contra eventos fantasma
+                          if (typeof document !== 'undefined' && document.hasFocus()) {
+                            setHoverIndex(idx);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          // Protección contra eventos fantasma
+                          if (typeof document !== 'undefined' && document.hasFocus()) {
+                            setHoverIndex(null);
+                          }
+                        }}
+                        onClick={() => {
+                          // Protección contra eventos fantasma
+                          if (typeof document !== 'undefined' && document.hasFocus()) {
+                            setActiveIndex(idx === activeIndex ? null : idx);
+                          }
+                        }}
                       />
                     </g>
                   );
@@ -354,11 +356,22 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
                 key={item.categoryId} 
                 className={`flex items-center py-2.5 cursor-pointer transition-all duration-200 ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-50 rounded-lg' : ''}`}
                 onMouseOver={() => {
-                  if (idx < 10) setHoverIndex(idx);
+                  // Protección contra eventos fantasma
+                  if (idx < 10 && typeof document !== 'undefined' && document.hasFocus()) {
+                    setHoverIndex(idx);
+                  }
                 }}
-                onMouseOut={() => setHoverIndex(null)}
+                onMouseOut={() => {
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    setHoverIndex(null);
+                  }
+                }}
                 onClick={() => {
-                  if (idx < 10) setActiveIndex(idx === activeIndex ? null : idx);
+                  // Protección contra eventos fantasma
+                  if (idx < 10 && typeof document !== 'undefined' && document.hasFocus()) {
+                    setActiveIndex(idx === activeIndex ? null : idx);
+                  }
                 }}
               >
                 {/* Círculo con icono (estilo Apple con tamaño perfecto) */}
@@ -400,13 +413,4 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   );
 };
 
-// Versión final con estabilizador para evitar eventos fantasma
-const StabilizedExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = (props) => {
-  return (
-    <ComponentStabilizer stabilityDelay={2000} showDebugInfo={true}>
-      <ExpensesByCategoryApple {...props} />
-    </ComponentStabilizer>
-  );
-};
-
-export default StabilizedExpensesByCategoryApple;
+export default ExpensesByCategoryApple;

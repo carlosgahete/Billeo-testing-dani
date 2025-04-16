@@ -5,13 +5,8 @@ import { toast } from '@/hooks/use-toast';
 
 // Hook para obtener y refrescar los datos del dashboard
 export function useDashboardData() {
-  // Usar el año actual como predeterminado (2025 para pruebas)
-  const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState<string>((2025).toString());
-  const [period, setPeriod] = useState<string>('all');
-  
-  // Registrar en consola para diagnóstico con timestamp para evitar confusiones
-  console.log(`📊 Dashboard: Inicializando con año=${year}, periodo=${period}, timestamp=${new Date().toISOString()}`);
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [period, setPeriod] = useState('all');
   
   const {
     data,
@@ -138,22 +133,14 @@ export function useDashboardData() {
     };
   }, [queryClient, refreshDashboardData]);
   
-  // Funciones para cambiar filtros con protecciones
-  const changeYear = useCallback((newYear: string) => {
-    // Verificar que tenemos el foco y que el valor es diferente
-    if (typeof document !== 'undefined' && document.hasFocus() && newYear !== year) {
-      console.log(`📊 Dashboard: Cambiando año de ${year} a ${newYear}`);
-      setYear(newYear);
-    }
-  }, [year]);
+  // Funciones para cambiar filtros
+  const changeYear = (newYear: string) => {
+    setYear(newYear);
+  };
   
-  const changePeriod = useCallback((newPeriod: string) => {
-    // Verificar que tenemos el foco y que el valor es diferente
-    if (typeof document !== 'undefined' && document.hasFocus() && newPeriod !== period) {
-      console.log(`📊 Dashboard: Cambiando período de ${period} a ${newPeriod}`);
-      setPeriod(newPeriod);
-    }
-  }, [period]);
+  const changePeriod = (newPeriod: string) => {
+    setPeriod(newPeriod);
+  };
   
   return {
     data,

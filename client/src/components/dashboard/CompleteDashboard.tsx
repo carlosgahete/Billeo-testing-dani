@@ -31,21 +31,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
   
   // Estados locales para UI
-  // Forzamos 2025 como año predeterminado para pruebas, independientemente del año actual
-  const [selectedYear, setSelectedYear] = useState<string>("2025");
-  // Debug para diagnóstico
-  console.log(`📊 CompleteDashboard: Forzando año=2025 en lugar del año actual ${new Date().getFullYear()}`);
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
-  
-  // Log de información de filtros para depuración
-  useEffect(() => {
-    console.log("CompleteDashboard - Filtros actuales:", { 
-      año: selectedYear, 
-      período: selectedPeriod,
-      combinados: `${selectedYear}-${selectedPeriod}`,
-      timestamp: new Date().toISOString()
-    });
-  }, [selectedYear, selectedPeriod]);
   
   // Sincronizamos nuestro estado local con el hook
   useEffect(() => {
@@ -230,12 +217,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="relative w-[45%] sm:w-auto">
             <button 
               type="button"
-              onClick={(e) => {
-                // Protección contra eventos fantasma
-                if (typeof document !== 'undefined' && document.hasFocus()) {
-                  document.getElementById('year-dropdown')?.classList.toggle('hidden');
-                }
-              }}
+              onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="year-dropdown"
             >
@@ -248,39 +230,27 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             {/* Dropdown años */}
             <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedYear("2025");
-                    document.getElementById('year-dropdown')?.classList.add('hidden');
-                    console.log("✓ Año seleccionado: 2025");
-                  }
+                onClick={() => {
+                  setSelectedYear("2025");
+                  document.getElementById('year-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2025
               </button>
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedYear("2024");
-                    document.getElementById('year-dropdown')?.classList.add('hidden');
-                    console.log("✓ Año seleccionado: 2024");
-                  }
+                onClick={() => {
+                  setSelectedYear("2024");
+                  document.getElementById('year-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2024
               </button>
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedYear("2023");
-                    document.getElementById('year-dropdown')?.classList.add('hidden');
-                    console.log("✓ Año seleccionado: 2023");
-                  }
+                onClick={() => {
+                  setSelectedYear("2023");
+                  document.getElementById('year-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -293,12 +263,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="relative w-[55%] sm:w-auto">
             <button 
               type="button"
-              onClick={(e) => {
-                // Protección contra eventos fantasma
-                if (typeof document !== 'undefined' && document.hasFocus()) {
-                  document.getElementById('period-dropdown')?.classList.toggle('hidden');
-                }
-              }}
+              onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="period-dropdown"
             >
@@ -317,65 +282,45 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             {/* Dropdown periodos - Ancho completo en móvil */}
             <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedPeriod("all");
-                    document.getElementById('period-dropdown')?.classList.add('hidden');
-                    console.log("✓ Período seleccionado: Todo el año");
-                  }
+                onClick={() => {
+                  setSelectedPeriod("all");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Todo el año
               </button>
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedPeriod("q1");
-                    document.getElementById('period-dropdown')?.classList.add('hidden');
-                    console.log("✓ Período seleccionado: Trimestre 1");
-                  }
+                onClick={() => {
+                  setSelectedPeriod("q1");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 1
               </button>
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedPeriod("q2");
-                    document.getElementById('period-dropdown')?.classList.add('hidden');
-                    console.log("✓ Período seleccionado: Trimestre 2");
-                  }
+                onClick={() => {
+                  setSelectedPeriod("q2");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 2
               </button>
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedPeriod("q3");
-                    document.getElementById('period-dropdown')?.classList.add('hidden');
-                    console.log("✓ Período seleccionado: Trimestre 3");
-                  }
+                onClick={() => {
+                  setSelectedPeriod("q3");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 3
               </button>
               <button
-                onClick={(e) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setSelectedPeriod("q4");
-                    document.getElementById('period-dropdown')?.classList.add('hidden');
-                    console.log("✓ Período seleccionado: Trimestre 4");
-                  }
+                onClick={() => {
+                  setSelectedPeriod("q4");
+                  document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -544,13 +489,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={(e) => {
-                    // Protección contra eventos fantasma
-                    if (typeof document !== 'undefined' && document.hasFocus()) {
-                      setComparisonViewType("quarterly");
-                      console.log("✓ Vista comparativa: Trimestral");
-                    }
-                  }}
+                  onClick={() => setComparisonViewType("quarterly")}
                   className={`px-2 py-1 rounded-md mr-1 ${comparisonViewType === "quarterly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
                 >
                   Trimestral
@@ -558,13 +497,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={(e) => {
-                    // Protección contra eventos fantasma
-                    if (typeof document !== 'undefined' && document.hasFocus()) {
-                      setComparisonViewType("yearly");
-                      console.log("✓ Vista comparativa: Anual");
-                    }
-                  }}
+                  onClick={() => setComparisonViewType("yearly")}
                   className={`px-2 py-1 rounded-md ${comparisonViewType === "yearly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
                 >
                   Anual
@@ -610,23 +543,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="h-[400px]">
               {/* Usamos consultas directas para transacciones y categorías */}
               <ExpensesByCategory 
-                // Usar variable memorizada para evitar actualizaciones innecesarias
                 period={`${selectedYear}-${selectedPeriod}`}
-                periodLabel={selectedPeriod === "all" ? `Año ${selectedYear} completo` : 
-                             selectedPeriod.startsWith("q") ? `Trimestre ${selectedPeriod.slice(1)} ${selectedYear}` :
-                             `Mes ${selectedPeriod} ${selectedYear}`}
                 onPeriodChange={(period) => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    console.log("ExpensesByCategory solicitó cambio de período a:", period);
-                    try {
-                      const [year, newPeriod] = period.split('-');
-                      setSelectedYear(year);
-                      setSelectedPeriod(newPeriod);
-                    } catch (err) {
-                      console.error("Error al procesar cambio de período:", err);
-                    }
-                  }
+                  const [year, newPeriod] = period.split('-');
+                  setSelectedYear(year);
+                  setSelectedPeriod(newPeriod);
                 }}
               />
             </div>
