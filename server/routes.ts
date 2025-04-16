@@ -3890,14 +3890,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               // Buscar impuestos de tipo IRPF
+              // Mostrar el formato exacto para depuración
+              console.log(`Transaction ${transaction.id} additionalTaxes:`, JSON.stringify(taxesArray));
+              
               taxesArray.forEach(tax => {
-                if (tax.name === 'IRPF' && tax.isPercentage) {
-                  // Para un gasto de 100€ con IRPF de -15%, necesitamos 15€
-                  const baseAmount = parseFloat(transaction.amount) / (1 + 0.21); // Estimamos la base imponible desde el total
-                  const irpfAmount = baseAmount * (Math.abs(tax.amount) / 100);
+                const taxAny = tax as any;
+                
+                if (tax.name === 'IRPF') {
+                  let irpfAmount = 0;
                   
-                  console.log(`¡¡¡ Se encontró IRPF en gasto ID${transaction.id}: ${irpfAmount}€ (${Math.abs(tax.amount)}%) !!!`);
-                  totalIrpfFromExpensesInvoices += irpfAmount;
+                  // Contenido del impuesto IRPF para depuración
+                  console.log(`IRPF tax object in transaction ${transaction.id}:`, JSON.stringify(tax));
+                  
+                  // Si tiene el campo value, es el valor directo del IRPF
+                  if (taxAny.value !== undefined) {
+                    irpfAmount = parseFloat(String(taxAny.value));
+                    console.log(`✅ Se encontró IRPF con value en gasto ID${transaction.id}: ${irpfAmount}€`);
+                  } 
+                  // Si tiene isPercentage, calculamos el IRPF como porcentaje
+                  else if (taxAny.isPercentage) {
+                    const baseAmount = parseFloat(transaction.amount) / (1 + 0.21); // Estimamos la base imponible desde el total
+                    irpfAmount = baseAmount * (Math.abs(tax.amount) / 100);
+                    console.log(`⚠️ Se encontró IRPF con isPercentage en gasto ID${transaction.id}: ${irpfAmount}€ (${Math.abs(tax.amount)}%)`);
+                  }
+                  // Si solo tiene amount, lo usamos directamente
+                  else if (tax.amount) {
+                    irpfAmount = Math.abs(parseFloat(String(tax.amount)));
+                    console.log(`⚠️ Se encontró IRPF con amount en gasto ID${transaction.id}: ${irpfAmount}€`);
+                  }
+                  
+                  if (irpfAmount > 0) {
+                    totalIrpfFromExpensesInvoices += irpfAmount;
+                    console.log(`IRPF total acumulado hasta ahora: ${totalIrpfFromExpensesInvoices}€`);
+                  }
                 }
               });
             } catch (e) {
