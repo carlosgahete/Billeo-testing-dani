@@ -12,15 +12,6 @@ interface NetExpensesCardProps extends DashboardBlockProps {}
 const NetExpensesCard: React.FC<NetExpensesCardProps> = ({ data, isLoading }) => {
   const [, navigate] = useLocation();
   
-  // NOTA: Estamos ignorando completamente los datos reales y usando valores fijos
-  // según las especificaciones exactas del cliente
-  
-  // Valores fijos - NO usar datos reales
-  const baseImponible = 100; // Base imponible exacta: 100€
-  const ivaSoportado = 21;   // IVA exacto: 21€ 
-  const irpfAmount = 15;     // IRPF exacto: 15€
-  const gastoNeto = 85;      // Gasto neto exacto: 85€
-  
   if (isLoading) {
     return (
       <Card className="overflow-hidden flex-grow">
@@ -60,31 +51,31 @@ const NetExpensesCard: React.FC<NetExpensesCardProps> = ({ data, isLoading }) =>
         </div>
       </CardHeader>
       <CardContent className="p-3">
-        {/* Base imponible - valor fijo */}
+        {/* Base imponible */}
         <div className="mb-2">
           <h3 className="text-sm font-medium text-red-700">Base imponible</h3>
           <p className="text-2xl font-bold text-red-600">
-            100,00 €
+            —
           </p>
         </div>
         
-        {/* Impuestos desglosados - valores fijos */}
+        {/* Impuestos desglosados */}
         <div className="mb-3 text-sm">
           <div className="flex justify-between">
             <span className="text-neutral-500">IVA (21%):</span>
-            <span className="font-medium text-red-600">+21,00 €</span>
+            <span className="font-medium text-red-600">—</span>
           </div>
           <div className="flex justify-between border-t pt-1 mt-1">
             <span className="text-neutral-500">IRPF (15%):</span>
-            <span className="font-medium text-emerald-600">-15,00 €</span>
+            <span className="font-medium text-emerald-600">—</span>
           </div>
         </div>
         
-        {/* Gastos netos - valor fijo */}
+        {/* Gastos netos */}
         <div className="mt-3 border-t pt-2">
           <h3 className="text-sm font-medium text-gray-600">Gasto neto para resultado final:</h3>
           <p className="text-lg font-bold text-red-700">
-            85,00 €
+            —
           </p>
         </div>
         

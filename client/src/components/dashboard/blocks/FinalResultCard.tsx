@@ -40,24 +40,6 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
     );
   }
   
-  // Valores fijos del ejemplo
-  // Valores de ingresos
-  const baseImponibleIngresos = 1000; // Base imponible de 1000€
-  const ivaRepercutido = 210; // IVA 21% de 1000€
-  const irpfIngresos = 150; // IRPF 15% de 1000€
-  const ingresoNeto = baseImponibleIngresos - irpfIngresos; // 1000€ - 150€ = 850€
-  
-  // Valores de gastos
-  const baseImponibleGastos = 100; // Base imponible de 100€
-  const ivaSoportado = 21; // IVA 21% de 100€
-  const irpfGastos = 15; // IRPF 15% de 100€
-  const gastoNeto = baseImponibleGastos - irpfGastos; // 100€ - 15€ = 85€
-  
-  // Resultados finales
-  const resultadoFinal = ingresoNeto - gastoNeto; // 850€ - 85€ = 765€
-  const ivaLiquidar = ivaRepercutido - ivaSoportado; // 210€ - 21€ = 189€
-  const totalIRPF = irpfIngresos + irpfGastos; // 150€ + 15€ = 165€
-  
   return (
     <Card className="overflow-hidden flex-grow">
       <CardHeader className="bg-blue-50 p-2">
@@ -85,7 +67,7 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
         <div className="mb-2 text-sm">
           <div className="flex justify-between">
             <span className="font-medium text-neutral-600">Ingresos netos:</span>
-            <span className="font-medium text-emerald-600">{ingresoNeto.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
+            <span className="font-medium text-emerald-600">—</span>
           </div>
         </div>
         
@@ -93,7 +75,7 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
         <div className="mb-3 text-sm border-t pt-1">
           <div className="flex justify-between">
             <span className="font-medium text-neutral-600">Gastos netos:</span>
-            <span className="font-medium text-red-600">{gastoNeto.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
+            <span className="font-medium text-red-600">—</span>
           </div>
         </div>
         
@@ -104,10 +86,7 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
         <div className="mb-4">
           <h3 className="text-sm font-medium text-blue-700">Resultado final:</h3>
           <p className="text-2xl font-bold text-blue-600">
-            {resultadoFinal > 0 ? "+" : ""}{new Intl.NumberFormat('es-ES', { 
-              minimumFractionDigits: 2, 
-              maximumFractionDigits: 2 
-            }).format(resultadoFinal)} €
+            —
           </p>
         </div>
         
@@ -116,29 +95,29 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
           <h3 className="font-medium text-neutral-700 mb-1">IVA a pagar:</h3>
           <div className="flex justify-between pl-2">
             <span className="text-neutral-500">IVA ingresos:</span>
-            <span className="font-medium">{ivaRepercutido.toLocaleString('es-ES')} €</span>
+            <span className="font-medium">—</span>
           </div>
           <div className="flex justify-between pl-2">
             <span className="text-neutral-500">- IVA gastos:</span>
-            <span className="font-medium">{ivaSoportado.toLocaleString('es-ES')} €</span>
+            <span className="font-medium">—</span>
           </div>
           <div className="flex justify-between border-t pt-1 mt-1 pl-2">
             <span className="text-neutral-600 font-medium">IVA a pagar:</span>
-            <span className="font-medium text-blue-600">{ivaLiquidar.toLocaleString('es-ES')} €</span>
+            <span className="font-medium text-blue-600">—</span>
           </div>
           
           <h3 className="font-medium text-neutral-700 mt-3 mb-1">IRPF total retenido:</h3>
           <div className="flex justify-between pl-2">
             <span className="text-neutral-500">IRPF ingresos:</span>
-            <span className="font-medium">{irpfIngresos.toLocaleString('es-ES')} €</span>
+            <span className="font-medium">—</span>
           </div>
           <div className="flex justify-between pl-2">
             <span className="text-neutral-500">+ IRPF gastos:</span>
-            <span className="font-medium">{irpfGastos.toLocaleString('es-ES')} €</span>
+            <span className="font-medium">—</span>
           </div>
           <div className="flex justify-between border-t pt-1 mt-1 pl-2">
             <span className="text-neutral-600 font-medium">Total IRPF:</span>
-            <span className="font-medium text-blue-600">{totalIRPF.toLocaleString('es-ES')} €</span>
+            <span className="font-medium text-blue-600">—</span>
           </div>
         </div>
         

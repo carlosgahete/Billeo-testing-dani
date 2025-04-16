@@ -1,0 +1,117 @@
+Perfecto, teniendo en cuenta que los datos del dashboard se actualizan en tiempo real, la explicación se adapta de la siguiente manera:
+
+⸻
+
+Cómo calcular y mostrar los datos en el dashboard en tiempo real
+
+1. Cálculo de Ingresos
+
+Fuente de datos:
+	•	Ir al módulo de Transacciones.
+	•	Filtrar las transacciones de tipo “ingreso” que estén marcadas como pagadas y que pertenezcan al trimestre y año seleccionados.
+
+Campos a usar en cada transacción:
+	•	Base imponible (BI)
+	•	IVA (%)
+	•	IRPF (%)
+
+Cálculos:
+	•	Ingresos Brutos: Suma de todas las bases imponibles de las transacciones filtradas.
+	•	IVA Total Ingresado: Suma del IVA de cada transacción, calculado como:
+	•	BI * (IVA / 100)
+	•	IRPF Total Retenido: Suma del IRPF de cada transacción, calculado como:
+	•	BI * (IRPF / 100)
+	•	Ingresos Netos:
+	•	Ingresos Netos = Base Imponible Total - IRPF Total
+
+Importante: Los cálculos de ingresos se actualizan en tiempo real cada vez que un cliente sube una nueva factura de ingreso, afectando los resultados inmediatos en el dashboard.
+
+⸻
+
+2. Cálculo de Gastos
+
+Fuente de datos:
+	•	Ir al módulo de Transacciones.
+	•	Filtrar las transacciones de tipo “gasto” que estén marcadas como pagadas y que pertenezcan al trimestre y año seleccionados.
+
+Campos a usar en cada transacción:
+	•	Base imponible (BI)
+	•	IVA (%)
+	•	IRPF (%) (solo si tiene IRPF, si no, se ignora)
+
+Cálculos:
+	•	Gastos Brutos: Suma de todas las bases imponibles de las transacciones filtradas.
+	•	IVA Soportado: Suma del IVA de cada transacción.
+	•	IRPF Recibido: Suma del IRPF de cada transacción (solo si tiene).
+	•	Gastos Netos:
+	•	Gastos Netos = Base Imponible Total - IRPF Total (si lo tiene)
+
+Importante: Los cálculos de gastos se actualizan en tiempo real cada vez que un cliente sube un nuevo gasto, lo que también afectará los resultados del dashboard.
+
+⸻
+
+3. Resultado Final del Trimestre
+
+Cálculo del resultado final:
+	•	Resultado Final = Ingresos Netos - Gastos Netos
+	•	Este valor representa el beneficio neto del trimestre, y como los ingresos y gastos se actualizan continuamente, el resultado final también cambiará en tiempo real.
+
+⸻
+
+4. Cálculo de IVA a Pagar
+
+Fórmula:
+	•	IVA a Pagar = IVA Facturado (Ingresos) - IVA Soportado (Gastos)
+
+Importante: Esta cifra se recalcula cada vez que haya cambios en las transacciones, lo que puede variar dependiendo de nuevos ingresos o gastos que se suban.
+
+⸻
+
+5. Cálculo de IRPF Total Retenido
+
+Fórmula:
+	•	IRPF Total Retenido = IRPF Ingresos + IRPF Gastos
+
+Importante: Al igual que el resto de los cálculos, este valor se actualiza de forma dinámica con cada nueva transacción.
+
+⸻
+
+Resumen Visual del Dashboard
+	•	Tarjeta de Ingresos:
+	•	El número grande será siempre la suma de las bases imponibles de todas las facturas de ingresos, que cambiará en tiempo real con cada nueva factura subida.
+	•	Debajo, se desglosará:
+	•	IVA Total (calculado).
+	•	IRPF Total (calculado).
+	•	Tarjeta de Gastos:
+	•	El número grande será siempre la suma de las bases imponibles de todas las facturas de gasto, que se actualizará con cada nuevo gasto subido.
+	•	Debajo, se desglosará:
+	•	IVA Total Soportado (calculado).
+	•	IRPF Total (calculado o no aparece si no tiene).
+	•	Resultado Final del Trimestre:
+	•	Mostrar solo el número final calculado como:
+	•	Resultado Final = (Base Imponible Ingresos - IRPF Ingresos) - (Base Imponible Gastos - IRPF Gastos)
+	•	Este número cambiará en tiempo real, ya que depende de las actualizaciones de ingresos y gastos.
+
+⸻
+
+Ejemplo Práctico con Actualización en Tiempo Real:
+
+Si se suben nuevas facturas o gastos, los valores del dashboard se recalculan automáticamente:
+	•	Si hay 3 facturas de ingreso:
+	•	Factura 1: Base imponible 400€
+	•	Factura 2: Base imponible 300€
+	•	Factura 3: Base imponible 300€
+El número grande en la tarjeta de Ingresos será +1.000€, y cualquier nueva factura de ingreso añadirá al total de la base imponible de forma automática.
+	•	Si hay 2 facturas de gasto:
+	•	Factura 1: Base imponible 60€
+	•	Factura 2: Base imponible 40€
+El número grande en la tarjeta de Gastos será -100€, y cualquier nuevo gasto que se suba hará que este valor cambie en tiempo real.
+
+El Resultado Final se recalculará automáticamente:
+	•	Ingresos Netos (Base Imponible Total - IRPF Total) - Gastos Netos (Base Imponible Total - IRPF Total).
+
+⸻
+
+Recuerda: Los datos en el dashboard son dinámicos y se actualizan al instante. Cada vez que se sube una nueva factura o un gasto, todo el sistema recalcula los resultados y los muestra en tiempo real.
+
+Si tienes más dudas o necesitas otro ejemplo, ¡avísame!

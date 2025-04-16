@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpFromLine, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,15 +28,6 @@ const NetIncomeCard: React.FC<NetIncomeCardProps> = ({ data, isLoading }) => {
     );
   }
   
-  // Usar valores fijos según el ejemplo
-  const baseImponible = 1000; // Base imponible fija de 1000€
-  const ivaRepercutido = 210; // IVA 21% de 1000€
-  const irpfPercentage = 15;
-  const irpfAmount = 150; // IRPF 15% de 1000€
-  
-  // Valores netos
-  const netIncome = baseImponible - irpfAmount; // 1000€ - 150€ = 850€
-  
   return (
     <Card className="overflow-hidden flex-grow">
       <CardHeader className="bg-emerald-50 p-2">
@@ -64,10 +55,7 @@ const NetIncomeCard: React.FC<NetIncomeCardProps> = ({ data, isLoading }) => {
         <div className="mb-2">
           <h3 className="text-sm font-medium text-emerald-700">Base imponible</h3>
           <p className="text-2xl font-bold text-emerald-600">
-            {new Intl.NumberFormat('es-ES', { 
-              minimumFractionDigits: 2, 
-              maximumFractionDigits: 2 
-            }).format(baseImponible)} €
+            —
           </p>
         </div>
         
@@ -75,11 +63,11 @@ const NetIncomeCard: React.FC<NetIncomeCardProps> = ({ data, isLoading }) => {
         <div className="mb-3 text-sm">
           <div className="flex justify-between">
             <span className="text-neutral-500">IVA (21%):</span>
-            <span className="font-medium text-emerald-600">+{ivaRepercutido.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
+            <span className="font-medium text-emerald-600">—</span>
           </div>
           <div className="flex justify-between border-t pt-1 mt-1">
             <span className="text-neutral-500">IRPF (15%):</span>
-            <span className="font-medium text-red-600">-{irpfAmount.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
+            <span className="font-medium text-red-600">—</span>
           </div>
         </div>
         
@@ -87,10 +75,7 @@ const NetIncomeCard: React.FC<NetIncomeCardProps> = ({ data, isLoading }) => {
         <div className="mt-3 border-t pt-2">
           <h3 className="text-sm font-medium text-gray-600">Ingreso neto para resultado final:</h3>
           <p className="text-lg font-bold text-emerald-700">
-            {new Intl.NumberFormat('es-ES', { 
-              minimumFractionDigits: 2, 
-              maximumFractionDigits: 2 
-            }).format(baseImponible - irpfAmount)} €
+            —
           </p>
         </div>
         
