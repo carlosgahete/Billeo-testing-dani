@@ -50,6 +50,10 @@ export default function AuthPage() {
     setLoginFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Método directo de login como alternativa
+  const [useDirectLogin, setUseDirectLogin] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  
   // Handle login form submission
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +66,28 @@ export default function AuthPage() {
         description: "Verificando tus credenciales",
       });
       
-      // Proceed with login
+      // Incrementar contador de intentos
+      setLoginAttempts(prev => prev + 1);
+      
+      // Si estamos usando el método directo o hay varios intentos fallidos
+      if (useDirectLogin || loginAttempts >= 1) {
+        console.log("Utilizando método directo de login");
+        
+        // Usar el método directo
+        const success = await directLogin(loginFormData.username, loginFormData.password);
+        
+        if (!success) {
+          toast({
+            title: "Error de inicio de sesión",
+            description: "Usuario o contraseña incorrectos",
+            variant: "destructive",
+          });
+        }
+        
+        return;
+      }
+      
+      // Proceed with normal login
       loginMutation.mutate(loginFormData);
       
       // Verificar si la mutación se ha completado sin error después de un tiempo
@@ -192,6 +217,25 @@ export default function AuthPage() {
               Prueba con: <span className="font-medium">demo</span> / <span className="font-medium">demo</span>
               <br />O para acceso admin: <span className="font-medium">billeo_admin</span> / <span className="font-medium">superadmin</span>
             </div>
+            
+            {/* Botón de acceso alternativo */}
+            {loginAttempts > 0 && (
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setUseDirectLogin(!useDirectLogin)}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline transition-colors"
+                >
+                  {useDirectLogin ? "Usar método normal de acceso" : "¿Problemas para acceder? Prueba el método alternativo"}
+                </button>
+                
+                {useDirectLogin && (
+                  <div className="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded">
+                    El método alternativo utiliza una conexión directa para iniciar sesión sin utilizar React Query.
+                  </div>
+                )}
+              </div>
+            )}
           </form>
         </div>
       </div>

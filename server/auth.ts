@@ -192,15 +192,44 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log("Procesando solicitud de inicio de sesión para:", req.body.username);
+    
     passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: "Credenciales inválidas" });
+      if (err) {
+        console.error("Error en autenticación:", err);
+        return next(err);
+      }
+      
+      if (!user) {
+        console.log("Autenticación fallida para:", req.body.username);
+        return res.status(401).json({ message: "Credenciales inválidas" });
+      }
+      
+      console.log("Usuario autenticado correctamente:", user.username);
       
       req.login(user, (err: any) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Error en login:", err);
+          return next(err);
+        }
+        
+        // Mejorar la sesión con datos adicionales de respaldo
+        try {
+          import('./session-helper.js').then(({ enhanceUserSession }) => {
+            enhanceUserSession(req, user);
+            console.log("Sesión mejorada para el usuario:", user.username);
+          }).catch(error => {
+            console.error("Error al cargar el helper de sesiones:", error);
+          });
+        } catch (sessionError) {
+          console.error("Error al mejorar la sesión:", sessionError);
+          // Continuar a pesar del error en la mejora de sesión
+        }
         
         // Omitir la contraseña en la respuesta
         const { password, ...userWithoutPassword } = user;
+        
+        console.log("Login completo, enviando respuesta");
         return res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);

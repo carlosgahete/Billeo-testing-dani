@@ -13,6 +13,12 @@ export async function directLogin(username: string, password: string): Promise<b
   console.log("Iniciando proceso de login directo para:", username);
   
   try {
+    console.log("Preparando petición de login directo");
+    
+    // Log de datos (sin mostrar contraseña completa)
+    const maskedPassword = password.substring(0, 1) + "****";
+    console.log(`Datos de login: username=${username}, password=${maskedPassword}`);
+    
     // Configurar la llamada fetch
     const res = await fetch("/api/login", {
       method: "POST",
@@ -23,16 +29,41 @@ export async function directLogin(username: string, password: string): Promise<b
       body: JSON.stringify({ username, password }),
     });
 
-    console.log("Respuesta de login directo:", res.status);
+    console.log("Respuesta de login directo - Estado:", res.status);
+    console.log("Respuesta de login directo - OK:", res.ok);
+    console.log("Respuesta de login directo - Headers:", 
+      Array.from(res.headers.entries())
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(", ")
+    );
     
     if (res.ok) {
       // Login exitoso
-      console.log("Login directo exitoso - Redirigiendo a página principal");
+      console.log("Login directo exitoso - Intentando obtener datos del usuario");
+      
+      // Intentar obtener datos del usuario para verificar que la sesión está activa
+      try {
+        const userCheckResponse = await fetch("/api/user", {
+          method: "GET",
+          credentials: "include",
+        });
+        
+        if (userCheckResponse.ok) {
+          const userData = await userCheckResponse.json();
+          console.log("Verificación de usuario exitosa:", userData);
+        } else {
+          console.warn("Verificación de usuario fallida pero login ok - Status:", userCheckResponse.status);
+        }
+      } catch (userCheckError) {
+        console.error("Error al verificar usuario:", userCheckError);
+      }
       
       // Esperar un poco y redireccionar
+      console.log("Preparando redirección al dashboard");
       setTimeout(() => {
+        console.log("Redirigiendo al dashboard ahora");
         window.location.href = "/";
-      }, 500);
+      }, 1000);
       
       return true;
     } else {
@@ -42,9 +73,10 @@ export async function directLogin(username: string, password: string): Promise<b
       try {
         // Intentar leer el mensaje de error
         const errorData = await res.text();
+        console.error("Respuesta de error completa:", errorData);
         errorMessage = errorData || "Error al iniciar sesión";
       } catch (e) {
-        // Ignorar error al leer respuesta
+        console.error("Error al leer respuesta de error:", e);
       }
       
       console.error("Mensaje de error:", errorMessage);
