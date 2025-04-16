@@ -1,28 +1,22 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Activity, 
-  BarChart3,
-  TrendingUp, 
-  TrendingDown, 
-  CreditCard,
-  Percent,
-  Calendar,
-  Euro
-} from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, BarChart2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function InicioPage() {
   return (
-    <div className="container mx-auto p-4 md:p-6">
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard de Resultados</h1>
+        <div className="flex items-center">
+          <BarChart2 className="h-6 w-6 text-blue-500 mr-2" />
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+        </div>
         
-        {/* Filtros (desactivados por ahora) */}
+        {/* Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
-          <Select disabled>
-            <SelectTrigger className="w-[160px]">
+          <Select>
+            <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="2025" />
             </SelectTrigger>
             <SelectContent>
@@ -31,9 +25,9 @@ export default function InicioPage() {
             </SelectContent>
           </Select>
           
-          <Select disabled>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Trimestre actual" />
+          <Select>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Todo el año" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="q1">1er Trimestre</SelectItem>
@@ -46,121 +40,99 @@ export default function InicioPage() {
         </div>
       </div>
       
-      {/* SECCIÓN 1: VISIÓN GENERAL TRIMESTRAL */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Tarjeta de Ingresos */}
-        <Card className="shadow-md">
-          <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white pb-3">
-            <CardTitle className="flex items-center text-lg">
-              <TrendingUp className="mr-2" />
-              Ingresos
-            </CardTitle>
-          </CardHeader>
+        <Card className="shadow-sm bg-white rounded-xl overflow-hidden border-gray-100">
           <CardContent className="p-6">
-            <div className="text-4xl font-bold mb-4 text-center">
-              —
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">IVA:</span>
-                <span className="font-medium">—</span>
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                <TrendingUp className="h-4 w-4 text-green-500" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">IRPF:</span>
-                <span className="font-medium">—</span>
+              <span className="text-gray-600 font-medium">Ingresos</span>
+            </div>
+            <div className="text-sm text-gray-500 mb-2">Entradas totales</div>
+            <div className="text-3xl font-bold text-green-500 mb-4">—</div>
+            <div className="text-sm text-gray-500 mb-5">Ingresos totales (sin IVA)</div>
+            
+            <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+              <div>
+                <div className="text-gray-500 text-xs mb-1">IVA repercutido:</div>
+                <div className="text-gray-700">—</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-1">IRPF:</div>
+                <div className="text-gray-700">—</div>
               </div>
             </div>
           </CardContent>
+          <CardFooter className="bg-gray-50 p-0">
+            <Button variant="ghost" className="w-full rounded-none h-12 text-blue-500 hover:text-blue-600 hover:bg-gray-100">
+              Ver facturas
+            </Button>
+          </CardFooter>
         </Card>
         
         {/* Tarjeta de Gastos */}
-        <Card className="shadow-md">
-          <CardHeader className="bg-gradient-to-r from-red-500 to-red-600 text-white pb-3">
-            <CardTitle className="flex items-center text-lg">
-              <TrendingDown className="mr-2" />
-              Gastos
-            </CardTitle>
-          </CardHeader>
+        <Card className="shadow-sm bg-white rounded-xl overflow-hidden border-gray-100">
           <CardContent className="p-6">
-            <div className="text-4xl font-bold mb-4 text-center">
-              —
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">IVA:</span>
-                <span className="font-medium">—</span>
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                <TrendingDown className="h-4 w-4 text-red-500" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">IRPF:</span>
-                <span className="font-medium">—</span>
+              <span className="text-gray-600 font-medium">Gastos</span>
+            </div>
+            <div className="text-sm text-gray-500 mb-2">Salidas totales</div>
+            <div className="text-3xl font-bold text-red-500 mb-4">—</div>
+            <div className="text-sm text-gray-500 mb-5">Gastos totales</div>
+            
+            <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+              <div>
+                <div className="text-gray-500 text-xs mb-1">IVA soportado:</div>
+                <div className="text-gray-700">—</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-1">IRPF:</div>
+                <div className="text-gray-700">—</div>
               </div>
             </div>
           </CardContent>
-        </Card>
-      </div>
-      
-      {/* SECCIÓN 2: RESULTADO Y FISCALIDAD */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Resultado del Trimestre */}
-        <Card className="shadow-md md:col-span-1">
-          <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white pb-3">
-            <CardTitle className="flex items-center text-lg">
-              <Euro className="mr-2" />
-              Resultado Neto
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="text-3xl font-bold text-center">
-              —
-            </div>
-            <div className="mt-2 text-sm text-gray-500 text-center">
-              Resultado del trimestre
-            </div>
-          </CardContent>
+          <CardFooter className="bg-gray-50 p-0">
+            <Button variant="ghost" className="w-full rounded-none h-12 text-red-500 hover:text-red-600 hover:bg-gray-100">
+              Ver gastos
+            </Button>
+          </CardFooter>
         </Card>
         
-        {/* IVA a pagar */}
-        <Card className="shadow-md">
-          <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white pb-3">
-            <CardTitle className="flex items-center text-lg">
-              <Percent className="mr-2" />
-              IVA a Pagar
-            </CardTitle>
-          </CardHeader>
+        {/* Tarjeta de Resultado */}
+        <Card className="shadow-sm bg-white rounded-xl overflow-hidden border-gray-100">
           <CardContent className="p-6">
-            <div className="text-3xl font-bold text-center">
-              —
+            <div className="flex items-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                <BarChart2 className="h-4 w-4 text-blue-500" />
+              </div>
+              <span className="text-gray-600 font-medium">Resultado Final</span>
             </div>
-            <div className="mt-2 text-sm text-gray-500 text-center">
-              IVA repercutido - IVA soportado
+            <div className="text-sm text-gray-500 mb-2">Ingresos - Gastos</div>
+            <div className="text-3xl font-bold text-blue-500 mb-4">—</div>
+            <div className="text-sm text-gray-500 mb-5">Beneficio neto</div>
+            
+            <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+              <div>
+                <div className="text-gray-500 text-xs mb-1">IVA a pagar:</div>
+                <div className="text-gray-700">—</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-1">IRPF a pagar:</div>
+                <div className="text-gray-700">—</div>
+              </div>
             </div>
           </CardContent>
+          <CardFooter className="bg-gray-50 p-0">
+            <Button variant="ghost" className="w-full rounded-none h-12 text-blue-500 hover:text-blue-600 hover:bg-gray-100">
+              Ver informes
+            </Button>
+          </CardFooter>
         </Card>
-        
-        {/* IRPF Retenido */}
-        <Card className="shadow-md">
-          <CardHeader className="bg-gradient-to-r from-amber-500 to-amber-600 text-white pb-3">
-            <CardTitle className="flex items-center text-lg">
-              <CreditCard className="mr-2" />
-              IRPF Retenido
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="text-3xl font-bold text-center">
-              —
-            </div>
-            <div className="mt-2 text-sm text-gray-500 text-center">
-              Total IRPF acumulado
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Separator className="my-6" />
-      
-      <div className="text-center text-gray-500 text-sm">
-        <p>Esta pantalla está preparada para mostrar los resultados fiscales en tiempo real.</p>
-        <p className="mt-1">Próximamente: informes fiscales detallados y alertas de fechas importantes.</p>
       </div>
     </div>
   );
