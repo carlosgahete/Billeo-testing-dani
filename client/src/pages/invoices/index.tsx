@@ -78,12 +78,54 @@ const InvoicesPage = () => {
   
   // Calcular estadísticas para las tarjetas
   const stats = useMemo(() => {
+    console.log("Calculando estadísticas para", filteredInvoices.length, "facturas");
+    
+    // Verificar que hay datos válidos
+    if (!filteredInvoices || filteredInvoices.length === 0) {
+      return {
+        totalCount: 0,
+        totalValue: 0,
+        pendingCount: 0,
+        pendingValue: 0,
+        quarterCount: 0,
+        quarterValue: 0,
+        availableYears: availableYears
+      };
+    }
+
+    // Log de facturas para debug
+    console.log("Primeras 3 facturas:", filteredInvoices.slice(0, 3).map(i => ({
+      id: i.id,
+      number: i.invoiceNumber,
+      total: i.total,
+      status: i.status,
+      date: i.issueDate
+    })));
+    
+    // Asegurar que los valores son números
+    const ensureNumber = (value: any): number => {
+      if (typeof value === 'string') {
+        return parseFloat(value) || 0;
+      }
+      return typeof value === 'number' ? value : 0;
+    };
+    
     const total = filteredInvoices.length;
+    
     const pending = filteredInvoices.filter(i => i.status === 'pending').length;
+    
+    // Calcular valores asegurando que son números
     const pendingValue = filteredInvoices
       .filter(i => i.status === 'pending')
-      .reduce((sum, i) => sum + i.total, 0);
-    const totalValue = filteredInvoices.reduce((sum, i) => sum + i.total, 0);
+      .reduce((sum, i) => sum + ensureNumber(i.total), 0);
+    
+    const totalValue = filteredInvoices
+      .reduce((sum, i) => {
+        const numericTotal = ensureNumber(i.total);
+        return sum + numericTotal;
+      }, 0);
+    
+    console.log("Total calculado:", totalValue);
     
     // Factura del trimestre actual (si estamos en yearFilter = 'all' o en el año actual)
     const currentYear = new Date().getFullYear().toString();
@@ -104,7 +146,7 @@ const InvoicesPage = () => {
     }) : [];
     
     const quarterCount = quarterInvoices.length;
-    const quarterValue = quarterInvoices.reduce((sum, i) => sum + i.total, 0);
+    const quarterValue = quarterInvoices.reduce((sum, i) => sum + ensureNumber(i.total), 0);
     
     return {
       totalCount: total,
