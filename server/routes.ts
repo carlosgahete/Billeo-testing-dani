@@ -4118,16 +4118,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Si encontramos el objeto de IVA, extraemos la tasa
                   ivaRate = ivaObj.amount || ivaObj.value || 21;
                   
-                  // CAMBIO IMPORTANTE: No calculamos la base imponible.
-                  // Buscamos si existe un campo baseAmount en los impuestos adicionales
-                  const baseImponibleObj = Array.isArray(taxesData) ? 
-                    taxesData.find(tax => tax.name === "BaseImponible" || tax.name === "Base" || tax.type === "base") : null;
-                    
-                  if (baseImponibleObj && (baseImponibleObj.amount || baseImponibleObj.value)) {
-                    // Si existe, usamos ese valor directamente
-                    baseAmount = baseImponibleObj.amount || baseImponibleObj.value;
-                    console.log(`Usando base imponible explícita: ${baseAmount}€`);
-                  } else {
+                  // *** CAMBIO RADICAL: USAMOS EL MONTO TOTAL COMO BASE IMPONIBLE ***
+                  // SIMPLEMENTE USAMOS EL VALOR TOTAL
+                  baseAmount = amount;
+                  console.log(`USANDO DIRECTAMENTE EL MONTO TOTAL COMO BASE IMPONIBLE: ${amount}€`);
+                  
+                  // Dejamos un espacio IF falso para mantener la estructura del código 
+                  if (false) {
                     // Si no hay base imponible explícita en los metadatos, intentar encontrar el valor en el objeto principal
                     if (tx.baseAmount) {
                       baseAmount = Number(tx.baseAmount);
@@ -4250,10 +4247,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               baseAmount = Number(tx.subtotal);
               console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
             } else {
-              // Ya NO calculamos base imponible, usamos el importe total
-              const amount = Number(tx.amount);
-              baseAmount = amount; // Usamos el importe completo como base imponible
-              console.log(`NO CALCULAMOS BASE IMPONIBLE - usando el monto total como base imponible: ${amount}€`);
+              // USAMOS DIRECTAMENTE EL MONTO TOTAL COMO BASE IMPONIBLE
+              baseAmount = Number(tx.amount); // Usamos el importe completo como base imponible
+              console.log(`MISMO TRATAMIENTO: USANDO DIRECTAMENTE EL MONTO TOTAL COMO BASE IMPONIBLE: ${baseAmount}€`);
             }
             
             // Calculamos el IVA como la diferencia entre el total y la base imponible
