@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useInteractionGuard } from '@/utils/useInteractionGuard';
 import { 
   Card, 
   CardContent, 
@@ -105,6 +106,12 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
   
+  // Aplicamos protección de interacción global para prevenir eventos fantasma
+  const { guard } = useInteractionGuard({
+    throttleTime: 500, // Medio segundo entre eventos del mismo tipo
+    debug: true, // Activamos logs para depuración
+  });
+  
   // Obtener datos del dashboard usando el hook centralizado
   const { data: dashboardData } = useDashboardData();
   
@@ -169,16 +176,14 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     }).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)); // Ordenar por valor absoluto descendente
   }, [expensesByCategory]);
 
-  // Manejar el cambio de período
-  const handlePeriodChange = (value: string) => {
-    // Protección contra eventos fantasma
-    if (typeof document !== 'undefined' && document.hasFocus()) {
-      setSelectedPeriod(value);
-      if (onPeriodChange) {
-        onPeriodChange(value);
-      }
+  // Manejar el cambio de período con protección contra eventos fantasma
+  const handlePeriodChange = guard('period-change', (value: string) => {
+    console.log('✅ Cambiando período a:', value);
+    setSelectedPeriod(value);
+    if (onPeriodChange) {
+      onPeriodChange(value);
     }
-  };
+  });
 
   // Añadir un log para depurar la carga de datos
   useEffect(() => {
@@ -326,24 +331,9 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
                         fill="transparent"
                         stroke="transparent"
                         style={{ cursor: 'pointer' }}
-                        onMouseEnter={() => {
-                          // Protección contra eventos fantasma
-                          if (typeof document !== 'undefined' && document.hasFocus()) {
-                            setHoverIndex(idx);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          // Protección contra eventos fantasma
-                          if (typeof document !== 'undefined' && document.hasFocus()) {
-                            setHoverIndex(null);
-                          }
-                        }}
-                        onClick={() => {
-                          // Protección contra eventos fantasma
-                          if (typeof document !== 'undefined' && document.hasFocus()) {
-                            setActiveIndex(idx === activeIndex ? null : idx);
-                          }
-                        }}
+                        onMouseEnter={guard('hover-start', () => setHoverIndex(idx))}
+                        onMouseLeave={guard('hover-end', () => setHoverIndex(null))}
+                        onClick={guard('segment-click', () => setActiveIndex(idx === activeIndex ? null : idx))}
                       />
                     </g>
                   );
@@ -369,24 +359,13 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
               <div 
                 key={item.categoryId} 
                 className={`flex items-center py-2.5 cursor-pointer transition-all duration-200 ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-50 rounded-lg' : ''}`}
-                onMouseOver={() => {
-                  // Protección contra eventos fantasma
-                  if (idx < 10 && typeof document !== 'undefined' && document.hasFocus()) {
-                    setHoverIndex(idx);
-                  }
-                }}
-                onMouseOut={() => {
-                  // Protección contra eventos fantasma
-                  if (typeof document !== 'undefined' && document.hasFocus()) {
-                    setHoverIndex(null);
-                  }
-                }}
-                onClick={() => {
-                  // Protección contra eventos fantasma
-                  if (idx < 10 && typeof document !== 'undefined' && document.hasFocus()) {
-                    setActiveIndex(idx === activeIndex ? null : idx);
-                  }
-                }}
+                onMouseOver={guard('list-hover-start', () => {
+                  if (idx < 10) setHoverIndex(idx);
+                })}
+                onMouseOut={guard('list-hover-end', () => setHoverIndex(null))}
+                onClick={guard('list-item-click', () => {
+                  if (idx < 10) setActiveIndex(idx === activeIndex ? null : idx);
+                })}
               >
                 {/* Círculo con icono (estilo Apple con tamaño perfecto) */}
                 <div className="relative mr-3">
