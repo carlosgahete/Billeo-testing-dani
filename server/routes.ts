@@ -4331,17 +4331,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("CÁLCULOS NETOS PARA DASHBOARD:");
       console.log(`- Ingresos brutos: ${income}€`);
+      console.log(`- Base imponible ingresos: ${baseImponible}€`);
       console.log(`- IRPF retenido: ${irpfRetenidoIngresos}€`);
       console.log(`- Ingresos NETOS: ${netIncome}€`);
       console.log(`- Gastos brutos: ${expenses}€`);
+      console.log(`- Base imponible gastos: ${baseImponibleGastos}€`);
       console.log(`- IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
       console.log(`- Gastos NETOS: ${netExpenses}€`);
       console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
 
       return res.status(200).json({
         // Valores brutos (anteriores)
-        income,
-        expenses,
+        income: baseImponible, // Ahora mostramos la base imponible de ingresos en lugar del total
+        expenses: baseImponibleGastos, // Ahora mostramos la base imponible de gastos en lugar del total
         pendingInvoices,
         pendingCount,
         pendingQuotes: pendingQuotesTotal,

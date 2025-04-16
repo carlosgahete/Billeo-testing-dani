@@ -156,7 +156,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const ivaRepercutido = dashboardStats.ivaRepercutido || 0;
   const baseImponibleGastos = dashboardStats.baseImponibleGastos || Math.round(dashboardStats.expenses / 1.21);
   const ivaSoportado = dashboardStats.ivaSoportado || 0;
-  const ivaALiquidar = dashboardStats.taxes?.ivaLiquidar || 0;
+  const ivaALiquidar = dashboardStats.taxes?.ivaALiquidar || 0;
   const retencionesIrpf = dashboardStats.irpfRetenidoIngresos || 0;
   // Obtener el IRPF retenido en facturas de gastos
   const irpfRetenciones = dashboardStats.totalWithholdings || 0;
@@ -528,7 +528,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA a pagar:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.ivaALiquidar || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IRPF a pagar:</span>
