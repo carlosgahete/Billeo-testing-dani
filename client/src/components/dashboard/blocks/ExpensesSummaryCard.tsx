@@ -28,10 +28,10 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
   const ivaSoportado = data?.ivaSoportado || 0;
   const irpfLiquidar = data?.totalWithholdings || 0;
   
-  // Calcular base imponible: total - IVA + IRPF
-  // En un escenario de gasto como 106€ total con IVA 21% e IRPF 15%,
-  // la base imponible sería aproximadamente 100€
-  const baseImponible = expenses - ivaSoportado;
+  // Calcular base imponible: El total es 106€, el IVA es 21€ y el IRPF es 15€
+  // La base imponible es 100€, sobre la que se aplica IVA y luego se resta IRPF
+  // La fórmula correcta es: base = total / (1 + iva/100) donde total ya incluye IRPF
+  const baseImponible = Math.round(expenses / 1.21);
   
   // Formatear números para mostrar
   const formatCurrency = (value: number) => {
