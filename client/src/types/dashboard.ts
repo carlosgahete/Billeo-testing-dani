@@ -53,6 +53,9 @@ export interface DashboardStats {
   netExpenses?: number;    // Gastos netos (descontando IRPF)
   netResult?: number;      // Resultado neto final
   
+  // Datos para el gráfico de gastos por categoría
+  expensesByCategory?: Record<string, { amount: number, count: number }>;
+  
   // Datos de impuestos
   taxes: {
     vat: number;

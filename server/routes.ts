@@ -4629,7 +4629,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rejectedQuotes: rejectedQuotesCount,
         pendingQuotesCount,
         pendingQuotesTotal,
-        lastQuoteDate
+        lastQuoteDate,
+        
+        // Datos para el gráfico de gastos por categoría
+        expensesByCategory
       });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
