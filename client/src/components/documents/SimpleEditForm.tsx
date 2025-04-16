@@ -405,7 +405,7 @@ Proveedor: ${formData.provider || ""}`
         <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
         <div className="flex items-center space-x-2">
           <Select
-            value="null" // Siempre comenzar con "Sin categoría" por defecto
+            value={transaction.categoryId ? String(transaction.categoryId) : "null"}
             onValueChange={(value) => onUpdateCategory(value)}
           >
             <SelectTrigger className="w-full h-9">
