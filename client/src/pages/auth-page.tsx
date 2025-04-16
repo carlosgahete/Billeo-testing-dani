@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
 import { Eye, EyeOff } from "lucide-react";
+import { directLogin } from "../utils/directLogin";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -15,13 +16,22 @@ export default function AuthPage() {
 
   // Redirect to appropriate page if already logged in
   useEffect(() => {
+    console.log("AuthPage useEffect - Estado de user:", user ? "Autenticado" : "No autenticado");
+    
     if (user) {
+      console.log("AuthPage - Usuario autenticado, preparando redirección al dashboard");
+      
       // Use a minimal timeout to improve UX and avoid flicker
       const timer = setTimeout(() => {
         // Todos los usuarios se redirigen primero al dashboard
+        console.log("AuthPage - Redirigiendo al dashboard");
         navigate("/"); // Esta ruta "/" va al dashboard completo
-      }, 10);
-      return () => clearTimeout(timer);
+      }, 100); // Aumentado a 100ms para dar tiempo a la actualización del estado
+      
+      return () => {
+        console.log("AuthPage - Limpiando timer de redirección");
+        clearTimeout(timer);
+      };
     }
   }, [user, navigate]);
 
@@ -45,8 +55,32 @@ export default function AuthPage() {
     e.preventDefault();
     console.log("Intentando iniciar sesión con:", loginFormData);
     
-    // Proceed with login
-    loginMutation.mutate(loginFormData);
+    try {
+      // Mostrar mensaje informativo
+      toast({
+        title: "Iniciando sesión...",
+        description: "Verificando tus credenciales",
+      });
+      
+      // Proceed with login
+      loginMutation.mutate(loginFormData);
+      
+      // Verificar si la mutación se ha completado sin error después de un tiempo
+      setTimeout(() => {
+        if (!loginMutation.isPending && !loginMutation.isError && !user) {
+          console.log("Sesión iniciada pero sin redirección - Intentando recuperar usuario");
+          // Forzar una recarga para obtener los datos de usuario
+          window.location.href = "/";
+        }
+      }, 3000);
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      toast({
+        title: "Error de conexión",
+        description: "Hubo un problema al conectar con el servidor",
+        variant: "destructive",
+      });
+    }
   };
 
   const isPending = loginMutation.isPending;

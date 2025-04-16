@@ -54,31 +54,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
       try {
+        console.log("Iniciando proceso de login - Antes de la petición API");
         const res = await apiRequest("POST", "/api/login", credentials);
+        console.log("Login API respuesta status:", res.status);
         
         if (!res.ok) {
           if (res.status === 401) {
+            console.error("Login fallido: Credenciales inválidas");
             throw new Error("Usuario o contraseña incorrectos");
           } else {
             const errorData = await res.text();
+            console.error(`Login fallido con status ${res.status}:`, errorData);
             throw new Error(errorData || "Error al iniciar sesión");
           }
         }
         
-        return await res.json();
+        const data = await res.json();
+        console.log("Login exitoso - Datos de usuario recibidos:", { ...data, password: "[OCULTO]" });
+        return data;
       } catch (error) {
         console.error("Login error:", error);
         throw error;
       }
     },
     onSuccess: (userData: Omit<SelectUser, "password">) => {
+      console.log("Login mutation onSuccess - Actualizando query cache");
       queryClient.setQueryData(["/api/user"], userData);
+      
+      // Invalidar la query para forzar una recarga fresca
+      queryClient.invalidateQueries({queryKey: ["/api/user"]});
+      
       toast({
         title: "Inicio de sesión exitoso",
         description: "Bienvenido al sistema de gestión financiera",
       });
+      
+      // Verificar si los datos están actualizados en la caché
+      setTimeout(() => {
+        console.log("Estado de usuario en caché después de login:", 
+          queryClient.getQueryData(["/api/user"]));
+      }, 100);
     },
     onError: (error: Error) => {
+      console.error("Login mutation onError:", error.message);
       toast({
         title: "Error de inicio de sesión",
         description: error.message || "Usuario o contraseña incorrectos",
