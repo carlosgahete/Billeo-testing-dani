@@ -4141,10 +4141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     } else {
                       // Si no hay información específica, usamos la información proporcionada por el cliente
                       if (ivaRate > 0 && amount > 0) {
-                        // Si es Consultoría empresarial, usar directamente 100€
-                        if (tx.description === 'Consultoría empresarial') {
-                          baseAmount = 100;
-                          console.log(`Detectada consultoría empresarial, usando base fija de 100€`);
+                        // Calculamos la base imponible a partir del monto total y la tasa de IVA
+                        if (ivaRate > 0 && amount > 0) {
+                          baseAmount = Math.round((amount / (1 + (ivaRate / 100))) * 100) / 100;
+                          console.log(`Calculando base imponible a partir del monto ${amount}€ y tasa IVA ${ivaRate}%: ${baseAmount}€`);
                         } else {
                           // Si la tasa de IVA es un porcentaje y el importe total está disponible, intenta obtener la base
                           // Si tiene subtotal, usamos ese como base imponible
@@ -4250,15 +4250,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               baseAmount = Number(tx.subtotal);
               console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
             } else {
-              // Si es Consultoría empresarial, usar directamente el valor que ingresó el cliente (100€)
-              if (tx.description === 'Consultoría empresarial') {
-                baseAmount = 100;
-                console.log(`Detectada consultoría empresarial, usando base imponible directa de 100€`);
-              } else {
-                // Para otros tipos de gastos, si no tenemos información específica, podemos usar también 100€
-                baseAmount = 100; // Valor ingresado por el cliente en lugar de calcularlo
-                console.log(`No se encontró información de base imponible, usando valor fijo de 100€`);
-              }
+              // Calculamos la base imponible a partir del monto total asumiendo un IVA estándar del 21%
+              const amount = Number(tx.amount);
+              const ivaRate = 21; // Valor por defecto del IVA en España
+              baseAmount = Math.round((amount / (1 + (ivaRate / 100))) * 100) / 100;
+              console.log(`Calculando base imponible a partir del monto ${amount}€ y tasa IVA ${ivaRate}%: ${baseAmount}€`);
             }
             
             // Calculamos el IVA como la diferencia entre el total y la base imponible
