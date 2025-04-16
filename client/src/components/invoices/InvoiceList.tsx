@@ -323,19 +323,26 @@ const DeleteInvoiceDialog = ({
       forceDataRefresh();
       
       // Actualizar la vista sin redireccionar completamente para una experiencia más rápida
-      // La redirección completa solo se hace si hay algún problema
-      try {
-        const navEvent = new CustomEvent('updateInvoices');
-        window.dispatchEvent(navEvent);
-        // Solo recargamos la página si estamos en otra ruta diferente
-        if (!window.location.pathname.includes('/invoices')) {
-          window.location.href = '/invoices';
+      // Disparamos el evento personalizado para actualizar los datos
+      const navEvent = new CustomEvent('updateInvoices');
+      window.dispatchEvent(navEvent);
+      
+      // Usamos setTimout con tiempo cero para dar prioridad a la actualización de la UI
+      setTimeout(() => {
+        try {
+          // Verificar la ruta actual para evitar recargas innecesarias
+          if (!window.location.pathname.includes('/invoices')) {
+            // Si no estamos en la página de facturas, entonces redirigimos de manera segura
+            window.location.href = '/invoices';
+          } else {
+            // Estamos ya en la página de facturas, solo actualizamos los datos nuevamente
+            console.log("📊 Actualizando datos localmente sin recargar la página");
+            queryClient.refetchQueries();
+          }
+        } catch (err) {
+          console.error("Error al actualizar vista:", err);
         }
-      } catch (err) {
-        console.error("Error al actualizar vista:", err);
-        // Si falla, usamos el método antiguo
-        window.location.href = '/invoices';
-      }
+      }, 0);
     } catch (error: any) {
       console.error("Error al eliminar factura desde el diálogo:", error);
       
