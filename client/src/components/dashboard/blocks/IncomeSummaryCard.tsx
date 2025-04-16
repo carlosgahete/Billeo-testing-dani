@@ -28,8 +28,9 @@ const IncomeSummaryCard: React.FC<IncomeSummaryCardProps> = ({ data, isLoading }
   const ivaRepercutido = data?.taxStats?.ivaRepercutido || 0;
   const irpfRetenido = data?.irpfRetenidoIngresos || 0;
   
-  // Para este caso específico, sabemos que la base imponible es 1000€
-  const baseImponible = 100000; // 1000€ en céntimos
+  // Calcular la base imponible dinámicamente
+  // La base imponible debe calcularse según las facturas ingresadas
+  const baseImponible = data?.baseImponible || Math.round(income / 1.21);
   
   // Formatear números para mostrar
   const formatCurrency = (value: number) => {
