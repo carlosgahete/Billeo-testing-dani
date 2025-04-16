@@ -761,15 +761,17 @@ const TransactionList = () => {
         
         return (
           <div className="flex justify-end space-x-1">
-            {/* Botón de editar siempre visible */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
-              title="Editar"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            {/* Botón de editar - visible solo si NO es un gasto */}
+            {transaction.type !== "expense" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
+                title="Editar"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
             
             {/* Botón de descarga - siempre visible pero deshabilitado si no hay adjuntos */}
             <Button
