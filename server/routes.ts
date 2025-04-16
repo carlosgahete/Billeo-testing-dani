@@ -4111,10 +4111,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const ivaRate = parseFloat(ivaObj.amount) || 21;
                 console.log(`- IVA encontrado, tasa: ${ivaRate}%`);
                 
-                // Si tenemos un valor explícito del IVA, lo usamos
-                if (ivaObj.value && !isNaN(Number(ivaObj.value))) {
+                // Si tenemos un valor explícito del IVA, lo usamos como prioridad
+                if (ivaObj.value !== undefined && !isNaN(Number(ivaObj.value))) {
+                  // Usamos directamente el valor explícito proporcionado
                   ivaAmount = Number(ivaObj.value);
                   console.log(`- USANDO valor explícito de IVA: ${ivaAmount}€`);
+                  
+                  // Calculamos la base imponible como: total - IVA (en lugar de usar la fórmula)
+                  const baseReal = amount - ivaAmount;
+                  console.log(`- Base imponible real (total - IVA): ${baseReal.toFixed(2)}€`);
                 } else {
                   // Si no tenemos valor explícito, lo calculamos con la fórmula
                   const base = amount / (1 + (ivaRate / 100));
@@ -4229,13 +4234,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   ivaRate = ivaObj.amount || 21;
                   const ivaValue = ivaObj.value || 0;
                   
-                  // Calcular la base imponible correctamente usando la fórmula matemática
-                  // La fórmula correcta es base = amount / (1 + (ivaRate/100))
+                  // Calcular la base imponible cuando tenemos un valor explicito de IVA
                   if (ivaValue > 0) {
-                    // Si tenemos el valor exacto del IVA, podemos calcular la base imponible
-                    // usando la fórmula: base = total / (1 + (ivaRate/100))
-                    baseAmount = Math.round((amount / (1 + (ivaRate/100))) * 100) / 100;
-                    console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${amount}€ con IVA ${ivaRate}%: ${baseAmount}€ (IVA: ${ivaValue}€)`);
+                    // Si tenemos el valor exacto del IVA, calculamos la base como TOTAL - IVA
+                    // en lugar de usar la fórmula con porcentajes que puede dar imprecisiones
+                    baseAmount = amount - ivaValue;
+                    console.log(`CORRECCIÓN: Usando base imponible real (total - IVA): ${amount}€ - ${ivaValue}€ = ${baseAmount.toFixed(2)}€`);
                   } else {
                     // Si no tenemos el valor específico, intentamos usar otros métodos para determinar la base
                     if (tx.baseAmount) {

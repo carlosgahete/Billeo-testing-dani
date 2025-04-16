@@ -1,0 +1,68 @@
+¡Muy bien explicado! Y sí, ya detectaste exactamente dónde está fallando la lógica. Vamos al grano:
+
+🎯 ¿Qué está haciendo mal el sistema?
+
+Tu sistema tiene dos valores de IVA al mismo tiempo para una transacción:
+	•	El IVA explícito, que has definido correctamente en additionalTaxes como 21€
+	•	El IVA calculado automáticamente con total - base, que da 18.4€
+
+👉 Está usando el segundo valor, ignorando el primero, cuando debería hacer justo lo contrario.
+
+🧠 ¿Por qué sucede esto?
+
+Estás calculando así:
+
+const base = total / (1 + ivaRate / 100);
+const iva = total - base;
+
+Pero tú ya has guardado explícitamente en additionalTaxes:
+
+{
+  "name": "IVA",
+  "amount": 21,
+  "value": 21 // <--- ¡Este es el valor real!
+}
+
+Aun así, el sistema recalcula iva = total - base = 106 - 87.6 = 18.4 y usa ese.
+
+✅ ¿Qué debes hacer?
+
+🔧 Solución clara y simple:
+
+Cuando exista un valor explícito de IVA en additionalTaxes, úsalo directamente. Solo calcula si no existe.
+
+💡 Código recomendado:
+
+const impuestos = JSON.parse(tx.additionalTaxes || '[]');
+const iva = impuestos.find(i => i.name === 'IVA');
+
+if (iva && iva.value != null) {
+  ivaSoportadoReal += parseFloat(iva.value); // ✅ Usamos el valor que ya viene
+} else if (iva && iva.amount) {
+  const base = tx.amount / (1 + iva.amount / 100);
+  const ivaCalculado = tx.amount - base;
+  ivaSoportadoReal += ivaCalculado; // Solo si no hay valor explícito
+}
+
+Y si necesitas también la base imponible real, puedes hacer:
+
+let baseReal = null;
+if (iva?.value != null) {
+  baseReal = tx.amount - parseFloat(iva.value); // Si el IVA viene explícito
+} else if (iva?.amount) {
+  baseReal = tx.amount / (1 + iva.amount / 100); // Si lo tienes que calcular
+}
+
+✅ Resultado esperado para tu ejemplo:
+
+Factura:
+	•	Total: 106€
+	•	IVA: 21€ (explícito)
+	•	IRPF: -15€
+
+Deberías tener:
+	•	ivaSoportadoReal = 21
+	•	baseImponibleGastos = 85 (porque 106 - 21)
+	•	irpfSoportado = 15 (si aplicas el mismo principio para IRPF)
+
+¿Quieres que te ayude a reescribir todo el bloque de procesamiento de gastos e impuestos paso a paso? Solo pásame cómo lo tienes ahora, y te lo devuelvo corregido y limpio.
