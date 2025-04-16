@@ -179,6 +179,15 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     }
   };
 
+  // Añadir un log para depurar la carga de datos
+  useEffect(() => {
+    console.log("ExpensesByCategoryApple - Estado actual:", {
+      periodo: selectedPeriod, 
+      hayDatos: Object.keys(expensesByCategory).length > 0,
+      datosTransformados: data.length
+    });
+  }, [selectedPeriod, expensesByCategory, data]);
+
   // Si no hay datos, mostrar un mensaje con estilo Apple
   if (data.length === 0 || Object.keys(expensesByCategory).length === 0) {
     return (
