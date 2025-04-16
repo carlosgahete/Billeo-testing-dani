@@ -25,8 +25,21 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
   
   // Valores reales o por defecto si no hay datos
   const expenses = data?.expenses || 0;
-  const ivaSoportado = data?.taxStats?.ivaSoportado || 0;
-  const irpfLiquidar = data?.taxStats?.irpfPagar || 0;
+  const ivaSoportado = data?.ivaSoportado || 0;
+  const irpfLiquidar = data?.totalWithholdings || 0;
+  
+  // Calcular base imponible: total - IVA + IRPF
+  // En un escenario de gasto como 106€ total con IVA 21% e IRPF 15%,
+  // la base imponible sería aproximadamente 100€
+  const baseImponible = expenses - ivaSoportado;
+  
+  // Formatear números para mostrar
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(value / 100);
+  };
   
   return (
     <Card className="overflow-hidden flex-grow">
@@ -52,24 +65,46 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
       </CardHeader>
       <CardContent className="p-3">
         <p className="text-2xl font-bold text-red-600">
-          {new Intl.NumberFormat('es-ES', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-          }).format(expenses / 100)} €
+          {formatCurrency(expenses)} €
         </p>
         
-        <div className="mt-2 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-neutral-500">IVA incluido en los gastos:</span>
-            <span className="font-medium">{(ivaSoportado / 100).toLocaleString('es-ES')} €</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-neutral-500">IRPF a liquidar por gastos:</span>
-            <span className="font-medium">-{(irpfLiquidar / 100).toLocaleString('es-ES')} €</span>
+        {/* Desglose fiscal */}
+        <div className="mt-3 space-y-2 bg-gray-50 p-3 rounded-md border border-gray-100">
+          <h4 className="text-sm font-medium text-gray-700 pb-1 border-b border-gray-200">
+            Desglose fiscal
+          </h4>
+          
+          <div className="space-y-1 text-sm">
+            {/* Base Imponible */}
+            <div className="flex justify-between">
+              <span className="text-neutral-600">Base imponible:</span>
+              <span className="font-medium">{formatCurrency(baseImponible)} €</span>
+            </div>
+            
+            {/* IVA */}
+            <div className="flex justify-between">
+              <span className="text-neutral-600">IVA:</span>
+              <span className="font-medium text-blue-600">+{formatCurrency(ivaSoportado)} €</span>
+            </div>
+            
+            {/* IRPF */}
+            <div className="flex justify-between">
+              <span className="text-neutral-600">IRPF:</span>
+              <span className="font-medium text-red-600">-{formatCurrency(irpfLiquidar)} €</span>
+            </div>
+            
+            {/* Línea divisoria */}
+            <div className="border-t border-gray-200 my-1"></div>
+            
+            {/* Total */}
+            <div className="flex justify-between">
+              <span className="font-medium">Total:</span>
+              <span className="font-bold">{formatCurrency(expenses)} €</span>
+            </div>
           </div>
         </div>
         
-        <div className="mt-auto pt-8 mb-2">
+        <div className="mt-auto pt-4 mb-2">
           <Button 
             variant="outline" 
             size="sm" 
