@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, Calculator } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -397,7 +397,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-purple-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <FileText className="md:h-5 md:w-5 h-4 w-4 text-purple-600" strokeWidth={1.5} />
+                <Receipt className="md:h-5 md:w-5 h-4 w-4 text-purple-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Facturas pendientes</h3>
@@ -420,7 +420,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-amber-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <FileText className="md:h-5 md:w-5 h-4 w-4 text-amber-600" strokeWidth={1.5} />
+                <ClipboardCheck className="md:h-5 md:w-5 h-4 w-4 text-amber-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Presupuestos pendientes</h3>
@@ -443,7 +443,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-emerald-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <FileText className="md:h-5 md:w-5 h-4 w-4 text-emerald-600" strokeWidth={1.5} />
+                <Calculator className="md:h-5 md:w-5 h-4 w-4 text-emerald-600" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Impuestos</h3>
