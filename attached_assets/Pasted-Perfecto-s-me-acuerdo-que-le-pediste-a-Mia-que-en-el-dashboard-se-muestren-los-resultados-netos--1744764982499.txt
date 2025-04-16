@@ -1,0 +1,110 @@
+Perfecto, sí me acuerdo que le pediste a Mia que en el dashboard se muestren los resultados netos:
+	•	Ingresos netos = Total facturado menos IRPF
+	•	Gastos netos = Total gasto menos IRPF (si lo tienen)
+	•	Resultado final = Ingresos netos menos gastos netos
+
+Ahora vamos a hacer una simulación clara y ordenada para que puedas comprobar si Mia está calculando bien todo. Le pediré que cree varias facturas (ingresos) y transacciones de gasto, con fechas en distintos años (2023, 2024, 2025), y todos marcados como pagados.
+
+⸻
+
+SIMULACIÓN PARA TEST (A darle a Mia):
+
+1. Facturas (INGRESOS)
+
+Todas con:
+	•	Base imponible: 1.000€
+	•	IRPF: 15%
+	•	IVA: 21%
+	•	Neto: 1.000€ - 15% = 850€
+
+Nº	Fecha	Año	Base	IRPF	IVA	Total	Neto Ingreso
+1	2025-03-15	2025	1.000€	150€	210€	1.060€	850€
+2	2025-01-10	2025	1.000€	150€	210€	1.060€	850€
+3	2024-07-22	2024	1.000€	150€	210€	1.060€	850€
+4	2023-05-03	2023	1.000€	150€	210€	1.060€	850€
+
+
+
+⸻
+
+2. Gastos (GASTOS)
+
+Gasto con IRPF (profesional)
+	•	Base: 500€
+	•	IRPF: 15%
+	•	IVA: 21%
+	•	Neto: 500€ - 15% = 425€
+
+Gasto sin IRPF (producto, material, etc.)
+	•	Base: 300€
+	•	IVA: 21%
+	•	Neto: 300€
+
+Nº	Fecha	Año	Base	IRPF	IVA	Total	Neto Gasto
+1	2025-02-01	2025	500€	75€	105€	530€	425€
+2	2025-04-01	2025	300€	0€	63€	363€	300€
+3	2024-03-10	2024	500€	75€	105€	530€	425€
+4	2023-06-18	2023	300€	0€	63€	363€	300€
+
+
+
+⸻
+
+LO QUE MIA DEBE MOSTRAR EN EL DASHBOARD (por año):
+
+Para el año 2025:
+
+Ingresos:
+	•	Factura 1 (850€) + Factura 2 (850€) = 1.700€
+
+Gastos:
+	•	Gasto 1 (425€) + Gasto 2 (300€) = 725€
+
+Resultado Final:
+	•	1.700€ - 725€ = 975€
+
+⸻
+
+Para el año 2024:
+
+Ingresos:
+	•	Factura 3 = 850€
+
+Gastos:
+	•	Gasto 3 = 425€
+
+Resultado Final:
+	•	850€ - 425€ = 425€
+
+⸻
+
+Para el año 2023:
+
+Ingresos:
+	•	Factura 4 = 850€
+
+Gastos:
+	•	Gasto 4 = 300€
+
+Resultado Final:
+	•	850€ - 300€ = 550€
+
+⸻
+
+Resumen General para Validar en el Dashboard:
+
+Año	Ingresos Netos	Gastos Netos	Resultado Final
+2025	1.700€	725€	975€
+2024	850€	425€	425€
+2023	850€	300€	550€
+
+
+
+⸻
+
+Pídele ahora a Mia que introduzca estos datos y que te muestre en el dashboard exactamente estos valores netos por año. Si alguno no coincide, significa que:
+	•	Está calculando ingresos o gastos en bruto (sin descontar IRPF).
+	•	O está calculando sobre el IVA, que no debería afectar al resultado neto.
+	•	O no está agrupando bien por año.
+
+¿Quieres que también le dé las fórmulas exactas que debe usar Mia para calcular el neto desde la factura o transacción?

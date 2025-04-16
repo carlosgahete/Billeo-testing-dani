@@ -4087,7 +4087,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastQuoteDate = sortedQuotes[0].issueDate;
       }
       
+      // Cálculo de valores netos para el dashboard según requerimientos
+      // 1. Ingresos netos = Total facturado menos IRPF retenido
+      const netIncome = income - irpfRetenidoIngresos;
+      
+      // 2. Gastos netos = Total gasto menos IRPF en gastos (si lo tienen)
+      const netExpenses = expenses - totalIrpfFromExpensesInvoices;
+      
+      // 3. Resultado final neto = Ingresos netos menos gastos netos
+      const netResult = netIncome - netExpenses;
+      
+      console.log("CÁLCULOS NETOS PARA DASHBOARD:");
+      console.log(`- Ingresos brutos: ${income}€`);
+      console.log(`- IRPF retenido: ${irpfRetenidoIngresos}€`);
+      console.log(`- Ingresos NETOS: ${netIncome}€`);
+      console.log(`- Gastos brutos: ${expenses}€`);
+      console.log(`- IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
+      console.log(`- Gastos NETOS: ${netExpenses}€`);
+      console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
+
       return res.status(200).json({
+        // Valores brutos (anteriores)
         income,
         expenses,
         pendingInvoices,
@@ -4103,6 +4123,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ivaSoportado, // IVA soportado (pagado)
         period,
         year,
+        
+        // Nuevos valores netos para dashboard
+        netIncome,       // Ingresos netos (descontando IRPF)
+        netExpenses,     // Gastos netos (descontando IRPF)
+        netResult,       // Resultado neto final
+        
         taxes: {
           vat: vatBalance,
           incomeTax,
