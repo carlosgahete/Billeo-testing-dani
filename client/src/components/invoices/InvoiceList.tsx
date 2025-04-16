@@ -310,32 +310,58 @@ const DeleteInvoiceDialog = ({
       // Eliminar la factura
       const response = await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
       
-      // Notificar al usuario
+      // Verificar que la respuesta sea exitosa
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.message || "Error al eliminar la factura");
+      }
+      
+      // Notificar al usuario del éxito
       toast({
         title: "Factura eliminada",
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
       });
       
-      // Cerrar el diálogo
+      // Cerrar el diálogo y actualizar los datos
       onConfirm();
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
-      // Redireccionar a la página de facturas
+      // Forzar actualización de datos antes de redireccionar
+      forceDataRefresh();
+      
+      // Redireccionar a la página de facturas, pero mantenemos la app funcional si falla
       setTimeout(() => {
-        window.location.href = '/invoices';
-      }, 500);
+        try {
+          window.location.href = '/invoices';
+        } catch (err) {
+          console.error("Error al redireccionar:", err);
+          // No hacemos nada, la UI sigue siendo funcional
+        }
+      }, 800);
     } catch (error: any) {
       console.error("Error al eliminar factura desde el diálogo:", error);
       
       // Extraer el mensaje de error más específico si está disponible
-      const errorMsg = error.response?.data?.detail || 
-                      error.response?.data?.message || 
-                      (error.message || "No se pudo eliminar la factura");
+      let errorMsg = "No se pudo eliminar la factura";
       
+      if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      // Mostrar el error al usuario
       toast({
         title: "Error al eliminar factura",
         description: errorMsg,
         variant: "destructive",
       });
+      
+      // Asegurar que la interfaz se actualice en caso de error
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
     } finally {
       setIsPending(false);
     }
@@ -1433,27 +1459,48 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                 onClick={() => {
                   if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
                     apiRequest("DELETE", `/api/invoices/${invoice.id}`)
-                      .then(() => {
-                        toast({
-                          title: "Factura eliminada",
-                          description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
-                        });
-                        // Actualizar la lista
-                        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                      .then((response) => {
+                        // Verificar si la respuesta es exitosa
+                        if (response.ok) {
+                          toast({
+                            title: "Factura eliminada",
+                            description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
+                          });
+                          // Actualizar la lista de facturas y estadísticas
+                          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                          queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                          // Forzar la actualización de datos
+                          forceDataRefresh();
+                        } else {
+                          // Si la respuesta no es 200-299, convertir a JSON para obtener el mensaje de error
+                          return response.json().then(errorData => {
+                            throw new Error(errorData.detail || errorData.message || "Error al eliminar la factura");
+                          });
+                        }
                       })
                       .catch((error) => {
-                        console.error("Error al eliminar factura:", error);
-                        // Mostrar mensaje de error específico si está disponible
-                        const errorMsg = error.response?.data?.detail || 
-                                        error.response?.data?.message || 
-                                        "No se pudo eliminar la factura";
+                        console.error("Error al eliminar factura (versión móvil):", error);
                         
+                        // Extraer mensaje de error de varias fuentes posibles
+                        let errorMsg = "No se pudo eliminar la factura";
+                        
+                        if (error.response?.data?.detail) {
+                          errorMsg = error.response.data.detail;
+                        } else if (error.response?.data?.message) {
+                          errorMsg = error.response.data.message;
+                        } else if (error.message) {
+                          errorMsg = error.message;
+                        }
+                        
+                        // Mostrar mensaje de error
                         toast({
                           title: "Error al eliminar factura",
                           description: errorMsg,
                           variant: "destructive",
                         });
+                        
+                        // Asegurar que la interfaz se actualice en caso de error
+                        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
                       });
                   }
                 }}
