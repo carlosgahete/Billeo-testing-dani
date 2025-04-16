@@ -370,10 +370,13 @@ const ExpensesByCategoryNew: React.FC<{
             </SelectContent>
           </Select>
         </CardHeader>
-        <CardContent className="p-6 flex flex-col items-center justify-center h-[300px]">
-          <div className="text-center text-gray-500">
-            <p>No hay gastos registrados para este período</p>
-            <p className="text-sm mt-2">Selecciona otro período o añade gastos</p>
+        <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center h-[300px]">
+          <div className="text-center">
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p className="text-gray-600 font-medium text-lg">No hay gastos registrados</p>
+            <p className="text-sm mt-2 text-gray-400">Selecciona otro período o añade gastos</p>
           </div>
         </CardContent>
       </Card>
@@ -383,16 +386,16 @@ const ExpensesByCategoryNew: React.FC<{
   // Diseño adaptado a los nuevos requerimientos - sin título y con tarjeta más grande
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
-      <CardHeader className="p-2 sm:p-3 flex justify-end">
-        {/* Solo el selector de período, sin título */}
+      <CardHeader className="p-3 sm:p-4 flex justify-end">
+        {/* Selector de período con estilo Apple */}
         <Select 
           value={selectedPeriod}
           onValueChange={handlePeriodChange}
         >
-          <SelectTrigger className="w-40 h-8 text-xs">
+          <SelectTrigger className="w-44 h-8 text-xs bg-gray-50 border-0 rounded-full shadow-sm hover:bg-gray-100 transition-colors">
             <SelectValue placeholder="Seleccionar período" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-lg shadow-md">
             {/* Generar opciones para cada año disponible */}
             {availableYears.map(year => [
                 <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
@@ -417,29 +420,27 @@ const ExpensesByCategoryNew: React.FC<{
         </Select>
       </CardHeader>
       
-      <CardContent className="p-2 sm:p-4">
-        
-        {/* Contenido principal con donut y lista de categorías */}
-        <div className="flex h-full">
-          {/* Gráfico donut (alineado y centrado vertical/horizontalmente) */}
-          <div className="w-1/2 flex items-center justify-start pl-0 sm:pl-1 my-auto">
-            {/* Gráfico de donut (anillo) - con tamaño aumentado */}
-            <div className="relative w-40 h-40 sm:w-52 sm:h-52 mx-auto">
-              {/* Círculo base (agujero blanco del centro) */}
+      <CardContent className="p-4 pb-6 sm:p-6 sm:pb-8">
+        {/* Layout al estilo Apple con más aire y simetría perfecta */}
+        <div className="flex flex-col sm:flex-row h-full gap-6">
+          {/* Gráfico donut perfectamente centrado (estilo Apple) */}
+          <div className="flex justify-center items-center w-full sm:w-1/2 py-4 sm:py-0">
+            <div className="relative w-48 h-48 sm:w-56 sm:h-56">
+              {/* Círculo base (agujero central con sombra sutil) */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full"></div>
+                <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-full shadow-inner"></div>
               </div>
               
               {/* Construcción del donut con segmentos circulares */}
               <svg className="w-full h-full" viewBox="0 0 100 100" style={{ zIndex: 10 }}>
                 <desc>Gráfico de distribución de gastos</desc>
-                {/* Círculo base (gris claro) */}
+                {/* Círculo base (gris muy claro) */}
                 <circle 
                   cx="50" 
                   cy="50" 
                   r="40" 
                   fill="transparent" 
-                  stroke="#f1f1f1"
+                  stroke="#f5f5f7"
                   strokeWidth="20"
                 />
                 {data.slice(0, Math.min(10, data.length)).map((item, idx) => {
@@ -481,25 +482,25 @@ const ExpensesByCategoryNew: React.FC<{
                 })}
               </svg>
               
-              {/* Información en el centro solo cuando hay mouse hover sobre un segmento */}
+              {/* Información en el centro con estilo Apple (más sutil y suave) */}
               {hoverIndex !== null && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-white p-3 rounded-md shadow-sm text-center w-36">
+                  <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-sm text-center w-40">
                     <p className="font-semibold text-sm truncate">{data[hoverIndex].name}</p>
-                    <p className="text-red-600 text-base">{formatCurrency(data[hoverIndex].value * -1)}</p>
-                    <p className="text-gray-500 text-xs">{data[hoverIndex].percentage.toFixed(2)}%</p>
+                    <p className="text-red-600 text-base font-medium">{formatCurrency(data[hoverIndex].value * -1)}</p>
+                    <p className="text-gray-500 text-xs">{data[hoverIndex].percentage.toFixed(1)}%</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
           
-          {/* Lado derecho: Lista de categorías con scroll cuando es necesario - altura aumentada */}
-          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[320px] overflow-y-auto custom-scrollbar pr-1 sm:pr-3 pt-3">
+          {/* Lista de categorías con estilo Apple (más limpio y minimalista) */}
+          <div className="w-full sm:w-1/2 flex flex-col max-h-[320px] overflow-y-auto custom-scrollbar pr-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200">
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
-                className={`flex items-center py-1 cursor-pointer transition-colors ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-100 rounded' : ''}`}
+                className={`flex items-center py-2.5 cursor-pointer transition-all duration-200 ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-50 rounded-lg' : ''}`}
                 onMouseOver={() => {
                   if (idx < 10) {
                     setHoverIndex(idx);
@@ -507,40 +508,39 @@ const ExpensesByCategoryNew: React.FC<{
                 }}
                 onMouseOut={() => setHoverIndex(null)}
                 onClick={() => {
-                  // Solo permitir clic en elementos que están en el gráfico (primeros 10)
                   if (idx < 10) {
                     setActiveIndex(idx === activeIndex ? null : idx);
                   }
                 }}
               >
-                {/* Círculo con icono */}
+                {/* Círculo con icono (estilo Apple con tamaño perfecto) */}
                 <div className="relative mr-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    {/* Indicador de color */}
+                  <div className="w-10 h-10 sm:w-10 sm:h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                    {/* Indicador de color con diseño más sutil */}
                     <div 
                       className="absolute left-0 top-0 w-3 h-3 rounded-full" 
                       style={{ backgroundColor: item.color }}
                     ></div>
                     {/* Icono */}
-                    <span className="text-sm sm:text-lg">{item.icon}</span>
+                    <span className="text-base text-gray-600">{item.icon}</span>
                   </div>
                 </div>
                 
-                {/* Información de la categoría */}
+                {/* Información de la categoría (tipografía mejorada) */}
                 <div className="flex-grow">
-                  <div className="text-sm sm:text-base font-medium text-gray-900">{item.name}</div>
-                  <div className="text-xs sm:text-sm text-gray-500">
-                    {item.count} {item.count === 1 ? 'trans.' : 'trans.'}
+                  <div className="text-sm font-medium text-gray-800">{item.name}</div>
+                  <div className="text-xs text-gray-400">
+                    {item.count} {item.count === 1 ? 'transacción' : 'transacciones'}
                   </div>
                 </div>
                 
-                {/* Valores y porcentajes */}
-                <div className="text-right mr-2 sm:mr-8">
+                {/* Valores y porcentajes (alineado y espaciado perfecto) */}
+                <div className="text-right pl-2">
                   <div className="text-base font-medium text-red-600">
                     {formatCurrency(item.value * -1)}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {item.percentage.toFixed(2)}%
+                  <div className="text-xs text-gray-400">
+                    {item.percentage.toFixed(1)}%
                   </div>
                 </div>
               </div>
