@@ -17,37 +17,44 @@ export function ProtectedRoute({
   path: string;
   component: React.FC<{}>;
 }) {
+  return (
+    <Route path={path}>
+      <ProtectedRouteGuard component={Component} route={path} />
+    </Route>
+  );
+}
+
+// Componente interno para la protección real
+function ProtectedRouteGuard({
+  component: Component,
+  route,
+}: {
+  component: React.FC<{}>;
+  route: string;
+}) {
   const { user, isLoading } = useAuth();
 
-  // Si estamos cargando los datos del usuario, mostrar un indicador de carga más ligero
+  // Si estamos cargando los datos del usuario, mostrar un indicador de carga
   if (isLoading) {
     return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Route>
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
-  // Si no hay usuario, redirigir al inicio de sesión
+  // Si no hay usuario autenticado, redirigir al login
   if (!user) {
-    console.log(`ProtectedRoute: Acceso denegado a ${path} - Usuario no autenticado`);
-    return (
-      <Route path={path}>
-        <Redirect to="/auth" />
-      </Route>
-    );
+    console.log(`⛔ ProtectedRouteGuard: Acceso denegado a ${route} - Usuario no autenticado (Redirigiendo...)`);
+    return <Redirect to="/auth" />;
   }
 
   // Usuario autenticado - Renderizar el componente
-  console.log(`ProtectedRoute: Acceso permitido a ${path} - Usuario: ${user.username}`);
+  console.log(`✅ ProtectedRouteGuard: Acceso permitido a ${route} - Usuario: ${user.username}`);
   return (
-    <Route path={path}>
-      <Suspense fallback={<LazyLoader />}>
-        <Component />
-      </Suspense>
-    </Route>
+    <Suspense fallback={<LazyLoader />}>
+      <Component />
+    </Suspense>
   );
 }
 
@@ -58,51 +65,53 @@ export function ProtectedAdminRoute({
   path: string;
   component: React.FC<{}>;
 }) {
+  return (
+    <Route path={path}>
+      <ProtectedAdminRouteGuard component={Component} route={path} />
+    </Route>
+  );
+}
+
+// Componente interno para la protección de rutas de administrador
+function ProtectedAdminRouteGuard({
+  component: Component,
+  route,
+}: {
+  component: React.FC<{}>;
+  route: string;
+}) {
   const { user, isLoading } = useAuth();
-  
+
   // Si estamos cargando los datos del usuario, mostrar un indicador de carga
   if (isLoading) {
     return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Route>
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
-  // Si no hay usuario o no es administrador, redirigir
+  // Si no hay usuario autenticado, redirigir al login
   if (!user) {
-    console.log(`ProtectedAdminRoute: Acceso denegado a ${path} - Usuario no autenticado`);
-    return (
-      <Route path={path}>
-        <Redirect to="/auth" />
-      </Route>
-    );
+    console.log(`⛔ ProtectedAdminRouteGuard: Acceso denegado a ${route} - Usuario no autenticado (Redirigiendo...)`);
+    return <Redirect to="/auth" />;
   }
   
-  // Si el usuario no es administrador o superadmin, redirigir al dashboard
-  // También permitimos a los usuarios "Superadmin" o "billeo_admin" independientemente de su rol
+  // Si el usuario no es administrador, redirigir al dashboard
   if (user.role !== 'admin' && 
       user.role !== 'superadmin' && 
       user.role !== 'SUPERADMIN' && 
       user.username !== 'Superadmin' &&
       user.username !== 'billeo_admin') {
-    console.log(`ProtectedAdminRoute: Acceso denegado a ${path} - Usuario ${user.username} no tiene permisos de administrador`);
-    return (
-      <Route path={path}>
-        <Redirect to="/" />
-      </Route>
-    );
+    console.log(`⛔ ProtectedAdminRouteGuard: Acceso denegado a ${route} - Usuario ${user.username} no tiene permisos de administrador (Redirigiendo...)`);
+    return <Redirect to="/" />;
   }
 
   // Usuario administrador autenticado - Renderizar el componente
-  console.log(`ProtectedAdminRoute: Acceso permitido a ${path} - Admin: ${user.username}`);
+  console.log(`✅ ProtectedAdminRouteGuard: Acceso permitido a ${route} - Admin: ${user.username}`);
   return (
-    <Route path={path}>
-      <Suspense fallback={<LazyLoader />}>
-        <Component />
-      </Suspense>
-    </Route>
+    <Suspense fallback={<LazyLoader />}>
+      <Component />
+    </Suspense>
   );
 }
