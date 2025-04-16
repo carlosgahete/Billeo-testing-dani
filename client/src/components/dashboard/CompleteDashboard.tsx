@@ -240,7 +240,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedYear("2025");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -250,7 +250,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedYear("2024");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -260,7 +260,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedYear("2023");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -295,7 +295,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("all");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -305,7 +305,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("q1");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -315,7 +315,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("q2");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -325,7 +325,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("q3");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -335,7 +335,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("q4");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -563,7 +563,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                   const [year, newPeriod] = period.split('-');
                   setSelectedYear(year);
                   setSelectedPeriod(newPeriod);
-                  setTimeout(applyFilters, 100);
+                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
               />
             </div>
