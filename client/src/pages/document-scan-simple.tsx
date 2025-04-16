@@ -146,8 +146,20 @@ const DocumentScanPage = () => {
 
       const data = await response.json();
       
-      setExtractedData(data.extractedData);
-      setTransaction(data.transaction);
+      // Asegurarse de que hay datos reales antes de establecer los estados
+      const hasExtractedData = data.extractedData && Object.keys(data.extractedData).length > 0;
+      const hasTransaction = data.transaction && Object.keys(data.transaction).length > 0;
+      
+      console.log('Datos extraídos del documento:', { 
+        hasExtractedData, 
+        hasTransaction, 
+        extractedData: data.extractedData,
+        transaction: data.transaction
+      });
+      
+      // Establecer datos solo si realmente existen
+      setExtractedData(hasExtractedData ? data.extractedData : null);
+      setTransaction(hasTransaction ? data.transaction : null);
       setDocumentImage(data.documentUrl || null);
       
       // Ir directamente a edición sin mostrar el diálogo de confirmación
@@ -180,11 +192,15 @@ const DocumentScanPage = () => {
     setFile(null);
     setFileName("");
     setPreviewUrl(null);
+    
+    // IMPORTANTE: Inicializar explícitamente con null para evitar datos por defecto
     setExtractedData(null);
     setTransaction(null);
     setDocumentImage(null);
     setShowEditMode(false);
     setIsSecondStep(false);
+    
+    console.log('Reiniciando formulario completamente - sin mostrar valores por defecto');
     
     // Función de limpieza cuando se desmonta el componente
     return () => {
@@ -547,8 +563,8 @@ const DocumentScanPage = () => {
                 </h3>
                 
                 <SimpleEditForm 
-                  transaction={transaction}
-                  extractedData={extractedData || {}}
+                  transaction={transaction || {}}
+                  extractedData={extractedData || null}
                   categories={categories}
                   onCreateCategory={() => setNewCategoryDialogOpen(true)}
                   onSave={handleSaveChanges}
