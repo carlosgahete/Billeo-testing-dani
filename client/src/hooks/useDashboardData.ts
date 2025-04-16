@@ -58,13 +58,7 @@ export function useDashboardData() {
     refetch();
   }, [refetch]);
   
-  // Refrescar datos automáticamente cuando cambien year o period
-  useEffect(() => {
-    if (year && period) {
-      console.log('🔄 Ejecutando refetch automático por cambio en filtros:', year, period);
-      refetch();
-    }
-  }, [year, period, refetch]);
+  // Nota: Removemos este useEffect para evitar ciclos de actualización
   
   // Eventos que escuchar para actualizar el dashboard
   useEffect(() => {
@@ -149,13 +143,21 @@ export function useDashboardData() {
     setYear(newYear);
     // Forzamos refetch inmediatamente cuando cambia el año
     console.log('🔄 Cambiando año a:', newYear);
-  }, []);
+    setTimeout(() => {
+      console.log('Ejecutando refetch después de cambiar año');
+      refetch();
+    }, 0);
+  }, [refetch]);
   
   const changePeriod = useCallback((newPeriod: string) => {
     setPeriod(newPeriod);
     // Forzamos refetch inmediatamente cuando cambia el periodo
     console.log('🔄 Cambiando periodo a:', newPeriod);
-  }, []);
+    setTimeout(() => {
+      console.log('Ejecutando refetch después de cambiar periodo');
+      refetch();
+    }, 0);
+  }, [refetch]);
   
   return {
     data,
