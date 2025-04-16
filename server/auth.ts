@@ -207,7 +207,7 @@ export function setupAuth(app: Express) {
       
       console.log("Usuario autenticado correctamente:", user.username);
       
-      req.login(user, (err: any) => {
+      req.login(user, async (err: any) => {
         if (err) {
           console.error("Error en login:", err);
           return next(err);
@@ -215,12 +215,26 @@ export function setupAuth(app: Express) {
         
         // Mejorar la sesión con datos adicionales de respaldo
         try {
-          import('./session-helper.js').then(({ enhanceUserSession }) => {
-            enhanceUserSession(req, user);
-            console.log("Sesión mejorada para el usuario:", user.username);
-          }).catch(error => {
-            console.error("Error al cargar el helper de sesiones:", error);
-          });
+          // Precargamos el módulo de sesión para no tener problemas con imports asíncronos
+          const sessionHelper = await import('./session-helper.js');
+          sessionHelper.enhanceUserSession(req, user);
+          
+          // Guardamos la sesión explícitamente para asegurar que se almacene
+          if (req.session) {
+            await new Promise<void>((resolve, reject) => {
+              req.session.save((saveErr) => {
+                if (saveErr) {
+                  console.error("Error al guardar la sesión:", saveErr);
+                  reject(saveErr);
+                } else {
+                  console.log("Sesión guardada correctamente");
+                  resolve();
+                }
+              });
+            });
+          }
+          
+          console.log("Sesión mejorada para el usuario:", user.username);
         } catch (sessionError) {
           console.error("Error al mejorar la sesión:", sessionError);
           // Continuar a pesar del error en la mejora de sesión
@@ -235,42 +249,44 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/logout", async (req, res, next) => {
     console.log("Procesando solicitud de cierre de sesión");
     
     // Limpiar la sesión mejorada si está disponible
     try {
-      import('./session-helper.js').then(({ clearEnhancedSession }) => {
-        clearEnhancedSession(req);
-        console.log("Datos adicionales de sesión limpiados");
-      }).catch(error => {
-        console.error("Error al cargar el helper de sesiones para logout:", error);
-      });
+      const sessionHelper = await import('./session-helper.js');
+      sessionHelper.clearEnhancedSession(req);
+      console.log("Datos adicionales de sesión limpiados");
     } catch (sessionError) {
       console.error("Error al limpiar la sesión mejorada:", sessionError);
       // Continuar a pesar del error
     }
     
     // Proceder con el logout estándar de passport
-    req.logout((err) => {
-      if (err) {
-        console.error("Error durante el logout de passport:", err);
-        return next(err);
-      }
-      
-      // Destruir la sesión completamente si es posible
-      if (req.session) {
-        req.session.destroy((sessionErr) => {
-          if (sessionErr) {
-            console.error("Error al destruir la sesión:", sessionErr);
-          } else {
-            console.log("Sesión destruida completamente");
-          }
-          return res.sendStatus(200);
-        });
-      } else {
-        return res.sendStatus(200);
-      }
+    return new Promise<void>((resolve) => {
+      req.logout((err) => {
+        if (err) {
+          console.error("Error durante el logout de passport:", err);
+          next(err);
+          return resolve();
+        }
+        
+        // Destruir la sesión completamente si es posible
+        if (req.session) {
+          req.session.destroy((sessionErr) => {
+            if (sessionErr) {
+              console.error("Error al destruir la sesión:", sessionErr);
+            } else {
+              console.log("Sesión destruida completamente");
+            }
+            res.sendStatus(200);
+            return resolve();
+          });
+        } else {
+          res.sendStatus(200);
+          return resolve();
+        }
+      });
     });
   });
 
