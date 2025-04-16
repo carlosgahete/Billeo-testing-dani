@@ -4066,16 +4066,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ivaRepercutido = Math.round(ivaRepercutido * 100) / 100;
       irpfRetenidoIngresos = Math.round(irpfRetenidoIngresos * 100) / 100;
       
+      // Inicializamos la variable para acumular el IVA soportado real de las transacciones
+      let ivaSoportadoReal = 0;
+      
       // Cálculo del IVA soportado (pagado) en gastos
       // Como simplificación, asumimos que el 21% de los gastos es IVA
       const vatRate = 0.21;
       
-      // Usamos el IVA soportado real calculado de las transacciones (si existe)
-      // Si no hay valor real, calculamos una aproximación basada en el total de gastos
+      // Calculamos una primera aproximación del IVA soportado
+      const ivaSoportadoEstimado = Math.round(expenses * vatRate * 100) / 100;
+        
+      // Ahora comprobamos si tenemos un valor real de las transacciones
+      // Si es mayor que 0, usamos ese valor, si no, usamos la aproximación
       const ivaSoportado = ivaSoportadoReal > 0 ? 
         ivaSoportadoReal : 
-        Math.round(expenses * vatRate * 100) / 100;
+        ivaSoportadoEstimado;
         
+      console.log("IVA soportado estimado:", ivaSoportadoEstimado);
       console.log("IVA soportado real (de transacciones):", ivaSoportadoReal);
       console.log("IVA soportado usado:", ivaSoportado);
       
@@ -4088,12 +4095,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Base imponible para ingresos: es la suma de los subtotales de las facturas (sin IVA)
       const baseImponible = paidInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
       
-      // Base imponible para gastos: Intentamos obtenerla directamente de las transacciones
-      // ya que el usuario la introduce en el formulario
+      // Variables para acumular los valores correctos de las transacciones
       let baseImponibleGastos = 0;
-      
-      // Variables para acumular los valores correctos
-      let ivaSoportadoReal = 0;
+      // Ya no redeclaramos ivaSoportadoReal porque ya fue declarado anteriormente
       
       // Recorremos todas las transacciones para extraer las bases imponibles y el IVA
       allTransactions.forEach(tx => {
