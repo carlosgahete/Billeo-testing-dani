@@ -3860,9 +3860,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Sumar el IRPF de cada transacción - Para cada transacción buscamos si tiene un campo de IRPF
         expenseTransactions.forEach(transaction => {
-          // Si la transacción tiene datos adicionales y un campo de IRPF
-          if (transaction.metadata && typeof transaction.metadata === 'object') {
-            const metadata = transaction.metadata as Record<string, any>;
+          // La propiedad metadata podría no existir directamente en el objeto transaction
+          // pero podríamos tenerla en algún campo personalizado o anidado
+          const transactionAny = transaction as any;
+          if (transactionAny.metadata && typeof transactionAny.metadata === 'object') {
+            const metadata = transactionAny.metadata as Record<string, any>;
             
             // Si hay un campo de IRPF (puede estar en diferentes formatos)
             if (metadata.irpf || metadata.IRPF || metadata.irpfAmount || metadata.irpfValue) {
@@ -3872,6 +3874,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (!isNaN(irpfAmount) && irpfAmount > 0) {
                 totalIrpfFromExpensesInvoices += irpfAmount;
               }
+            }
+          }
+          
+          // También buscamos en additionalTaxes (formato JSON)
+          if (transaction.additionalTaxes) {
+            try {
+              let taxesArray = [];
+              
+              // Convertir el campo additionalTaxes a array si es un string
+              if (typeof transaction.additionalTaxes === 'string') {
+                taxesArray = JSON.parse(transaction.additionalTaxes);
+              } else if (Array.isArray(transaction.additionalTaxes)) {
+                taxesArray = transaction.additionalTaxes;
+              }
+              
+              // Buscar impuestos de tipo IRPF
+              taxesArray.forEach(tax => {
+                if (tax.name === 'IRPF' && tax.isPercentage) {
+                  // Para un gasto de 100€ con IRPF de -15%, necesitamos 15€
+                  const baseAmount = parseFloat(transaction.amount) / (1 + 0.21); // Estimamos la base imponible desde el total
+                  const irpfAmount = baseAmount * (Math.abs(tax.amount) / 100);
+                  
+                  console.log(`¡¡¡ Se encontró IRPF en gasto ID${transaction.id}: ${irpfAmount}€ (${Math.abs(tax.amount)}%) !!!`);
+                  totalIrpfFromExpensesInvoices += irpfAmount;
+                }
+              });
+            } catch (e) {
+              console.log(`Error al parsear additionalTaxes de transacción ${transaction.id}:`, e);
             }
           }
         });
