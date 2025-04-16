@@ -14,7 +14,8 @@ import {
   PieChart,
   TrendingUp,
   ScanLine,
-  Plus
+  Plus,
+  Home
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -125,8 +126,13 @@ const Sidebar = ({
   
   // Crear items de navegación base
   const baseNavigationItems: NavItem[] = [
+    {
+      href: "/",
+      icon: <Home size={20} />,
+      label: "Inicio"
+    },
     { 
-      href: "/", 
+      href: "/complete-dashboard", 
       icon: <LayoutDashboard size={20} />, 
       label: "Dashboard" 
     },
