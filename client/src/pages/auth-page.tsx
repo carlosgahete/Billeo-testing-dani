@@ -7,13 +7,25 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
 import { Eye, EyeOff, Wrench, Bug, AlertTriangle, ArrowRight } from "lucide-react";
-import { directLogin } from "../utils/directLogin";
 
-// Componente para diagnóstico avanzado de sesión
+// Importación para diagnóstico avanzado de sesión
+import { lastLoginDiagnostic, directLogin, LoginDiagnosticResult } from "../utils/directLogin";
+
 function SessionDiagnostic() {
   const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
+  const [loginDiagnostic, setLoginDiagnostic] = useState<LoginDiagnosticResult | null>(lastLoginDiagnostic);
   const [isLoading, setIsLoading] = useState(false);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [testCredentials, setTestCredentials] = useState({
+    username: "demo",
+    password: "demo"
+  });
+  const [showCredentials, setShowCredentials] = useState(false);
+  
+  // Actualizar el estado local si lastLoginDiagnostic cambia externamente
+  useEffect(() => {
+    setLoginDiagnostic(lastLoginDiagnostic);
+  }, [lastLoginDiagnostic]);
   
   const runDiagnostic = async () => {
     setIsLoading(true);
@@ -59,13 +71,27 @@ function SessionDiagnostic() {
           storageEnabled,
           language: navigator.language,
           online: navigator.onLine,
-        }
+        },
+        lastLoginInfo: lastLoginDiagnostic
       };
       
       setDiagnosticInfo(diagnosticData);
     } catch (error) {
       console.error("Error al ejecutar diagnóstico:", error);
       setDiagnosticInfo({ error: String(error) });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  
+  const runLoginTest = async () => {
+    setIsLoading(true);
+    try {
+      await directLogin(testCredentials.username, testCredentials.password, 'diagnostic');
+      // directLogin actualiza lastLoginDiagnostic, así que usamos el hook para actualizar nuestro estado local
+      setLoginDiagnostic(lastLoginDiagnostic);
+    } catch (error) {
+      console.error("Error al ejecutar test de login:", error);
     } finally {
       setIsLoading(false);
     }
@@ -108,12 +134,56 @@ function SessionDiagnostic() {
           onClick={runDiagnostic}
           disabled={isLoading}
         >
-          {isLoading ? "Ejecutando..." : "Ejecutar diagnóstico"}
+          {isLoading ? "Ejecutando..." : "Verificar sesión"}
+        </Button>
+        
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs h-7 px-2 py-0"
+          onClick={runLoginTest}
+          disabled={isLoading}
+        >
+          Test login directo
+        </Button>
+        
+        <Button
+          size="sm"
+          variant="secondary"
+          className="text-xs h-7 px-2 py-0"
+          onClick={() => setShowCredentials(!showCredentials)}
+        >
+          {showCredentials ? "Ocultar credenciales" : "Mostrar credenciales"}
         </Button>
       </div>
       
+      {showCredentials && (
+        <div className="mb-3 bg-blue-50 p-2 rounded border border-blue-100">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-gray-500 mb-1">Usuario</label>
+              <input 
+                type="text" 
+                value={testCredentials.username}
+                onChange={(e) => setTestCredentials(prev => ({...prev, username: e.target.value}))}
+                className="w-full border border-gray-200 rounded px-2 py-1 text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-500 mb-1">Contraseña</label>
+              <input 
+                type="password" 
+                value={testCredentials.password}
+                onChange={(e) => setTestCredentials(prev => ({...prev, password: e.target.value}))}
+                className="w-full border border-gray-200 rounded px-2 py-1 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       {diagnosticInfo && (
-        <div className="bg-white p-2 rounded border border-gray-200 text-gray-600 max-h-40 overflow-y-auto">
+        <div className="bg-white p-2 rounded border border-gray-200 text-gray-600 max-h-60 overflow-y-auto">
           {diagnosticInfo.error ? (
             <div className="text-red-500">
               <AlertTriangle className="h-3 w-3 inline mr-1" />
@@ -131,6 +201,31 @@ function SessionDiagnostic() {
                 <span className="font-medium">Storage:</span> {diagnosticInfo.browser.storageEnabled ? "Habilitado" : "Deshabilitado"}
               </div>
             </>
+          )}
+        </div>
+      )}
+      
+      {loginDiagnostic && (
+        <div className="mt-3 bg-white p-2 rounded border border-gray-200 text-gray-600 max-h-60 overflow-y-auto">
+          <h5 className="font-medium mb-1">Último diagnóstico de login:</h5>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+            <div><span className="font-medium">Estado:</span> {loginDiagnostic.status}</div>
+            <div><span className="font-medium">Exitoso:</span> {loginDiagnostic.success ? "Sí" : "No"}</div>
+            <div><span className="font-medium">Tiempo:</span> {Math.round(loginDiagnostic.timing.total)} ms</div>
+            <div><span className="font-medium">Respuesta:</span> {loginDiagnostic.statusText}</div>
+          </div>
+          
+          {loginDiagnostic.error && (
+            <div className="mt-2 text-red-500 text-xs">
+              <AlertTriangle className="h-3 w-3 inline mr-1" />
+              Error: {loginDiagnostic.error}
+            </div>
+          )}
+          
+          {loginDiagnostic.success && loginDiagnostic.userData && (
+            <div className="mt-2 bg-blue-50 p-2 rounded text-xs">
+              <span className="font-medium">Usuario:</span> ID {loginDiagnostic.userData.id} - {loginDiagnostic.userData.username}
+            </div>
           )}
         </div>
       )}

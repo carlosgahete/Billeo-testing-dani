@@ -32,6 +32,19 @@ export let lastLoginDiagnostic: LoginDiagnosticResult | null = null;
 export async function directLogin(username: string, password: string, mode: 'redirect' | 'diagnostic' = 'redirect'): Promise<boolean> {
   console.log("Iniciando proceso de login directo para:", username);
   
+  // Variables para diagnóstico
+  const startTime = performance.now();
+  const diagnostic: LoginDiagnosticResult = {
+    success: false,
+    status: 0,
+    statusText: "",
+    timing: {
+      start: startTime,
+      loginComplete: 0,
+      total: 0
+    }
+  };
+
   try {
     console.log("Preparando petición de login directo");
     
@@ -49,6 +62,12 @@ export async function directLogin(username: string, password: string, mode: 'red
       body: JSON.stringify({ username, password }),
     });
 
+    // Actualizamos el diagnóstico con la información de la respuesta
+    diagnostic.status = res.status;
+    diagnostic.statusText = res.statusText;
+    diagnostic.headers = Object.fromEntries(res.headers.entries());
+    diagnostic.timing.loginComplete = performance.now();
+
     console.log("Respuesta de login directo - Estado:", res.status);
     console.log("Respuesta de login directo - OK:", res.ok);
     console.log("Respuesta de login directo - Headers:", 
@@ -59,6 +78,7 @@ export async function directLogin(username: string, password: string, mode: 'red
     
     if (res.ok) {
       // Login exitoso
+      diagnostic.success = true;
       console.log("Login directo exitoso - Intentando obtener datos del usuario");
       
       // Intentar obtener datos del usuario para verificar que la sesión está activa
@@ -71,11 +91,26 @@ export async function directLogin(username: string, password: string, mode: 'red
         if (userCheckResponse.ok) {
           const userData = await userCheckResponse.json();
           console.log("Verificación de usuario exitosa:", userData);
+          
+          // Añadir datos del usuario al diagnóstico
+          diagnostic.userData = userData;
         } else {
           console.warn("Verificación de usuario fallida pero login ok - Status:", userCheckResponse.status);
+          diagnostic.error = `Verificación de usuario fallida: ${userCheckResponse.status} ${userCheckResponse.statusText}`;
         }
+        
+        // Registramos el tiempo de verificación de usuario
+        diagnostic.timing.userCheckComplete = performance.now();
       } catch (userCheckError) {
         console.error("Error al verificar usuario:", userCheckError);
+        diagnostic.error = `Error al verificar usuario: ${String(userCheckError)}`;
+      }
+      
+      // Si estamos en modo diagnóstico, solo devolvemos los datos sin redireccionar
+      if (mode === 'diagnostic') {
+        diagnostic.timing.total = performance.now() - startTime;
+        lastLoginDiagnostic = diagnostic;
+        return true;
       }
       
       // Esperar un poco y redireccionar
@@ -85,8 +120,13 @@ export async function directLogin(username: string, password: string, mode: 'red
         window.location.href = "/";
       }, 1000);
       
+      // Guardar diagnóstico antes de retornar
+      diagnostic.timing.total = performance.now() - startTime;
+      lastLoginDiagnostic = diagnostic;
       return true;
     } else {
+      // Login fallido
+      diagnostic.success = false;
       console.error("Login directo fallido - Código:", res.status);
       let errorMessage = "Error al iniciar sesión";
       
@@ -95,15 +135,26 @@ export async function directLogin(username: string, password: string, mode: 'red
         const errorData = await res.text();
         console.error("Respuesta de error completa:", errorData);
         errorMessage = errorData || "Error al iniciar sesión";
+        diagnostic.error = errorMessage;
       } catch (e) {
         console.error("Error al leer respuesta de error:", e);
+        diagnostic.error = `Error al procesar respuesta: ${String(e)}`;
       }
       
       console.error("Mensaje de error:", errorMessage);
+      
+      // Guardar diagnóstico antes de retornar
+      diagnostic.timing.total = performance.now() - startTime;
+      lastLoginDiagnostic = diagnostic;
       return false;
     }
   } catch (error) {
+    // Error general durante el proceso
     console.error("Error durante login directo:", error);
+    diagnostic.success = false;
+    diagnostic.error = `Error general: ${String(error)}`;
+    diagnostic.timing.total = performance.now() - startTime;
+    lastLoginDiagnostic = diagnostic;
     return false;
   }
 }
