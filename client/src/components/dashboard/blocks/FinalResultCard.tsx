@@ -23,12 +23,21 @@ interface FinalResultCardProps {
 const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) => {
   const [, navigate] = useLocation();
   
-  // Valores reales o por defecto si no hay datos
+  // Obtener valores brutos y netos
+  // Valores brutos
   const income = data?.income || 0;
   const expenses = data?.expenses || 0;
   const result = income - expenses;
+  
+  // Valores netos (usando los nuevos campos)
+  const netIncome = data?.netIncome !== undefined ? data.netIncome : income;
+  const netExpenses = data?.netExpenses !== undefined ? data.netExpenses : expenses;
+  const netResult = data?.netResult !== undefined ? data.netResult : result;
+  
+  // Información fiscal
   const ivaLiquidar = data?.taxStats?.ivaLiquidar || 0;
   const irpfAdelantado = data?.taxStats?.irpfRetenido || 0;
+  const irpfPagar = data?.taxStats?.irpfPagar || 0;
   
   return (
     <Card className="overflow-hidden flex-grow">
@@ -53,21 +62,42 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
         </div>
       </CardHeader>
       <CardContent className="p-3">
-        <p className="text-2xl font-bold text-blue-600">
-          {new Intl.NumberFormat('es-ES', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-          }).format(result / 100)} €
-        </p>
+        {/* Resultado neto */}
+        <div className="mb-3">
+          <h3 className="text-sm font-medium text-blue-700">Resultado neto (después de IRPF)</h3>
+          <p className="text-2xl font-bold text-blue-600">
+            {new Intl.NumberFormat('es-ES', { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+            }).format(netResult)} €
+          </p>
+        </div>
         
+        {/* Comparación con el bruto */}
+        <div className="mb-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Resultado bruto:</span>
+            <span className="font-medium">{result.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
+          </div>
+          <div className="flex justify-between border-t pt-1 mt-1">
+            <span className="text-neutral-500">Diferencia por IRPF:</span>
+            <span className="font-medium text-purple-600">{(netResult - result).toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
+          </div>
+        </div>
+        
+        {/* Información de impuestos */}
         <div className="mt-2 space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-neutral-500">IVA a liquidar:</span>
-            <span className="font-medium text-red-600">{(ivaLiquidar / 100).toLocaleString('es-ES')} €</span>
+            <span className="font-medium text-red-600">{ivaLiquidar.toLocaleString('es-ES')} €</span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">IRPF adelantado:</span>
-            <span className="font-medium text-green-600">{(irpfAdelantado / 100).toLocaleString('es-ES')} €</span>
+            <span className="font-medium text-green-600">{irpfAdelantado.toLocaleString('es-ES')} €</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">IRPF a pagar:</span>
+            <span className="font-medium text-orange-600">{irpfPagar.toLocaleString('es-ES')} €</span>
           </div>
         </div>
         

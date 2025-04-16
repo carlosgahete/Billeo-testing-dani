@@ -31,22 +31,33 @@ export interface DashboardBlock {
 
 // Interfaz para las estadísticas que se pasan a los componentes
 export interface DashboardStats {
+  // Valores brutos
   income: number;
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
   pendingQuotes: number;
   pendingQuotesCount: number;
+  
+  // Información impositiva
   baseImponible?: number;
   ivaRepercutido?: number;
   ivaSoportado?: number;
   irpfRetenidoIngresos?: number;
   totalWithholdings?: number;
+  
+  // Valores netos (nuevos campos)
+  netIncome?: number;      // Ingresos netos (descontando IRPF)
+  netExpenses?: number;    // Gastos netos (descontando IRPF)
+  netResult?: number;      // Resultado neto final
+  
+  // Datos de impuestos
   taxes: {
     vat: number;
     incomeTax: number;
     ivaALiquidar: number;
   };
+  
   [key: string]: any;  // Para permitir propiedades adicionales
 }
 

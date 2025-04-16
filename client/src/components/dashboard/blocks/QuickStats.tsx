@@ -38,12 +38,19 @@ const QuickStats = ({ data, isLoading }: QuickStatsProps) => {
     );
   }
 
-  // Calcular la rentabilidad
-  const income = data?.income || 0;
-  const expenses = data?.expenses || 0;
-  const balance = income - expenses;
-  const profitMargin = income > 0 ? ((balance / income) * 100).toFixed(1) : "0.0";
-  const isPositiveMargin = balance >= 0;
+  // Obtener valores (brutos y netos)
+  const income = data?.income || 0; // Ingresos brutos
+  const expenses = data?.expenses || 0; // Gastos brutos
+  const balance = income - expenses; // Balance bruto
+  
+  // Obtener los valores netos del API
+  const netIncome = data?.netIncome !== undefined ? data.netIncome : income;
+  const netExpenses = data?.netExpenses !== undefined ? data.netExpenses : expenses;
+  const netBalance = netIncome - netExpenses;
+  
+  // Calcular la rentabilidad (usando valores netos)
+  const profitMargin = netIncome > 0 ? ((netBalance / netIncome) * 100).toFixed(1) : "0.0";
+  const isPositiveMargin = netBalance >= 0;
   
   // Calcular pendientes
   const pendingInvoicesAmount = data?.pendingInvoices || 0;
@@ -97,21 +104,21 @@ const QuickStats = ({ data, isLoading }: QuickStatsProps) => {
             </div>
           </div>
           
-          {/* Balance */}
+          {/* Balance Neto */}
           <div className="border rounded-md p-3">
             <div>
-              <h3 className="text-sm font-medium text-gray-700">Balance</h3>
+              <h3 className="text-sm font-medium text-gray-700">Balance Neto</h3>
               <p className={`text-lg font-bold mt-1 ${
-                balance >= 0 ? 'text-green-600' : 'text-red-600'
+                netBalance >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {new Intl.NumberFormat('es-ES', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).format(balance)} €
+                }).format(netBalance)} €
               </p>
             </div>
             <div className="mt-1 text-xs text-neutral-500">
-              Ingresos - Gastos
+              Ingresos Netos - Gastos Netos
             </div>
           </div>
           
