@@ -221,7 +221,12 @@ console.log(`📊 CompleteDashboard: Inicializando con año=${currentYear}`);
           <div className="relative w-[45%] sm:w-auto">
             <button 
               type="button"
-              onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
+              onClick={(e) => {
+                // Protección contra eventos fantasma
+                if (typeof document !== 'undefined' && document.hasFocus()) {
+                  document.getElementById('year-dropdown')?.classList.toggle('hidden');
+                }
+              }}
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="year-dropdown"
             >
@@ -279,7 +284,12 @@ console.log(`📊 CompleteDashboard: Inicializando con año=${currentYear}`);
           <div className="relative w-[55%] sm:w-auto">
             <button 
               type="button"
-              onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
+              onClick={(e) => {
+                // Protección contra eventos fantasma
+                if (typeof document !== 'undefined' && document.hasFocus()) {
+                  document.getElementById('period-dropdown')?.classList.toggle('hidden');
+                }
+              }}
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="period-dropdown"
             >
@@ -563,11 +573,23 @@ console.log(`📊 CompleteDashboard: Inicializando con año=${currentYear}`);
             <div className="h-[400px]">
               {/* Usamos consultas directas para transacciones y categorías */}
               <ExpensesByCategory 
+                // Usar variable memorizada para evitar actualizaciones innecesarias
                 period={`${selectedYear}-${selectedPeriod}`}
+                periodLabel={selectedPeriod === "all" ? `Año ${selectedYear} completo` : 
+                             selectedPeriod.startsWith("q") ? `Trimestre ${selectedPeriod.slice(1)} ${selectedYear}` :
+                             `Mes ${selectedPeriod} ${selectedYear}`}
                 onPeriodChange={(period) => {
-                  const [year, newPeriod] = period.split('-');
-                  setSelectedYear(year);
-                  setSelectedPeriod(newPeriod);
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    console.log("ExpensesByCategory solicitó cambio de período a:", period);
+                    try {
+                      const [year, newPeriod] = period.split('-');
+                      setSelectedYear(year);
+                      setSelectedPeriod(newPeriod);
+                    } catch (err) {
+                      console.error("Error al procesar cambio de período:", err);
+                    }
+                  }
                 }}
               />
             </div>

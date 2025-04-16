@@ -115,13 +115,17 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   // Usamos los datos de categorías que vienen del prop si están disponibles,
   // o los del dashboardData si el prop está vacío
   const expensesByCategory = useMemo(() => {
+    console.log("📊 ExpensesByCategoryApple: Actualizando datos para período", selectedPeriod);
     if (propExpensesByCategory && Object.keys(propExpensesByCategory).length > 0) {
+      console.log("📊 ExpensesByCategoryApple: Usando datos de prop");
       return propExpensesByCategory;
     } else if (dashboardData?.expensesByCategory) {
+      console.log("📊 ExpensesByCategoryApple: Usando datos de dashboardData");
       return dashboardData.expensesByCategory;
     }
+    console.log("📊 ExpensesByCategoryApple: No hay datos disponibles");
     return {};
-  }, [propExpensesByCategory, dashboardData?.expensesByCategory]);
+  }, [propExpensesByCategory, dashboardData?.expensesByCategory, selectedPeriod]);
 
   // Procesar los datos para el gráfico
   const data = useMemo(() => {
