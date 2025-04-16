@@ -32,6 +32,7 @@ export function ProtectedRoute({
 
   // Si no hay usuario, redirigir al inicio de sesión
   if (!user) {
+    console.log(`ProtectedRoute: Acceso denegado a ${path} - Usuario no autenticado`);
     return (
       <Route path={path}>
         <Redirect to="/auth" />
@@ -39,11 +40,14 @@ export function ProtectedRoute({
     );
   }
 
-  // Renderizar el componente dentro de Suspense para cargas asíncronas
+  // Usuario autenticado - Renderizar el componente
+  console.log(`ProtectedRoute: Acceso permitido a ${path} - Usuario: ${user.username}`);
   return (
-    <Suspense fallback={<LazyLoader />}>
-      <Component />
-    </Suspense>
+    <Route path={path}>
+      <Suspense fallback={<LazyLoader />}>
+        <Component />
+      </Suspense>
+    </Route>
   );
 }
 
@@ -56,19 +60,6 @@ export function ProtectedAdminRoute({
 }) {
   const { user, isLoading } = useAuth();
   
-  // MODO DESARROLLO: Permitir acceso incluso sin autenticación
-  // a rutas específicas para pruebas
-  if (path.includes('libro-registros-simple')) {
-    console.log('MODO DESARROLLO: Permitiendo acceso sin restricción a libro-registros-simple');
-    return (
-      <Route path={path}>
-        <Suspense fallback={<LazyLoader />}>
-          <Component />
-        </Suspense>
-      </Route>
-    );
-  }
-
   // Si estamos cargando los datos del usuario, mostrar un indicador de carga
   if (isLoading) {
     return (
@@ -82,6 +73,7 @@ export function ProtectedAdminRoute({
 
   // Si no hay usuario o no es administrador, redirigir
   if (!user) {
+    console.log(`ProtectedAdminRoute: Acceso denegado a ${path} - Usuario no autenticado`);
     return (
       <Route path={path}>
         <Redirect to="/auth" />
@@ -96,6 +88,7 @@ export function ProtectedAdminRoute({
       user.role !== 'SUPERADMIN' && 
       user.username !== 'Superadmin' &&
       user.username !== 'billeo_admin') {
+    console.log(`ProtectedAdminRoute: Acceso denegado a ${path} - Usuario ${user.username} no tiene permisos de administrador`);
     return (
       <Route path={path}>
         <Redirect to="/" />
@@ -103,10 +96,13 @@ export function ProtectedAdminRoute({
     );
   }
 
-  // Renderizar el componente dentro de Suspense para cargas asíncronas
+  // Usuario administrador autenticado - Renderizar el componente
+  console.log(`ProtectedAdminRoute: Acceso permitido a ${path} - Admin: ${user.username}`);
   return (
-    <Suspense fallback={<LazyLoader />}>
-      <Component />
-    </Suspense>
+    <Route path={path}>
+      <Suspense fallback={<LazyLoader />}>
+        <Component />
+      </Suspense>
+    </Route>
   );
 }

@@ -66,11 +66,11 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       {/* Usamos CompleteDashboardPage como ruta principal */}
-      <Route path="/">
+      <ProtectedRoute path="/" component={() => (
         <Layout>
-          <ProtectedRoute path="/" component={CompleteDashboardPage} />
+          <CompleteDashboardPage />
         </Layout>
-      </Route>
+      )} />
       <Route path="/invoices">
         <Layout>
           <ProtectedRoute path="/invoices" component={InvoicesPage} />
