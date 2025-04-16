@@ -166,9 +166,12 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
 
   // Manejar el cambio de período
   const handlePeriodChange = (value: string) => {
-    setSelectedPeriod(value);
-    if (onPeriodChange) {
-      onPeriodChange(value);
+    // Protección contra eventos fantasma
+    if (typeof document !== 'undefined' && document.hasFocus()) {
+      setSelectedPeriod(value);
+      if (onPeriodChange) {
+        onPeriodChange(value);
+      }
     }
   };
 
@@ -309,9 +312,24 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
                         fill="transparent"
                         stroke="transparent"
                         style={{ cursor: 'pointer' }}
-                        onMouseEnter={() => setHoverIndex(idx)}
-                        onMouseLeave={() => setHoverIndex(null)}
-                        onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                        onMouseEnter={() => {
+                          // Protección contra eventos fantasma
+                          if (typeof document !== 'undefined' && document.hasFocus()) {
+                            setHoverIndex(idx);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          // Protección contra eventos fantasma
+                          if (typeof document !== 'undefined' && document.hasFocus()) {
+                            setHoverIndex(null);
+                          }
+                        }}
+                        onClick={() => {
+                          // Protección contra eventos fantasma
+                          if (typeof document !== 'undefined' && document.hasFocus()) {
+                            setActiveIndex(idx === activeIndex ? null : idx);
+                          }
+                        }}
                       />
                     </g>
                   );
@@ -338,13 +356,20 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
                 key={item.categoryId} 
                 className={`flex items-center py-2.5 cursor-pointer transition-all duration-200 ${idx < 10 && (idx === activeIndex || idx === hoverIndex) ? 'bg-gray-50 rounded-lg' : ''}`}
                 onMouseOver={() => {
-                  if (idx < 10) {
+                  // Protección contra eventos fantasma
+                  if (idx < 10 && typeof document !== 'undefined' && document.hasFocus()) {
                     setHoverIndex(idx);
                   }
                 }}
-                onMouseOut={() => setHoverIndex(null)}
+                onMouseOut={() => {
+                  // Protección contra eventos fantasma
+                  if (typeof document !== 'undefined' && document.hasFocus()) {
+                    setHoverIndex(null);
+                  }
+                }}
                 onClick={() => {
-                  if (idx < 10) {
+                  // Protección contra eventos fantasma
+                  if (idx < 10 && typeof document !== 'undefined' && document.hasFocus()) {
                     setActiveIndex(idx === activeIndex ? null : idx);
                   }
                 }}
