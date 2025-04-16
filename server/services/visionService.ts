@@ -903,12 +903,13 @@ function mapToTransaction(
   userId: number, 
   categoryId: number | null
 ): InsertTransaction {
-  // Obtener valores fiscales
-  const subtotal = extractedData.subtotal || 0;
+  // IMPORTANTE: Usamos exactamente los valores proporcionados en el documento
+  // La base imponible debe venir directamente del documento sin calcular
+  const subtotal = extractedData.baseAmount || extractedData.subtotal || 0;
   const taxAmount = extractedData.taxAmount || 0;
   const irpfAmount = extractedData.irpfAmount || 0;
-  const ivaRate = extractedData.ivaRate || 21;
-  const irpfRate = extractedData.irpfRate || 15;
+  const ivaRate = extractedData.ivaRate || extractedData.tax || 21;
+  const irpfRate = extractedData.irpfRate || extractedData.irpf || 15;
   
   // Construir detalles fiscales mejorados según los requisitos
   const taxDetails = [];
