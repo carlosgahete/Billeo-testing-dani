@@ -177,7 +177,8 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
     if (!isNaN(baseAmount) && !isNaN(irpfRate)) {
       const irpfAmount = (baseAmount * irpfRate / 100).toFixed(2);
       if (irpfAmountRef.current) {
-        irpfAmountRef.current.textContent = `${irpfAmount}€`;
+        // Mostrar siempre con el signo negativo para que quede claro que es una retención
+        irpfAmountRef.current.textContent = `-${irpfAmount}€`;
       }
       
       // También actualizar el total
@@ -374,7 +375,7 @@ Proveedor: ${formData.provider || ""}`
         </div>
         
         <div className="space-y-1">
-          <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%):</Label>
+          <Label htmlFor="transaction-irpf" className="text-sm">IRPF (%) <span className="text-red-500">-</span>:</Label>
           <div className="flex items-center space-x-2">
             <Input
               id="transaction-irpf"
@@ -387,7 +388,7 @@ Proveedor: ${formData.provider || ""}`
                 updateTotal();
               }}
             />
-            <div ref={irpfAmountRef} className="w-1/2 text-sm text-muted-foreground"></div>
+            <div ref={irpfAmountRef} className="w-1/2 text-sm text-red-500"></div>
           </div>
         </div>
       </div>
