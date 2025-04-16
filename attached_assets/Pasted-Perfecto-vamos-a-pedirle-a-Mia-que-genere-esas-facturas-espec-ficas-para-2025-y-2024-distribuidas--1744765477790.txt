@@ -1,0 +1,105 @@
+Perfecto, vamos a pedirle a Mia que genere esas facturas específicas para 2025 y 2024, distribuidas en los 4 trimestres, y le vamos a indicar cómo debe calcular todo en neto, para que puedas validar si lo está haciendo bien en el dashboard.
+
+⸻
+
+INSTRUCCIONES PARA MIA – AÑO 2025
+
+1. Facturas de INGRESO por valor total de 1.000€ (bruto)
+
+Repartido en los 4 trimestres (puedes hacer 4 facturas de 250€ cada una con IRPF 15% e IVA 21%).
+
+Datos de cada factura:
+	•	Base: 250€
+	•	IRPF: 15% = 37,50€
+	•	IVA: 21% = 52,50€
+	•	Total bruto: 250€ - 37,50€ + 52,50€ = 265€
+	•	Neto (para el dashboard): 250€ - 37,50€ = 212,50€
+
+Ingresos netos totales 2025:
+212,50€ x 4 = 850€
+
+⸻
+
+2. Facturas de GASTO por valor total de 100€ (bruto)
+
+Puedes hacer 2 facturas de 50€, una con IRPF y una sin IRPF.
+
+Gasto 1 (con IRPF):
+	•	Base: 50€
+	•	IRPF: 15% = 7,50€
+	•	IVA: 21% = 10,50€
+	•	Total: 50€ - 7,50€ + 10,50€ = 53€
+	•	Neto: 50€ - 7,50€ = 42,50€
+
+Gasto 2 (sin IRPF):
+	•	Base: 50€
+	•	IVA: 21% = 10,50€
+	•	Total: 60,50€
+	•	Neto: 50€
+
+Gastos netos totales 2025:
+42,50€ + 50€ = 92,50€
+
+⸻
+
+3. Resultado final 2025:
+
+Ingresos netos (850€) - Gastos netos (92,50€) = **757,50€**
+
+⸻
+
+INSTRUCCIONES PARA MIA – AÑO 2024
+
+1. Facturas de INGRESO por valor total de 10.000€ (bruto)
+
+Repartido en 4 facturas de 2.500€ con IRPF 15% e IVA 21%.
+
+Datos por factura:
+	•	Base: 2.500€
+	•	IRPF: 15% = 375€
+	•	IVA: 21% = 525€
+	•	Total: 2.500€ - 375€ + 525€ = 2.650€
+	•	Neto: 2.500€ - 375€ = 2.125€
+
+Ingresos netos totales 2024:
+2.125€ x 4 = 8.500€
+
+⸻
+
+2. Facturas de GASTO por valor total de 1.000€ (bruto)
+
+Dos facturas de 500€, una con IRPF y una sin IRPF.
+
+Gasto 1 (con IRPF):
+	•	Base: 500€
+	•	IRPF: 15% = 75€
+	•	IVA: 105€
+	•	Neto: 500€ - 75€ = 425€
+
+Gasto 2 (sin IRPF):
+	•	Base: 500€
+	•	IVA: 105€
+	•	Neto: 500€
+
+Gastos netos totales 2024:
+425€ + 500€ = 925€
+
+⸻
+
+3. Resultado final 2024:
+
+Ingresos netos (8.500€) - Gastos netos (925€) = **7.575€**
+
+⸻
+
+RESUMEN QUE DEBE APARECER EN EL DASHBOARD
+
+Año	Ingresos Netos	Gastos Netos	Resultado Final
+2025	850€	92,50€	757,50€
+2024	8.500€	925€	7.575€
+
+
+
+⸻
+
+Pídele a Mia que cree exactamente esas facturas y gastos con esos importes, y luego verifica que el dashboard muestre estos resultados netos por año. Si no coinciden, ya sabes qué buscar: está usando el bruto o no está restando IRPF. ¿Quieres que le demos también una fórmula para que sepa calcular el neto en cada caso?
