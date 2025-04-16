@@ -104,13 +104,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const stats = dashboardData || defaultStats;
 
   // Calcular valores específicos usando los datos directos de la API
-  const finalResult = stats.income - stats.expenses;
   // Usamos los valores directos de la API que provienen directamente del cálculo del backend
-  const baseImponibleIngresos = stats.baseImponible || 0;
+  const baseImponibleIngresos = stats.income || 0;
   const ivaRepercutido = stats.ivaRepercutido || 0;
-  // Usar directamente el valor del backend sin recalcularlo
-  const baseImponibleGastos = stats.expenses || 0; // Ahora la API devuelve directamente baseImponibleGastos en el campo expenses
+  
+  // CORRECCIÓN: La API está enviando la base imponible de gastos en el campo 'expenses'
+  // Ya no necesitamos hacer más cálculos, pues el backend ya lo está calculando correctamente
+  const baseImponibleGastos = stats.expenses || 0;
   const ivaSoportado = stats.ivaSoportado || 0;
+  
+  // Resultado total (diferencia entre ingresos y gastos)
+  const finalResult = baseImponibleIngresos - baseImponibleGastos;
+  
+  // Otros valores fiscales
   const ivaALiquidar = stats.taxes?.ivaALiquidar || 0;
   const retencionesIrpf = stats.irpfRetenidoIngresos || 0;
   // Obtener el IRPF retenido en facturas de gastos

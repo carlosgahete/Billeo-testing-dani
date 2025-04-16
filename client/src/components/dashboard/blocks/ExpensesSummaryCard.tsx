@@ -24,13 +24,13 @@ const ExpensesSummaryCard: React.FC<ExpensesSummaryCardProps> = ({ data, isLoadi
   const [, navigate] = useLocation();
   
   // Valores reales o por defecto si no hay datos
-  const expenses = data?.expenses || 0;
+  // CORRECCIÓN: El campo "expenses" ya contiene la base imponible
+  const baseImponible = data?.expenses || 0;
   const ivaSoportado = data?.ivaSoportado || 0;
   const irpfLiquidar = data?.totalWithholdings || 0;
   
-  // Usar la base imponible para gastos proporcionada por el servidor
-  // El backend calcula esto específicamente para gastos
-  const baseImponible = data?.baseImponibleGastos || 0;
+  // El total con IVA sería baseImponible + ivaSoportado
+  const expenses = baseImponible + ivaSoportado;
   
   // Formatear números para mostrar
   const formatCurrency = (value: number) => {

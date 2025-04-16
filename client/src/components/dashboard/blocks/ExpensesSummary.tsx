@@ -26,10 +26,15 @@ const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({ data, isLoading }) =>
     );
   }
 
-  // Calculamos los valores relevantes
-  const expenses = data?.expenses || 0;
-  const baseImponibleGastos = Math.round(expenses / 1.21);
-  const ivaSoportado = data?.ivaSoportado || data?.taxStats?.ivaSoportado || expenses - baseImponibleGastos;
+  // Obtenemos los valores directamente de la API
+  // CORRECCIÓN: La API ya nos envía la base imponible en el campo 'expenses'
+  const baseImponibleGastos = data?.expenses || 0;
+  const ivaSoportado = data?.ivaSoportado || data?.taxStats?.ivaSoportado || 0;
+  
+  // El total con IVA sería baseImponible + ivaSoportado
+  const expenses = baseImponibleGastos + ivaSoportado;
+  
+  // IRPF retenido en gastos
   const totalWithholdings = data?.totalWithholdings || 0;
 
   // Formatear valores monetarios con el formato español
