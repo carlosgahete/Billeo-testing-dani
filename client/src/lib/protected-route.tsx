@@ -93,7 +93,7 @@ function ProtectedAdminRouteGuard({
   component: React.FC<{}>;
   route: string;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
 
   // Si estamos cargando los datos del usuario, mostrar un indicador de carga
   if (isLoading) {
@@ -104,10 +104,23 @@ function ProtectedAdminRouteGuard({
     );
   }
 
-  // Si no hay usuario autenticado, redirigir al login
+  // Si no hay usuario, intentar refrescar y mostrar mensaje de redirección
   if (!user) {
+    // Refrescar datos de usuario por si acaso hay una sesión activa
+    // que no se ha detectado correctamente
+    console.log(`🔄 ProtectedAdminRouteGuard: Intentando refrescar datos de usuario para ${route}`);
+    refreshUser();
+    
     console.log(`⛔ ProtectedAdminRouteGuard: Acceso denegado a ${route} - Usuario no autenticado (Redirigiendo...)`);
-    return <Redirect to="/auth" />;
+    
+    // Redirección explícita
+    return (
+      <div className="text-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+        <p className="text-gray-500 mb-4">Acceso restringido. Redirigiendo al login...</p>
+        <Redirect to="/auth" />
+      </div>
+    );
   }
   
   // Si el usuario no es administrador, redirigir al dashboard
@@ -117,7 +130,13 @@ function ProtectedAdminRouteGuard({
       user.username !== 'Superadmin' &&
       user.username !== 'billeo_admin') {
     console.log(`⛔ ProtectedAdminRouteGuard: Acceso denegado a ${route} - Usuario ${user.username} no tiene permisos de administrador (Redirigiendo...)`);
-    return <Redirect to="/" />;
+    
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-500 mb-4">Acceso solo para administradores. Redirigiendo al dashboard...</p>
+        <Redirect to="/" />
+      </div>
+    );
   }
 
   // Usuario administrador autenticado - Renderizar el componente
