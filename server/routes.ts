@@ -4070,8 +4070,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Como simplificación, asumimos que el 21% de los gastos es IVA
       const vatRate = 0.21;
       
-      // Calcular el IVA soportado basado en todos los gastos reales
-      const ivaSoportado = Math.round(expenses * vatRate * 100) / 100;
+      // Usamos el IVA soportado real calculado de las transacciones (si existe)
+      // Si no hay valor real, calculamos una aproximación basada en el total de gastos
+      const ivaSoportado = ivaSoportadoReal > 0 ? 
+        ivaSoportadoReal : 
+        Math.round(expenses * vatRate * 100) / 100;
+        
+      console.log("IVA soportado real (de transacciones):", ivaSoportadoReal);
+      console.log("IVA soportado usado:", ivaSoportado);
       
       // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
       const vatBalance = Math.round((ivaRepercutido - ivaSoportado) * 100) / 100;
@@ -4086,32 +4092,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ya que el usuario la introduce en el formulario
       let baseImponibleGastos = 0;
       
-      // Recorremos todas las transacciones para extraer las bases imponibles
+      // Variables para acumular los valores correctos
+      let ivaSoportadoReal = 0;
+      
+      // Recorremos todas las transacciones para extraer las bases imponibles y el IVA
       allTransactions.forEach(tx => {
         // Solo consideramos transacciones de tipo gasto
         if (tx.type === 'expense') {
           try {
-            // Si la transacción tiene metadata que incluye baseAmount, la usamos
-            if (tx.metadata && typeof tx.metadata === 'string') {
-              const metadata = JSON.parse(tx.metadata);
-              if (metadata.baseAmount) {
-                baseImponibleGastos += Number(metadata.baseAmount);
-                return; // Continuamos con la siguiente transacción
+            // 1. Intentar extraer base imponible y valor IVA desde additionalTaxes
+            if (tx.additionalTaxes && typeof tx.additionalTaxes === 'string') {
+              try {
+                const taxesData = JSON.parse(tx.additionalTaxes);
+                // Buscar si hay algún objeto de IVA para extraer la tasa
+                let ivaRate = 21; // Valor por defecto si no encontramos el IVA
+                let ivaAmount = 0;
+                let baseAmount = 0;
+                
+                const amount = Number(tx.amount);
+                
+                // Buscar si existe un impuesto de tipo IVA
+                const ivaObj = Array.isArray(taxesData) ? 
+                  taxesData.find(tax => tax.name === "IVA") : null;
+                
+                if (ivaObj) {
+                  // Si encontramos el objeto de IVA, extraemos la tasa
+                  ivaRate = ivaObj.amount || ivaObj.value || 21;
+                  
+                  // Calculamos la base imponible usando la tasa de IVA encontrada
+                  baseAmount = Math.round(amount / (1 + (ivaRate / 100)));
+                  // Y calculamos el monto del IVA
+                  ivaAmount = amount - baseAmount;
+                  
+                  console.log(`Transacción ID ${tx.id}: IVA encontrado en additionalTaxes`, {
+                    ivaRate,
+                    baseAmount,
+                    ivaAmount,
+                    totalAmount: amount
+                  });
+                  
+                  // Acumulamos los valores
+                  baseImponibleGastos += baseAmount;
+                  ivaSoportadoReal += ivaAmount;
+                  
+                  return; // Continuamos con la siguiente transacción
+                }
+              } catch (parseError) {
+                console.error("Error al parsear additionalTaxes:", parseError);
               }
             }
             
-            // Si la transacción no tiene metadata pero sí tiene un campo baseAmount directo
-            if (tx.baseAmount) {
-              baseImponibleGastos += Number(tx.baseAmount);
-              return;
+            // 2. Si la transacción tiene metadata que incluye baseAmount, la usamos
+            if (tx.metadata && typeof tx.metadata === 'string') {
+              try {
+                const metadata = JSON.parse(tx.metadata);
+                if (metadata.baseAmount) {
+                  const baseAmount = Number(metadata.baseAmount);
+                  baseImponibleGastos += baseAmount;
+                  
+                  // Calculamos el IVA como la diferencia entre el total y la base
+                  const amount = Number(tx.amount);
+                  const ivaAmount = amount - baseAmount;
+                  ivaSoportadoReal += ivaAmount;
+                  
+                  console.log(`Transacción ID ${tx.id}: Base imponible encontrada en metadata`, {
+                    baseAmount,
+                    ivaAmount,
+                    totalAmount: amount
+                  });
+                  
+                  return; // Continuamos con la siguiente transacción
+                }
+              } catch (parseError) {
+                console.error("Error al parsear metadata:", parseError);
+              }
             }
             
-            // Si no hay info directa, usamos el cálculo aproximado (mejor que nada)
+            // 3. Si la transacción no tiene metadata pero sí tiene un campo baseAmount directo
+            if (tx.baseAmount) {
+              const baseAmount = Number(tx.baseAmount);
+              baseImponibleGastos += baseAmount;
+              
+              // Calculamos el IVA como la diferencia entre el total y la base
+              const amount = Number(tx.amount);
+              const ivaAmount = amount - baseAmount;
+              ivaSoportadoReal += ivaAmount;
+              
+              console.log(`Transacción ID ${tx.id}: Base imponible encontrada directamente`, {
+                baseAmount,
+                ivaAmount,
+                totalAmount: amount
+              });
+              
+              return; // Continuamos con la siguiente transacción
+            }
+            
+            // 4. Si no hay info directa, usamos el cálculo aproximado (mejor que nada)
             // Para un gasto típico, la base imponible sería: monto total / (1 + IVA)
             const amount = Number(tx.amount);
-            baseImponibleGastos += Math.round(amount / 1.21); // IVA estándar del 21%
+            const baseAmount = Math.round(amount / 1.21); // IVA estándar del 21%
+            const ivaAmount = amount - baseAmount;
+            
+            baseImponibleGastos += baseAmount;
+            ivaSoportadoReal += ivaAmount;
+            
+            console.log(`Transacción ID ${tx.id}: Usando cálculo aproximado con IVA 21%`, {
+              baseAmount,
+              ivaAmount,
+              totalAmount: amount
+            });
+            
           } catch (error) {
-            console.error("Error al procesar base imponible de gasto:", error);
+            console.error(`Error al procesar transacción ID ${tx.id}:`, error);
           }
         }
       });
