@@ -4119,11 +4119,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   ivaRate = ivaObj.amount || 21;
                   const ivaValue = ivaObj.value || 0;
                   
-                  // Calcular la base imponible adecuadamente a partir del importe total y el valor del IVA
-                  // Si tenemos el valor del IVA, podemos calcular la base imponible restando del total
+                  // Calcular la base imponible correctamente usando la fórmula matemática
+                  // La fórmula correcta es base = amount / (1 + (ivaRate/100))
                   if (ivaValue > 0) {
-                    baseAmount = amount - ivaValue;
-                    console.log(`Calculando base imponible a partir del total ${amount}€ menos el IVA ${ivaValue}€: ${baseAmount}€`);
+                    // Si tenemos el valor exacto del IVA, podemos calcular la base imponible
+                    // usando la fórmula: base = total / (1 + (ivaRate/100))
+                    baseAmount = Math.round((amount / (1 + (ivaRate/100))) * 100) / 100;
+                    console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${amount}€ con IVA ${ivaRate}%: ${baseAmount}€ (IVA: ${ivaValue}€)`);
                   } else {
                     // Si no tenemos el valor específico, intentamos usar otros métodos para determinar la base
                     if (tx.baseAmount) {
@@ -4140,7 +4142,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       if (ivaRate > 0 && amount > 0) {
                         // Calculamos la base imponible a partir del monto total y la tasa de IVA
                         if (ivaRate > 0 && amount > 0) {
-                          baseAmount = Math.round((amount / (1 + (ivaRate / 100))) * 100) / 100;
+                          // La fórmula correcta es: baseAmount = amount / (1 + (ivaRate/100))
+                          // Aseguramos que no haya errores de redondeo usando toFixed y luego parseFloat
+                          baseAmount = parseFloat((amount / (1 + (ivaRate / 100))).toFixed(2));
                           console.log(`Calculando base imponible a partir del monto ${amount}€ y tasa IVA ${ivaRate}%: ${baseAmount}€`);
                         } else {
                           // Si la tasa de IVA es un porcentaje y el importe total está disponible, intenta obtener la base
@@ -4248,9 +4252,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
             } else {
               // Calculamos la base imponible a partir del valor total y la tasa de IVA estándar
-              // Este es un fallback cuando no hay información directa sobre la base imponible
-              baseAmount = Math.round((Number(tx.amount) / 1.21) * 100) / 100;
-              console.log(`Calculando base imponible a partir del total ${tx.amount}€ con IVA estándar del 21%: ${baseAmount}€`);
+              // La fórmula correcta es baseAmount = amount / (1 + (ivaRate/100))
+              // Para IVA 21%: amount / (1 + 0.21) = amount / 1.21
+              const ivaRate = 21; // IVA estándar español
+              baseAmount = Math.round((Number(tx.amount) / (1 + (ivaRate/100))) * 100) / 100;
+              console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${tx.amount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
             }
             
             // Calculamos el IVA como la diferencia entre el total y la base imponible
