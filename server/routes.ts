@@ -2988,14 +2988,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to delete this transaction" });
       }
       
-      // Si es un ingreso y tiene invoiceId asociado, también eliminar la factura
-      if (transaction.type === 'income' && transaction.invoiceId) {
+      // Verificamos si hay que eliminar la factura asociada (según indicación del usuario)
+      // NOTA: Ya no eliminamos automáticamente las facturas al eliminar una transacción
+      // Esto permite mantener facturas pagadas en el sistema pero eliminar las transacciones asociadas
+      
+      // Primero eliminamos la referencia a la factura en la transacción
+      if (transaction.invoiceId) {
+        // Actualizamos la transacción para quitar la referencia a la factura
         try {
-          console.log(`Eliminando factura con ID ${transaction.invoiceId} asociada a la transacción ${transactionId}`);
-          await storage.deleteInvoice(transaction.invoiceId);
-        } catch (invoiceError) {
-          console.error(`Error al eliminar factura asociada (ID ${transaction.invoiceId}):`, invoiceError);
-          // Continuamos con la eliminación de la transacción aunque falle la factura
+          await db.query(
+            'UPDATE transactions SET invoice_id = NULL WHERE id = $1',
+            [transactionId]
+          );
+          console.log(`Se eliminó la referencia a la factura ${transaction.invoiceId} en la transacción ${transactionId}`);
+        } catch (updateError) {
+          console.error(`Error al eliminar referencia a factura:`, updateError);
+          // Continuamos con la eliminación aunque falle esta actualización
         }
       }
       
