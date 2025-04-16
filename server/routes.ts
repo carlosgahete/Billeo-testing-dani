@@ -3925,8 +3925,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   } 
                   // Si tiene isPercentage, calculamos el IRPF como porcentaje
                   else if (taxAny.isPercentage) {
-                    // Estimamos la base imponible desde el total (quitando el IVA por defecto)
-                    const baseAmount = parseFloat(transaction.amount) / (1 + 0.21); 
+                    // Calculamos la base imponible correctamente desde el total con IVA (21%)
+                    const ivaRate = 21; // IVA estándar español
+                    const baseAmount = Math.round((parseFloat(transaction.amount) / (1 + (ivaRate/100))) * 100) / 100;
                     irpfAmount = baseAmount * (Math.abs(tax.amount) / 100);
                     console.log(`    ⚠️ Using PERCENTAGE calculation: ${baseAmount}€ base * ${Math.abs(tax.amount)}% = ${irpfAmount}€`);
                   }
