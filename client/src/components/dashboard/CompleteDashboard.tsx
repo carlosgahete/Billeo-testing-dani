@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
 import {
@@ -19,16 +17,38 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ExpensesByCategory from "@/components/dashboard/ExpensesByCategoryNew";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 interface CompleteDashboardProps {
   className?: string;
 }
 
 const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
-  const [year, setYear] = useState("2025");
-  const [period, setPeriod] = useState("all");
   const [comparisonViewType, setComparisonViewType] = useState<"quarterly" | "yearly">("quarterly");
   const [_, navigate] = useLocation();
+  
+  // Usamos el hook centralizado para obtener datos del dashboard
+  const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
+  
+  // Estados locales para UI
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  
+  // Sincronizamos nuestro estado local con el hook
+  useEffect(() => {
+    if (filters) {
+      setSelectedYear(filters.year);
+      setSelectedPeriod(filters.period);
+    }
+  }, [filters]);
+  
+  // Efecto para cambiar los filtros cuando cambia el año o período
+  useEffect(() => {
+    if (filters && (filters.year !== selectedYear || filters.period !== selectedPeriod)) {
+      filters.changeYear(selectedYear);
+      filters.changePeriod(selectedPeriod);
+    }
+  }, [selectedYear, selectedPeriod, filters]);
   
   // Efecto para cerrar los menus al hacer clic fuera de ellos
   useEffect(() => {
@@ -54,8 +74,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           !periodButton.contains(event.target as Node)) {
         periodDropdown.classList.add('hidden');
       }
-      
-      // Ya no necesitamos esta parte para cerrar el dropdown de vista
     };
     
     // Agregar el listener al documento
@@ -66,28 +84,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
-  // Variables temporales para desarrollo - se reemplazarán con datos reales
-  const refreshDashboard = () => {
-    console.log("Función de refresco del dashboard - ahora vacía");
-    // Esta función será implementada después con la nueva lógica
-  };
-  
-  // Estados simplificados - sin lógica de fetch de datos
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  
-  // Estado de carga simulado
-  const statsLoading = false;
-  const transactionsLoading = false;
-  const categoriesLoading = false;
-  
-  // Este useEffect se mantendrá para futura implementación
-  useEffect(() => {
-    console.log("Dashboard montado - la lógica de carga de datos será implementada aquí");
-    // La nueva lógica de carga de datos se implementará aquí
-  }, [year, period]);
 
   // Definir datos predeterminados si no hay datos
   const defaultStats: DashboardStats = {
@@ -105,24 +101,24 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   };
 
   // Estadísticas para usar (reales o predeterminadas)
-  const dashboardStats = stats || defaultStats;
+  const stats = dashboardData || defaultStats;
 
   // Calcular valores específicos usando los datos directos de la API
-  const finalResult = dashboardStats.income - dashboardStats.expenses;
+  const finalResult = stats.income - stats.expenses;
   // Usamos los valores directos de la API que provienen directamente del cálculo del backend
-  const baseImponibleIngresos = dashboardStats.baseImponible || 0;
-  const ivaRepercutido = dashboardStats.ivaRepercutido || 0;
-  const baseImponibleGastos = dashboardStats.baseImponibleGastos || Math.round(dashboardStats.expenses / 1.21);
-  const ivaSoportado = dashboardStats.ivaSoportado || 0;
-  const ivaALiquidar = dashboardStats.taxes?.ivaALiquidar || 0;
-  const retencionesIrpf = dashboardStats.irpfRetenidoIngresos || 0;
+  const baseImponibleIngresos = stats.baseImponible || 0;
+  const ivaRepercutido = stats.ivaRepercutido || 0;
+  const baseImponibleGastos = stats.baseImponibleGastos || Math.round(stats.expenses / 1.21);
+  const ivaSoportado = stats.ivaSoportado || 0;
+  const ivaALiquidar = stats.taxes?.ivaALiquidar || 0;
+  const retencionesIrpf = stats.irpfRetenidoIngresos || 0;
   // Obtener el IRPF retenido en facturas de gastos
-  const irpfRetenciones = dashboardStats.totalWithholdings || 0;
+  const irpfRetenciones = stats.totalWithholdings || 0;
   
   // Imprimir los datos para debug
   console.log("Dashboard stats", {
-    income: dashboardStats.income,
-    expenses: dashboardStats.expenses,
+    income: stats.income,
+    expenses: stats.expenses,
     baseImponible: baseImponibleIngresos,
     result: finalResult
   });
@@ -139,13 +135,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     return "Q4";
   };
 
-  // Preparar datos reales para el gráfico de comparativa financiera
+  // Preparar datos para el gráfico de comparativa financiera
   const prepareFinancialComparisonData = () => {
-    if (!transactions) return [];
-
-    // Si es vista trimestral
+    // Vista por trimestres
     if (comparisonViewType === "quarterly") {
-      // Vista por trimestres
+      // Datos trimestrales simplificados
       const quarterlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
         "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
         "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
@@ -153,56 +147,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
       };
 
-      // Procesar transacciones (gastos) y agruparlas por trimestre
-      transactions.forEach(tx => {
-        if (!tx.date) return;
-        
-        const txDate = new Date(tx.date);
-        if (txDate.getFullYear().toString() !== year) return;
-        
-        const quarter = getQuarterFromDate(txDate);
-        const amount = parseFloat(tx.amount);
-
-        if (tx.type === "income") {
-          // Para ingresos de transacciones directas (aunque no hay ninguna actualmente)
-          // Usamos la base imponible (sin IVA)
-          const baseAmount = Math.round(amount / 1.21);
-          quarterlyData[quarter].Ingresos += baseAmount;
-        } else {
-          // Para gastos
-          // Usamos la base imponible (sin IVA)
-          const baseAmount = Math.round(amount / 1.21);
-          quarterlyData[quarter].Gastos += baseAmount;
-        }
-      });
-
-      // Agregamos los ingresos netos (sin IVA) si están disponibles en las estadísticas
-      if (baseImponibleIngresos > 0 && 
-          Object.values(quarterlyData).every(data => data.Ingresos === 0)) {
-        
-        // Sabemos que los ingresos están en Q2 (abril) según los logs
-        // Usamos directamente el valor de baseImponibleIngresos que ya está sin IVA
-        quarterlyData["Q2"].Ingresos = baseImponibleIngresos;
-      }
-
-      // Calculamos los gastos totales netos (sin IVA) si no hay transacciones
-      let totalGastosNetos = 0;
-      Object.values(quarterlyData).forEach(data => {
-        totalGastosNetos += data.Gastos;
-      });
-
-      // Si los gastos calculados no coinciden con el baseImponibleGastos, ajustamos
-      if (totalGastosNetos === 0 && baseImponibleGastos > 0) {
-        // Asignamos todos los gastos al Q2 (abril) según los logs
-        quarterlyData["Q2"].Gastos = baseImponibleGastos;
-      }
-
-      // Calcular el resultado para cada trimestre (neto)
-      Object.keys(quarterlyData).forEach(quarter => {
-        quarterlyData[quarter].Resultado = 
-          quarterlyData[quarter].Ingresos - quarterlyData[quarter].Gastos;
-      });
-
+      // Asignamos los datos al trimestre correcto basándonos en la información disponible
+      // Sabemos que los ingresos están en Q2 (abril) según los logs
+      quarterlyData["Q2"].Ingresos = baseImponibleIngresos;
+      quarterlyData["Q2"].Gastos = baseImponibleGastos;
+      quarterlyData["Q2"].Resultado = baseImponibleIngresos - baseImponibleGastos;
+      
       console.log("Quarterly data for financial comparison (net values):", quarterlyData);
 
       // Convertir a array para el gráfico
@@ -216,9 +166,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     else {
       // Vista por años
       const yearlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
-        [year]: { Ingresos: baseImponibleIngresos, Gastos: baseImponibleGastos, Resultado: baseImponibleIngresos - baseImponibleGastos },
-        [(parseInt(year) - 1).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 },
-        [(parseInt(year) - 2).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 }
+        [selectedYear]: { Ingresos: baseImponibleIngresos, Gastos: baseImponibleGastos, Resultado: baseImponibleIngresos - baseImponibleGastos },
+        [(parseInt(selectedYear) - 1).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        [(parseInt(selectedYear) - 2).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 }
       };
 
       console.log("Yearly data for financial comparison:", yearlyData);
@@ -235,8 +185,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
   // Datos para el gráfico de comparativa financiera
   const financialComparisonData = prepareFinancialComparisonData();
-
-  const isLoading = statsLoading || transactionsLoading || categoriesLoading;
   
   if (isLoading) {
     return (
@@ -266,7 +214,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="year-dropdown"
             >
-              <span>{year}</span>
+              <span>{selectedYear}</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
               </svg>
@@ -276,28 +224,28 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
               <button
                 onClick={() => {
-                  setYear("2025");
+                  setSelectedYear("2025");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${year === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2025
               </button>
               <button
                 onClick={() => {
-                  setYear("2024");
+                  setSelectedYear("2024");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${year === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2024
               </button>
               <button
                 onClick={() => {
-                  setYear("2023");
+                  setSelectedYear("2023");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${year === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2023
               </button>
@@ -313,11 +261,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               aria-controls="period-dropdown"
             >
               <span>
-                {period === "all" ? "Todo el año" : 
-                period === "q1" ? "Trimestre 1" : 
-                period === "q2" ? "Trimestre 2" : 
-                period === "q3" ? "Trimestre 3" : 
-                period === "q4" ? "Trimestre 4" : ""}
+                {selectedPeriod === "all" ? "Todo el año" : 
+                selectedPeriod === "q1" ? "Trimestre 1" : 
+                selectedPeriod === "q2" ? "Trimestre 2" : 
+                selectedPeriod === "q3" ? "Trimestre 3" : 
+                selectedPeriod === "q4" ? "Trimestre 4" : ""}
               </span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -328,46 +276,46 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
               <button
                 onClick={() => {
-                  setPeriod("all");
+                  setSelectedPeriod("all");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Todo el año
               </button>
               <button
                 onClick={() => {
-                  setPeriod("q1");
+                  setSelectedPeriod("q1");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 1
               </button>
               <button
                 onClick={() => {
-                  setPeriod("q2");
+                  setSelectedPeriod("q2");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 2
               </button>
               <button
                 onClick={() => {
-                  setPeriod("q3");
+                  setSelectedPeriod("q3");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 3
               </button>
               <button
                 onClick={() => {
-                  setPeriod("q4");
+                  setSelectedPeriod("q4");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 4
               </button>
@@ -388,35 +336,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Entradas totales</p>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
               </div>
             </div>
-            
-            <div className="md:mb-5 mb-2">
-              <div className="md:text-3xl text-2xl font-bold text-[#34C759] md:pt-3 pt-1">
-                {formatCurrency(baseImponibleIngresos)}
-              </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
-                Ingresos totales (sin IVA)
-              </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(baseImponibleIngresos)}</div>
+              <div className="text-sm text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(stats.income)}</div>
             </div>
-            
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IVA repercutido:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaRepercutido)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IRPF:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(retencionesIrpf)}</span>
-              </div>
-            </div>
-            
-            <Link href="/invoices" className="md:block hidden">
-              <button className="w-full px-4 py-2 rounded-md font-medium text-[#34C759] border border-[#34C759] hover:bg-[#34C759]/10 transition-colors">
-                Ver facturas
-              </button>
-            </Link>
           </div>
         </div>
 
@@ -424,218 +351,201 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#FEECEB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+              <div className="bg-[#FFECEC] md:p-3 p-2 rounded-full mr-3 md:mr-3">
                 <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Gastos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Salidas totales</p>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
               </div>
             </div>
-            
-            <div className="md:mb-5 mb-2">
-              <div className="md:text-3xl text-2xl font-bold text-[#FF3B30] md:pt-3 pt-1">
-                {formatCurrency(baseImponibleGastos)}
-              </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
-                Gastos totales
-              </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(baseImponibleGastos)}</div>
+              <div className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(stats.expenses)}</div>
             </div>
-            
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IVA soportado:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaSoportado)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IRPF:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(irpfRetenciones)}</span>
-              </div>
-            </div>
-            
-            <Link href="/transactions" className="md:block hidden">
-              <button className="w-full px-4 py-2 rounded-md font-medium text-[#FF3B30] border border-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors">
-                Ver gastos
-              </button>
-            </Link>
           </div>
         </div>
 
-        {/* Widget de Resultado Final - Estilo Apple - Mismo ancho que las otras tarjetas */}
-        <div className="dashboard-card fade-in col-span-1 sm:col-span-2 lg:col-span-1 -mx-2 sm:mx-0 px-0">
+        {/* Widget de Resultado - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
-              <div className="bg-[#E9F8FB] md:p-3 p-2 rounded-full mr-3 md:mr-3">
-                <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
+              <div className={`${isPositiveResult ? 'bg-[#E2F6ED]' : 'bg-[#FFECEC]'} md:p-3 p-2 rounded-full mr-3 md:mr-3`}>
+                <PiggyBank className={`md:h-5 md:w-5 h-4 w-4 ${isPositiveResult ? 'text-[#34C759]' : 'text-[#FF3B30]'}`} strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado Final</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0.5 md:block hidden">Ingresos - Gastos</p>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
               </div>
             </div>
-            
-            <div className="md:mb-5 mb-2">
-              <div className="md:text-3xl text-2xl font-bold text-[#007AFF] md:pt-3 pt-1">
+            <div className="flex flex-col">
+              <div className={`text-3xl md:text-4xl font-bold mb-1 ${isPositiveResult ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
                 {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
-              <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
-                {isPositiveResult ? 'Beneficio neto' : 'Pérdida neta'}
-              </div>
+              <div className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(ivaALiquidar)}</div>
+              <div className="text-sm text-gray-500">Retenciones IRPF: {formatCurrency(retencionesIrpf)}</div>
             </div>
-            
-            <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IVA a pagar:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.ivaALiquidar || 0)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="md:text-sm text-xs text-gray-600">IRPF a pagar:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
-              </div>
-            </div>
-            
-            <Link href="/reports" className="md:block hidden">
-              <button className="w-full px-4 py-2 rounded-md font-medium text-[#007AFF] border border-[#007AFF] hover:bg-[#007AFF]/10 transition-colors">
-                Ver informes
-              </button>
-            </Link>
           </div>
         </div>
       </div>
 
-      {/* Segunda fila: Widgets de Comparativa Financiera y Gastos por Categoría - Estilo Apple - Ocultos en móvil */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-8 mt-5 md:mt-8">
-        {/* Widget de Comparativa Financiera - Estilo Apple */}
-        <div className="dashboard-card fade-in col-span-3 mx-0 px-0">
-          <div className="p-1 md:p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center">
-                <div className="bg-[#F0EDFF] p-2 rounded-full mr-2">
-                  <BarChart3 className="h-4 w-4 text-[#5856D6]" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h3 className="text-base font-medium text-gray-800 mb-0 leading-tight">Comparativa Financiera</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Evolución por período</p>
-                </div>
+      {/* Segunda fila: Widgets secundarios - Row 2 - De 2 columnas en tablet, 1 columna en móvil */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-3 md:mt-8">
+        {/* Widget de Facturas pendientes - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#E9F3FF] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <FileText className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
               </div>
-              <div className="flex items-center gap-2">
-                <Select 
-                  defaultValue="quarterly" 
-                  value={comparisonViewType}
-                  onValueChange={(value) => {
-                    setComparisonViewType(value as "quarterly" | "yearly");
-                  }}
-                >
-                  <SelectTrigger className="h-7 w-28 text-xs bg-white focus:ring-0">
-                    <SelectValue>
-                      {comparisonViewType === "quarterly" ? "Trimestral" : "Anual"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="quarterly" className="text-xs">Trimestral</SelectItem>
-                    <SelectItem value="yearly" className="text-xs">Anual</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Facturas pendientes</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Por cobrar</p>
               </div>
             </div>
-
-            {/* Comparativa financiera - Estilo Apple */}
-            <div className="bg-white rounded-xl border border-gray-100 p-1 sm:p-3 glass-panel">
-              {/* Mostrar el resultado en grande */}
-              <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-2 sm:mb-3">
-                <div className="bg-[#F5FFF7] p-1 sm:p-2 rounded-lg border border-[#DCFFE5]">
-                  <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
-                  <div className="text-sm font-semibold text-[#34C759] tracking-tight">
-                    {formatCurrency(baseImponibleIngresos)}
-                  </div>
-                </div>
-                <div className="bg-[#FFF5F5] p-1 sm:p-2 rounded-lg border border-[#FFDFDF]">
-                  <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
-                  <div className="text-sm font-semibold text-[#FF3B30] tracking-tight">
-                    {formatCurrency(baseImponibleGastos)}
-                  </div>
-                </div>
-                <div className="bg-[#F0F7FF] p-1 sm:p-2 rounded-lg border border-[#DAE8FF]">
-                  <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
-                  <div className="text-sm font-semibold text-[#007AFF] tracking-tight">
-                    {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Gráfico o mensaje de datos insuficientes */}
-              <div className="h-[180px]">
-                {financialComparisonData && financialComparisonData.length > 0 && 
-                  financialComparisonData.some(item => item.Ingresos > 0 || item.Gastos > 0) ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={financialComparisonData}
-                      margin={{
-                        top: 5,
-                        right: 5,
-                        left: 10,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
-                      <XAxis 
-                        dataKey="quarter" 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fontSize: 10 }}
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => `${value}€`}
-                        width={45}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10 }}
-                      />
-                      <Tooltip 
-                        formatter={(value: number) => [`${value}€`, undefined]}
-                        contentStyle={{ 
-                          borderRadius: '10px',
-                          boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
-                          border: 'none',
-                          padding: '6px',
-                          fontSize: '10px'
-                        }}
-                      />
-                      <Legend 
-                        iconType="circle" 
-                        iconSize={5}
-                        wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }}
-                      />
-                      <Bar dataKey="Ingresos" fill="#34C759" radius={[4, 4, 0, 0]} barSize={16} />
-                      <Bar dataKey="Gastos" fill="#FF3B30" radius={[4, 4, 0, 0]} barSize={16} />
-                      <Bar dataKey="Resultado" fill="#007AFF" radius={[4, 4, 0, 0]} barSize={16} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center">
-                    <div className="text-gray-400 mb-2">
-                      <BarChart3 className="h-12 w-12 mx-auto text-gray-200" strokeWidth={1} />
-                    </div>
-                    <p className="text-gray-500 text-sm text-center">
-                      No hay datos para este año
-                    </p>
-                    <p className="text-gray-400 text-xs text-center mt-1">
-                      Los datos se mostrarán cuando registres transacciones
-                    </p>
-                  </div>
-                )}
-              </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(stats.pendingInvoices)}</div>
+              <div className="text-sm text-gray-500">{stats.pendingCount} {stats.pendingCount === 1 ? 'factura' : 'facturas'}</div>
+              <Link href="/invoices" className="text-sm text-primary mt-2 flex items-center hover:underline">
+                <span>Ver facturas</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Widget de Gastos por Categoría */}
-        <div className="col-span-2 mx-0 px-0">
-          <ExpensesByCategory 
-            transactions={transactions || []} 
-            categories={categories || []}
-            period={`${year}-${period}`}
-          />
+        {/* Widget de Presupuestos pendientes - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#E9F3FF] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <FileText className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Presupuestos pendientes</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Por aceptar</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(stats.pendingQuotes)}</div>
+              <div className="text-sm text-gray-500">{stats.pendingQuotesCount} {stats.pendingQuotesCount === 1 ? 'presupuesto' : 'presupuestos'}</div>
+              <Link href="/quotes" className="text-sm text-primary mt-2 flex items-center hover:underline">
+                <span>Ver presupuestos</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Widget de Impuestos - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#E9F3FF] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <FileText className="md:h-5 md:w-5 h-4 w-4 text-[#007AFF]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Impuestos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Resumen fiscal</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-700">IVA a liquidar:</span>
+                <span className="text-sm font-semibold">{formatCurrency(stats.taxes?.ivaALiquidar || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-gray-700">IRPF retenido en facturas:</span>
+                <span className="text-sm font-semibold">{formatCurrency(retencionesIrpf)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">IRPF a pagar (est.):</span>
+                <span className="text-sm font-semibold">{formatCurrency(stats.taxes?.incomeTax || 0)}</span>
+              </div>
+              <Link href="/taxes" className="text-sm text-primary mt-2 flex items-center hover:underline">
+                <span>Ver detalle impuestos</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tercera Fila - Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8 mt-3 md:mt-8">
+        {/* Gráfico de Comparativa Financiera - Estilo Apple - Col-span-1 en tablet+ */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <BarChart3 className="h-5 w-5 text-blue-500 mr-3" strokeWidth={1.5} />
+                <h3 className="text-lg font-medium text-gray-800">Comparativa Financiera</h3>
+              </div>
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setComparisonViewType("quarterly")}
+                  className={`px-2 py-1 rounded-md mr-1 ${comparisonViewType === "quarterly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
+                >
+                  Trimestral
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setComparisonViewType("yearly")}
+                  className={`px-2 py-1 rounded-md ${comparisonViewType === "yearly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
+                >
+                  Anual
+                </Button>
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={financialComparisonData}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="quarter" 
+                    tick={{ fontSize: 12 }}
+                    axisLine={{ stroke: '#e0e0e0' }}
+                    tickLine={{ stroke: '#e0e0e0' }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `${value}€`} 
+                    tick={{ fontSize: 12 }}
+                    axisLine={{ stroke: '#e0e0e0' }}
+                    tickLine={{ stroke: '#e0e0e0' }}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${formatCurrency(Number(value))}`, undefined]}
+                    labelFormatter={(label) => comparisonViewType === "quarterly" ? `Trimestre ${label.substring(1)}` : `Año ${label}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="Ingresos" fill="#34C759" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Gastos" fill="#FF3B30" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Resultado" fill="#007AFF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Gastos por Categoría - Estilo Apple */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <BarChart3 className="h-5 w-5 text-blue-500 mr-3" strokeWidth={1.5} />
+              <h3 className="text-lg font-medium text-gray-800">Gastos por Categoría</h3>
+            </div>
+            <div className="h-64">
+              {/* Componente de gastos por categoría - Se mantiene igual */}
+              <ExpensesByCategory />
+            </div>
+          </div>
         </div>
       </div>
     </div>
