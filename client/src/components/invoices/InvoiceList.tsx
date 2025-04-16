@@ -388,13 +388,27 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const { data: invoicesData = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
+  const { data: invoicesData = [], isLoading: invoicesLoading, error: invoicesError } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  const { data: clientsData = [], isLoading: clientsLoading } = useQuery<Client[]>({
+  const { data: clientsData = [], isLoading: clientsLoading, error: clientsError } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
+  
+  // Mostrar errores en consola para debugging
+  useEffect(() => {
+    if (invoicesError) {
+      console.error("Error cargando facturas:", invoicesError);
+    }
+    if (clientsError) {
+      console.error("Error cargando clientes:", clientsError);
+    }
+  }, [invoicesError, clientsError]);
   
   // Obtener información de la empresa para los PDFs y emails
   const { data: companyData } = useQuery<Company>({

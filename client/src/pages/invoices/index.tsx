@@ -18,17 +18,48 @@ const InvoicesPage = () => {
   // Consulta para obtener estadísticas basadas en el año seleccionado
   const { 
     data: stats,
-    isLoading: statsLoading
+    isLoading: statsLoading,
+    error: statsError
   } = useQuery<DashboardStats>({
     queryKey: ['/api/stats/dashboard', yearFilter],
     queryFn: async () => {
-      const response = await fetch(`/api/stats/dashboard?year=${yearFilter}&period=all`);
-      if (!response.ok) {
-        throw new Error('Error fetching dashboard data');
+      try {
+        const response = await fetch(`/api/stats/dashboard?year=${yearFilter}&period=all`);
+        if (response.status === 401) {
+          console.log("Usuario no autenticado, redirigiendo a login");
+          // Podríamos redirigir aquí con navigate('/login') si fuera necesario
+          return {
+            income: 0,
+            expenses: 0,
+            pendingInvoices: 0,
+            pendingCount: 0,
+            pendingQuotes: 0,
+            pendingQuotesCount: 0,
+            yearCount: 0,
+            yearIncome: 0,
+            quarterCount: 0,
+            quarterIncome: 0,
+            issuedCount: 0,
+            taxes: {
+              vat: 0,
+              incomeTax: 0,
+              ivaALiquidar: 0
+            }
+          } as DashboardStats;
+        }
+        
+        if (!response.ok) {
+          throw new Error('Error fetching dashboard data');
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error obteniendo estadísticas:", error);
+        throw error;
       }
-      return response.json();
     },
-    refetchOnWindowFocus: false
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: true
   });
   
   // Manejar cambio de año desde InvoiceList
