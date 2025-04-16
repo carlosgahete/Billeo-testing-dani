@@ -52,6 +52,7 @@ import UltraSimpleQuotesPage from "@/pages/quotes/ultra-simple";
 import TestEmailPage from "@/pages/test-email";
 import TaxesPage from "@/pages/taxes";
 import FilterTestPage from "@/pages/FilterTest";
+import FilterTestSimplePage from "@/pages/FilterTestSimple";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -262,6 +263,13 @@ function Router() {
       <Route path="/filter-test">
         <Layout>
           <ProtectedRoute path="/filter-test" component={FilterTestPage} />
+        </Layout>
+      </Route>
+      
+      {/* Ruta para prueba de filtros simplificada */}
+      <Route path="/filter-test-simple">
+        <Layout>
+          <ProtectedRoute path="/filter-test-simple" component={FilterTestSimplePage} />
         </Layout>
       </Route>
       

@@ -174,9 +174,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     else {
       // Vista por años
       const yearlyData: Record<string, { Ingresos: number, Gastos: number, Resultado: number }> = {
-        [selectedYear]: { Ingresos: baseImponibleIngresos, Gastos: baseImponibleGastos, Resultado: baseImponibleIngresos - baseImponibleGastos },
-        [(parseInt(selectedYear) - 1).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 },
-        [(parseInt(selectedYear) - 2).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 }
+        [filters?.year || currentYearStr]: { Ingresos: baseImponibleIngresos, Gastos: baseImponibleGastos, Resultado: baseImponibleIngresos - baseImponibleGastos },
+        [(parseInt(filters?.year || currentYearStr) - 1).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        [(parseInt(filters?.year || currentYearStr) - 2).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 }
       };
 
       console.log("Yearly data for financial comparison:", yearlyData);
@@ -302,31 +302,28 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </button>
               <button
                 onClick={() => {
-                  setSelectedPeriod("q2");
+                  handleChangePeriod("q2");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 2
               </button>
               <button
                 onClick={() => {
-                  setSelectedPeriod("q3");
+                  handleChangePeriod("q3");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 3
               </button>
               <button
                 onClick={() => {
-                  setSelectedPeriod("q4");
+                  handleChangePeriod("q4");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 4
               </button>
@@ -547,12 +544,13 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="h-[400px]">
               {/* Usamos consultas directas para transacciones y categorías */}
               <ExpensesByCategory 
-                period={`${selectedYear}-${selectedPeriod}`}
+                period={`${filters?.year}-${filters?.period}`}
                 onPeriodChange={(period) => {
                   const [year, newPeriod] = period.split('-');
-                  setSelectedYear(year);
-                  setSelectedPeriod(newPeriod);
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
+                  if (year && newPeriod) {
+                    handleChangeYear(year);
+                    handleChangePeriod(newPeriod);
+                  }
                 }}
               />
             </div>
