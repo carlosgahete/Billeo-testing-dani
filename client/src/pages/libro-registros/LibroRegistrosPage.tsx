@@ -1523,7 +1523,7 @@ export default function LibroRegistrosPage() {
                   <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">Número</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">Fecha</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">Cliente</TableHead>
-                  <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">Base</TableHead>
+                  <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 text-right">Base</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">IVA</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">Total</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700">Estado</TableHead>
@@ -1545,9 +1545,9 @@ export default function LibroRegistrosPage() {
                       <TableCell className="py-2 px-4 text-sm">{invoice.number}</TableCell>
                       <TableCell className="py-2 px-4 text-sm">{formatDate(invoice.date)}</TableCell>
                       <TableCell className="py-2 px-4 text-sm">{invoice.clientName}</TableCell>
-                      <TableCell className="py-2 px-4 text-sm">{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
-                      <TableCell className="py-2 px-4 text-sm">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
-                      <TableCell className="py-2 px-4 text-sm font-medium">{formatCurrency(parseFloat(invoice.total))}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm text-right">{formatCurrency(parseFloat(invoice.subtotal))}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm text-right">{formatCurrency(parseFloat(invoice.tax))}</TableCell>
+                      <TableCell className="py-2 px-4 text-sm font-medium text-right">{formatCurrency(parseFloat(invoice.total))}</TableCell>
                       <TableCell className="py-2 px-4">
                         <Badge className={invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-100 px-3 py-0.5 rounded-full text-xs font-medium shadow-sm border border-gray-200"}>
                           {invoice.status === 'paid' ? 'Pagada' : invoice.status}
