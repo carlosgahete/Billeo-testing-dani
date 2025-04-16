@@ -546,9 +546,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             <div className="h-64">
               {/* Componente de gastos por categoría con datos del año y periodo seleccionados */}
-              <div className="text-center text-sm text-gray-500">
-                <p>No hay datos de gastos para mostrar en este periodo</p>
-              </div>
+              <ExpensesByCategory 
+                transactions={dashboardData.transactions || []} 
+                categories={dashboardData.categories || []}
+                period={`${selectedYear}-${selectedPeriod}`}
+                onPeriodChange={(period) => {
+                  const [year, newPeriod] = period.split('-');
+                  setSelectedYear(year);
+                  setSelectedPeriod(newPeriod);
+                }}
+              />
             </div>
           </div>
         </div>
