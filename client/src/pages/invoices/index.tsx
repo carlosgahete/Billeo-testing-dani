@@ -3,8 +3,20 @@ import InvoiceList from "@/components/invoices/InvoiceList";
 import { Loader2, Receipt, FileCheck, Calendar, AlertTriangle, CalendarDays } from "lucide-react";
 import { useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
-import { DashboardStats } from "@/types/dashboard";
+import { useEffect, useState, useMemo } from "react";
+
+// Definimos las interfaces que necesitamos
+interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  clientId: number;
+  issueDate: string;
+  dueDate: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: string;
+}
 
 const InvoicesPage = () => {
   const [, navigate] = useLocation();
@@ -15,65 +27,19 @@ const InvoicesPage = () => {
     queryKey: ["/api/auth/session"],
   });
   
-  // Consulta para obtener estadísticas basadas en el año seleccionado
+  // Consulta para obtener todas las facturas
   const { 
-    data: stats,
-    isLoading: statsLoading,
-    error: statsError
-  } = useQuery<DashboardStats>({
-    queryKey: ['/api/stats/dashboard', yearFilter],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/stats/dashboard?year=${yearFilter}&period=all`);
-        if (response.status === 401) {
-          console.log("Usuario no autenticado, redirigiendo a login");
-          // Podríamos redirigir aquí con navigate('/login') si fuera necesario
-          return {
-            income: 0,
-            expenses: 0,
-            pendingInvoices: 0,
-            pendingCount: 0,
-            pendingQuotes: 0,
-            pendingQuotesCount: 0,
-            yearCount: 0,
-            yearIncome: 0,
-            quarterCount: 0,
-            quarterIncome: 0,
-            issuedCount: 0,
-            taxes: {
-              vat: 0,
-              incomeTax: 0,
-              ivaALiquidar: 0
-            }
-          } as DashboardStats;
-        }
-        
-        if (!response.ok) {
-          throw new Error('Error fetching dashboard data');
-        }
-        
-        return response.json();
-      } catch (error) {
-        console.error("Error obteniendo estadísticas:", error);
-        throw error;
-      }
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnWindowFocus: true
+    data: invoices = [],
+    isLoading: invoicesLoading
+  } = useQuery<Invoice[]>({
+    queryKey: ['/api/invoices'],
+    staleTime: 1000 * 60 * 5 // 5 minutos
   });
   
   // Manejar cambio de año desde InvoiceList
   const handleYearFilterChange = (year: string) => {
     setYearFilter(year);
   };
-
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-      </div>
-    );
-  }
 
   // Formatear valores monetarios en euros
   const formatCurrency = (value: number) => {
@@ -83,9 +49,87 @@ const InvoicesPage = () => {
     }).format(value || 0);
   };
 
+  // Obtener los años únicos de las facturas
+  const availableYears = useMemo(() => {
+    if (!invoices || invoices.length === 0) return [];
+    
+    const yearsSet = new Set<string>();
+    invoices.forEach(invoice => {
+      const date = new Date(invoice.issueDate);
+      yearsSet.add(date.getFullYear().toString());
+    });
+    
+    return Array.from(yearsSet).sort((a, b) => parseInt(b) - parseInt(a));
+  }, [invoices]);
+
+  // Filtrar facturas por año
+  const filteredInvoices = useMemo(() => {
+    if (!invoices) return [];
+    
+    if (yearFilter === "all") {
+      return invoices;
+    }
+    
+    return invoices.filter(invoice => {
+      const date = new Date(invoice.issueDate);
+      return date.getFullYear().toString() === yearFilter;
+    });
+  }, [invoices, yearFilter]);
+  
+  // Calcular estadísticas para las tarjetas
+  const stats = useMemo(() => {
+    const total = filteredInvoices.length;
+    const pending = filteredInvoices.filter(i => i.status === 'pending').length;
+    const pendingValue = filteredInvoices
+      .filter(i => i.status === 'pending')
+      .reduce((sum, i) => sum + i.total, 0);
+    const totalValue = filteredInvoices.reduce((sum, i) => sum + i.total, 0);
+    
+    // Factura del trimestre actual (si estamos en yearFilter = 'all' o en el año actual)
+    const currentYear = new Date().getFullYear().toString();
+    const currentQuarter = Math.floor(new Date().getMonth() / 3) + 1;
+    
+    // Si yearFilter no es "all" y no es el año actual, no mostramos facturas del trimestre
+    const isCurrentYearSelected = yearFilter === "all" || yearFilter === currentYear;
+    
+    // Filtrar facturas del trimestre actual del año actual
+    const quarterInvoices = isCurrentYearSelected ? filteredInvoices.filter(invoice => {
+      const date = new Date(invoice.issueDate);
+      const invoiceYear = date.getFullYear().toString();
+      const invoiceQuarter = Math.floor(date.getMonth() / 3) + 1;
+      
+      return (yearFilter === "all" || invoiceYear === yearFilter) && 
+             invoiceQuarter === currentQuarter &&
+             invoiceYear === currentYear;
+    }) : [];
+    
+    const quarterCount = quarterInvoices.length;
+    const quarterValue = quarterInvoices.reduce((sum, i) => sum + i.total, 0);
+    
+    return {
+      totalCount: total,
+      totalValue: totalValue,
+      pendingCount: pending,
+      pendingValue: pendingValue,
+      quarterCount: quarterCount,
+      quarterValue: quarterValue,
+      availableYears: availableYears
+    };
+  }, [filteredInvoices, yearFilter, availableYears]);
+
+  if (authLoading || invoicesLoading) {
+    return (
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
   // Valores para mostrar en las tarjetas
   const currentYear = new Date().getFullYear().toString();
-  const isCurrentYearSelected = yearFilter === currentYear || yearFilter === "all";
+  const yearsText = stats.availableYears.length > 0 ? 
+    stats.availableYears.join("-") : 
+    currentYear;
 
   return (
     <div className="w-full pl-0 pr-2 md:px-2 space-y-0 sm:space-y-6 mt-0 sm:mt-2 max-w-full">
@@ -122,10 +166,10 @@ const InvoicesPage = () => {
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#007AFF] pt-1">
-                {statsLoading ? "..." : (stats?.issuedCount || 0)}
+                {stats.totalCount}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {statsLoading ? "..." : formatCurrency(stats?.income || 0)}
+                Valor: {formatCurrency(stats.totalValue)}
               </div>
             </div>
           </div>
@@ -140,22 +184,17 @@ const InvoicesPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  Este Año {yearFilter === "all" && <span>({currentYear})</span>}
-                  {yearFilter !== "all" && <span>({yearFilter})</span>}
+                  Años {stats.availableYears.length > 0 && <span>({yearsText})</span>}
                 </p>
               </div>
             </div>
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#34C759] pt-1">
-                {statsLoading ? "..." : (
-                  yearFilter === "all" ? stats?.yearCount || 0 : stats?.issuedCount || 0
-                )}
+                {stats.availableYears.length}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {statsLoading ? "..." : formatCurrency(
-                  yearFilter === "all" ? stats?.yearIncome || 0 : stats?.income || 0
-                )}
+                Total años con facturas
               </div>
             </div>
           </div>
@@ -177,16 +216,10 @@ const InvoicesPage = () => {
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF9500] pt-1">
-                {statsLoading ? "..." : (
-                  yearFilter === "all" ? stats?.quarterCount || 0 : 
-                  (stats?.quarterCount && isCurrentYearSelected ? stats.quarterCount : 0)
-                )}
+                {stats.quarterCount}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {statsLoading ? "..." : formatCurrency(
-                  yearFilter === "all" ? stats?.quarterIncome || 0 : 
-                  (stats?.quarterIncome && isCurrentYearSelected ? stats.quarterIncome : 0)
-                )}
+                Valor: {formatCurrency(stats.quarterValue)}
               </div>
             </div>
           </div>
@@ -208,10 +241,10 @@ const InvoicesPage = () => {
             
             <div className="mb-3">
               <div className="text-2xl font-bold text-[#FF3B30] pt-1">
-                {statsLoading ? "..." : (stats?.pendingCount || 0)}
+                {stats.pendingCount}
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Valor: {statsLoading ? "..." : formatCurrency(stats?.pendingInvoices || 0)}
+                Valor: {formatCurrency(stats.pendingValue)}
               </div>
             </div>
           </div>
