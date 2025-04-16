@@ -470,10 +470,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <span className="text-sm text-gray-700">IRPF a pagar (est.):</span>
                 <span className="text-sm font-semibold text-emerald-600">{formatCurrency(stats.taxes?.incomeTax || 0)}</span>
               </div>
-              <Link href="/taxes" className="text-sm text-emerald-600 mt-2 flex items-center hover:text-emerald-800 hover:underline">
-                <span>Ver detalle impuestos</span>
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </Link>
             </div>
           </div>
         </div>

@@ -39,7 +39,7 @@ export default function TaxesPage() {
     return (
       <div className="container mx-auto py-6">
         <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mr-4">
+          <Button variant="ghost" onClick={() => navigate("/")} className="mr-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
@@ -66,7 +66,7 @@ export default function TaxesPage() {
     <div className="container mx-auto py-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mr-4">
+          <Button variant="ghost" onClick={() => navigate("/")} className="mr-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
