@@ -17,6 +17,7 @@ export function useDashboardData() {
     queryKey: ['/api/stats/dashboard', year, period],
     queryFn: async () => {
       // Añadimos nocache=true para forzar la actualización sin caché en cada petición
+      console.log(`📊 Ejecutando consulta con: año=${year}, periodo=${period}`);
       const response = await fetch(`/api/stats/dashboard?year=${year}&period=${period}&nocache=true`, {
         headers: {
           'Cache-Control': 'no-cache',
@@ -32,7 +33,9 @@ export function useDashboardData() {
     refetchOnWindowFocus: false,     // No refrescar automáticamente al obtener el foco
     refetchOnMount: true,            // Refresca cuando el componente se monta
     refetchInterval: false,          // No refrescar automáticamente a intervalos
-    staleTime: 5 * 60 * 1000         // Datos válidos por 5 minutos
+    staleTime: 5 * 60 * 1000,        // Datos válidos por 5 minutos
+    // IMPORTANTE: Esta propiedad hace que la consulta se actualice automáticamente cuando cambian las dependencias
+    enabled: !!year && !!period      // Asegurarse de que tenemos los parámetros antes de consultar
   });
   
   // Manejar errores
@@ -54,6 +57,14 @@ export function useDashboardData() {
     console.log('🔄 Actualizando datos del dashboard en tiempo real...');
     refetch();
   }, [refetch]);
+  
+  // Refrescar datos automáticamente cuando cambien year o period
+  useEffect(() => {
+    if (year && period) {
+      console.log('🔄 Ejecutando refetch automático por cambio en filtros:', year, period);
+      refetch();
+    }
+  }, [year, period, refetch]);
   
   // Eventos que escuchar para actualizar el dashboard
   useEffect(() => {
@@ -133,14 +144,18 @@ export function useDashboardData() {
     };
   }, [queryClient, refreshDashboardData]);
   
-  // Funciones para cambiar filtros
-  const changeYear = (newYear: string) => {
+  // Funciones para cambiar filtros - usamos useCallback para evitar recreaciones
+  const changeYear = useCallback((newYear: string) => {
     setYear(newYear);
-  };
+    // Forzamos refetch inmediatamente cuando cambia el año
+    console.log('🔄 Cambiando año a:', newYear);
+  }, []);
   
-  const changePeriod = (newPeriod: string) => {
+  const changePeriod = useCallback((newPeriod: string) => {
     setPeriod(newPeriod);
-  };
+    // Forzamos refetch inmediatamente cuando cambia el periodo
+    console.log('🔄 Cambiando periodo a:', newPeriod);
+  }, []);
   
   return {
     data,

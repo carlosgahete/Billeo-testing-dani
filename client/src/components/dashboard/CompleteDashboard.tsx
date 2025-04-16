@@ -34,19 +34,20 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   
-  // Sincronizamos nuestro estado local con el hook solo una vez al inicio
+  // Sincronizamos nuestro estado local con el hook en ambas direcciones
   useEffect(() => {
     if (filters) {
-      // Solo actualizamos el estado local si está diferente al filtro actual
-      // y solo durante la inicialización, para evitar bucles infinitos
+      // Sincronizamos los estados locales con los filtros globales
       if (selectedYear !== filters.year) {
+        console.log('Sincronizando estado local de año:', filters.year);
         setSelectedYear(filters.year);
       }
       if (selectedPeriod !== filters.period) {
+        console.log('Sincronizando estado local de periodo:', filters.period);
         setSelectedPeriod(filters.period);
       }
     }
-  }, []);
+  }, [filters.year, filters.period]);
   
   // Función para aplicar los cambios de filtro de manera controlada
   const applyFilters = useCallback(() => {
