@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings } from "lucide-react";
-import CustomizableDashboard from "./CustomizableDashboard";
+// Eliminamos la importación que estaba causando conflicto
+// import CustomizableDashboard from "./CustomizableDashboard";
 
 interface DashboardMetricsProps {
   userId: number;
@@ -45,10 +46,11 @@ const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
     }).format(value);
   };
 
+  // Devolvemos un contenedor vacío en lugar del dashboard personalizable
+  // que estaba causando el conflicto
   return (
-    <div>
-      {/* Dashboard personalizable */}
-      <CustomizableDashboard userId={userId} />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
+      {/* Aquí se pueden añadir métricas simplificadas si se desea */}
     </div>
   );
 };
