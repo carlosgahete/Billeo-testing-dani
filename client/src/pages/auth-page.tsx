@@ -314,15 +314,6 @@ export default function AuthPage() {
       // Proceed with normal login
       console.log("Utilizando el método normal de login");
       loginMutation.mutate(loginFormData);
-      
-      // Verificar si la mutación se ha completado sin error después de un tiempo
-      setTimeout(() => {
-        if (!loginMutation.isPending && !loginMutation.isError && !user) {
-          console.log("Sesión iniciada pero sin redirección - Intentando recuperar usuario");
-          // Forzar una recarga para obtener los datos de usuario
-          window.location.href = "/";
-        }
-      }, 3000);
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       toast({

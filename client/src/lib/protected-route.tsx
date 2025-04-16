@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 // Función de carga optimizada para componentes
 const LazyLoader = () => (
@@ -32,7 +32,7 @@ function ProtectedRouteGuard({
   component: React.FC<{}>;
   route: string;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
 
   // Si estamos cargando los datos del usuario, mostrar un indicador de carga
   if (isLoading) {
@@ -43,10 +43,23 @@ function ProtectedRouteGuard({
     );
   }
 
-  // Si no hay usuario autenticado, redirigir al login
+  // Si no hay usuario, intentar refrescar una vez y mostrar mensaje de redirección
   if (!user) {
+    // Refrescar datos de usuario por si acaso hay una sesión activa
+    // que no se ha detectado correctamente
+    console.log(`🔄 ProtectedRouteGuard: Intentando refrescar datos de usuario para ${route}`);
+    refreshUser();
+    
     console.log(`⛔ ProtectedRouteGuard: Acceso denegado a ${route} - Usuario no autenticado (Redirigiendo...)`);
-    return <Redirect to="/auth" />;
+    
+    // Redirección explícita
+    return (
+      <div className="text-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+        <p className="text-gray-500 mb-4">Acceso restringido. Redirigiendo al login...</p>
+        <Redirect to="/auth" />
+      </div>
+    );
   }
 
   // Usuario autenticado - Renderizar el componente
