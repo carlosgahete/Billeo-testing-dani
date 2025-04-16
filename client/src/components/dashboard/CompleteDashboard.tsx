@@ -31,26 +31,25 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
   
   // Estados locales para UI
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  // Importante: Usamos directamente los filtros del hook global
+  // En lugar de mantener estado local que podría desincronizarse
   
-  // Sincronizamos nuestro estado local con el hook solo al inicio
-  useEffect(() => {
+  // Creamos funciones específicas para cada acción de filtro para evitar la confusión
+  const handleChangeYear = useCallback((newYear: string) => {
     if (filters) {
-      console.log('Inicializando filtros locales con los globales:', filters.year, filters.period);
-      setSelectedYear(filters.year);
-      setSelectedPeriod(filters.period);
+      console.log("Cambiando año directamente a:", newYear);
+      // Llamamos directamente a la función del hook global
+      filters.changeYear(newYear);
     }
-  }, []);
+  }, [filters]);
   
-  // Función para aplicar los cambios de filtro de manera controlada
-  const applyFilters = useCallback(() => {
+  const handleChangePeriod = useCallback((newPeriod: string) => {
     if (filters) {
-      console.log("Aplicando filtros:", selectedYear, selectedPeriod);
-      filters.changeYear(selectedYear);
-      filters.changePeriod(selectedPeriod);
+      console.log("Cambiando periodo directamente a:", newPeriod);
+      // Llamamos directamente a la función del hook global
+      filters.changePeriod(newPeriod);
     }
-  }, [selectedYear, selectedPeriod, filters]);
+  }, [filters]);
   
   // Efecto para cerrar los menus al hacer clic fuera de ellos
   useEffect(() => {
@@ -223,7 +222,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="year-dropdown"
             >
-              <span>{selectedYear}</span>
+              <span>{filters?.year || new Date().getFullYear().toString()}</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
               </svg>
@@ -233,31 +232,28 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
               <button
                 onClick={() => {
-                  setSelectedYear("2025");
+                  handleChangeYear("2025");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2025
               </button>
               <button
                 onClick={() => {
-                  setSelectedYear("2024");
+                  handleChangeYear("2024");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2024
               </button>
               <button
                 onClick={() => {
-                  setSelectedYear("2023");
+                  handleChangeYear("2023");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 2023
               </button>

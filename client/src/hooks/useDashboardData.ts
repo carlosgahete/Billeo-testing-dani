@@ -138,26 +138,44 @@ export function useDashboardData() {
     };
   }, [queryClient, refreshDashboardData]);
   
-  // Funciones para cambiar filtros - usamos useCallback para evitar recreaciones
+  // Funciones para cambiar filtros - implementación directa y forzada
   const changeYear = useCallback((newYear: string) => {
-    setYear(newYear);
-    // Forzamos refetch inmediatamente cuando cambia el año
     console.log('🔄 Cambiando año a:', newYear);
+    
+    // Primero actualizamos el estado local
+    setYear(newYear);
+    
+    // Forzar invalidación de la caché para esta query
+    queryClient.invalidateQueries({
+      queryKey: ['/api/stats/dashboard']
+    });
+    
+    // Después de un pequeño tiempo, forzar la recarga
     setTimeout(() => {
-      console.log('Ejecutando refetch después de cambiar año');
+      console.log('⚡ Forzando recarga inmediata del dashboard después de cambiar año');
+      window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
       refetch();
-    }, 0);
-  }, [refetch]);
+    }, 10);
+  }, [refetch, queryClient]);
   
   const changePeriod = useCallback((newPeriod: string) => {
-    setPeriod(newPeriod);
-    // Forzamos refetch inmediatamente cuando cambia el periodo
     console.log('🔄 Cambiando periodo a:', newPeriod);
+    
+    // Primero actualizamos el estado local
+    setPeriod(newPeriod);
+    
+    // Forzar invalidación de la caché para esta query
+    queryClient.invalidateQueries({
+      queryKey: ['/api/stats/dashboard']
+    });
+    
+    // Después de un pequeño tiempo, forzar la recarga
     setTimeout(() => {
-      console.log('Ejecutando refetch después de cambiar periodo');
+      console.log('⚡ Forzando recarga inmediata del dashboard después de cambiar periodo');
+      window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
       refetch();
-    }, 0);
-  }, [refetch]);
+    }, 10);
+  }, [refetch, queryClient]);
   
   return {
     data,
