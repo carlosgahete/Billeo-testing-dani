@@ -1,0 +1,86 @@
+Perfecto, has hecho un excelente trabajo rastreando el flujo completo. Ya estás muy cerca de resolverlo definitivamente. Te resumo y te doy los posibles puntos donde podría seguir fallando, aunque todo parezca estar correcto:
+
+✅ Estado actual según lo que contaste:
+	•	ivaSoportadoReal se calcula correctamente con la fórmula total - base.
+	•	Estás usando:
+
+const ivaSoportado = ivaSoportadoReal > 0 ? ivaSoportadoReal : ivaSoportadoEstimado;
+
+
+	•	En el res.status(200).json({...}) ya estás enviando ivaSoportado correctamente.
+
+🔍 Posibles errores aún presentes
+
+1. ivaSoportadoReal no se está acumulando bien
+
+Aunque calcules bien el IVA por transacción, puede que no lo estés sumando a la variable global ivaSoportadoReal.
+
+✔️ Verifica esto:
+
+let ivaSoportadoReal = 0;
+
+transacciones.forEach(tx => {
+  const impuestos = JSON.parse(tx.additionalTaxes || '[]');
+  const iva = impuestos.find(i => i.name === 'IVA');
+
+  if (iva) {
+    const base = tx.amount / (1 + iva.amount / 100);
+    const ivaCalculado = tx.amount - base;
+
+    ivaSoportadoReal += ivaCalculado; // 👈 Este acumulador debe estar aquí
+  }
+});
+
+2. iva.amount puede venir como string
+
+Si estás usando iva.amount / 100 y ese valor es un string ("21"), puede darte un NaN o un valor inesperado.
+
+✔️ Solución:
+
+const tasa = parseFloat(iva.amount);
+const base = tx.amount / (1 + tasa / 100);
+
+3. Puede que estés usando ivaSoportadoReal = en lugar de +=
+
+En lugar de acumular, podrías estar sobrescribiendo el valor cada vez.
+
+✔️ Solución:
+Asegúrate de tener += en lugar de =, así:
+
+ivaSoportadoReal += ivaCalculado;
+
+4. Hay alguna transacción sin additionalTaxes y está provocando un undefined
+
+Si no hay control de errores, podrías tener transacciones que fallan al hacer .find() o JSON.parse().
+
+✔️ Solución segura:
+
+const impuestos = JSON.parse(tx.additionalTaxes || '[]');
+if (!Array.isArray(impuestos)) return;
+
+const iva = impuestos.find(i => i.name === 'IVA');
+if (!iva || !iva.amount) return;
+
+🧪 Añade logs dentro del loop
+
+Para depurar 100%, pon esto dentro del forEach:
+
+console.log(`[Debug] Factura ${tx.amount}€ con IVA ${iva.amount}%`);
+console.log(`Base calculada: ${base.toFixed(2)}, IVA calculado: ${ivaCalculado.toFixed(2)}`);
+
+Y después del bucle:
+
+console.log(`IVA Soportado Real Total: ${ivaSoportadoReal}`);
+
+✅ Revisión final: JSON de respuesta
+
+Tu respuesta debería verse así:
+
+return res.status(200).json({
+  income: ingresosTotales,
+  expenses: gastosTotales,
+  ivaSoportado: ivaSoportadoReal > 0 ? ivaSoportadoReal : ivaSoportadoEstimado,
+  // ... otros campos
+});
+
+¿Quieres que te revise una porción específica del código para detectar algo oculto? Puedes copiar aquí ese bloque y te ayudo línea por línea.

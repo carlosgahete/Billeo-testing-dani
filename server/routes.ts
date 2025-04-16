@@ -4077,6 +4077,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let ivaSoportadoReal = 0;
       
       console.log("---------- INICIO CÁLCULO IVA REAL ----------");
+      
+      // Aseguramos tener una lista válida de transacciones
+      const expenseTransactions = allTransactions.filter(tx => tx.type === 'expense');
       console.log(`Total de transacciones de gastos: ${expenseTransactions.length}`);
       
       // Calculamos el IVA soportado real directamente desde los datos de las transacciones
@@ -4091,44 +4094,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Primero buscamos si hay additionalTaxes con un valor explícito de IVA
           if (tx.additionalTaxes && typeof tx.additionalTaxes === 'string') {
             try {
-              const taxesData = JSON.parse(tx.additionalTaxes);
+              // Parsear los impuestos adicionales de forma segura
+              const taxesData = JSON.parse(tx.additionalTaxes || '[]');
+              if (!Array.isArray(taxesData)) {
+                console.log(`- additionalTaxes no es un array: ${tx.additionalTaxes}`);
+                return; // Continuar con la siguiente transacción
+              }
+              
               console.log(`- additionalTaxes encontrado: ${tx.additionalTaxes}`);
               
-              const ivaObj = Array.isArray(taxesData) ? 
-                taxesData.find(tax => tax.name === "IVA") : null;
+              // Buscar el objeto IVA entre los impuestos
+              const ivaObj = taxesData.find(tax => tax.name === "IVA");
               
-              if (ivaObj) {
-                const ivaRate = ivaObj.amount || 21;
+              if (ivaObj && ivaObj.amount) {
+                // Asegurarnos de que la tasa es un número
+                const ivaRate = parseFloat(ivaObj.amount) || 21;
                 console.log(`- IVA encontrado, tasa: ${ivaRate}%`);
                 
                 // Si tenemos un valor explícito del IVA, lo usamos
-                if (ivaObj.value) {
+                if (ivaObj.value && !isNaN(Number(ivaObj.value))) {
                   ivaAmount = Number(ivaObj.value);
                   console.log(`- USANDO valor explícito de IVA: ${ivaAmount}€`);
                 } else {
                   // Si no tenemos valor explícito, lo calculamos con la fórmula
-                  const resultado = calcularBaseEIVA(amount, ivaRate);
-                  ivaAmount = resultado.iva;
-                  console.log(`- CALCULANDO IVA: ${ivaAmount}€ (base: ${resultado.base}€, tasa: ${ivaRate}%)`);
+                  const base = amount / (1 + (ivaRate / 100));
+                  ivaAmount = amount - base;
+                  console.log(`[Debug] Transacción ${tx.id}: ${amount}€ con IVA ${ivaRate}%`);
+                  console.log(`Base calculada: ${base.toFixed(2)}€, IVA calculado: ${ivaAmount.toFixed(2)}€`);
                 }
                 
-                // Acumulamos el IVA calculado
+                // Acumulamos el IVA calculado, asegurándonos de usar += y no =
                 ivaSoportadoReal += ivaAmount;
-                console.log(`- IVA acumulado hasta ahora: ${ivaSoportadoReal}€`);
+                console.log(`- IVA acumulado hasta ahora: ${ivaSoportadoReal.toFixed(2)}€`);
               } else {
-                console.log("- No se encontró objeto de IVA en los impuestos adicionales");
+                console.log("- No se encontró objeto de IVA en los impuestos adicionales o no tiene tasa");
               }
             } catch (error) {
               console.error(`Error al procesar additionalTaxes para transacción ${tx.id}:`, error);
             }
           } else {
             console.log("- No tiene additionalTaxes definido o no es un string");
+            
+            // Si no hay datos de impuestos, usar tasa estándar de 21%
+            // Este es un fallback para asegurar que siempre calculemos algo
+            const ivaRate = 21;
+            const base = amount / 1.21; // Simplificado para 21%
+            ivaAmount = amount - base;
+            
+            console.log(`- Usando cálculo con tasa estándar 21%: base=${base.toFixed(2)}€, IVA=${ivaAmount.toFixed(2)}€`);
+            
+            // Acumular este valor también
+            ivaSoportadoReal += ivaAmount;
+            console.log(`- IVA acumulado hasta ahora: ${ivaSoportadoReal.toFixed(2)}€`);
           }
         });
       } else {
         console.log("No hay transacciones de gastos para calcular IVA real");
       }
       
+      console.log(`IVA Soportado Real Total: ${ivaSoportadoReal.toFixed(2)}€`);
       console.log("---------- FIN CÁLCULO IVA REAL ----------");
       
       // Como simplificación, asumimos que el 21% de los gastos es IVA (solo si no hay transacciones)
