@@ -342,7 +342,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="flex flex-col">
               <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(baseImponibleIngresos)}</div>
               <div className="text-sm text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)}</div>
-              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(stats.income)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleIngresos + ivaRepercutido)}</div>
             </div>
           </div>
         </div>
@@ -362,7 +362,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="flex flex-col">
               <div className="text-3xl md:text-4xl font-bold mb-1">{formatCurrency(baseImponibleGastos)}</div>
               <div className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)}</div>
-              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(stats.expenses)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleGastos + ivaSoportado)}</div>
             </div>
           </div>
         </div>
