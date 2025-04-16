@@ -1,0 +1,105 @@
+Perfecto. Aquí tienes una explicación completa con varios ejemplos de facturas con diferentes bases imponibles e IVA, para que tu IA o backend pueda entender exactamente cómo procesarlas correctamente y evitar errores en el cálculo del IVA soportado.
+
+🧮 Cómo se calcula el IVA Soportado
+
+Fórmula:
+	•	Base imponible = total / (1 + (IVA / 100))
+	•	IVA soportado = total - base imponible
+
+✅ Ejemplo 1: Factura con base imponible de 100€, IVA 21%
+	•	Base imponible: 100€
+	•	Tasa de IVA: 21%
+	•	Total factura:
+100 * 1.21 = 121€
+
+{
+  "amount": 121,
+  "additionalTaxes": [
+    {"name": "IVA", "amount": 21, "value": 21}
+  ]
+}
+
+	•	Cálculo backend:
+
+base = 121 / 1.21 = 100.00€
+iva = 121 - 100 = 21.00€
+
+✅ Ejemplo 2: Factura con base imponible de 500€, IVA 21%
+	•	Base imponible: 500€
+	•	Tasa de IVA: 21%
+	•	Total factura:
+500 * 1.21 = 605€
+
+{
+  "amount": 605,
+  "additionalTaxes": [
+    {"name": "IVA", "amount": 21, "value": 105}
+  ]
+}
+
+	•	Cálculo backend:
+
+base = 605 / 1.21 = 500.00€
+iva = 605 - 500 = 105.00€
+
+✅ Ejemplo 3: Factura con base imponible de 1000€, IVA 21%
+	•	Base imponible: 1000€
+	•	Tasa de IVA: 21%
+	•	Total factura:
+1000 * 1.21 = 1210€
+
+{
+  "amount": 1210,
+  "additionalTaxes": [
+    {"name": "IVA", "amount": 21, "value": 210}
+  ]
+}
+
+	•	Cálculo backend:
+
+base = 1210 / 1.21 = 1000.00€
+iva = 1210 - 1000 = 210.00€
+
+✅ Ejemplo 4: Factura con total redondeado (no sabemos base imponible exacta)
+	•	Total: 530€
+	•	Tasa de IVA estimada: 21%
+
+{
+  "amount": 530,
+  "additionalTaxes": [
+    {"name": "IVA", "amount": 21}
+  ]
+}
+
+	•	Cálculo backend:
+
+base = 530 / 1.21 = 438.02€
+iva = 530 - 438.02 = 91.98€
+
+🛠 Función sugerida (en JS/TS)
+
+function calcularBaseEIVA(amount, tasaIVA) {
+  const base = amount / (1 + tasaIVA / 100);
+  const iva = amount - base;
+
+  return {
+    base: Number(base.toFixed(2)),
+    iva: Number(iva.toFixed(2))
+  };
+}
+
+Ejemplo de uso:
+
+const resultado = calcularBaseEIVA(530, 21);
+// resultado.base = 438.02
+// resultado.iva = 91.98
+
+💡 Consejo final para tu IA
+
+Siempre que proceses una transacción, sigue este orden:
+	1.	Si additionalTaxes ya tiene el valor del IVA (value), úsalo directamente.
+	2.	Si no, calcula la base imponible con total / (1 + IVA/100).
+	3.	Calcula el IVA como total - base.
+	4.	Usa esos valores en el dashboard.
+
+¿Quieres que te lo traduzca también a Python o al lenguaje backend que estés usando?
