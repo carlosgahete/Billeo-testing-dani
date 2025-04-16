@@ -2529,6 +2529,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to delete this invoice" });
       }
       
+      // Verificar si la factura está pagada (status = 'paid')
+      if (invoice.status === 'paid') {
+        // Verificar si hay transacciones asociadas a esta factura
+        try {
+          const result = await db.select()
+                               .from(transactions)
+                               .where(eq(transactions.invoiceId, invoiceId));
+          
+          if (result.length > 0) {
+            // Hay transacciones asociadas
+            return res.status(400).json({ 
+              message: "No se puede eliminar una factura que ya ha sido pagada",
+              detail: "Esta factura tiene transacciones de pago asociadas. Si necesitas eliminarla, primero debes eliminar las transacciones relacionadas en la sección de Transacciones.",
+              isPaid: true
+            });
+          } else {
+            // No hay transacciones pero la factura está marcada como pagada
+            return res.status(400).json({ 
+              message: "No se puede eliminar una factura que ya ha sido pagada",
+              detail: "Esta factura está marcada como pagada. Si necesitas eliminarla, primero debes cambiar su estado a 'pendiente' editando la factura.",
+              isPaid: true
+            });
+          }
+        } catch (dbError) {
+          console.error("Error al verificar transacciones asociadas:", dbError);
+          return res.status(500).json({ 
+            message: "Error al verificar si la factura puede ser eliminada", 
+            error: String(dbError)
+          });
+        }
+      }
+      
       // Delete invoice items first
       const items = await storage.getInvoiceItemsByInvoiceId(invoiceId);
       for (const item of items) {
@@ -2543,7 +2575,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(200).json({ message: "Invoice deleted successfully" });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Error al eliminar factura:", error);
+      return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
   });
   
