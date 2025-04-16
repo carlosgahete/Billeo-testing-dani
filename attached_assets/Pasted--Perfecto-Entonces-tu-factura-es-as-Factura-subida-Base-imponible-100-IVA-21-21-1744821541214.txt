@@ -1,0 +1,98 @@
+¡Perfecto! Entonces tu factura es así:
+
+🧾 Factura subida
+	•	Base imponible: 100 €
+	•	IVA (21%): +21 €
+	•	IRPF (-15%): –15 €
+	•	Total factura (a pagar):
+💰 106 €
+
+	Porque se calcula: 100 + 21 - 15 = 106
+
+💡 ¿Qué deberías guardar (y usar) en el sistema?
+
+Supongamos que el JSON de esa transacción contiene esto:
+
+{
+  "type": "expense",
+  "totalAmount": 106,
+  "additionalTaxes": [
+    {
+      "name": "IVA",
+      "rate": 21,
+      "value": 21
+    },
+    {
+      "name": "IRPF",
+      "rate": 15,
+      "value": -15
+    }
+  ]
+}
+
+✅ Cálculos correctos esperados
+
+Campo	Valor
+baseImponibleGastos	100 €
+ivaSoportadoReal	21 €
+netExpenses	106 €
+
+❌ Si ves estos errores, algo está fallando:
+
+❗ Error típico 1: El sistema recalcula la base:
+
+base = totalAmount / 1.21 = 106 / 1.21 ≈ 87.6 €
+iva = 106 - 87.6 = 18.4 €
+
+Esto es incorrecto, porque tú ya has indicado que:
+	•	Base: 100
+	•	IVA: 21
+	•	Total: 106
+
+No hace falta (ni se debe) recalcular nada si ya lo proporcionaste.
+
+❗ Error típico 2: El sistema no suma el IVA explícito al ivaSoportado
+
+Esto ocurre si el sistema no busca en additionalTaxes un valor value para el IVA, y por defecto intenta estimarlo a partir del total.
+
+✅ Solución clara en backend (resumen):
+
+let baseAmount = 0;
+let ivaSoportadoReal = 0;
+let irpfGastos = 0;
+
+for (const tx of transacciones) {
+  if (tx.type === 'expense') {
+    const total = tx.totalAmount || 0;
+    let iva = 0;
+    let irpf = 0;
+
+    // Procesamos additionalTaxes
+    if (Array.isArray(tx.additionalTaxes)) {
+      for (const tax of tx.additionalTaxes) {
+        if (tax.name === 'IVA' && tax.value != null) {
+          iva = tax.value;
+        }
+        if (tax.name === 'IRPF' && tax.value != null) {
+          irpf = tax.value;
+        }
+      }
+    }
+
+    // Usamos los valores explícitos
+    ivaSoportadoReal += iva;
+    irpfGastos += irpf;
+
+    // La base es total - iva + irpf (porque total ya tiene los dos aplicados)
+    baseAmount += total - iva + irpf;
+  }
+}
+
+🧪 Ejemplo con 3 facturas
+
+Base	IVA	IRPF	Total	Base usada	IVA usado	Net Expense
+100	21	-15	106	100	21	106
+500	105	-75	530	500	105	530
+1000	210	-150	1060	1000	210	1060
+
+¿Quieres que revisemos tu código backend línea a línea para confirmar que está tomando correctamente esos valores? O si me enseñas el JSON exacto de la transacción te digo qué interpretación está haciendo mal.

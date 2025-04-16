@@ -4234,12 +4234,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   ivaRate = ivaObj.amount || 21;
                   const ivaValue = ivaObj.value || 0;
                   
-                  // Calcular la base imponible cuando tenemos un valor explicito de IVA
+                  // Calcular la base imponible cuando tenemos un valor explícito de IVA
                   if (ivaValue > 0) {
-                    // Si tenemos el valor exacto del IVA, calculamos la base como TOTAL - IVA
-                    // en lugar de usar la fórmula con porcentajes que puede dar imprecisiones
-                    baseAmount = amount - ivaValue;
-                    console.log(`CORRECCIÓN: Usando base imponible real (total - IVA): ${amount}€ - ${ivaValue}€ = ${baseAmount.toFixed(2)}€`);
+                    // Buscar si hay también IRPF
+                    let irpfAmount = 0;
+                    const irpfObj = Array.isArray(taxesData) ? 
+                      taxesData.find(tax => tax.name === "IRPF") : null;
+                    
+                    if (irpfObj && irpfObj.value) {
+                      // Si hay IRPF, tomamos su valor explícito
+                      irpfAmount = Math.abs(Number(irpfObj.value)); // Lo guardamos como positivo
+                      console.log(`- IRPF encontrado, valor: ${irpfAmount}€`);
+                    }
+                    
+                    // La fórmula correcta para la base cuando hay IVA e IRPF es:
+                    // base = total - IVA + IRPF
+                    // Porque el total ya tiene aplicado: base + IVA - IRPF
+                    baseAmount = amount - ivaValue + irpfAmount;
+                    console.log(`CORRECCIÓN: Calculando base imponible considerando IVA e IRPF:`);
+                    console.log(`- Base = Total(${amount}€) - IVA(${ivaValue}€) + IRPF(${irpfAmount}€) = ${baseAmount.toFixed(2)}€`);
                   } else {
                     // Si no tenemos el valor específico, intentamos usar otros métodos para determinar la base
                     if (tx.baseAmount) {
