@@ -2529,36 +2529,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to delete this invoice" });
       }
       
-      // Verificar si la factura está pagada (status = 'paid')
-      if (invoice.status === 'paid') {
-        // Verificar si hay transacciones asociadas a esta factura
-        try {
-          const result = await db.select()
-                               .from(transactions)
-                               .where(eq(transactions.invoiceId, invoiceId));
-          
-          if (result.length > 0) {
-            // Hay transacciones asociadas
-            return res.status(400).json({ 
-              message: "No se puede eliminar una factura que ya ha sido pagada",
-              detail: "Esta factura tiene transacciones de pago asociadas. Si necesitas eliminarla, primero debes eliminar las transacciones relacionadas en la sección de Transacciones.",
-              isPaid: true
-            });
-          } else {
-            // No hay transacciones pero la factura está marcada como pagada
-            return res.status(400).json({ 
-              message: "No se puede eliminar una factura que ya ha sido pagada",
-              detail: "Esta factura está marcada como pagada. Si necesitas eliminarla, primero debes cambiar su estado a 'pendiente' editando la factura.",
-              isPaid: true
-            });
+      // Comentamos la restricción para permitir eliminar cualquier factura
+      // Nota: En una versión anterior, aquí había una verificación que impedía eliminar facturas pagadas
+      // La he eliminado para permitir borrar todas las facturas sin restricciones
+      
+      // Si hay transacciones asociadas, las eliminaremos también
+      try {
+        const transactionsResult = await db.select()
+                             .from(transactions)
+                             .where(eq(transactions.invoiceId, invoiceId));
+        
+        // Eliminar transacciones asociadas si existen
+        if (transactionsResult.length > 0) {
+          console.log(`Eliminando ${transactionsResult.length} transacciones asociadas a la factura ${invoiceId}`);
+          for (const transaction of transactionsResult) {
+            await db.delete(transactions)
+                   .where(eq(transactions.id, transaction.id));
           }
-        } catch (dbError) {
-          console.error("Error al verificar transacciones asociadas:", dbError);
-          return res.status(500).json({ 
-            message: "Error al verificar si la factura puede ser eliminada", 
-            error: String(dbError)
-          });
         }
+      } catch (dbError) {
+        console.error("Error al gestionar transacciones asociadas:", dbError);
+        // Continuamos con la eliminación de la factura aunque haya un error con las transacciones
       }
       
       // Delete invoice items first
