@@ -65,41 +65,31 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 import RepairInvoiceButton from "./RepairInvoiceButton";
 
-// Función de utilidad para forzar la actualización de datos
+// Función optimizada para forzar la actualización de datos
 const forceDataRefresh = () => {
-  console.log("🔄 Iniciando actualización completa de datos...");
+  console.log("🔄 Iniciando actualización optimizada de datos...");
   
-  // Eliminación completa de datos en caché para forzar recargas frescas
+  // Eliminar las consultas de caché es más rápido que invalidarlas
   queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
   queryClient.removeQueries({ queryKey: ["/api/invoices"] });
-  queryClient.removeQueries({ queryKey: ["/api/invoices/recent"] });
   
-  // Invalidar todas las consultas relevantes
-  queryClient.invalidateQueries();
-  
-  // Dar tiempo al backend para procesar la acción
-  setTimeout(() => {
-    // Hacer peticiones manuales para asegurar datos frescos
+  // Hacer la recarga inmediata de forma asíncrona
+  Promise.all([
+    fetch("/api/invoices?nocache=" + Date.now(), { 
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    }),
     fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
     })
-    .then(() => {
-      console.log("⚡ Forzando recarga de datos:", new Date().toISOString());
-      
-      // Refrescar explícitamente todas las consultas relevantes
-      queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-      queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-      queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
-      
-      // Refrescar nuevamente después de un tiempo adicional con mayor retraso
-      setTimeout(() => {
-        queryClient.invalidateQueries();
-        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-        console.log("🔄 Segunda actualización de datos completada");
-      }, 1000);
-    })
-    .catch(err => console.error("Error al recargar dashboard:", err));
-  }, 300);
+  ])
+  .then(() => {
+    console.log("⚡ Datos actualizados:", new Date().toISOString());
+    
+    // Refrescar inmediatamente las consultas relevantes
+    queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+    queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+  })
+  .catch(err => console.error("Error al recargar datos:", err));
 };
 
 interface Invoice {
@@ -307,7 +297,7 @@ const DeleteInvoiceDialog = ({
   const handleDelete = async () => {
     setIsPending(true);
     try {
-      // Eliminar la factura
+      // Eliminar la factura (operación asíncrona)
       const response = await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
       
       // Verificar que la respuesta sea exitosa
@@ -316,29 +306,36 @@ const DeleteInvoiceDialog = ({
         throw new Error(errorData.detail || errorData.message || "Error al eliminar la factura");
       }
       
+      // Primero invalidar las consultas para que se actualicen en segundo plano
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
       // Notificar al usuario del éxito
       toast({
         title: "Factura eliminada",
         description: `La factura ${invoiceNumber} ha sido eliminada con éxito`,
       });
       
-      // Cerrar el diálogo y actualizar los datos
+      // Cerrar el diálogo
       onConfirm();
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       
-      // Forzar actualización de datos antes de redireccionar
+      // Actualizar la interfaz inmediatamente sin esperar refrescos
       forceDataRefresh();
       
-      // Redireccionar a la página de facturas, pero mantenemos la app funcional si falla
-      setTimeout(() => {
-        try {
+      // Actualizar la vista sin redireccionar completamente para una experiencia más rápida
+      // La redirección completa solo se hace si hay algún problema
+      try {
+        const navEvent = new CustomEvent('updateInvoices');
+        window.dispatchEvent(navEvent);
+        // Solo recargamos la página si estamos en otra ruta diferente
+        if (!window.location.pathname.includes('/invoices')) {
           window.location.href = '/invoices';
-        } catch (err) {
-          console.error("Error al redireccionar:", err);
-          // No hacemos nada, la UI sigue siendo funcional
         }
-      }, 800);
+      } catch (err) {
+        console.error("Error al actualizar vista:", err);
+        // Si falla, usamos el método antiguo
+        window.location.href = '/invoices';
+      }
     } catch (error: any) {
       console.error("Error al eliminar factura desde el diálogo:", error);
       
@@ -442,6 +439,27 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
       console.error("Error cargando clientes:", clientsError);
     }
   }, [invoicesError, clientsError]);
+  
+  // Escuchar eventos personalizados para actualizar la lista de facturas
+  useEffect(() => {
+    // Crear función para manejar la actualización forzada
+    const handleUpdateInvoices = () => {
+      console.log("⚡ Evento de actualización de facturas recibido");
+      // Refrescar datos de facturas inmediatamente
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Actualizar también el dashboard para mantener consistencia
+      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+    };
+    
+    // Agregar el listener de eventos
+    window.addEventListener('updateInvoices', handleUpdateInvoices);
+    
+    // Limpiar el listener cuando el componente se desmonte
+    return () => {
+      window.removeEventListener('updateInvoices', handleUpdateInvoices);
+    };
+  }, []);
   
   // Obtener información de la empresa para los PDFs y emails
   const { data: companyData } = useQuery<Company>({
