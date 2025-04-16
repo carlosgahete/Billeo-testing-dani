@@ -4536,6 +4536,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`- Gastos NETOS: ${netExpenses}€`);
       console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
 
+      // Calcular gastos por categoría para el gráfico
+      const expensesByCategory: Record<string, { amount: number; count: number }> = {};
+      
+      // Agrupar transacciones de gastos por categoría
+      allTransactions
+        .filter(t => t.type === "expense")
+        .forEach(transaction => {
+          const categoryId = transaction.categoryId.toString();
+          if (!expensesByCategory[categoryId]) {
+            expensesByCategory[categoryId] = { amount: 0, count: 0 };
+          }
+          expensesByCategory[categoryId].amount += Number(transaction.amount);
+          expensesByCategory[categoryId].count += 1;
+        });
+
+      console.log("Gastos por categoría calculados:", expensesByCategory);
+
       return res.status(200).json({
         // Valores principales (se usa la base imponible como valor principal)
         income: baseImponible,           // Base imponible de ingresos (sin IVA)
