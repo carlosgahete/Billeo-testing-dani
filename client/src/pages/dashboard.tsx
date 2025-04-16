@@ -306,19 +306,19 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              {/* Valores fijos para la tarjeta de ingresos */}
+              {/* Valores para la tarjeta de ingresos - con guiones */}
               <p className="text-2xl font-bold text-emerald-600 animate-in fade-in duration-500">
-                1.000,00 €
+                —
               </p>
               
               <div className="mt-2 space-y-1 text-sm animate-in fade-in duration-700 delay-200">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Facturas cobradas:</span>
-                  <span className="font-medium">1</span>
+                  <span className="font-medium">—</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA repercutido:</span>
-                  <span className="font-medium">210,00 €</span>
+                  <span className="font-medium">—</span>
                 </div>
               </div>
               
@@ -372,19 +372,19 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              {/* Valores fijos para la tarjeta de gastos */}
+              {/* Valores para la tarjeta de gastos - con guiones */}
               <p className="text-2xl font-bold text-red-600 animate-in fade-in duration-500">
-                100,00 €
+                —
               </p>
               
               <div className="mt-2 space-y-1 text-sm animate-in fade-in duration-700 delay-200">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA incluido en los gastos:</span>
-                  <span className="font-medium">21,00 €</span>
+                  <span className="font-medium">—</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IRPF a liquidar por gastos:</span>
-                  <span className="font-medium text-red-600">-15,00 €</span>
+                  <span className="font-medium text-red-600">—</span>
                 </div>
               </div>
               
@@ -427,19 +427,19 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              {/* Valores fijos para la tarjeta de resultado final */}
+              {/* Valores para la tarjeta de resultado final - con guiones */}
               <p className="text-2xl font-bold text-blue-600 animate-in fade-in duration-500">
-                765,00 €
+                —
               </p>
               
               <div className="mt-2 space-y-1 text-sm animate-in fade-in duration-700 delay-200">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IVA a liquidar:</span>
-                  <span className="font-medium text-red-600">189,00 €</span>
+                  <span className="font-medium text-red-600">—</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">IRPF adelantado:</span>
-                  <span className="font-medium text-green-600">165,00 €</span>
+                  <span className="font-medium text-green-600">—</span>
                 </div>
               </div>
               
