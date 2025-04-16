@@ -3749,7 +3749,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paidInvoices = allInvoices.filter(inv => inv.status === "paid");
       
       // Ahora usamos el total en lugar del subtotal para reflejar correctamente todos los impuestos (IVA, IRPF, etc.)
-      const invoiceIncome = paidInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
+      // Ahora sumamos todas las facturas, no solo las pagadas
+      const invoiceIncome = dbInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
+      console.log(`Total de ingresos calculado desde facturas (incluyendo pendientes): ${invoiceIncome}€`);
         
       // Registro detallado para depuración
       console.log("=== CÁLCULO DE INGRESOS Y GASTOS ===");
@@ -4083,8 +4085,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Cálculo del IRPF según el sistema español para autónomos
       // El IRPF se calcula como un % (15-20%) sobre el beneficio (ingresos - gastos)
       const irpfRate = 0.15; // Usamos 15% como tipo estándar de IRPF
-      // Base imponible para ingresos: es la suma de los subtotales de las facturas (sin IVA)
-      const baseImponible = paidInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
+      // Base imponible para ingresos: es la suma de los subtotales de TODAS las facturas (sin IVA)
+      // Antes sólo sumaba las pagadas, ahora sumamos todas (pagadas + pendientes)
+      const baseImponible = allInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
+      console.log(`Total de facturas encontradas: ${allInvoices.length}, base imponible total: ${baseImponible}€`);
       
       // Variables para acumular los valores correctos de las transacciones
       let baseImponibleGastos = 0;
