@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Plus, Settings } from "lucide-react";
 import CustomizableDashboard from "./CustomizableDashboard";
 import QuickStats from "./blocks/QuickStats";
-import NetIncomeCard from "./blocks/NetIncomeCard";
-import NetExpensesCard from "./blocks/NetExpensesCard";
-import FinalResultCard from "./blocks/FinalResultCard";
+import NetIncomeCard from "./blocks/SimplifiedNetIncomeCard";
+import NetExpensesCard from "./blocks/SimplifiedNetExpensesCard";
+import FinalResultCard from "./blocks/SimplifiedFinalResultCard";
 
 interface DashboardMetricsProps {
   userId: number;
@@ -17,37 +17,13 @@ interface DashboardStats {
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
-  pendingQuotes: number;
-  pendingQuotesCount: number;
-  baseImponible?: number;
-  ivaRepercutido?: number;
-  ivaSoportado?: number;
-  irpfRetenidoIngresos?: number;
-  totalWithholdings?: number;
-  taxes: {
-    vat: number;
-    incomeTax: number;
-    ivaALiquidar: number;
-  };
   [key: string]: any;
 }
 
 const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
   const { data, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"],
-    // Desactivamos los errores TypeScript sobre las propiedades anulables
-    select: (data) => data as DashboardStats
+    queryKey: ["/api/stats/dashboard"]
   });
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-ES', { 
-      style: 'currency', 
-      currency: 'EUR',
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-      useGrouping: true
-    }).format(value);
-  };
 
   return (
     <div>
