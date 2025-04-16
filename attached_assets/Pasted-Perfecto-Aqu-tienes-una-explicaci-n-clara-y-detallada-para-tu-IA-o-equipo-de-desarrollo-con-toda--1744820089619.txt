@@ -1,0 +1,94 @@
+Perfecto. Aquí tienes una explicación clara y detallada para tu IA o equipo de desarrollo, con toda la lógica corregida paso a paso. Esto asegura que el cálculo del IVA soportado sea preciso y el dashboard muestre los valores correctos.
+
+✅ 🎯 OBJETIVO
+
+Corregir el cálculo del IVA soportado en gastos, ya que actualmente se está calculando mal como el 21% del total, cuando debería calcularse sobre la base imponible, o directamente como:
+
+	IVA = Total - Base imponible
+
+🚨 PROBLEMA ACTUAL
+
+Cuando escaneas un gasto de 530€ con IVA al 21%, el sistema calcula mal:
+
+ivaSoportado = total * (21 / 100) = 530 * 0.21 = 111.30€ ❌
+
+Esto es incorrecto. El IVA no se calcula sobre el total, sino sobre la base imponible.
+
+✅ SOLUCIÓN CORRECTA
+
+1. Extraer correctamente los datos
+
+Al escanear una factura:
+
+{
+  "amount": 530,
+  "additionalTaxes": [
+    {"name": "IVA", "amount": 21, "value": 105},
+    {"name": "IRPF", "amount": -15, "value": 75}
+  ]
+}
+
+	Nota: Aunque el valor de IVA sea 105, no es correcto porque no cuadra con el cálculo de base (530 / 1.21 = 438.02), y el IVA real sería 91.98€.
+
+2. Calcular la base imponible correctamente
+
+Si la base no está en la factura, debes calcularla con:
+
+baseImponible = amount / (1 + (ivaPorcentaje / 100));
+
+Ejemplo con 530€ y 21% de IVA:
+
+baseImponible = 530 / 1.21 = 438.02€
+
+3. Calcular el IVA soportado correctamente
+
+Usando:
+
+ivaReal = amount - baseImponible; // 530 - 438.02 = 91.98€
+
+O alternativamente:
+
+ivaReal = baseImponible * (ivaPorcentaje / 100);
+
+Ambas fórmulas dan el mismo resultado: 91.98€.
+
+4. Asegurar consistencia en el backend
+
+Código sugerido (JS/TS):
+
+function calcularIvaSoportado(transaccion) {
+  const amount = transaccion.amount;
+  const ivaEntry = transaccion.additionalTaxes.find(t => t.name === 'IVA');
+
+  if (!ivaEntry) return 0;
+
+  const tasa = ivaEntry.amount;
+
+  // Calcular base imponible si no está almacenada
+  const base = amount / (1 + tasa / 100);
+  const iva = amount - base;
+
+  return Number(iva.toFixed(2));
+}
+
+✅ Este valor iva debe ser el que se envía al dashboard como ivaSoportado.
+
+5. Enviar valores correctos al frontend
+
+Al construir la respuesta del backend para el dashboard, asegúrate de usar:
+
+{
+  "income": baseImponibleIngresos,
+  "expenses": baseImponibleGastos,
+  "ivaSoportado": ivaRealCalculado,
+  ...
+}
+
+✅ RESULTADO FINAL EN EL DASHBOARD
+
+Con los datos correctos, el dashboard mostrará:
+	•	Base imponible gastos: 438.02€
+	•	IVA soportado: 91.98€
+	•	Total gastos: 530€
+
+¿Quieres que te prepare este mismo ejemplo en código Python, Node.js o directamente como función reutilizable en tu backend actual?
