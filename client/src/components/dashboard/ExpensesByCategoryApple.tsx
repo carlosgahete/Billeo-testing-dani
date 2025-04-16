@@ -233,37 +233,8 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   // Diseño estilo Apple - minimalista, simétrico y con espacio para respirar
   return (
     <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
-      <CardHeader className="p-3 sm:p-4 flex justify-end">
-        {/* Selector de período con estilo Apple */}
-        <Select 
-          value={selectedPeriod}
-          onValueChange={handlePeriodChange}
-        >
-          <SelectTrigger className="w-44 h-8 text-xs bg-gray-50 border-0 rounded-full shadow-sm hover:bg-gray-100 transition-colors">
-            <SelectValue placeholder="Seleccionar período" />
-          </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-md">
-            {availableYears.map(year => [
-              <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
-              <SelectItem key={`${year}-q1`} value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>,
-              <SelectItem key={`${year}-q2`} value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>,
-              <SelectItem key={`${year}-q3`} value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>,
-              <SelectItem key={`${year}-q4`} value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>,
-              <SelectItem key={`${year}-1`} value={`${year}-1`}>Enero {year}</SelectItem>,
-              <SelectItem key={`${year}-2`} value={`${year}-2`}>Febrero {year}</SelectItem>,
-              <SelectItem key={`${year}-3`} value={`${year}-3`}>Marzo {year}</SelectItem>,
-              <SelectItem key={`${year}-4`} value={`${year}-4`}>Abril {year}</SelectItem>,
-              <SelectItem key={`${year}-5`} value={`${year}-5`}>Mayo {year}</SelectItem>,
-              <SelectItem key={`${year}-6`} value={`${year}-6`}>Junio {year}</SelectItem>,
-              <SelectItem key={`${year}-7`} value={`${year}-7`}>Julio {year}</SelectItem>,
-              <SelectItem key={`${year}-8`} value={`${year}-8`}>Agosto {year}</SelectItem>,
-              <SelectItem key={`${year}-9`} value={`${year}-9`}>Septiembre {year}</SelectItem>,
-              <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
-              <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
-              <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
-            ])}
-          </SelectContent>
-        </Select>
+      <CardHeader className="p-3 sm:p-4 flex justify-between">
+        <h3 className="text-lg font-medium">Gastos por Categoría</h3>
       </CardHeader>
       
       <CardContent className="p-4 pb-6 sm:p-6 sm:pb-8">
