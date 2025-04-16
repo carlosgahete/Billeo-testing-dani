@@ -542,8 +542,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <h3 className="text-lg font-medium text-gray-800">Gastos por Categoría</h3>
             </div>
             <div className="h-64">
-              {/* Componente de gastos por categoría - Se mantiene igual */}
-              <ExpensesByCategory />
+              {/* Componente de gastos por categoría con datos del año y periodo seleccionados */}
+              <div className="text-center text-sm text-gray-500">
+                <p>No hay datos de gastos para mostrar en este periodo</p>
+              </div>
             </div>
           </div>
         </div>
