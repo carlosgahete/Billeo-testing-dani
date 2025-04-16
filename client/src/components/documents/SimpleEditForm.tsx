@@ -51,84 +51,96 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
   const providerRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
   
-  // Inicializar los valores una sola vez al montar
+  // Estado para controlar si es la primera renderización
+  const [isFirstRender, setIsFirstRender] = useState(true);
+  // ID original de la transacción para evitar reinicializar en cambios de categoría
+  const transactionIdRef = useRef<number | null>(null);
+  
+  // Inicializar los valores solo en el montaje inicial o si cambia el ID de la transacción
   useEffect(() => {
-    // Limpiar todos los campos primero para evitar valores por defecto no deseados
-    if (amountRef.current) amountRef.current.value = '';
-    if (baseAmountRef.current) baseAmountRef.current.value = '';
-    if (taxRef.current) taxRef.current.value = '';
-    if (irpfRef.current) irpfRef.current.value = '';
-    if (dateRef.current) dateRef.current.value = '';
-    if (providerRef.current) providerRef.current.value = '';
-    if (descriptionRef.current) descriptionRef.current.value = '';
-    
     // Verificar primero si hay datos válidos antes de mostrar cualquier valor
     const hasTransactionData = transaction && Object.keys(transaction).length > 0 && transaction.id;
     const hasExtractedData = extractedData && Object.keys(extractedData).length > 0;
     
-    console.log('Estado inicial del formulario:', { 
-      hasTransactionData, 
-      hasExtractedData,
-      transaction,
-      extractedData
-    });
-    
-    // Solo mostrar valores cuando hay datos reales extraídos del documento
-    if (hasTransactionData && hasExtractedData) {
-      console.log('Inicializando formulario con datos extraídos');
+    // Si es la primera renderización o si la transacción cambió (no solo la categoría)
+    if (isFirstRender || transactionIdRef.current !== transaction?.id) {
+      // Actualizar el ID de referencia
+      transactionIdRef.current = transaction?.id || null;
       
-      if (amountRef.current) {
-        // Solo establecer el valor si realmente existe un valor válido
-        const amountValue = transaction.amount?.toString();
-        if (amountValue && amountValue !== '0') {
-          amountRef.current.value = amountValue;
-          console.log('Estableciendo amount:', amountValue);
+      console.log('Estado inicial del formulario:', { 
+        hasTransactionData, 
+        hasExtractedData,
+        transaction,
+        extractedData
+      });
+      
+      // Limpiar los campos solo en la inicialización, no cuando cambia solo la categoría
+      if (amountRef.current) amountRef.current.value = '';
+      if (baseAmountRef.current) baseAmountRef.current.value = '';
+      if (taxRef.current) taxRef.current.value = '';
+      if (irpfRef.current) irpfRef.current.value = '';
+      if (dateRef.current) dateRef.current.value = '';
+      if (providerRef.current) providerRef.current.value = '';
+      if (descriptionRef.current) descriptionRef.current.value = '';
+      
+      // Solo mostrar valores cuando hay datos reales extraídos del documento
+      if (hasTransactionData && hasExtractedData) {
+        console.log('Inicializando formulario con datos extraídos');
+        setIsFirstRender(false);
+        
+        if (amountRef.current) {
+          // Solo establecer el valor si realmente existe un valor válido
+          const amountValue = transaction.amount?.toString();
+          if (amountValue && amountValue !== '0') {
+            amountRef.current.value = amountValue;
+            console.log('Estableciendo amount:', amountValue);
+          }
         }
-      }
-      
-      if (baseAmountRef.current) {
-        const baseValue = extractedData?.baseAmount?.toString();
-        if (baseValue && baseValue !== '0') {
-          baseAmountRef.current.value = baseValue;
-          console.log('Estableciendo baseAmount:', baseValue);
+        
+        if (baseAmountRef.current) {
+          const baseValue = extractedData?.baseAmount?.toString();
+          if (baseValue && baseValue !== '0') {
+            baseAmountRef.current.value = baseValue;
+            console.log('Estableciendo baseAmount:', baseValue);
+          }
         }
-      }
-      
-      if (taxRef.current) {
-        const taxValue = extractedData?.tax?.toString();
-        if (taxValue && taxValue !== '0') {
-          taxRef.current.value = taxValue;
-          console.log('Estableciendo tax:', taxValue);
+        
+        if (taxRef.current) {
+          const taxValue = extractedData?.tax?.toString();
+          if (taxValue && taxValue !== '0') {
+            taxRef.current.value = taxValue;
+            console.log('Estableciendo tax:', taxValue);
+          }
         }
-      }
-      
-      if (irpfRef.current) {
-        const irpfValue = extractedData?.irpf?.toString();
-        if (irpfValue && irpfValue !== '0') {
-          irpfRef.current.value = irpfValue;
-          console.log('Estableciendo irpf:', irpfValue);
+        
+        if (irpfRef.current) {
+          const irpfValue = extractedData?.irpf?.toString();
+          if (irpfValue && irpfValue !== '0') {
+            irpfRef.current.value = irpfValue;
+            console.log('Estableciendo irpf:', irpfValue);
+          }
         }
+        
+        if (dateRef.current && transaction.date) {
+          const dateValue = format(new Date(transaction.date), "yyyy-MM-dd");
+          dateRef.current.value = dateValue;
+          console.log('Estableciendo date:', dateValue);
+        }
+        
+        if (providerRef.current && extractedData?.provider) {
+          providerRef.current.value = extractedData.provider;
+          console.log('Estableciendo provider:', extractedData.provider);
+        }
+        
+        if (descriptionRef.current && transaction.description) {
+          descriptionRef.current.value = transaction.description;
+          console.log('Estableciendo description:', transaction.description);
+        }
+        
+        // Mostrar los montos de impuestos iniciales solo si hay datos
+        updateTaxDisplay();
+        updateIrpfDisplay();
       }
-      
-      if (dateRef.current && transaction.date) {
-        const dateValue = format(new Date(transaction.date), "yyyy-MM-dd");
-        dateRef.current.value = dateValue;
-        console.log('Estableciendo date:', dateValue);
-      }
-      
-      if (providerRef.current && extractedData?.provider) {
-        providerRef.current.value = extractedData.provider;
-        console.log('Estableciendo provider:', extractedData.provider);
-      }
-      
-      if (descriptionRef.current && transaction.description) {
-        descriptionRef.current.value = transaction.description;
-        console.log('Estableciendo description:', transaction.description);
-      }
-      
-      // Mostrar los montos de impuestos iniciales solo si hay datos
-      updateTaxDisplay();
-      updateIrpfDisplay();
     } else {
       console.log('No hay datos reales para mostrar - manteniendo campos vacíos');
     }
