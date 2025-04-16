@@ -308,7 +308,7 @@ const DeleteInvoiceDialog = ({
     setIsPending(true);
     try {
       // Eliminar la factura
-      await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
+      const response = await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
       
       // Notificar al usuario
       toast({
@@ -324,9 +324,16 @@ const DeleteInvoiceDialog = ({
         window.location.href = '/invoices';
       }, 500);
     } catch (error: any) {
+      console.error("Error al eliminar factura desde el diálogo:", error);
+      
+      // Extraer el mensaje de error más específico si está disponible
+      const errorMsg = error.response?.data?.detail || 
+                      error.response?.data?.message || 
+                      (error.message || "No se pudo eliminar la factura");
+      
       toast({
-        title: "Error",
-        description: `No se pudo eliminar la factura: ${error.message}`,
+        title: "Error al eliminar factura",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -1425,15 +1432,29 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                 className="text-red-600 hover:bg-red-50"
                 onClick={() => {
                   if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
-                    apiRequest("DELETE", `/api/invoices/${invoice.id}`).then(() => {
-                      toast({
-                        title: "Factura eliminada",
-                        description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
+                    apiRequest("DELETE", `/api/invoices/${invoice.id}`)
+                      .then(() => {
+                        toast({
+                          title: "Factura eliminada",
+                          description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
+                        });
+                        // Actualizar la lista
+                        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                      })
+                      .catch((error) => {
+                        console.error("Error al eliminar factura:", error);
+                        // Mostrar mensaje de error específico si está disponible
+                        const errorMsg = error.response?.data?.detail || 
+                                        error.response?.data?.message || 
+                                        "No se pudo eliminar la factura";
+                        
+                        toast({
+                          title: "Error al eliminar factura",
+                          description: errorMsg,
+                          variant: "destructive",
+                        });
                       });
-                      // Actualizar la lista
-                      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-                    });
                   }
                 }}
               >
