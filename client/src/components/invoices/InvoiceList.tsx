@@ -323,9 +323,11 @@ const DeleteInvoiceDialog = ({
       forceDataRefresh();
       
       // Actualizar la vista sin redireccionar completamente para una experiencia más rápida
-      // Disparamos el evento personalizado para actualizar los datos
-      const navEvent = new CustomEvent('updateInvoices');
-      window.dispatchEvent(navEvent);
+      // Disparamos eventos personalizados para actualizar los datos
+      window.dispatchEvent(new CustomEvent('invoice-deleted', { 
+        detail: { invoiceId }
+      }));
+      window.dispatchEvent(new CustomEvent('updateInvoices'));
       
       // Usamos setTimout con tiempo cero para dar prioridad a la actualización de la UI
       setTimeout(() => {

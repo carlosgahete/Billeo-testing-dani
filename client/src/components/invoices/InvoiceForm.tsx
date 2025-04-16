@@ -587,6 +587,14 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     onSuccess: (data) => {
       console.log("✅ Factura guardada:", data);
       
+      // Disparar evento personalizado para notificar a los componentes sobre el cambio
+      const eventName = isEditMode ? 'invoice-updated' : 'invoice-created';
+      window.dispatchEvent(new CustomEvent(eventName, { 
+        detail: { invoiceId: isEditMode ? invoiceId : data.id }
+      }));
+      
+      console.log(`🔔 Evento disparado: ${eventName}`);
+      
       // Eliminar completamente las consultas relevantes para forzar una recarga completa 
       queryClient.removeQueries({ queryKey: ["/api/invoices"] });
       queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
@@ -604,9 +612,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
         queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
         
-        // Realizar una segunda actualización después de un breve retraso
+        // Disparar segunda actualización del dashboard después de un breve retraso
         setTimeout(() => {
           queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
           console.log("🔄 Segunda actualización del dashboard completada");
         }, 500);
       })
