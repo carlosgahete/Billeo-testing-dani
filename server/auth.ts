@@ -236,9 +236,41 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
+    console.log("Procesando solicitud de cierre de sesión");
+    
+    // Limpiar la sesión mejorada si está disponible
+    try {
+      import('./session-helper.js').then(({ clearEnhancedSession }) => {
+        clearEnhancedSession(req);
+        console.log("Datos adicionales de sesión limpiados");
+      }).catch(error => {
+        console.error("Error al cargar el helper de sesiones para logout:", error);
+      });
+    } catch (sessionError) {
+      console.error("Error al limpiar la sesión mejorada:", sessionError);
+      // Continuar a pesar del error
+    }
+    
+    // Proceder con el logout estándar de passport
     req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
+      if (err) {
+        console.error("Error durante el logout de passport:", err);
+        return next(err);
+      }
+      
+      // Destruir la sesión completamente si es posible
+      if (req.session) {
+        req.session.destroy((sessionErr) => {
+          if (sessionErr) {
+            console.error("Error al destruir la sesión:", sessionErr);
+          } else {
+            console.log("Sesión destruida completamente");
+          }
+          return res.sendStatus(200);
+        });
+      } else {
+        return res.sendStatus(200);
+      }
     });
   });
 

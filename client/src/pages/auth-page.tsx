@@ -6,8 +6,137 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Wrench, Bug, AlertTriangle, ArrowRight } from "lucide-react";
 import { directLogin } from "../utils/directLogin";
+
+// Componente para diagnóstico avanzado de sesión
+function SessionDiagnostic() {
+  const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  
+  const runDiagnostic = async () => {
+    setIsLoading(true);
+    try {
+      // Verificar estado de la sesión
+      const sessionResponse = await fetch('/api/user', { 
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      // Verificar cookies
+      let cookiesEnabled = false;
+      try {
+        document.cookie = "test_cookie=1";
+        cookiesEnabled = document.cookie.indexOf("test_cookie=1") !== -1;
+      } catch (e) {
+        console.error("Error al probar cookies:", e);
+      }
+      
+      // Verificar localStorage
+      let storageEnabled = false;
+      try {
+        localStorage.setItem("test_storage", "1");
+        storageEnabled = localStorage.getItem("test_storage") === "1";
+        localStorage.removeItem("test_storage");
+      } catch (e) {
+        console.error("Error al probar localStorage:", e);
+      }
+      
+      // Datos de diagnóstico
+      const diagnosticData = {
+        timestamp: new Date().toISOString(),
+        session: {
+          status: sessionResponse.status,
+          statusText: sessionResponse.statusText,
+          isOk: sessionResponse.ok,
+          headers: Object.fromEntries(sessionResponse.headers.entries()),
+          responseType: sessionResponse.headers.get('content-type'),
+        },
+        browser: {
+          userAgent: navigator.userAgent,
+          cookiesEnabled,
+          storageEnabled,
+          language: navigator.language,
+          online: navigator.onLine,
+        }
+      };
+      
+      setDiagnosticInfo(diagnosticData);
+    } catch (error) {
+      console.error("Error al ejecutar diagnóstico:", error);
+      setDiagnosticInfo({ error: String(error) });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  
+  if (!showDiagnostic) {
+    return (
+      <div className="mt-4">
+        <button 
+          onClick={() => setShowDiagnostic(true)}
+          className="text-xs text-gray-500 hover:text-blue-600 flex items-center"
+        >
+          <Wrench className="h-3 w-3 mr-1" />
+          Diagnóstico avanzado
+        </button>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="mt-4 bg-gray-50 p-3 rounded-lg text-xs border border-gray-200">
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="font-medium text-gray-700 flex items-center">
+          <Bug className="h-3 w-3 mr-1" />
+          Diagnóstico de Sesión
+        </h4>
+        <button 
+          onClick={() => setShowDiagnostic(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+      
+      <div className="flex space-x-2 mb-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs h-7 px-2 py-0"
+          onClick={runDiagnostic}
+          disabled={isLoading}
+        >
+          {isLoading ? "Ejecutando..." : "Ejecutar diagnóstico"}
+        </Button>
+      </div>
+      
+      {diagnosticInfo && (
+        <div className="bg-white p-2 rounded border border-gray-200 text-gray-600 max-h-40 overflow-y-auto">
+          {diagnosticInfo.error ? (
+            <div className="text-red-500">
+              <AlertTriangle className="h-3 w-3 inline mr-1" />
+              {diagnosticInfo.error}
+            </div>
+          ) : (
+            <>
+              <div className="mb-1">
+                <span className="font-medium">Sesión:</span> {diagnosticInfo.session.status} ({diagnosticInfo.session.isOk ? "OK" : "Error"})
+              </div>
+              <div className="mb-1">
+                <span className="font-medium">Cookies:</span> {diagnosticInfo.browser.cookiesEnabled ? "Habilitadas" : "Deshabilitadas"}
+              </div>
+              <div className="mb-1">
+                <span className="font-medium">Storage:</span> {diagnosticInfo.browser.storageEnabled ? "Habilitado" : "Deshabilitado"}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -236,6 +365,9 @@ export default function AuthPage() {
                 )}
               </div>
             )}
+            
+            {/* Componente de diagnóstico de sesión */}
+            <SessionDiagnostic />
           </form>
         </div>
       </div>

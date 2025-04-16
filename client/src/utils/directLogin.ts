@@ -9,7 +9,27 @@
  * @param password - Contraseña
  * @returns Promise<boolean> - Retorna true si el inicio de sesión fue exitoso
  */
-export async function directLogin(username: string, password: string): Promise<boolean> {
+export type LoginDiagnosticResult = {
+  success: boolean;
+  status: number;
+  statusText: string;
+  headers?: Record<string, string>;
+  userData?: any;
+  error?: string;
+  timing: {
+    start: number;
+    loginComplete: number;
+    userCheckComplete?: number;
+    total: number;
+  };
+}
+
+/**
+ * Información de diagnóstico sobre el último intento de login
+ */
+export let lastLoginDiagnostic: LoginDiagnosticResult | null = null;
+
+export async function directLogin(username: string, password: string, mode: 'redirect' | 'diagnostic' = 'redirect'): Promise<boolean> {
   console.log("Iniciando proceso de login directo para:", username);
   
   try {
