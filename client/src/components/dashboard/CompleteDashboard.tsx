@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, Calculator } from "lucide-react";
@@ -34,17 +34,24 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   
-  // Sincronizamos nuestro estado local con el hook
+  // Sincronizamos nuestro estado local con el hook solo una vez al inicio
   useEffect(() => {
     if (filters) {
-      setSelectedYear(filters.year);
-      setSelectedPeriod(filters.period);
+      // Solo actualizamos el estado local si está diferente al filtro actual
+      // y solo durante la inicialización, para evitar bucles infinitos
+      if (selectedYear !== filters.year) {
+        setSelectedYear(filters.year);
+      }
+      if (selectedPeriod !== filters.period) {
+        setSelectedPeriod(filters.period);
+      }
     }
-  }, [filters]);
+  }, []);
   
-  // Efecto para cambiar los filtros cuando cambia el año o período
-  useEffect(() => {
-    if (filters && (filters.year !== selectedYear || filters.period !== selectedPeriod)) {
+  // Función para aplicar los cambios de filtro de manera controlada
+  const applyFilters = useCallback(() => {
+    if (filters) {
+      console.log("Aplicando filtros:", selectedYear, selectedPeriod);
       filters.changeYear(selectedYear);
       filters.changePeriod(selectedPeriod);
     }
@@ -233,6 +240,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedYear("2025");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
+                  setTimeout(applyFilters, 100);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -242,6 +250,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedYear("2024");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
+                  setTimeout(applyFilters, 100);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -251,6 +260,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedYear("2023");
                   document.getElementById('year-dropdown')?.classList.add('hidden');
+                  setTimeout(applyFilters, 100);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedYear === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -285,6 +295,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("all");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setTimeout(applyFilters, 100);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -294,6 +305,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("q1");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setTimeout(applyFilters, 100);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -303,6 +315,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 onClick={() => {
                   setSelectedPeriod("q2");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setTimeout(applyFilters, 100);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
