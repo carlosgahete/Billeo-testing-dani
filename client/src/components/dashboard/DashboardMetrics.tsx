@@ -3,10 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings } from "lucide-react";
 import CustomizableDashboard from "./CustomizableDashboard";
-import QuickStats from "./blocks/QuickStats";
-import NetIncomeCard from "./blocks/SimplifiedNetIncomeCard";
-import NetExpensesCard from "./blocks/SimplifiedNetExpensesCard";
-import FinalResultCard from "./blocks/SimplifiedFinalResultCard";
 
 interface DashboardMetricsProps {
   userId: number;
@@ -17,33 +13,42 @@ interface DashboardStats {
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
+  pendingQuotes: number;
+  pendingQuotesCount: number;
+  baseImponible?: number;
+  ivaRepercutido?: number;
+  ivaSoportado?: number;
+  irpfRetenidoIngresos?: number;
+  totalWithholdings?: number;
+  taxes: {
+    vat: number;
+    incomeTax: number;
+    ivaALiquidar: number;
+  };
   [key: string]: any;
 }
 
 const DashboardMetrics = ({ userId }: DashboardMetricsProps) => {
   const { data, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"]
+    queryKey: ["/api/stats/dashboard"],
+    // Desactivamos los errores TypeScript sobre las propiedades anulables
+    select: (data) => data as DashboardStats
   });
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', { 
+      style: 'currency', 
+      currency: 'EUR',
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+      useGrouping: true
+    }).format(value);
+  };
 
   return (
     <div>
-      {/* Estadísticas rápidas - Vista general */}
-      <div className="mb-4">
-        <QuickStats data={data} isLoading={isLoading} />
-      </div>
-      
-      {/* Tarjetas de ingresos, gastos y resultado final */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <NetIncomeCard data={data} isLoading={isLoading} />
-        <NetExpensesCard data={data} isLoading={isLoading} />
-        <FinalResultCard data={data} isLoading={isLoading} />
-      </div>
-      
       {/* Dashboard personalizable */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Dashboard Personalizado</h2>
-        <CustomizableDashboard userId={userId} />
-      </div>
+      <CustomizableDashboard userId={userId} />
     </div>
   );
 };

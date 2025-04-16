@@ -13,7 +13,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PiggyBank, Info } from "lucide-react";
 
 interface FinalResultCardProps {
@@ -24,21 +23,21 @@ interface FinalResultCardProps {
 const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) => {
   const [, navigate] = useLocation();
   
-  if (isLoading) {
-    return (
-      <Card className="overflow-hidden flex-grow">
-        <CardHeader className="bg-blue-50 p-2">
-          <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent className="p-3">
-          <Skeleton className="h-8 w-24 mb-3" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-10 w-full mt-8" />
-        </CardContent>
-      </Card>
-    );
-  }
+  // Obtener valores brutos y netos
+  // Valores brutos
+  const income = data?.income || 0;
+  const expenses = data?.expenses || 0;
+  const result = income - expenses;
+  
+  // Valores netos (usando los nuevos campos)
+  const netIncome = data?.netIncome !== undefined ? data.netIncome : income;
+  const netExpenses = data?.netExpenses !== undefined ? data.netExpenses : expenses;
+  const netResult = data?.netResult !== undefined ? data.netResult : result;
+  
+  // Información fiscal
+  const ivaLiquidar = data?.taxStats?.ivaLiquidar || 0;
+  const irpfAdelantado = data?.taxStats?.irpfRetenido || 0;
+  const irpfPagar = data?.taxStats?.irpfPagar || 0;
   
   return (
     <Card className="overflow-hidden flex-grow">
@@ -63,72 +62,53 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
         </div>
       </CardHeader>
       <CardContent className="p-3">
-        {/* Ingresos netos */}
-        <div className="mb-2 text-sm">
-          <div className="flex justify-between">
-            <span className="font-medium text-neutral-600">Ingresos netos:</span>
-            <span className="font-medium text-emerald-600">—</span>
-          </div>
-        </div>
-        
-        {/* Gastos netos */}
-        <div className="mb-3 text-sm border-t pt-1">
-          <div className="flex justify-between">
-            <span className="font-medium text-neutral-600">Gastos netos:</span>
-            <span className="font-medium text-red-600">—</span>
-          </div>
-        </div>
-        
-        {/* Línea divisoria */}
-        <div className="border-b border-gray-300 my-2"></div>
-        
-        {/* Resultado final */}
-        <div className="mb-4">
-          <h3 className="text-sm font-medium text-blue-700">Resultado final:</h3>
+        {/* Resultado neto */}
+        <div className="mb-3">
+          <h3 className="text-sm font-medium text-blue-700">Resultado neto (después de IRPF)</h3>
           <p className="text-2xl font-bold text-blue-600">
-            —
+            {new Intl.NumberFormat('es-ES', { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+            }).format(netResult)} €
           </p>
         </div>
         
-        {/* Información de impuestos */}
-        <div className="mt-3 space-y-1 text-sm">
-          <h3 className="font-medium text-neutral-700 mb-1">IVA a pagar:</h3>
-          <div className="flex justify-between pl-2">
-            <span className="text-neutral-500">IVA ingresos:</span>
-            <span className="font-medium">—</span>
+        {/* Comparación con el bruto */}
+        <div className="mb-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Resultado bruto:</span>
+            <span className="font-medium">{result.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
           </div>
-          <div className="flex justify-between pl-2">
-            <span className="text-neutral-500">- IVA gastos:</span>
-            <span className="font-medium">—</span>
-          </div>
-          <div className="flex justify-between border-t pt-1 mt-1 pl-2">
-            <span className="text-neutral-600 font-medium">IVA a pagar:</span>
-            <span className="font-medium text-blue-600">—</span>
-          </div>
-          
-          <h3 className="font-medium text-neutral-700 mt-3 mb-1">IRPF total retenido:</h3>
-          <div className="flex justify-between pl-2">
-            <span className="text-neutral-500">IRPF ingresos:</span>
-            <span className="font-medium">—</span>
-          </div>
-          <div className="flex justify-between pl-2">
-            <span className="text-neutral-500">+ IRPF gastos:</span>
-            <span className="font-medium">—</span>
-          </div>
-          <div className="flex justify-between border-t pt-1 mt-1 pl-2">
-            <span className="text-neutral-600 font-medium">Total IRPF:</span>
-            <span className="font-medium text-blue-600">—</span>
+          <div className="flex justify-between border-t pt-1 mt-1">
+            <span className="text-neutral-500">Diferencia por IRPF:</span>
+            <span className="font-medium text-purple-600">{(netResult - result).toLocaleString('es-ES', {minimumFractionDigits: 2})} €</span>
           </div>
         </div>
         
-        <div className="mt-auto pt-4 mb-2">
+        {/* Información de impuestos */}
+        <div className="mt-2 space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-neutral-500">IVA a liquidar:</span>
+            <span className="font-medium text-red-600">{ivaLiquidar.toLocaleString('es-ES')} €</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">IRPF adelantado:</span>
+            <span className="font-medium text-green-600">{irpfAdelantado.toLocaleString('es-ES')} €</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">IRPF a pagar:</span>
+            <span className="font-medium text-orange-600">{irpfPagar.toLocaleString('es-ES')} €</span>
+          </div>
+        </div>
+        
+        <div className="mt-auto pt-8 mb-2">
           <Button 
             variant="outline" 
             size="sm" 
             className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
             onClick={() => navigate("/analytics")}
           >
-            Ver informes completos
+            Ver informes
           </Button>
         </div>
       </CardContent>

@@ -435,9 +435,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <div className="md:mb-5 mb-2">
-              {/* Valores fijos para ingresos */}
               <div className="md:text-3xl text-2xl font-bold text-[#34C759] md:pt-3 pt-1">
-                1.000,00 €
+                {formatCurrency(baseImponibleIngresos)}
               </div>
               <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
                 Ingresos totales (sin IVA)
@@ -447,11 +446,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F9FDFB] rounded-xl border border-[#E2F6ED]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA repercutido:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">210,00 €</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaRepercutido)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IRPF:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">150,00 €</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(retencionesIrpf)}</span>
               </div>
             </div>
             
@@ -477,9 +476,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <div className="md:mb-5 mb-2">
-              {/* Valores fijos para gastos */}
               <div className="md:text-3xl text-2xl font-bold text-[#FF3B30] md:pt-3 pt-1">
-                100,00 €
+                {formatCurrency(baseImponibleGastos)}
               </div>
               <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
                 Gastos totales
@@ -489,11 +487,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#FFFAFA] rounded-xl border border-[#FEECEB]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA soportado:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">21,00 €</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(ivaSoportado)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IRPF:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">15,00 €</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(irpfRetenciones)}</span>
               </div>
             </div>
             
@@ -519,23 +517,22 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
             
             <div className="md:mb-5 mb-2">
-              {/* Valores fijos para resultado final */}
               <div className="md:text-3xl text-2xl font-bold text-[#007AFF] md:pt-3 pt-1">
-                765,00 €
+                {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
               </div>
               <div className="stat-label text-xs md:text-sm mt-1 md:block hidden">
-                Beneficio neto
+                {isPositiveResult ? 'Beneficio neto' : 'Pérdida neta'}
               </div>
             </div>
             
             <div className="space-y-2 md:mb-5 mb-2 md:p-4 p-3 bg-[#F7FDFF] rounded-xl border border-[#E9F8FB]">
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IVA a pagar:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">189,00 €</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.ivaLiquidar || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="md:text-sm text-xs text-gray-600">IRPF a pagar:</span>
-                <span className="font-medium text-gray-800 md:text-sm text-xs">165,00 €</span>
+                <span className="font-medium text-gray-800 md:text-sm text-xs">{formatCurrency(dashboardStats.taxStats?.irpfPagar || 0)}</span>
               </div>
             </div>
             
@@ -591,19 +588,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <div className="bg-[#F5FFF7] p-1 sm:p-2 rounded-lg border border-[#DCFFE5]">
                   <div className="text-xs text-[#34C759] mb-1 font-medium">Ingresos</div>
                   <div className="text-sm font-semibold text-[#34C759] tracking-tight">
-                    1.000,00 €
+                    {formatCurrency(baseImponibleIngresos)}
                   </div>
                 </div>
                 <div className="bg-[#FFF5F5] p-1 sm:p-2 rounded-lg border border-[#FFDFDF]">
                   <div className="text-xs text-[#FF3B30] mb-1 font-medium">Gastos</div>
                   <div className="text-sm font-semibold text-[#FF3B30] tracking-tight">
-                    100,00 €
+                    {formatCurrency(baseImponibleGastos)}
                   </div>
                 </div>
                 <div className="bg-[#F0F7FF] p-1 sm:p-2 rounded-lg border border-[#DAE8FF]">
                   <div className="text-xs text-[#007AFF] mb-1 font-medium">Resultado</div>
                   <div className="text-sm font-semibold text-[#007AFF] tracking-tight">
-                    765,00 €
+                    {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
                   </div>
                 </div>
               </div>
