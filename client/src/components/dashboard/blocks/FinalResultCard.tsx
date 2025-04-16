@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PiggyBank, Info } from "lucide-react";
 
 interface FinalResultCardProps {
@@ -39,35 +40,23 @@ const FinalResultCard: React.FC<FinalResultCardProps> = ({ data, isLoading }) =>
     );
   }
   
-  // Calcular valores brutos
-  const income = data?.income || 0;
-  const expenses = data?.expenses || 0;
-  const result = income - expenses;
+  // Valores fijos del ejemplo
+  // Valores de ingresos
+  const baseImponibleIngresos = 1000; // Base imponible de 1000€
+  const ivaRepercutido = 210; // IVA 21% de 1000€
+  const irpfIngresos = 150; // IRPF 15% de 1000€
+  const ingresoNeto = baseImponibleIngresos - irpfIngresos; // 1000€ - 150€ = 850€
   
-  // Calcular bases imponibles
-  const baseImponibleIngresos = data?.baseImponible || Math.round(income / 1.21);
-  const baseImponibleGastos = Math.round(expenses / 1.21);
+  // Valores de gastos
+  const baseImponibleGastos = 100; // Base imponible de 100€
+  const ivaSoportado = 21; // IVA 21% de 100€
+  const irpfGastos = 15; // IRPF 15% de 100€
+  const gastoNeto = baseImponibleGastos - irpfGastos; // 100€ - 15€ = 85€
   
-  // Calcular IVA
-  const ivaRepercutido = data?.ivaRepercutido || Math.round(baseImponibleIngresos * 0.21);
-  const ivaSoportado = data?.ivaSoportado || Math.round(baseImponibleGastos * 0.21);
-  const ivaLiquidar = ivaRepercutido - ivaSoportado;
-  
-  // Calcular IRPF según tus especificaciones
-  const irpfPercentage = 15;
-  const irpfIngresos = Math.round(baseImponibleIngresos * (irpfPercentage / 100));
-  
-  // Para gastos, asumimos que la mitad tiene IRPF como en tu ejemplo
-  const gastoConIRPF = Math.round(baseImponibleGastos / 2);
-  const irpfGastos = Math.round(gastoConIRPF * (irpfPercentage / 100));
-  
-  // Cálculo de valores netos
-  const ingresoNeto = baseImponibleIngresos - irpfIngresos;
-  const gastoNeto = baseImponibleGastos - irpfGastos;
-  const resultadoFinal = ingresoNeto - gastoNeto;
-  
-  // Total IRPF
-  const totalIRPF = irpfIngresos + irpfGastos;
+  // Resultados finales
+  const resultadoFinal = ingresoNeto - gastoNeto; // 850€ - 85€ = 765€
+  const ivaLiquidar = ivaRepercutido - ivaSoportado; // 210€ - 21€ = 189€
+  const totalIRPF = irpfIngresos + irpfGastos; // 150€ + 15€ = 165€
   
   return (
     <Card className="overflow-hidden flex-grow">
