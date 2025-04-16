@@ -337,72 +337,13 @@ const ExpensesByCategoryNew: React.FC<{
   if (!data.length) {
     return (
       <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
-        <CardHeader className="bg-red-50 p-1 sm:p-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base text-red-700 flex items-center">
-              <TrendingDown className="mr-2 h-4 w-4" />
-              Gastos por Categoría
-            </CardTitle>
-            
-            {/* Selector de período - Siempre visible incluso sin datos */}
-            <Select 
-              value={selectedPeriod}
-              onValueChange={handlePeriodChange}
-            >
-              <SelectTrigger className="w-32 h-7 text-xs bg-white/80">
-                <SelectValue placeholder="Seleccionar período" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* Generar opciones para cada año disponible */}
-                {availableYears.map(year => [
-                    <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
-                    <SelectItem key={`${year}-q1`} value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>,
-                    <SelectItem key={`${year}-q2`} value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>,
-                    <SelectItem key={`${year}-q3`} value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>,
-                    <SelectItem key={`${year}-q4`} value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>,
-                    <SelectItem key={`${year}-1`} value={`${year}-1`}>Enero {year}</SelectItem>,
-                    <SelectItem key={`${year}-2`} value={`${year}-2`}>Febrero {year}</SelectItem>,
-                    <SelectItem key={`${year}-3`} value={`${year}-3`}>Marzo {year}</SelectItem>,
-                    <SelectItem key={`${year}-4`} value={`${year}-4`}>Abril {year}</SelectItem>,
-                    <SelectItem key={`${year}-5`} value={`${year}-5`}>Mayo {year}</SelectItem>,
-                    <SelectItem key={`${year}-6`} value={`${year}-6`}>Junio {year}</SelectItem>,
-                    <SelectItem key={`${year}-7`} value={`${year}-7`}>Julio {year}</SelectItem>,
-                    <SelectItem key={`${year}-8`} value={`${year}-8`}>Agosto {year}</SelectItem>,
-                    <SelectItem key={`${year}-9`} value={`${year}-9`}>Septiembre {year}</SelectItem>,
-                    <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
-                    <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
-                    <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
-                ])}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 flex items-center justify-center h-[260px]">
-          <div className="text-center text-gray-500">
-            <p>No hay gastos registrados para este período</p>
-            <p className="text-sm mt-2">Selecciona otro período o añade gastos</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Diseño exactamente como la imagen de referencia
-  return (
-    <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
-      <CardHeader className="bg-red-50 p-1 sm:p-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base text-red-700 flex items-center">
-            <TrendingDown className="mr-2 h-4 w-4" />
-            Gastos por Categoría
-          </CardTitle>
-          
-          {/* Selector de período */}
+        <CardHeader className="p-2 sm:p-3 flex justify-end">
+          {/* Solo el selector de período, sin título */}
           <Select 
             value={selectedPeriod}
             onValueChange={handlePeriodChange}
           >
-            <SelectTrigger className="w-32 h-7 text-xs bg-white/80">
+            <SelectTrigger className="w-40 h-8 text-xs">
               <SelectValue placeholder="Seleccionar período" />
             </SelectTrigger>
             <SelectContent>
@@ -425,27 +366,73 @@ const ExpensesByCategoryNew: React.FC<{
                   <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
                   <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
                   <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
-                ])}
+              ])}
             </SelectContent>
           </Select>
-        </div>
+        </CardHeader>
+        <CardContent className="p-6 flex flex-col items-center justify-center h-[300px]">
+          <div className="text-center text-gray-500">
+            <p className="text-base font-medium mb-2">{periodLabel}</p>
+            <p>No hay gastos registrados para este período</p>
+            <p className="text-sm mt-2">Selecciona otro período o añade gastos</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Diseño adaptado a los nuevos requerimientos - sin título y con tarjeta más grande
+  return (
+    <Card className="h-full overflow-hidden fade-in dashboard-card mx-0 px-0">
+      <CardHeader className="p-2 sm:p-3 flex justify-end">
+        {/* Solo el selector de período, sin título */}
+        <Select 
+          value={selectedPeriod}
+          onValueChange={handlePeriodChange}
+        >
+          <SelectTrigger className="w-40 h-8 text-xs">
+            <SelectValue placeholder="Seleccionar período" />
+          </SelectTrigger>
+          <SelectContent>
+            {/* Generar opciones para cada año disponible */}
+            {availableYears.map(year => [
+                <SelectItem key={`${year}-all`} value={`${year}-all`}>Año {year} completo</SelectItem>,
+                <SelectItem key={`${year}-q1`} value={`${year}-q1`}>Q1 {year} (Ene-Mar)</SelectItem>,
+                <SelectItem key={`${year}-q2`} value={`${year}-q2`}>Q2 {year} (Abr-Jun)</SelectItem>,
+                <SelectItem key={`${year}-q3`} value={`${year}-q3`}>Q3 {year} (Jul-Sep)</SelectItem>,
+                <SelectItem key={`${year}-q4`} value={`${year}-q4`}>Q4 {year} (Oct-Dic)</SelectItem>,
+                <SelectItem key={`${year}-1`} value={`${year}-1`}>Enero {year}</SelectItem>,
+                <SelectItem key={`${year}-2`} value={`${year}-2`}>Febrero {year}</SelectItem>,
+                <SelectItem key={`${year}-3`} value={`${year}-3`}>Marzo {year}</SelectItem>,
+                <SelectItem key={`${year}-4`} value={`${year}-4`}>Abril {year}</SelectItem>,
+                <SelectItem key={`${year}-5`} value={`${year}-5`}>Mayo {year}</SelectItem>,
+                <SelectItem key={`${year}-6`} value={`${year}-6`}>Junio {year}</SelectItem>,
+                <SelectItem key={`${year}-7`} value={`${year}-7`}>Julio {year}</SelectItem>,
+                <SelectItem key={`${year}-8`} value={`${year}-8`}>Agosto {year}</SelectItem>,
+                <SelectItem key={`${year}-9`} value={`${year}-9`}>Septiembre {year}</SelectItem>,
+                <SelectItem key={`${year}-10`} value={`${year}-10`}>Octubre {year}</SelectItem>,
+                <SelectItem key={`${year}-11`} value={`${year}-11`}>Noviembre {year}</SelectItem>,
+                <SelectItem key={`${year}-12`} value={`${year}-12`}>Diciembre {year}</SelectItem>
+              ])}
+          </SelectContent>
+        </Select>
       </CardHeader>
       
-      <CardContent className="p-1 sm:p-3">
+      <CardContent className="p-2 sm:p-4">
         {/* Título del periodo */}
-        <div className="mb-2 text-gray-700 text-xs">
+        <div className="mb-3 text-gray-700 text-sm font-medium">
           {periodLabel}
         </div>
         
         {/* Contenido principal con donut y lista de categorías */}
         <div className="flex h-full">
-          {/* Lado izquierdo: Gráfico donut como en la imagen de referencia */}
-          <div className="w-1/2 flex items-center justify-start pl-2 sm:pl-10 pt-4 sm:pt-8">
-            {/* Gráfico de donut (anillo) */}
-            <div className="relative w-36 h-36 sm:w-48 sm:h-48">
+          {/* Lado izquierdo: Gráfico donut más grande */}
+          <div className="w-1/2 flex items-center justify-start pl-2 sm:pl-5 pt-1">
+            {/* Gráfico de donut (anillo) - con tamaño aumentado */}
+            <div className="relative w-40 h-40 sm:w-52 sm:h-52">
               {/* Círculo base (agujero blanco del centro) */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full"></div>
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full"></div>
               </div>
               
               {/* Construcción del donut con segmentos circulares */}
@@ -502,9 +489,9 @@ const ExpensesByCategoryNew: React.FC<{
               {/* Información en el centro solo cuando hay mouse hover sobre un segmento */}
               {hoverIndex !== null && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-white p-2 rounded-md shadow-sm text-center w-28">
+                  <div className="bg-white p-3 rounded-md shadow-sm text-center w-36">
                     <p className="font-semibold text-sm truncate">{data[hoverIndex].name}</p>
-                    <p className="text-red-600 text-sm">{formatCurrency(data[hoverIndex].value * -1)}</p>
+                    <p className="text-red-600 text-base">{formatCurrency(data[hoverIndex].value * -1)}</p>
                     <p className="text-gray-500 text-xs">{data[hoverIndex].percentage.toFixed(2)}%</p>
                   </div>
                 </div>
@@ -512,8 +499,8 @@ const ExpensesByCategoryNew: React.FC<{
             </div>
           </div>
           
-          {/* Lado derecho: Lista de categorías con scroll cuando es necesario */}
-          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[280px] overflow-y-auto custom-scrollbar pr-1 sm:pr-3 pt-4 sm:pt-8">
+          {/* Lado derecho: Lista de categorías con scroll cuando es necesario - altura aumentada */}
+          <div className="w-1/2 flex flex-col h-full pl-0 max-h-[320px] overflow-y-auto custom-scrollbar pr-1 sm:pr-3 pt-3">
             {data.map((item, idx) => (
               <div 
                 key={item.categoryId} 
