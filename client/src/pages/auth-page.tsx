@@ -293,9 +293,9 @@ export default function AuthPage() {
       // Incrementar contador de intentos
       setLoginAttempts(prev => prev + 1);
       
-      // Si estamos usando el método directo o hay varios intentos fallidos
-      if (useDirectLogin || loginAttempts >= 1) {
-        console.log("Utilizando método directo de login");
+      // Solo usar directLogin si está explícitamente habilitado
+      if (useDirectLogin) {
+        console.log("Utilizando método directo de login por elección explícita");
         
         // Usar el método directo
         const success = await directLogin(loginFormData.username, loginFormData.password);
@@ -312,6 +312,7 @@ export default function AuthPage() {
       }
       
       // Proceed with normal login
+      console.log("Utilizando el método normal de login");
       loginMutation.mutate(loginFormData);
       
       // Verificar si la mutación se ha completado sin error después de un tiempo
