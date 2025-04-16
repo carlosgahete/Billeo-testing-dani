@@ -13,8 +13,10 @@ import { ThemeProvider } from "@/hooks/use-theme";
 // Por problemas de compatibilidad con tipos, volvemos a los import normales
 // La optimización la haremos a nivel de API y de caché
 import NotFound from "@/pages/not-found";
-import FixedDashboard from "@/pages/fixed-dashboard";
+// Eliminamos todas las importaciones de dashboards alternativos
+// import FixedDashboard from "@/pages/fixed-dashboard"; // Dashboard eliminado
 // import AppleSimpleDashboardPage from "@/pages/apple-simple-dashboard"; // Eliminado
+// Mantenemos únicamente el dashboard completo
 import CompleteDashboardPage from "@/pages/complete-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
@@ -62,6 +64,7 @@ function Router() {
       <Route path="/login" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
+      {/* Usamos CompleteDashboardPage como ruta principal */}
       <Route path="/">
         <Layout>
           <ProtectedRoute path="/" component={CompleteDashboardPage} />

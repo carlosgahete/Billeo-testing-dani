@@ -1,0 +1,38 @@
+# Plan de limpieza de componentes de Dashboard
+
+1. Mantener únicamente el componente CompleteDashboard.tsx
+2. Eliminar referencias al resto de dashboards:
+   - AppleStyleDashboard.tsx
+   - CustomizableDashboard.tsx
+   - Otras versiones de dashboard que están en desuso
+3. Asegurar que los datos de las facturas (valor 1060.00€) se reflejen correctamente en el dashboard
+
+## Archivo principal a conservar:
+- client/src/components/dashboard/CompleteDashboard.tsx
+
+## Páginas a conservar:
+- client/src/pages/complete-dashboard.tsx (única página de dashboard que debe quedar)
+
+## Componentes a eliminar:
+- Referencias a CustomizableDashboard en DashboardMetrics.tsx ✓
+- Eliminar importación de FixedDashboard en App.tsx ✓
+- Redirigir la ruta principal a CompleteDashboard ✓
+
+## Archivos de dashboard identificados para eliminar:
+- client/src/pages/empty-dashboard.tsx
+- client/src/pages/fixed-dashboard.tsx
+- client/src/pages/fixed-dashboard.tsx.new
+- client/src/pages/apple-dashboard.tsx
+- client/src/pages/dashboard.tsx.backup
+- client/src/pages/dashboard.tsx.old
+
+- client/src/components/dashboard/blocks/PreviewDashboard.tsx
+- client/src/components/dashboard/DashboardBlockMenu.tsx
+- client/src/components/dashboard/EmptyDashboard.tsx
+- client/src/components/dashboard/CustomizableDashboard.tsx
+- client/src/components/dashboard/AppleStyleDashboard.tsx
+(Mantenemos DashboardMetrics.tsx ya que es usado por CompleteDashboard)
+
+## Pasos siguientes:
+1. Verificar datos en el endpoint /api/stats/dashboard para asegurar que el valor 1060.00€ aparece correctamente
+2. Comprobar que solo CompleteDashboard es accesible a través de la interfaz de usuario
