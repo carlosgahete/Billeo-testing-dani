@@ -77,17 +77,19 @@ const ExpensesByCategoryNew: React.FC<{
   period?: string;
   onPeriodChange?: (period: string) => void;
 }> = ({ period, onPeriodChange }) => {
-  // Obtener las transacciones directamente
+  // Obtener las transacciones directamente - menos refrescos para mejor rendimiento
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
-    refetchInterval: 5000, // Refrescar cada 5 segundos
-    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Refrescar cada 30 segundos en lugar de 5 para reducir carga
+    refetchOnWindowFocus: false, // Desactivar refresco al volver a la ventana para mejorar rendimiento
+    staleTime: 1000 * 60 * 5, // Considerar datos frescos por 5 minutos
   });
   
-  // Obtener las categorías directamente
+  // Obtener las categorías directamente - optimizado para rendimiento
   const { data: categories = [], isLoading: categoriesLoading } = useQuery<any[]>({
     queryKey: ["/api/categories"],
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // No refrescar al volver a la ventana
+    staleTime: 1000 * 60 * 30, // Las categorías raramente cambian, mantener frescas por 30 minutos
   });
   const [data, setData] = useState<ExpenseByCategoryData[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
@@ -265,14 +267,12 @@ const ExpensesByCategoryNew: React.FC<{
   // Actualizar los datos cuando cambie el período seleccionado o cuando cambien las transacciones
   useEffect(() => {
     if (transactions && categories && transactions.length > 0) {
-      console.log("Actualizando datos con período:", selectedPeriod);
+      // Sin logging para mejorar el rendimiento
       
       // Filtrar transacciones por el período seleccionado
       const filteredTransactions = filterTransactionsByPeriod(selectedPeriod, transactions);
-      console.log("Transacciones filtradas:", filteredTransactions.length);
       
       const expenses = filteredTransactions.filter(t => t.type === 'expense');
-      console.log("Gastos filtrados:", expenses.length);
       
       if (expenses.length === 0) {
         setData([]);
@@ -282,10 +282,6 @@ const ExpensesByCategoryNew: React.FC<{
       const totalExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
       
       const expensesByCategory: Record<string, { amount: number, count: number, name: string }> = {};
-      
-      // Mostrar información de categorías para depuración
-      console.log("Categorías disponibles:", categories.map(c => ({id: c.id, name: c.name})));
-      console.log("Transacciones de gastos:", expenses.map(t => ({id: t.id, description: t.description, categoryId: t.categoryId, category: t.category})));
       
       expenses.forEach((transaction) => {
         // Intentamos encontrar la categoría por id primero, luego por comparación con el nombre
@@ -316,9 +312,6 @@ const ExpensesByCategoryNew: React.FC<{
           // Buscar la categoría por id o por nombre para obtener el color e icono
           const category = categories.find(c => c.id.toString() === id.toString()) || 
                           categories.find(c => c.name === data.name);
-          
-          // Para debugging
-          console.log(`Procesando categoría: id=${id}, nombre=${data.name}, encontrada=${category ? 'sí' : 'no'}`);
           
           return {
             name: data.name,
@@ -497,18 +490,9 @@ const ExpensesByCategoryNew: React.FC<{
                         fill="transparent"
                         stroke="transparent"
                         style={{ cursor: 'pointer' }}
-                        onMouseEnter={() => {
-                          console.log(`Mouse enter en segmento ${idx}, categoría ${item.name}`);
-                          setHoverIndex(idx);
-                        }}
-                        onMouseLeave={() => {
-                          console.log(`Mouse leave en segmento ${idx}`);
-                          setHoverIndex(null);
-                        }}
-                        onClick={() => {
-                          console.log(`Clic en segmento ${idx}, categoría ${item.name}`);
-                          setActiveIndex(idx === activeIndex ? null : idx);
-                        }}
+                        onMouseEnter={() => setHoverIndex(idx)}
+                        onMouseLeave={() => setHoverIndex(null)}
+                        onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
                       />
                     </g>
                   );
