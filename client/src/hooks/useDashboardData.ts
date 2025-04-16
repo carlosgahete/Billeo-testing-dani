@@ -28,11 +28,11 @@ export function useDashboardData() {
       }
       return response.json();
     },
-    // Configuraciones para actualización en tiempo real
-    refetchOnWindowFocus: true,      // Refresca cuando la ventana obtiene el foco
+    // Configuraciones para actualización controlada
+    refetchOnWindowFocus: false,     // No refrescar automáticamente al obtener el foco
     refetchOnMount: true,            // Refresca cuando el componente se monta
-    refetchInterval: 5000,           // Refresca cada 5 segundos
-    staleTime: 0                     // Los datos siempre se consideran obsoletos
+    refetchInterval: false,          // No refrescar automáticamente a intervalos
+    staleTime: 5 * 60 * 1000         // Datos válidos por 5 minutos
   });
   
   // Manejar errores
@@ -59,31 +59,41 @@ export function useDashboardData() {
   useEffect(() => {
     // Suscribirse a eventos de facturación (creación, edición, eliminación)
     const handleInvoiceChange = () => {
-      console.log('📝 Factura modificada, actualizando dashboard...');
-      // Pequeño retardo para asegurar que la transacción en bd se completó
-      setTimeout(refreshDashboardData, 300);
+      if (document.hasFocus()) {
+        console.log('📝 Factura modificada, actualizando dashboard...');
+        // Pequeño retardo para asegurar que la transacción en bd se completó
+        setTimeout(refreshDashboardData, 300);
+      }
     };
     
     // Suscribirse a eventos de transacciones (creación, edición, eliminación)
     const handleTransactionChange = () => {
-      console.log('💰 Transacción modificada, actualizando dashboard...');
-      setTimeout(refreshDashboardData, 300);
+      if (document.hasFocus()) {
+        console.log('💰 Transacción modificada, actualizando dashboard...');
+        setTimeout(refreshDashboardData, 300);
+      }
     };
 
     // Escuchar eventos del DOM para actualización inmediata
     const handleInvoiceCreated = () => {
-      console.log('✨ Nueva factura creada, actualizando dashboard inmediatamente...');
-      setTimeout(refreshDashboardData, 300);
+      if (document.hasFocus()) {
+        console.log('✨ Nueva factura creada, actualizando dashboard inmediatamente...');
+        setTimeout(refreshDashboardData, 300);
+      }
     };
 
     const handleInvoiceDeleted = () => {
-      console.log('🗑️ Factura eliminada, actualizando dashboard inmediatamente...');
-      setTimeout(refreshDashboardData, 300);
+      if (document.hasFocus()) {
+        console.log('🗑️ Factura eliminada, actualizando dashboard inmediatamente...');
+        setTimeout(refreshDashboardData, 300);
+      }
     };
     
     const handleDashboardRefreshRequired = () => {
-      console.log('🔄 Solicitud explícita de actualización de dashboard recibida...');
-      refreshDashboardData();
+      if (document.hasFocus()) {
+        console.log('🔄 Solicitud explícita de actualización de dashboard recibida...');
+        refreshDashboardData();
+      }
     };
     
     // Escuchar eventos personalizados del DOM
