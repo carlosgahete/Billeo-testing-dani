@@ -64,7 +64,7 @@ const NetExpensesCard: React.FC<NetExpensesCardProps> = ({ data, isLoading }) =>
         <div className="mb-2">
           <h3 className="text-sm font-medium text-red-700">Base imponible</h3>
           <p className="text-2xl font-bold text-red-600">
-            -{new Intl.NumberFormat('es-ES', { 
+            {new Intl.NumberFormat('es-ES', { 
               minimumFractionDigits: 2, 
               maximumFractionDigits: 2 
             }).format(baseImponible)} €
@@ -87,7 +87,7 @@ const NetExpensesCard: React.FC<NetExpensesCardProps> = ({ data, isLoading }) =>
         <div className="mt-3 border-t pt-2">
           <h3 className="text-sm font-medium text-gray-600">Gasto neto para resultado final:</h3>
           <p className="text-lg font-bold text-red-700">
-            -{new Intl.NumberFormat('es-ES', { 
+            {new Intl.NumberFormat('es-ES', { 
               minimumFractionDigits: 2, 
               maximumFractionDigits: 2 
             }).format(baseImponible - irpfAmount)} €
