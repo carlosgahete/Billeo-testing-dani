@@ -18,6 +18,7 @@ import {
   MdDevices, MdCardGiftcard, MdEvent, MdMiscellaneousServices,
   MdMoreHoriz
 } from 'react-icons/md';
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -79,15 +80,22 @@ const categoryNames: Record<number, string> = {
   0: 'Otros',
 };
 
+// Definimos una interfaz clara para un gasto por categoría
+interface ExpenseCategoryItem {
+  amount: number;
+  count: number;
+}
+
+// Definimos la interfaz de props
 interface ExpensesByCategoryProps {
-  expensesByCategory?: Record<number, { amount: number; count: number }>;
+  expensesByCategory?: Record<string | number, ExpenseCategoryItem>;
   period?: string;
   periodLabel?: string;
   onPeriodChange?: (period: string) => void;
 }
 
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
-  expensesByCategory = {}, 
+  expensesByCategory: propExpensesByCategory, 
   period = "2025-all",
   periodLabel = "Año 2025 completo", 
   onPeriodChange 
@@ -95,15 +103,52 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
+  
+  // Obtener datos del dashboard usando el hook centralizado
+  const { data: dashboardData } = useDashboardData();
+  
+  // Actualizar el período seleccionado cuando cambie el prop period
+  useEffect(() => {
+    setSelectedPeriod(period);
+  }, [period]);
+  
+  // Usamos los datos de categorías que vienen del prop si están disponibles,
+  // o los del dashboardData si el prop está vacío
+  const expensesByCategory = useMemo(() => {
+    if (propExpensesByCategory && Object.keys(propExpensesByCategory).length > 0) {
+      return propExpensesByCategory;
+    } else if (dashboardData?.expensesByCategory) {
+      return dashboardData.expensesByCategory;
+    }
+    return {};
+  }, [propExpensesByCategory, dashboardData?.expensesByCategory]);
 
   // Procesar los datos para el gráfico
   const data = useMemo(() => {
-    // Calcular el total de gastos para los porcentajes
-    const totalExpenses = Object.values(expensesByCategory)
-      .reduce((sum, { amount }) => sum + Math.abs(amount), 0);
+    // Crear una versión tipada de los datos para evitar errores
+    const typedExpenses: Record<string, ExpenseCategoryItem> = {};
+    
+    // Convertir los datos de forma segura
+    Object.keys(expensesByCategory).forEach(key => {
+      const entry = expensesByCategory[key];
+      if (entry && typeof entry === 'object' && 'amount' in entry && 'count' in entry) {
+        typedExpenses[key] = {
+          amount: Number(entry.amount),
+          count: Number(entry.count)
+        };
+      }
+    });
+    
+    // Calcular el total de gastos
+    let totalExpenses = 0;
+    Object.values(typedExpenses).forEach(item => {
+      totalExpenses += Math.abs(item.amount);
+    });
 
     // Crear los datos con porcentajes
-    return Object.entries(expensesByCategory).map(([categoryId, { amount, count }]) => {
+    return Object.entries(typedExpenses).map(([categoryId, item]) => {
+      const amount = item.amount;
+      const count = item.count;
       const numericId = parseInt(categoryId);
       const absAmount = Math.abs(amount); // Asegurar que el valor sea positivo para cálculos
       
