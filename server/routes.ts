@@ -4082,10 +4082,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Base imponible para ingresos: es la suma de los subtotales de las facturas (sin IVA)
       const baseImponible = paidInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
       
-      // Base imponible para gastos: calculamos a partir del total y los impuestos
-      // Para un gasto típico, la base imponible sería: monto total / (1 + IVA)
-      // Por ejemplo, si expenses=106 con IVA=21%, la base sería 106/1.21 ≈ 87.60
-      const baseImponibleGastos = Math.round(expenses / 1.21); // Asumimos IVA estándar del 21%
+      // Base imponible para gastos: Intentamos obtenerla directamente de las transacciones
+      // ya que el usuario la introduce en el formulario
+      let baseImponibleGastos = 0;
+      
+      // Recorremos todas las transacciones para extraer las bases imponibles
+      allTransactions.forEach(tx => {
+        // Solo consideramos transacciones de tipo gasto
+        if (tx.type === 'expense') {
+          try {
+            // Si la transacción tiene metadata que incluye baseAmount, la usamos
+            if (tx.metadata && typeof tx.metadata === 'string') {
+              const metadata = JSON.parse(tx.metadata);
+              if (metadata.baseAmount) {
+                baseImponibleGastos += Number(metadata.baseAmount);
+                return; // Continuamos con la siguiente transacción
+              }
+            }
+            
+            // Si la transacción no tiene metadata pero sí tiene un campo baseAmount directo
+            if (tx.baseAmount) {
+              baseImponibleGastos += Number(tx.baseAmount);
+              return;
+            }
+            
+            // Si no hay info directa, usamos el cálculo aproximado (mejor que nada)
+            // Para un gasto típico, la base imponible sería: monto total / (1 + IVA)
+            const amount = Number(tx.amount);
+            baseImponibleGastos += Math.round(amount / 1.21); // IVA estándar del 21%
+          } catch (error) {
+            console.error("Error al procesar base imponible de gasto:", error);
+          }
+        }
+      });
+      
+      // Si no se encontró ninguna base imponible, usamos el cálculo aproximado
+      if (baseImponibleGastos === 0) {
+        baseImponibleGastos = Math.round(expenses / 1.21); // IVA estándar del 21%
+      }
       
       const irpfTotalEstimated = Math.max(0, Math.round(baseImponible * irpfRate * 100) / 100);
       
