@@ -269,11 +269,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               aria-controls="period-dropdown"
             >
               <span>
-                {selectedPeriod === "all" ? "Todo el año" : 
-                selectedPeriod === "q1" ? "Trimestre 1" : 
-                selectedPeriod === "q2" ? "Trimestre 2" : 
-                selectedPeriod === "q3" ? "Trimestre 3" : 
-                selectedPeriod === "q4" ? "Trimestre 4" : ""}
+                {filters?.period === "all" ? "Todo el año" : 
+                filters?.period === "q1" ? "Trimestre 1" : 
+                filters?.period === "q2" ? "Trimestre 2" : 
+                filters?.period === "q3" ? "Trimestre 3" : 
+                filters?.period === "q4" ? "Trimestre 4" : "Todo el año"}
               </span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -284,21 +284,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
               <button
                 onClick={() => {
-                  setSelectedPeriod("all");
+                  handleChangePeriod("all");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Todo el año
               </button>
               <button
                 onClick={() => {
-                  setSelectedPeriod("q1");
+                  handleChangePeriod("q1");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
-                  applyFilters(); // Aplicamos inmediatamente, sin timeout
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedPeriod === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 1
               </button>
