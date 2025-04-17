@@ -233,138 +233,133 @@ const CompanyForm = () => {
             </div>
           </div>
           
-          {/* Sección de contacto */}
-          <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center mb-5 space-x-3">
-              <div className="rounded-full bg-green-50 p-2">
-                <Mail className="h-5 w-5 text-green-500" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Información de contacto</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="empresa@ejemplo.com" 
-                          {...field}
-                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Teléfono</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="+34 123 456 789" 
-                          {...field}
-                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-          </div>
-          
-          {/* Sección de dirección */}
+          {/* Sección de dirección y contacto combinada */}
           <div className="backdrop-blur-sm bg-white/80 rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center mb-5 space-x-3">
               <div className="rounded-full bg-purple-50 p-2">
                 <MapPin className="h-5 w-5 text-purple-500" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900">Dirección fiscal</h3>
+              <h3 className="text-lg font-medium text-gray-900">Dirección y contacto</h3>
             </div>
             
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Dirección</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Calle, número, piso..." 
-                        {...field}
-                        className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              {/* Dirección */}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Dirección</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Calle, número, piso..." 
+                          {...field}
+                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Ciudad</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ciudad" 
+                            {...field}
+                            className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="postalCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Código postal</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="28001" 
+                            {...field}
+                            className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">País</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="España" 
+                            {...field}
+                            className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Ciudad</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Ciudad" 
-                          {...field}
-                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="postalCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Código postal</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="28001" 
-                          {...field}
-                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">País</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="España" 
-                          {...field}
-                          className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Contacto - con un separador visual */}
+              <div className="pt-4 border-t border-gray-100">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Información de contacto</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="empresa@ejemplo.com" 
+                            {...field}
+                            className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Teléfono</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="+34 123 456 789" 
+                            {...field}
+                            className="h-10 rounded-lg border-gray-200 bg-white/90 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 shadow-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </div>

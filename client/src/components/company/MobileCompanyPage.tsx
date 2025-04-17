@@ -194,7 +194,7 @@ const MobileCompanyPage = () => {
               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mr-3">
                 <Building2 className="h-4 w-4 text-[#007AFF]" />
               </div>
-              <h3 className="text-base font-medium text-gray-800">Información principal</h3>
+              <h3 className="text-base font-medium text-gray-800">Datos empresariales</h3>
             </div>
             
             <div className="space-y-4">
@@ -224,50 +224,17 @@ const MobileCompanyPage = () => {
             </div>
           </section>
           
-          {/* Contacto */}
-          <section className="bg-white px-5 py-5 rounded-lg shadow-sm mt-3">
-            <div className="flex items-center mb-3">
-              <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center mr-3">
-                <Phone className="h-4 w-4 text-green-500" />
-              </div>
-              <h3 className="text-base font-medium text-gray-800">Contacto</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                <input
-                  {...form.register("email")}
-                  type="email"
-                  placeholder="empresa@ejemplo.com"
-                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-100 shadow-sm"
-                />
-                {form.formState.errors.email && (
-                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.email.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Teléfono</label>
-                <input
-                  {...form.register("phone")}
-                  placeholder="+34 123 456 789"
-                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-100 shadow-sm"
-                />
-              </div>
-            </div>
-          </section>
-          
-          {/* Dirección */}
+          {/* Dirección y contacto combinados */}
           <section className="bg-white px-5 py-5 rounded-lg shadow-sm mt-3">
             <div className="flex items-center mb-3">
               <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center mr-3">
                 <MapPin className="h-4 w-4 text-purple-500" />
               </div>
-              <h3 className="text-base font-medium text-gray-800">Dirección fiscal</h3>
+              <h3 className="text-base font-medium text-gray-800">Dirección y contacto</h3>
             </div>
             
             <div className="space-y-4">
+              {/* Dirección */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Dirección</label>
                 <input
@@ -316,6 +283,34 @@ const MobileCompanyPage = () => {
                 {form.formState.errors.country && (
                   <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.country.message}</p>
                 )}
+              </div>
+              
+              {/* Separador visualmente ligero */}
+              <div className="border-t border-gray-100 my-2 pt-2">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Información de contacto</h4>
+              </div>
+              
+              {/* Contacto */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <input
+                  {...form.register("email")}
+                  type="email"
+                  placeholder="empresa@ejemplo.com"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-100 shadow-sm"
+                />
+                {form.formState.errors.email && (
+                  <p className="text-xs text-red-500 mt-1.5">{form.formState.errors.email.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Teléfono</label>
+                <input
+                  {...form.register("phone")}
+                  placeholder="+34 123 456 789"
+                  className="w-full p-3.5 bg-[#F6F8FA] rounded-xl border-0 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-100 shadow-sm"
+                />
               </div>
             </div>
           </section>

@@ -32,19 +32,19 @@ const CompanyPage = () => {
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-2xl shadow-sm">
             <Building2 className="h-6 w-6 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-medium text-gray-900">Perfil de empresa</h1>
+          <h1 className="text-2xl font-medium text-gray-900">Información de empresa</h1>
         </div>
         <p className="text-gray-500 ml-12 max-w-3xl">
-          Gestiona los datos fiscales y de contacto de tu empresa. Esta información se utilizará para generar facturas y documentos oficiales.
+          Gestiona todos los datos de tu empresa para facturas, documentos oficiales y comunicaciones.
         </p>
       </div>
       
       {/* Contenedor principal con efecto de vidrio */}
       <div className="backdrop-blur-lg bg-white/80 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-6 bg-gradient-to-r from-gray-50/90 to-white/90">
-          <h2 className="text-xl font-medium text-gray-900 mb-1">Datos fiscales</h2>
+          <h2 className="text-xl font-medium text-gray-900 mb-1">Datos empresariales</h2>
           <p className="text-sm text-gray-500">
-            Mantén actualizada la información fiscal de tu empresa
+            Revisa y actualiza todos los datos de tu empresa
           </p>
         </div>
         
