@@ -4167,6 +4167,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("IVA soportado real (de transacciones):", ivaSoportadoReal);
       console.log("IVA soportado usado:", ivaSoportado);
       
+      // Asegurarse de que los valores son números válidos para evitar errores
+      const ivaRepercutidoSafe = isNaN(ivaRepercutido) ? 0 : ivaRepercutido;
+      const ivaSoportadoSafe = isNaN(ivaSoportado) ? 0 : ivaSoportado;
+      
       // Asegurarse de que siempre usamos el IVA soportado real si está disponible
       // y nunca el estimado, ya que es más preciso
       if (ivaSoportadoReal > 0) {
@@ -4186,7 +4190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
-      const vatBalance = Math.round((ivaRepercutido - ivaSoportado) * 100) / 100;
+      // Usamos los valores seguros para evitar NaN
+      const vatBalance = Math.round((ivaRepercutidoSafe - ivaSoportadoSafe) * 100) / 100;
       
       // Cálculo del IRPF según el sistema español para autónomos
       // El IRPF se calcula como un % (15-20%) sobre el beneficio (ingresos - gastos)
@@ -4454,8 +4459,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Debug: Objeto completo para ver qué estructura está enviándose al frontend
       const taxStats = {
-        ivaRepercutido,
-        ivaSoportado,
+        ivaRepercutido: ivaRepercutidoSafe,
+        ivaSoportado: ivaSoportadoSafe,
         ivaLiquidar: vatBalance,
         irpfRetenido: irpfRetenidoIngresos,
         irpfTotal: irpfTotalEstimated,
@@ -4598,18 +4603,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         taxes: {
           vat: vatBalance,
           incomeTax,
-          ivaALiquidar: ivaRepercutido - ivaSoportado
+          ivaALiquidar: ivaRepercutidoSafe - ivaSoportadoSafe
         },
         
         // Datos fiscales estructurados completos (para componentes avanzados)
-        taxStats: {
-          ivaRepercutido,
-          ivaSoportado,
-          ivaLiquidar: vatBalance,
-          irpfRetenido: irpfRetenidoIngresos,
-          irpfTotal: irpfTotalEstimated,
-          irpfPagar: incomeTax
-        },
+        taxStats: taxStats,
         // Añadimos los contadores que faltaban
         issuedCount,
         quarterCount,
