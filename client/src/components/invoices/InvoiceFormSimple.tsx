@@ -118,6 +118,11 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     amount: 0,
     isPercentage: true
   });
+  const [calculatedTotalSnapshot, setCalculatedTotalSnapshot] = useState({
+    subtotal: 0,
+    tax: 0,
+    total: 0
+  });
   const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -386,23 +391,35 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Función para manejar cambios en campos numéricos
   const handleNumericChange = (field: any, index: number, fieldName: string) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Obtener el valor numérico del input
+      const value = parseFloat(e.target.value) || 0;
+      
       // Actualizar el campo
-      field.onChange(e);
+      field.onChange(value);
       
       // Actualizar los subtotales inmediatamente
-      if (fieldName === 'quantity' || fieldName === 'unitPrice') {
-        const items = form.getValues().items || [];
-        if (items[index]) {
-          const quantity = toNumber(items[index].quantity, 0);
-          const unitPrice = toNumber(items[index].unitPrice, 0);
-          const subtotal = quantity * unitPrice;
-          
-          // Actualizar el subtotal directamente
-          form.setValue(`items.${index}.subtotal`, subtotal);
-          
-          // Recalcular totales
-          calculateTotals();
-        }
+      if (fieldName === 'quantity' || fieldName === 'unitPrice' || fieldName === 'taxRate') {
+        setTimeout(() => {
+          const items = form.getValues().items || [];
+          if (items[index]) {
+            const quantity = toNumber(items[index].quantity, 0);
+            const unitPrice = toNumber(items[index].unitPrice, 0);
+            const subtotal = quantity * unitPrice;
+            
+            // Actualizar el subtotal directamente
+            form.setValue(`items.${index}.subtotal`, subtotal);
+            
+            // Recalcular totales
+            const totals = calculateTotals();
+            
+            // Actualizar el snapshot para forzar renderizado
+            setCalculatedTotalSnapshot({
+              subtotal: totals.subtotal,
+              tax: totals.tax,
+              total: totals.total
+            });
+          }
+        }, 0);
       }
     };
   };
