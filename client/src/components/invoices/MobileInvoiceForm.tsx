@@ -536,7 +536,7 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       // Disparar evento personalizado para notificar a los componentes sobre el cambio
       const eventName = isEditMode ? 'invoice-updated' : 'invoice-created';
       window.dispatchEvent(new CustomEvent(eventName, { 
-        detail: { invoiceId: isEditMode ? invoiceId : response?.id }
+        detail: { invoiceId: isEditMode ? invoiceId : response?.id || 'new' }
       }));
       
       console.log(`🔔 Evento disparado desde formulario móvil: ${eventName}`);
@@ -650,27 +650,32 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       }
       
       // Eliminar completamente las consultas relevantes para forzar una recarga completa 
-      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
-      queryClient.removeQueries({ queryKey: ["/api/transactions"] });
-      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      console.log("🧹 Limpiando caché de consultas (handleSubmit)...");
+      queryClient.removeQueries({ queryKey: ["invoices"] });
+      queryClient.removeQueries({ queryKey: ["transactions"] });
+      queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
       
       // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
-      fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
+      fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
         headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
       })
       .then(() => {
         console.log("⚡ Forzando recarga de datos para dashboard");
         
-        // Refrescar explícitamente todas las consultas 
-        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-        queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-        queryClient.refetchQueries({ queryKey: ["/api/transactions"] });
+        // Refrescar explícitamente todas las consultas con claves consistentes
+        queryClient.refetchQueries({ queryKey: ["dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["invoices"] });
+        queryClient.refetchQueries({ queryKey: ["transactions"] });
+        
+        // Disparar evento para actualización a través del hook de useDashboardData
+        console.log("📣 Disparando evento dashboard-refresh-required");
+        window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
         
         // Realizar una segunda actualización después de un breve retraso
         setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-          console.log("🔄 Segunda actualización del dashboard completada");
-        }, 500);
+          console.log("🔄 Segunda actualización del dashboard");
+          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+        }, 800);
       })
       .catch(err => console.error("Error al recargar dashboard:", err));
       

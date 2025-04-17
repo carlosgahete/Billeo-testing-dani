@@ -590,7 +590,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       // Disparar evento personalizado para notificar a los componentes sobre el cambio
       const eventName = isEditMode ? 'invoice-updated' : 'invoice-created';
       window.dispatchEvent(new CustomEvent(eventName, { 
-        detail: { invoiceId: isEditMode ? invoiceId : data.id }
+        detail: { invoiceId: isEditMode ? invoiceId : (data as any)?.id || 'new' }
       }));
       
       console.log(`🔔 Evento disparado: ${eventName}`);
