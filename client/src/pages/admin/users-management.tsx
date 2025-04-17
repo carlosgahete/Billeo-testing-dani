@@ -401,58 +401,34 @@ export default function UsersManagement() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setEditUser(user)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Editar usuario</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEditUser(user)}
+                      title="Editar usuario"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
                     
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleLoginAsUser(user.id)}
-                            disabled={actionLoading}
-                          >
-                            <UserCheck className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Iniciar sesión como este usuario</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleLoginAsUser(user.id)}
+                      disabled={actionLoading}
+                      title="Iniciar sesión como este usuario"
+                    >
+                      <UserCheck className="h-4 w-4" />
+                    </Button>
                     
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setConfirmDeleteUser(user.id)}
-                            disabled={actionLoading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Eliminar usuario</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setConfirmDeleteUser(user.id)}
+                      disabled={actionLoading}
+                      title="Eliminar usuario"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                     
                     {/* Dropdown para cambiar rol del usuario */}
                     <DropdownMenu>
@@ -461,7 +437,7 @@ export default function UsersManagement() {
                           variant="outline"
                           size="icon"
                           disabled={actionLoading}
-                          title="Cambiar rol"
+                          title="Configurar rol de usuario"
                           className="bg-blue-50 hover:bg-blue-100 border-blue-200"
                         >
                           <UserCog className="h-4 w-4 text-blue-600" />
