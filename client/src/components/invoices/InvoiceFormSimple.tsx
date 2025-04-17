@@ -3,12 +3,6 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-// Importar utilidades de corrección para fechas pasadas (especialmente marzo)
-import { 
-  forceUpdateAllValues, 
-  isPastDateInvoice,
-  withCorrectCalculation
-} from "./invoice-calculation-fix";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -123,11 +117,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     name: '',
     amount: 0,
     isPercentage: true
-  });
-  const [calculatedTotalSnapshot, setCalculatedTotalSnapshot] = useState({
-    subtotal: 0,
-    tax: 0,
-    total: 0
   });
   const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [location, navigate] = useLocation();
@@ -284,196 +273,60 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // =============== CÁLCULOS DE TOTALES =================
   
-  // Función para actualizar los subtotales de los items
-  const updateItemSubtotals = () => {
-    const formItems = form.getValues().items || [];
-    formItems.forEach((item: any, index: number) => {
+  // Función para calcular los totales del formulario (usando valores actuales)
+  const calculateTotals = () => {
+    const { items = [], additionalTaxes = [] } = form.getValues();
+    
+    // Calculamos subtotales de cada item
+    const updatedItems = (items || []).map((item: any) => {
       const quantity = toNumber(item.quantity, 0);
       const unitPrice = toNumber(item.unitPrice, 0);
       const subtotal = quantity * unitPrice;
-      
-      // Actualizar el subtotal en el formulario directamente
-      form.setValue(`items.${index}.subtotal`, subtotal);
-    });
-  };
-
-  // Función MEJORADA para calcular los totales del formulario
-  const calculateTotals = () => {
-    console.log("🧮 INICIO DE CÁLCULO DE TOTALES");
-    
-    // VERIFICACIÓN DE MARZO: Detectar si es una factura de marzo para aplicar tratamiento especial
-    const issueDateStr = form.getValues().issueDate;
-    let isMarchInvoice = false;
-    
-    if (issueDateStr) {
-      try {
-        const issueDate = new Date(issueDateStr);
-        isMarchInvoice = issueDate.getMonth() === 2; // 2 = marzo (los meses van de 0-11)
-        if (isMarchInvoice) {
-          console.log("⚠️ DETECTADA FACTURA DE MARZO - Aplicando lógica especial");
-        }
-      } catch (e) {
-        console.error("Error al verificar fecha:", e);
-      }
-    }
-    
-    // Obtener los valores actuales de todos los campos
-    const formData = form.getValues();
-    console.log("📋 Datos del formulario:", formData);
-    
-    // PASO 1: Recalcular todos los subtotales de items para asegurar consistencia
-    const itemsArray = formData.items || [];
-    console.log(`📦 ${itemsArray.length} items encontrados en el formulario`);
-    
-    let subtotalGeneral = 0;
-    let ivaGeneral = 0;
-    
-    // PASO 2: Procesar cada ítem y calcular sus valores
-    itemsArray.forEach((item: any, index: number) => {
-      // Convertir siempre a números para evitar problemas con strings
-      // MEJORA PARA MARZO: Usar replace(',', '.') para manejar formatos europeos
-      let cantidad = typeof item.quantity === 'string' ? 
-                   parseFloat(item.quantity.replace(',', '.')) || 0 : 
-                   Number(item.quantity) || 0;
-                   
-      let precioUnitario = typeof item.unitPrice === 'string' ? 
-                          parseFloat(item.unitPrice.replace(',', '.')) || 0 : 
-                          Number(item.unitPrice) || 0;
-                          
-      let tasaIva = typeof item.taxRate === 'string' ? 
-                   parseFloat(item.taxRate.replace(',', '.')) || 0 : 
-                   Number(item.taxRate) || 0;
-      
-      // Para marzo, asegurar que no hay problemas de precisión
-      if (isMarchInvoice) {
-        cantidad = parseFloat(cantidad.toFixed(4));
-        precioUnitario = parseFloat(precioUnitario.toFixed(4));
-        console.log(`🗓️ MARZO - Valores ajustados: cantidad=${cantidad}, precio=${precioUnitario}`);
-      }
-      
-      // Calcular subtotal del ítem con precisión forzada para marzo
-      const subtotalItem = cantidad * precioUnitario;
-      console.log(`📝 Item ${index+1}: cantidad=${cantidad}, precio=${precioUnitario}, subtotal=${subtotalItem}`);
-      
-      // CRUCIAL: Actualizar el subtotal en el formulario
-      form.setValue(`items.${index}.subtotal`, subtotalItem);
-      
-      // Acumular al subtotal general
-      subtotalGeneral += subtotalItem;
-      
-      // Calcular y acumular IVA
-      const ivaItem = subtotalItem * (tasaIva / 100);
-      ivaGeneral += ivaItem;
+      return {
+        ...item,
+        quantity,
+        unitPrice,
+        subtotal
+      };
     });
     
-    console.log(`💰 Subtotal general calculado: ${subtotalGeneral}`);
-    console.log(`💸 IVA general calculado: ${ivaGeneral}`);
+    // Calculamos subtotal de la factura
+    const subtotal = updatedItems.reduce(
+      (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
+      0
+    );
     
-    // PASO 3: Calcular impuestos adicionales
-    const additionalTaxes = formData.additionalTaxes || [];
+    // Calculamos IVA basado en la tasa de cada item
+    const tax = updatedItems.reduce((sum: number, item: any) => {
+      const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
+      return sum + itemTax;
+    }, 0);
+    
+    // Calculamos impuestos adicionales
     let additionalTaxesTotal = 0;
-    
-    additionalTaxes.forEach((taxItem: any, index: number) => {
-      if (!taxItem) return;
-      
-      // Convertir a números - MEJORA para marzo
-      const isPercentage = !!taxItem.isPercentage;
-      let amount = typeof taxItem.amount === 'string' ? 
-                 parseFloat(taxItem.amount.replace(',', '.')) || 0 : 
-                 Number(taxItem.amount) || 0;
-      
-      // Para facturas de marzo, asegurar precisión
-      if (isMarchInvoice) {
-        amount = parseFloat(amount.toFixed(4));
-      }
-                    
-      // Calcular impuesto adicional
-      if (isPercentage) {
-        const percentageTax = subtotalGeneral * (amount / 100);
+    (additionalTaxes || []).forEach((taxItem: any) => {
+      if (taxItem.isPercentage) {
+        const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
         additionalTaxesTotal += percentageTax;
-        console.log(`💹 Impuesto porcentual: ${taxItem.name} - ${amount}% = ${percentageTax}`);
       } else {
-        additionalTaxesTotal += amount;
-        console.log(`💹 Impuesto fijo: ${taxItem.name} - ${amount}`);
+        additionalTaxesTotal += toNumber(taxItem.amount, 0);
       }
     });
     
-    // PASO 4: Calcular el total final
-    const total = subtotalGeneral + ivaGeneral + additionalTaxesTotal;
-    console.log(`🧾 TOTAL FINAL: ${total} (${subtotalGeneral} + ${ivaGeneral} + ${additionalTaxesTotal})`);
-    
-    // PASO 5: Actualizar el formulario - Con tratamiento especial para marzo
-    form.setValue("subtotal", subtotalGeneral);
-    form.setValue("tax", ivaGeneral);
-    form.setValue("total", Math.max(0, total));
-    
-    // ESPECIAL PARA MARZO: Programar una actualización forzada
-    if (isMarchInvoice) {
-      console.log("⚡ MARZO: Aplicando actualización forzada con delay");
-      
-      // Usar setTimeout para asegurar que se aplica después del ciclo actual
-      setTimeout(() => {
-        console.log("🔄 MARZO: Ejecutando actualización forzada");
-        
-        // Actualizar directamente el DOM con valores calculados
-        form.setValue("subtotal", subtotalGeneral); 
-        form.setValue("tax", ivaGeneral);
-        form.setValue("total", Math.max(0, total));
-        
-        // Actualizar el snapshot para forzar el re-renderizado
-        setCalculatedTotalSnapshot({
-          subtotal: subtotalGeneral,
-          tax: ivaGeneral,
-          total: Math.max(0, total)
-        });
-        
-        console.log("✅ MARZO: Actualización forzada completada");
-      }, 50);
-    }
+    // Total final con todos los impuestos
+    const total = subtotal + tax + additionalTaxesTotal;
     
     return {
-      subtotal: subtotalGeneral,
-      tax: ivaGeneral,
-      additionalTaxesTotal: additionalTaxesTotal,
+      updatedItems,
+      subtotal,
+      tax,
+      additionalTaxesTotal,
       total: Math.max(0, total) // Nunca permitir totales negativos
     };
   };
   
-  // Observamos todos los cambios en el formulario
-  const formValues = form.watch();
-  
-  // Usamos useEffect para actualizar los totales cuando cambian los valores
-  useEffect(() => {
-    calculateTotals();
-  }, [formValues]);
-  
-  // Usar useEffect para forzar redibujado con el estado local
-  useEffect(() => {
-    try {
-      // Verificar si es una factura con fecha de marzo o pasada
-      if (isPastDateInvoice(form)) {
-        console.log("📅 Detectada factura con fecha pasada - Aplicando lógica especial");
-        // Usar la función de la utilidad que maneja correctamente facturas pasadas
-        const totals = forceUpdateAllValues(form, setCalculatedTotalSnapshot);
-        console.log("📊 Totales actualizados (especial para fechas pasadas):", totals);
-      } else {
-        // Para fechas normales, usar el cálculo estándar
-        const totals = calculateTotals();
-        console.log("📊 Totales actualizados:", totals);
-        
-        setCalculatedTotalSnapshot({
-          subtotal: totals.subtotal,
-          tax: totals.tax,
-          total: totals.total
-        });
-      }
-    } catch (error) {
-      console.error("❌ Error en actualización de totales:", error);
-    }
-  }, [formValues]);
-  
-  // También memorizamos los totales para uso en renderizado
-  const calculatedTotals = useMemo(calculateTotals, [formValues, calculatedTotalSnapshot]);
+  // Usamos useMemo para memorizar los totales calculados (solo se recalcula cuando form cambia)
+  const calculatedTotals = useMemo(calculateTotals, [form]);
 
   // =============== MANEJADORES DE EVENTOS =================
   
@@ -510,105 +363,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       if (numericValue > 0 || field.value !== "") {
         field.onChange(numericValue.toString());
       }
-      // Recalcular todos los valores al salir del campo
-      calculateTotals();
     };
-  };
-  
-  // NUEVA VERSIÓN MEJORADA - Función para manejar cambios en campos numéricos
-  // Utiliza la función auxiliar withCorrectCalculation para manejar correctamente fechas de marzo
-  const handleNumericChange = (field: any, index: number, fieldName: string) => {
-    // Definimos el manejador base
-    const baseHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Capturar el valor original
-      const inputValue = e.target.value;
-      
-      // Actualizar el campo con el valor original (string)
-      field.onChange(inputValue);
-      
-      // Forzar actualización de cálculos después de que React haya actualizado el estado
-      setTimeout(() => {
-        // 1. Primero actualizar subtotales individualmente si corresponde
-        if (fieldName === 'quantity' || fieldName === 'unitPrice') {
-          // Obtener los valores actualizados
-          const items = form.getValues().items || [];
-          
-          if (items[index]) {
-            // Convertir a números
-            const quantity = toNumber(items[index].quantity);
-            const unitPrice = toNumber(items[index].unitPrice);
-            const subtotal = quantity * unitPrice;
-            
-            // Actualizar subtotal en el formulario
-            form.setValue(`items.${index}.subtotal`, subtotal);
-          }
-        }
-        
-        // 2. Luego recalcular todos los valores
-        const totals = calculateTotals();
-        
-        // 3. Actualizar el snapshot para forzar renderizado
-        setCalculatedTotalSnapshot({
-          subtotal: totals.subtotal,
-          tax: totals.tax,
-          total: totals.total
-        });
-      }, 10); // Un pequeño retraso para asegurar que React haya actualizado el estado
-    };
-    
-    // Envolvemos el manejador base con nuestra función de corrección
-    // Esto garantiza cálculos correctos para facturas con fechas pasadas (como marzo)
-    return withCorrectCalculation(baseHandler, form, setCalculatedTotalSnapshot);
-  };
-  
-  // NUEVO: Función específica para manejar cambios de fecha con lógica mejorada para fechas de marzo
-  const handleDateChange = (field: any, dateType: string) => {
-    // Función base para manejar el cambio de fecha
-    const baseHandler = (date: Date | undefined) => {
-      if (!date) return;
-      
-      // Formatear la fecha y actualizar el campo
-      const formattedDate = format(date, "yyyy-MM-dd");
-      console.log(`🗓️ ${dateType} cambiada a ${formattedDate}`);
-      
-      // Actualizar el campo
-      field.onChange(formattedDate);
-      
-      // Verificar si la fecha es de marzo (mes 2 en JavaScript, que empieza en 0)
-      const isMarzo = date.getMonth() === 2;
-      if (isMarzo) {
-        console.log("⚠️ FECHA DE MARZO DETECTADA - Aplicando actualización forzada");
-        
-        // Para facturas de marzo, usar la utilidad especializada
-        setTimeout(() => {
-          forceUpdateAllValues(form, setCalculatedTotalSnapshot);
-        }, 20);
-      } else {
-        // Forzar recálculo de totales después de cambiar la fecha
-        setTimeout(() => {
-          try {
-            // Primero actualizar los subtotales
-            updateItemSubtotals();
-            
-            // Luego calcular totales generales
-            const totals = calculateTotals();
-            console.log(`📊 Totales recalculados después de cambio de fecha:`, totals);
-            
-            // Actualizar snapshot para forzar renderizado
-            setCalculatedTotalSnapshot({
-              subtotal: totals.subtotal,
-              tax: totals.tax,
-              total: totals.total
-            });
-          } catch (error) {
-            console.error("Error al recalcular después de cambio de fecha:", error);
-          }
-        }, 20);
-      }
-    };
-    
-    // Usar sin envoltura para fechas, ya que manejamos la detección de marzo específicamente
-    return baseHandler;
   };
   
   // Función para manejar la subida de archivos
@@ -1169,7 +924,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     step="0.01"
                                     placeholder="1"
                                     {...field}
-                                    onChange={handleNumericChange(field, index, 'quantity')}
                                     onBlur={handleNumericBlur(field, 1)}
                                     className="border-gray-200"
                                   />
@@ -1193,7 +947,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     step="0.01"
                                     placeholder="100"
                                     {...field}
-                                    onChange={handleNumericChange(field, index, 'unitPrice')}
                                     onBlur={handleNumericBlur(field, 0)}
                                     className="border-gray-200"
                                   />
@@ -1217,7 +970,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     step="1"
                                     placeholder="21"
                                     {...field}
-                                    onChange={handleNumericChange(field, index, 'taxRate')}
                                     onBlur={handleNumericBlur(field, 21)}
                                     className="border-gray-200"
                                   />
@@ -1338,7 +1090,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           const taxItem = form.getValues(`additionalTaxes.${index}`);
                           const isPercentage = taxItem?.isPercentage;
                           const amount = toNumber(taxItem?.amount, 0);
-                          const subtotal = calculatedTotalSnapshot.subtotal || calculatedTotals.subtotal;
+                          const subtotal = calculatedTotals.subtotal;
                           const taxValue = isPercentage ? (amount * subtotal / 100) : amount;
                           const sign = amount < 0 ? "-" : "+";
                           
@@ -1388,11 +1140,11 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     <div className="space-y-2">
                       <div className="flex justify-between pb-1 border-b border-dashed border-gray-200">
                         <span className="text-sm text-gray-600">Subtotal:</span>
-                        <span className="font-medium">{(calculatedTotalSnapshot.subtotal || calculatedTotals.subtotal).toFixed(2)}€</span>
+                        <span className="font-medium">{calculatedTotals.subtotal.toFixed(2)}€</span>
                       </div>
                       <div className="flex justify-between pb-1 border-b border-dashed border-gray-200">
                         <span className="text-sm text-gray-600">IVA ({fields.length > 0 ? 'según productos' : '0%'}):</span>
-                        <span className="font-medium">{(calculatedTotalSnapshot.tax || calculatedTotals.tax).toFixed(2)}€</span>
+                        <span className="font-medium">{calculatedTotals.tax.toFixed(2)}€</span>
                       </div>
                       {taxFields.length > 0 && taxFields.map((field, index) => {
                         const taxItem = form.getValues(`additionalTaxes.${index}`);
@@ -1400,7 +1152,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         
                         const isPercentage = taxItem.isPercentage;
                         const amount = toNumber(taxItem.amount, 0);
-                        const subtotal = calculatedTotalSnapshot.subtotal || calculatedTotals.subtotal;
+                        const subtotal = calculatedTotals.subtotal;
                         const taxValue = isPercentage ? (amount * subtotal / 100) : amount;
                         const sign = amount < 0 ? "-" : "+";
                         
@@ -1420,7 +1172,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-blue-900">Total:</span>
-                      <span className="text-xl font-bold text-blue-900">{(calculatedTotalSnapshot.total || calculatedTotals.total).toFixed(2)}€</span>
+                      <span className="text-xl font-bold text-blue-900">{calculatedTotals.total.toFixed(2)}€</span>
                     </div>
                     {form.getValues("status") === "paid" && (
                       <div className="mt-3 p-2 bg-green-100 rounded-md text-sm text-green-800 flex items-center">
