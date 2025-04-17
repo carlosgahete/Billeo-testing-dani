@@ -1,9 +1,6 @@
-// Nueva implementación simplificada del endpoint de dashboard
-// Añadir al final de routes.ts
-
-app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
+app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
   try {
-    console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
+    console.log("Iniciando manejo de solicitud a /api/stats/dashboard - VERSIÓN SIMPLIFICADA");
     
     // Configurar encabezados para evitar almacenamiento en caché de datos financieros
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -15,11 +12,15 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
     
     // Registrar la consulta para depuración
     const formattedDate = timestamp ? new Date(timestamp as string).toISOString() : new Date().toISOString();
-    console.log(`📊 Consultando datos fiscales [SIMPLIFICADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
+    console.log(`📊 Consultando datos fiscales [FORZADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
     
     // Obtener el ID del usuario autenticado
     const userId = req.session.userId;
     
+    // IMPLEMENTACIÓN SIMPLIFICADA:
+    // Esta es una implementación simplificada y robusta que solo incluye los cálculos básicos
+    // para asegurar que el dashboard funcione correctamente
+
     try {
       // Obtener datos de facturas
       const invoices = await storage.getInvoicesByUserId(userId);
@@ -99,15 +100,12 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       for (const invoice of paidInvoices) {
         try {
           if (invoice.additionalTaxes) {
-            let taxes = [];
-            if (typeof invoice.additionalTaxes === 'string') {
-              taxes = JSON.parse(invoice.additionalTaxes);
-            } else if (Array.isArray(invoice.additionalTaxes)) {
-              taxes = invoice.additionalTaxes;
-            }
-            
+            const taxes = typeof invoice.additionalTaxes === 'string' 
+              ? JSON.parse(invoice.additionalTaxes) 
+              : invoice.additionalTaxes;
+              
             for (const tax of taxes) {
-              if (tax && tax.name === 'IRPF') {
+              if (tax.name === 'IRPF') {
                 const subtotal = parseFloat(invoice.subtotal || '0');
                 if (tax.isPercentage) {
                   irpfRetenidoIngresos += (Math.abs(tax.amount) * subtotal) / 100;
