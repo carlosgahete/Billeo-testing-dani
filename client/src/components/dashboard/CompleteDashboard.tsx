@@ -244,7 +244,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="md:flex hidden items-center">
             <BarChart3 className="h-6 w-6 text-primary mr-3" />
           </div>
-          <h1 className="section-title text-sm md:text-lg font-medium hidden md:block">Dashboard</h1>
+          <h1 className="section-title text-sm md:text-lg font-medium hidden md:block mt-1">Dashboard</h1>
         </div>
         
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-0">
