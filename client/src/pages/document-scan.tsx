@@ -61,6 +61,7 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 // Tipo para categorías
 interface Category {
   id: number;
+  userId: number;
   name: string;
   type: "income" | "expense";
   color: string;
@@ -360,7 +361,7 @@ const DocumentScanPage = () => {
     const previousTransaction = {...transaction};
     
     // Actualizar localmente primero para mantener la UI responsive
-    setTransaction(prev => ({
+    setTransaction((prev: any) => ({
       ...prev,
       categoryId: numericCategoryId
     }));
