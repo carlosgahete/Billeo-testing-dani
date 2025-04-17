@@ -4168,8 +4168,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("IVA soportado usado:", ivaSoportado);
       
       // Asegurarse de que los valores son números válidos para evitar errores
-      const ivaRepercutidoSafe = isNaN(ivaRepercutido) ? 0 : ivaRepercutido;
-      const ivaSoportadoSafe = isNaN(ivaSoportado) ? 0 : ivaSoportado;
+      let ivaRepercutidoSafe = 0;
+      let ivaSoportadoSafe = 0;
+      
+      if (typeof ivaRepercutido === 'number' && !isNaN(ivaRepercutido)) {
+        ivaRepercutidoSafe = ivaRepercutido;
+      }
+      
+      if (typeof ivaSoportado === 'number' && !isNaN(ivaSoportado)) {
+        ivaSoportadoSafe = ivaSoportado;
+      }
+      
+      console.log("ivaRepercutidoSafe:", ivaRepercutidoSafe);
+      console.log("ivaSoportadoSafe:", ivaSoportadoSafe);
       
       // Asegurarse de que siempre usamos el IVA soportado real si está disponible
       // y nunca el estimado, ya que es más preciso
@@ -4191,7 +4202,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
       // Usamos los valores seguros para evitar NaN
-      const vatBalance = Math.round((ivaRepercutidoSafe - ivaSoportadoSafe) * 100) / 100;
+      let vatBalance = 0;
+      
+      try {
+        // Verificar que los valores son números válidos antes de calcular
+        if (typeof ivaRepercutidoSafe === 'number' && typeof ivaSoportadoSafe === 'number') {
+          vatBalance = Math.round((ivaRepercutidoSafe - ivaSoportadoSafe) * 100) / 100;
+          console.log(`Cálculo de IVA a liquidar: ${ivaRepercutidoSafe} - ${ivaSoportadoSafe} = ${vatBalance}`);
+        } else {
+          console.error("Error en cálculo de vatBalance: valores no numéricos:", { ivaRepercutidoSafe, ivaSoportadoSafe });
+        }
+      } catch (error) {
+        console.error("Error al calcular vatBalance:", error);
+      }
       
       // Cálculo del IRPF según el sistema español para autónomos
       // El IRPF se calcula como un % (15-20%) sobre el beneficio (ingresos - gastos)
@@ -4458,13 +4481,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("IRPF a pagar:", incomeTax);
       
       // Debug: Objeto completo para ver qué estructura está enviándose al frontend
+      // Primero verificamos que todas las variables son números válidos
+      let ivaRepercutidoFinal = typeof ivaRepercutidoSafe === 'number' ? ivaRepercutidoSafe : 0;
+      let ivaSoportadoFinal = typeof ivaSoportadoSafe === 'number' ? ivaSoportadoSafe : 0;
+      let vatBalanceFinal = typeof vatBalance === 'number' ? vatBalance : 0;
+      let irpfRetenidoFinal = typeof irpfRetenidoIngresos === 'number' ? irpfRetenidoIngresos : 0;
+      let irpfTotalFinal = typeof irpfTotalEstimated === 'number' ? irpfTotalEstimated : 0;
+      let incomeTaxFinal = typeof incomeTax === 'number' ? incomeTax : 0;
+      
+      console.log("VALORES FINALES CONVERTIDOS Y SEGUROS:");
+      console.log("ivaRepercutidoFinal:", ivaRepercutidoFinal, "tipo:", typeof ivaRepercutidoFinal);
+      console.log("ivaSoportadoFinal:", ivaSoportadoFinal, "tipo:", typeof ivaSoportadoFinal);
+      console.log("vatBalanceFinal:", vatBalanceFinal, "tipo:", typeof vatBalanceFinal);
+      
+      // Construimos el objeto con valores seguros
       const taxStats = {
-        ivaRepercutido: ivaRepercutidoSafe,
-        ivaSoportado: ivaSoportadoSafe,
-        ivaLiquidar: vatBalance,
-        irpfRetenido: irpfRetenidoIngresos,
-        irpfTotal: irpfTotalEstimated,
-        irpfPagar: incomeTax
+        ivaRepercutido: ivaRepercutidoFinal,
+        ivaSoportado: ivaSoportadoFinal,
+        ivaLiquidar: vatBalanceFinal,
+        irpfRetenido: irpfRetenidoFinal,
+        irpfTotal: irpfTotalFinal,
+        irpfPagar: incomeTaxFinal
       };
       console.log("OBJETO COMPLETO TAXSTATS:", JSON.stringify(taxStats, null, 2));
       
@@ -4601,9 +4638,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Estructura simplificada para impuestos
         taxes: {
-          vat: vatBalance,
-          incomeTax,
-          ivaALiquidar: ivaRepercutidoSafe - ivaSoportadoSafe
+          vat: vatBalanceFinal,
+          incomeTax: incomeTaxFinal,
+          ivaALiquidar: vatBalanceFinal // Usar el valor seguro de vatBalanceFinal
         },
         
         // Datos fiscales estructurados completos (para componentes avanzados)
