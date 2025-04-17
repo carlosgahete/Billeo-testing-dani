@@ -1230,20 +1230,8 @@ export default function LibroRegistrosPage() {
     }
   };
   
-  // Renderizar componente de carga
-  if (loading) {
-    return (
-      <div className="container mx-auto py-6">
-        <PageHeader
-          title="Libro de Registros"
-          description="Consulta y exporta tu actividad financiera"
-        />
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+  // No mostrar pantalla de carga separada para evitar parpadeo y redirección
+  // Los datos se cargarán progresivamente conforme estén disponibles
   
   // Renderizar mensaje de error
   if (error) {
@@ -1289,7 +1277,9 @@ export default function LibroRegistrosPage() {
     );
   }
   
-  // Si no hay datos después de cargar
+  // Comentado para evitar pantalla separada que parpadea durante la carga
+  // Mostraremos la interfaz principal siempre, y los datos se cargarán cuando estén disponibles
+  /*
   if (!data || !summary) {
     return (
       <div className="container mx-auto py-6">
@@ -1299,32 +1289,42 @@ export default function LibroRegistrosPage() {
         />
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="text-center p-8">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay datos disponibles</h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4">
-                  No se encontraron registros financieros para mostrar en el período seleccionado. 
-                  Por favor, verifica la conexión o selecciona otro período.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => refetchLibroRegistros()}
-                  className="bg-white hover:bg-gray-100"
-                >
-                  <RefreshCcw className="mr-2 h-4 w-4" /> Reintentar
-                </Button>
-              </div>
+            <div className="text-center p-4">
+              <RefreshCcw className="mx-auto h-8 w-8 text-blue-500 mb-2 animate-spin" />
+              <p className="text-gray-500 dark:text-gray-400">
+                Cargando datos...
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
     );
   }
+  */
   
-  // Renderizar componente principal
+  // Inicializar valores predeterminados en caso de que los datos no estén disponibles aún
+  const displaySummary = summary || {
+    totalInvoices: 0,
+    totalTransactions: 0,
+    totalQuotes: 0,
+    incomeTotal: 0,
+    expenseTotal: 0,
+    balance: 0
+  };
+  
+  const displayInvoices = filteredInvoices || [];
+  const displayTransactions = filteredTransactions || [];
+  const displayQuotes = filteredQuotes || [];
+  
+  // Renderizar componente principal - sin pantalla de carga separada
   return (
     <div className="container mx-auto py-6 px-4 max-w-7xl bg-gradient-to-b from-gray-50 to-white dark:bg-gray-900/10 min-h-screen">      
+      {/* Cabecera */}
+      <PageHeader
+        title="Libro de Registros"
+        description="Consulta y exporta tu actividad financiera"
+      />
+      
       {/* Filtros y botones de exportación */}
       <div className="flex flex-wrap items-center justify-between mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
         <div className="flex flex-wrap gap-4 items-center">
