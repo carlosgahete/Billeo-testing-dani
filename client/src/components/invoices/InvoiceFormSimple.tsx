@@ -298,15 +298,24 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     const { items = [], additionalTaxes = [] } = form.getValues();
     
+    // Asegurarnos que los valores son numéricos
+    let processedItems = (items || []).map((item: any) => ({
+      ...item,
+      quantity: parseFloat(item.quantity) || 0,
+      unitPrice: parseFloat(item.unitPrice) || 0,
+      taxRate: parseFloat(item.taxRate) || 0,
+      subtotal: parseFloat(item.subtotal) || 0
+    }));
+    
     // Calculamos subtotal de la factura (suma de todos los subtotales de items)
-    const subtotal = (items || []).reduce(
-      (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
+    const subtotal = processedItems.reduce(
+      (sum: number, item: any) => sum + parseFloat(item.subtotal || 0),
       0
     );
     
     // Calculamos IVA basado en la tasa de cada item
-    const tax = (items || []).reduce((sum: number, item: any) => {
-      const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
+    const tax = processedItems.reduce((sum: number, item: any) => {
+      const itemTax = parseFloat(item.subtotal || 0) * (parseFloat(item.taxRate || 0) / 100);
       return sum + itemTax;
     }, 0);
     
@@ -314,10 +323,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     let additionalTaxesTotal = 0;
     (additionalTaxes || []).forEach((taxItem: any) => {
       if (taxItem.isPercentage) {
-        const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
+        const percentageTax = subtotal * (parseFloat(taxItem.amount || 0) / 100);
         additionalTaxesTotal += percentageTax;
       } else {
-        additionalTaxesTotal += toNumber(taxItem.amount, 0);
+        additionalTaxesTotal += parseFloat(taxItem.amount || 0);
       }
     });
     
@@ -345,8 +354,20 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     calculateTotals();
   }, [formValues]);
   
+  // Usar useEffect para forzar redibujado con el estado local
+  useEffect(() => {
+    const totals = calculateTotals();
+    console.log("📊 Totales actualizados:", totals);
+    
+    setCalculatedTotalSnapshot({
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      total: totals.total
+    });
+  }, [formValues]);
+  
   // También memorizamos los totales para uso en renderizado
-  const calculatedTotals = useMemo(calculateTotals, [formValues]);
+  const calculatedTotals = useMemo(calculateTotals, [formValues, calculatedTotalSnapshot]);
 
   // =============== MANEJADORES DE EVENTOS =================
   
@@ -395,32 +416,37 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const value = parseFloat(e.target.value) || 0;
       
       // Actualizar el campo
-      field.onChange(value);
+      field.onChange(value.toString());
       
-      // Actualizar los subtotales inmediatamente
-      if (fieldName === 'quantity' || fieldName === 'unitPrice' || fieldName === 'taxRate') {
-        setTimeout(() => {
-          const items = form.getValues().items || [];
-          if (items[index]) {
-            const quantity = toNumber(items[index].quantity, 0);
-            const unitPrice = toNumber(items[index].unitPrice, 0);
-            const subtotal = quantity * unitPrice;
-            
-            // Actualizar el subtotal directamente
-            form.setValue(`items.${index}.subtotal`, subtotal);
-            
-            // Recalcular totales
-            const totals = calculateTotals();
-            
-            // Actualizar el snapshot para forzar renderizado
-            setCalculatedTotalSnapshot({
-              subtotal: totals.subtotal,
-              tax: totals.tax,
-              total: totals.total
-            });
-          }
-        }, 0);
-      }
+      // Actualizar todos los valores inmediatamente
+      console.log(`🔄 Campo actualizado: ${fieldName} = ${value}`);
+      
+      // Usar requestAnimationFrame para asegurar que se ejecuta en el próximo ciclo de renderizado
+      requestAnimationFrame(() => {
+        const items = form.getValues().items || [];
+        
+        // Actualizar el subtotal del item directamente
+        if (items[index] && (fieldName === 'quantity' || fieldName === 'unitPrice')) {
+          const quantity = parseFloat(items[index].quantity) || 0;
+          const unitPrice = parseFloat(items[index].unitPrice) || 0;
+          const subtotal = quantity * unitPrice;
+          console.log(`📝 Subtotal calculado: ${quantity} x ${unitPrice} = ${subtotal}`);
+          
+          // Actualizar el subtotal directamente
+          form.setValue(`items.${index}.subtotal`, subtotal);
+        }
+        
+        // Forzar un recálculo completo y actualizar el snapshot
+        const totals = calculateTotals();
+        console.log(`📊 Totales recalculados:`, totals);
+        
+        // Actualizar el snapshot para forzar renderizado
+        setCalculatedTotalSnapshot({
+          subtotal: totals.subtotal,
+          tax: totals.tax,
+          total: totals.total
+        });
+      });
     };
   };
   
