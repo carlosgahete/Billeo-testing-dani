@@ -1011,7 +1011,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                                 const category = categories?.find(c => c.id === (expense.categoryId || 0));
                                 
                                 // Llamar a la función para ver el archivo
-                                viewExpenseOriginal(attachment, expense, category);
+                                viewExpenseOriginal(attachment, {...expense, type: 'expense' as const, categoryId: expense.categoryId as number}, category);
                               });
                             }}
                           >
@@ -1045,7 +1045,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                                 const category = categories?.find(c => c.id === (expense.categoryId || 0));
                                 
                                 // Llamar a la función para descargar el archivo
-                                downloadExpenseOriginal(attachment, expense, category);
+                                downloadExpenseOriginal(attachment, {...expense, type: 'expense' as const, categoryId: expense.categoryId as number}, category);
                               });
                             }}
                           >
