@@ -1551,7 +1551,7 @@ export default function LibroRegistrosPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Gastos y transacciones</h3>
-          <div className="text-sm text-gray-500">{filteredTransactions.length} registros</div>
+          <div className="text-sm text-gray-500">{displayTransactions.length} registros</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
@@ -1566,14 +1566,14 @@ export default function LibroRegistrosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.length === 0 ? (
+                {displayTransactions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-6 text-gray-400">
                       No hay transacciones en este período
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((transaction, index) => (
+                  displayTransactions.map((transaction, index) => (
                     <TableRow 
                       key={transaction.id} 
                       className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
@@ -1602,7 +1602,7 @@ export default function LibroRegistrosPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Presupuestos</h3>
-          <div className="text-sm text-gray-500">{filteredQuotes.length} registros</div>
+          <div className="text-sm text-gray-500">{displayQuotes.length} registros</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
@@ -1617,14 +1617,14 @@ export default function LibroRegistrosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredQuotes.length === 0 ? (
+                {displayQuotes.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-6 text-gray-400">
                       No hay presupuestos en este período
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredQuotes.map((quote, index) => (
+                  displayQuotes.map((quote, index) => (
                     <TableRow 
                       key={quote.id} 
                       className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
