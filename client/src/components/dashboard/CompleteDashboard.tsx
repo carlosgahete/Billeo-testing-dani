@@ -199,12 +199,33 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Datos para el gráfico de comparativa financiera
   const financialComparisonData = prepareFinancialComparisonData();
   
-  // Verificar si hay un error de autenticación
-  if (error && error instanceof Error && error.message === 'AUTHENTICATION_ERROR') {
-    return <AuthenticationStatus 
-      statusTitle="Sesión Expirada" 
-      statusDescription="Tu sesión ha expirado o no tienes acceso a esta sección."
-    />;
+  // Verificar si hay algún tipo de error
+  if (error) {
+    console.error("Error en dashboard:", error);
+    
+    // Caso 1: Error de autenticación (401)
+    if (error instanceof Error && error.message === 'AUTHENTICATION_ERROR') {
+      return <AuthenticationStatus 
+        statusTitle="Sesión Expirada" 
+        statusDescription="Tu sesión ha expirado o no tienes acceso a esta sección."
+      />;
+    }
+    
+    // Caso 2: Error del servidor (500 u otros)
+    return <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] px-4 text-center">
+      <div className="bg-red-100 border border-red-300 rounded-lg p-6 max-w-lg">
+        <h2 className="text-xl font-semibold text-red-800 mb-2">Error al cargar datos</h2>
+        <p className="text-gray-700 mb-4">
+          Ha ocurrido un error al cargar los datos del dashboard. Este problema está siendo revisado por nuestro equipo.
+        </p>
+        <Button 
+          onClick={() => refetch()} 
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          Intentar nuevamente
+        </Button>
+      </div>
+    </div>;
   }
   
   if (isLoading) {
