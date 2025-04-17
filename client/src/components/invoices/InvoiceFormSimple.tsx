@@ -1251,21 +1251,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       </Dialog>
 
       {/* Modal de cliente */}
-      <Dialog open={showClientForm} onOpenChange={handleClientModalClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{clientToEdit ? "Editar cliente" : "Nuevo cliente"}</DialogTitle>
-            <DialogDescription>
-              {clientToEdit ? "Modifica los datos del cliente seleccionado." : "Introduce los datos del nuevo cliente."}
-            </DialogDescription>
-          </DialogHeader>
-          <ClientForm 
-            client={clientToEdit} 
-            onCreated={handleClientCreated}
-            onCancel={() => setShowClientForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <ClientForm 
+        open={showClientForm}
+        onOpenChange={handleClientModalClose}
+        onClientCreated={handleClientCreated}
+        clientToEdit={clientToEdit}
+      />
     </>
   );
 };
