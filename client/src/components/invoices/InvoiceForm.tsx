@@ -372,7 +372,16 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   };
   
   // Inicializa el formulario con los datos
+  // Hacemos un nuevo enfoque: solo inicializamos los datos una vez al principio
+  // y no actualizamos el formulario cuando los datos cambian para evitar bucles de renderizado
+  const hasInitializedRef = useRef(false);
+  
   useEffect(() => {
+    // Si ya inicializamos el formulario, no lo hacemos de nuevo
+    if (hasInitializedRef.current) {
+      return;
+    }
+    
     // Si estamos en modo edición y tenemos datos
     if (isEditMode) {
       let dataSource = null;
@@ -419,22 +428,19 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           items: `${processedItems.length} items`
         });
         
-        // Actualizar el formulario con los datos formateados - SOLO UNA VEZ
-        // Este es un cambio importante: sólo hacemos form.reset si dataSource ha cambiado
-        // para evitar renders infinitos
-        const resetForm = () => {
-          form.reset(formattedInvoice);
-          
-          // Si hay archivos adjuntos, actualizamos el estado
-          if (invoice.attachments) {
-            setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
-          }
-        };
+        // Solo reseteamos el formulario si los datos han cambiado
+        form.reset(formattedInvoice);
         
-        resetForm();
+        // Si hay archivos adjuntos, actualizamos el estado
+        if (invoice.attachments) {
+          setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+        }
+        
+        // Marcamos que ya inicializamos el formulario para no hacerlo de nuevo
+        hasInitializedRef.current = true;
       }
     }
-  }, [invoiceData, initialData, isEditMode]); // Quitamos 'form' y 'calculateInvoiceTotals' de las dependencias
+  }, [invoiceData, initialData, isEditMode]); // No incluimos form en las dependencias
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
