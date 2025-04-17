@@ -220,7 +220,9 @@ export default function LibroRegistrosPage() {
     staleTime: 30000 // Comprobar cada 30 segundos
   });
 
-  // Verificar la autenticación periódicamente para detectar expiración de sesión
+  // Verificación de autenticación periódica - desactivada para solucionar mensajes de "sesión expirada"
+  // Nota: La autenticación ya está manejada por el hook useAuth y los Guards de ruta
+  /*
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
@@ -229,16 +231,7 @@ export default function LibroRegistrosPage() {
         });
         
         if (!response.ok) {
-          toast({
-            title: "Sesión expirada",
-            description: "Tu sesión ha expirado, presiona aquí para iniciar sesión de nuevo",
-            variant: "destructive",
-            action: (
-              <Button variant="secondary" size="sm" onClick={() => setLocation("/auth")}>
-                Iniciar sesión
-              </Button>
-            )
-          });
+          console.log("Verificación de sesión: No autenticado");
           return false;
         }
         
@@ -250,33 +243,28 @@ export default function LibroRegistrosPage() {
       }
     };
     
-    // Verificar autenticación cada 5 minutos
+    // Verificar autenticación cada 10 minutos (tiempo más largo)
     const interval = setInterval(() => {
       checkAuthentication();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
     
     // Limpiar intervalo al desmontar
     return () => clearInterval(interval);
-  }, [toast, setLocation]);
+  }, []);
+  */
 
   // Función para cargar datos del libro de registros usando React Query
   const { refetch: refetchLibroRegistros } = useQuery({
     queryKey: [`libro-registros-${selectedUserId || (user?.id?.toString() || '')}-${selectedYear}-${selectedQuarter}-${selectedMonth}`],
     queryFn: async () => {
-      // Validaciones previas
+      // Validaciones previas - Desactivada para evitar mensajes repetitivos de expiración de sesión
+      // La protección ya se maneja a nivel de ruta y con useAuth
+      /*
       if (!isUserAuthenticated.data) {
-        toast({
-          title: "Sesión expirada",
-          description: "Tu sesión ha expirado, presiona aquí para iniciar sesión",
-          variant: "destructive",
-          action: (
-            <Button variant="secondary" size="sm" onClick={() => setLocation("/auth")}>
-              Iniciar sesión
-            </Button>
-          )
-        });
+        console.log("Sesión no autenticada durante carga de datos");
         return null;
       }
+      */
       
       if (!user) {
         return null;
@@ -311,15 +299,12 @@ export default function LibroRegistrosPage() {
           }
         });
         
-        // Si el error es 401 (No autenticado), redirigir a /auth
+        // Si el error es 401 (No autenticado), redirigir a /auth silenciosamente
         if (response.status === 401) {
-          toast({
-            title: "Sesión expirada",
-            description: "Tu sesión ha expirado, serás redirigido a la página de login",
-            variant: "destructive"
-          });
-          setTimeout(() => setLocation("/auth"), 2000);
-          throw new Error("Sesión expirada");
+          console.log("Sesión expirada - redirigiendo silenciosamente");
+          // Redirigir sin mostrar toast para evitar duplicación de mensajes
+          setTimeout(() => setLocation("/auth"), 1000);
+          throw new Error("Redirigiendo a autenticación");
         }
         
         if (!response.ok) {
