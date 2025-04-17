@@ -3,6 +3,12 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
+// Importar utilidades de corrección para fechas pasadas (especialmente marzo)
+import { 
+  forceUpdateAllValues, 
+  isPastDateInvoice,
+  withCorrectCalculation
+} from "./invoice-calculation-fix";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -486,6 +492,55 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           total: totals.total
         });
       }, 10); // Un pequeño retraso para asegurar que React haya actualizado el estado
+    };
+  };
+  
+  // NUEVO: Función específica para manejar cambios de fecha
+  const handleDateChange = (field: any, dateType: string) => {
+    return (date: Date | undefined) => {
+      if (!date) return;
+      
+      // Formatear la fecha y actualizar el campo
+      const formattedDate = format(date, "yyyy-MM-dd");
+      console.log(`🗓️ ${dateType} cambiada a ${formattedDate}`);
+      
+      // Actualizar el campo
+      field.onChange(formattedDate);
+      
+      // Verificar si la fecha es de marzo (mes 2 en JavaScript, que empieza en 0)
+      const isMarzo = date.getMonth() === 2;
+      if (isMarzo) {
+        console.log("⚠️ FECHA DE MARZO DETECTADA - Aplicando actualización forzada");
+      }
+      
+      // Forzar recálculo de totales después de cambiar la fecha
+      // Especialmente importante para fechas en marzo
+      setTimeout(() => {
+        try {
+          // Primero actualizar los subtotales
+          updateItemSubtotals();
+          
+          // Luego calcular totales generales
+          const totals = calculateTotals();
+          console.log(`📊 Totales recalculados después de cambio de fecha:`, totals);
+          
+          // Actualizar snapshot para forzar renderizado
+          setCalculatedTotalSnapshot({
+            subtotal: totals.subtotal,
+            tax: totals.tax,
+            total: totals.total
+          });
+          
+          // Doble verificación para fechas de marzo
+          if (isMarzo) {
+            console.log("🔍 Verificando de nuevo debido a fecha de marzo");
+            // Un segundo retardo para asegurar que todo está actualizado
+            setTimeout(() => calculateTotals(), 50);
+          }
+        } catch (error) {
+          console.error("Error al recalcular después de cambio de fecha:", error);
+        }
+      }, 20);
     };
   };
   
