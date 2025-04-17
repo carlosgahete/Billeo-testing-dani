@@ -1151,7 +1151,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           const taxItem = form.getValues(`additionalTaxes.${index}`);
                           const isPercentage = taxItem?.isPercentage;
                           const amount = toNumber(taxItem?.amount, 0);
-                          const subtotal = calculatedTotals.subtotal;
+                          const subtotal = calculatedTotalSnapshot.subtotal || calculatedTotals.subtotal;
                           const taxValue = isPercentage ? (amount * subtotal / 100) : amount;
                           const sign = amount < 0 ? "-" : "+";
                           
@@ -1201,11 +1201,11 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     <div className="space-y-2">
                       <div className="flex justify-between pb-1 border-b border-dashed border-gray-200">
                         <span className="text-sm text-gray-600">Subtotal:</span>
-                        <span className="font-medium">{calculatedTotals.subtotal.toFixed(2)}€</span>
+                        <span className="font-medium">{(calculatedTotalSnapshot.subtotal || calculatedTotals.subtotal).toFixed(2)}€</span>
                       </div>
                       <div className="flex justify-between pb-1 border-b border-dashed border-gray-200">
                         <span className="text-sm text-gray-600">IVA ({fields.length > 0 ? 'según productos' : '0%'}):</span>
-                        <span className="font-medium">{calculatedTotals.tax.toFixed(2)}€</span>
+                        <span className="font-medium">{(calculatedTotalSnapshot.tax || calculatedTotals.tax).toFixed(2)}€</span>
                       </div>
                       {taxFields.length > 0 && taxFields.map((field, index) => {
                         const taxItem = form.getValues(`additionalTaxes.${index}`);
@@ -1213,7 +1213,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         
                         const isPercentage = taxItem.isPercentage;
                         const amount = toNumber(taxItem.amount, 0);
-                        const subtotal = calculatedTotals.subtotal;
+                        const subtotal = calculatedTotalSnapshot.subtotal || calculatedTotals.subtotal;
                         const taxValue = isPercentage ? (amount * subtotal / 100) : amount;
                         const sign = amount < 0 ? "-" : "+";
                         
@@ -1233,7 +1233,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-blue-900">Total:</span>
-                      <span className="text-xl font-bold text-blue-900">{calculatedTotals.total.toFixed(2)}€</span>
+                      <span className="text-xl font-bold text-blue-900">{(calculatedTotalSnapshot.total || calculatedTotals.total).toFixed(2)}€</span>
                     </div>
                     {form.getValues("status") === "paid" && (
                       <div className="mt-3 p-2 bg-green-100 rounded-md text-sm text-green-800 flex items-center">
