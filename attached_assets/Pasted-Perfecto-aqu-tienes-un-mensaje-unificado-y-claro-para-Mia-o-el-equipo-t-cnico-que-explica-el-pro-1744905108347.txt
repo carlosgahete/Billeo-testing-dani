@@ -1,0 +1,65 @@
+Perfecto, aquí tienes un mensaje unificado y claro para Mia (o el equipo técnico) que explica el problema, el ejemplo real y lo que se debe corregir, todo en un solo texto:
+
+⸻
+
+Hola Mia,
+
+Te explico con detalle un error que está ocurriendo en el cálculo de los gastos en el dashboard y cómo debe corregirse. Este punto es clave para asegurar que los datos que mostramos al usuario sean coherentes, reales y fieles a la información que él mismo introduce.
+
+⸻
+
+1. Solo deben usarse los datos proporcionados por el cliente
+
+Los únicos datos válidos para el cálculo de los gastos son los que el cliente:
+	•	Introduce manualmente,
+	•	O que se extraen correctamente del OCR (imagen o PDF).
+
+El sistema no debe recalcular, alterar ni reinterpretar la base imponible, el IVA o el IRPF si ya vienen definidos por el cliente.
+
+⸻
+
+2. Ejemplo real donde el dashboard falla
+
+El cliente ha subido una factura con los siguientes valores reales:
+	•	Base imponible: 500€
+	•	IVA: 21%
+	•	IRPF: -15%
+
+El sistema debería calcular:
+	•	IVA soportado: 500 × 0.21 = 105€
+	•	IRPF retenido: 500 × 0.15 = 75€
+	•	Total con IVA: 500 + 105 = 605€
+	•	Total pagado real (con IRPF): 605 - 75 = 530€
+
+Sin embargo, el dashboard muestra:
+	•	Base imponible: 481,82€
+	•	IVA soportado: 101,18€
+	•	Total con IVA: 583€
+
+Esto es incorrecto, porque está claro que el sistema ha recalculado los valores hacia atrás desde un total estimado (por ejemplo, dividiendo 583 / 1.21), en lugar de respetar los valores introducidos.
+
+⸻
+
+3. Qué debe corregirse
+	•	Nunca recalcular la base imponible.
+Si el usuario introdujo 500€, el dashboard debe mostrar 500€, no 481,82€.
+	•	IVA e IRPF deben calcularse sobre esa base, no sobre una inferida.
+	•	Solo usar valores estimados (predeterminados) si no hay datos reales, y deben estar claramente marcados como tales.
+	•	Actualizar en tiempo real el dashboard cada vez que el cliente edite o suba un documento nuevo.
+
+⸻
+
+4. Objetivo de esta corrección
+
+Evitar que el sistema “invente” cifras a partir de un total mal entendido, y mostrar siempre lo que el cliente ha introducido o validado. Esto mejora:
+	•	La precisión del dashboard.
+	•	La confianza del usuario en los datos.
+	•	Y previene errores en la contabilidad trimestral.
+
+Gracias por revisar este punto y ajustar el sistema para que siempre respete los datos reales.
+
+—Daniel
+
+⸻
+
+¿Quieres que lo formatee también como mensaje de GitHub, Jira o Slack para que lo puedas pegar directo como incidencia?
