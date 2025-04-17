@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Receipt, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import InvoiceForm from "@/components/invoices/InvoiceForm";
+import InvoiceFormSimple from "@/components/invoices/InvoiceFormSimple";
 import SimpleMobileInvoiceForm from "@/components/invoices/SimpleMobileInvoiceForm";
 
 // Página específica para editar facturas con manejo de errores mejorado
@@ -198,7 +198,7 @@ export default function EditInvoicePage() {
             initialData={invoiceData} 
           />
         ) : (
-          <InvoiceForm 
+          <InvoiceFormSimple 
             key={`desktop-invoice-form-${invoiceId}`}
             invoiceId={invoiceId} 
             initialData={invoiceData} 
