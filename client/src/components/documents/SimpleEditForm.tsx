@@ -357,9 +357,15 @@ Proveedor: ${formData.provider || ""}`
         <Input
           id="transaction-description"
           ref={descriptionRef}
-          // Eliminamos el defaultValue para evitar valores por defecto
           className="w-full h-9"
           placeholder="Añade una descripción para este gasto"
+          onChange={(e) => {
+            // Actualizar el estado al cambiar el valor
+            setFormValues(prev => ({
+              ...prev,
+              description: e.target.value
+            }));
+          }}
         />
       </div>
       
@@ -479,6 +485,13 @@ Proveedor: ${formData.provider || ""}`
             id="transaction-provider"
             ref={providerRef}
             className="w-full h-9"
+            onChange={(e) => {
+              // Actualizar el estado al cambiar el valor
+              setFormValues(prev => ({
+                ...prev,
+                provider: e.target.value
+              }));
+            }}
           />
         </div>
       </div>
