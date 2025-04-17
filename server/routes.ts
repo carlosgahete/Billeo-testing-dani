@@ -4061,49 +4061,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       irpfRetenidoIngresos = Math.round(irpfRetenidoIngresos * 100) / 100;
       
       // Función auxiliar para calcular base imponible e IVA correctamente
-      function calcularBaseEIVA(amount: number, tasaIVA: number, irpf = 0) {
-        // Si hay IRPF, la fórmula para despejar la base imponible desde el total es:
-        // base = (total * (1 + irpf/100)) / (1 + (iva/100) - (irpf/100))
-        // Si no hay IRPF, se usa la fórmula tradicional: base = total / (1 + iva/100)
-        
-        // Verificamos primero si hay IRPF
-        if (irpf !== 0) {
-          const factorIRPF = irpf / 100;
-          const factorIVA = tasaIVA / 100;
-          
-          // Usar la fórmula completa que considera IRPF e IVA
-          const baseImponible = (amount * (1 + factorIRPF)) / (1 + factorIVA - factorIRPF);
-          
-          // El IVA es un porcentaje de la base imponible
-          const iva = baseImponible * factorIVA;
-          
-          // El IRPF es un porcentaje de la base imponible
-          const irpfAmount = baseImponible * factorIRPF;
-          
-          console.log(`Cálculo con IRPF: Total=${amount}€, Base=${Number(baseImponible.toFixed(2))}€, IVA=${Number(iva.toFixed(2))}€, IRPF=${Number(irpfAmount.toFixed(2))}€`);
-          
-          return {
-            base: Number(baseImponible.toFixed(2)),
-            iva: Number(iva.toFixed(2)),
-            irpfAmount: Number(irpfAmount.toFixed(2))
-          };
-        } else {
-          // Convertir la tasa de IVA a un factor decimal
-          const factorIVA = tasaIVA / 100;
-          
-          // Calcular la base imponible usando la fórmula: base = total / (1 + tasa)
-          const base = amount / (1 + factorIVA);
-          
-          // Calcular el IVA como la diferencia entre el monto total y la base
-          const iva = amount - base;
-          
-          return {
-            base: Number(base.toFixed(2)),
-            iva: Number(iva.toFixed(2)),
-            irpfAmount: 0
-          };
-        }
-      }
+      // Importamos la función desde el módulo de utilidades
+      const { calcularBaseEIVA } = require('../utils/taxUtils');
       
       // Inicializamos la variable para acumular el IVA soportado real de las transacciones
       let ivaSoportadoReal = 0;
