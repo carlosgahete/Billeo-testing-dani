@@ -157,7 +157,7 @@ const CompanyForm = () => {
               <div className="rounded-full bg-blue-50 p-2">
                 <Building2 className="h-5 w-5 text-blue-500" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900">Información principal</h3>
+              <h3 className="text-lg font-medium text-gray-900">Datos empresariales</h3>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-start gap-6">
