@@ -131,7 +131,7 @@ export default function UsersManagement() {
           title: "Éxito",
           description: "Usuario eliminado correctamente",
         });
-        setUsers(users.filter(u => u.id !== userId));
+        setUsers(Array.isArray(users) ? users.filter(u => u.id !== userId) : []);
       } else {
         const errorData = await response.json();
         toast({
@@ -237,7 +237,7 @@ export default function UsersManagement() {
         if (response.ok) {
           const data = await response.json();
           // Actualizar la lista de usuarios
-          setUsers(users.map(u => u.id === userId ? data.user : u));
+          setUsers(Array.isArray(users) ? users.map(u => u.id === userId ? data.user : u) : [data.user]);
           toast({
             title: "Éxito",
             description: `Usuario promovido a superadmin correctamente`,
@@ -259,7 +259,7 @@ export default function UsersManagement() {
         
         if (response.ok) {
           const updatedUser = await response.json();
-          setUsers(users.map(u => u.id === userId ? updatedUser : u));
+          setUsers(Array.isArray(users) ? users.map(u => u.id === userId ? updatedUser : u) : [updatedUser]);
           toast({
             title: "Éxito",
             description: `Rol del usuario actualizado a ${newRole} correctamente`,
@@ -301,7 +301,7 @@ export default function UsersManagement() {
       
       if (response.ok) {
         const createdUser = await response.json();
-        setUsers([...users, createdUser]);
+        setUsers(Array.isArray(users) ? [...users, createdUser] : [createdUser]);
         toast({
           title: "Éxito",
           description: "Usuario creado correctamente",
