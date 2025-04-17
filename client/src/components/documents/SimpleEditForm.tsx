@@ -40,6 +40,17 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   
+  // Usar estado para guardar los valores del formulario
+  const [formValues, setFormValues] = useState({
+    amount: '',
+    baseAmount: '',
+    tax: '',
+    irpf: '',
+    date: '',
+    provider: '',
+    description: ''
+  });
+  
   // Referencias directas a los campos del formulario (no controlados)
   const amountRef = useRef<HTMLInputElement>(null);
   const baseAmountRef = useRef<HTMLInputElement>(null);
@@ -53,15 +64,6 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
   
   // Inicializar los valores una sola vez al montar
   useEffect(() => {
-    // Limpiar todos los campos primero para evitar valores por defecto no deseados
-    if (amountRef.current) amountRef.current.value = '';
-    if (baseAmountRef.current) baseAmountRef.current.value = '';
-    if (taxRef.current) taxRef.current.value = '';
-    if (irpfRef.current) irpfRef.current.value = '';
-    if (dateRef.current) dateRef.current.value = '';
-    if (providerRef.current) providerRef.current.value = '';
-    if (descriptionRef.current) descriptionRef.current.value = '';
-    
     // Verificar primero si hay datos válidos antes de mostrar cualquier valor
     const hasTransactionData = transaction && Object.keys(transaction).length > 0 && transaction.id;
     const hasExtractedData = extractedData && Object.keys(extractedData).length > 0;
@@ -73,66 +75,84 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
       extractedData
     });
     
-    // Solo mostrar valores cuando hay datos reales extraídos del documento
+    // Solo actualizar el estado cuando hay datos reales extraídos del documento
     if (hasTransactionData && hasExtractedData) {
       console.log('Inicializando formulario con datos extraídos');
       
-      if (amountRef.current) {
-        // Solo establecer el valor si realmente existe un valor válido
-        const amountValue = transaction.amount?.toString();
-        if (amountValue && amountValue !== '0') {
-          amountRef.current.value = amountValue;
-          console.log('Estableciendo amount:', amountValue);
-        }
+      // Preparar nuevos valores para el estado
+      let newFormValues = {
+        amount: '',
+        baseAmount: '',
+        tax: '',
+        irpf: '',
+        date: '',
+        provider: '',
+        description: ''
+      };
+      
+      // Solo establecer el valor si realmente existe un valor válido
+      const amountValue = transaction.amount?.toString();
+      if (amountValue && amountValue !== '0') {
+        newFormValues.amount = amountValue;
+        console.log('Estableciendo amount:', amountValue);
       }
       
-      if (baseAmountRef.current) {
-        const baseValue = extractedData?.baseAmount?.toString();
-        if (baseValue && baseValue !== '0') {
-          baseAmountRef.current.value = baseValue;
-          console.log('Estableciendo baseAmount:', baseValue);
-        }
+      const baseValue = extractedData?.baseAmount?.toString();
+      if (baseValue && baseValue !== '0') {
+        newFormValues.baseAmount = baseValue;
+        console.log('Estableciendo baseAmount:', baseValue);
       }
       
-      if (taxRef.current) {
-        const taxValue = extractedData?.tax?.toString();
-        if (taxValue && taxValue !== '0') {
-          taxRef.current.value = taxValue;
-          console.log('Estableciendo tax:', taxValue);
-        }
+      const taxValue = extractedData?.tax?.toString();
+      if (taxValue && taxValue !== '0') {
+        newFormValues.tax = taxValue;
+        console.log('Estableciendo tax:', taxValue);
       }
       
-      if (irpfRef.current) {
-        const irpfValue = extractedData?.irpf?.toString();
-        if (irpfValue && irpfValue !== '0') {
-          irpfRef.current.value = irpfValue;
-          console.log('Estableciendo irpf:', irpfValue);
-        }
+      const irpfValue = extractedData?.irpf?.toString();
+      if (irpfValue && irpfValue !== '0') {
+        newFormValues.irpf = irpfValue;
+        console.log('Estableciendo irpf:', irpfValue);
       }
       
-      if (dateRef.current && transaction.date) {
+      if (transaction.date) {
         const dateValue = format(new Date(transaction.date), "yyyy-MM-dd");
-        dateRef.current.value = dateValue;
+        newFormValues.date = dateValue;
         console.log('Estableciendo date:', dateValue);
       }
       
-      if (providerRef.current && extractedData?.provider) {
-        providerRef.current.value = extractedData.provider;
+      if (extractedData?.provider) {
+        newFormValues.provider = extractedData.provider;
         console.log('Estableciendo provider:', extractedData.provider);
       }
       
-      if (descriptionRef.current && transaction.description) {
-        descriptionRef.current.value = transaction.description;
+      if (transaction.description) {
+        newFormValues.description = transaction.description;
         console.log('Estableciendo description:', transaction.description);
       }
       
-      // Mostrar los montos de impuestos iniciales solo si hay datos
-      updateTaxDisplay();
-      updateIrpfDisplay();
+      // Actualizar el estado con todos los valores nuevos
+      setFormValues(newFormValues);
     } else {
       console.log('No hay datos reales para mostrar - manteniendo campos vacíos');
     }
   }, [transaction, extractedData]);
+  
+  // Actualizar los campos del formulario cuando cambia el estado
+  useEffect(() => {
+    // Actualizar los campos del formulario con los valores del estado
+    if (amountRef.current) amountRef.current.value = formValues.amount;
+    if (baseAmountRef.current) baseAmountRef.current.value = formValues.baseAmount;
+    if (taxRef.current) taxRef.current.value = formValues.tax;
+    if (irpfRef.current) irpfRef.current.value = formValues.irpf;
+    if (dateRef.current) dateRef.current.value = formValues.date;
+    if (providerRef.current) providerRef.current.value = formValues.provider;
+    if (descriptionRef.current) descriptionRef.current.value = formValues.description;
+    
+    // Mostrar los montos de impuestos iniciales solo si hay datos
+    updateTaxDisplay();
+    updateIrpfDisplay();
+  }, [formValues]);
   
   // Funciones para actualizar los valores calculados
   const updateTaxDisplay = () => {
@@ -352,7 +372,13 @@ Proveedor: ${formData.provider || ""}`
             type="text"
             inputMode="decimal"
             className="w-full h-9"
-            onChange={() => {}} // Formulario no controlado
+            onChange={(e) => {
+              // Actualizar el estado al cambiar el valor
+              setFormValues(prev => ({
+                ...prev,
+                amount: e.target.value
+              }));
+            }}
           />
         </div>
         
@@ -364,7 +390,13 @@ Proveedor: ${formData.provider || ""}`
             type="text"
             inputMode="decimal"
             className="w-full h-9"
-            onChange={() => {
+            onChange={(e) => {
+              // Actualizar el estado al cambiar el valor
+              setFormValues(prev => ({
+                ...prev,
+                baseAmount: e.target.value
+              }));
+              
               updateTaxDisplay();
               updateIrpfDisplay();
               updateTotal();
@@ -383,7 +415,13 @@ Proveedor: ${formData.provider || ""}`
               type="text"
               inputMode="numeric"
               className="w-full h-9"
-              onChange={() => {
+              onChange={(e) => {
+                // Actualizar el estado al cambiar el valor
+                setFormValues(prev => ({
+                  ...prev,
+                  tax: e.target.value
+                }));
+                
                 updateTaxDisplay();
                 updateTotal();
               }}
@@ -401,7 +439,13 @@ Proveedor: ${formData.provider || ""}`
               type="text"
               inputMode="numeric"
               className="w-full h-9"
-              onChange={() => {
+              onChange={(e) => {
+                // Actualizar el estado al cambiar el valor
+                setFormValues(prev => ({
+                  ...prev,
+                  irpf: e.target.value
+                }));
+                
                 updateIrpfDisplay();
                 updateTotal();
               }}
@@ -419,6 +463,13 @@ Proveedor: ${formData.provider || ""}`
             ref={dateRef}
             type="date"
             className="w-full h-9"
+            onChange={(e) => {
+              // Actualizar el estado al cambiar el valor
+              setFormValues(prev => ({
+                ...prev,
+                date: e.target.value
+              }));
+            }}
           />
         </div>
         
@@ -440,19 +491,30 @@ Proveedor: ${formData.provider || ""}`
             onValueChange={(value) => {
               // Capturar todos los valores actuales del formulario
               const formData = {
-                amount: amountRef.current?.value,
-                baseAmount: baseAmountRef.current?.value,
-                tax: taxRef.current?.value,
-                irpf: irpfRef.current?.value,
-                date: dateRef.current?.value,
-                provider: providerRef.current?.value,
-                description: descriptionRef.current?.value,
+                amount: amountRef.current?.value || '',
+                baseAmount: baseAmountRef.current?.value || '',
+                tax: taxRef.current?.value || '',
+                irpf: irpfRef.current?.value || '',
+                date: dateRef.current?.value || '',
+                provider: providerRef.current?.value || '',
+                description: descriptionRef.current?.value || '',
                 // Guardar valores calculados (importante para el contexto)
-                taxAmount: taxAmountRef.current?.textContent,
-                irpfAmount: irpfAmountRef.current?.textContent
+                taxAmount: taxAmountRef.current?.textContent || '',
+                irpfAmount: irpfAmountRef.current?.textContent || ''
               };
               
               console.log("Guardando datos de formulario antes de cambiar categoría:", formData);
+              
+              // Actualizar el estado local para mantener los datos
+              setFormValues({
+                amount: formData.amount,
+                baseAmount: formData.baseAmount,
+                tax: formData.tax,
+                irpf: formData.irpf,
+                date: formData.date,
+                provider: formData.provider,
+                description: formData.description
+              });
               
               // Pasar los datos del formulario al actualizar la categoría
               onUpdateCategory(value, formData);
