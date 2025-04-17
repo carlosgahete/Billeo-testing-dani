@@ -53,15 +53,15 @@ export function useDashboardData() {
       // Verificar si es un error de autenticación
       if (error instanceof Error && error.message === 'AUTHENTICATION_ERROR') {
         toast({
-          title: 'Sesión no válida',
-          description: 'Debes iniciar sesión para acceder a los datos del dashboard.',
+          title: 'Sesión expirada',
+          description: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
           variant: 'destructive'
         });
         
         // Redirigir a la página de login después de un breve retraso
         setTimeout(() => {
           window.location.href = '/auth';
-        }, 2000);
+        }, 1500);
       } else {
         // Para otros tipos de errores
         toast({

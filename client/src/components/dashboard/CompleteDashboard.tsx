@@ -19,6 +19,7 @@ import {
 import ExpensesByCategoryApple from "./ExpensesByCategoryApple";
 import ExpensesByCategory from "./ExpensesByCategory";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 
 interface CompleteDashboardProps {
   className?: string;
@@ -32,7 +33,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const currentYearStr = new Date().getFullYear().toString();
   
   // Usamos el hook centralizado para obtener datos del dashboard
-  const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
+  const { data: dashboardData, isLoading, error, filters, refetch } = useDashboardData();
   
   // Estados locales para UI
   // Importante: Usamos directamente los filtros del hook global
@@ -197,6 +198,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
   // Datos para el gráfico de comparativa financiera
   const financialComparisonData = prepareFinancialComparisonData();
+  
+  // Verificar si hay un error de autenticación
+  if (error && error instanceof Error && error.message === 'AUTHENTICATION_ERROR') {
+    return <AuthenticationStatus 
+      statusTitle="Sesión Expirada" 
+      statusDescription="Tu sesión ha expirado o no tienes acceso a esta sección."
+    />;
+  }
   
   if (isLoading) {
     return (
