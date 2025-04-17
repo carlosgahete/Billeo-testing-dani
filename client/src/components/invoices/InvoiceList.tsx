@@ -284,15 +284,20 @@ const MarkAsPaidButton = ({
 
 const DeleteInvoiceDialog = ({ 
   invoiceId, 
-  invoiceNumber, 
+  invoiceNumber,
+  status, 
   onConfirm 
 }: { 
   invoiceId: number; 
-  invoiceNumber: string; 
-  onConfirm: () => void; 
+  invoiceNumber: string;
+  status: string; 
+  onConfirm: () => void | Promise<void>; 
 }) => {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
+  
+  // No permitir eliminar facturas con estado "paid" (cobradas)
+  const isPaid = status === 'paid';
 
   const handleDelete = async () => {
     setIsPending(true);
@@ -373,6 +378,30 @@ const DeleteInvoiceDialog = ({
     }
   };
 
+  // Si está pagada, mostrar un tooltip y deshabilitar el botón
+  if (isPaid) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-400" 
+              disabled
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>No se pueden eliminar facturas ya cobradas</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // Para facturas no pagadas, permitir eliminar normalmente
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -1600,6 +1629,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                       <DeleteInvoiceDialog
                         invoiceId={invoice.id}
                         invoiceNumber={invoice.invoiceNumber}
+                        status={invoice.status}
                         onConfirm={() => {
                           // Invalidar consultas después de eliminar
                           forceDataRefresh();
@@ -2012,6 +2042,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                               <DeleteInvoiceDialog
                                 invoiceId={invoice.id}
                                 invoiceNumber={invoice.invoiceNumber}
+                                status={invoice.status}
                                 onConfirm={() => queryClient.invalidateQueries({ queryKey: ["/api/invoices"] })}
                               />
                             </div>
