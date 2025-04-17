@@ -325,8 +325,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     };
   };
   
-  // Usamos useMemo para memorizar los totales calculados (solo se recalcula cuando form cambia)
-  const calculatedTotals = useMemo(calculateTotals, [form]);
+  // Usamos useMemo para memorizar los totales calculados
+  // Dependencias: form Y watch para detectar cualquier cambio en los campos del formulario
+  const formValues = form.watch();
+  const calculatedTotals = useMemo(calculateTotals, [formValues]);
 
   // =============== MANEJADORES DE EVENTOS =================
   
