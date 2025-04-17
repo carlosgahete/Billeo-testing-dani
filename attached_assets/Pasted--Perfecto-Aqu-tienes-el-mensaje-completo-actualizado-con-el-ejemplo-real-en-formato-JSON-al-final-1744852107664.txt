@@ -1,0 +1,99 @@
+¡Perfecto! Aquí tienes el mensaje completo actualizado, con el ejemplo real en formato JSON al final para facilitar el testeo y asegurar que el backend envíe los datos correctos al dashboard:
+
+⚠️ ERROR ACTUAL: El sistema está enviando mal la información de gastos al dashboard
+
+Cuando se suben facturas con IRPF, el sistema interpreta mal los valores y envía datos erróneos, especialmente en:
+	•	Base imponible
+	•	IVA soportado
+	•	Total con IVA
+
+Esto distorsiona los datos del dashboard y los cálculos fiscales.
+
+🧾 EJEMPLO DE FACTURA SUBIDA
+
+Factura real:
+
+Concepto	Valor
+Base imponible	100 €
+IVA 21%	21 €
+IRPF -15%	-15 €
+Total pagado	106 €
+
+❌ PROBLEMAS DETECTADOS
+	1.	Se está usando esta fórmula incorrecta:
+
+base = totalAmount / (1 + ivaRate / 100)
+
+⚠️ Esto da mal la base e IVA si el total ya tiene aplicada la retención de IRPF (como en la mayoría de facturas de proveedores).
+	2.	Se ignoran los valores explícitos de IVA e IRPF que vienen correctamente definidos en additionalTaxes.
+
+✅ SOLUCIÓN CORRECTA
+
+✅ Usar la fórmula adecuada cuando el total ya tiene IRPF aplicado
+
+	En la parte del código que revisa los additionalTaxes, necesitamos asegurarnos de que se utilice la siguiente fórmula:
+
+base = totalAmount - totalIVA + totalIRPF
+
+⚠️ Esta fórmula debe usarse solo cuando el totalAmount ya tiene aplicado el IRPF, como es el caso más común en facturas recibidas.
+
+🔍 Cálculo correcto de impuestos
+
+let totalIVA = 0;
+let totalIRPF = 0;
+
+for (const tax of additionalTaxes) {
+  if (tax.name === "IVA" && tax.value) totalIVA += tax.value;
+  if (tax.name === "IRPF" && tax.value) totalIRPF += tax.value;
+}
+
+const base = totalAmount - totalIVA + totalIRPF;
+
+📤 Valores correctos a enviar al dashboard
+
+Campo	Valor calculado
+expenses	base
+taxStats.ivaSoportado	totalIVA
+netExpenses	totalAmount
+taxStats.irpfRetenido	totalIRPF (si se usa)
+
+✅ Compatibilidad con facturas con múltiples tipos de IVA e IRPF
+
+El sistema debe contemplar que una factura puede tener líneas con:
+	•	Distintos tipos de IVA: 21%, 10%, 4%
+	•	IRPF parcial, nulo o en varias líneas
+
+Por tanto, es obligatorio sumar todos los valores de additionalTaxes agrupando por tipo.
+
+🧪 Casos de prueba
+
+Base	IVA (21%)	IRPF (15%)	Total pagado	Base calculada	IVA soportado
+100€	21€	-15€	106 €	✅ 100€	✅ 21€
+500€	105€	-75€	530 €	✅ 500€	✅ 105€
+1000€	210€	-150€	1060 €	✅ 1000€	✅ 210€
+
+🧾 Ejemplo real de JSON correcto que el backend debería enviar:
+
+{
+  "income": 0,
+  "expenses": 100,
+  "pendingInvoices": [],
+  "pendingCount": 0,
+  "taxStats": {
+    "ivaRepercutido": 0,
+    "ivaSoportado": 21,
+    "ivaLiquidar": -21,
+    "irpfRetenido": 15
+  },
+  "netIncome": 0,
+  "netExpenses": 106,
+  "netResult": -106
+}
+
+	Donde:
+		•	expenses = base = 106 - 21 + 15 = 100
+	•	ivaSoportado = 21
+	•	netExpenses = 106 (totalAmount pagado)
+	•	irpfRetenido = 15 (para modelos como el 111/190)
+
+¿Quieres que prepare también una validación automática en el frontend para asegurar que estos datos estén alineados al recibir la respuesta de la API?

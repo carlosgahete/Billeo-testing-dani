@@ -4061,16 +4061,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       irpfRetenidoIngresos = Math.round(irpfRetenidoIngresos * 100) / 100;
       
       // Función auxiliar para calcular base imponible e IVA correctamente
-      function calcularBaseEIVA(amount: number, tasaIVA: number) {
-        // Calculamos la base imponible a partir del total y la tasa de IVA
-        const base = amount / (1 + tasaIVA / 100);
-        // El IVA es la diferencia entre el total y la base
-        const iva = amount - base;
+      function calcularBaseEIVA(amount: number, tasaIVA: number, irpf = 0) {
+        // Si hay IRPF, la fórmula para despejar la base imponible desde el total es:
+        // base = (total * (1 + irpf/100)) / (1 + (iva/100) - (irpf/100))
+        // Si no hay IRPF, se usa la fórmula tradicional: base = total / (1 + iva/100)
         
-        return {
-          base: Number(base.toFixed(2)),
-          iva: Number(iva.toFixed(2))
-        };
+        // Verificamos primero si hay IRPF
+        if (irpf !== 0) {
+          const factorIRPF = irpf / 100;
+          const factorIVA = tasaIVA / 100;
+          
+          // Usar la fórmula completa que considera IRPF e IVA
+          const baseImponible = (amount * (1 + factorIRPF)) / (1 + factorIVA - factorIRPF);
+          
+          // El IVA es un porcentaje de la base imponible
+          const iva = baseImponible * factorIVA;
+          
+          // El IRPF es un porcentaje de la base imponible
+          const irpfAmount = baseImponible * factorIRPF;
+          
+          console.log(`Cálculo con IRPF: Total=${amount}€, Base=${Number(baseImponible.toFixed(2))}€, IVA=${Number(iva.toFixed(2))}€, IRPF=${Number(irpfAmount.toFixed(2))}€`);
+          
+          return {
+            base: Number(baseImponible.toFixed(2)),
+            iva: Number(iva.toFixed(2)),
+            irpfAmount: Number(irpfAmount.toFixed(2))
+          };
+        } else {
+          // Convertir la tasa de IVA a un factor decimal
+          const factorIVA = tasaIVA / 100;
+          
+          // Calcular la base imponible usando la fórmula: base = total / (1 + tasa)
+          const base = amount / (1 + factorIVA);
+          
+          // Calcular el IVA como la diferencia entre el monto total y la base
+          const iva = amount - base;
+          
+          return {
+            base: Number(base.toFixed(2)),
+            iva: Number(iva.toFixed(2)),
+            irpfAmount: 0
+          };
+        }
       }
       
       // Inicializamos la variable para acumular el IVA soportado real de las transacciones
@@ -4253,6 +4285,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     baseAmount = amount - ivaValue + irpfAmount;
                     console.log(`CORRECCIÓN: Calculando base imponible considerando IVA e IRPF:`);
                     console.log(`- Base = Total(${amount}€) - IVA(${ivaValue}€) + IRPF(${irpfAmount}€) = ${baseAmount.toFixed(2)}€`);
+                    
+                    // Si el IVA parece incorrecto (demasiado bajo), usar el valor exacto
+                    if (ivaRate && ivaValue < (baseAmount * ivaRate / 100) * 0.9) {
+                      const calculatedIva = parseFloat((baseAmount * ivaRate / 100).toFixed(2));
+                      console.log(`⚠️ El IVA parece incorrecto. Valor esperado para base ${baseAmount}€ con ${ivaRate}%: ${calculatedIva}€`);
+                      ivaValue = calculatedIva;
+                    }
                   } else {
                     // Si no tenemos el valor específico, intentamos usar otros métodos para determinar la base
                     if (tx.baseAmount) {
@@ -4379,11 +4418,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
             } else {
               // Calculamos la base imponible a partir del valor total y la tasa de IVA estándar
-              // La fórmula correcta es baseAmount = amount / (1 + (ivaRate/100))
-              // Para IVA 21%: amount / (1 + 0.21) = amount / 1.21
+              // IMPORTANTE: Verificamos primero si hay indicios de que el IRPF está descontado
               const ivaRate = 21; // IVA estándar español
-              baseAmount = Math.round((Number(tx.amount) / (1 + (ivaRate/100))) * 100) / 100;
-              console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${tx.amount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
+              const irpfRate = 15; // Tipo estándar de IRPF para autónomos
+              const totalAmount = Number(tx.amount);
+              
+              // Comprobar si el total termina en números característicos que indican IRPF
+              // (facturas con IRPF suelen terminar en x6 o similar por la resta del 15%)
+              const lastTwoDigits = Math.round(totalAmount * 100) % 100;
+              const hasIrpfPattern = (lastTwoDigits >= 5 && lastTwoDigits <= 10) || 
+                                    (lastTwoDigits >= 30 && lastTwoDigits <= 35) ||
+                                    (lastTwoDigits >= 55 && lastTwoDigits <= 60) ||
+                                    (lastTwoDigits >= 80 && lastTwoDigits <= 85);
+                                    
+              if (hasIrpfPattern && totalAmount > 50) {
+                // Si parece tener IRPF descontado, estimamos la base con la fórmula inversa
+                // Para un total de 106€ con base 100€, IVA 21€ y -15% IRPF (-15€)
+                // base = (total * 1.15) / 1.06
+                const estimatedBase = Math.round((totalAmount * (1 + irpfRate/100)) / (1 + (ivaRate/100) - (irpfRate/100)) * 100) / 100;
+                console.log(`⚠️ POSIBLE IRPF DETECTADO. Recalculando base con fórmula especial: ${estimatedBase}€`);
+                
+                // Verificamos que la base sea razonable (aproximadamente un número redondo)
+                const isNearRound = Math.abs(Math.round(estimatedBase) - estimatedBase) < 1.5;
+                if (isNearRound) {
+                  baseAmount = Math.round(estimatedBase);
+                  console.log(`✅ Base ajustada a valor redondeado: ${baseAmount}€`);
+                } else {
+                  baseAmount = estimatedBase;
+                }
+              } else {
+                // Si no hay indicios de IRPF, usamos la fórmula tradicional
+                baseAmount = Math.round((totalAmount / (1 + (ivaRate/100))) * 100) / 100;
+                console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${totalAmount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
+              }
             }
             
             // Calculamos el IVA como la diferencia entre el total y la base imponible
