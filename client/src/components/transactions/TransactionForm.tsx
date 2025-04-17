@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Expense } from "@/lib/attachmentService";
 import {
   Select,
   SelectContent,
@@ -84,6 +85,22 @@ const categorySchema = z.object({
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
+
+// Función de utilidad para convertir un objeto de transacción al tipo Expense
+const toExpense = (data: any): Expense => {
+  return {
+    id: data.id || 0,
+    userId: data.userId || 0,
+    description: data.description || '',
+    amount: typeof data.amount === 'string' ? parseFloat(data.amount) : (data.amount || 0),
+    date: data.date?.toISOString ? data.date.toISOString() : (data.date || new Date().toISOString()),
+    type: 'expense' as const,
+    categoryId: data.categoryId ? parseInt(String(data.categoryId)) : 0,
+    paymentMethod: data.paymentMethod || '',
+    title: data.title || '',
+    attachments: data.attachments || []
+  };
+};
 
 const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   const { toast } = useToast();
@@ -1011,7 +1028,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                                 const category = categories?.find(c => c.id === (expense.categoryId || 0));
                                 
                                 // Llamar a la función para ver el archivo
-                                viewExpenseOriginal(attachment, {...expense, type: 'expense' as const, categoryId: expense.categoryId as number}, category);
+                                viewExpenseOriginal(attachment, toExpense(expense), category);
                               });
                             }}
                           >
@@ -1045,7 +1062,7 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                                 const category = categories?.find(c => c.id === (expense.categoryId || 0));
                                 
                                 // Llamar a la función para descargar el archivo
-                                downloadExpenseOriginal(attachment, {...expense, type: 'expense' as const, categoryId: expense.categoryId as number}, category);
+                                downloadExpenseOriginal(attachment, toExpense(expense), category);
                               });
                             }}
                           >
