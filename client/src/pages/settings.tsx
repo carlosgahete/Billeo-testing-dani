@@ -296,16 +296,18 @@ const SettingsPage = () => {
   return (
     <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto">
       {/* Encabezado estilo Apple - Solo visible en escritorio */}
-      <div className="mb-8">
-        <div className="flex items-center mb-4 space-x-3">
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-2xl shadow-sm">
+      <div className="mb-7">
+        <div className="flex mb-0 items-start">
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-2xl shadow-sm mr-3 mt-0.5">
             <User className="h-6 w-6 text-gray-600" />
           </div>
-          <h1 className="text-2xl font-medium text-gray-900">Configuración</h1>
+          <div>
+            <h1 className="text-2xl font-medium text-gray-900 mb-0.5">Configuración</h1>
+            <p className="text-gray-500 max-w-3xl">
+              Administra tu perfil, preferencias y configuración de seguridad
+            </p>
+          </div>
         </div>
-        <p className="text-gray-500 ml-12 max-w-3xl">
-          Administra tu perfil, preferencias y configuración de seguridad
-        </p>
       </div>
       
       <Tabs defaultValue="profile" className="w-full">

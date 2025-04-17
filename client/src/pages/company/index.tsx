@@ -28,15 +28,17 @@ const CompanyPage = () => {
     <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto">
       {/* Encabezado estilo Apple */}
       <div className="mb-7">
-        <div className="flex items-center mb-1 space-x-3">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-2xl shadow-sm">
+        <div className="flex items-start space-x-3">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-2xl shadow-sm mt-1">
             <Building2 className="h-6 w-6 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-medium text-gray-900">Información de empresa</h1>
+          <div>
+            <h1 className="text-2xl font-medium text-gray-900 mb-0.5">Información de empresa</h1>
+            <p className="text-gray-500 max-w-3xl">
+              Gestiona todos los datos de tu empresa para facturas, documentos oficiales y comunicaciones.
+            </p>
+          </div>
         </div>
-        <p className="text-gray-500 ml-12 max-w-3xl">
-          Gestiona todos los datos de tu empresa para facturas, documentos oficiales y comunicaciones.
-        </p>
       </div>
       
       {/* Contenedor principal con efecto de vidrio */}
