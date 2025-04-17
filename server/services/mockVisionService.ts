@@ -69,7 +69,8 @@ export async function processReceiptImage(imagePath: string) {
     const multiplier = Math.max(1, baseDigit / 10); // Valor entre 0.1-10
     
     // Generar valores fiscales basados en el "contenido" del archivo
-    const baseAmount = Math.round(750 * multiplier * 100) / 100; // 75-7500€
+    // Valores mucho más pequeños y sin tendencia a valores altos
+    const baseAmount = Math.round((100 + (Math.random() * 400)) * 100) / 100; // 100-500€ 
     const taxRate = 21; // IVA estándar en España
     const taxAmount = Math.round(baseAmount * (taxRate / 100) * 100) / 100;
     const irpfRate = 15; // Retención típica para autónomos
@@ -123,7 +124,7 @@ export async function processReceiptImage(imagePath: string) {
       extractedData: {
         date: new Date().toISOString().split('T')[0],
         description: "Servicios profesionales",
-        amount: 100.00,
+        amount: 106.00,
         baseAmount: 100.00,
         tax: 21,
         taxAmount: 21.00,
@@ -169,7 +170,8 @@ export async function processReceiptPDF(pdfPath: string) {
     const multiplier = Math.max(0.5, baseDigit / 20); // Valor entre 0.5-10
     
     // Generar valores fiscales basados en el "contenido" del archivo
-    const baseAmount = Math.round(500 * multiplier * 100) / 100; // Valores entre 250-5000€
+    // Valores más pequeños y uniformes para PDFs también
+    const baseAmount = Math.round((150 + (Math.random() * 300)) * 100) / 100; // 150-450€ 
     const taxRate = 21; // IVA estándar en España
     const taxAmount = Math.round(baseAmount * (taxRate / 100) * 100) / 100;
     const irpfRate = 15; // Retención típica para autónomos
@@ -252,17 +254,17 @@ export async function processReceiptPDF(pdfPath: string) {
       extractedData: {
         date: new Date().toISOString().split('T')[0],
         description: "Servicios profesionales",
-        amount: 242.00,
-        baseAmount: 200.00,
+        amount: 120.00,
+        baseAmount: 100.00,
         tax: 21,
-        taxAmount: 42.00,
+        taxAmount: 21.00,
         irpf: 15,
-        irpfAmount: 30.00,
+        irpfAmount: 15.00,
         provider: "Empresa de servicios",
         categoryHint: "Servicios profesionales",
         ivaRate: 21,
         irpfRate: 15,
-        subtotal: 200.00
+        subtotal: 100.00
       }
     };
   }
