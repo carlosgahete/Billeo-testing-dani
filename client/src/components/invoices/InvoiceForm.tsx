@@ -596,30 +596,34 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       console.log(`🔔 Evento disparado: ${eventName}`);
       
       // Eliminar completamente las consultas relevantes para forzar una recarga completa 
-      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
-      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
-      queryClient.removeQueries({ queryKey: ["/api/invoices/recent"] });
+      console.log("🧹 Limpiando caché de consultas...");
+      queryClient.removeQueries({ queryKey: ["invoices"] });
+      queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
+      queryClient.removeQueries({ queryKey: ["invoices", "recent"] });
       
       // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
-      fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
+      fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
         headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
       })
       .then(() => {
         console.log("⚡ Forzando recarga de datos para dashboard");
         
-        // Refrescar explícitamente todas las consultas 
-        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
-        queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-        queryClient.refetchQueries({ queryKey: ["/api/invoices/recent"] });
+        // Refrescar explícitamente todas las consultas con las claves correctas
+        queryClient.refetchQueries({ queryKey: ["dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["invoices"] });
+        queryClient.refetchQueries({ queryKey: ["invoices", "recent"] });
         
-        // Disparar segunda actualización del dashboard después de un breve retraso
+        // Disparar evento para actualización del dashboard (esto forzará la actualización a través del hook)
+        console.log("📣 Disparando evento dashboard-refresh-required");
+        window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+        
+        // Disparar una segunda actualización después de un breve retraso
         setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+          console.log("🔄 Segunda actualización del dashboard");
           window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
-          console.log("🔄 Segunda actualización del dashboard completada");
-        }, 500);
+        }, 800);
       })
-      .catch(err => console.error("Error al recargar dashboard:", err));
+      .catch(err => console.error("❌ Error al recargar dashboard:", err));
       
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
