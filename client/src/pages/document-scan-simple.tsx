@@ -60,8 +60,6 @@ const DocumentScanPage = () => {
   const [uploading, setUploading] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
   const [transaction, setTransaction] = useState<any>(null);
-  // Mantener una copia del objeto de transacción original para comparar cambios
-  const [originalTransaction, setOriginalTransaction] = useState<any>(null);
   const [isResultZoomed, setIsResultZoomed] = useState(false);
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [documentImage, setDocumentImage] = useState<string | null>(null);
@@ -161,18 +159,7 @@ const DocumentScanPage = () => {
       
       // Establecer datos solo si realmente existen
       setExtractedData(hasExtractedData ? data.extractedData : null);
-      
-      // Guardar tanto la transacción actual como una copia del original para comparaciones
-      if (hasTransaction) {
-        const transactionData = data.transaction;
-        setTransaction(transactionData);
-        setOriginalTransaction({...transactionData}); // Crear una copia independiente
-        console.log('Guardado estado original de la transacción para comparaciones futuras');
-      } else {
-        setTransaction(null);
-        setOriginalTransaction(null);
-      }
-      
+      setTransaction(hasTransaction ? data.transaction : null);
       setDocumentImage(data.documentUrl || null);
       
       // Ir directamente a edición sin mostrar el diálogo de confirmación
@@ -209,7 +196,6 @@ const DocumentScanPage = () => {
     // IMPORTANTE: Inicializar explícitamente con null para evitar datos por defecto
     setExtractedData(null);
     setTransaction(null);
-    setOriginalTransaction(null); // Importante: reiniciar también el estado original
     setDocumentImage(null);
     setShowEditMode(false);
     setIsSecondStep(false);
@@ -262,7 +248,7 @@ const DocumentScanPage = () => {
     }
   };
   
-  // Función para actualizar la categoría de la transacción (en el estado local)
+  // Función para actualizar la categoría de la transacción (solo en el estado local)
   const handleUpdateCategory = (categoryId: string | null) => {
     if (!transaction) return;
     
@@ -270,8 +256,7 @@ const DocumentScanPage = () => {
     const numericCategoryId = categoryId === "null" ? null : 
                               categoryId ? parseInt(categoryId) : null;
     
-    // Solo actualizamos el estado local sin enviar petición al servidor todavía
-    // Esto evita reescribir otros campos como amount que el usuario puede haber editado
+    // Solo actualizamos el estado local sin enviar petición al servidor
     setTransaction({
       ...transaction,
       categoryId: numericCategoryId
@@ -283,27 +268,13 @@ const DocumentScanPage = () => {
     if (!transaction) return;
     
     try {
-      // Verificar si solo ha cambiado la categoría o si hay otros cambios
-      // Esto permite evitar sobrescribir otros campos que el usuario no ha modificado
-      const onlyCategoryChanged = originalTransaction && 
-        transaction.amount === originalTransaction.amount &&
-        transaction.description === originalTransaction.description &&
-        transaction.date === originalTransaction.date &&
-        transaction.categoryId !== originalTransaction.categoryId;
-      
-      // Si solo ha cambiado la categoría, enviamos solo ese campo para actualizar
-      const dataToSend = onlyCategoryChanged ? 
-        { categoryId: transaction.categoryId } : transaction;
-      
-      console.log('Guardando cambios:', onlyCategoryChanged ? 'Solo categoría' : 'Transacción completa');
-      
-      // Realizar la petición al servidor con los datos apropiados
+      // Ahora hacemos una sola petición al servidor con todos los datos, incluida la categoría
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(transaction),
         credentials: 'include'
       });
       

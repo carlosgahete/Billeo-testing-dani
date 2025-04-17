@@ -4543,25 +4543,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       allTransactions
         .filter(t => t.type === "expense")
         .forEach(transaction => {
-          // Manejar correctamente las transacciones sin categoría
-          const categoryId = transaction.categoryId === null ? "Sin categoría" : transaction.categoryId.toString();
-          const transactionAmount = Number(transaction.amount);
-          
-          // Validar que es un número válido
-          if (isNaN(transactionAmount)) {
-            console.log(`⚠️ Valor inválido para transaction.amount: ${transaction.amount} (ID: ${transaction.id})`);
-            return; // Omitir esta transacción
-          }
-          
+          const categoryId = transaction.categoryId.toString();
           if (!expensesByCategory[categoryId]) {
             expensesByCategory[categoryId] = { amount: 0, count: 0 };
           }
-          
-          // Usar Math.abs para asegurar que se suman valores positivos (porque los gastos son negativos)
-          expensesByCategory[categoryId].amount += Math.abs(transactionAmount);
+          expensesByCategory[categoryId].amount += Number(transaction.amount);
           expensesByCategory[categoryId].count += 1;
-          
-          console.log(`Gasto para categoría ${categoryId}: ${Math.abs(transactionAmount)}€ (Total acumulado: ${expensesByCategory[categoryId].amount}€)`);
         });
 
       console.log("Gastos por categoría calculados:", expensesByCategory);

@@ -16,8 +16,7 @@ import {
   MdFoodBank, MdDirectionsCar, MdHomeWork,
   MdLocalGroceryStore, MdHealthAndSafety, MdSchool,
   MdDevices, MdCardGiftcard, MdEvent, MdMiscellaneousServices,
-  MdMoreHoriz, MdAttachMoney, MdCreditCard, MdCampaign,
-  MdCode, MdLaptop, MdAccountBalance, MdHelpOutline
+  MdMoreHoriz
 } from 'react-icons/md';
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
@@ -34,52 +33,49 @@ type ExpenseCategory = {
   count: number;
 };
 
-// Define colores para diferentes categorías - actualizados para coincidir con categorías reales
+// Define colores para diferentes categorías (paleta más atractiva)
 const categoryColors: Record<number, string> = {
-  1: '#4CAF50', // Ventas (verde)
-  2: '#FF6B6B', // Gastos Generales (rojo suave)
-  3: '#FF9F1C', // Oficina (naranja)
-  4: '#E07A5F', // Marketing (terracota)
-  5: '#4ECDC4', // Servicios Externos (turquesa)
-  6: '#CBF3F0', // Formación (menta claro)
-  7: '#FFCBF2', // Software (rosa claro)
-  8: '#C8E7FF', // Hardware (azul claro)
-  9: '#2EC4B6', // Viajes (verde azulado)
-  10: '#9C27B0', // Impuestos (morado)
-  11: '#F4F1DE', // Otros (beige)
-  0: '#6B705C',  // Sin categoría (gris verdoso)
+  1: '#FF6B6B', // Comida y bebida (rojo suave)
+  2: '#4ECDC4', // Transporte (turquesa)
+  3: '#FF9F1C', // Vivienda (naranja)
+  4: '#2EC4B6', // Compras (verde azulado)
+  5: '#FFBF69', // Salud (melocotón)
+  6: '#CBF3F0', // Educación (menta claro)
+  7: '#FFCBF2', // Tecnología (rosa claro)
+  8: '#C8E7FF', // Regalos (azul claro)
+  9: '#F4F1DE', // Entretenimiento (beige)
+  10: '#E07A5F', // Servicios profesionales (terracota)
+  0: '#6B705C', // Otros (gris verdoso)
 };
 
-// Asignar iconos a las categorías - actualizados para coincidir con categorías reales
+// Asignar iconos a las categorías
 const categoryIcons: Record<number, React.ReactNode> = {
-  1: <MdAttachMoney />,        // Ventas (Ingresos)
-  2: <MdCreditCard />,         // Gastos Generales
-  3: <MdHomeWork />,           // Oficina
-  4: <MdCampaign />,           // Marketing
-  5: <MdMiscellaneousServices />, // Servicios Externos
-  6: <MdSchool />,             // Formación
-  7: <MdCode />,               // Software
-  8: <MdLaptop />,             // Hardware
-  9: <MdDirectionsCar />,      // Viajes
-  10: <MdAccountBalance />,    // Impuestos
-  11: <MdMoreHoriz />,         // Otros
-  0: <MdHelpOutline />,        // Sin categoría
+  1: <MdFoodBank />,
+  2: <MdDirectionsCar />,
+  3: <MdHomeWork />,
+  4: <MdLocalGroceryStore />,
+  5: <MdHealthAndSafety />,
+  6: <MdSchool />,
+  7: <MdDevices />,
+  8: <MdCardGiftcard />,
+  9: <MdEvent />,
+  10: <MdMiscellaneousServices />,
+  0: <MdMoreHoriz />,
 };
 
-// Mapeo de ID de categoría a nombres - actualizado para coincidir con las categorías de la base de datos
+// Mapeo de ID de categoría a nombres
 const categoryNames: Record<number, string> = {
-  1: 'Ventas',        // Ingresos
-  2: 'Gastos Generales',
-  3: 'Oficina',       // Corregido de 'Vivienda' a 'Oficina'
-  4: 'Marketing',
-  5: 'Servicios Externos',
-  6: 'Formación',
-  7: 'Software',
-  8: 'Hardware',
-  9: 'Viajes',
-  10: 'Impuestos',
-  11: 'Otros',
-  0: 'Sin categoría',
+  1: 'Comida y bebida',
+  2: 'Transporte',
+  3: 'Vivienda',
+  4: 'Compras',
+  5: 'Salud',
+  6: 'Educación',
+  7: 'Tecnología',
+  8: 'Regalos',
+  9: 'Entretenimiento',
+  10: 'Servicios prof.',
+  0: 'Otros',
 };
 
 // Definimos una interfaz clara para un gasto por categoría
@@ -147,45 +143,14 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     return Object.entries(typedExpenses).map(([categoryId, item]) => {
       const amount = item.amount;
       const count = item.count;
-      
-      // Manejar correctamente "Sin categoría" o valores nulos/undefined
-      let numericId: number;
-      let categoryName: string;
-      let categoryIcon: React.ReactNode;
-      let categoryColor: string;
-      
-      console.log("Procesando categoría:", categoryId, typeof categoryId);
-      
-      // Si es "null", "undefined", o "Sin categoría"
-      if (categoryId === "null" || categoryId === "undefined" || categoryId === "Sin categoría") {
-        numericId = 0;
-        categoryName = "Sin categoría";
-        categoryIcon = <MdHelpOutline />;
-        categoryColor = "#6B705C"; // Color para "Sin categoría"
-      } else {
-        // Intentar convertir a número
-        numericId = parseInt(categoryId);
-        
-        // Si no es un número válido, usar ID 0 (Otros/Sin categoría)
-        if (isNaN(numericId)) {
-          numericId = 0;
-          categoryName = categoryId; // Usar el ID como nombre
-          categoryIcon = <MdHelpOutline />;
-          categoryColor = "#6B705C";
-        } else {
-          categoryName = categoryNames[numericId] || 'Categoría desconocida';
-          categoryIcon = categoryIcons[numericId] || <MdMoreHoriz />;
-          categoryColor = categoryColors[numericId] || '#888888';
-        }
-      }
-      
+      const numericId = parseInt(categoryId);
       const absAmount = Math.abs(amount); // Asegurar que el valor sea positivo para cálculos
       
       return {
         categoryId: numericId,
-        name: categoryName,
-        icon: categoryIcon,
-        color: categoryColor,
+        name: categoryNames[numericId] || 'Categoría desconocida',
+        icon: categoryIcons[numericId] || <MdMoreHoriz />,
+        color: categoryColors[numericId] || '#888888',
         value: amount, // Mantener el valor original con signo para la visualización
         percentage: totalExpenses ? (absAmount / totalExpenses) * 100 : 0,
         count,
