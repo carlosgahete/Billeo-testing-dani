@@ -698,7 +698,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                         field.onChange(format(date, "yyyy-MM-dd"));
                                       }
                                     }}
-                                    disabled={(date) => date < new Date("1900-01-01")}
+                                    disabled={(date) => false}
                                     initialFocus
                                     className="rounded-md border shadow p-4"
                                   />
@@ -739,7 +739,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                         field.onChange(format(date, "yyyy-MM-dd"));
                                       }
                                     }}
-                                    disabled={(date) => date < new Date("1900-01-01")}
+                                    disabled={(date) => false}
                                     initialFocus
                                     className="rounded-md border shadow p-4"
                                   />
