@@ -1,0 +1,72 @@
+Perfecto, Daniel. Aquí tienes el mensaje final, limpio y listo para enviar a Mia, combinando el resumen técnico y el test práctico de validación:
+
+⸻
+
+Mia, me alegra ver que los últimos cambios están funcionando correctamente.
+
+Veo en los logs del servidor que el sistema ya está procesando bien los datos reales de las transacciones de gastos, por ejemplo:
+	•	Gasto procesado: ID=348, Total=522.5€, Base=550€, IVA=55€, IRPF=82.5€
+	•	Gasto procesado: ID=347, Total=530€, Base=500€, IVA=105€, IRPF=75€
+
+Y el resumen general de los cálculos muestra:
+	•	Ingresos base imponible: 5.000€
+	•	IVA repercutido: 300€
+	•	Gastos base imponible: 1.050€
+	•	IVA soportado: 160€
+	•	IRPF retenido en ingresos: 750€
+	•	IRPF en gastos: 157,5€
+
+Esto confirma que:
+	•	Se está utilizando correctamente la base imponible real introducida por el cliente (y no valores simulados).
+	•	El IVA soportado se está sumando bien.
+	•	El IRPF en gastos también se está calculando y sumando correctamente.
+
+⸻
+
+Ahora te pido por favor que hagas un test de validación manual.
+
+Mia, por favor realiza este ejercicio:
+
+A continuación te dejo 5 facturas con distintos escenarios (con y sin IRPF, distintos IVAs, decimales…). Quiero que tú misma calcules los valores, tal como se deben mostrar en el dashboard.
+
+⸻
+
+Facturas de prueba
+
+Factura 1
+	•	Base imponible: 200€
+	•	IVA: 21%
+	•	IRPF: —
+
+Factura 2
+	•	Base imponible: 150€
+	•	IVA: 10%
+	•	IRPF: -7%
+
+Factura 3
+	•	Base imponible: 300€
+	•	IVA: 0%
+	•	IRPF: -15%
+
+Factura 4
+	•	Base imponible: 123,45€
+	•	IVA: 21%
+	•	IRPF: -1%
+
+Factura 5
+	•	Base imponible: 89,99€
+	•	IVA: 4%
+	•	IRPF: —
+
+⸻
+
+Por favor dime para cada factura:
+	1.	¿Cuál es el IVA soportado?
+	2.	¿Cuánto es el IRPF retenido (si lo hay)?
+	3.	¿Cuál sería el total pagado real? (Base + IVA - IRPF)
+	4.	Verifica que el número grande del dashboard (en la tarjeta de gastos) sea la suma de todas las bases imponibles.
+	5.	Verifica que el IVA y el IRPF estén bien sumados en los subtotales.
+
+⸻
+
+Este ejercicio es clave para validar que la lógica actual coincide exactamente con los datos introducidos por el cliente y con los cálculos que queremos mostrar. Gracias por tu ayuda con esto.
