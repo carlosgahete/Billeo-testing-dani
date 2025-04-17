@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +74,35 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
       transaction,
       extractedData
     });
+    
+    // Comprobar si hay datos respaldados en sessionStorage (prioridad más alta)
+    const savedData = sessionStorage.getItem('form-data-backup');
+    if (savedData) {
+      try {
+        console.log('Encontrados datos de respaldo en sessionStorage, restaurando...');
+        const parsedData = JSON.parse(savedData);
+        
+        // Restaurar del respaldo
+        setFormValues({
+          amount: parsedData.amount || '',
+          baseAmount: parsedData.baseAmount || '',
+          tax: parsedData.tax || '',
+          irpf: parsedData.irpf || '',
+          date: parsedData.date || '',
+          provider: parsedData.provider || '',
+          description: parsedData.description || ''
+        });
+        
+        // Eliminar el respaldo después de utilizarlo
+        sessionStorage.removeItem('form-data-backup');
+        console.log('Datos de respaldo restaurados correctamente');
+        
+        return; // Salir temprano, el respaldo tiene prioridad
+      } catch (e) {
+        console.error('Error al restaurar datos de sessionStorage:', e);
+        // Continuar con la inicialización normal si hay error
+      }
+    }
     
     // Solo actualizar el estado cuando hay datos reales extraídos del documento
     if (hasTransactionData && hasExtractedData) {
@@ -516,7 +545,11 @@ Proveedor: ${formData.provider || ""}`
                 irpfAmount: irpfAmountRef.current?.textContent || ''
               };
               
+              // Guardar en sessionStorage como respaldo
+              sessionStorage.setItem('form-data-backup', JSON.stringify(formData));
+              
               console.log("Guardando datos de formulario antes de cambiar categoría:", formData);
+              console.log("Respaldo guardado en sessionStorage");
               
               // Actualizar el estado local para mantener los datos
               setFormValues({
