@@ -34,8 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// Importar el componente SimpleEditForm
-import SimpleEditForm from "@/components/documents/SimpleEditForm";
+// Importar el componente PersistentEditForm (versión mejorada que mantiene estado)
+import PersistentEditForm from "@/components/documents/PersistentEditForm";
 import {
   Form,
   FormControl,
@@ -344,23 +344,45 @@ const DocumentScanPage = () => {
   };
   
   // Función para actualizar la categoría de la transacción
-  const handleUpdateCategory = async (categoryId: string | null) => {
+  const handleUpdateCategory = async (categoryId: string | null, formData?: any) => {
     if (!transaction) return;
     
     // Convertir string a number o null
     const numericCategoryId = categoryId === "null" ? null : 
                               categoryId ? parseInt(categoryId) : null;
     
+    console.log("Actualizando categoría a:", numericCategoryId);
+    console.log("Datos del formulario:", formData);
+    
+    // Mantener una copia del estado anterior para restaurarlo en caso de error
+    const previousTransaction = {...transaction};
+    
+    // Actualizar localmente primero para mantener la UI responsive
+    setTransaction(prev => ({
+      ...prev,
+      categoryId: numericCategoryId
+    }));
+    
     try {
+      // Si tenemos datos del formulario, usarlos para la actualización
+      const updateData = {
+        ...transaction,
+        categoryId: numericCategoryId,
+        // Solo incluir datos del formulario si están disponibles
+        ...(formData ? {
+          title: formData.title || transaction.title,
+          description: formData.description || transaction.description,
+          amount: formData.amount || transaction.amount,
+          // Incluir otros campos que pueden haber sido editados
+        } : {})
+      };
+      
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...transaction,
-          categoryId: numericCategoryId
-        }),
+        body: JSON.stringify(updateData),
         credentials: 'include'
       });
       
@@ -368,21 +390,20 @@ const DocumentScanPage = () => {
         throw new Error(`Error: ${response.status}`);
       }
       
-      // Actualizar la transacción en el estado
-      setTransaction({
-        ...transaction,
-        categoryId: numericCategoryId
-      });
-      
-      // Invalidar consultas
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      // Invalidar consultas pero sin refrescar el componente actual
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      }, 500);
       
       toast({
         title: "Categoría actualizada",
         description: "La categoría del gasto se ha actualizado correctamente",
       });
     } catch (error: any) {
+      // En caso de error, restaurar el estado anterior
+      setTransaction(previousTransaction);
+      
       toast({
         title: "Error al actualizar la categoría",
         description: error.message,
@@ -882,8 +903,8 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                       Detalles del gasto
                     </h3>
                     
-                    {/* Importar nuestro nuevo componente SimpleEditForm */}
-                    <SimpleEditForm 
+                    {/* Usar nuestro nuevo componente PersistentEditForm */}
+                    <PersistentEditForm 
                       transaction={transaction}
                       extractedData={extractedData || {}}
                       categories={categories}
