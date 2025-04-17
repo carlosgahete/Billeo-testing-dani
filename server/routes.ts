@@ -4635,114 +4635,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Cálculo de valores netos para el dashboard según requerimientos
-      // 1. Ingresos netos = Total facturado menos IRPF retenido
-      const netIncome = income - irpfRetenidoIngresos;
-      
-      // 2. Gastos netos = Total gasto menos IRPF en gastos (si lo tienen)
-      const netExpenses = expenses - totalIrpfFromExpensesInvoices;
-      
-      // 3. Resultado final neto = Ingresos netos menos gastos netos
-      const netResult = netIncome - netExpenses;
-      
-      console.log("CÁLCULOS NETOS PARA DASHBOARD:");
-      console.log(`- Ingresos brutos: ${income}€`);
-      console.log(`- Base imponible ingresos: ${baseImponible}€`);
-      console.log(`- IRPF retenido: ${irpfRetenidoIngresos}€`);
-      console.log(`- Ingresos NETOS: ${netIncome}€`);
-      console.log(`- Gastos brutos: ${expenses}€`);
-      console.log(`- Base imponible gastos: ${baseImponibleGastos}€`);
-      console.log(`- IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
-      console.log(`- Gastos NETOS: ${netExpenses}€`);
-      console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
-      
-      // Verificación de valores nulos o indefinidos
-      console.log("VERIFICANDO VALORES CRÍTICOS:");
-      console.log("balance:", typeof balance, balance);
-      console.log("result:", typeof result, result);
-      console.log("pendingInvoices:", typeof pendingInvoices, pendingInvoices);
-      console.log("pendingCount:", typeof pendingCount, pendingCount);
-      console.log("pendingQuotesTotal:", typeof pendingQuotesTotal, pendingQuotesTotal);
-      console.log("pendingQuotesCount:", typeof pendingQuotesCount, pendingQuotesCount);
-      console.log("issuedCount:", typeof issuedCount, issuedCount);
-      console.log("quarterCount:", typeof quarterCount, quarterCount);
-      console.log("quarterIncome:", typeof quarterIncome, quarterIncome);
-      console.log("yearCount:", typeof yearCount, yearCount);
-      console.log("yearIncome:", typeof yearIncome, yearIncome);
-      console.log("allQuotesCount:", typeof allQuotesCount, allQuotesCount);
-      console.log("acceptedQuotesCount:", typeof acceptedQuotesCount, acceptedQuotesCount);
-      console.log("rejectedQuotesCount:", typeof rejectedQuotesCount, rejectedQuotesCount);
+      try {
+        // 1. Ingresos netos = Total facturado menos IRPF retenido
+        const netIncome = income - irpfRetenidoIngresos;
+        
+        // 2. Gastos netos = Total gasto menos IRPF en gastos (si lo tienen)
+        // Asegurar que los valores sean números válidos
+        const safeExpenses = typeof expenses === 'number' ? expenses : 0;
+        const safeIrpfGastos = typeof totalIrpfFromExpensesInvoices === 'number' ? totalIrpfFromExpensesInvoices : 0;
+        const netExpenses = safeExpenses - safeIrpfGastos;
+        
+        // 3. Resultado final neto = Ingresos netos menos gastos netos
+        const netResult = netIncome - netExpenses;
+        
+        console.log("CÁLCULOS NETOS PARA DASHBOARD:");
+        console.log(`- Ingresos brutos: ${income}€`);
+        console.log(`- Base imponible ingresos: ${baseImponible}€`);
+        console.log(`- IRPF retenido: ${irpfRetenidoIngresos}€`);
+        console.log(`- Ingresos NETOS: ${netIncome}€`);
+        console.log(`- Gastos brutos: ${safeExpenses}€`);
+        console.log(`- Base imponible gastos: ${baseImponibleGastos}€`);
+        console.log(`- IRPF en gastos: ${safeIrpfGastos}€`);
+        console.log(`- Gastos NETOS: ${netExpenses}€`);
+        console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
+        
+        // Verificación de valores nulos o indefinidos
+        console.log("VERIFICANDO VALORES CRÍTICOS:");
+        console.log("balance:", typeof balance, balance);
+        console.log("result:", typeof result, result);
+        console.log("pendingInvoices:", typeof pendingInvoices, pendingInvoices);
+        console.log("pendingCount:", typeof pendingCount, pendingCount);
+        console.log("pendingQuotesTotal:", typeof pendingQuotesTotal, pendingQuotesTotal);
+        console.log("pendingQuotesCount:", typeof pendingQuotesCount, pendingQuotesCount);
+        console.log("issuedCount:", typeof issuedCount, issuedCount);
+        console.log("quarterCount:", typeof quarterCount, quarterCount);
+        console.log("quarterIncome:", typeof quarterIncome, quarterIncome);
+        console.log("yearCount:", typeof yearCount, yearCount);
+        console.log("yearIncome:", typeof yearIncome, yearIncome);
+        console.log("allQuotesCount:", typeof allQuotesCount, allQuotesCount);
+        console.log("acceptedQuotesCount:", typeof acceptedQuotesCount, acceptedQuotesCount);
+        console.log("rejectedQuotesCount:", typeof rejectedQuotesCount, rejectedQuotesCount);
+      } catch (error) {
+        console.error("Error en el cálculo de valores netos:", error);
+      }
 
-      return res.status(200).json({
-        // Valores principales (se usa la base imponible como valor principal)
-        income: baseImponible,           // Base imponible de ingresos (sin IVA)
-        expenses: baseImponibleGastos,   // Base imponible de gastos (sin IVA)
-        pendingInvoices,
-        pendingCount,
-        pendingQuotes: pendingQuotesTotal,
-        pendingQuotesCount,
-        balance,
-        result,
+      // Verificar y convertir valores a números seguros para evitar enviar NaN, undefined o null
+      try {
+        // Función para asegurar valores numéricos
+        const safeNumber = (value: any): number => {
+          if (typeof value !== 'number' || isNaN(value)) return 0;
+          return value;
+        };
         
-        // Estos valores se mantienen por compatibilidad
-        baseImponible,                   // Base imponible (suma de subtotales de facturas, sin IVA)
-        baseImponibleGastos,             // Base imponible para gastos calculada a partir del total
+        // Variables seguras para los valores del dashboard
+        const safeBaseImponible = safeNumber(baseImponible);
+        const safeBaseImponibleGastos = safeNumber(baseImponibleGastos);
+        const safePendingInvoices = safeNumber(pendingInvoices);
+        const safePendingCount = safeNumber(pendingCount);
+        const safePendingQuotes = safeNumber(pendingQuotesTotal);
+        const safePendingQuotesCount = safeNumber(pendingQuotesCount);
+        const safeBalance = safeNumber(balance);
+        const safeResult = safeNumber(result);
+        const safeIvaRepercutido = safeNumber(ivaRepercutido);
+        const safeIvaSoportado = safeNumber(ivaSoportado);
+        const safeIrpfRetenidoIngresos = safeNumber(irpfRetenidoIngresos);
+        const safeTotalWithholdings = safeNumber(totalIrpfFromExpensesInvoices);
         
-        // Impuestos principales (visibles al usuario)
-        ivaRepercutido,                  // IVA repercutido (cobrado)
-        ivaSoportado,                    // IVA soportado (pagado)
-        irpfRetenidoIngresos,            // IRPF retenido en facturas de ingresos
+        // Valores netos seguros
+        let safeNetIncome = 0, safeNetExpenses = 0, safeNetResult = 0;
+        try {
+          safeNetIncome = safeNumber(income - safeIrpfRetenidoIngresos);
+          safeNetExpenses = safeNumber(expenses - safeTotalWithholdings);
+          safeNetResult = safeNumber(safeNetIncome - safeNetExpenses);
+        } catch (e) {
+          console.error("Error al calcular valores netos:", e);
+        }
         
-        // Datos para filtrado
-        period,
-        year,
+        // Contadores seguros
+        const safeIssuedCount = safeNumber(issuedCount);
+        const safeQuarterCount = safeNumber(quarterCount);
+        const safeQuarterIncome = safeNumber(quarterIncome);
+        const safeYearCount = safeNumber(yearCount);
+        const safeYearIncome = safeNumber(yearIncome);
+        const safeAllQuotesCount = safeNumber(allQuotesCount);
+        const safeAcceptedQuotesCount = safeNumber(acceptedQuotesCount);
+        const safeRejectedQuotesCount = safeNumber(rejectedQuotesCount);
         
-        // Datos internos (no mostrados directamente)
-        totalWithholdings: totalIrpfFromExpensesInvoices,  // IRPF en gastos (solo para cálculos)
+        // Asegurarse de que taxStats contiene valores válidos
+        const safeTaxStats = {
+          ivaRepercutido: safeIvaRepercutido,
+          ivaSoportado: safeIvaSoportado,
+          ivaLiquidar: safeNumber(vatBalanceFinal),
+          irpfRetenido: safeIrpfRetenidoIngresos,
+          irpfTotal: safeIrpfRetenidoIngresos + safeTotalWithholdings,
+          irpfPagar: safeNumber(incomeTaxFinal)
+        };
         
-        // Valores netos para dashboard y componentes específicos
-        netIncome,                       // Ingresos netos (descontando IRPF)
-        netExpenses,                     // Gastos netos (considerando IRPF)
-        netResult,                       // Resultado neto final
+        console.log("Enviando respuesta con datos validados al cliente");
         
-        // Estructura simplificada para impuestos
-        taxes: {
-          vat: vatBalanceFinal,
-          incomeTax: incomeTaxFinal,
-          ivaALiquidar: vatBalanceFinal // Usar el valor seguro de vatBalanceFinal
-        },
-        
-        // Datos fiscales estructurados completos (para componentes avanzados)
-        taxStats: taxStats,
-        // Añadimos los contadores que faltaban
-        issuedCount,
-        quarterCount,
-        quarterIncome,
-        // Datos del año actual
-        yearCount,
-        yearIncome,
-        // Información estructurada para el componente de Facturas
-        invoices: {
-          total: issuedCount,
-          pending: pendingCount,
-          paid: issuedCount - pendingCount,
-          overdue: 0, // Por ahora no tenemos este dato, se podría calcular en el futuro
-          totalAmount: invoiceIncome
-        },
-        // Información estructurada para el componente de Presupuestos
-        quotes: {
-          total: allQuotesCount,
-          pending: pendingQuotesCount,
-          accepted: acceptedQuotesCount,
-          rejected: rejectedQuotesCount
-        },
-        // Datos de presupuestos (mantener compatibilidad)
-        allQuotes: allQuotesCount,
-        acceptedQuotes: acceptedQuotesCount,
-        rejectedQuotes: rejectedQuotesCount,
-        pendingQuotesCount,
-        pendingQuotesTotal,
-        lastQuoteDate
-      });
+        return res.status(200).json({
+          // Valores principales (se usa la base imponible como valor principal)
+          income: safeBaseImponible,           // Base imponible de ingresos (sin IVA)
+          expenses: safeBaseImponibleGastos,   // Base imponible de gastos (sin IVA)
+          pendingInvoices: safePendingInvoices,
+          pendingCount: safePendingCount,
+          pendingQuotes: safePendingQuotes,
+          pendingQuotesCount: safePendingQuotesCount,
+          balance: safeBalance,
+          result: safeResult,
+          
+          // Estos valores se mantienen por compatibilidad
+          baseImponible: safeBaseImponible,                   // Base imponible (suma de subtotales de facturas, sin IVA)
+          baseImponibleGastos: safeBaseImponibleGastos,       // Base imponible para gastos calculada a partir del total
+          
+          // Impuestos principales (visibles al usuario)
+          ivaRepercutido: safeIvaRepercutido,                 // IVA repercutido (cobrado)
+          ivaSoportado: safeIvaSoportado,                     // IVA soportado (pagado)
+          irpfRetenidoIngresos: safeIrpfRetenidoIngresos,     // IRPF retenido en facturas de ingresos
+          
+          // Datos para filtrado
+          period,
+          year,
+          
+          // Datos internos (no mostrados directamente)
+          totalWithholdings: safeTotalWithholdings,           // IRPF en gastos (solo para cálculos)
+          
+          // Valores netos para dashboard y componentes específicos
+          netIncome: safeNetIncome,                           // Ingresos netos (descontando IRPF)
+          netExpenses: safeNetExpenses,                       // Gastos netos (considerando IRPF)
+          netResult: safeNetResult,                           // Resultado neto final
+          
+          // Estructura simplificada para impuestos
+          taxes: {
+            vat: safeNumber(vatBalanceFinal),
+            incomeTax: safeNumber(incomeTaxFinal),
+            ivaALiquidar: safeNumber(vatBalanceFinal)         // Usar el valor seguro de vatBalanceFinal
+          },
+          
+          // Datos fiscales estructurados completos (para componentes avanzados)
+          taxStats: safeTaxStats,
+          
+          // Añadimos los contadores que faltaban
+          issuedCount: safeIssuedCount,
+          quarterCount: safeQuarterCount,
+          quarterIncome: safeQuarterIncome,
+          
+          // Datos del año actual
+          yearCount: safeYearCount,
+          yearIncome: safeYearIncome,
+          
+          // Información estructurada para el componente de Facturas
+          invoices: {
+            total: safeIssuedCount,
+            pending: safePendingCount,
+            paid: Math.max(0, safeIssuedCount - safePendingCount),
+            overdue: 0, // Por ahora no tenemos este dato, se podría calcular en el futuro
+            totalAmount: safeNumber(invoiceIncome)
+          },
+          
+          // Información estructurada para el componente de Presupuestos
+          quotes: {
+            total: safeAllQuotesCount,
+            pending: safePendingQuotesCount,
+            accepted: safeAcceptedQuotesCount,
+            rejected: safeRejectedQuotesCount
+          },
+          
+          // Datos de presupuestos (mantener compatibilidad)
+          allQuotes: safeAllQuotesCount,
+          acceptedQuotes: safeAcceptedQuotesCount,
+          rejectedQuotes: safeRejectedQuotesCount,
+          pendingQuotesCount: safePendingQuotesCount,
+          pendingQuotesTotal: safePendingQuotes,
+          lastQuoteDate
+        });
+      } catch (error) {
+        console.error("Error al preparar la respuesta JSON:", error);
+        // Enviar una respuesta mínima pero válida en caso de error
+        return res.status(200).json({
+          income: 0,
+          expenses: 0,
+          pendingInvoices: 0,
+          pendingCount: 0,
+          balance: 0,
+          result: 0,
+          baseImponible: 0,
+          baseImponibleGastos: 0,
+          period,
+          year,
+          taxStats: {
+            ivaRepercutido: 0,
+            ivaSoportado: 0,
+            ivaLiquidar: 0,
+            irpfRetenido: 0,
+            irpfTotal: 0,
+            irpfPagar: 0
+          }
+        });
+      }
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
