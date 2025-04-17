@@ -378,15 +378,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     form.setValue("tax", ivaGeneral);
     form.setValue("total", Math.max(0, total));
     
-    // Actualizamos directamente los valores en el formulario
-    form.setValue("subtotal", subtotal);
-    form.setValue("tax", tax);
-    form.setValue("total", Math.max(0, total));
-    
     return {
-      subtotal,
-      tax,
-      additionalTaxesTotal,
+      subtotal: subtotalGeneral,
+      tax: ivaGeneral,
+      additionalTaxesTotal: additionalTaxesTotal,
       total: Math.max(0, total) // Nunca permitir totales negativos
     };
   };

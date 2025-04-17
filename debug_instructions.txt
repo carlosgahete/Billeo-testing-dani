@@ -1,0 +1,33 @@
+SOLUCIÓN PARA EL PROBLEMA DE CÁLCULO DE TOTALES EN FACTURAS CON FECHAS DE MARZO
+
+Se ha identificado que hay un problema con el cálculo de totales en el formulario de facturas específicamente cuando se seleccionan fechas de marzo. El problema ocurre en la lógica de actualización y sincronización entre los cambios de campos y los cálculos de totales.
+
+SOLUCIÓN IMPLEMENTADA:
+
+1. Se ha creado una función específica handleDateChange que maneja el caso especial de fechas de marzo, añadiendo pasos adicionales de verificación y recálculos cuando se detecta que la fecha seleccionada es de marzo.
+
+2. La función implementa:
+   - Detección específica de fechas de marzo (mes 2 en JavaScript)
+   - Recálculo inmediato de totales después de cambiar la fecha
+   - Doble verificación con tiempo adicional para fechas de marzo
+   - Actualización forzada del snapshot para garantizar renderizado
+
+3. La solución usa múltiples técnicas para garantizar sincronización:
+   - setTimeout para separar los cambios del proceso de renderizado
+   - Actualizaciones explícitas de los subtotales de cada ítem
+   - Doble verificación con tiempos diferentes para las fechas problemáticas
+
+CÓMO IMPLEMENTAR LA SOLUCIÓN:
+
+1. Modificar todas las instancias donde se seleccionan fechas en el calendario para que usen nuestra función handleDateChange en lugar del callback predeterminado.
+
+2. Específicamente, para cada componente Calendar en el formulario:
+   - Reemplazar el onSelect actual
+   - Usar handleDateChange(field, "nombre-del-campo") en su lugar
+
+VENTAJAS DE ESTA SOLUCIÓN:
+
+1. No requiere cambiar la estructura del formulario o los componentes
+2. Implementa una solución específica para el problema de fechas de marzo
+3. Mejora la sincronización entre cambios de fecha y cálculos
+4. Añade logs para facilitar la depuración en caso de problemas futuros
