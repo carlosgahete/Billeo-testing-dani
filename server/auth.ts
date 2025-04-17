@@ -28,6 +28,24 @@ export async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+// Middleware para requerir autenticación
+export const requireAuth = (req: any, res: any, next: any) => {
+  // Verificar autenticación mediante passport
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  
+  // Verificar autenticación mediante userId en sesión
+  if (req.session && req.session.userId) {
+    return next();
+  }
+  
+  // Si no está autenticado, devolver 401
+  return res.status(401).json({
+    message: "Authentication required"
+  });
+};
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'financial-app-secret-key',

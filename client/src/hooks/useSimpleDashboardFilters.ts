@@ -11,41 +11,31 @@ export function useSimpleDashboardFilters() {
     console.log('Cambiando año a:', newYear);
     setYear(newYear);
     
-    // Invalidar consultas existentes
+    // Invalidar consultas existentes para ambos endpoints
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard'],
+      queryKey: ['dashboard'],
     });
     
-    // Forzar refetch directo
-    queryClient.fetchQuery({
-      queryKey: ['/api/stats/dashboard', newYear, period],
-    });
-  }, [period, queryClient]);
+    // No es necesario forzar el refetch, el useDashboardData se encargará
+  }, [queryClient]);
   
   // Función para cambiar el periodo
   const changePeriod = useCallback((newPeriod: string) => {
     console.log('Cambiando periodo a:', newPeriod);
     setPeriod(newPeriod);
     
-    // Invalidar consultas existentes
+    // Invalidar consultas existentes para ambos endpoints
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard'],
+      queryKey: ['dashboard'],
     });
     
-    // Forzar refetch directo
-    queryClient.fetchQuery({
-      queryKey: ['/api/stats/dashboard', year, newPeriod],
-    });
-  }, [year, queryClient]);
+    // No es necesario forzar el refetch, el useDashboardData se encargará
+  }, [queryClient]);
   
   return {
-    filters: {
-      year,
-      period,
-      changeYear,
-      changePeriod
-    },
-    handleChangeYear: changeYear,
-    handleChangePeriod: changePeriod
+    year,
+    period,
+    changeYear,
+    changePeriod
   };
 }

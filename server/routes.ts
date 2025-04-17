@@ -4265,3 +4265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   return httpServer;
 }
+// Nueva implementación simplificada del endpoint de dashboard
+// Añadir al final de routes.ts
+
+// Final de routes.ts

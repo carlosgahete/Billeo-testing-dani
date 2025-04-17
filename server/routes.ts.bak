@@ -3639,1206 +3639,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
-    console.log("Iniciando manejo de solicitud a /api/stats/dashboard");
-    try {
-      // Configurar encabezados para evitar almacenamiento en caché de datos financieros
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-      res.setHeader('Expires', '0');
-      res.setHeader('Pragma', 'no-cache');
-      
-      // Obtenemos el ID de usuario desde passport o desde session
-      const userId = req.isAuthenticated() ? (req.user as any).id : req.session.userId;
-      
-      // Obtenemos parámetros de año y trimestre si fueron enviados
-      // Restauramos a configuración normal
-      const year = req.query.year ? String(req.query.year) : new Date().getFullYear().toString();
-      const period = req.query.period ? String(req.query.period) : 'all';
-      
-      // Detectar solicitudes de actualización forzada (nocache)
-      const forceRefresh = !!req.query.nocache;
-      
-      // Loguear qué período se está consultando
-      console.log(`📊 Consultando datos fiscales [${forceRefresh ? 'FORZADO' : 'NORMAL'}]:`, { 
-        year, period, timestamp: new Date().toISOString()
-      });
-      
-      // Función para filtrar por año y trimestre
-      const isInPeriod = (dateString: string) => {
-        try {
-          // Si dateString es null o undefined, excluir
-          if (!dateString) {
-            console.error("Fecha vacía en isInPeriod");
-            return false;
-          }
-          
-          // Forzar conversión a fecha si es necesario
-          const date = new Date(dateString);
-          
-          // Verificar que la fecha es válida
-          if (isNaN(date.getTime())) {
-            console.error("Fecha inválida en isInPeriod:", dateString);
-            return false;
-          }
-          
-          const dateYear = date.getFullYear().toString();
-          const month = date.getMonth() + 1; // getMonth() devuelve 0-11
-          
-          console.log(`Comprobando fecha ${dateString} - Año ${dateYear} frente a ${year}, Mes ${month}`);
-          
-          // Si el año no coincide, excluir
-          if (dateYear !== year) return false;
-          
-          // Si estamos buscando todo el año, incluir
-          if (period === 'all') return true;
-          
-          // Definir en qué trimestre cae el mes
-          const quarter = 
-            month <= 3 ? 'q1' : 
-            month <= 6 ? 'q2' : 
-            month <= 9 ? 'q3' : 'q4';
-            
-          return quarter === period;
-        } catch (e) {
-          console.error("Error al parsear fecha:", dateString, e);
-          return false;
-        }
-      };
-      
-      // Get all transactions for the user
-      let allTransactions = await storage.getTransactionsByUserId(userId);
-      
-      // Get all invoices
-      let allInvoices = await storage.getInvoicesByUserId(userId);
-      
-      // Get all quotes
-      let allQuotes = await storage.getQuotesByUserId(userId);
-      
-      // Log de depuración para los años de transacciones
-      console.log("Años de transacciones:", 
-        allTransactions.map(t => {
-          try {
-            return new Date(t.date).getFullYear();
-          } catch (e) {
-            return "error parsing date";
-          }
-        })
-      );
-      
-      // Filtrar por período si es necesario
-      allTransactions = allTransactions.filter(t => {
-        try {
-          return isInPeriod(t.date);
-        } catch (e) {
-          console.error("Error filtrando transacción por fecha:", t.id, t.date, e);
-          return false;
-        }
-      });
-      allInvoices = allInvoices.filter(inv => isInPeriod(inv.issueDate));
-      allQuotes = allQuotes.filter(q => isInPeriod(q.issueDate));
-      
-      // Calculate totals from transactions
-      const transactionIncome = allTransactions
-        .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      
-      const transactionExpenses = allTransactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      
-      // Calculate invoice income (paid invoices only)
-      const paidInvoices = allInvoices.filter(inv => inv.status === "paid");
-      
-      // Ahora usamos el total en lugar del subtotal para reflejar correctamente todos los impuestos (IVA, IRPF, etc.)
-      // Ahora sumamos todas las facturas, no solo las pagadas
-      const invoiceIncome = allInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
-      console.log(`Total de ingresos calculado desde facturas (incluyendo pendientes): ${invoiceIncome}€`);
-        
-      // Registro detallado para depuración
-      console.log("=== CÁLCULO DE INGRESOS Y GASTOS ===");
-      console.log("Período filtrado:", year, period);
-      console.log("Número total de facturas:", allInvoices.length);
-      console.log("Facturas pagadas:", paidInvoices.length);
-      console.log("Detalle de facturas pagadas:", 
-        paidInvoices.map(inv => ({ 
-          number: inv.invoiceNumber, 
-          status: inv.status,
-          subtotal: inv.subtotal,
-          total: inv.total,
-          fecha: inv.issueDate
-        }))
-      );
-      
-      // Detalle de transacciones para depuración
-      // Registro detallado de transacciones para depuración
-      console.log("Total de transacciones:", allTransactions.length);
-      console.log("Transacciones de ingresos:", allTransactions.filter(t => t.type === "income").length);
-      console.log("Transacciones de gastos:", allTransactions.filter(t => t.type === "expense").length);
-      console.log("Detalle de gastos:", 
-        allTransactions
-          .filter(t => t.type === "expense")
-          .map(t => ({ 
-            id: t.id,
-            description: t.description, 
-            amount: t.amount,
-            date: t.date,
-            year: new Date(t.date).getFullYear()
-          }))
-      );
-      
-      console.log("Ingresos de facturas:", invoiceIncome);
-      console.log("Ingresos de transacciones:", transactionIncome);
-      console.log("Gastos de transacciones:", transactionExpenses);
-      
-      // Añadir información detallada de impuestos para depuración
-      console.log("Detalle de facturas e impuestos:");
-      paidInvoices.forEach(invoice => {
-        console.log(`Factura ${invoice.invoiceNumber}: Subtotal=${invoice.subtotal}, Total=${invoice.total}`);
-        
-        // Mostrar impuestos adicionales si existen
-        if (invoice.additionalTaxes) {
-          let additionalTaxes = [];
-          try {
-            if (typeof invoice.additionalTaxes === 'string') {
-              additionalTaxes = JSON.parse(invoice.additionalTaxes);
-            } else if (Array.isArray(invoice.additionalTaxes)) {
-              additionalTaxes = invoice.additionalTaxes;
-            }
-            
-            console.log("  - Impuestos adicionales:", additionalTaxes);
-          } catch (e) {
-            console.log("  - Error al parsear impuestos adicionales");
-          }
-        }
-      });
-        
-      // Calculamos los ingresos totales.
-      // Idealmente, las facturas pagadas deberían generar transacciones de ingreso automáticamente,
-      // pero parece que en este caso no está ocurriendo, así que usamos el ingreso de facturas
-      // si las transacciones de ingreso son 0.
-      const income = transactionIncome > 0 ? transactionIncome : invoiceIncome;
-      
-      // Calcular el total de gastos incluyendo todas las transacciones
-      let expenses = transactionExpenses;
-      
-      // Log transacciones de gastos
-      console.log(`Total de gastos: ${expenses}€ (basado únicamente en transacciones)`);
-      
-      // Ya no añadimos un gasto fijo codificado, usamos solo las transacciones reales
-      // Esto permite que al borrar gastos se refleje correctamente en el dashboard
-      
-      // Depurar gastos para verificar
-      console.log("DESGLOSE DE GASTOS:");
-      console.log("- Gastos de transacciones:", transactionExpenses);
-      console.log("- Total de gastos (después de ajustes):", expenses);
-      
-      // Calculate pending invoices (money expected but not yet received)
-      const pendingInvoices = allInvoices
-        .filter(inv => inv.status === "pending" || inv.status === "overdue")
-        .reduce((sum, inv) => sum + Number(inv.total), 0);
-      
-      const pendingCount = allInvoices
-        .filter(inv => inv.status === "pending" || inv.status === "overdue")
-        .length;
-      
-      // Calcular el IRPF que ha sido retenido en las facturas RECIBIDAS como gastos
-      // Este IRPF es el que el autónomo puede deducirse de los impuestos a pagar
-      let totalIrpfFromExpensesInvoices = 0;
-      
-      // Vamos a buscar todas las transacciones de gastos que sean de tipo factura y tengan IRPF
-      // Obtenemos el total de IRPF retenido en facturas de gastos sumando todos los importes de IRPF
-      
-      try {
-        // Obtener todas las transacciones de gastos que sean facturas
-        const expenseTransactions = allTransactions.filter(tx => tx.type === "expense");
-        
-        // Sumar el IRPF de cada transacción - Para cada transacción buscamos si tiene un campo de IRPF
-        console.log(`====== PROCESANDO ${expenseTransactions.length} TRANSACCIONES DE GASTOS PARA IRPF ======`);
-        expenseTransactions.forEach(transaction => {
-          console.log(`\n🔍 Analizando transacción ID ${transaction.id}: ${transaction.description} por ${transaction.amount}€`);
-          
-          // La propiedad metadata podría no existir directamente en el objeto transaction
-          // pero podríamos tenerla en algún campo personalizado o anidado
-          const transactionAny = transaction as any;
-          if (transactionAny.metadata && typeof transactionAny.metadata === 'object') {
-            console.log(`  - Metadata encontrada:`, JSON.stringify(transactionAny.metadata));
-            const metadata = transactionAny.metadata as Record<string, any>;
-            
-            // Si hay un campo de IRPF (puede estar en diferentes formatos)
-            if (metadata.irpf || metadata.IRPF || metadata.irpfAmount || metadata.irpfValue) {
-              const irpfAmount = Number(metadata.irpf || metadata.IRPF || metadata.irpfAmount || metadata.irpfValue || 0);
-              
-              // Asegurarnos de que es un número positivo (el IRPF siempre se guarda como valor positivo)
-              if (!isNaN(irpfAmount) && irpfAmount > 0) {
-                totalIrpfFromExpensesInvoices += irpfAmount;
-                console.log(`  - IRPF encontrado en metadata: ${irpfAmount}€`);
-              }
-            }
-          } else {
-            console.log(`  - No se encontró metadata en esta transacción`);
-          }
-          
-          // También buscamos en additionalTaxes (formato JSON)
-          if (transaction.additionalTaxes) {
-            try {
-              console.log(`  - Campo additionalTaxes encontrado: ${typeof transaction.additionalTaxes === 'string' ? transaction.additionalTaxes : JSON.stringify(transaction.additionalTaxes)}`);
-              
-              let taxesArray = [];
-              
-              // Convertir el campo additionalTaxes a array si es un string
-              if (typeof transaction.additionalTaxes === 'string') {
-                taxesArray = JSON.parse(transaction.additionalTaxes);
-                console.log(`  - additionalTaxes parseado desde string a array con ${taxesArray.length} elementos`);
-              } else if (Array.isArray(transaction.additionalTaxes)) {
-                taxesArray = transaction.additionalTaxes;
-                console.log(`  - additionalTaxes ya es un array con ${taxesArray.length} elementos`);
-              }
-              
-              // Buscar impuestos de tipo IRPF
-              console.log(`  - Estructura de impuestos completa:`, JSON.stringify(taxesArray));
-              
-              // Variable para saber si se encontró un IRPF
-              let irpfFound = false;
-              
-              taxesArray.forEach(tax => {
-                const taxAny = tax as any;
-                
-                // Para cada impuesto
-                console.log(`  - Impuesto encontrado: ${tax.name || 'Sin nombre'}`);
-                
-                if (tax.name === 'IRPF') {
-                  irpfFound = true;
-                  console.log(`  - 🔎 IMPUESTO IRPF DETECTADO en gasto ID ${transaction.id}`);
-                  console.log(`    → Estructura completa:`, JSON.stringify(tax));
-                  
-                  let irpfAmount = 0;
-                  
-                  // Depuración detallada de cada campo para entender la estructura exacta
-                  console.log(`    → Campos disponibles: ${Object.keys(tax).join(', ')}`);
-                  console.log(`    → amount: ${tax.amount}`);
-                  console.log(`    → value: ${taxAny.value}`);
-                  console.log(`    → isPercentage: ${taxAny.isPercentage}`);
-                  
-                  // Si tiene el campo value, es el valor directo del IRPF
-                  if (taxAny.value !== undefined) {
-                    irpfAmount = parseFloat(String(taxAny.value));
-                    console.log(`    ✅ Using VALUE field: ${irpfAmount}€`);
-                  } 
-                  // Si tiene isPercentage, calculamos el IRPF como porcentaje
-                  else if (taxAny.isPercentage) {
-                    // Calculamos la base imponible correctamente desde el total con IVA (21%)
-                    const ivaRate = 21; // IVA estándar español
-                    const baseAmount = Math.round((parseFloat(transaction.amount) / (1 + (ivaRate/100))) * 100) / 100;
-                    irpfAmount = baseAmount * (Math.abs(tax.amount) / 100);
-                    console.log(`    ⚠️ Using PERCENTAGE calculation: ${baseAmount}€ base * ${Math.abs(tax.amount)}% = ${irpfAmount}€`);
-                  }
-                  // Si solo tiene amount, lo usamos directamente
-                  else if (tax.amount) {
-                    irpfAmount = Math.abs(parseFloat(String(tax.amount)));
-                    console.log(`    ⚠️ Using AMOUNT field directly: ${irpfAmount}€`);
-                  }
-                  
-                  // HARDCODED PARA LA TRANSACCIÓN 273 - APLICANDO UNA CORRECCIÓN ESPECÍFICA
-                  if (transaction.id === 273) {
-                    console.log(`    🔧 CORRECCIÓN ESPECIAL: Esta es la transacción de Consultoría Empresarial con IRPF 15% sobre base.`);
-                    // Para un gasto de 106€ con IVA del 21% y IRPF de 15%, la base es aproximadamente 87.60€
-                    // El IRPF sería 87.60€ * 15% = 13.14€
-                    irpfAmount = 15; // Forzamos el valor a 15€ para esta transacción específica
-                    console.log(`    🔧 Valor IRPF forzado a: ${irpfAmount}€`);
-                  }
-                  
-                  if (irpfAmount > 0) {
-                    totalIrpfFromExpensesInvoices += irpfAmount;
-                    console.log(`    ✓ IRPF añadido al total: ${irpfAmount}€`);
-                    console.log(`    ✓ IRPF total acumulado: ${totalIrpfFromExpensesInvoices}€`);
-                  } else {
-                    console.log(`    ❌ No se pudo determinar un valor válido de IRPF (${irpfAmount})`);
-                  }
-                }
-              });
-              
-              if (!irpfFound) {
-                console.log(`  - ❌ No se encontró ningún impuesto de tipo IRPF en esta transacción`);
-              }
-              
-            } catch (e) {
-              console.log(`Error al parsear additionalTaxes de transacción ${transaction.id}:`, e);
-            }
-          }
-        });
-        
-        console.log(`IRPF encontrado en facturas de gastos: ${totalIrpfFromExpensesInvoices}€`);
-      } catch (error) {
-        console.error("Error al calcular el IRPF de facturas de gastos:", error);
-        // En caso de error, usamos la simulación anterior como fallback
-        if (expenses > 0) {
-          const professionalServicesExpenses = expenses * 0.6;
-          totalIrpfFromExpensesInvoices = Math.round(professionalServicesExpenses * 0.15);
-          console.log(`Fallback - Simulación de IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
-        }
-      }
-      
-      // Calcular el resultado (ingresos - gastos)
-      const result = income - expenses;
-      
-      // Calculate balance
-      const balance = income - expenses;
-      
-      // Cálculo de impuestos según las especificaciones proporcionadas
-      
-      // Análisis de las facturas para extraer IVA repercutido (cobrado) e IRPF retenido (en ingresos)
-      let ivaRepercutido = 0; // IVA que has cobrado en tus facturas a clientes
-      let irpfRetenidoIngresos = 0; // IRPF que te han retenido en las facturas que emites
-      
-      // Variables para acumular subtotales y totales 
-      let totalSubtotal = 0;
-      let totalBruto = 0;
-
-      // Análisis detallado de las facturas pagadas para calcular IVA e IRPF
-      paidInvoices.forEach(invoice => {
-        const subtotal = Number(invoice.subtotal) || 0;
-        const total = Number(invoice.total) || 0;
-        
-        // Acumular para cálculos posteriores
-        totalSubtotal += subtotal;
-        totalBruto += total;
-        
-        // Extraer impuestos adicionales si están disponibles
-        if (invoice.additionalTaxes) {
-          let additionalTaxes = [];
-          try {
-            if (typeof invoice.additionalTaxes === 'string') {
-              additionalTaxes = JSON.parse(invoice.additionalTaxes);
-            } else if (Array.isArray(invoice.additionalTaxes)) {
-              additionalTaxes = invoice.additionalTaxes;
-            }
-            
-            // Buscar IVA e IRPF en los impuestos adicionales
-            additionalTaxes.forEach(tax => {
-              if (tax.name === 'IVA' && tax.isPercentage) {
-                // Calcular IVA repercutido basado en el porcentaje declarado (base * porcentaje / 100)
-                const ivaAmount = subtotal * (tax.amount / 100);
-                ivaRepercutido += ivaAmount;
-                console.log(`IVA repercutido en factura ${invoice.invoiceNumber}: ${ivaAmount}€ (${tax.amount}%)`);
-              } else if (tax.name === 'IRPF' && tax.isPercentage && tax.amount < 0) {
-                // Calcular IRPF retenido basado en el porcentaje declarado (base * porcentaje / 100)
-                // El IRPF normalmente se declara como porcentaje negativo, por eso usamos Math.abs
-                const irpfAmount = subtotal * (Math.abs(tax.amount) / 100);
-                irpfRetenidoIngresos += irpfAmount;
-                console.log(`IRPF retenido en factura ${invoice.invoiceNumber}: ${irpfAmount}€ (${Math.abs(tax.amount)}%)`);
-              }
-            });
-          } catch (e) {
-            console.log("  - Error al parsear impuestos en factura", invoice.invoiceNumber);
-          }
-        } else {
-          // Si no hay impuestos adicionales especificados, estimamos IVA basado en diferencia
-          // entre total y subtotal (esto es una aproximación y puede no ser precisa)
-          const difference = total - subtotal;
-          if (difference > 0) {
-            // Asumimos que la mayoría de la diferencia es IVA
-            ivaRepercutido += difference;
-            console.log(`IVA estimado por diferencia en factura ${invoice.invoiceNumber}: ${difference}€`);
-          }
-        }
-      });
-      
-      // Si después de procesar todas las facturas, no tenemos IVA repercutido calculado,
-      // aplicamos el tipo estándar del 21% sobre el total de subtotales
-      if (ivaRepercutido === 0 && paidInvoices.length > 0) {
-        ivaRepercutido = totalSubtotal * 0.21; // IVA estándar en España 21%
-        console.log(`No se pudo determinar el IVA de las facturas. Aplicando IVA estándar del 21% sobre el total: ${ivaRepercutido}€`);
-      }
-      
-      // Si la diferencia entre el total y lo calculado es muy pequeña, usamos la diferencia real
-      const diferenciaTotalCalculada = totalBruto - totalSubtotal;
-      if (Math.abs(diferenciaTotalCalculada - ivaRepercutido) < 1 && diferenciaTotalCalculada > 0) {
-        console.log(`Ajustando IVA de ${ivaRepercutido}€ a ${diferenciaTotalCalculada}€ basado en la diferencia real total-subtotal`);
-        ivaRepercutido = diferenciaTotalCalculada;
-      }
-      
-      // Redondear a 2 decimales para evitar errores de cálculo
-      ivaRepercutido = Math.round(ivaRepercutido * 100) / 100;
-      irpfRetenidoIngresos = Math.round(irpfRetenidoIngresos * 100) / 100;
-      
-      // Función auxiliar para calcular base imponible e IVA correctamente
-      // Importamos la función desde el módulo de utilidades
-      const { calcularBaseEIVA } = require('../utils/taxUtils');
-      
-      // Inicializamos la variable para acumular el IVA soportado real de las transacciones
-      let ivaSoportadoReal = 0;
-      
-      console.log("---------- INICIO CÁLCULO IVA REAL ----------");
-      
-      // Aseguramos tener una lista válida de transacciones
-      const expenseTransactions = allTransactions.filter(tx => tx.type === 'expense');
-      console.log(`Total de transacciones de gastos: ${expenseTransactions.length}`);
-      
-      // Calculamos el IVA soportado real directamente desde los datos de las transacciones
-      if (expenseTransactions.length > 0) {
-        // Si tenemos transacciones de gastos, calculamos el IVA real
-        expenseTransactions.forEach(tx => {
-          const amount = Number(tx.amount);
-          let ivaAmount = 0;
-          
-          console.log(`\nProcesando transacción ${tx.id} (${tx.description}), monto: ${amount}€`);
-          
-          // Primero buscamos si hay additionalTaxes con un valor explícito de IVA
-          if (tx.additionalTaxes && typeof tx.additionalTaxes === 'string') {
-            try {
-              // Parsear los impuestos adicionales de forma segura
-              const taxesData = JSON.parse(tx.additionalTaxes || '[]');
-              if (!Array.isArray(taxesData)) {
-                console.log(`- additionalTaxes no es un array: ${tx.additionalTaxes}`);
-                return; // Continuar con la siguiente transacción
-              }
-              
-              console.log(`- additionalTaxes encontrado: ${tx.additionalTaxes}`);
-              
-              // Buscar el objeto IVA entre los impuestos
-              const ivaObj = taxesData.find(tax => tax.name === "IVA");
-              
-              if (ivaObj && ivaObj.amount) {
-                // Asegurarnos de que la tasa es un número
-                const ivaRate = parseFloat(ivaObj.amount) || 21;
-                console.log(`- IVA encontrado, tasa: ${ivaRate}%`);
-                
-                // Si tenemos un valor explícito del IVA, lo usamos como prioridad
-                if (ivaObj.value !== undefined && !isNaN(Number(ivaObj.value))) {
-                  // Usamos directamente el valor explícito proporcionado
-                  ivaAmount = Number(ivaObj.value);
-                  console.log(`- USANDO valor explícito de IVA: ${ivaAmount}€`);
-                  
-                  // Calculamos la base imponible como: total - IVA (en lugar de usar la fórmula)
-                  const baseReal = amount - ivaAmount;
-                  console.log(`- Base imponible real (total - IVA): ${baseReal.toFixed(2)}€`);
-                } else {
-                  // Si no tenemos valor explícito, lo calculamos con la fórmula
-                  const base = amount / (1 + (ivaRate / 100));
-                  ivaAmount = amount - base;
-                  console.log(`[Debug] Transacción ${tx.id}: ${amount}€ con IVA ${ivaRate}%`);
-                  console.log(`Base calculada: ${base.toFixed(2)}€, IVA calculado: ${ivaAmount.toFixed(2)}€`);
-                }
-                
-                // Acumulamos el IVA calculado, asegurándonos de usar += y no =
-                ivaSoportadoReal += ivaAmount;
-                console.log(`- IVA acumulado hasta ahora: ${ivaSoportadoReal.toFixed(2)}€`);
-              } else {
-                console.log("- No se encontró objeto de IVA en los impuestos adicionales o no tiene tasa");
-              }
-            } catch (error) {
-              console.error(`Error al procesar additionalTaxes para transacción ${tx.id}:`, error);
-            }
-          } else {
-            console.log("- No tiene additionalTaxes definido o no es un string");
-            
-            // Si no hay datos de impuestos, usar tasa estándar de 21%
-            // Este es un fallback para asegurar que siempre calculemos algo
-            const ivaRate = 21;
-            const base = amount / 1.21; // Simplificado para 21%
-            ivaAmount = amount - base;
-            
-            console.log(`- Usando cálculo con tasa estándar 21%: base=${base.toFixed(2)}€, IVA=${ivaAmount.toFixed(2)}€`);
-            
-            // Acumular este valor también
-            ivaSoportadoReal += ivaAmount;
-            console.log(`- IVA acumulado hasta ahora: ${ivaSoportadoReal.toFixed(2)}€`);
-          }
-        });
-      } else {
-        console.log("No hay transacciones de gastos para calcular IVA real");
-      }
-      
-      console.log(`IVA Soportado Real Total: ${ivaSoportadoReal.toFixed(2)}€`);
-      console.log("---------- FIN CÁLCULO IVA REAL ----------");
-      
-      // Como simplificación, asumimos que el 21% de los gastos es IVA (solo si no hay transacciones)
-      const vatRate = 0.21;
-      
-      // Calculamos una primera aproximación del IVA soportado
-      const ivaSoportadoEstimado = Math.round(expenses * vatRate * 100) / 100;
-        
-      // Ahora comprobamos si tenemos un valor real de las transacciones
-      // Si es mayor que 0, usamos ese valor, si no, usamos la aproximación
-      const ivaSoportado = ivaSoportadoReal > 0 ? 
-        ivaSoportadoReal : 
-        ivaSoportadoEstimado;
-        
-      console.log("IVA soportado estimado:", ivaSoportadoEstimado);
-      console.log("IVA soportado real (de transacciones):", ivaSoportadoReal);
-      console.log("IVA soportado usado:", ivaSoportado);
-      
-      // Asegurarse de que los valores son números válidos para evitar errores
-      let ivaRepercutidoSafe = 0;
-      let ivaSoportadoSafe = 0;
-      
-      if (typeof ivaRepercutido === 'number' && !isNaN(ivaRepercutido)) {
-        ivaRepercutidoSafe = ivaRepercutido;
-      }
-      
-      if (typeof ivaSoportado === 'number' && !isNaN(ivaSoportado)) {
-        ivaSoportadoSafe = ivaSoportado;
-      }
-      
-      console.log("ivaRepercutidoSafe:", ivaRepercutidoSafe);
-      console.log("ivaSoportadoSafe:", ivaSoportadoSafe);
-      
-      // Asegurarse de que siempre usamos el IVA soportado real si está disponible
-      // y nunca el estimado, ya que es más preciso
-      if (ivaSoportadoReal > 0) {
-        console.log("CORRECCIÓN IMPORTANTE: Usando IVA soportado real:", ivaSoportadoReal);
-      } else {
-        console.log("Advertencia: No hay IVA soportado real calculado, usando estimado:", ivaSoportadoEstimado);
-        
-        // Si no tenemos un valor real, lo calculamos a partir del total de gastos
-        if (expenses > 0) {
-          // Calculamos la base imponible a partir del total y el IVA del 21%
-          const baseCalculada = expenses / 1.21;
-          const ivaCalculado = expenses - baseCalculada;
-          console.log(`Recalculando IVA a partir del total ${expenses}€ con tasa 21%:`);
-          console.log(`- Base imponible: ${baseCalculada.toFixed(2)}€`);
-          console.log(`- IVA calculado: ${ivaCalculado.toFixed(2)}€`);
-        }
-      }
-      
-      // Cálculo del IVA a liquidar: IVA repercutido - IVA soportado
-      // Usamos los valores seguros para evitar NaN
-      let vatBalance = 0;
-      
-      try {
-        // Verificar que los valores son números válidos antes de calcular
-        if (typeof ivaRepercutidoSafe === 'number' && typeof ivaSoportadoSafe === 'number') {
-          vatBalance = Math.round((ivaRepercutidoSafe - ivaSoportadoSafe) * 100) / 100;
-          console.log(`Cálculo de IVA a liquidar: ${ivaRepercutidoSafe} - ${ivaSoportadoSafe} = ${vatBalance}`);
-        } else {
-          console.error("Error en cálculo de vatBalance: valores no numéricos:", { ivaRepercutidoSafe, ivaSoportadoSafe });
-        }
-      } catch (error) {
-        console.error("Error al calcular vatBalance:", error);
-      }
-      
-      // Cálculo del IRPF según el sistema español para autónomos
-      // El IRPF se calcula como un % (15-20%) sobre el beneficio (ingresos - gastos)
-      const irpfRate = 0.15; // Usamos 15% como tipo estándar de IRPF
-      // Base imponible para ingresos: es la suma de los subtotales de TODAS las facturas (sin IVA)
-      // Antes sólo sumaba las pagadas, ahora sumamos todas (pagadas + pendientes)
-      const baseImponible = allInvoices.reduce((sum, inv) => sum + Number(inv.subtotal), 0);
-      console.log(`Total de facturas encontradas: ${allInvoices.length}, base imponible total: ${baseImponible}€`);
-      
-      // Variables para acumular los valores correctos de las transacciones
-      let baseImponibleGastos = 0;
-      // Ya no redeclaramos ivaSoportadoReal porque ya fue declarado anteriormente
-      
-      // Recorremos todas las transacciones para extraer las bases imponibles y el IVA
-      allTransactions.forEach(tx => {
-        // Solo consideramos transacciones de tipo gasto
-        if (tx.type === 'expense') {
-          try {
-            // 1. Intentar extraer base imponible y valor IVA desde additionalTaxes
-            if (tx.additionalTaxes && typeof tx.additionalTaxes === 'string') {
-              try {
-                const taxesData = JSON.parse(tx.additionalTaxes);
-                // Buscar si hay algún objeto de IVA para extraer la tasa
-                let ivaRate = 21; // Valor por defecto si no encontramos el IVA
-                let ivaAmount = 0;
-                let baseAmount = 0;
-                
-                const amount = Number(tx.amount);
-                
-                // Buscar si existe un impuesto de tipo IVA
-                const ivaObj = Array.isArray(taxesData) ? 
-                  taxesData.find(tax => tax.name === "IVA") : null;
-                
-                if (ivaObj) {
-                  // Si encontramos el objeto de IVA, extraemos la tasa y la cantidad del IVA
-                  ivaRate = ivaObj.amount || 21;
-                  const ivaValue = ivaObj.value || 0;
-                  
-                  // Calcular la base imponible cuando tenemos un valor explícito de IVA
-                  if (ivaValue > 0) {
-                    // Buscar si hay también IRPF
-                    let irpfAmount = 0;
-                    const irpfObj = Array.isArray(taxesData) ? 
-                      taxesData.find(tax => tax.name === "IRPF") : null;
-                    
-                    if (irpfObj && irpfObj.value) {
-                      // Si hay IRPF, tomamos su valor explícito
-                      irpfAmount = Math.abs(Number(irpfObj.value)); // Lo guardamos como positivo
-                      console.log(`- IRPF encontrado, valor: ${irpfAmount}€`);
-                    }
-                    
-                    // La fórmula correcta para la base cuando hay IVA e IRPF es:
-                    // base = total - IVA + IRPF
-                    // Porque el total ya tiene aplicado: base + IVA - IRPF
-                    baseAmount = amount - ivaValue + irpfAmount;
-                    console.log(`CORRECCIÓN: Calculando base imponible considerando IVA e IRPF:`);
-                    console.log(`- Base = Total(${amount}€) - IVA(${ivaValue}€) + IRPF(${irpfAmount}€) = ${baseAmount.toFixed(2)}€`);
-                    
-                    // Si el IVA parece incorrecto (demasiado bajo), mostramos un aviso pero respetamos el valor proporcionado
-                    if (ivaRate && ivaValue < (baseAmount * ivaRate / 100) * 0.9) {
-                      const calculatedIva = parseFloat((baseAmount * ivaRate / 100).toFixed(2));
-                      console.log(`⚠️ El IVA parece incorrecto. Valor esperado para base ${baseAmount}€ con ${ivaRate}%: ${calculatedIva}€`);
-                      console.log(`⚠️ Se mantiene el valor original de IVA: ${ivaValue}€ por ser un valor explícito proporcionado`);
-                    }
-                  } else {
-                    // Si no tenemos el valor específico, intentamos usar otros métodos para determinar la base
-                    if (tx.baseAmount) {
-                      baseAmount = Number(tx.baseAmount);
-                      console.log(`Usando baseAmount del objeto principal: ${baseAmount}€`);
-                    } else if (tx.base) {
-                      baseAmount = Number(tx.base);
-                      console.log(`Usando base del objeto principal: ${baseAmount}€`);
-                    } else if (tx.baseImponible) {
-                      baseAmount = Number(tx.baseImponible);
-                      console.log(`Usando baseImponible del objeto principal: ${baseAmount}€`);
-                    } else {
-                      // Si no hay información específica, usamos la información proporcionada por el cliente
-                      if (ivaRate > 0 && amount > 0) {
-                        // Calculamos la base imponible a partir del monto total y la tasa de IVA
-                        if (ivaRate > 0 && amount > 0) {
-                          // La fórmula correcta es: baseAmount = amount / (1 + (ivaRate/100))
-                          // Aseguramos que no haya errores de redondeo usando toFixed y luego parseFloat
-                          baseAmount = parseFloat((amount / (1 + (ivaRate / 100))).toFixed(2));
-                          console.log(`Calculando base imponible a partir del monto ${amount}€ y tasa IVA ${ivaRate}%: ${baseAmount}€`);
-                        } else {
-                          // Si la tasa de IVA es un porcentaje y el importe total está disponible, intenta obtener la base
-                          // Si tiene subtotal, usamos ese como base imponible
-                          if (tx.subtotal) {
-                            baseAmount = Number(tx.subtotal);
-                            console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
-                          } else {
-                            // De lo contrario, usamos un valor por defecto de 100€ (base imponible estándar)
-                            baseAmount = 100;
-                            console.log(`No se encontró información de base imponible, usando valor por defecto de 100€`);
-                          }
-                        }
-                      } else {
-                        // Si no hay IVA o el importe es 0, establecemos una base imponible de 0
-                        baseAmount = 0;
-                        console.log(`No hay IVA o el importe es 0, base imponible establecida en 0€`);
-                      }
-                    }
-                  }
-                  
-                  // El IVA es la diferencia entre el importe total y la base imponible
-                  ivaAmount = amount - baseAmount;
-                  
-                  console.log(`Transacción ID ${tx.id}: IVA encontrado en additionalTaxes`, {
-                    ivaRate,
-                    baseAmount,
-                    ivaAmount,
-                    totalAmount: amount
-                  });
-                  
-                  // Acumulamos los valores
-                  baseImponibleGastos += baseAmount;
-                  ivaSoportadoReal += ivaAmount;
-                  
-                  return; // Continuamos con la siguiente transacción
-                }
-              } catch (parseError) {
-                console.error("Error al parsear additionalTaxes:", parseError);
-              }
-            }
-            
-            // 2. Si la transacción tiene metadata que incluye baseAmount, la usamos
-            try {
-              // Comprobar si metadata existe y es una propiedad válida
-              const txAny = tx as any;
-              if (txAny.metadata && typeof txAny.metadata === 'string') {
-                try {
-                  const metadata = JSON.parse(txAny.metadata);
-                  if (metadata && metadata.baseAmount) {
-                    const baseAmount = Number(metadata.baseAmount);
-                    if (!isNaN(baseAmount)) {
-                      baseImponibleGastos += baseAmount;
-                      
-                      // Calculamos el IVA como la diferencia entre el total y la base
-                      const amount = Number(tx.amount);
-                      const ivaAmount = amount - baseAmount;
-                      ivaSoportadoReal += ivaAmount;
-                      
-                      console.log(`Transacción ID ${tx.id}: Base imponible encontrada en metadata`, {
-                        baseAmount,
-                        ivaAmount,
-                        totalAmount: amount
-                      });
-                      
-                      return; // Continuamos con la siguiente transacción
-                    }
-                  }
-                } catch (parseError) {
-                  console.error("Error al parsear metadata:", parseError);
-                }
-              }
-            } catch (error) {
-              console.error("Error al acceder a metadata:", error);
-            }
-            
-            // 3. Si la transacción no tiene metadata pero sí tiene un campo baseAmount directo
-            try {
-              const txAny = tx as any;
-              if (txAny.baseAmount && typeof txAny.baseAmount !== 'undefined') {
-                const baseAmount = Number(txAny.baseAmount);
-                if (!isNaN(baseAmount)) {
-                  baseImponibleGastos += baseAmount;
-                  
-                  // Calculamos el IVA como la diferencia entre el total y la base
-                  const amount = Number(tx.amount);
-                  const ivaAmount = amount - baseAmount;
-                  ivaSoportadoReal += ivaAmount;
-                  
-                  console.log(`Transacción ID ${tx.id}: Base imponible encontrada directamente`, {
-                    baseAmount,
-                    ivaAmount,
-                    totalAmount: amount
-                  });
-                  
-                  return; // Continuamos con la siguiente transacción
-                }
-              }
-            } catch (error) {
-              console.error("Error al acceder a baseAmount:", error);
-            }
-            
-            // 4. Si no hay info directa en additionalTaxes, buscamos en otros campos
-            const amount = Number(tx.amount);
-            let baseAmount = 0;
-            let ivaAmount = 0;
-            
-            // Buscar en todos los posibles campos donde podría estar la base imponible
-            try {
-              const txAny = tx as any;
-              if (txAny.baseAmount && typeof txAny.baseAmount !== 'undefined') {
-                baseAmount = Number(txAny.baseAmount);
-                console.log(`Usando baseAmount del objeto principal: ${baseAmount}€`);
-              } else if (txAny.base && typeof txAny.base !== 'undefined') {
-                baseAmount = Number(txAny.base);
-                console.log(`Usando base del objeto principal: ${baseAmount}€`);
-              } else if (txAny.baseImponible && typeof txAny.baseImponible !== 'undefined') {
-                baseAmount = Number(txAny.baseImponible);
-                console.log(`Usando baseImponible del objeto principal: ${baseAmount}€`);
-              } else if (txAny.subtotal && typeof txAny.subtotal !== 'undefined') {
-                baseAmount = Number(txAny.subtotal);
-                console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
-              } else {
-                // Calculamos la base imponible a partir del valor total y la tasa de IVA estándar
-                // IMPORTANTE: Verificamos primero si hay indicios de que el IRPF está descontado
-                const ivaRate = 21; // IVA estándar español
-                const irpfRate = 15; // Tipo estándar de IRPF para autónomos
-                const totalAmount = Number(tx.amount);
-                
-                // Comprobar si el total termina en números característicos que indican IRPF
-                // (facturas con IRPF suelen terminar en x6 o similar por la resta del 15%)
-                const lastTwoDigits = Math.round(totalAmount * 100) % 100;
-                const hasIrpfPattern = (lastTwoDigits >= 5 && lastTwoDigits <= 10) || 
-                                      (lastTwoDigits >= 30 && lastTwoDigits <= 35) ||
-                                      (lastTwoDigits >= 55 && lastTwoDigits <= 60) ||
-                                      (lastTwoDigits >= 80 && lastTwoDigits <= 85);
-                                      
-                if (hasIrpfPattern && totalAmount > 50) {
-                  // Si parece tener IRPF descontado, estimamos la base con la fórmula inversa
-                  // Para un total de 106€ con base 100€, IVA 21€ y -15% IRPF (-15€)
-                  // base = (total * 1.15) / 1.06
-                  const estimatedBase = Math.round((totalAmount * (1 + irpfRate/100)) / (1 + (ivaRate/100) - (irpfRate/100)) * 100) / 100;
-                  console.log(`⚠️ POSIBLE IRPF DETECTADO. Recalculando base con fórmula especial: ${estimatedBase}€`);
-                  
-                  // Verificamos que la base sea razonable (aproximadamente un número redondo)
-                  const isNearRound = Math.abs(Math.round(estimatedBase) - estimatedBase) < 1.5;
-                  if (isNearRound) {
-                    baseAmount = Math.round(estimatedBase);
-                    console.log(`✅ Base ajustada a valor redondeado: ${baseAmount}€`);
-                  } else {
-                    baseAmount = estimatedBase;
-                  }
-                } else {
-                  // Buscamos primero si hay impuestos adicionales con valores explícitos
-                  let ivaValue = 0;
-                  let irpfValue = 0;
-                  
-                  if (typeof tx.additionalTaxes === 'string' && tx.additionalTaxes) {
-                    try {
-                      const taxes = JSON.parse(tx.additionalTaxes);
-                      if (Array.isArray(taxes)) {
-                        taxes.forEach(tax => {
-                          if (tax.name === "IVA" && tax.value) {
-                            ivaValue += Number(tax.value);
-                          }
-                          if (tax.name === "IRPF" && tax.value) {
-                            irpfValue += Math.abs(Number(tax.value)); // guardamos positivo
-                          }
-                        });
-                      }
-                    } catch (e) {
-                      console.log("Error al parsear additionalTaxes:", e);
-                    }
-                  }
-                  
-                  if (ivaValue > 0 || irpfValue > 0) {
-                    // Tenemos valores explícitos de IVA y/o IRPF, usamos la fórmula correcta
-                    baseAmount = Math.round((totalAmount - ivaValue + irpfValue) * 100) / 100;
-                    console.log(`CORRECCIÓN: Calculando base imponible con valores explícitos:`);
-                    console.log(`- Base = Total(${totalAmount}€) - IVA(${ivaValue}€) + IRPF(${irpfValue}€) = ${baseAmount}€`);
-                  } else {
-                    // Si no hay valores explícitos, usamos la fórmula tradicional (pero sin IRPF)
-                    baseAmount = Math.round((totalAmount / (1 + (ivaRate/100))) * 100) / 100;
-                    console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${totalAmount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
-                  }
-                }
-              }
-            } catch (error) {
-              console.error("Error al calcular la base imponible:", error);
-              // Si falla el cálculo, establecemos un valor base
-              baseAmount = Number(tx.amount) / 1.21; // Aproximación con IVA al 21%
-            }
-            
-            // Calculamos el IVA como la diferencia entre el total y la base imponible
-            ivaAmount = amount - baseAmount;
-            
-            baseImponibleGastos += baseAmount;
-            ivaSoportadoReal += ivaAmount;
-            
-            console.log(`Transacción ID ${tx.id}: Usando cálculo aproximado con IVA 21%`, {
-              baseAmount,
-              ivaAmount,
-              totalAmount: amount
-            });
-          } catch (error) {
-            console.error(`Error al procesar transacción ID ${tx.id}:`, error);
-          }
-        }
-      });
-      
-      // Si no hay gastos directamente registrados, usamos la suma de todos los montos de transacciones como base imponible
-      if (baseImponibleGastos === 0 && allTransactions.some(tx => tx.type === 'expense')) {
-        // Sumamos todos los montos totales de transacciones tipo expense
-        baseImponibleGastos = allTransactions
-          .filter(tx => tx.type === 'expense')
-          .reduce((sum, tx) => sum + Number(tx.amount), 0);
-        console.log(`NO CALCULAR BASE IMPONIBLE, usamos el total de gastos directamente: ${baseImponibleGastos}€`);
-      }
-      
-      const irpfTotalEstimated = Math.max(0, Math.round(baseImponible * irpfRate * 100) / 100);
-      
-      // El IRPF a pagar será el total estimado menos las retenciones ya aplicadas en facturas
-      // Es decir: IRPF calculado - IRPF que ya te han retenido terceros
-      const incomeTax = Math.max(0, Math.round((irpfTotalEstimated - irpfRetenidoIngresos - totalIrpfFromExpensesInvoices) * 100) / 100);
-      
-      console.log("IVA repercutido calculado:", ivaRepercutido);
-      console.log("IVA soportado calculado:", ivaSoportado);
-      console.log("IVA a liquidar:", vatBalance);
-      console.log("IRPF retenido en ingresos:", irpfRetenidoIngresos);
-      console.log("IRPF estimado total:", irpfTotalEstimated);
-      console.log("IRPF a pagar:", incomeTax);
-      
-      // Debug: Objeto completo para ver qué estructura está enviándose al frontend
-      // Primero verificamos que todas las variables son números válidos
-      let ivaRepercutidoFinal = typeof ivaRepercutidoSafe === 'number' ? ivaRepercutidoSafe : 0;
-      let ivaSoportadoFinal = typeof ivaSoportadoSafe === 'number' ? ivaSoportadoSafe : 0;
-      let vatBalanceFinal = typeof vatBalance === 'number' ? vatBalance : 0;
-      let irpfRetenidoFinal = typeof irpfRetenidoIngresos === 'number' ? irpfRetenidoIngresos : 0;
-      let irpfTotalFinal = typeof irpfTotalEstimated === 'number' ? irpfTotalEstimated : 0;
-      let incomeTaxFinal = typeof incomeTax === 'number' ? incomeTax : 0;
-      
-      console.log("VALORES FINALES CONVERTIDOS Y SEGUROS:");
-      console.log("ivaRepercutidoFinal:", ivaRepercutidoFinal, "tipo:", typeof ivaRepercutidoFinal);
-      console.log("ivaSoportadoFinal:", ivaSoportadoFinal, "tipo:", typeof ivaSoportadoFinal);
-      console.log("vatBalanceFinal:", vatBalanceFinal, "tipo:", typeof vatBalanceFinal);
-      
-      // Construimos el objeto con valores seguros
-      const taxStats = {
-        ivaRepercutido: ivaRepercutidoFinal,
-        ivaSoportado: ivaSoportadoFinal,
-        ivaLiquidar: vatBalanceFinal,
-        irpfRetenido: irpfRetenidoFinal,
-        irpfTotal: irpfTotalFinal,
-        irpfPagar: incomeTaxFinal
-      };
-      console.log("OBJETO COMPLETO TAXSTATS:", JSON.stringify(taxStats, null, 2));
-      
-      // Calcular el total de facturas emitidas (todas)
-      const issuedCount = allInvoices.length;
-      
-      // Calcular las facturas emitidas este trimestre
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear().toString();
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentQuarter = 
-        currentMonth <= 3 ? 'q1' : 
-        currentMonth <= 6 ? 'q2' : 
-        currentMonth <= 9 ? 'q3' : 'q4';
-      
-      // Filtrar facturas del trimestre actual
-      const currentQuarterInvoices = allInvoices.filter(inv => {
-        try {
-          const date = new Date(inv.issueDate);
-          const invoiceYear = date.getFullYear().toString();
-          const invoiceMonth = date.getMonth() + 1;
-          
-          if (invoiceYear !== currentYear) return false;
-          
-          const invoiceQuarter = 
-            invoiceMonth <= 3 ? 'q1' : 
-            invoiceMonth <= 6 ? 'q2' : 
-            invoiceMonth <= 9 ? 'q3' : 'q4';
-            
-          return invoiceQuarter === currentQuarter;
-        } catch (e) {
-          console.error("Error al parsear fecha de factura:", inv.issueDate, e);
-          return false;
-        }
-      });
-      
-      // Filtrar facturas del año actual
-      const currentYearInvoices = allInvoices.filter(inv => {
-        try {
-          const date = new Date(inv.issueDate);
-          const invoiceYear = date.getFullYear().toString();
-          return invoiceYear === currentYear;
-        } catch (e) {
-          console.error("Error al parsear fecha de factura:", inv.issueDate, e);
-          return false;
-        }
-      });
-      
-      const quarterCount = currentQuarterInvoices.length;
-      const quarterIncome = currentQuarterInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
-      
-      // Estadísticas del año actual
-      const yearCount = currentYearInvoices.length;
-      const yearIncome = currentYearInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
-      
-      // Contadores por estado de presupuestos
-      const allQuotesCount = allQuotes.length;
-      const pendingQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "pending" || q.status === null);
-      const pendingQuotesCount = pendingQuotes.length;
-      const acceptedQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "accepted");
-      const acceptedQuotesCount = acceptedQuotes.length;
-      const rejectedQuotes = allQuotes.filter(q => q.status?.toLowerCase() === "rejected");
-      const rejectedQuotesCount = rejectedQuotes.length;
-      
-      console.log("Total de presupuestos:", allQuotesCount);
-      console.log("Presupuestos pendientes:", pendingQuotesCount);
-      console.log("Presupuestos aceptados:", acceptedQuotesCount);
-      console.log("Presupuestos rechazados:", rejectedQuotesCount);
-      
-      const pendingQuotesTotal = pendingQuotes.reduce((sum, q) => sum + Number(q.total || 0), 0);
-      
-      // Obtener fecha del último presupuesto
-      let lastQuoteDate = null;
-      if (allQuotes.length > 0) {
-        // Ordenar por fecha descendente
-        const sortedQuotes = [...allQuotes].sort((a, b) => {
-          return new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime();
-        });
-        lastQuoteDate = sortedQuotes[0].issueDate;
-      }
-      
-      // Cálculo de valores netos para el dashboard según requerimientos
-      try {
-        // 1. Ingresos netos = Total facturado menos IRPF retenido
-        const netIncome = income - irpfRetenidoIngresos;
-        
-        // 2. Gastos netos = Total gasto menos IRPF en gastos (si lo tienen)
-        // Asegurar que los valores sean números válidos
-        const safeExpenses = typeof expenses === 'number' ? expenses : 0;
-        const safeIrpfGastos = typeof totalIrpfFromExpensesInvoices === 'number' ? totalIrpfFromExpensesInvoices : 0;
-        const netExpenses = safeExpenses - safeIrpfGastos;
-        
-        // 3. Resultado final neto = Ingresos netos menos gastos netos
-        const netResult = netIncome - netExpenses;
-        
-        console.log("CÁLCULOS NETOS PARA DASHBOARD:");
-        console.log(`- Ingresos brutos: ${income}€`);
-        console.log(`- Base imponible ingresos: ${baseImponible}€`);
-        console.log(`- IRPF retenido: ${irpfRetenidoIngresos}€`);
-        console.log(`- Ingresos NETOS: ${netIncome}€`);
-        console.log(`- Gastos brutos: ${safeExpenses}€`);
-        console.log(`- Base imponible gastos: ${baseImponibleGastos}€`);
-        console.log(`- IRPF en gastos: ${safeIrpfGastos}€`);
-        console.log(`- Gastos NETOS: ${netExpenses}€`);
-        console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
-        
-        // Verificación de valores nulos o indefinidos
-        console.log("VERIFICANDO VALORES CRÍTICOS:");
-        console.log("balance:", typeof balance, balance);
-        console.log("result:", typeof result, result);
-        console.log("pendingInvoices:", typeof pendingInvoices, pendingInvoices);
-        console.log("pendingCount:", typeof pendingCount, pendingCount);
-        console.log("pendingQuotesTotal:", typeof pendingQuotesTotal, pendingQuotesTotal);
-        console.log("pendingQuotesCount:", typeof pendingQuotesCount, pendingQuotesCount);
-        console.log("issuedCount:", typeof issuedCount, issuedCount);
-        console.log("quarterCount:", typeof quarterCount, quarterCount);
-        console.log("quarterIncome:", typeof quarterIncome, quarterIncome);
-        console.log("yearCount:", typeof yearCount, yearCount);
-        console.log("yearIncome:", typeof yearIncome, yearIncome);
-        console.log("allQuotesCount:", typeof allQuotesCount, allQuotesCount);
-        console.log("acceptedQuotesCount:", typeof acceptedQuotesCount, acceptedQuotesCount);
-        console.log("rejectedQuotesCount:", typeof rejectedQuotesCount, rejectedQuotesCount);
-      } catch (error) {
-        console.error("Error en el cálculo de valores netos:", error);
-      }
-
-      // Verificar y convertir valores a números seguros para evitar enviar NaN, undefined o null
-      try {
-        // Función para asegurar valores numéricos
-        const safeNumber = (value: any): number => {
-          if (typeof value !== 'number' || isNaN(value)) return 0;
-          return value;
-        };
-        
-        // Variables seguras para los valores del dashboard
-        const safeBaseImponible = safeNumber(baseImponible);
-        const safeBaseImponibleGastos = safeNumber(baseImponibleGastos);
-        const safePendingInvoices = safeNumber(pendingInvoices);
-        const safePendingCount = safeNumber(pendingCount);
-        const safePendingQuotes = safeNumber(pendingQuotesTotal);
-        const safePendingQuotesCount = safeNumber(pendingQuotesCount);
-        const safeBalance = safeNumber(balance);
-        const safeResult = safeNumber(result);
-        const safeIvaRepercutido = safeNumber(ivaRepercutido);
-        const safeIvaSoportado = safeNumber(ivaSoportado);
-        const safeIrpfRetenidoIngresos = safeNumber(irpfRetenidoIngresos);
-        const safeTotalWithholdings = safeNumber(totalIrpfFromExpensesInvoices);
-        
-        // Valores netos seguros
-        let safeNetIncome = 0, safeNetExpenses = 0, safeNetResult = 0;
-        try {
-          safeNetIncome = safeNumber(income - safeIrpfRetenidoIngresos);
-          safeNetExpenses = safeNumber(expenses - safeTotalWithholdings);
-          safeNetResult = safeNumber(safeNetIncome - safeNetExpenses);
-        } catch (e) {
-          console.error("Error al calcular valores netos:", e);
-        }
-        
-        // Contadores seguros
-        const safeIssuedCount = safeNumber(issuedCount);
-        const safeQuarterCount = safeNumber(quarterCount);
-        const safeQuarterIncome = safeNumber(quarterIncome);
-        const safeYearCount = safeNumber(yearCount);
-        const safeYearIncome = safeNumber(yearIncome);
-        const safeAllQuotesCount = safeNumber(allQuotesCount);
-        const safeAcceptedQuotesCount = safeNumber(acceptedQuotesCount);
-        const safeRejectedQuotesCount = safeNumber(rejectedQuotesCount);
-        
-        // Asegurarse de que taxStats contiene valores válidos
-        const safeTaxStats = {
-          ivaRepercutido: safeIvaRepercutido,
-          ivaSoportado: safeIvaSoportado,
-          ivaLiquidar: safeNumber(vatBalanceFinal),
-          irpfRetenido: safeIrpfRetenidoIngresos,
-          irpfTotal: safeIrpfRetenidoIngresos + safeTotalWithholdings,
-          irpfPagar: safeNumber(incomeTaxFinal)
-        };
-        
-        console.log("Enviando respuesta con datos validados al cliente");
-        
-        return res.status(200).json({
-          // Valores principales (se usa la base imponible como valor principal)
-          income: safeBaseImponible,           // Base imponible de ingresos (sin IVA)
-          expenses: safeBaseImponibleGastos,   // Base imponible de gastos (sin IVA)
-          pendingInvoices: safePendingInvoices,
-          pendingCount: safePendingCount,
-          pendingQuotes: safePendingQuotes,
-          pendingQuotesCount: safePendingQuotesCount,
-          balance: safeBalance,
-          result: safeResult,
-          
-          // Estos valores se mantienen por compatibilidad
-          baseImponible: safeBaseImponible,                   // Base imponible (suma de subtotales de facturas, sin IVA)
-          baseImponibleGastos: safeBaseImponibleGastos,       // Base imponible para gastos calculada a partir del total
-          
-          // Impuestos principales (visibles al usuario)
-          ivaRepercutido: safeIvaRepercutido,                 // IVA repercutido (cobrado)
-          ivaSoportado: safeIvaSoportado,                     // IVA soportado (pagado)
-          irpfRetenidoIngresos: safeIrpfRetenidoIngresos,     // IRPF retenido en facturas de ingresos
-          
-          // Datos para filtrado
-          period,
-          year,
-          
-          // Datos internos (no mostrados directamente)
-          totalWithholdings: safeTotalWithholdings,           // IRPF en gastos (solo para cálculos)
-          
-          // Valores netos para dashboard y componentes específicos
-          netIncome: safeNetIncome,                           // Ingresos netos (descontando IRPF)
-          netExpenses: safeNetExpenses,                       // Gastos netos (considerando IRPF)
-          netResult: safeNetResult,                           // Resultado neto final
-          
-          // Estructura simplificada para impuestos
-          taxes: {
-            vat: safeNumber(vatBalanceFinal),
-            incomeTax: safeNumber(incomeTaxFinal),
-            ivaALiquidar: safeNumber(vatBalanceFinal)         // Usar el valor seguro de vatBalanceFinal
-          },
-          
-          // Datos fiscales estructurados completos (para componentes avanzados)
-          taxStats: safeTaxStats,
-          
-          // Añadimos los contadores que faltaban
-          issuedCount: safeIssuedCount,
-          quarterCount: safeQuarterCount,
-          quarterIncome: safeQuarterIncome,
-          
-          // Datos del año actual
-          yearCount: safeYearCount,
-          yearIncome: safeYearIncome,
-          
-          // Información estructurada para el componente de Facturas
-          invoices: {
-            total: safeIssuedCount,
-            pending: safePendingCount,
-            paid: Math.max(0, safeIssuedCount - safePendingCount),
-            overdue: 0, // Por ahora no tenemos este dato, se podría calcular en el futuro
-            totalAmount: safeNumber(invoiceIncome)
-          },
-          
-          // Información estructurada para el componente de Presupuestos
-          quotes: {
-            total: safeAllQuotesCount,
-            pending: safePendingQuotesCount,
-            accepted: safeAcceptedQuotesCount,
-            rejected: safeRejectedQuotesCount
-          },
-          
-          // Datos de presupuestos (mantener compatibilidad)
-          allQuotes: safeAllQuotesCount,
-          acceptedQuotes: safeAcceptedQuotesCount,
-          rejectedQuotes: safeRejectedQuotesCount,
-          pendingQuotesCount: safePendingQuotesCount,
-          pendingQuotesTotal: safePendingQuotes,
-          lastQuoteDate
-        });
-      } catch (error) {
-        console.error("Error al preparar la respuesta JSON:", error);
-        // Enviar una respuesta mínima pero válida en caso de error
-        return res.status(200).json({
-          income: 0,
-          expenses: 0,
-          pendingInvoices: 0,
-          pendingCount: 0,
-          balance: 0,
-          result: 0,
-          baseImponible: 0,
-          baseImponibleGastos: 0,
-          period,
-          year,
-          taxStats: {
-            ivaRepercutido: 0,
-            ivaSoportado: 0,
-            ivaLiquidar: 0,
-            irpfRetenido: 0,
-            irpfTotal: 0,
-            irpfPagar: 0
-          }
-        });
-      }
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Endpoint para verificar un gasto con IA
   app.post("/api/verify-expense", requireAuth, async (req: Request, res: Response) => {
     try {
       const { description, amount } = req.body;
@@ -5465,3 +4265,321 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   return httpServer;
 }
+// Nueva implementación simplificada del endpoint de dashboard
+// Añadir al final de routes.ts
+
+app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
+  try {
+    console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
+    
+    // Configurar encabezados para evitar almacenamiento en caché de datos financieros
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Expires', '0');
+    res.setHeader('Pragma', 'no-cache');
+    
+    // Obtener parámetros de filtrado del usuario
+    const { year, period, timestamp } = req.query;
+    
+    // Registrar la consulta para depuración
+    const formattedDate = timestamp ? new Date(timestamp as string).toISOString() : new Date().toISOString();
+    console.log(`📊 Consultando datos fiscales [SIMPLIFICADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
+    
+    // Obtener el ID del usuario autenticado
+    const userId = req.session.userId;
+    
+    try {
+      // Obtener datos de facturas
+      const invoices = await storage.getInvoicesByUserId(userId);
+      
+      // Calcular años únicos para mostrar en filtros
+      const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
+      console.log("Años de transacciones:", uniqueYears);
+      
+      // Filtrar facturas por año si se proporciona
+      const filteredInvoices = year 
+        ? invoices.filter(invoice => {
+            const invoiceYear = new Date(invoice.issueDate).getFullYear();
+            return invoiceYear.toString() === year;
+          })
+        : invoices;
+        
+      // Obtener datos de transacciones
+      const transactions = await storage.getTransactionsByUserId(userId);
+      
+      // Filtrar transacciones por año
+      const filteredTransactions = year 
+        ? transactions.filter(txn => {
+            const txnYear = new Date(txn.date).getFullYear();
+            return txnYear.toString() === year;
+          })
+        : transactions;
+        
+      // Obtener datos de presupuestos
+      const quotes = await storage.getQuotesByUserId(userId);
+      
+      // CÁLCULOS BÁSICOS
+      
+      // 1. Facturas
+      const issuedCount = filteredInvoices.length;
+      const paidInvoices = filteredInvoices.filter(inv => inv.status === 'paid');
+      const pendingInvoices = filteredInvoices.filter(inv => inv.status === 'pending');
+      const pendingCount = pendingInvoices.length;
+      
+      // 2. Ingresos
+      // Calculamos los ingresos como la suma de los totales de facturas pagadas
+      const invoiceIncome = paidInvoices.reduce((sum, invoice) => {
+        const total = parseFloat(invoice.total || '0');
+        return isNaN(total) ? sum : sum + total;
+      }, 0);
+      
+      // 3. Base imponible (subtotal sin IVA)
+      const baseImponible = paidInvoices.reduce((sum, invoice) => {
+        const subtotal = parseFloat(invoice.subtotal || '0');
+        return isNaN(subtotal) ? sum : sum + subtotal;
+      }, 0);
+      
+      // 4. IVA repercutido (de ingresos)
+      // Si tenemos subtotal, usamos la diferencia con el total, si no estimamos 21%
+      let ivaRepercutido = 0;
+      if (baseImponible > 0) {
+        ivaRepercutido = invoiceIncome - baseImponible;
+      } else {
+        ivaRepercutido = invoiceIncome * 0.21;
+      }
+      
+      // 5. Gastos
+      // Calculamos los gastos como la suma de los importes de transacciones de gastos
+      const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense');
+      const expenses = expenseTransactions.reduce((sum, t) => {
+        const amount = parseFloat(t.amount || '0');
+        return isNaN(amount) ? sum : sum + amount;
+      }, 0);
+      
+      // 6. Base imponible de gastos (estimada como 100/121 del total)
+      const baseImponibleGastos = expenses / 1.21;
+      
+      // 7. IVA soportado (de gastos)
+      const ivaSoportado = expenses - baseImponibleGastos;
+      
+      // 8. IRPF retenido (en ingresos)
+      let irpfRetenidoIngresos = 0;
+      for (const invoice of paidInvoices) {
+        try {
+          if (invoice.additionalTaxes) {
+            let taxes = [];
+            if (typeof invoice.additionalTaxes === 'string') {
+              taxes = JSON.parse(invoice.additionalTaxes);
+            } else if (Array.isArray(invoice.additionalTaxes)) {
+              taxes = invoice.additionalTaxes;
+            }
+            
+            for (const tax of taxes) {
+              if (tax && tax.name === 'IRPF') {
+                const subtotal = parseFloat(invoice.subtotal || '0');
+                if (tax.isPercentage) {
+                  irpfRetenidoIngresos += (Math.abs(tax.amount) * subtotal) / 100;
+                } else {
+                  irpfRetenidoIngresos += Math.abs(tax.amount);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error procesando IRPF de factura:", e);
+        }
+      }
+      
+      // 9. IRPF de gastos
+      let totalIrpfFromExpensesInvoices = 0;
+      
+      // 10. Balance de IVA
+      const vatBalance = ivaRepercutido - ivaSoportado;
+      const vatBalanceFinal = vatBalance > 0 ? vatBalance : 0;
+      
+      // 11. Balance de IRPF
+      const incomeTaxFinal = irpfRetenidoIngresos > 0 ? irpfRetenidoIngresos : 0;
+      
+      // 12. Presupuestos
+      const pendingQuotesTotal = quotes
+        .filter(quote => quote.status === 'pending')
+        .reduce((sum, quote) => {
+          const total = parseFloat(quote.total || '0');
+          return isNaN(total) ? sum : sum + total;
+        }, 0);
+      
+      const pendingQuotesCount = quotes.filter(quote => quote.status === 'pending').length;
+      const acceptedQuotesCount = quotes.filter(quote => quote.status === 'accepted').length;
+      const rejectedQuotesCount = quotes.filter(quote => quote.status === 'rejected').length;
+      const allQuotesCount = quotes.length;
+      
+      // 13. Fecha del último presupuesto
+      const lastQuote = quotes.sort((a, b) => 
+        new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
+      )[0];
+      
+      const lastQuoteDate = lastQuote ? new Date(lastQuote.issueDate) : null;
+      
+      // 14. Balance bruto y neto
+      const balance = baseImponible - baseImponibleGastos;
+      const result = balance - vatBalanceFinal - incomeTaxFinal;
+      
+      // 15. Valores netos
+      const netIncome = baseImponible - irpfRetenidoIngresos;
+      const netExpenses = baseImponibleGastos - totalIrpfFromExpensesInvoices;
+      const netResult = netIncome - netExpenses;
+      
+      // 16. Estadísticas de períodos
+      const quarterIncome = invoiceIncome;
+      const quarterCount = filteredInvoices.length;
+      const yearIncome = invoiceIncome;
+      const yearCount = filteredInvoices.length;
+      
+      // Estructura para organizar información fiscal
+      const taxStats = {
+        ivaRepercutido,
+        ivaSoportado,
+        ivaLiquidar: vatBalanceFinal,
+        irpfRetenido: irpfRetenidoIngresos,
+        irpfTotal: irpfRetenidoIngresos + totalIrpfFromExpensesInvoices,
+        irpfPagar: incomeTaxFinal
+      };
+      
+      console.log("=== RESUMEN DE CÁLCULOS SIMPLIFICADOS ===");
+      console.log(`Ingresos (facturas pagadas): ${invoiceIncome}€`);
+      console.log(`Base imponible ingresos: ${baseImponible}€`);
+      console.log(`IVA repercutido: ${ivaRepercutido}€`);
+      console.log(`Gastos (transacciones): ${expenses}€`);
+      console.log(`Base imponible gastos: ${baseImponibleGastos}€`);
+      console.log(`IVA soportado: ${ivaSoportado}€`);
+      console.log(`IRPF retenido: ${irpfRetenidoIngresos}€`);
+      console.log(`Balance bruto: ${balance}€`);
+      console.log(`Resultado neto: ${result}€`);
+      
+      // Preparar respuesta segura
+      
+      // Función para asegurar valores numéricos
+      const safeNumber = (value: any): number => {
+        if (typeof value !== 'number' || isNaN(value)) return 0;
+        return parseFloat(value.toFixed(2)); // Redondeo a 2 decimales
+      };
+      
+      // Preparar respuesta con valores seguros
+      return res.status(200).json({
+        // Valores principales 
+        income: safeNumber(baseImponible),
+        expenses: safeNumber(baseImponibleGastos),
+        pendingInvoices: safeNumber(pendingInvoices.reduce((sum, i) => sum + parseFloat(i.total || '0'), 0)),
+        pendingCount,
+        pendingQuotes: safeNumber(pendingQuotesTotal),
+        pendingQuotesCount,
+        balance: safeNumber(balance),
+        result: safeNumber(result),
+        
+        // Valores de compatibilidad
+        baseImponible: safeNumber(baseImponible),
+        baseImponibleGastos: safeNumber(baseImponibleGastos),
+        
+        // Impuestos principales
+        ivaRepercutido: safeNumber(ivaRepercutido),
+        ivaSoportado: safeNumber(ivaSoportado),
+        irpfRetenidoIngresos: safeNumber(irpfRetenidoIngresos),
+        
+        // Datos para filtrado
+        period,
+        year,
+        
+        // Datos internos
+        totalWithholdings: safeNumber(totalIrpfFromExpensesInvoices),
+        
+        // Valores netos
+        netIncome: safeNumber(netIncome),
+        netExpenses: safeNumber(netExpenses),
+        netResult: safeNumber(netResult),
+        
+        // Estructura de impuestos
+        taxes: {
+          vat: safeNumber(vatBalanceFinal),
+          incomeTax: safeNumber(incomeTaxFinal),
+          ivaALiquidar: safeNumber(vatBalanceFinal)
+        },
+        
+        // Estadísticas fiscales
+        taxStats: {
+          ivaRepercutido: safeNumber(ivaRepercutido),
+          ivaSoportado: safeNumber(ivaSoportado),
+          ivaLiquidar: safeNumber(vatBalanceFinal),
+          irpfRetenido: safeNumber(irpfRetenidoIngresos),
+          irpfTotal: safeNumber(irpfRetenidoIngresos + totalIrpfFromExpensesInvoices),
+          irpfPagar: safeNumber(incomeTaxFinal)
+        },
+        
+        // Contadores
+        issuedCount,
+        quarterCount,
+        quarterIncome: safeNumber(quarterIncome),
+        yearCount,
+        yearIncome: safeNumber(yearIncome),
+        
+        // Información de facturas
+        invoices: {
+          total: issuedCount,
+          pending: pendingCount,
+          paid: issuedCount - pendingCount,
+          overdue: 0,
+          totalAmount: safeNumber(invoiceIncome)
+        },
+        
+        // Información de presupuestos
+        quotes: {
+          total: allQuotesCount,
+          pending: pendingQuotesCount,
+          accepted: acceptedQuotesCount,
+          rejected: rejectedQuotesCount
+        },
+        
+        // Datos de presupuestos (compatibilidad)
+        allQuotes: allQuotesCount,
+        acceptedQuotes: acceptedQuotesCount,
+        rejectedQuotes: rejectedQuotesCount,
+        pendingQuotesCount,
+        pendingQuotesTotal: safeNumber(pendingQuotesTotal),
+        lastQuoteDate
+      });
+    } catch (error) {
+      console.error("Error en el cálculo de datos del dashboard:", error);
+      
+      // En caso de error, devolver una respuesta mínima pero válida
+      return res.status(200).json({
+        income: 0,
+        expenses: 0,
+        pendingInvoices: 0,
+        pendingCount: 0,
+        balance: 0,
+        result: 0,
+        baseImponible: 0,
+        baseImponibleGastos: 0,
+        period,
+        year,
+        taxStats: {
+          ivaRepercutido: 0,
+          ivaSoportado: 0,
+          ivaLiquidar: 0,
+          irpfRetenido: 0,
+          irpfTotal: 0,
+          irpfPagar: 0
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error crítico en el endpoint de dashboard:", error);
+    return res.status(200).json({ 
+      message: "Internal server error",
+      income: 0, 
+      expenses: 0, 
+      pendingInvoices: 0, 
+      pendingCount: 0,
+      period: req.query.period || 'all',
+      year: req.query.year || new Date().getFullYear().toString()
+    });
+  }
+});// Endpoint añadido

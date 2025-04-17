@@ -156,6 +156,19 @@ app.use((req, res, next) => {
   }).catch(err => {
     console.error('Error al cargar el módulo de prueba de correo:', err);
   });
+  
+  // Añadir el endpoint simplificado para el dashboard
+  import('./fixes/dashboard-simplificado').then((module) => {
+    // Obtener el middleware de autenticación de routes.ts
+    import('./auth').then((authModule) => {
+      module.setupSimplifiedDashboardEndpoint(app, authModule.requireAuth, server.storage);
+      console.log('Endpoint simplificado del dashboard (/api/stats/dashboard-fix) configurado');
+    }).catch(err => {
+      console.error('Error al cargar el módulo de autenticación:', err);
+    });
+  }).catch(err => {
+    console.error('Error al cargar el módulo de dashboard simplificado:', err);
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
