@@ -4274,11 +4274,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log(`CORRECCIÓN: Calculando base imponible considerando IVA e IRPF:`);
                     console.log(`- Base = Total(${amount}€) - IVA(${ivaValue}€) + IRPF(${irpfAmount}€) = ${baseAmount.toFixed(2)}€`);
                     
-                    // Si el IVA parece incorrecto (demasiado bajo), usar el valor exacto
+                    // Si el IVA parece incorrecto (demasiado bajo), mostramos un aviso pero respetamos el valor proporcionado
                     if (ivaRate && ivaValue < (baseAmount * ivaRate / 100) * 0.9) {
                       const calculatedIva = parseFloat((baseAmount * ivaRate / 100).toFixed(2));
                       console.log(`⚠️ El IVA parece incorrecto. Valor esperado para base ${baseAmount}€ con ${ivaRate}%: ${calculatedIva}€`);
-                      ivaValue = calculatedIva;
+                      console.log(`⚠️ Se mantiene el valor original de IVA: ${ivaValue}€ por ser un valor explícito proporcionado`);
                     }
                   } else {
                     // Si no tenemos el valor específico, intentamos usar otros métodos para determinar la base
