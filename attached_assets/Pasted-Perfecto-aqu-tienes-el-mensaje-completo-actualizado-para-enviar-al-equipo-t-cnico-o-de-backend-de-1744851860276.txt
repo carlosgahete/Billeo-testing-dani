@@ -1,0 +1,87 @@
+Perfecto, aquí tienes el mensaje completo actualizado para enviar al equipo técnico o de backend, dejando claro que actualmente el sistema está enviando mal la información, y explicando cómo corregirlo paso a paso:
+
+⚠️ IMPORTANTE: El sistema está enviando mal la información de los gastos
+
+Actualmente, al subir facturas con IRPF, el sistema interpreta mal los valores y manda al dashboard datos incorrectos, especialmente en:
+	•	Base imponible
+	•	IVA soportado
+	•	Total con IVA
+
+Esto genera errores contables visibles en el dashboard. Es necesario ajustar la lógica de cómo se interpreta el total y los impuestos en facturas con IRPF.
+
+🧾 Ejemplo de factura problemática
+
+Una factura subida tiene:
+
+Concepto	Valor
+Base imponible	100 €
+IVA 21%	21 €
+IRPF -15%	-15 €
+Total pagado	106 €
+
+❌ ¿Qué está pasando mal ahora mismo?
+
+El sistema está usando el totalAmount (106 €) para recalcular la base y el IVA con fórmulas del tipo:
+
+base = totalAmount / 1.21 ≈ 87.6 €
+iva = totalAmount - base ≈ 18.4 €
+
+Esto es incorrecto porque:
+	•	El totalAmount ya tiene descontado el IRPF.
+	•	El valor de IVA ya está en additionalTaxes, no hace falta recalcularlo.
+	•	El sistema ignora el valor explícito del IRPF, que es clave para restituir la base.
+
+✅ Cómo debe hacerse correctamente
+
+Paso 1: Usar los valores explícitos de IVA e IRPF si existen
+
+// totalAmount: 106
+// additionalTaxes: [
+//   { name: "IVA", amount: 21, value: 21 },
+//   { name: "IRPF", amount: -15, value: 15 }
+// ]
+
+let iva = 0;
+let irpf = 0;
+
+for (const tax of additionalTaxes) {
+  if (tax.name === "IVA" && tax.value) iva += tax.value;
+  if (tax.name === "IRPF" && tax.value) irpf += tax.value;
+}
+
+Paso 2: Calcular la base de forma correcta
+
+const base = totalAmount - iva + irpf; // 106 - 21 + 15 = 100
+
+Paso 3: Enviar al dashboard los siguientes datos
+
+Campo	Valor
+Gastos (base)	100 €
+IVA soportado	21 €
+Total con IVA	106 €
+(IRPF opcional)	15 €
+
+🧪 Verificación con más facturas
+
+Base	IVA 21%	IRPF 15%	Total esperado	Base enviada	IVA enviado
+100€	21€	-15€	106 €	✅ 100€	✅ 21€
+500€	105€	-75€	530 €	✅ 500€	✅ 105€
+1000€	210€	-150€	1060 €	✅ 1000€	✅ 210€
+
+🧩 Y si no hay value explícito…
+
+Solo en caso de que no vengan valores explícitos, como último recurso se puede estimar:
+
+base = totalAmount / (1 + ivaRate / 100)
+iva = totalAmount - base
+
+⚠️ Esto solo es válido si NO hay IRPF descontado. Si lo hay, es obligatorio aplicar el paso anterior.
+
+✅ Resumen final
+	•	El sistema está enviando mal la info al dashboard.
+	•	La lógica correcta es:
+	•	base = total - IVA + IRPF
+	•	Usar los valores explícitos de IVA e IRPF siempre que estén presentes.
+	•	Esto asegura que el dashboard refleje correctamente los gastos reales, el IVA soportado y evite errores contables.
+
+¿Te paso también esta lógica en formato JSON ejemplo o código funcional para backend?
