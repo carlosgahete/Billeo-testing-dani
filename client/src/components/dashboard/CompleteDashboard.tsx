@@ -19,6 +19,7 @@ import {
 import ExpensesByCategoryApple from "./ExpensesByCategoryApple";
 import ExpensesByCategory from "./ExpensesByCategory";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useSimpleDashboardFilters } from "@/hooks/useSimpleDashboardFilters";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 
 interface CompleteDashboardProps {
@@ -33,7 +34,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const currentYearStr = new Date().getFullYear().toString();
   
   // Usamos el hook centralizado para obtener datos del dashboard
-  const { data: dashboardData, isLoading, error, filters, refetch } = useDashboardData();
+  const { data: dashboardData, isLoading, isError, refetch } = useDashboardData();
+  // Obtenemos los filtros directamente del hook
+  const filters = useSimpleDashboardFilters();
   
   // Estados locales para UI
   // Importante: Usamos directamente los filtros del hook global
@@ -200,18 +203,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const financialComparisonData = prepareFinancialComparisonData();
   
   // Verificar si hay algún tipo de error
-  if (error) {
-    console.error("Error en dashboard:", error);
+  if (isError) {
+    console.error("Error en dashboard: No se pudieron obtener los datos");
     
-    // Caso 1: Error de autenticación (401)
-    if (error instanceof Error && error.message === 'AUTHENTICATION_ERROR') {
-      return <AuthenticationStatus 
-        statusTitle="Sesión Expirada" 
-        statusDescription="Tu sesión ha expirado o no tienes acceso a esta sección."
-      />;
-    }
-    
-    // Caso 2: Error del servidor (500 u otros)
+    // Error del servidor (500 u otros)
     return <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] px-4 text-center">
       <div className="bg-red-100 border border-red-300 rounded-lg p-6 max-w-lg">
         <h2 className="text-xl font-semibold text-red-800 mb-2">Error al cargar datos</h2>
