@@ -273,31 +273,34 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // =============== CÁLCULOS DE TOTALES =================
   
-  // Función para calcular los totales del formulario (usando valores actuales)
-  const calculateTotals = () => {
-    const { items = [], additionalTaxes = [] } = form.getValues();
-    
-    // Calculamos subtotales de cada item
-    const updatedItems = (items || []).map((item: any) => {
+  // Función para actualizar los subtotales de los items
+  const updateItemSubtotals = () => {
+    const formItems = form.getValues().items || [];
+    formItems.forEach((item: any, index: number) => {
       const quantity = toNumber(item.quantity, 0);
       const unitPrice = toNumber(item.unitPrice, 0);
       const subtotal = quantity * unitPrice;
-      return {
-        ...item,
-        quantity,
-        unitPrice,
-        subtotal
-      };
+      
+      // Actualizar el subtotal en el formulario directamente
+      form.setValue(`items.${index}.subtotal`, subtotal);
     });
+  };
+
+  // Función para calcular los totales del formulario (usando valores actuales)
+  const calculateTotals = () => {
+    // Primero actualizamos los subtotales de cada ítem
+    updateItemSubtotals();
     
-    // Calculamos subtotal de la factura
-    const subtotal = updatedItems.reduce(
+    const { items = [], additionalTaxes = [] } = form.getValues();
+    
+    // Calculamos subtotal de la factura (suma de todos los subtotales de items)
+    const subtotal = (items || []).reduce(
       (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
       0
     );
     
     // Calculamos IVA basado en la tasa de cada item
-    const tax = updatedItems.reduce((sum: number, item: any) => {
+    const tax = (items || []).reduce((sum: number, item: any) => {
       const itemTax = toNumber(item.subtotal, 0) * (toNumber(item.taxRate, 0) / 100);
       return sum + itemTax;
     }, 0);
@@ -316,8 +319,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     // Total final con todos los impuestos
     const total = subtotal + tax + additionalTaxesTotal;
     
+    // Actualizamos directamente los valores en el formulario
+    form.setValue("subtotal", subtotal);
+    form.setValue("tax", tax);
+    form.setValue("total", Math.max(0, total));
+    
     return {
-      updatedItems,
       subtotal,
       tax,
       additionalTaxesTotal,
@@ -325,9 +332,15 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     };
   };
   
-  // Usamos useMemo para memorizar los totales calculados
-  // Dependencias: form Y watch para detectar cualquier cambio en los campos del formulario
+  // Observamos todos los cambios en el formulario
   const formValues = form.watch();
+  
+  // Usamos useEffect para actualizar los totales cuando cambian los valores
+  useEffect(() => {
+    calculateTotals();
+  }, [formValues]);
+  
+  // También memorizamos los totales para uso en renderizado
   const calculatedTotals = useMemo(calculateTotals, [formValues]);
 
   // =============== MANEJADORES DE EVENTOS =================
@@ -364,6 +377,32 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const numericValue = toNumber(field.value, defaultValue);
       if (numericValue > 0 || field.value !== "") {
         field.onChange(numericValue.toString());
+      }
+      // Recalcular todos los valores al salir del campo
+      calculateTotals();
+    };
+  };
+  
+  // Función para manejar cambios en campos numéricos
+  const handleNumericChange = (field: any, index: number, fieldName: string) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Actualizar el campo
+      field.onChange(e);
+      
+      // Actualizar los subtotales inmediatamente
+      if (fieldName === 'quantity' || fieldName === 'unitPrice') {
+        const items = form.getValues().items || [];
+        if (items[index]) {
+          const quantity = toNumber(items[index].quantity, 0);
+          const unitPrice = toNumber(items[index].unitPrice, 0);
+          const subtotal = quantity * unitPrice;
+          
+          // Actualizar el subtotal directamente
+          form.setValue(`items.${index}.subtotal`, subtotal);
+          
+          // Recalcular totales
+          calculateTotals();
+        }
       }
     };
   };
@@ -926,6 +965,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     step="0.01"
                                     placeholder="1"
                                     {...field}
+                                    onChange={handleNumericChange(field, index, 'quantity')}
                                     onBlur={handleNumericBlur(field, 1)}
                                     className="border-gray-200"
                                   />
@@ -949,6 +989,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     step="0.01"
                                     placeholder="100"
                                     {...field}
+                                    onChange={handleNumericChange(field, index, 'unitPrice')}
                                     onBlur={handleNumericBlur(field, 0)}
                                     className="border-gray-200"
                                   />
@@ -972,6 +1013,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     step="1"
                                     placeholder="21"
                                     {...field}
+                                    onChange={handleNumericChange(field, index, 'taxRate')}
                                     onBlur={handleNumericBlur(field, 21)}
                                     className="border-gray-200"
                                   />
