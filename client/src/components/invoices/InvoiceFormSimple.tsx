@@ -697,7 +697,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     <span className="text-muted-foreground">Seleccionar fecha</span>}
                                   </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
+                                <PopoverContent className="w-auto p-0 calendar-md">
                                   <Calendar
                                     mode="single"
                                     selected={field.value ? new Date(field.value) : undefined}
@@ -708,7 +708,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     }}
                                     disabled={(date) => false}
                                     initialFocus
-                                    className="rounded-md border shadow p-4"
+                                    className="rounded-md border shadow p-2 text-sm calendar-md"
                                   />
                                 </PopoverContent>
                               </Popover>
@@ -738,7 +738,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     <span className="text-muted-foreground">Seleccionar fecha</span>}
                                   </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
+                                <PopoverContent className="w-auto p-0 calendar-md">
                                   <Calendar
                                     mode="single"
                                     selected={field.value ? new Date(field.value) : undefined}
@@ -749,7 +749,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                     }}
                                     disabled={(date) => false}
                                     initialFocus
-                                    className="rounded-md border shadow p-4"
+                                    className="rounded-md border shadow p-2 text-sm calendar-md"
                                   />
                                 </PopoverContent>
                               </Popover>

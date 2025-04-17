@@ -1,6 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Estilos personalizados para calendario tamaño mediano */
+.calendar-md .rdp-caption {
+  font-size: 0.875rem;
+}
+
+.calendar-md .rdp-table {
+  font-size: 0.75rem;
+}
+
+.calendar-md .rdp-button {
+  width: 28px;
+  height: 28px;
+}
+
+.calendar-md .rdp-day_today:not(.rdp-day_outside) {
+  font-weight: bold;
+  color: var(--primary);
+}
  
 @layer base {
   :root {
