@@ -74,22 +74,25 @@ export function useDashboardData(
   const finalYear = forcedYear || year;
   const finalPeriod = forcedPeriod || period;
   
-  const timestamp = new Date().toISOString(); // Para evitar caché
+  // No utilizamos timestamp en queryKey para evitar bucles infinitos
 
   // Utilizamos el endpoint fix aquí
   const dashboardQuery = useQuery({
-    queryKey: ['dashboard', finalYear, finalPeriod, timestamp],
+    queryKey: ['dashboard', finalYear, finalPeriod],
     queryFn: async () => {
+      // Crear un nuevo cache param al momento de la llamada para evitar caché
+      const queryTimestamp = `_cb=${Date.now()}`;
+      
       try {
         // Intentar primero con el endpoint fijo
-        const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&timestamp=${timestamp}`);
+        const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`);
         if (response.ok) {
           return await response.json();
         }
         
         // Si falla, intentar con el endpoint original
         console.log("El endpoint fix falló, probando con el original...");
-        const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&timestamp=${timestamp}`);
+        const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`);
         if (originalResponse.ok) {
           return await originalResponse.json();
         }
@@ -130,7 +133,8 @@ export function useDashboardData(
         };
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 15 * 60 * 1000, // 15 minutos
+    refetchOnWindowFocus: false, // No refrescar al cambiar el foco de la ventana
   });
 
   // Depuración
