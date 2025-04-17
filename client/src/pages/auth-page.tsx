@@ -6,232 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
-import { Eye, EyeOff, Wrench, Bug, AlertTriangle, ArrowRight } from "lucide-react";
-
-// Importación para diagnóstico avanzado de sesión
-import { lastLoginDiagnostic, directLogin, LoginDiagnosticResult } from "../utils/directLogin";
-
-function SessionDiagnostic() {
-  const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
-  const [loginDiagnostic, setLoginDiagnostic] = useState<LoginDiagnosticResult | null>(lastLoginDiagnostic);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
-  const [testCredentials, setTestCredentials] = useState({
-    username: "demo",
-    password: "demo"
-  });
-  const [showCredentials, setShowCredentials] = useState(false);
-  
-  // Actualizar el estado local si lastLoginDiagnostic cambia externamente
-  useEffect(() => {
-    setLoginDiagnostic(lastLoginDiagnostic);
-  }, [lastLoginDiagnostic]);
-  
-  const runDiagnostic = async () => {
-    setIsLoading(true);
-    try {
-      // Verificar estado de la sesión
-      const sessionResponse = await fetch('/api/user', { 
-        credentials: 'include',
-        headers: { 'Accept': 'application/json' }
-      });
-      
-      // Verificar cookies
-      let cookiesEnabled = false;
-      try {
-        document.cookie = "test_cookie=1";
-        cookiesEnabled = document.cookie.indexOf("test_cookie=1") !== -1;
-      } catch (e) {
-        console.error("Error al probar cookies:", e);
-      }
-      
-      // Verificar localStorage
-      let storageEnabled = false;
-      try {
-        localStorage.setItem("test_storage", "1");
-        storageEnabled = localStorage.getItem("test_storage") === "1";
-        localStorage.removeItem("test_storage");
-      } catch (e) {
-        console.error("Error al probar localStorage:", e);
-      }
-      
-      // Datos de diagnóstico
-      const diagnosticData = {
-        timestamp: new Date().toISOString(),
-        session: {
-          status: sessionResponse.status,
-          statusText: sessionResponse.statusText,
-          isOk: sessionResponse.ok,
-          headers: Object.fromEntries(sessionResponse.headers.entries()),
-          responseType: sessionResponse.headers.get('content-type'),
-        },
-        browser: {
-          userAgent: navigator.userAgent,
-          cookiesEnabled,
-          storageEnabled,
-          language: navigator.language,
-          online: navigator.onLine,
-        },
-        lastLoginInfo: lastLoginDiagnostic
-      };
-      
-      setDiagnosticInfo(diagnosticData);
-    } catch (error) {
-      console.error("Error al ejecutar diagnóstico:", error);
-      setDiagnosticInfo({ error: String(error) });
-    } finally {
-      setIsLoading(false);
-    }
-  }
-  
-  const runLoginTest = async () => {
-    setIsLoading(true);
-    try {
-      await directLogin(testCredentials.username, testCredentials.password, 'diagnostic');
-      // directLogin actualiza lastLoginDiagnostic, así que usamos el hook para actualizar nuestro estado local
-      setLoginDiagnostic(lastLoginDiagnostic);
-    } catch (error) {
-      console.error("Error al ejecutar test de login:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-  
-  if (!showDiagnostic) {
-    return (
-      <div className="mt-4">
-        <button 
-          onClick={() => setShowDiagnostic(true)}
-          className="text-xs text-gray-500 hover:text-blue-600 flex items-center"
-        >
-          <Wrench className="h-3 w-3 mr-1" />
-          Diagnóstico avanzado
-        </button>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="mt-4 bg-gray-50 p-3 rounded-lg text-xs border border-gray-200">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="font-medium text-gray-700 flex items-center">
-          <Bug className="h-3 w-3 mr-1" />
-          Diagnóstico de Sesión
-        </h4>
-        <button 
-          onClick={() => setShowDiagnostic(false)}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <ArrowRight className="h-3 w-3" />
-        </button>
-      </div>
-      
-      <div className="flex space-x-2 mb-2">
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs h-7 px-2 py-0"
-          onClick={runDiagnostic}
-          disabled={isLoading}
-        >
-          {isLoading ? "Ejecutando..." : "Verificar sesión"}
-        </Button>
-        
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs h-7 px-2 py-0"
-          onClick={runLoginTest}
-          disabled={isLoading}
-        >
-          Test login directo
-        </Button>
-        
-        <Button
-          size="sm"
-          variant="secondary"
-          className="text-xs h-7 px-2 py-0"
-          onClick={() => setShowCredentials(!showCredentials)}
-        >
-          {showCredentials ? "Ocultar credenciales" : "Mostrar credenciales"}
-        </Button>
-      </div>
-      
-      {showCredentials && (
-        <div className="mb-3 bg-blue-50 p-2 rounded border border-blue-100">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-gray-500 mb-1">Usuario</label>
-              <input 
-                type="text" 
-                value={testCredentials.username}
-                onChange={(e) => setTestCredentials(prev => ({...prev, username: e.target.value}))}
-                className="w-full border border-gray-200 rounded px-2 py-1 text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-500 mb-1">Contraseña</label>
-              <input 
-                type="password" 
-                value={testCredentials.password}
-                onChange={(e) => setTestCredentials(prev => ({...prev, password: e.target.value}))}
-                className="w-full border border-gray-200 rounded px-2 py-1 text-xs"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {diagnosticInfo && (
-        <div className="bg-white p-2 rounded border border-gray-200 text-gray-600 max-h-60 overflow-y-auto">
-          {diagnosticInfo.error ? (
-            <div className="text-red-500">
-              <AlertTriangle className="h-3 w-3 inline mr-1" />
-              {diagnosticInfo.error}
-            </div>
-          ) : (
-            <>
-              <div className="mb-1">
-                <span className="font-medium">Sesión:</span> {diagnosticInfo.session.status} ({diagnosticInfo.session.isOk ? "OK" : "Error"})
-              </div>
-              <div className="mb-1">
-                <span className="font-medium">Cookies:</span> {diagnosticInfo.browser.cookiesEnabled ? "Habilitadas" : "Deshabilitadas"}
-              </div>
-              <div className="mb-1">
-                <span className="font-medium">Storage:</span> {diagnosticInfo.browser.storageEnabled ? "Habilitado" : "Deshabilitado"}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-      
-      {loginDiagnostic && (
-        <div className="mt-3 bg-white p-2 rounded border border-gray-200 text-gray-600 max-h-60 overflow-y-auto">
-          <h5 className="font-medium mb-1">Último diagnóstico de login:</h5>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-            <div><span className="font-medium">Estado:</span> {loginDiagnostic.status}</div>
-            <div><span className="font-medium">Exitoso:</span> {loginDiagnostic.success ? "Sí" : "No"}</div>
-            <div><span className="font-medium">Tiempo:</span> {Math.round(loginDiagnostic.timing.total)} ms</div>
-            <div><span className="font-medium">Respuesta:</span> {loginDiagnostic.statusText}</div>
-          </div>
-          
-          {loginDiagnostic.error && (
-            <div className="mt-2 text-red-500 text-xs">
-              <AlertTriangle className="h-3 w-3 inline mr-1" />
-              Error: {loginDiagnostic.error}
-            </div>
-          )}
-          
-          {loginDiagnostic.success && loginDiagnostic.userData && (
-            <div className="mt-2 bg-blue-50 p-2 rounded text-xs">
-              <span className="font-medium">Usuario:</span> ID {loginDiagnostic.userData.id} - {loginDiagnostic.userData.username}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -274,10 +49,6 @@ export default function AuthPage() {
     setLoginFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Método directo de login como alternativa
-  const [useDirectLogin, setUseDirectLogin] = useState(false);
-  const [loginAttempts, setLoginAttempts] = useState(0);
-  
   // Handle login form submission
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,28 +61,7 @@ export default function AuthPage() {
         description: "Verificando tus credenciales",
       });
       
-      // Incrementar contador de intentos
-      setLoginAttempts(prev => prev + 1);
-      
-      // Solo usar directLogin si está explícitamente habilitado
-      if (useDirectLogin) {
-        console.log("Utilizando método directo de login por elección explícita");
-        
-        // Usar el método directo
-        const success = await directLogin(loginFormData.username, loginFormData.password);
-        
-        if (!success) {
-          toast({
-            title: "Error de inicio de sesión",
-            description: "Usuario o contraseña incorrectos",
-            variant: "destructive",
-          });
-        }
-        
-        return;
-      }
-      
-      // Proceed with normal login
+      // Usar el método estándar de inicio de sesión
       console.log("Utilizando el método normal de login");
       loginMutation.mutate(loginFormData);
     } catch (error) {
@@ -429,32 +179,7 @@ export default function AuthPage() {
               )}
             </Button>
             
-            <div className="text-center text-xs text-gray-500 mt-6 bg-blue-50/80 py-3 px-2 rounded-lg border border-blue-100/50 shadow-sm">
-              Prueba con: <span className="font-medium">demo</span> / <span className="font-medium">demo</span>
-              <br />O para acceso admin: <span className="font-medium">billeo_admin</span> / <span className="font-medium">superadmin</span>
-            </div>
-            
-            {/* Botón de acceso alternativo */}
-            {loginAttempts > 0 && (
-              <div className="mt-4 text-center">
-                <button
-                  type="button"
-                  onClick={() => setUseDirectLogin(!useDirectLogin)}
-                  className="text-xs text-blue-600 hover:text-blue-800 underline transition-colors"
-                >
-                  {useDirectLogin ? "Usar método normal de acceso" : "¿Problemas para acceder? Prueba el método alternativo"}
-                </button>
-                
-                {useDirectLogin && (
-                  <div className="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded">
-                    El método alternativo utiliza una conexión directa para iniciar sesión sin utilizar React Query.
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Componente de diagnóstico de sesión */}
-            <SessionDiagnostic />
+            {/* Se eliminaron credenciales demo y opciones de diagnóstico */}
           </form>
         </div>
       </div>
