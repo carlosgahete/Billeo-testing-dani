@@ -3640,6 +3640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
+    console.log("Iniciando manejo de solicitud a /api/stats/dashboard");
     try {
       // Configurar encabezados para evitar almacenamiento en caché de datos financieros
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -4624,6 +4625,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`- IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
       console.log(`- Gastos NETOS: ${netExpenses}€`);
       console.log(`- RESULTADO NETO FINAL: ${netResult}€`);
+      
+      // Verificación de valores nulos o indefinidos
+      console.log("VERIFICANDO VALORES CRÍTICOS:");
+      console.log("balance:", typeof balance, balance);
+      console.log("result:", typeof result, result);
+      console.log("pendingInvoices:", typeof pendingInvoices, pendingInvoices);
+      console.log("pendingCount:", typeof pendingCount, pendingCount);
+      console.log("pendingQuotesTotal:", typeof pendingQuotesTotal, pendingQuotesTotal);
+      console.log("pendingQuotesCount:", typeof pendingQuotesCount, pendingQuotesCount);
+      console.log("issuedCount:", typeof issuedCount, issuedCount);
+      console.log("quarterCount:", typeof quarterCount, quarterCount);
+      console.log("quarterIncome:", typeof quarterIncome, quarterIncome);
+      console.log("yearCount:", typeof yearCount, yearCount);
+      console.log("yearIncome:", typeof yearIncome, yearIncome);
+      console.log("allQuotesCount:", typeof allQuotesCount, allQuotesCount);
+      console.log("acceptedQuotesCount:", typeof acceptedQuotesCount, acceptedQuotesCount);
+      console.log("rejectedQuotesCount:", typeof rejectedQuotesCount, rejectedQuotesCount);
 
       return res.status(200).json({
         // Valores principales (se usa la base imponible como valor principal)
