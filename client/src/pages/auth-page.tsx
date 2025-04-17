@@ -368,7 +368,7 @@ export default function AuthPage() {
               <Input
                 id="login-username"
                 name="username"
-                placeholder="demo o usuario@ejemplo.com"
+                placeholder="usuario o correo@ejemplo.com"
                 value={loginFormData.username}
                 onChange={handleLoginChange}
                 required
