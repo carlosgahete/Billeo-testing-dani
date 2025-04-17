@@ -91,6 +91,14 @@ const invoiceSchema = z.object({
   notes: z.string().nullable().optional(),
   attachments: z.array(z.string()).nullable().optional(),
   items: z.array(invoiceItemSchema).min(1, "Agrega al menos un ítem a la factura"),
+}).refine((data) => {
+  // Aseguramos que la fecha de vencimiento no sea anterior a la fecha de emisión
+  const issueDate = new Date(data.issueDate);
+  const dueDate = new Date(data.dueDate);
+  return dueDate >= issueDate;
+}, {
+  message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
+  path: ["dueDate"] // Este campo mostrará el error
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
