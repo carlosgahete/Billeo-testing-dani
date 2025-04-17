@@ -199,7 +199,7 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
     if (!formRef.current) return;
     
     try {
-      // Preparar los datos para guardar
+      // Capturar todos los valores actuales del formulario
       const formData = {
         amount: amountRef.current?.value ? parseFloat(amountRef.current.value) : transaction.amount,
         baseAmount: baseAmountRef.current?.value ? parseFloat(baseAmountRef.current.value) : null,
@@ -209,6 +209,8 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
         provider: providerRef.current?.value || '',
         description: descriptionRef.current?.value || ''
       };
+      
+      console.log('Guardando datos del formulario:', formData);
       
       // Calcular montos de impuestos
       const taxAmount = formData.baseAmount && formData.tax 
@@ -263,6 +265,19 @@ Total: ${formData.amount} €
 Proveedor: ${formData.provider || ""}`
       };
       
+      console.log('Actualizando transacción:', updatedTransaction);
+      
+      // Guardar una copia de los valores actuales para restaurarlos después
+      const savedFormValues = {
+        amount: amountRef.current?.value || '',
+        baseAmount: baseAmountRef.current?.value || '',
+        tax: taxRef.current?.value || '',
+        irpf: irpfRef.current?.value || '',
+        date: dateRef.current?.value || '',
+        provider: providerRef.current?.value || '',
+        description: descriptionRef.current?.value || ''
+      };
+      
       // Enviar la actualización al servidor
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: 'PUT',
@@ -282,6 +297,22 @@ Proveedor: ${formData.provider || ""}`
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
       queryClient.invalidateQueries();
+      
+      // Restaurar los valores del formulario después de la actualización
+      setTimeout(() => {
+        if (amountRef.current) amountRef.current.value = savedFormValues.amount;
+        if (baseAmountRef.current) baseAmountRef.current.value = savedFormValues.baseAmount;
+        if (taxRef.current) taxRef.current.value = savedFormValues.tax;
+        if (irpfRef.current) irpfRef.current.value = savedFormValues.irpf;
+        if (dateRef.current) dateRef.current.value = savedFormValues.date;
+        if (providerRef.current) providerRef.current.value = savedFormValues.provider;
+        if (descriptionRef.current) descriptionRef.current.value = savedFormValues.description;
+        
+        // Actualizar los displays de impuestos
+        updateTaxDisplay();
+        updateIrpfDisplay();
+        updateTotal();
+      }, 100);
       
       toast({
         title: "Cambios guardados",
@@ -405,8 +436,39 @@ Proveedor: ${formData.provider || ""}`
         <Label htmlFor="transaction-category" className="text-sm">Categoría:</Label>
         <div className="flex items-center space-x-2">
           <Select
-            value="null" // Siempre comenzar con "Sin categoría" por defecto
-            onValueChange={(value) => onUpdateCategory(value)}
+            value={transaction.categoryId ? String(transaction.categoryId) : "null"}
+            onValueChange={(value) => {
+              // Primero guardar los valores actuales del formulario
+              const formData = {
+                amount: amountRef.current?.value,
+                baseAmount: baseAmountRef.current?.value,
+                tax: taxRef.current?.value,
+                irpf: irpfRef.current?.value,
+                date: dateRef.current?.value,
+                provider: providerRef.current?.value,
+                description: descriptionRef.current?.value
+              };
+              
+              // Luego actualizar la categoría
+              onUpdateCategory(value);
+              
+              // Esperar un momento para que se complete la actualización de la categoría
+              setTimeout(() => {
+                // Restaurar los valores del formulario después de actualizar la categoría
+                if (amountRef.current) amountRef.current.value = formData.amount || '';
+                if (baseAmountRef.current) baseAmountRef.current.value = formData.baseAmount || '';
+                if (taxRef.current) taxRef.current.value = formData.tax || '';
+                if (irpfRef.current) irpfRef.current.value = formData.irpf || '';
+                if (dateRef.current) dateRef.current.value = formData.date || '';
+                if (providerRef.current) providerRef.current.value = formData.provider || '';
+                if (descriptionRef.current) descriptionRef.current.value = formData.description || '';
+                
+                // Actualizar los displays de impuestos
+                updateTaxDisplay();
+                updateIrpfDisplay();
+                updateTotal();
+              }, 100);
+            }}
           >
             <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="Seleccionar categoría" />
