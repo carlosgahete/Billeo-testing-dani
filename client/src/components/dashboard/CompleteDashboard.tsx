@@ -241,13 +241,13 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
       <div className="section-header px-0 pt-0 md:pt-0 pb-0 md:px-4 md:py-4">
         <div className="flex items-center justify-center md:justify-start mt-[-15px] md:mt-0">
-          <div className="md:flex hidden items-center">
+          <div className="md:flex hidden items-center mt-4">
             <BarChart3 className="h-6 w-6 text-primary mr-3" />
           </div>
-          <h1 className="section-title text-sm md:text-lg font-medium hidden md:block pb-2 mb-1">Dashboard</h1>
+          <h1 className="section-title text-sm md:text-lg font-medium hidden md:block mt-4">Dashboard</h1>
         </div>
         
-        <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-0">
+        <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-3">
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
           <div className="relative w-[45%] sm:w-auto">
             <button 
