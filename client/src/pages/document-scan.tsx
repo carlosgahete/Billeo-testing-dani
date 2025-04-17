@@ -376,7 +376,15 @@ const DocumentScanPage = () => {
           title: formData.title || transaction.title,
           description: formData.description || transaction.description,
           amount: formData.amount || transaction.amount,
-          // Incluir otros campos que pueden haber sido editados
+          // Incluir todos los campos adicionales del formulario
+          baseAmount: formData.baseAmount ? parseFloat(formData.baseAmount) : transaction.baseAmount || null,
+          tax: formData.tax ? parseFloat(formData.tax) : transaction.tax || null,
+          irpf: formData.irpf ? parseFloat(formData.irpf) : transaction.irpf || null,
+          date: formData.date ? new Date(formData.date) : transaction.date,
+          provider: formData.provider || transaction.provider || '',
+          // También mantener información sobre los montos calculados
+          taxCalculated: formData.taxAmount || '',
+          irpfCalculated: formData.irpfAmount || ''
         } : {})
       };
       
@@ -906,8 +914,8 @@ Proveedor: ${editedData.provider || extractedData?.provider || ""}`
                       Detalles del gasto
                     </h3>
                     
-                    {/* Usar nuestro nuevo componente PersistentEditForm */}
-                    <PersistentEditForm 
+                    {/* Usar SimpleEditForm que ahora mantiene el estado entre cambios de categoría */}
+                    <SimpleEditForm 
                       transaction={transaction}
                       extractedData={extractedData || {}}
                       categories={categories}
