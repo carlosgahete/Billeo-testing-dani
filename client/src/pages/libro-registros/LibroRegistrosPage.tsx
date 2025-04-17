@@ -1447,9 +1447,9 @@ export default function LibroRegistrosPage() {
             <div className="text-sm font-medium text-white">Facturas</div>
           </div>
           <div className="p-4 bg-white">
-            <div className="text-2xl font-semibold">{summary.totalInvoices}</div>
+            <div className="text-2xl font-semibold">{displaySummary.totalInvoices}</div>
             <div className="text-xs text-gray-500">Total emitidas</div>
-            <div className="mt-3 text-lg font-semibold">{formatCurrency(summary.incomeTotal)}</div>
+            <div className="mt-3 text-lg font-semibold">{formatCurrency(displaySummary.incomeTotal)}</div>
             <div className="text-xs text-gray-500">Importe total facturado</div>
           </div>
         </div>
@@ -1461,10 +1461,10 @@ export default function LibroRegistrosPage() {
           </div>
           <div className="p-4 bg-white">
             <div className="text-2xl font-semibold">
-              {filteredTransactions.filter(t => t.type === 'expense').length}
+              {displayTransactions.filter(t => t.type === 'expense').length}
             </div>
             <div className="text-xs text-gray-500">Transacciones</div>
-            <div className="mt-3 text-lg font-semibold text-red-600">{formatCurrency(summary.expenseTotal)}</div>
+            <div className="mt-3 text-lg font-semibold text-red-600">{formatCurrency(displaySummary.expenseTotal)}</div>
             <div className="text-xs text-gray-500">Importe total gastado</div>
           </div>
         </div>
@@ -1475,7 +1475,7 @@ export default function LibroRegistrosPage() {
             <div className="text-sm font-medium text-white">Presupuestos</div>
           </div>
           <div className="p-4 bg-white">
-            <div className="text-2xl font-semibold">{summary.totalQuotes}</div>
+            <div className="text-2xl font-semibold">{displaySummary.totalQuotes}</div>
             <div className="text-xs text-gray-500">Total presupuestos</div>
           </div>
         </div>
@@ -1486,8 +1486,8 @@ export default function LibroRegistrosPage() {
             <div className="text-sm font-medium text-white">Balance</div>
           </div>
           <div className="p-4 bg-white">
-            <div className={`text-2xl font-semibold ${summary.balance < 0 ? "text-red-600" : ""}`}>
-              {formatCurrency(summary.balance)}
+            <div className={`text-2xl font-semibold ${displaySummary.balance < 0 ? "text-red-600" : ""}`}>
+              {formatCurrency(displaySummary.balance)}
             </div>
             <div className="text-xs text-gray-500">Resultado</div>
           </div>
@@ -1498,7 +1498,7 @@ export default function LibroRegistrosPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Facturas emitidas</h3>
-          <div className="text-sm text-gray-500">{filteredInvoices.length} registros</div>
+          <div className="text-sm text-gray-500">{displayInvoices.length} registros</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
@@ -1515,14 +1515,14 @@ export default function LibroRegistrosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.length === 0 ? (
+                {displayInvoices.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-6 text-gray-400">
                       No hay facturas en este período
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredInvoices.map((invoice, index) => (
+                  displayInvoices.map((invoice, index) => (
                     <TableRow 
                       key={invoice.id} 
                       className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
