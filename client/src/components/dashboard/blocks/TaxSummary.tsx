@@ -79,8 +79,8 @@ const TaxSummary = ({ data, isLoading }: TaxSummaryProps) => {
           <div className={`border rounded-md p-3 ${ivaAlerta ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-sm font-medium text-gray-700">IVA a liquidar</h3>
-                <p className="text-xl font-bold text-blue-700 mt-1">
+                <h3 className="text-base font-medium text-gray-700">IVA a liquidar</h3>
+                <p className="text-2xl font-bold text-blue-700 mt-1">
                   {new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
@@ -94,14 +94,14 @@ const TaxSummary = ({ data, isLoading }: TaxSummaryProps) => {
               )}
             </div>
             
-            <div className="mt-2 space-y-1 text-xs">
+            <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-500">IVA repercutido:</span>
-                <span>{ivaRepercutido.toLocaleString('es-ES')} €</span>
+                <span className="font-medium">{ivaRepercutido.toLocaleString('es-ES')} €</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">IVA soportado:</span>
-                <span>{ivaSoportado.toLocaleString('es-ES')} €</span>
+                <span className="font-medium">{ivaSoportado.toLocaleString('es-ES')} €</span>
               </div>
             </div>
           </div>
@@ -110,8 +110,8 @@ const TaxSummary = ({ data, isLoading }: TaxSummaryProps) => {
           <div className={`border rounded-md p-3 ${irpfAlerta ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-sm font-medium text-gray-700">IRPF adelantado</h3>
-                <p className="text-xl font-bold text-blue-700 mt-1">
+                <h3 className="text-base font-medium text-gray-700">IRPF adelantado</h3>
+                <p className="text-2xl font-bold text-blue-700 mt-1">
                   {new Intl.NumberFormat('es-ES', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
@@ -125,10 +125,10 @@ const TaxSummary = ({ data, isLoading }: TaxSummaryProps) => {
               )}
             </div>
             
-            <div className="mt-2 space-y-1 text-xs">
+            <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-500">Retenciones en facturas:</span>
-                <span>{irpfRetenido.toLocaleString('es-ES')} €</span>
+                <span className="font-medium">{irpfRetenido.toLocaleString('es-ES')} €</span>
               </div>
             </div>
           </div>
