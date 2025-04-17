@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { useSimpleDashboardFilters } from './useSimpleDashboardFilters';
 
 export interface DashboardStats {
@@ -74,33 +75,69 @@ export function useDashboardData(
   const finalYear = forcedYear || year;
   const finalPeriod = forcedPeriod || period;
   
-  // No utilizamos timestamp en queryKey para evitar bucles infinitos
+  // Definimos un estado para forzar actualizaciones manuales
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+  
+  // Efecto para escuchar eventos de creación/actualización de facturas
+  useEffect(() => {
+    // Función para manejar eventos de facturas
+    const handleInvoiceEvent = () => {
+      console.log("🔄 Evento de factura detectado en useDashboardData, forzando actualización...");
+      // Incrementar el contador para forzar la recarga
+      setRefreshTrigger((prev: number) => prev + 1);
+    };
+    
+    // Registrar múltiples eventos
+    window.addEventListener('invoice-created', handleInvoiceEvent);
+    window.addEventListener('invoice-updated', handleInvoiceEvent);
+    window.addEventListener('dashboard-refresh-required', handleInvoiceEvent);
+    
+    // Limpiar al desmontar
+    return () => {
+      window.removeEventListener('invoice-created', handleInvoiceEvent);
+      window.removeEventListener('invoice-updated', handleInvoiceEvent);
+      window.removeEventListener('dashboard-refresh-required', handleInvoiceEvent);
+    };
+  }, []);
 
-  // Utilizamos el endpoint fix aquí
+  // Utilizamos el endpoint fix aquí y añadimos el refreshTrigger al queryKey
   const dashboardQuery = useQuery({
-    queryKey: ['dashboard', finalYear, finalPeriod],
+    queryKey: ['dashboard', finalYear, finalPeriod, refreshTrigger],
     queryFn: async () => {
       // Crear un nuevo cache param al momento de la llamada para evitar caché
       const queryTimestamp = `_cb=${Date.now()}`;
       
       try {
+        // Refrescar los datos forzando una solicitud fresca
+        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
+        
         // Intentar primero con el endpoint fijo
-        const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`);
+        const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        });
+        
         if (response.ok) {
-          return await response.json();
+          const data = await response.json();
+          console.log("✅ Datos actualizados del dashboard cargados correctamente");
+          return data;
         }
         
         // Si falla, intentar con el endpoint original
-        console.log("El endpoint fix falló, probando con el original...");
-        const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`);
+        console.log("⚠️ El endpoint fix falló, probando con el original...");
+        const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        });
+        
         if (originalResponse.ok) {
-          return await originalResponse.json();
+          const data = await originalResponse.json();
+          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original)");
+          return data;
         }
         
         // Si ambos fallan, lanzar error
         throw new Error('No se pudo obtener los datos del dashboard');
       } catch (error) {
-        console.error("Error al cargar datos del dashboard:", error);
+        console.error("❌ Error al cargar datos del dashboard:", error);
         
         // Proporcionar una estructura de datos base para que la UI no falle
         return {
@@ -133,8 +170,8 @@ export function useDashboardData(
         };
       }
     },
-    staleTime: 15 * 60 * 1000, // 15 minutos
-    refetchOnWindowFocus: false, // No refrescar al cambiar el foco de la ventana
+    staleTime: 60 * 1000, // Reducido a 1 minuto para permitir actualizaciones más frecuentes
+    refetchOnWindowFocus: true, // Ahora sí refrescamos al cambiar el foco para obtener datos actualizados
   });
 
   // Depuración

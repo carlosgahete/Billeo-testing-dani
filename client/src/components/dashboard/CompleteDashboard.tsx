@@ -39,47 +39,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
-  // Efecto para escuchar eventos de creación y actualización de facturas
-  useEffect(() => {
-    // Función que maneja la actualización después de crear/editar una factura
-    const handleInvoiceChange = (event: Event) => {
-      console.log("🔔 Evento de factura detectado, actualizando dashboard...", event.type);
-      
-      // Limpiar caché inmediatamente para garantizar datos frescos
-      queryClient.removeQueries({ queryKey: ['dashboard'] });
-      
-      // Hacer una solicitud directa para forzar la actualización
-      fetch(`/api/stats/dashboard-fix?nocache=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-      })
-      .then(() => {
-        // Forzar actualización del dashboard con un breve retraso para esperar a que los datos estén actualizados
-        setTimeout(() => {
-          console.log("⚡ Refrescando datos del dashboard después del evento");
-          refetch();
-          
-          // Hacer una segunda actualización después de un tiempo más largo
-          setTimeout(() => {
-            console.log("🔄 Segunda actualización del dashboard");
-            refetch();
-          }, 1000);
-        }, 500);
-      })
-      .catch(err => console.error("Error al recargar el dashboard:", err));
-    };
-    
-    // Escuchar ambos eventos - usar cualquier tipo de evento para mayor compatibilidad
-    window.addEventListener('invoice-created', handleInvoiceChange as EventListener);
-    window.addEventListener('invoice-updated', handleInvoiceChange as EventListener);
-    window.addEventListener('dashboard-refresh-required', handleInvoiceChange as EventListener);
-    
-    // Limpiar event listeners al desmontar
-    return () => {
-      window.removeEventListener('invoice-created', handleInvoiceChange as EventListener);
-      window.removeEventListener('invoice-updated', handleInvoiceChange as EventListener);
-      window.removeEventListener('dashboard-refresh-required', handleInvoiceChange as EventListener);
-    };
-  }, [refetch, queryClient]);
+  // Ya no necesitamos este efecto aquí porque ahora está en useDashboardData 
+  // y manejará automáticamente los eventos y la actualización de datos
+  // Si necesitamos alguna lógica específica después de detectar cambios, podemos añadirla aquí
   
   // Estados locales para UI
   // Importante: Usamos directamente los filtros del hook global
