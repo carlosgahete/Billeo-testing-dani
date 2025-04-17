@@ -199,7 +199,7 @@ export default function UsersManagement() {
       
       if (response.ok) {
         const updatedUser = await response.json();
-        setUsers(users.map(u => u.id === id ? updatedUser : u));
+        setUsers(Array.isArray(users) ? users.map(u => u.id === id ? updatedUser : u) : [updatedUser]);
         toast({
           title: "Éxito",
           description: "Usuario actualizado correctamente",
@@ -382,7 +382,7 @@ export default function UsersManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {Array.isArray(users) && users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
                 <TableCell>{user.name}</TableCell>
