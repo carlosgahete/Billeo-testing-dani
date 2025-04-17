@@ -261,6 +261,7 @@ export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({
       // Crear el objeto de actualización
       const updatedTransaction = {
         userId: transaction.userId,
+        // Priorizar el valor introducido por el usuario
         amount: formData.amount.toString(),
         title: updatedTitle,
         description: updatedDescription,
