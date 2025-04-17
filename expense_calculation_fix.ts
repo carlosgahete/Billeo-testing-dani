@@ -80,19 +80,87 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         ivaRepercutido = invoiceIncome * 0.21;
       }
       
-      // 5. Gastos
-      // Calculamos los gastos como la suma de los importes de transacciones de gastos
+      // 5. Gastos - Mejorado para calcular correctamente base imponible, IVA e IRPF
       const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense');
-      const expenses = expenseTransactions.reduce((sum, t) => {
-        const amount = parseFloat(t.amount || '0');
-        return isNaN(amount) ? sum : sum + amount;
-      }, 0);
       
-      // 6. Base imponible de gastos (estimada como 100/121 del total)
-      const baseImponibleGastos = expenses / 1.21;
+      // Variables para acumular los totales correctos
+      let totalBaseImponibleGastos = 0;
+      let totalIvaSoportado = 0;
+      let totalIrpfGastos = 0;
       
-      // 7. IVA soportado (de gastos)
-      const ivaSoportado = expenses - baseImponibleGastos;
+      // Procesar cada transacción individualmente para extraer los impuestos correctamente
+      for (const transaction of expenseTransactions) {
+        try {
+          // Valor total del gasto (lo pagado)
+          const totalAmount = parseFloat(transaction.amount || '0');
+          
+          // Si no hay monto válido, saltamos esta transacción
+          if (isNaN(totalAmount)) continue;
+          
+          // Variables para esta transacción específica
+          let baseAmount = totalAmount; // Por defecto asumimos que todo es base imponible
+          let ivaAmount = 0;
+          let irpfAmount = 0;
+          let ivaRate = 0;
+          let irpfRate = 0;
+          
+          // Procesar impuestos adicionales si existen
+          if (transaction.additionalTaxes) {
+            let taxes = [];
+            if (typeof transaction.additionalTaxes === 'string') {
+              taxes = JSON.parse(transaction.additionalTaxes);
+            } else if (Array.isArray(transaction.additionalTaxes)) {
+              taxes = transaction.additionalTaxes;
+            }
+            
+            // Extraer tasas de IVA e IRPF
+            for (const tax of taxes) {
+              if (tax && tax.name === 'IVA') {
+                ivaRate = Math.abs(parseFloat(tax.amount) || 0);
+              } else if (tax && tax.name === 'IRPF') {
+                irpfRate = Math.abs(parseFloat(tax.amount) || 0);
+              }
+            }
+            
+            // Si tenemos información de impuestos, recalcular la base imponible correctamente
+            if (ivaRate > 0 || irpfRate > 0) {
+              // Extraer la base imponible real considerando ambos impuestos
+              // La fórmula correcta es: base = total / (1 + IVA/100) para quitar el IVA
+              if (ivaRate > 0) {
+                baseAmount = totalAmount / (1 + (ivaRate / 100));
+                ivaAmount = totalAmount - baseAmount;
+              }
+              
+              // Si hay IRPF, este valor se restó del pago pero debemos considerarlo parte de la base
+              if (irpfRate > 0) {
+                // El IRPF se calcula sobre la base imponible
+                irpfAmount = (baseAmount * irpfRate) / 100;
+              }
+              
+              // Ajustar la base según el método correcto
+              baseAmount = parseFloat(baseAmount.toFixed(2));
+              ivaAmount = parseFloat(ivaAmount.toFixed(2));
+              irpfAmount = parseFloat(irpfAmount.toFixed(2));
+            }
+          }
+          
+          // Añadir al acumulado
+          totalBaseImponibleGastos += baseAmount;
+          totalIvaSoportado += ivaAmount;
+          totalIrpfGastos += irpfAmount;
+          
+        } catch (error) {
+          console.error("Error procesando gasto:", error);
+        }
+      }
+      
+      // Establecer los valores correctos calculados individualmente
+      const baseImponibleGastos = totalBaseImponibleGastos;
+      const ivaSoportado = totalIvaSoportado;
+      const irpfGastos = totalIrpfGastos;
+      
+      // Para compatibilidad, también calculamos el total de gastos (para referencia)
+      const expenses = baseImponibleGastos + ivaSoportado;
       
       // 8. IRPF retenido (en ingresos)
       let irpfRetenidoIngresos = 0;
@@ -122,8 +190,8 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         }
       }
       
-      // 9. IRPF de gastos
-      let totalIrpfFromExpensesInvoices = 0;
+      // 9. IRPF de gastos - Ya calculado anteriormente
+      let totalIrpfFromExpensesInvoices = irpfGastos; // Usamos el valor calculado anteriormente
       
       // 10. Balance de IVA
       const vatBalance = ivaRepercutido - ivaSoportado;
@@ -181,10 +249,11 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       console.log(`Ingresos (facturas pagadas): ${invoiceIncome}€`);
       console.log(`Base imponible ingresos: ${baseImponible}€`);
       console.log(`IVA repercutido: ${ivaRepercutido}€`);
-      console.log(`Gastos (transacciones): ${expenses}€`);
-      console.log(`Base imponible gastos: ${baseImponibleGastos}€`);
+      console.log(`Gastos (base imponible): ${baseImponibleGastos}€`);
       console.log(`IVA soportado: ${ivaSoportado}€`);
-      console.log(`IRPF retenido: ${irpfRetenidoIngresos}€`);
+      console.log(`Total con IVA: ${expenses}€`);
+      console.log(`IRPF en gastos: ${totalIrpfFromExpensesInvoices}€`);
+      console.log(`IRPF en ingresos: ${irpfRetenidoIngresos}€`);
       console.log(`Balance bruto: ${balance}€`);
       console.log(`Resultado neto: ${result}€`);
       

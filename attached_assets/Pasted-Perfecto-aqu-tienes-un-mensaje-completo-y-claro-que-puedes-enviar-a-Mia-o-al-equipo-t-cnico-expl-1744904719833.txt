@@ -1,0 +1,114 @@
+Perfecto, aquí tienes un mensaje completo y claro que puedes enviar a Mia (o al equipo técnico) explicando todo lo que debe corregir en el cálculo de los gastos y cómo debe funcionar el dashboard en tiempo real:
+
+⸻
+
+Hola Mia,
+
+Te explico de forma clara y completa cómo debe funcionar el cálculo de los gastos en el dashboard, ya que ahora mismo hay algunos errores clave que debemos corregir. También incluyo cómo se comporta el sistema en tiempo real para que todo esté bien sincronizado.
+
+⸻
+
+1. Cómo deben calcularse los GASTOS
+
+A. Obtención de datos
+	•	Se deben obtener todas las transacciones con type: "expense" (gasto).
+	•	Filtrar solo las que estén marcadas como pagadas.
+	•	Filtrar por el periodo seleccionado (año y trimestre).
+
+B. De cada gasto necesitas:
+	•	Base imponible (baseAmount)
+	•	Si no viene directamente, se puede calcular a partir del total y los impuestos.
+	•	IVA soportado:
+	•	Se saca de additionalTaxes donde name: "IVA".
+	•	Se calcula: baseAmount * (IVA / 100).
+	•	IRPF:
+	•	Se saca de additionalTaxes donde name: "IRPF".
+	•	Este valor viene negativo, así que para los cálculos se usa su valor absoluto:
+Math.abs(IRPF).
+
+C. Cómo mostrarlo en el dashboard
+	•	El número grande en la tarjeta de “Gastos” debe ser la suma de las bases imponibles de todas las facturas de gasto (sin IVA ni IRPF).
+	•	Debajo de ese número, se muestran:
+	•	IVA soportado total (sumando todos los IVAs de cada factura)
+	•	IRPF total retenido (sumando los IRPF de cada gasto, si hay)
+
+Importante: el IRPF en los gastos debe restarse de la base para obtener el gasto neto (para los cálculos internos), pero nunca se muestra restado en el número grande.
+El número grande es siempre la base imponible total.
+
+⸻
+
+2. Cómo debe calcularse el RESULTADO FINAL
+	•	Ingresos netos = base imponible de ingresos - IRPF retenido en ingresos
+	•	Gastos netos = base imponible de gastos - IRPF retenido en gastos
+	•	Resultado final = ingresos netos - gastos netos
+
+⸻
+
+3. Cálculo de IVA a pagar
+	•	IVA facturado (de ingresos) - IVA soportado (de gastos)
+
+⸻
+
+4. IRPF total
+	•	IRPF de ingresos + IRPF de gastos
+
+⸻
+
+5. Muy importante: el sistema es en TIEMPO REAL
+
+Cada vez que un cliente sube una factura o un gasto:
+	•	Los datos del dashboard deben actualizarse inmediatamente.
+	•	Esto afecta directamente al resultado neto, al IVA a pagar y al IRPF total.
+	•	El backend tiene un endpoint preparado para esto:
+/api/stats/dashboard-fix
+que devuelve ya todo lo necesario:
+
+{
+  "income": base ingresos total,
+  "expenses": base gastos total,
+  "ivaRepercutido": IVA ingresos,
+  "ivaSoportado": IVA gastos,
+  "irpfRetenido": IRPF total,
+  "pendingInvoices": total facturas pendientes,
+  "pendingCount": cantidad
+}
+
+
+
+⸻
+
+6. Errores que estaban ocurriendo y que debes corregir:
+
+Problema	Qué hacía mal	Qué debe hacer
+IRPF en gastos	Lo sumaba o ignoraba	Restarlo de la base para obtener el gasto neto (internamente)
+IVA	Lo sumaba al valor principal del gasto	IVA debe mostrarse solo debajo, nunca en el número grande
+Número principal de gasto	Mostraba “lo que se pagó” (base + IVA - IRPF)	Debe ser solo la suma de las bases imponibles
+Facturas no pagadas	Las contaba	Solo se consideran las pagadas
+Recalcular en tiempo real	No siempre actualizaba	Debe hacerlo al instante cuando el usuario sube un documento
+Repetía cálculos en el frontend	Calculaba todo manualmente	Usar el endpoint del backend para evitar errores
+
+
+
+⸻
+
+Resumen visual para gastos (ejemplo)
+
+Supongamos que hay dos facturas de gasto:
+	•	Factura 1: base 60€, IVA 21%, IRPF -7%
+	•	Factura 2: base 40€, IVA 10%, sin IRPF
+
+Tarjeta de gastos debería mostrar:
+
+–100 € (en grande → suma de base imponible)
+IVA: 17.1 €
+IRPF: 4.2 € (solo si hay)
+
+⸻
+
+Cualquier duda o si necesitas ver ejemplos reales, avísame y te los preparo. Gracias por revisar y ajustar esto.
+
+— Daniel
+
+⸻
+
+¿Te gustaría que también lo convierta en documentación técnica o guía visual rápida para los devs?

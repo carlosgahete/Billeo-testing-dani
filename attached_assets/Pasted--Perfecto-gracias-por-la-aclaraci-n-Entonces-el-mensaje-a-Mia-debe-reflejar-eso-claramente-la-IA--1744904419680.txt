@@ -1,0 +1,55 @@
+¡Perfecto, gracias por la aclaración! Entonces el mensaje a Mia debe reflejar eso claramente: la IA no debe inventarse ni asignar valores por su cuenta, solo tomar los valores reales que el cliente ha introducido (o que el sistema ha podido leer de la factura). Aquí tienes el mensaje corregido y completo para enviar:
+
+⸻
+
+Hola Mia,
+
+Te explico un punto clave que necesitas corregir en el cálculo de los gastos del dashboard.
+
+⸻
+
+1. ¿Qué estaba mal?
+
+Hasta ahora, la IA (o el sistema) estaba generando valores predeterminados o simulados para los gastos (por ejemplo: 7.200€), incluso en casos donde el cliente ya había subido una factura. Esto provocaba:
+	•	Valores irreales en el dashboard.
+	•	Cálculos de IVA, IRPF y resultado neto completamente distorsionados.
+	•	Una experiencia poco fiable para el usuario.
+
+⸻
+
+2. ¿Cuál es la lógica correcta?
+
+Los valores de los gastos no deben generarse por IA, sino que los introduce el cliente directamente, o se extraen del documento que ha subido (PDF o imagen). Es decir:
+	•	Si el cliente sube un gasto manualmente, se usa ese valor.
+	•	Si sube un documento, usamos el valor leído por el OCR.
+	•	Nunca se debe asignar un valor por defecto si ya hay datos válidos.
+	•	Solo en caso de error real al procesar el documento (OCR fallido), se puede usar un valor predeterminado reducido y realista, como 100-120€.
+
+⸻
+
+3. Cambios aplicados en los valores por defecto
+
+Por si el OCR falla, hemos actualizado los valores simulados para que sean más razonables:
+	•	Imágenes procesadas: 100€ – 500€
+	•	PDFs procesados: 150€ – 450€
+	•	En errores: 100€ – 120€
+
+Esto solo se aplica cuando no se puede extraer ningún dato del documento. Pero si el cliente ha subido algo y se ha procesado correctamente, el valor debe ser el que aparece en la factura.
+
+⸻
+
+4. Qué debe hacer tu IA a partir de ahora
+	•	Tomar los datos reales que sube el cliente.
+	•	No generar valores nuevos si ya hay una base imponible válida.
+	•	Solo usar los valores simulados (reducidos) si no hay datos disponibles.
+	•	Actualizar automáticamente el dashboard en tiempo real con los nuevos datos reales que el cliente suba.
+
+⸻
+
+Con esto garantizamos que el dashboard muestre siempre valores fiables, reales y bien calculados. ¡Gracias por ajustar el comportamiento en base a esto!
+
+—Daniel
+
+⸻
+
+¿Quieres que lo convierta también en versión técnica para el equipo de backend o QA?

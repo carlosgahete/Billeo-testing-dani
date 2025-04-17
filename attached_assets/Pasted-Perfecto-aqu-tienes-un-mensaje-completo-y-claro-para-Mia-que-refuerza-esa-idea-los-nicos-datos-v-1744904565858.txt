@@ -1,0 +1,60 @@
+Perfecto, aquí tienes un mensaje completo y claro para Mia que refuerza esa idea: los únicos datos válidos son los que vienen del cliente, y todo lo demás es solo un respaldo temporal en caso de fallo.
+
+⸻
+
+Hola Mia,
+
+Quiero dejar claro cómo debe funcionar el cálculo de gastos en el dashboard, y qué datos deben considerarse como válidos. Este ajuste es muy importante para que la experiencia del usuario sea coherente, precisa y profesional.
+
+⸻
+
+1. Solo hay una fuente de datos real: el cliente
+
+Los únicos datos que consideramos válidos y oficiales son los que el cliente proporciona. Esto puede ser:
+	•	Datos ingresados manualmente en una factura o gasto.
+	•	Datos extraídos correctamente a través de OCR de una factura subida (imagen o PDF).
+
+La IA no debe generar ni modificar estos valores. Su papel es únicamente de soporte en caso de que no se haya podido extraer la información correctamente.
+
+⸻
+
+2. Qué hacer cuando no hay datos válidos
+
+En caso de que el OCR no funcione y no se pueda extraer la base imponible ni los impuestos, ahí sí se permite usar un valor predeterminado. Pero ese valor:
+	•	Debe ser realista (rango de 100€–120€).
+	•	Se debe marcar internamente como “estimado” o “simulado”.
+	•	Debe ser reemplazado automáticamente en cuanto el cliente edite o valide el gasto.
+
+⸻
+
+3. Qué se ha corregido ya
+
+Antes, la IA o el sistema estaba generando automáticamente valores predeterminados muy altos (como 7.200€), lo cual:
+	•	Daba una imagen falsa en el dashboard.
+	•	Afectaba negativamente a los cálculos del IVA, IRPF y resultado final.
+	•	Confundía al usuario.
+
+Ahora:
+	•	Para imágenes procesadas: valores entre 100€–500€.
+	•	Para PDFs procesados: 150€–450€.
+	•	En errores: 100€–120€ máximo.
+
+⸻
+
+4. Lo que debe hacer el sistema a partir de ahora
+	•	Usar siempre los datos del cliente si están disponibles.
+	•	Si hay OCR correcto, tomar esos datos.
+	•	Solo si falla todo lo anterior, usar los valores predeterminados pequeños.
+	•	Y muy importante: actualizar en tiempo real el dashboard cada vez que el cliente suba o modifique una factura o gasto.
+
+⸻
+
+Con este enfoque, el dashboard será mucho más preciso, los resultados más coherentes, y el usuario confiará más en la herramienta.
+
+Gracias por adaptar la lógica con estos cambios en mente.
+
+—Daniel
+
+⸻
+
+¿Quieres que prepare una versión técnica de este mismo mensaje para el equipo de backend o IA?
