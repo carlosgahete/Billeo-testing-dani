@@ -78,25 +78,38 @@ export function useDashboardData(
   // Definimos un estado para forzar actualizaciones manuales
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
-  // Efecto para escuchar eventos de creación/actualización de facturas
+  // Efecto para escuchar eventos de creación/actualización de facturas y transacciones
   useEffect(() => {
-    // Función para manejar eventos de facturas
-    const handleInvoiceEvent = () => {
-      console.log("🔄 Evento de factura detectado en useDashboardData, forzando actualización...");
+    // Función para manejar eventos que requieren actualización del dashboard
+    const handleUpdateEvent = (event: Event) => {
+      console.log(`🔄 Evento ${(event as CustomEvent).type} detectado en useDashboardData, forzando actualización...`);
       // Incrementar el contador para forzar la recarga
       setRefreshTrigger((prev: number) => prev + 1);
     };
     
-    // Registrar múltiples eventos
-    window.addEventListener('invoice-created', handleInvoiceEvent);
-    window.addEventListener('invoice-updated', handleInvoiceEvent);
-    window.addEventListener('dashboard-refresh-required', handleInvoiceEvent);
+    // Registrar eventos para facturas
+    window.addEventListener('invoice-created', handleUpdateEvent);
+    window.addEventListener('invoice-updated', handleUpdateEvent);
     
-    // Limpiar al desmontar
+    // Registrar eventos para transacciones
+    window.addEventListener('transaction-created', handleUpdateEvent);
+    window.addEventListener('transaction-updated', handleUpdateEvent);
+    
+    // Evento general de refresco del dashboard
+    window.addEventListener('dashboard-refresh-required', handleUpdateEvent);
+    
+    // Limpiar todos los listeners al desmontar
     return () => {
-      window.removeEventListener('invoice-created', handleInvoiceEvent);
-      window.removeEventListener('invoice-updated', handleInvoiceEvent);
-      window.removeEventListener('dashboard-refresh-required', handleInvoiceEvent);
+      // Facturas
+      window.removeEventListener('invoice-created', handleUpdateEvent);
+      window.removeEventListener('invoice-updated', handleUpdateEvent);
+      
+      // Transacciones
+      window.removeEventListener('transaction-created', handleUpdateEvent);
+      window.removeEventListener('transaction-updated', handleUpdateEvent);
+      
+      // General
+      window.removeEventListener('dashboard-refresh-required', handleUpdateEvent);
     };
   }, []);
 

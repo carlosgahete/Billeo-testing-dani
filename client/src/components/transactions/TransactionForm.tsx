@@ -218,18 +218,51 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
         return apiRequest("POST", "/api/transactions", payload);
       }
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("✅ Transacción guardada:", response);
+      
+      // Disparar evento personalizado para notificar a los componentes sobre el cambio
+      const eventName = isEditMode ? 'transaction-updated' : 'transaction-created';
+      window.dispatchEvent(new CustomEvent(eventName, { 
+        detail: { transactionId: isEditMode ? transactionId : (response as any)?.id || 'new' }
+      }));
+      
+      console.log(`🔔 Evento disparado: ${eventName}`);
+      
+      // Eliminar completamente las consultas relevantes para forzar una recarga completa
+      console.log("🧹 Limpiando caché de consultas...");
+      queryClient.removeQueries({ queryKey: ["transactions"] });
+      queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
+      
+      // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
+      fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+      })
+      .then(() => {
+        console.log("⚡ Forzando recarga de datos para dashboard");
+        
+        // Refrescar explícitamente todas las consultas con las claves correctas
+        queryClient.refetchQueries({ queryKey: ["dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["transactions"] });
+        
+        // Disparar evento para actualización del dashboard (esto forzará la actualización a través del hook)
+        console.log("📣 Disparando evento dashboard-refresh-required");
+        window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+        
+        // Disparar una segunda actualización después de un breve retraso
+        setTimeout(() => {
+          console.log("🔄 Segunda actualización del dashboard");
+          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+        }, 800);
+      })
+      .catch(err => console.error("❌ Error al recargar dashboard:", err));
+      
       toast({
         title: isEditMode ? "Movimiento actualizado" : "Movimiento creado",
         description: isEditMode
           ? "El movimiento se ha actualizado correctamente"
           : "El movimiento se ha creado correctamente",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      if (isEditMode) {
-        queryClient.invalidateQueries({ queryKey: [`/api/transactions/${transactionId}`] });
-      }
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
       navigate("/transactions");
     },
     onError: (error: any) => {
