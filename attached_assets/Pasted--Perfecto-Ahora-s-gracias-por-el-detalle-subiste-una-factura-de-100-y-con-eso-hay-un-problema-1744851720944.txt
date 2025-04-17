@@ -1,0 +1,106 @@
+¡Perfecto! Ahora sí, gracias por el detalle: subiste una factura de 100 €, y con eso hay un problema en cómo se están interpretando los valores. Vamos a desglosarlo paso a paso para identificar exactamente qué falla.
+
+🧾 Supuesto correcto de la factura subida
+
+La factura subida tiene estos valores:
+	•	Base imponible: 100 €
+	•	IVA 21%: 21 €
+	•	IRPF -15%: -15 €
+	•	Total factura:
+	•	Si la retención de IRPF no afecta el total, el total bruto es 121 €
+	•	Si el IRPF se descuenta, el total neto a pagar sería 106 €
+
+	Necesitamos aclarar qué se guarda como totalAmount: ¿es el bruto con IVA o el neto con IVA - IRPF?
+
+Pero vamos con ambas posibilidades:
+
+🧠 POSIBILIDAD 1: El total es 121 €
+
+(Es decir: 100 base + 21 IVA)
+
+Entonces:
+	•	baseAmount: 100 €
+	•	ivaAmount: 21 €
+	•	irpfAmount: -15 €
+	•	totalAmount: 121 €
+
+Esto es contablemente correcto.
+Y el cálculo esperado sería:
+
+expenses = 100
+ivaSoportado = 21
+netExpenses = 106 // 121 - 15
+
+Si el sistema sólo ve el totalAmount (121) y calcula la base como 121 / 1.21 ≈ 100, ¡bien!
+
+Pero si por error recalcula el IVA como 121 - base ≈ 21, y luego vuelve a restar IVA (en vez de IRPF)… ahí hay lío.
+
+🧠 POSIBILIDAD 2: El total es 106 €
+
+(Es decir: 100 base + 21 IVA - 15 IRPF = 106)
+
+	Este suele ser el caso más común cuando el IRPF se descuenta en origen (en vez de pagarse aparte).
+
+Entonces:
+	•	baseAmount: 100
+	•	ivaAmount: 21
+	•	irpfAmount: -15
+	•	totalAmount: 106
+
+Aquí es donde muchos sistemas fallan.
+
+Si el backend hace esto:
+
+// calcula base desde total
+base = 106 / 1.21 ≈ 87.6
+iva = 106 - base ≈ 18.4
+
+🚨 ¡ERROR! Porque ya tienes el valor correcto del IVA: 21 €, y el total tiene aplicada la retención.
+
+🔍 ¿Dónde puede estar fallando tu sistema?
+
+❌ ERROR 1: Ignorar el IVA explícito
+
+Si a pesar de tener ivaAmount: 21, el sistema lo recalcula como total - base, dará mal (ej. 18.4)
+
+❌ ERROR 2: Calcular base con fórmula
+
+Usar base = total / (1 + ivaRate/100) es incorrecto si el total ya tiene aplicada una retención (IRPF). Eso distorsiona completamente la base y el IVA.
+
+❌ ERROR 3: No distinguir total bruto vs neto
+
+Si totalAmount ya incluye el IRPF (neto), pero se trata como si fuera bruto, se rompe el cálculo.
+
+✅ ¿Cuál es la solución?
+
+En el backend, la lógica debe ser:
+
+if (additionalTaxes contiene IVA con value explícito) {
+   ivaSoportado += ivaAmount;
+   baseGasto += (totalAmount - ivaAmount);
+} else {
+   // última opción: estimación
+   baseGasto += totalAmount / (1 + ivaRate / 100);
+   ivaSoportado += totalAmount - baseGasto;
+}
+
+Y si hay IRPF:
+
+if (additionalTaxes contiene IRPF con value) {
+   netExpenses += (totalAmount - irpfAmount);
+} else {
+   netExpenses += totalAmount;
+}
+
+🧪 ¿Quieres que hagamos un ejemplo real con 3 facturas?
+
+Por ejemplo:
+
+Base	IVA 21%	IRPF 15%	Total esperado
+100€	21€	-15€	106€
+500€	105€	-75€	530€
+1000€	210€	-150€	1060€
+
+Puedo ayudarte a simular cómo se deben guardar y cómo procesarlas para que todos los cálculos cuadren.
+
+¿Quieres que lo prepare así en formato JSON ejemplo o directamente en código del backend?
