@@ -37,24 +37,28 @@ export function setupSimplifiedDashboardEndpoint(
         const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
         console.log("Años de transacciones:", uniqueYears);
         
-        // Filtrar facturas por año si se proporciona
-        const filteredInvoices = year 
+        // Filtrar facturas por año si se proporciona, pero nunca filtrar por año si estamos en 'all'
+        const filteredInvoices = (year && year !== 'all')
           ? invoices.filter(invoice => {
+              // Verificamos si la factura tiene fecha válida
+              if (!invoice.issueDate) return true; // Incluir facturas sin fecha
               const invoiceYear = new Date(invoice.issueDate).getFullYear();
               return invoiceYear.toString() === year;
             })
-          : invoices;
+          : invoices; // Si year es 'all' o no se proporciona, incluir todas las facturas
           
         // Obtener datos de transacciones
         const transactions = await storage.getTransactionsByUserId(userId);
         
-        // Filtrar transacciones por año
-        const filteredTransactions = year 
+        // Filtrar transacciones por año, pero nunca filtrar si estamos en 'all'
+        const filteredTransactions = (year && year !== 'all')
           ? transactions.filter(txn => {
+              // Verificamos si la transacción tiene fecha válida
+              if (!txn.date) return true; // Incluir transacciones sin fecha
               const txnYear = new Date(txn.date).getFullYear();
               return txnYear.toString() === year;
             })
-          : transactions;
+          : transactions; // Si year es 'all' o no se proporciona, incluir todas las transacciones
           
         // Obtener datos de presupuestos
         const quotes = await storage.getQuotesByUserId(userId);
