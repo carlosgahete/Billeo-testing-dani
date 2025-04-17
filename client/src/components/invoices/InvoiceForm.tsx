@@ -649,10 +649,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Ya tenemos calculateInvoiceTotals definida globalmente
 
   // Usamos useMemo para memorizar los cálculos y prevenir bucles de renderizado
-  const { items, additionalTaxes } = form.getValues();
-  
-  // Memoizamos los cálculos para evitar re-renders excesivos
+  // FIX: Esta línea causaba re-renders porque se ejecutaba en cada renderización
+  // Movemos esta línea al interior del useMemo para que sólo se ejecute cuando las dependencias cambian
   const calculatedTotals = useMemo(() => {
+    // Obtenemos los valores dentro del useMemo para evitar re-renders
+    const { items = [], additionalTaxes = [] } = form.getValues();
+    
     // Calculamos subtotales
     const updatedItems = (items || []).map((item: any) => {
       const quantity = toNumber(item.quantity, 0);
@@ -694,7 +696,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       additionalTaxesTotal, 
       total: safeTotal 
     };
-  }, [items, additionalTaxes]);
+  // Dependencia del form para recalcular cuando cambie y no causar bucles infinitos
+  }, [form]);
   
   const handleSubmit = (data: InvoiceFormValues) => {
     // Las notas no necesitan incluir información bancaria, ya que aparece en otra parte del PDF
@@ -726,7 +729,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       if (numericValue > 0 || field.value !== "") {
         field.onChange(numericValue.toString());
       }
-      // Función calculateInvoiceTotals(form) reemplazada con código inline
+      // Ya no necesitamos recalcular aquí, se hace en useMemo con la dependencia del form
     };
   };
   
@@ -740,11 +743,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         amount: -15, 
         isPercentage: true 
       });
-      // Recalcular totales después de agregar impuesto usando referencia segura
-      const formRef = form; // Capturar en variable local
-      window.setTimeout(() => { 
-        if (formRef) calculateInvoiceTotals(formRef); 
-      }, 10);
+      // No necesitamos recalcular - useMemo con dependencia form se encargará
     } else if (taxType === 'iva') {
       // IVA adicional (21%)
       appendTax({ 
@@ -752,11 +751,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         amount: 21, 
         isPercentage: true 
       });
-      // Recalcular totales después de agregar impuesto con referencia estable
-      const formRef = form; // Capturar referencia en variable local
-      window.setTimeout(() => { 
-        if (formRef) calculateInvoiceTotals(formRef); 
-      }, 10);
+      // No necesitamos recalcular - useMemo con dependencia form se encargará
     } else {
       // Mostrar diálogo para impuesto personalizado
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
@@ -768,11 +763,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const handleAddTaxFromDialog = () => {
     appendTax(newTaxData);
     setShowTaxDialog(false);
-    // Recalcular totales después de agregar impuesto con referencia segura
-    const formRef = form; // Capturamos la referencia actual
-    window.setTimeout(() => { 
-      if (formRef) calculateInvoiceTotals(formRef); 
-    }, 10);
+    // No necesitamos recalcular - useMemo con dependencia form se encargará
   };
 
   // Función que maneja la creación o actualización de un cliente
