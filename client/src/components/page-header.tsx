@@ -9,15 +9,13 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, children, className }: PageHeaderProps) {
   return (
-    <div className={`mb-4 flex flex-col ${className}`}>
-      <div className="space-y-0">
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        {description && (
-          <p className="-mt-1 text-sm text-muted-foreground">
-            {description}
-          </p>
-        )}
-      </div>
+    <div className={`mb-3 ${className}`}>
+      <h1 className="text-2xl font-bold mb-0 leading-tight">{title}</h1>
+      {description && (
+        <p className="text-sm text-muted-foreground mt-0.5 leading-tight">
+          {description}
+        </p>
+      )}
       {children}
     </div>
   );
