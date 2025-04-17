@@ -237,9 +237,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4 pb-48 mb-20", className)}>
+    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4 pb-36 mb-12 -mt-6", className)}>
       {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
-      <div className="section-header px-0 pt-0 md:pt-1 pb-0 md:px-4 md:py-4">
+      <div className="section-header px-0 pt-0 md:pt-0 pb-0 md:px-4 md:py-2">
         <div className="flex items-center justify-center md:justify-start mt-[-15px] md:mt-0">
           <div className="md:flex hidden items-center">
             <BarChart3 className="h-6 w-6 text-primary mr-3" />
@@ -368,7 +368,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
       {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
           En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-0 md:mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4">
         {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
@@ -433,7 +433,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Segunda fila: Widgets secundarios - Row 2 - De 2 columnas en tablet, 1 columna en móvil */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 mt-3 md:mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-2 md:mt-4">
         {/* Widget de Facturas pendientes - Col-span-1 siempre */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-purple-500">
           <div className="md:p-6 p-3 sm:p-1">
@@ -507,7 +507,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       </div>
 
       {/* Tercera Fila - Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8 mt-3 md:mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 mt-2 md:mt-4">
         {/* Gráfico de Comparativa Financiera - Estilo Apple - Col-span-1 en tablet+ */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="p-6">
