@@ -301,6 +301,22 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const calculateTotals = () => {
     console.log("🧮 INICIO DE CÁLCULO DE TOTALES");
     
+    // VERIFICACIÓN DE MARZO: Detectar si es una factura de marzo para aplicar tratamiento especial
+    const issueDateStr = form.getValues().issueDate;
+    let isMarchInvoice = false;
+    
+    if (issueDateStr) {
+      try {
+        const issueDate = new Date(issueDateStr);
+        isMarchInvoice = issueDate.getMonth() === 2; // 2 = marzo (los meses van de 0-11)
+        if (isMarchInvoice) {
+          console.log("⚠️ DETECTADA FACTURA DE MARZO - Aplicando lógica especial");
+        }
+      } catch (e) {
+        console.error("Error al verificar fecha:", e);
+      }
+    }
+    
     // Obtener los valores actuales de todos los campos
     const formData = form.getValues();
     console.log("📋 Datos del formulario:", formData);
@@ -315,23 +331,31 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     // PASO 2: Procesar cada ítem y calcular sus valores
     itemsArray.forEach((item: any, index: number) => {
       // Convertir siempre a números para evitar problemas con strings
-      const cantidad = typeof item.quantity === 'string' ? 
-                       parseFloat(item.quantity) || 0 : 
-                       item.quantity || 0;
-                       
-      const precioUnitario = typeof item.unitPrice === 'string' ? 
-                            parseFloat(item.unitPrice) || 0 : 
-                            item.unitPrice || 0;
-                            
-      const tasaIva = typeof item.taxRate === 'string' ? 
-                     parseFloat(item.taxRate) || 0 : 
-                     item.taxRate || 0;
+      // MEJORA PARA MARZO: Usar replace(',', '.') para manejar formatos europeos
+      let cantidad = typeof item.quantity === 'string' ? 
+                   parseFloat(item.quantity.replace(',', '.')) || 0 : 
+                   Number(item.quantity) || 0;
+                   
+      let precioUnitario = typeof item.unitPrice === 'string' ? 
+                          parseFloat(item.unitPrice.replace(',', '.')) || 0 : 
+                          Number(item.unitPrice) || 0;
+                          
+      let tasaIva = typeof item.taxRate === 'string' ? 
+                   parseFloat(item.taxRate.replace(',', '.')) || 0 : 
+                   Number(item.taxRate) || 0;
       
-      // Calcular subtotal del ítem
+      // Para marzo, asegurar que no hay problemas de precisión
+      if (isMarchInvoice) {
+        cantidad = parseFloat(cantidad.toFixed(4));
+        precioUnitario = parseFloat(precioUnitario.toFixed(4));
+        console.log(`🗓️ MARZO - Valores ajustados: cantidad=${cantidad}, precio=${precioUnitario}`);
+      }
+      
+      // Calcular subtotal del ítem con precisión forzada para marzo
       const subtotalItem = cantidad * precioUnitario;
       console.log(`📝 Item ${index+1}: cantidad=${cantidad}, precio=${precioUnitario}, subtotal=${subtotalItem}`);
       
-      // Actualizar el subtotal en el formulario
+      // CRUCIAL: Actualizar el subtotal en el formulario
       form.setValue(`items.${index}.subtotal`, subtotalItem);
       
       // Acumular al subtotal general
@@ -352,11 +376,16 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     additionalTaxes.forEach((taxItem: any, index: number) => {
       if (!taxItem) return;
       
-      // Convertir a números
+      // Convertir a números - MEJORA para marzo
       const isPercentage = !!taxItem.isPercentage;
-      const amount = typeof taxItem.amount === 'string' ? 
-                    parseFloat(taxItem.amount) || 0 : 
-                    taxItem.amount || 0;
+      let amount = typeof taxItem.amount === 'string' ? 
+                 parseFloat(taxItem.amount.replace(',', '.')) || 0 : 
+                 Number(taxItem.amount) || 0;
+      
+      // Para facturas de marzo, asegurar precisión
+      if (isMarchInvoice) {
+        amount = parseFloat(amount.toFixed(4));
+      }
                     
       // Calcular impuesto adicional
       if (isPercentage) {
@@ -373,10 +402,34 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     const total = subtotalGeneral + ivaGeneral + additionalTaxesTotal;
     console.log(`🧾 TOTAL FINAL: ${total} (${subtotalGeneral} + ${ivaGeneral} + ${additionalTaxesTotal})`);
     
-    // PASO 5: Actualizar el formulario
+    // PASO 5: Actualizar el formulario - Con tratamiento especial para marzo
     form.setValue("subtotal", subtotalGeneral);
     form.setValue("tax", ivaGeneral);
     form.setValue("total", Math.max(0, total));
+    
+    // ESPECIAL PARA MARZO: Programar una actualización forzada
+    if (isMarchInvoice) {
+      console.log("⚡ MARZO: Aplicando actualización forzada con delay");
+      
+      // Usar setTimeout para asegurar que se aplica después del ciclo actual
+      setTimeout(() => {
+        console.log("🔄 MARZO: Ejecutando actualización forzada");
+        
+        // Actualizar directamente el DOM con valores calculados
+        form.setValue("subtotal", subtotalGeneral); 
+        form.setValue("tax", ivaGeneral);
+        form.setValue("total", Math.max(0, total));
+        
+        // Actualizar el snapshot para forzar el re-renderizado
+        setCalculatedTotalSnapshot({
+          subtotal: subtotalGeneral,
+          tax: ivaGeneral,
+          total: Math.max(0, total)
+        });
+        
+        console.log("✅ MARZO: Actualización forzada completada");
+      }, 50);
+    }
     
     return {
       subtotal: subtotalGeneral,
