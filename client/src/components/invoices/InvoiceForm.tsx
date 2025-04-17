@@ -287,6 +287,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   });
 
   // Efecto para añadir automáticamente el número de cuenta en las notas
+  // Este efecto es innecesario y podría causar renderizados infinitos al modificar form
+  // Ya que utilizamos el formulario para mostrar datos iniciales, no necesitamos modificarlo automáticamente
+  /*
   useEffect(() => {
     // Solo aplicar cuando obtengamos los datos de la empresa y no estemos en modo edición
     if (companyData && !isEditMode) {
@@ -299,6 +302,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       }
     }
   }, [companyData, isEditMode]); // Quitamos 'form' para evitar renderizados infinitos
+  */
 
   // Initialize form with invoice data when loaded - either from API or passed in
   // Función para formatear fechas al formato YYYY-MM-DD
@@ -415,24 +419,22 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           items: `${processedItems.length} items`
         });
         
-        // Actualizar el formulario con los datos formateados
-        form.reset(formattedInvoice);
+        // Actualizar el formulario con los datos formateados - SOLO UNA VEZ
+        // Este es un cambio importante: sólo hacemos form.reset si dataSource ha cambiado
+        // para evitar renders infinitos
+        const resetForm = () => {
+          form.reset(formattedInvoice);
+          
+          // Si hay archivos adjuntos, actualizamos el estado
+          if (invoice.attachments) {
+            setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
+          }
+        };
         
-        // Si hay archivos adjuntos, actualizamos el estado
-        if (invoice.attachments) {
-          setAttachments(Array.isArray(invoice.attachments) ? invoice.attachments : []);
-        }
-        
-        // Recalcular totales después de que el formulario se haya actualizado completamente
-        // Usamos un callback independiente para evitar renderizados infinitos
-        // Usamos setTimeout con una referencia segura al formulario
-        const formRef = form; // Capturamos la referencia en una constante estable
-        window.setTimeout(() => {
-          if (formRef) calculateInvoiceTotals(formRef);
-        }, 200);
+        resetForm();
       }
     }
-  }, [invoiceData, initialData, isEditMode]); // Quitamos 'form' de las dependencias para evitar renderizados infinitos
+  }, [invoiceData, initialData, isEditMode]); // Quitamos 'form' y 'calculateInvoiceTotals' de las dependencias
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
