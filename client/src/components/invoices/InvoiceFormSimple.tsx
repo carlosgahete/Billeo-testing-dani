@@ -449,70 +449,43 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   };
   
   // NUEVA VERSIÓN - Función para manejar cambios en campos numéricos - DIRECTAMENTE
+  // FUNCIÓN SIMPLIFICADA para evitar errores de tipos
   const handleNumericChange = (field: any, index: number, fieldName: string) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log(`🔄 CAMBIO DETECTADO EN CAMPO: ${fieldName}`);
+      // Capturar el valor original
+      const inputValue = e.target.value;
       
-      // Obtener el valor numérico del input (mejorado)
-      let value;
-      try {
-        value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-        if (isNaN(value)) value = 0;
-      } catch (err) {
-        console.error("Error al convertir valor:", err);
-        value = 0;
-      }
+      // Actualizar el campo con el valor original (string)
+      field.onChange(inputValue);
       
-      console.log(`📊 Valor convertido: ${value} (${typeof value})`);
-      
-      // Actualizar el campo inmediatamente
-      field.onChange(value.toString());
-      
-      // IMPORTANTE: Aplicar DOBLE actualización
-      // 1. Actualizar primero el campo individual
-      // 2. Luego forzar actualización de totales
-      
-      // Para evitar bloqueos de UI, encadenamos con setTimeout
+      // Forzar actualización de cálculos después de que React haya actualizado el estado
       setTimeout(() => {
-        console.log("⚡ Pre-actualizando subtotal del ítem...");
-        try {
+        // 1. Primero actualizar subtotales individualmente si corresponde
+        if (fieldName === 'quantity' || fieldName === 'unitPrice') {
           // Obtener los valores actualizados
           const items = form.getValues().items || [];
           
-          // Actualizar el subtotal del item si corresponde
-          if (items[index] && (fieldName === 'quantity' || fieldName === 'unitPrice')) {
-            // Convertir de forma segura a números
-            const quantity = parseFloat(items[index].quantity) || 0;
-            const unitPrice = parseFloat(items[index].unitPrice) || 0;
+          if (items[index]) {
+            // Convertir a números
+            const quantity = toNumber(items[index].quantity);
+            const unitPrice = toNumber(items[index].unitPrice);
             const subtotal = quantity * unitPrice;
             
-            console.log(`📈 Subtotal actualizado: ${quantity} x ${unitPrice} = ${subtotal}`);
-            
-            // Actualizar el subtotal en el formulario
+            // Actualizar subtotal en el formulario
             form.setValue(`items.${index}.subtotal`, subtotal);
           }
-          
-          // Usar un segundo paso con requestAnimationFrame para asegurar sincronización con el DOM
-          requestAnimationFrame(() => {
-            console.log("🔄 Recalculando totales finales...");
-            
-            // Forzar una actualización completa de todos los totales
-            updateItemSubtotals(); // Actualizar todos los subtotales primero
-            
-            const totals = calculateTotals();
-            console.log(`💰 TOTALES FINALES RECALCULADOS:`, totals);
-            
-            // Actualizar snapshot para forzar renderizado
-            setCalculatedTotalSnapshot({
-              subtotal: totals.subtotal, 
-              tax: totals.tax,
-              total: totals.total
-            });
-          });
-        } catch (error) {
-          console.error("❌ Error en actualización de cálculos:", error);
         }
-      }, 0);
+        
+        // 2. Luego recalcular todos los valores
+        const totals = calculateTotals();
+        
+        // 3. Actualizar el snapshot para forzar renderizado
+        setCalculatedTotalSnapshot({
+          subtotal: totals.subtotal,
+          tax: totals.tax,
+          total: totals.total
+        });
+      }, 10); // Un pequeño retraso para asegurar que React haya actualizado el estado
     };
   };
   
