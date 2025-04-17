@@ -4341,11 +4341,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // 2. Si la transacción tiene metadata que incluye baseAmount, la usamos
-            if (tx.metadata && typeof tx.metadata === 'string') {
-              try {
-                const metadata = JSON.parse(tx.metadata);
-                if (metadata.baseAmount) {
-                  const baseAmount = Number(metadata.baseAmount);
+            try {
+              // Comprobar si metadata existe y es una propiedad válida
+              const txAny = tx as any;
+              if (txAny.metadata && typeof txAny.metadata === 'string') {
+                try {
+                  const metadata = JSON.parse(txAny.metadata);
+                  if (metadata && metadata.baseAmount) {
+                    const baseAmount = Number(metadata.baseAmount);
+                    if (!isNaN(baseAmount)) {
+                      baseImponibleGastos += baseAmount;
+                      
+                      // Calculamos el IVA como la diferencia entre el total y la base
+                      const amount = Number(tx.amount);
+                      const ivaAmount = amount - baseAmount;
+                      ivaSoportadoReal += ivaAmount;
+                      
+                      console.log(`Transacción ID ${tx.id}: Base imponible encontrada en metadata`, {
+                        baseAmount,
+                        ivaAmount,
+                        totalAmount: amount
+                      });
+                      
+                      return; // Continuamos con la siguiente transacción
+                    }
+                  }
+                } catch (parseError) {
+                  console.error("Error al parsear metadata:", parseError);
+                }
+              }
+            } catch (error) {
+              console.error("Error al acceder a metadata:", error);
+            }
+            
+            // 3. Si la transacción no tiene metadata pero sí tiene un campo baseAmount directo
+            try {
+              const txAny = tx as any;
+              if (txAny.baseAmount && typeof txAny.baseAmount !== 'undefined') {
+                const baseAmount = Number(txAny.baseAmount);
+                if (!isNaN(baseAmount)) {
                   baseImponibleGastos += baseAmount;
                   
                   // Calculamos el IVA como la diferencia entre el total y la base
@@ -4353,7 +4387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const ivaAmount = amount - baseAmount;
                   ivaSoportadoReal += ivaAmount;
                   
-                  console.log(`Transacción ID ${tx.id}: Base imponible encontrada en metadata`, {
+                  console.log(`Transacción ID ${tx.id}: Base imponible encontrada directamente`, {
                     baseAmount,
                     ivaAmount,
                     totalAmount: amount
@@ -4361,28 +4395,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   
                   return; // Continuamos con la siguiente transacción
                 }
-              } catch (parseError) {
-                console.error("Error al parsear metadata:", parseError);
               }
-            }
-            
-            // 3. Si la transacción no tiene metadata pero sí tiene un campo baseAmount directo
-            if (tx.baseAmount) {
-              const baseAmount = Number(tx.baseAmount);
-              baseImponibleGastos += baseAmount;
-              
-              // Calculamos el IVA como la diferencia entre el total y la base
-              const amount = Number(tx.amount);
-              const ivaAmount = amount - baseAmount;
-              ivaSoportadoReal += ivaAmount;
-              
-              console.log(`Transacción ID ${tx.id}: Base imponible encontrada directamente`, {
-                baseAmount,
-                ivaAmount,
-                totalAmount: amount
-              });
-              
-              return; // Continuamos con la siguiente transacción
+            } catch (error) {
+              console.error("Error al acceder a baseAmount:", error);
             }
             
             // 4. Si no hay info directa en additionalTaxes, buscamos en otros campos
@@ -4391,53 +4406,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let ivaAmount = 0;
             
             // Buscar en todos los posibles campos donde podría estar la base imponible
-            if (tx.baseAmount) {
-              baseAmount = Number(tx.baseAmount);
-              console.log(`Usando baseAmount del objeto principal: ${baseAmount}€`);
-            } else if (tx.base) {
-              baseAmount = Number(tx.base);
-              console.log(`Usando base del objeto principal: ${baseAmount}€`);
-            } else if (tx.baseImponible) {
-              baseAmount = Number(tx.baseImponible);
-              console.log(`Usando baseImponible del objeto principal: ${baseAmount}€`);
-            } else if (tx.subtotal) {
-              baseAmount = Number(tx.subtotal);
-              console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
-            } else {
-              // Calculamos la base imponible a partir del valor total y la tasa de IVA estándar
-              // IMPORTANTE: Verificamos primero si hay indicios de que el IRPF está descontado
-              const ivaRate = 21; // IVA estándar español
-              const irpfRate = 15; // Tipo estándar de IRPF para autónomos
-              const totalAmount = Number(tx.amount);
-              
-              // Comprobar si el total termina en números característicos que indican IRPF
-              // (facturas con IRPF suelen terminar en x6 o similar por la resta del 15%)
-              const lastTwoDigits = Math.round(totalAmount * 100) % 100;
-              const hasIrpfPattern = (lastTwoDigits >= 5 && lastTwoDigits <= 10) || 
-                                    (lastTwoDigits >= 30 && lastTwoDigits <= 35) ||
-                                    (lastTwoDigits >= 55 && lastTwoDigits <= 60) ||
-                                    (lastTwoDigits >= 80 && lastTwoDigits <= 85);
-                                    
-              if (hasIrpfPattern && totalAmount > 50) {
-                // Si parece tener IRPF descontado, estimamos la base con la fórmula inversa
-                // Para un total de 106€ con base 100€, IVA 21€ y -15% IRPF (-15€)
-                // base = (total * 1.15) / 1.06
-                const estimatedBase = Math.round((totalAmount * (1 + irpfRate/100)) / (1 + (ivaRate/100) - (irpfRate/100)) * 100) / 100;
-                console.log(`⚠️ POSIBLE IRPF DETECTADO. Recalculando base con fórmula especial: ${estimatedBase}€`);
-                
-                // Verificamos que la base sea razonable (aproximadamente un número redondo)
-                const isNearRound = Math.abs(Math.round(estimatedBase) - estimatedBase) < 1.5;
-                if (isNearRound) {
-                  baseAmount = Math.round(estimatedBase);
-                  console.log(`✅ Base ajustada a valor redondeado: ${baseAmount}€`);
-                } else {
-                  baseAmount = estimatedBase;
-                }
+            try {
+              const txAny = tx as any;
+              if (txAny.baseAmount && typeof txAny.baseAmount !== 'undefined') {
+                baseAmount = Number(txAny.baseAmount);
+                console.log(`Usando baseAmount del objeto principal: ${baseAmount}€`);
+              } else if (txAny.base && typeof txAny.base !== 'undefined') {
+                baseAmount = Number(txAny.base);
+                console.log(`Usando base del objeto principal: ${baseAmount}€`);
+              } else if (txAny.baseImponible && typeof txAny.baseImponible !== 'undefined') {
+                baseAmount = Number(txAny.baseImponible);
+                console.log(`Usando baseImponible del objeto principal: ${baseAmount}€`);
+              } else if (txAny.subtotal && typeof txAny.subtotal !== 'undefined') {
+                baseAmount = Number(txAny.subtotal);
+                console.log(`Usando subtotal como base imponible: ${baseAmount}€`);
               } else {
-                // Si no hay indicios de IRPF, usamos la fórmula tradicional
-                baseAmount = Math.round((totalAmount / (1 + (ivaRate/100))) * 100) / 100;
-                console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${totalAmount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
+                // Calculamos la base imponible a partir del valor total y la tasa de IVA estándar
+                // IMPORTANTE: Verificamos primero si hay indicios de que el IRPF está descontado
+                const ivaRate = 21; // IVA estándar español
+                const irpfRate = 15; // Tipo estándar de IRPF para autónomos
+                const totalAmount = Number(tx.amount);
+                
+                // Comprobar si el total termina en números característicos que indican IRPF
+                // (facturas con IRPF suelen terminar en x6 o similar por la resta del 15%)
+                const lastTwoDigits = Math.round(totalAmount * 100) % 100;
+                const hasIrpfPattern = (lastTwoDigits >= 5 && lastTwoDigits <= 10) || 
+                                      (lastTwoDigits >= 30 && lastTwoDigits <= 35) ||
+                                      (lastTwoDigits >= 55 && lastTwoDigits <= 60) ||
+                                      (lastTwoDigits >= 80 && lastTwoDigits <= 85);
+                                      
+                if (hasIrpfPattern && totalAmount > 50) {
+                  // Si parece tener IRPF descontado, estimamos la base con la fórmula inversa
+                  // Para un total de 106€ con base 100€, IVA 21€ y -15% IRPF (-15€)
+                  // base = (total * 1.15) / 1.06
+                  const estimatedBase = Math.round((totalAmount * (1 + irpfRate/100)) / (1 + (ivaRate/100) - (irpfRate/100)) * 100) / 100;
+                  console.log(`⚠️ POSIBLE IRPF DETECTADO. Recalculando base con fórmula especial: ${estimatedBase}€`);
+                  
+                  // Verificamos que la base sea razonable (aproximadamente un número redondo)
+                  const isNearRound = Math.abs(Math.round(estimatedBase) - estimatedBase) < 1.5;
+                  if (isNearRound) {
+                    baseAmount = Math.round(estimatedBase);
+                    console.log(`✅ Base ajustada a valor redondeado: ${baseAmount}€`);
+                  } else {
+                    baseAmount = estimatedBase;
+                  }
+                } else {
+                  // Si no hay indicios de IRPF, usamos la fórmula tradicional
+                  baseAmount = Math.round((totalAmount / (1 + (ivaRate/100))) * 100) / 100;
+                  console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${totalAmount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
+                }
               }
+            } catch (error) {
+              console.error("Error al calcular la base imponible:", error);
+              // Si falla el cálculo, establecemos un valor base
+              baseAmount = Number(tx.amount) / 1.21; // Aproximación con IVA al 21%
             }
             
             // Calculamos el IVA como la diferencia entre el total y la base imponible
@@ -4451,7 +4473,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ivaAmount,
               totalAmount: amount
             });
-            
           } catch (error) {
             console.error(`Error al procesar transacción ID ${tx.id}:`, error);
           }
