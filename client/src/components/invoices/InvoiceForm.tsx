@@ -593,12 +593,15 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         detail: { invoiceId: isEditMode ? invoiceId : (data as any)?.id || 'new' }
       }));
       
-      console.log(`🔔 Evento disparado: ${eventName}`);
+      // Disparar el evento específico que el componente InvoiceList escucha
+      window.dispatchEvent(new CustomEvent('updateInvoices'));
+      
+      console.log(`🔔 Eventos disparados: ${eventName} y updateInvoices`);
       
       // Eliminar completamente las consultas relevantes para forzar una recarga completa 
       console.log("🧹 Limpiando caché de consultas...");
-      queryClient.removeQueries({ queryKey: ["invoices"] });
-      queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] }); // Corregir formato de queryKey
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] }); // Corregir formato de queryKey
       queryClient.removeQueries({ queryKey: ["invoices", "recent"] });
       
       // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos

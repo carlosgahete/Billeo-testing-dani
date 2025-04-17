@@ -539,13 +539,16 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
         detail: { invoiceId: isEditMode ? invoiceId : response?.id || 'new' }
       }));
       
-      console.log(`🔔 Evento disparado desde formulario móvil: ${eventName}`);
+      // Disparar el evento específico que el componente InvoiceList escucha
+      window.dispatchEvent(new CustomEvent('updateInvoices'));
+      
+      console.log(`🔔 Eventos disparados desde formulario móvil: ${eventName} y updateInvoices`);
       
       // Eliminar completamente las consultas relevantes para forzar una recarga completa 
       console.log("🧹 Limpiando caché de consultas desde móvil...");
-      queryClient.removeQueries({ queryKey: ["invoices"] });
-      queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
-      queryClient.removeQueries({ queryKey: ["transactions"] });
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] }); // Corregir formato de queryKey
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] }); // Corregir formato de queryKey
+      queryClient.removeQueries({ queryKey: ["/api/transactions"] }); // Corregir formato de queryKey
       
       // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
       fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
@@ -649,11 +652,15 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
         clearSavedFormState();
       }
       
+      // Disparar el evento específico que el componente InvoiceList escucha
+      window.dispatchEvent(new CustomEvent('updateInvoices'));
+      console.log("🔔 Evento disparado: updateInvoices (second handler)");
+      
       // Eliminar completamente las consultas relevantes para forzar una recarga completa 
       console.log("🧹 Limpiando caché de consultas (handleSubmit)...");
-      queryClient.removeQueries({ queryKey: ["invoices"] });
-      queryClient.removeQueries({ queryKey: ["transactions"] });
-      queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] }); // Corregir formato de queryKey
+      queryClient.removeQueries({ queryKey: ["/api/transactions"] }); // Corregir formato de queryKey
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] }); // Corregir formato de queryKey
       
       // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
       fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
