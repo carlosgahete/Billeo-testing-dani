@@ -4452,9 +4452,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     baseAmount = estimatedBase;
                   }
                 } else {
-                  // Si no hay indicios de IRPF, usamos la fórmula tradicional
-                  baseAmount = Math.round((totalAmount / (1 + (ivaRate/100))) * 100) / 100;
-                  console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${totalAmount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
+                  // Buscamos primero si hay impuestos adicionales con valores explícitos
+                  let ivaValue = 0;
+                  let irpfValue = 0;
+                  
+                  if (typeof tx.additionalTaxes === 'string' && tx.additionalTaxes) {
+                    try {
+                      const taxes = JSON.parse(tx.additionalTaxes);
+                      if (Array.isArray(taxes)) {
+                        taxes.forEach(tax => {
+                          if (tax.name === "IVA" && tax.value) {
+                            ivaValue += Number(tax.value);
+                          }
+                          if (tax.name === "IRPF" && tax.value) {
+                            irpfValue += Math.abs(Number(tax.value)); // guardamos positivo
+                          }
+                        });
+                      }
+                    } catch (e) {
+                      console.log("Error al parsear additionalTaxes:", e);
+                    }
+                  }
+                  
+                  if (ivaValue > 0 || irpfValue > 0) {
+                    // Tenemos valores explícitos de IVA y/o IRPF, usamos la fórmula correcta
+                    baseAmount = Math.round((totalAmount - ivaValue + irpfValue) * 100) / 100;
+                    console.log(`CORRECCIÓN: Calculando base imponible con valores explícitos:`);
+                    console.log(`- Base = Total(${totalAmount}€) - IVA(${ivaValue}€) + IRPF(${irpfValue}€) = ${baseAmount}€`);
+                  } else {
+                    // Si no hay valores explícitos, usamos la fórmula tradicional (pero sin IRPF)
+                    baseAmount = Math.round((totalAmount / (1 + (ivaRate/100))) * 100) / 100;
+                    console.log(`CORRECCIÓN: Calculando base imponible a partir del total ${totalAmount}€ con IVA ${ivaRate}%: ${baseAmount}€`);
+                  }
                 }
               }
             } catch (error) {
