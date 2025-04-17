@@ -24,7 +24,7 @@ interface SimpleEditFormProps {
   onCreateCategory: () => void;
   onSave: () => void;
   onSaveAndNavigate: () => void;
-  onUpdateCategory: (categoryId: string | null) => void;
+  onUpdateCategory: (categoryId: string | null, formData?: any) => void;
 }
 
 export const SimpleEditForm: React.FC<SimpleEditFormProps> = ({

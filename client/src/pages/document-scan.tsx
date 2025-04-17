@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/select";
 // Importar el componente PersistentEditForm (versión mejorada que mantiene estado)
 import PersistentEditForm from "@/components/documents/PersistentEditForm";
+// Importamos también SimpleEditForm como respaldo
+import SimpleEditForm from "@/components/documents/SimpleEditForm";
 import {
   Form,
   FormControl,
