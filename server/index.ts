@@ -159,10 +159,14 @@ app.use((req, res, next) => {
   
   // Añadir el endpoint simplificado para el dashboard
   import('./fixes/dashboard-simplificado').then((module) => {
-    // Obtener el middleware de autenticación de routes.ts
+    // Obtener el middleware de autenticación y el storage
     import('./auth').then((authModule) => {
-      module.setupSimplifiedDashboardEndpoint(app, authModule.requireAuth, server.storage);
-      console.log('Endpoint simplificado del dashboard (/api/stats/dashboard-fix) configurado');
+      import('./storage').then((storageModule) => {
+        module.setupSimplifiedDashboardEndpoint(app, authModule.requireAuth, storageModule.storage);
+        console.log('Endpoint simplificado del dashboard (/api/stats/dashboard-fix) configurado');
+      }).catch(err => {
+        console.error('Error al cargar el módulo de storage:', err);
+      });
     }).catch(err => {
       console.error('Error al cargar el módulo de autenticación:', err);
     });
