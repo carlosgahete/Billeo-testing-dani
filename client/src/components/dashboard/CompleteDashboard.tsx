@@ -38,6 +38,31 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
+  // Efecto para escuchar eventos de creación y actualización de facturas
+  useEffect(() => {
+    // Función que maneja la actualización después de crear/editar una factura
+    const handleInvoiceChange = () => {
+      console.log("🔔 Evento de factura detectado, actualizando dashboard...");
+      // Forzar actualización del dashboard con un breve retraso
+      setTimeout(() => {
+        console.log("⚡ Refrescando datos del dashboard después del evento");
+        refetch();
+      }, 500);
+    };
+    
+    // Escuchar ambos eventos
+    window.addEventListener('invoice-created', handleInvoiceChange);
+    window.addEventListener('invoice-updated', handleInvoiceChange);
+    window.addEventListener('dashboard-refresh-required', handleInvoiceChange);
+    
+    // Limpiar event listeners al desmontar
+    return () => {
+      window.removeEventListener('invoice-created', handleInvoiceChange);
+      window.removeEventListener('invoice-updated', handleInvoiceChange);
+      window.removeEventListener('dashboard-refresh-required', handleInvoiceChange);
+    };
+  }, [refetch]);
+  
   // Estados locales para UI
   // Importante: Usamos directamente los filtros del hook global
   // En lugar de mantener estado local que podría desincronizarse
