@@ -22,11 +22,18 @@ export function useDashboardData() {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
-        }
+        },
+        credentials: 'include' // Asegurar que se envían las cookies de sesión
       });
-      if (!response.ok) {
+      
+      // Verificar específicamente si el problema es de autenticación
+      if (response.status === 401) {
+        throw new Error('AUTHENTICATION_ERROR');
+      }
+      else if (!response.ok) {
         throw new Error('Error fetching dashboard data');
       }
+      
       return response.json();
     },
     // Configuraciones para actualización controlada
@@ -42,11 +49,27 @@ export function useDashboardData() {
   useEffect(() => {
     if (error) {
       console.error('Error loading dashboard data:', error);
-      toast({
-        title: 'Error al cargar datos',
-        description: 'No se pudieron cargar las estadísticas del dashboard. Inténtalo de nuevo.',
-        variant: 'destructive'
-      });
+      
+      // Verificar si es un error de autenticación
+      if (error instanceof Error && error.message === 'AUTHENTICATION_ERROR') {
+        toast({
+          title: 'Sesión no válida',
+          description: 'Debes iniciar sesión para acceder a los datos del dashboard.',
+          variant: 'destructive'
+        });
+        
+        // Redirigir a la página de login después de un breve retraso
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 2000);
+      } else {
+        // Para otros tipos de errores
+        toast({
+          title: 'Error al cargar datos',
+          description: 'No se pudieron cargar las estadísticas del dashboard. Inténtalo de nuevo.',
+          variant: 'destructive'
+        });
+      }
     }
   }, [error]);
   
