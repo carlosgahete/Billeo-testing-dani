@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -371,14 +371,14 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     });
   };
   
-  // Inicializa el formulario con los datos
-  // Hacemos un nuevo enfoque: solo inicializamos los datos una vez al principio
-  // y no actualizamos el formulario cuando los datos cambian para evitar bucles de renderizado
-  const hasInitializedRef = useRef(false);
+  // Inicializa el formulario con los datos solo una vez
+  // Utilizamos un enfoque más simple que no depende de useRef
+  // y que no actualizará el formulario automáticamente después de la carga inicial
+  const [hasInitialized, setHasInitialized] = useState(false);
   
   useEffect(() => {
     // Si ya inicializamos el formulario, no lo hacemos de nuevo
-    if (hasInitializedRef.current) {
+    if (hasInitialized) {
       return;
     }
     
@@ -437,10 +437,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         }
         
         // Marcamos que ya inicializamos el formulario para no hacerlo de nuevo
-        hasInitializedRef.current = true;
+        setHasInitialized(true);
       }
     }
-  }, [invoiceData, initialData, isEditMode]); // No incluimos form en las dependencias
+  }, [invoiceData, initialData, isEditMode, hasInitialized]); // No incluimos form en las dependencias
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
