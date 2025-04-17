@@ -396,14 +396,27 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Usar useEffect para forzar redibujado con el estado local
   useEffect(() => {
-    const totals = calculateTotals();
-    console.log("📊 Totales actualizados:", totals);
-    
-    setCalculatedTotalSnapshot({
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      total: totals.total
-    });
+    try {
+      // Verificar si es una factura con fecha de marzo o pasada
+      if (isPastDateInvoice(form)) {
+        console.log("📅 Detectada factura con fecha pasada - Aplicando lógica especial");
+        // Usar la función de la utilidad que maneja correctamente facturas pasadas
+        const totals = forceUpdateAllValues(form, setCalculatedTotalSnapshot);
+        console.log("📊 Totales actualizados (especial para fechas pasadas):", totals);
+      } else {
+        // Para fechas normales, usar el cálculo estándar
+        const totals = calculateTotals();
+        console.log("📊 Totales actualizados:", totals);
+        
+        setCalculatedTotalSnapshot({
+          subtotal: totals.subtotal,
+          tax: totals.tax,
+          total: totals.total
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error en actualización de totales:", error);
+    }
   }, [formValues]);
   
   // También memorizamos los totales para uso en renderizado
@@ -449,10 +462,11 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     };
   };
   
-  // NUEVA VERSIÓN - Función para manejar cambios en campos numéricos - DIRECTAMENTE
-  // FUNCIÓN SIMPLIFICADA para evitar errores de tipos
+  // NUEVA VERSIÓN MEJORADA - Función para manejar cambios en campos numéricos
+  // Utiliza la función auxiliar withCorrectCalculation para manejar correctamente fechas de marzo
   const handleNumericChange = (field: any, index: number, fieldName: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Definimos el manejador base
+    const baseHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
       // Capturar el valor original
       const inputValue = e.target.value;
       
@@ -488,11 +502,16 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         });
       }, 10); // Un pequeño retraso para asegurar que React haya actualizado el estado
     };
+    
+    // Envolvemos el manejador base con nuestra función de corrección
+    // Esto garantiza cálculos correctos para facturas con fechas pasadas (como marzo)
+    return withCorrectCalculation(baseHandler, form, setCalculatedTotalSnapshot);
   };
   
-  // NUEVO: Función específica para manejar cambios de fecha
+  // NUEVO: Función específica para manejar cambios de fecha con lógica mejorada para fechas de marzo
   const handleDateChange = (field: any, dateType: string) => {
-    return (date: Date | undefined) => {
+    // Función base para manejar el cambio de fecha
+    const baseHandler = (date: Date | undefined) => {
       if (!date) return;
       
       // Formatear la fecha y actualizar el campo
@@ -506,37 +525,37 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const isMarzo = date.getMonth() === 2;
       if (isMarzo) {
         console.log("⚠️ FECHA DE MARZO DETECTADA - Aplicando actualización forzada");
-      }
-      
-      // Forzar recálculo de totales después de cambiar la fecha
-      // Especialmente importante para fechas en marzo
-      setTimeout(() => {
-        try {
-          // Primero actualizar los subtotales
-          updateItemSubtotals();
-          
-          // Luego calcular totales generales
-          const totals = calculateTotals();
-          console.log(`📊 Totales recalculados después de cambio de fecha:`, totals);
-          
-          // Actualizar snapshot para forzar renderizado
-          setCalculatedTotalSnapshot({
-            subtotal: totals.subtotal,
-            tax: totals.tax,
-            total: totals.total
-          });
-          
-          // Doble verificación para fechas de marzo
-          if (isMarzo) {
-            console.log("🔍 Verificando de nuevo debido a fecha de marzo");
-            // Un segundo retardo para asegurar que todo está actualizado
-            setTimeout(() => calculateTotals(), 50);
+        
+        // Para facturas de marzo, usar la utilidad especializada
+        setTimeout(() => {
+          forceUpdateAllValues(form, setCalculatedTotalSnapshot);
+        }, 20);
+      } else {
+        // Forzar recálculo de totales después de cambiar la fecha
+        setTimeout(() => {
+          try {
+            // Primero actualizar los subtotales
+            updateItemSubtotals();
+            
+            // Luego calcular totales generales
+            const totals = calculateTotals();
+            console.log(`📊 Totales recalculados después de cambio de fecha:`, totals);
+            
+            // Actualizar snapshot para forzar renderizado
+            setCalculatedTotalSnapshot({
+              subtotal: totals.subtotal,
+              tax: totals.tax,
+              total: totals.total
+            });
+          } catch (error) {
+            console.error("Error al recalcular después de cambio de fecha:", error);
           }
-        } catch (error) {
-          console.error("Error al recalcular después de cambio de fecha:", error);
-        }
-      }, 20);
+        }, 20);
+      }
     };
+    
+    // Usar sin envoltura para fechas, ya que manejamos la detección de marzo específicamente
+    return baseHandler;
   };
   
   // Función para manejar la subida de archivos
