@@ -266,11 +266,30 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
           <span>Subtotal:</span>
           <span>{subtotal.toFixed(2)} €</span>
         </div>
+        
+        {/* Desglose de impuestos por nombre */}
+        {additionalTaxes.length > 0 ? (
+          <>
+            {additionalTaxes.map((tax, index) => (
+              <div key={index} className="flex justify-between mb-1 text-sm text-gray-600">
+                <span>{tax.name || 'Impuesto'} ({tax.rate}%):</span>
+                <span>{((subtotal * tax.rate) / 100).toFixed(2)} €</span>
+              </div>
+            ))}
+          </>
+        ) : (
+          <div className="flex justify-between mb-1 text-sm text-gray-600">
+            <span>IVA (21%):</span>
+            <span>{(subtotal * 0.21).toFixed(2)} €</span>
+          </div>
+        )}
+        
         <div className="flex justify-between mb-1">
-          <span>Impuestos:</span>
+          <span>Total impuestos:</span>
           <span>{taxes.toFixed(2)} €</span>
         </div>
-        <div className="flex justify-between text-lg font-bold">
+        
+        <div className="flex justify-between text-lg font-bold mt-2">
           <span>Total:</span>
           <span>{total.toFixed(2)} €</span>
         </div>

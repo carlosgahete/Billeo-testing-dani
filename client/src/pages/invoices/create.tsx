@@ -87,7 +87,7 @@ export default function CreateInvoicePage() {
 
   const onSubmit = async (data: any) => {
     // Transformar los datos al formato que espera el servidor
-    const invoiceData = {
+    const invoice = {
       invoiceNumber: `TEMP-${new Date().getTime()}`, // Número temporal, el servidor lo asignará correctamente
       clientId: 1, // ID del cliente por defecto para pruebas
       issueDate: data.issueDate,
@@ -98,19 +98,21 @@ export default function CreateInvoicePage() {
       additionalTaxes: data.additionalTaxes,
       status: "pending",
       notes: `${data.customerName} - ${data.customerNif}\n${data.customerEmail || ''}\n${data.customerAddress || ''}\n\nMétodo de pago: ${data.paymentMethod || 'No especificado'}\nCuenta: ${data.bankAccount || 'No especificada'}\n\n${data.notes || ''}`,
-      items: data.items.map((item: any) => ({
-        description: item.name,
-        quantity: parseFloat(item.quantity),
-        unitPrice: parseFloat(item.price),
-        taxRate: 21, // IVA por defecto
-        subtotal: parseFloat(item.quantity) * parseFloat(item.price)
-      }))
     };
     
-    console.log("Enviando datos:", invoiceData);
+    // Transformar los items
+    const items = data.items.map((item: any) => ({
+      description: item.name,
+      quantity: parseFloat(item.quantity),
+      unitPrice: parseFloat(item.price),
+      taxRate: 21, // IVA por defecto
+      subtotal: parseFloat(item.quantity) * parseFloat(item.price)
+    }));
     
-    // Enviar los datos transformados
-    invoiceMutation.mutate(invoiceData);
+    console.log("Enviando datos:", { invoice, items });
+    
+    // Enviar los datos transformados en el formato que espera el servidor
+    invoiceMutation.mutate({ invoice, items });
   }
 
   return (
