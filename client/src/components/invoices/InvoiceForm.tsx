@@ -287,6 +287,13 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     defaultValues: defaultFormValues,
   });
 
+  // Asegurarse de que los campos estén registrados en el formulario
+  useEffect(() => {
+    form.register('subtotal');
+    form.register('taxTotal');
+    form.register('total');
+  }, [form.register]);
+
   // Efecto para añadir automáticamente el número de cuenta en las notas
   // Este efecto es innecesario y podría causar renderizados infinitos al modificar form
   // Ya que utilizamos el formulario para mostrar datos iniciales, no necesitamos modificarlo automáticamente
@@ -1166,12 +1173,12 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   // Calcular totales inmediatamente al cambiar el valor con referencia segura
                                   const formRef = form; // Capturar referencia en variable local
                                   window.setTimeout(() => { 
-                                    if (formRef) calculateInvoiceTotals(formRef); 
+                                    if (formRef) calculateInvoice(formRef); 
                                   }, 10);
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
-                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
+                                  { const formRef = form; if (formRef) calculateInvoice(formRef); }
                                 }}
                               />
                             </FormControl>
@@ -1201,7 +1208,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
-                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
+                                  { const formRef = form; if (formRef) calculateInvoice(formRef); }
                                 }}
                               />
                             </FormControl>
@@ -1230,7 +1237,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 onChange={(e) => {
                                   field.onChange(parseFloat(e.target.value));
                                 }}
-                                onBlur={() => { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }}
+                                onBlur={() => { const formRef = form; if (formRef) calculateInvoice(formRef); }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1275,7 +1282,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           // Calcular totales inmediatamente al eliminar un ítem con referencia segura
                           const formRef = form; // Capturar referencia en variable local
                           window.setTimeout(() => { 
-                            if (formRef) calculateInvoiceTotals(formRef); 
+                            if (formRef) calculateInvoice(formRef); 
                           }, 10);
                         }}
                         disabled={fields.length === 1}
@@ -1306,7 +1313,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         // Calcular totales inmediatamente después de añadir un nuevo ítem con referencia segura
                         const formRef = form; // Capturar referencia en variable local
                         window.setTimeout(() => { 
-                          if (formRef) calculateInvoiceTotals(formRef); 
+                          if (formRef) calculateInvoice(formRef); 
                         }, 10);
                       }}
                     >
@@ -1393,7 +1400,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                       onChange={(e) => {
                                         field.onChange(parseFloat(e.target.value));
                                       }}
-                                      onBlur={() => { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }}
+                                      onBlur={() => { const formRef = form; if (formRef) calculateInvoice(formRef); }}
                                       className="h-8 text-sm"
                                     />
                                     
@@ -1412,7 +1419,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                                 size="sm"
                                                 onClick={() => {
                                                   field.onChange(!field.value);
-                                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
+                                                  { const formRef = form; if (formRef) calculateInvoice(formRef); }
                                                 }}
                                                 className="h-8 px-2 text-xs font-normal"
                                               >
@@ -1438,7 +1445,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
                             size="sm"
                             onClick={() => {
                               removeTax(index);
-                              { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
+                              { const formRef = form; if (formRef) calculateInvoice(formRef); }
                             }}
                             className="h-6 w-6 p-0"
                           >
