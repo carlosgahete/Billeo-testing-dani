@@ -54,7 +54,16 @@ const ItemRow = ({
           placeholder="Cantidad"
           className="w-full p-2 border rounded"
           onKeyDown={handleKeyDown}
-          onChange={handleChange}
+          onChange={(e) => {
+            // Activar el cambio normal primero
+            handleChange();
+            // Forzar actualización manual inmediata
+            const value = parseFloat(e.target.value) || 0;
+            setTimeout(() => {
+              setValue(`items.${index}.quantity`, value);
+              calculateTotals();
+            }, 0);
+          }}
         />
       </div>
       <div className="col-span-2">
@@ -64,7 +73,16 @@ const ItemRow = ({
           placeholder="Precio"
           className="w-full p-2 border rounded"
           onKeyDown={handleKeyDown}
-          onChange={handleChange}
+          onChange={(e) => {
+            // Activar el cambio normal primero
+            handleChange();
+            // Forzar actualización manual inmediata
+            const value = parseFloat(e.target.value) || 0;
+            setTimeout(() => {
+              setValue(`items.${index}.price`, value);
+              calculateTotals();
+            }, 0);
+          }}
         />
       </div>
       <div className="col-span-2 flex items-center">
@@ -130,7 +148,16 @@ const TaxRow = ({
           placeholder="Tasa (%)"
           className="w-full p-2 border rounded"
           onKeyDown={handleKeyDown}
-          onChange={handleChange}
+          onChange={(e) => {
+            // Activar el cambio normal primero
+            handleChange();
+            // Forzar actualización manual inmediata
+            const value = parseFloat(e.target.value) || 0;
+            setTimeout(() => {
+              setValue(`additionalTaxes.${index}.rate`, value);
+              if (calculateTotals) calculateTotals();
+            }, 0);
+          }}
         />
       </div>
       <div className="col-span-2 flex items-center">
