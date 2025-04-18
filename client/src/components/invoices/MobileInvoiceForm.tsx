@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/accordion";
 import { ClientForm } from "@/components/clients/ClientForm";
 import FileUpload from "@/components/common/FileUpload";
+import { calculateInvoice } from "@/utils/invoiceEngine";
 
 // Funciones auxiliares para persistencia de formularios entre pestañas
 const INVOICE_FORM_STORAGE_KEY = "billeo_invoice_form_draft";
@@ -341,6 +342,13 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
     // Si hay datos guardados y no estamos en modo edición, usarlos como valores iniciales
     defaultValues: savedFormState || defaultFormValues,
   });
+
+  // Asegurarse de que los campos estén registrados en el formulario
+  useEffect(() => {
+    form.register('subtotal');
+    form.register('tax');
+    form.register('total');
+  }, [form.register]);
 
   // Efecto para añadir automáticamente el número de cuenta en las notas
   useEffect(() => {

@@ -56,6 +56,6 @@ export function calculateInvoice(form: UseFormReturn<any>) {
 
   // ✅ Actualiza los campos del formulario
   setValue('subtotal', parseFloat(subtotal.toFixed(2)), { shouldDirty: true })
-  setValue('taxTotal', parseFloat(taxTotal.toFixed(2)), { shouldDirty: true })
+  setValue('tax', parseFloat(taxTotal.toFixed(2)), { shouldDirty: true })
   setValue('total', parseFloat(total.toFixed(2)), { shouldDirty: true })
 }

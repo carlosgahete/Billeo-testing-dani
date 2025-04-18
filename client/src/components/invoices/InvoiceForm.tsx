@@ -290,7 +290,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Asegurarse de que los campos estén registrados en el formulario
   useEffect(() => {
     form.register('subtotal');
-    form.register('taxTotal');
+    form.register('tax');
     form.register('total');
   }, [form.register]);
 
