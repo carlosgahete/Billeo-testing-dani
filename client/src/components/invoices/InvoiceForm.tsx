@@ -287,13 +287,17 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
     resolver: zodResolver(invoiceSchema),
     defaultValues: defaultFormValues,
   });
+  
+  // Determinar qué formulario usar: el externo o el interno
+  const activeForm = externalForm || form;
 
   // Asegurarse de que los campos estén registrados en el formulario
   useEffect(() => {
-    form.register('subtotal');
-    form.register('tax');
-    form.register('total');
-  }, [form.register]);
+    // Usamos el formulario activo (externo o interno)
+    activeForm.register('subtotal');
+    activeForm.register('tax');
+    activeForm.register('total');
+  }, [activeForm.register]);
 
   // Efecto para añadir automáticamente el número de cuenta en las notas
   // Este efecto es innecesario y podría causar renderizados infinitos al modificar form
@@ -384,9 +388,6 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
   // Utilizamos un enfoque más simple que no depende de useRef
   // y que no actualizará el formulario automáticamente después de la carga inicial
   const [hasInitialized, setHasInitialized] = useState(false);
-  
-  // Determinar qué formulario usar: el externo o el interno
-  const activeForm = externalForm || form;
   
   useEffect(() => {
     // Si ya inicializamos el formulario, no lo hacemos de nuevo
@@ -822,8 +823,8 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
 
   return (
     <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <Form {...activeForm}>
+        <form onSubmit={activeForm.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
               <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
