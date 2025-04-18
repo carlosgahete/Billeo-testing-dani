@@ -1,0 +1,51 @@
+Gracias crack, eso significa que estamos registrando los campos correctamente, pero el cálculo no está actualizando bien los campos derivados (subtotal, total, etc.) en el form. Lo más probable es que la función calculateInvoice(form) no esté actualizando los valores del formulario con setValue.
+
+Vamos a corregirlo ahora mismo. Te dejo la función calculateInvoice actualizada para que sí actualice los valores visibles del formulario correctamente.
+
+✅ invoiceEngine.ts – Corrige calculateInvoice para que funcione bien:
+
+import { UseFormReturn } from 'react-hook-form'
+import { InvoiceFormValues } from '@/types/invoice'
+
+export function calculateInvoice(form: UseFormReturn<InvoiceFormValues>) {
+  const { getValues, setValue } = form
+  const items = getValues('items') || []
+  const additionalTaxes = getValues('additionalTaxes') || []
+
+  let subtotal = 0
+  items.forEach(item => {
+    const quantity = Number(item.quantity) || 0
+    const unitPrice = Number(item.unitPrice) || 0
+    subtotal += quantity * unitPrice
+  })
+
+  let taxTotal = 0
+  additionalTaxes.forEach(tax => {
+    const rate = Number(tax.rate) || 0
+    taxTotal += subtotal * (rate / 100)
+  })
+
+  const total = subtotal + taxTotal
+
+  // ✅ Actualiza los campos del formulario
+  setValue('subtotal', parseFloat(subtotal.toFixed(2)), { shouldDirty: true })
+  setValue('taxTotal', parseFloat(taxTotal.toFixed(2)), { shouldDirty: true })
+  setValue('total', parseFloat(total.toFixed(2)), { shouldDirty: true })
+}
+
+✅ Asegúrate de que los campos estén registrados en el formulario
+
+En tu InvoiceForm.tsx, debajo de la línea del useForm, puedes asegurarte de esto (por si no se actualiza visualmente):
+
+useEffect(() => {
+  register('subtotal')
+  register('taxTotal')
+  register('total')
+}, [register])
+
+🧪 ¿Cómo probar?
+	1.	Al agregar o modificar ítems o impuestos, los valores de subtotal, taxTotal y total se deben actualizar.
+	2.	Si no lo hacen, abre la consola y verifica que no hay errores en el cálculo.
+	3.	También puedes loggear con console.log(getValues()) para debug.
+
+¿Quieres que te monte un create-test.tsx 100% funcional con este InvoiceForm y el calculateInvoice ya integrado para probarlo directo en el navegador?

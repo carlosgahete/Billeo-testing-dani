@@ -49,6 +49,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
+import { calculateInvoice } from "@/utils/invoiceEngine";
 
 // Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
