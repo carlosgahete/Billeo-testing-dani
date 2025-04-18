@@ -24,7 +24,6 @@ export default function CreateInvoicePage() {
     notes: string;
     paymentMethod: string;
     bankAccount: string;
-    defaultTaxRate: string; // Tipo de IVA por defecto (21%, 10%, 4%, 0%)
     subtotal?: number;
     taxes?: number;
     total?: number;
@@ -43,7 +42,6 @@ export default function CreateInvoicePage() {
       notes: '',
       paymentMethod: '',
       bankAccount: '',
-      defaultTaxRate: '21', // IVA por defecto (21%)
       subtotal: 0,
       taxes: 0,
       total: 0,
@@ -69,7 +67,6 @@ export default function CreateInvoicePage() {
   }, [
     watchedValues.items,
     watchedValues.additionalTaxes,
-    watchedValues.defaultTaxRate, // Recalcular cuando cambia el IVA por defecto
     setValue,
   ])
 

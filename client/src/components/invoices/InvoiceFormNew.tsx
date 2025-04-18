@@ -141,8 +141,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
   // Función para añadir un impuesto adicional
   const addTax = () => {
     const currentTaxes = [...additionalTaxes]
-    const defaultRate = watch('defaultTaxRate') || '21'
-    setValue('additionalTaxes', [...currentTaxes, { name: 'IVA', rate: defaultRate }])
+    setValue('additionalTaxes', [...currentTaxes, { name: 'IVA', rate: 21 }])
   }
 
   // Función para eliminar un impuesto
@@ -189,10 +188,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
         </div>
       </div>
 
-      {/* Sección de fechas e IVA por defecto */}
+      {/* Sección de fechas */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Fechas y configuración básica</h2>
-        <div className="grid grid-cols-3 gap-4">
+        <h2 className="text-lg font-semibold mb-2">Fechas</h2>
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block mb-1">Fecha de emisión</label>
             <input
@@ -208,29 +207,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
               type="date"
               className="w-full p-2 border rounded"
             />
-          </div>
-          <div>
-            <label className="block mb-1">IVA por defecto (%)</label>
-            <select
-              {...register('defaultTaxRate')}
-              className="w-full p-2 border rounded"
-              onChange={(e) => {
-                // Si no hay impuestos adicionales, aplicar este como IVA por defecto
-                const value = e.target.value;
-                if (additionalTaxes.length === 0) {
-                  // Añadir un impuesto por defecto si no hay ninguno
-                  setValue('additionalTaxes', [{ 
-                    name: 'IVA', 
-                    rate: value || '21'
-                  }]);
-                }
-              }}
-            >
-              <option value="21">21% (General)</option>
-              <option value="10">10% (Reducido)</option>
-              <option value="4">4% (Superreducido)</option>
-              <option value="0">0% (Exento)</option>
-            </select>
           </div>
         </div>
       </div>
@@ -298,7 +274,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
 
         {additionalTaxes.length === 0 && (
           <p className="text-gray-500 italic">
-            Se aplicará IVA del {watch('defaultTaxRate') || 21}% por defecto
+            Se aplicará IVA estándar (21%) por defecto
           </p>
         )}
       </div>
@@ -316,14 +292,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
             {additionalTaxes.map((tax, index) => (
               <div key={index} className="flex justify-between mb-1 text-sm text-gray-600">
                 <span>{tax.name || 'Impuesto'} ({tax.rate}%):</span>
-                <span>{((subtotal * Number(tax.rate)) / 100).toFixed(2)} €</span>
+                <span>{((subtotal * tax.rate) / 100).toFixed(2)} €</span>
               </div>
             ))}
           </>
         ) : (
           <div className="flex justify-between mb-1 text-sm text-gray-600">
-            <span>IVA ({watch('defaultTaxRate') || 21}%):</span>
-            <span>{(subtotal * (Number(watch('defaultTaxRate')) || 21) / 100).toFixed(2)} €</span>
+            <span>IVA (21%):</span>
+            <span>{(subtotal * 0.21).toFixed(2)} €</span>
           </div>
         )}
         
