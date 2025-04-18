@@ -1,0 +1,113 @@
+Perfecto, aquí tienes el mensaje que puedes usar para decirle a tu equipo (o dejar como comentario si estás haciendo un PR):
+
+🔁 Sustitución de la página de creación de facturas
+
+La pantalla create.tsx actual va a ser reemplazada por la nueva versión de prueba (create-test.tsx), que ya está funcionando correctamente y contiene todos los campos esenciales para crear una factura completa.
+
+✅ Esta nueva versión incluye:
+	•	Datos del cliente: nombre, NIF/CIF, email, dirección.
+	•	Fechas de emisión y vencimiento.
+	•	Ítems con nombre, cantidad, precio e importe.
+	•	Impuestos adicionales editables.
+	•	Subtotales, totales, y cálculo automático.
+	•	Método de pago, número de cuenta y notas.
+	•	Validación de campos esenciales.
+
+👉 Sustituye el contenido de client/src/pages/invoices/create.tsx por lo siguiente:
+
+// client/src/pages/invoices/create.tsx
+import React from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import { calculateInvoice } from "@/components/invoices/invoiceEngine";
+import InvoiceForm from "@/components/invoices/InvoiceForm";
+
+export default function CreateInvoicePage() {
+  const form = useForm({
+    defaultValues: {
+      issueDate: new Date().toISOString().substring(0, 10),
+      dueDate: "",
+      clientName: "",
+      clientNif: "",
+      clientEmail: "",
+      clientAddress: "",
+      paymentMethod: "",
+      bankAccount: "",
+      notes: "",
+      items: [{ name: "", quantity: 1, price: 0 }],
+      additionalTaxes: [],
+    },
+  });
+
+  const { watch } = form;
+
+  React.useEffect(() => {
+    const subscription = watch((_, { name }) => {
+      if (name?.startsWith("items") || name === "additionalTaxes") {
+        calculateInvoice(form);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  return (
+    <FormProvider {...form}>
+      <div style={{ padding: 32 }}>
+        <h1>🧾 Crear factura</h1>
+
+        <div>
+          <label>Fecha de emisión</label>
+          <input type="date" {...form.register("issueDate")} />
+        </div>
+
+        <div>
+          <label>Fecha de vencimiento</label>
+          <input type="date" {...form.register("dueDate")} />
+        </div>
+
+        <div>
+          <label>Nombre o razón social del cliente</label>
+          <input {...form.register("clientName", { required: true })} />
+        </div>
+
+        <div>
+          <label>NIF/CIF</label>
+          <input {...form.register("clientNif", { required: true })} />
+        </div>
+
+        <div>
+          <label>Email del cliente</label>
+          <input type="email" {...form.register("clientEmail")} />
+        </div>
+
+        <div>
+          <label>Dirección del cliente</label>
+          <input {...form.register("clientAddress")} />
+        </div>
+
+        <div>
+          <label>Método de pago</label>
+          <select {...form.register("paymentMethod")}>
+            <option value="">Selecciona uno</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="bizum">Bizum</option>
+            <option value="efectivo">Efectivo</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Número de cuenta bancaria</label>
+          <input {...form.register("bankAccount")} />
+        </div>
+
+        <div>
+          <label>Notas / condiciones adicionales</label>
+          <textarea {...form.register("notes")} />
+        </div>
+
+        <InvoiceForm form={form} />
+      </div>
+    </FormProvider>
+  );
+}
+
+¿Quieres que te prepare el commit con un mensaje estilo feat: reemplaza create.tsx con formulario completo también?
