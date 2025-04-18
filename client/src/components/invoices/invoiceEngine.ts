@@ -16,32 +16,38 @@ interface InvoiceFormData {
   items: InvoiceItem[];
   additionalTaxes: AdditionalTax[];
   subtotal?: number;
-  taxTotal?: number;
+  taxes?: number;
   total?: number;
 }
 
-export function calculateInvoice(form: UseFormReturn<InvoiceFormData>) {
-  const { getValues, setValue } = form
-  const items = getValues('items') || []
-  const additionalTaxes = getValues('additionalTaxes') || []
+// Versión para usar con valores directos (sin form)
+export function calculateInvoice(data: any) {
+  const items = data.items || []
+  const additionalTaxes = data.additionalTaxes || []
 
   let subtotal = 0
-  items.forEach((item: InvoiceItem) => {
+  items.forEach((item: any) => {
     const quantity = Number(item.quantity) || 0
     const unitPrice = Number(item.price) || 0
     subtotal += quantity * unitPrice
   })
 
-  let taxTotal = 0
-  additionalTaxes.forEach((tax: AdditionalTax) => {
+  let taxes = 0
+  additionalTaxes.forEach((tax: any) => {
     const rate = Number(tax.rate) || 0
-    taxTotal += subtotal * (rate / 100)
+    taxes += subtotal * (rate / 100)
   })
 
-  const total = subtotal + taxTotal
+  // Si no hay impuestos adicionales definidos, aplicar IVA por defecto (21%)
+  if (additionalTaxes.length === 0) {
+    taxes = subtotal * 0.21 // 21% IVA
+  }
 
-  // ✅ Actualiza los campos del formulario
-  setValue('subtotal', parseFloat(subtotal.toFixed(2)), { shouldDirty: true })
-  setValue('taxTotal', parseFloat(taxTotal.toFixed(2)), { shouldDirty: true })
-  setValue('total', parseFloat(total.toFixed(2)), { shouldDirty: true })
+  const total = subtotal + taxes
+
+  return {
+    subtotal: parseFloat(subtotal.toFixed(2)),
+    taxes: parseFloat(taxes.toFixed(2)),
+    total: parseFloat(total.toFixed(2))
+  }
 }

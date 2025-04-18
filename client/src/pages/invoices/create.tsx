@@ -1,35 +1,74 @@
 // client/src/pages/invoices/create.tsx
-import React from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { calculateInvoice } from "@/components/invoices/invoiceEngine";
-import InvoiceItemsForm from "@/components/invoices/InvoiceItemsForm";
-import { useLocation } from "wouter";
+
+import { useForm } from 'react-hook-form'
+import InvoiceFormNew from '@/components/invoices/InvoiceFormNew'
+import { useLocation } from 'wouter'
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { calculateInvoice } from '@/components/invoices/invoiceEngine'
+import { useEffect } from 'react'
 
 export default function CreateInvoicePage() {
   const [, navigate] = useLocation();
-  
-  const form = useForm({
-    defaultValues: {
-      issueDate: new Date().toISOString().substring(0, 10),
-      dueDate: "",
-      clientName: "",
-      clientNif: "",
-      clientEmail: "",
-      clientAddress: "",
-      paymentMethod: "",
-      bankAccount: "",
-      notes: "",
-      items: [{ name: "", quantity: 1, price: 0 }],
-      additionalTaxes: [],
-      subtotal: 0,
-      taxTotal: 0,
-      total: 0
-    },
-  });
 
-  const { watch, handleSubmit } = form;
+  // Definir el tipo de datos del formulario
+  type InvoiceFormValues = {
+    customerName: string;
+    customerNif: string;
+    customerEmail: string;
+    customerAddress: string;
+    issueDate: string;
+    dueDate: string;
+    items: { name: string; quantity: number; price: number; }[];
+    additionalTaxes: { name: string; rate: number; }[];
+    notes: string;
+    paymentMethod: string;
+    bankAccount: string;
+    subtotal?: number;
+    taxes?: number;
+    total?: number;
+  }
+
+  const form = useForm<InvoiceFormValues>({
+    defaultValues: {
+      customerName: '',
+      customerNif: '',
+      customerEmail: '',
+      customerAddress: '',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: '',
+      items: [{ name: '', quantity: 1, price: 0 }],
+      additionalTaxes: [],
+      notes: '',
+      paymentMethod: '',
+      bankAccount: '',
+      subtotal: 0,
+      taxes: 0,
+      total: 0,
+    },
+  })
+
+  const { watch, handleSubmit, setValue } = form
+
+  const watchedValues = watch()
+
+  // Calcular subtotal, impuestos y total cada vez que cambian los valores clave
+  useEffect(() => {
+    try {
+      const updated = calculateInvoice(watchedValues)
+      // Usar la versión no tipada de setValue para evitar errores de TypeScript
+      const setValueAny = setValue as any
+      setValueAny('subtotal', updated.subtotal)
+      setValueAny('taxes', updated.taxes)
+      setValueAny('total', updated.total)
+    } catch (error) {
+      console.error("Error al calcular totales:", error)
+    }
+  }, [
+    watchedValues.items,
+    watchedValues.additionalTaxes,
+    setValue,
+  ])
 
   // Crear una mutación para enviar la factura al servidor
   const invoiceMutation = useMutation({
@@ -46,31 +85,19 @@ export default function CreateInvoicePage() {
     }
   });
 
-  // Observar cambios en los campos para actualizar cálculos
-  React.useEffect(() => {
-    const subscription = watch((_, { name }) => {
-      if (name?.startsWith("items") || name === "additionalTaxes") {
-        calculateInvoice(form);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, form]);
-
-  // Manejar el envío del formulario
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     // Transformar los datos al formato que espera el servidor
     const invoiceData = {
       invoiceNumber: `TEMP-${new Date().getTime()}`, // Número temporal, el servidor lo asignará correctamente
-      clientId: 1, // ID del cliente por defecto para pruebas - normalmente se obtendría de un valor seleccionado
+      clientId: 1, // ID del cliente por defecto para pruebas
       issueDate: data.issueDate,
-      dueDate: data.dueDate || data.issueDate, // Si no hay fecha de vencimiento, usar la fecha de emisión
+      dueDate: data.dueDate || data.issueDate,
       subtotal: data.subtotal,
-      tax: data.taxTotal,
+      tax: data.taxes,
       total: data.total,
       additionalTaxes: data.additionalTaxes,
       status: "pending",
-      notes: `${data.clientName} - ${data.clientNif}\n${data.clientEmail || ''}\n${data.clientAddress || ''}\n\nMétodo de pago: ${data.paymentMethod || 'No especificado'}\nCuenta: ${data.bankAccount || 'No especificada'}\n\n${data.notes || ''}`,
-      // Convertir los ítems al formato que espera el servidor
+      notes: `${data.customerName} - ${data.customerNif}\n${data.customerEmail || ''}\n${data.customerAddress || ''}\n\nMétodo de pago: ${data.paymentMethod || 'No especificado'}\nCuenta: ${data.bankAccount || 'No especificada'}\n\n${data.notes || ''}`,
       items: data.items.map((item: any) => ({
         description: item.name,
         quantity: parseFloat(item.quantity),
@@ -80,132 +107,36 @@ export default function CreateInvoicePage() {
       }))
     };
     
+    console.log("Enviando datos:", invoiceData);
+    
     // Enviar los datos transformados
     invoiceMutation.mutate(invoiceData);
-  };
+  }
 
   return (
-    <FormProvider {...form}>
-      <div style={{ padding: 32, maxWidth: 800, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h1 style={{ margin: 0 }}>🧾 Crear factura</h1>
-          <button 
-            type="button" 
-            onClick={() => navigate("/invoices")}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#f1f1f1',
-              border: 'none',
-              borderRadius: 4,
-              cursor: 'pointer'
-            }}
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Crear Factura</h1>
+        <button
+          type="button"
+          onClick={() => navigate("/invoices")}
+          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+        >
+          Volver
+        </button>
+      </div>
+      
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <InvoiceFormNew form={form} />
+        <div className="mt-6 flex justify-end">
+          <button
+            type="submit"
+            className="bg-[#329FAD] hover:bg-[#2b8b96] text-white px-6 py-2 rounded-md"
           >
-            Volver
+            Guardar factura
           </button>
         </div>
-
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: 5 }}>Fecha de emisión</label>
-              <input 
-                type="date" 
-                {...form.register("issueDate")} 
-                style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: 5 }}>Fecha de vencimiento</label>
-              <input 
-                type="date" 
-                {...form.register("dueDate")} 
-                style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h2>📋 Datos del cliente</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 5 }}>Nombre o razón social</label>
-                <input 
-                  {...form.register("clientName", { required: true })} 
-                  style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-                />
-                {form.formState.errors.clientName && (
-                  <span style={{ color: 'red', fontSize: '0.8em' }}>Campo requerido</span>
-                )}
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 5 }}>NIF/CIF</label>
-                <input 
-                  {...form.register("clientNif", { required: true })} 
-                  style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-                />
-                {form.formState.errors.clientNif && (
-                  <span style={{ color: 'red', fontSize: '0.8em' }}>Campo requerido</span>
-                )}
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 5 }}>Email</label>
-                <input 
-                  type="email" 
-                  {...form.register("clientEmail")} 
-                  style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 5 }}>Dirección</label>
-                <input 
-                  {...form.register("clientAddress")} 
-                  style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h2>💸 Datos de pago</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 5 }}>Método de pago</label>
-                <select 
-                  {...form.register("paymentMethod")} 
-                  style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-                >
-                  <option value="">Selecciona uno</option>
-                  <option value="transferencia">Transferencia</option>
-                  <option value="bizum">Bizum</option>
-                  <option value="efectivo">Efectivo</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 5 }}>Número de cuenta bancaria</label>
-                <input 
-                  {...form.register("bankAccount")} 
-                  style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', marginBottom: 5 }}>Notas / condiciones adicionales</label>
-            <textarea 
-              {...form.register("notes")} 
-              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', minHeight: 100 }}
-            />
-          </div>
-
-          <InvoiceItemsForm />
-        </form>
-      </div>
-    </FormProvider>
-  );
+      </form>
+    </div>
+  )
 }

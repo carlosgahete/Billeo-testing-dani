@@ -1,0 +1,72 @@
+// client/src/pages/invoices/create.tsx
+
+import { useForm } from 'react-hook-form'
+import InvoiceForm from '@/components/invoices/InvoiceForm'
+import { useRouter } from 'next/router'
+import { createInvoice } from '@/lib/api/invoices'
+import { toast } from 'sonner'
+import { calculateInvoice } from '@/components/invoices/invoiceEngine'
+import { useEffect } from 'react'
+
+export default function CreateInvoicePage() {
+  const router = useRouter()
+
+  const form = useForm({
+    defaultValues: {
+      customerName: '',
+      customerNif: '',
+      customerEmail: '',
+      customerAddress: '',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: '',
+      items: [{ name: '', quantity: 1, price: 0 }],
+      additionalTaxes: [],
+      notes: '',
+      paymentMethod: '',
+      bankAccount: '',
+    },
+  })
+
+  const { watch, handleSubmit, setValue } = form
+
+  const watchedValues = watch()
+
+  // Calcular subtotal, impuestos y total cada vez que cambian los valores clave
+  useEffect(() => {
+    const updated = calculateInvoice(watchedValues)
+    setValue('subtotal', updated.subtotal)
+    setValue('taxes', updated.taxes)
+    setValue('total', updated.total)
+  }, [
+    watchedValues.items,
+    watchedValues.additionalTaxes,
+    setValue,
+  ])
+
+  const onSubmit = async (data: any) => {
+    try {
+      await createInvoice(data)
+      toast.success('Factura creada correctamente')
+      router.push('/invoices')
+    } catch (error) {
+      toast.error('Error al crear la factura')
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4">Crear Factura</h1>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <InvoiceForm form={form} />
+        <div className="mt-6 flex justify-end">
+          <button
+            type="submit"
+            className="bg-[#329FAD] hover:bg-[#2b8b96] text-white px-6 py-2 rounded-md"
+          >
+            Guardar factura
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
