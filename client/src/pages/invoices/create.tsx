@@ -6,7 +6,7 @@ import { useLocation } from 'wouter'
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { calculateInvoice } from '@/components/invoices/invoiceEngine'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export default function CreateInvoicePage() {
   const [, navigate] = useLocation();
@@ -48,28 +48,51 @@ export default function CreateInvoicePage() {
     },
   })
 
-  const { watch, handleSubmit, setValue } = form
+  const { watch, handleSubmit, setValue, getValues } = form
 
   const watchedValues = watch()
+  
+  // Referencia para mantener una versión previa de los valores de items
+  const prevItemsRef = useRef<string>("");
+  const prevTaxesRef = useRef<string>("");
+  
+  // Función para actualizar cálculos que se puede llamar directamente desde componentes hijos
+  const updateCalculations = () => {
+    try {
+      const formData = getValues();
+      const updated = calculateInvoice(formData);
+      setValue('subtotal', updated.subtotal, { shouldDirty: true });
+      setValue('taxes', updated.taxes, { shouldDirty: true });
+      setValue('total', updated.total, { shouldDirty: true });
+      
+      console.log("Cálculos actualizados:", updated);
+    } catch (error) {
+      console.error("Error al calcular totales:", error);
+    }
+  };
 
   // Calcular subtotal, impuestos y total cada vez que cambian los valores clave
   useEffect(() => {
     try {
-      const updated = calculateInvoice(watchedValues)
-      // Usar la versión no tipada de setValue para evitar errores de TypeScript
-      const setValueAny = setValue as any
-      setValueAny('subtotal', updated.subtotal)
-      setValueAny('taxes', updated.taxes)
-      setValueAny('total', updated.total)
+      const itemsJson = JSON.stringify(watchedValues.items || []);
+      const taxesJson = JSON.stringify(watchedValues.additionalTaxes || []);
+      
+      // Solo actualizar si realmente cambiaron los valores
+      if (itemsJson !== prevItemsRef.current || taxesJson !== prevTaxesRef.current) {
+        // Guardar valores actuales para la próxima comparación
+        prevItemsRef.current = itemsJson;
+        prevTaxesRef.current = taxesJson;
+        
+        updateCalculations();
+      }
     } catch (error) {
-      console.error("Error al calcular totales:", error)
+      console.error("Error al calcular totales:", error);
     }
   }, [
-    // Observar todos los campos relevantes para actualizaciones inmediatas
     watchedValues.items, 
-    JSON.stringify(watchedValues.items), // Para detectar cambios dentro de los items
     watchedValues.additionalTaxes,
     setValue,
+    getValues
   ])
 
   // Crear una mutación para enviar la factura al servidor
@@ -161,7 +184,7 @@ export default function CreateInvoicePage() {
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)}>
-        <InvoiceFormNew form={form} />
+        <InvoiceFormNew form={form} onCalculate={updateCalculations} />
         <div className="mt-6 flex justify-end">
           <button
             type="submit"

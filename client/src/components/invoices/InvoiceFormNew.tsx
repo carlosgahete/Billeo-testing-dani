@@ -3,7 +3,8 @@ import { UseFormReturn } from 'react-hook-form'
 import { calculateInvoice } from './invoiceEngine'
 
 interface InvoiceFormProps {
-  form: UseFormReturn<any>
+  form: UseFormReturn<any>;
+  onCalculate?: () => void;
 }
 
 // Componente simple para manejar la línea de artículos en una factura
@@ -145,7 +146,7 @@ const TaxRow = ({
   )
 }
 
-const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
+const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
   const { register, watch, setValue, getValues } = form
   const items = watch('items') || []
   const additionalTaxes = watch('additionalTaxes') || []
@@ -156,13 +157,19 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
   // Función para calcular totales de la factura
   const calculateTotals = () => {
     try {
-      const data = getValues();
-      const calculated = calculateInvoice(data);
-      
-      // Actualizar los valores calculados
-      setValue('subtotal', calculated.subtotal, { shouldDirty: true });
-      setValue('taxes', calculated.taxes, { shouldDirty: true });
-      setValue('total', calculated.total, { shouldDirty: true });
+      // Si se proporciona una función externa para cálculos, usarla
+      if (onCalculate) {
+        onCalculate();
+      } else {
+        // Calcular localmente como fallback
+        const data = getValues();
+        const calculated = calculateInvoice(data);
+        
+        // Actualizar los valores calculados
+        setValue('subtotal', calculated.subtotal, { shouldDirty: true });
+        setValue('taxes', calculated.taxes, { shouldDirty: true });
+        setValue('total', calculated.total, { shouldDirty: true });
+      }
     } catch (error) {
       console.error("Error al calcular totales:", error);
     }
