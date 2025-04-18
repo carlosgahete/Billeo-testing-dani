@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -186,9 +186,10 @@ type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 interface InvoiceFormProps {
   invoiceId?: number;
   initialData?: any; // Datos iniciales para el formulario
+  form?: UseFormReturn<any>; // Formulario externo (opcional)
 }
 
-const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
+const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showClientForm, setShowClientForm] = useState(false);
@@ -384,6 +385,9 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // y que no actualizará el formulario automáticamente después de la carga inicial
   const [hasInitialized, setHasInitialized] = useState(false);
   
+  // Determinar qué formulario usar: el externo o el interno
+  const activeForm = externalForm || form;
+  
   useEffect(() => {
     // Si ya inicializamos el formulario, no lo hacemos de nuevo
     if (hasInitialized) {
@@ -437,7 +441,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         });
         
         // Solo reseteamos el formulario si los datos han cambiado
-        form.reset(formattedInvoice);
+        activeForm.reset(formattedInvoice);
         
         // Si hay archivos adjuntos, actualizamos el estado
         if (invoice.attachments) {
@@ -448,10 +452,10 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
         setHasInitialized(true);
       }
     }
-  }, [invoiceData, initialData, isEditMode, hasInitialized]); // No incluimos form en las dependencias
+  }, [invoiceData, initialData, isEditMode, hasInitialized, activeForm]); // No incluimos form en las dependencias
 
   const { fields, append, remove } = useFieldArray({
-    control: form.control,
+    control: activeForm.control,
     name: "items",
   });
 
@@ -460,7 +464,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
     append: appendTax,
     remove: removeTax
   } = useFieldArray({
-    control: form.control,
+    control: activeForm.control,
     name: "additionalTaxes",
   });
 
@@ -669,7 +673,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Movemos esta línea al interior del useMemo para que sólo se ejecute cuando las dependencias cambian
   const calculatedTotals = useMemo(() => {
     // Obtenemos los valores dentro del useMemo para evitar re-renders
-    const { items = [], additionalTaxes = [] } = form.getValues();
+    const { items = [], additionalTaxes = [] } = activeForm.getValues();
     
     // Calculamos subtotales
     const updatedItems = (items || []).map((item: any) => {
@@ -712,8 +716,8 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       additionalTaxesTotal, 
       total: safeTotal 
     };
-  // Dependencia del form para recalcular cuando cambie y no causar bucles infinitos
-  }, [form]);
+  // Dependencia del activeForm para recalcular cuando cambie y no causar bucles infinitos
+  }, [activeForm]);
   
   const handleSubmit = (data: InvoiceFormValues) => {
     // Las notas no necesitan incluir información bancaria, ya que aparece en otra parte del PDF
