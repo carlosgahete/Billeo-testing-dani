@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm, useFieldArray, UseFormReturn } from "react-hook-form";
+import { calculateInvoice } from "@/utils/invoiceEngine";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -49,7 +50,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
-import { calculateInvoice } from "@/utils/invoiceEngine";
 
 // Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
@@ -291,13 +291,37 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
   // Determinar qué formulario usar: el externo o el interno
   const activeForm = externalForm || form;
 
-  // Asegurarse de que los campos estén registrados en el formulario
+  // Efecto para configurar los campos financieros en el formulario activo
   useEffect(() => {
-    // Usamos el formulario activo (externo o interno)
-    activeForm.register('subtotal');
-    activeForm.register('tax');
-    activeForm.register('total');
-  }, [activeForm.register]);
+    // Este efecto solo registra los campos una vez
+    const registerFinancialFields = () => {
+      if (!activeForm) return;
+      
+      try {
+        // Verificamos si ya existen valores en el formulario
+        const currentValues = activeForm.getValues();
+        
+        // Establecemos valores predeterminados para asegurar que estos campos existan en el formulario
+        if (currentValues.subtotal === undefined) {
+          activeForm.setValue('subtotal', 0, { shouldValidate: false });
+        }
+        
+        if (currentValues.tax === undefined) {
+          activeForm.setValue('tax', 0, { shouldValidate: false });
+        }
+        
+        if (currentValues.total === undefined) {
+          activeForm.setValue('total', 0, { shouldValidate: false });
+        }
+        
+        console.log("✅ Campos financieros configurados en el formulario");
+      } catch (error) {
+        console.warn("⚠️ Error al configurar campos del formulario:", error);
+      }
+    };
+    
+    registerFinancialFields();
+  }, []);
 
   // Efecto para añadir automáticamente el número de cuenta en las notas
   // Este efecto es innecesario y podría causar renderizados infinitos al modificar form
