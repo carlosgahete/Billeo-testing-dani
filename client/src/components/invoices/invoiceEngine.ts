@@ -25,6 +25,7 @@ export function calculateInvoice(data: any) {
   const items = data.items || []
   const additionalTaxes = data.additionalTaxes || []
 
+  // Calcular subtotal sumando todos los items
   let subtotal = 0
   items.forEach((item: any) => {
     const quantity = Number(item.quantity) || 0
@@ -32,17 +33,17 @@ export function calculateInvoice(data: any) {
     subtotal += quantity * unitPrice
   })
 
+  // Calcular impuestos solo si hay impuestos definidos
   let taxes = 0
   additionalTaxes.forEach((tax: any) => {
     const rate = Number(tax.rate) || 0
     taxes += subtotal * (rate / 100)
   })
 
-  // Si no hay impuestos adicionales definidos, aplicar IVA por defecto (21%)
-  if (additionalTaxes.length === 0) {
-    taxes = subtotal * 0.21 // 21% IVA
-  }
+  // No añadir impuestos automáticamente si no hay ninguno definido
+  // Solo se aplican los impuestos que el usuario ha añadido explícitamente
 
+  // Calcular total
   const total = subtotal + taxes
 
   return {

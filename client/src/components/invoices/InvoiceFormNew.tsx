@@ -141,7 +141,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
   // Función para añadir un impuesto adicional
   const addTax = () => {
     const currentTaxes = [...additionalTaxes]
-    setValue('additionalTaxes', [...currentTaxes, { name: 'IVA', rate: 21 }])
+    setValue('additionalTaxes', [...currentTaxes, { name: '', rate: 0 }])
   }
 
   // Función para eliminar un impuesto
@@ -274,7 +274,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
 
         {additionalTaxes.length === 0 && (
           <p className="text-gray-500 italic">
-            Se aplicará IVA estándar (21%) por defecto
+            No se aplicará ningún impuesto por defecto. Añade los impuestos que necesites.
           </p>
         )}
       </div>
@@ -286,8 +286,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
           <span>{subtotal.toFixed(2)} €</span>
         </div>
         
-        {/* Desglose de impuestos por nombre */}
-        {additionalTaxes.length > 0 ? (
+        {/* Desglose de impuestos por nombre - solo si hay impuestos definidos */}
+        {additionalTaxes.length > 0 && (
           <>
             {additionalTaxes.map((tax, index) => (
               <div key={index} className="flex justify-between mb-1 text-sm text-gray-600">
@@ -295,18 +295,13 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form }) => {
                 <span>{((subtotal * tax.rate) / 100).toFixed(2)} €</span>
               </div>
             ))}
+            
+            <div className="flex justify-between mb-1">
+              <span>Total impuestos:</span>
+              <span>{taxes.toFixed(2)} €</span>
+            </div>
           </>
-        ) : (
-          <div className="flex justify-between mb-1 text-sm text-gray-600">
-            <span>IVA (21%):</span>
-            <span>{(subtotal * 0.21).toFixed(2)} €</span>
-          </div>
         )}
-        
-        <div className="flex justify-between mb-1">
-          <span>Total impuestos:</span>
-          <span>{taxes.toFixed(2)} €</span>
-        </div>
         
         <div className="flex justify-between text-lg font-bold mt-2">
           <span>Total:</span>

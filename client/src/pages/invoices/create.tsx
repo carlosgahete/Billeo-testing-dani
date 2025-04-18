@@ -135,7 +135,7 @@ export default function CreateInvoicePage() {
       description: item.name || 'Servicio',
       quantity: String(parseFloat(item.quantity) || 1), // Convertir a string
       unitPrice: String(parseFloat(item.price) || 0), // Convertir a string
-      taxRate: "21", // IVA por defecto como string
+      taxRate: "0", // Sin impuesto por defecto, solo se aplican los definidos explícitamente
       subtotal: String((parseFloat(item.quantity || 1) * parseFloat(item.price || 0)).toFixed(2)) // Convertir a string
     }));
     
