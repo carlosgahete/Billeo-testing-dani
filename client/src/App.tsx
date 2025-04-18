@@ -20,6 +20,7 @@ import NotFound from "@/pages/not-found";
 import CompleteDashboardPage from "@/pages/complete-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
+import CreateInvoiceTestPage from "@/pages/invoices/create-test";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
 import EditInvoicePage from "@/pages/invoices/EditInvoicePage";
 import QuotesPage from "@/pages/quotes/index";
@@ -81,6 +82,11 @@ function Router() {
       <Route path="/invoices/create">
         <Layout>
           <ProtectedRoute path="/invoices/create" component={CreateInvoicePage} />
+        </Layout>
+      </Route>
+      <Route path="/invoices/create-test">
+        <Layout>
+          <ProtectedRoute path="/invoices/create-test" component={CreateInvoiceTestPage} />
         </Layout>
       </Route>
       <Route path="/invoices/edit/:id">
