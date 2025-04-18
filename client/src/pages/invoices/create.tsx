@@ -65,7 +65,9 @@ export default function CreateInvoicePage() {
       console.error("Error al calcular totales:", error)
     }
   }, [
-    watchedValues.items,
+    // Observar todos los campos relevantes para actualizaciones inmediatas
+    watchedValues.items, 
+    JSON.stringify(watchedValues.items), // Para detectar cambios dentro de los items
     watchedValues.additionalTaxes,
     setValue,
   ])
