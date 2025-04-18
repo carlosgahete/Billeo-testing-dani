@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useForm, useFieldArray, UseFormReturn } from "react-hook-form";
-import { calculateInvoice } from "@/utils/invoiceEngine";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -50,6 +49,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
+import { calculateInvoice } from "@/utils/invoiceEngine";
 
 // Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
@@ -186,10 +186,9 @@ type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 interface InvoiceFormProps {
   invoiceId?: number;
   initialData?: any; // Datos iniciales para el formulario
-  form?: UseFormReturn<any>; // Formulario externo (opcional)
 }
 
-const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceFormProps) => {
+const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showClientForm, setShowClientForm] = useState(false);
@@ -287,41 +286,6 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
     resolver: zodResolver(invoiceSchema),
     defaultValues: defaultFormValues,
   });
-  
-  // Determinar qué formulario usar: el externo o el interno
-  const activeForm = externalForm || form;
-
-  // Efecto para configurar los campos financieros en el formulario activo
-  useEffect(() => {
-    // Este efecto solo registra los campos una vez
-    const registerFinancialFields = () => {
-      if (!activeForm) return;
-      
-      try {
-        // Verificamos si ya existen valores en el formulario
-        const currentValues = activeForm.getValues();
-        
-        // Establecemos valores predeterminados para asegurar que estos campos existan en el formulario
-        if (currentValues.subtotal === undefined) {
-          activeForm.setValue('subtotal', 0, { shouldValidate: false });
-        }
-        
-        if (currentValues.tax === undefined) {
-          activeForm.setValue('tax', 0, { shouldValidate: false });
-        }
-        
-        if (currentValues.total === undefined) {
-          activeForm.setValue('total', 0, { shouldValidate: false });
-        }
-        
-        console.log("✅ Campos financieros configurados en el formulario");
-      } catch (error) {
-        console.warn("⚠️ Error al configurar campos del formulario:", error);
-      }
-    };
-    
-    registerFinancialFields();
-  }, []);
 
   // Efecto para añadir automáticamente el número de cuenta en las notas
   // Este efecto es innecesario y podría causar renderizados infinitos al modificar form
@@ -466,7 +430,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
         });
         
         // Solo reseteamos el formulario si los datos han cambiado
-        activeForm.reset(formattedInvoice);
+        form.reset(formattedInvoice);
         
         // Si hay archivos adjuntos, actualizamos el estado
         if (invoice.attachments) {
@@ -477,10 +441,10 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
         setHasInitialized(true);
       }
     }
-  }, [invoiceData, initialData, isEditMode, hasInitialized, activeForm]); // No incluimos form en las dependencias
+  }, [invoiceData, initialData, isEditMode, hasInitialized]); // No incluimos form en las dependencias
 
   const { fields, append, remove } = useFieldArray({
-    control: activeForm.control,
+    control: form.control,
     name: "items",
   });
 
@@ -489,7 +453,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
     append: appendTax,
     remove: removeTax
   } = useFieldArray({
-    control: activeForm.control,
+    control: form.control,
     name: "additionalTaxes",
   });
 
@@ -698,7 +662,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
   // Movemos esta línea al interior del useMemo para que sólo se ejecute cuando las dependencias cambian
   const calculatedTotals = useMemo(() => {
     // Obtenemos los valores dentro del useMemo para evitar re-renders
-    const { items = [], additionalTaxes = [] } = activeForm.getValues();
+    const { items = [], additionalTaxes = [] } = form.getValues();
     
     // Calculamos subtotales
     const updatedItems = (items || []).map((item: any) => {
@@ -741,8 +705,8 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
       additionalTaxesTotal, 
       total: safeTotal 
     };
-  // Dependencia del activeForm para recalcular cuando cambie y no causar bucles infinitos
-  }, [activeForm]);
+  // Dependencia del form para recalcular cuando cambie y no causar bucles infinitos
+  }, [form]);
   
   const handleSubmit = (data: InvoiceFormValues) => {
     // Las notas no necesitan incluir información bancaria, ya que aparece en otra parte del PDF
@@ -847,8 +811,8 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
 
   return (
     <>
-      <Form {...activeForm}>
-        <form onSubmit={activeForm.handleSubmit(handleSubmit)} className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
               <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">
@@ -1202,12 +1166,12 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                                   // Calcular totales inmediatamente al cambiar el valor con referencia segura
                                   const formRef = form; // Capturar referencia en variable local
                                   window.setTimeout(() => { 
-                                    if (formRef) calculateInvoice(formRef); 
+                                    if (formRef) calculateInvoiceTotals(formRef); 
                                   }, 10);
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
-                                  { const formRef = form; if (formRef) calculateInvoice(formRef); }
+                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                                 }}
                               />
                             </FormControl>
@@ -1237,7 +1201,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                                 }}
                                 onBlur={(e) => {
                                   // Calcular totales al salir del campo
-                                  { const formRef = form; if (formRef) calculateInvoice(formRef); }
+                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                                 }}
                               />
                             </FormControl>
@@ -1266,7 +1230,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                                 onChange={(e) => {
                                   field.onChange(parseFloat(e.target.value));
                                 }}
-                                onBlur={() => { const formRef = form; if (formRef) calculateInvoice(formRef); }}
+                                onBlur={() => { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1311,7 +1275,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                           // Calcular totales inmediatamente al eliminar un ítem con referencia segura
                           const formRef = form; // Capturar referencia en variable local
                           window.setTimeout(() => { 
-                            if (formRef) calculateInvoice(formRef); 
+                            if (formRef) calculateInvoiceTotals(formRef); 
                           }, 10);
                         }}
                         disabled={fields.length === 1}
@@ -1342,7 +1306,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                         // Calcular totales inmediatamente después de añadir un nuevo ítem con referencia segura
                         const formRef = form; // Capturar referencia en variable local
                         window.setTimeout(() => { 
-                          if (formRef) calculateInvoice(formRef); 
+                          if (formRef) calculateInvoiceTotals(formRef); 
                         }, 10);
                       }}
                     >
@@ -1429,7 +1393,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                                       onChange={(e) => {
                                         field.onChange(parseFloat(e.target.value));
                                       }}
-                                      onBlur={() => { const formRef = form; if (formRef) calculateInvoice(formRef); }}
+                                      onBlur={() => { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }}
                                       className="h-8 text-sm"
                                     />
                                     
@@ -1448,7 +1412,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                                                 size="sm"
                                                 onClick={() => {
                                                   field.onChange(!field.value);
-                                                  { const formRef = form; if (formRef) calculateInvoice(formRef); }
+                                                  { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                                                 }}
                                                 className="h-8 px-2 text-xs font-normal"
                                               >
@@ -1474,7 +1438,7 @@ const InvoiceForm = ({ invoiceId, initialData, form: externalForm }: InvoiceForm
                             size="sm"
                             onClick={() => {
                               removeTax(index);
-                              { const formRef = form; if (formRef) calculateInvoice(formRef); }
+                              { const formRef = form; if (formRef) calculateInvoiceTotals(formRef); }
                             }}
                             className="h-6 w-6 p-0"
                           >
