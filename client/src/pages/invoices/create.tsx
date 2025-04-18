@@ -73,40 +73,70 @@ export default function CreateInvoicePage() {
   // Crear una mutación para enviar la factura al servidor
   const invoiceMutation = useMutation({
     mutationFn: async (formData: any) => {
-      return await apiRequest("POST", "/api/invoices", formData);
+      try {
+        const response = await apiRequest("POST", "/api/invoices", formData);
+        return response;
+      } catch (error: any) {
+        // Manejar errores de validación del servidor
+        if (error.data && error.data.errors) {
+          // Formatear los mensajes de error para una mejor legibilidad
+          const errorMessages = error.data.errors.map((err: any) => {
+            return `- ${err.path.join('.')}: ${err.message}`;
+          }).join('\n');
+          
+          throw new Error(`Errores de validación:\n${errorMessages}`);
+        }
+        
+        // Reenviar el error original si no es un error de validación
+        throw error;
+      }
     },
     onSuccess: () => {
+      // Mostrar mensaje de éxito
+      alert("Factura creada correctamente");
       // Navegar a la lista de facturas después de crear exitosamente
       navigate("/invoices");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error al crear la factura:", error);
-      alert("Ocurrió un error al crear la factura: " + error.message);
+      // Mostrar mensaje de error más detallado
+      alert("Ocurrió un error al crear la factura:\n" + error.message);
     }
   });
 
   const onSubmit = async (data: any) => {
-    // Transformar los datos al formato que espera el servidor
-    const invoice = {
+    // Transformar los datos al formato que espera el servidor y convertir números a strings
+    const invoice: any = {
       invoiceNumber: `TEMP-${new Date().getTime()}`, // Número temporal, el servidor lo asignará correctamente
       clientId: 1, // ID del cliente por defecto para pruebas
       issueDate: data.issueDate,
       dueDate: data.dueDate || data.issueDate,
-      subtotal: data.subtotal,
-      tax: data.taxes,
-      total: data.total,
-      additionalTaxes: data.additionalTaxes,
+      subtotal: String(data.subtotal || 0), // Convertir a string para el servidor
+      tax: String(data.taxes || 0), // Convertir a string para el servidor
+      total: String(data.total || 0), // Convertir a string para el servidor
       status: "pending",
       notes: `${data.customerName} - ${data.customerNif}\n${data.customerEmail || ''}\n${data.customerAddress || ''}\n\nMétodo de pago: ${data.paymentMethod || 'No especificado'}\nCuenta: ${data.bankAccount || 'No especificada'}\n\n${data.notes || ''}`,
     };
     
+    // Asegurarnos de que los additionalTaxes tienen la estructura correcta
+    const additionalTaxes = data.additionalTaxes.map((tax: any) => ({
+      name: tax.name || 'IVA',
+      amount: String(((data.subtotal || 0) * (parseFloat(tax.rate) || 0) / 100).toFixed(2)), // Calcular y convertir a string
+      rate: String(tax.rate || 0), // Convertir a string
+    }));
+    
+    // Si hay impuestos, añadirlos al objeto de la factura
+    if (additionalTaxes.length > 0) {
+      invoice.additionalTaxes = additionalTaxes;
+    }
+    
     // Transformar los items
     const items = data.items.map((item: any) => ({
-      description: item.name,
-      quantity: parseFloat(item.quantity),
-      unitPrice: parseFloat(item.price),
-      taxRate: 21, // IVA por defecto
-      subtotal: parseFloat(item.quantity) * parseFloat(item.price)
+      description: item.name || 'Servicio',
+      quantity: String(parseFloat(item.quantity) || 1), // Convertir a string
+      unitPrice: String(parseFloat(item.price) || 0), // Convertir a string
+      taxRate: "21", // IVA por defecto como string
+      subtotal: String((parseFloat(item.quantity || 1) * parseFloat(item.price || 0)).toFixed(2)) // Convertir a string
     }));
     
     console.log("Enviando datos:", { invoice, items });

@@ -17,6 +17,13 @@ const ItemRow = ({
   remove: (index: number) => void, 
   canRemove: boolean 
 }) => {
+  // Prevenir envío del formulario al presionar Enter
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+  
   return (
     <div className="grid grid-cols-12 gap-2 mb-2">
       <div className="col-span-6">
@@ -24,6 +31,7 @@ const ItemRow = ({
           {...register(`items.${index}.name`)}
           placeholder="Descripción"
           className="w-full p-2 border rounded"
+          onKeyDown={handleKeyDown}
         />
       </div>
       <div className="col-span-2">
@@ -32,6 +40,7 @@ const ItemRow = ({
           type="number"
           placeholder="Cantidad"
           className="w-full p-2 border rounded"
+          onKeyDown={handleKeyDown}
         />
       </div>
       <div className="col-span-2">
@@ -40,6 +49,7 @@ const ItemRow = ({
           type="number"
           placeholder="Precio"
           className="w-full p-2 border rounded"
+          onKeyDown={handleKeyDown}
         />
       </div>
       <div className="col-span-2 flex items-center">
@@ -67,6 +77,13 @@ const TaxRow = ({
   register: any, 
   remove: (index: number) => void 
 }) => {
+  // Prevenir envío del formulario al presionar Enter
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+  
   return (
     <div className="grid grid-cols-12 gap-2 mb-2">
       <div className="col-span-6">
@@ -74,6 +91,7 @@ const TaxRow = ({
           {...register(`additionalTaxes.${index}.name`)}
           placeholder="Nombre del impuesto"
           className="w-full p-2 border rounded"
+          onKeyDown={handleKeyDown}
         />
       </div>
       <div className="col-span-4">
@@ -82,6 +100,7 @@ const TaxRow = ({
           type="number"
           placeholder="Tasa (%)"
           className="w-full p-2 border rounded"
+          onKeyDown={handleKeyDown}
         />
       </div>
       <div className="col-span-2 flex items-center">
