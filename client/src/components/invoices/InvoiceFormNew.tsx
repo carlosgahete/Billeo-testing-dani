@@ -412,11 +412,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
               {...register('status')}
               className="w-full p-2 border rounded"
             >
-              <option value="pending">Pendiente de pago</option>
-              <option value="paid">Pagada</option>
-              <option value="overdue">Vencida</option>
-              <option value="canceled">Cancelada</option>
+              <option value="pending">🕙 Pendiente de pago</option>
+              <option value="paid">✅ Pagada</option>
+              <option value="overdue">⚠️ Vencida</option>
+              <option value="canceled">❌ Cancelada</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Si seleccionas "Pagada", se creará automáticamente una transacción de ingreso.
+            </p>
           </div>
           
           <div>
@@ -459,11 +462,13 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
               {...register('createTransaction')}
               className="mr-2 h-4 w-4"
             />
-            <span>Registrar automáticamente como ingreso al guardar</span>
+            <span className="font-medium">Registrar automáticamente como ingreso al guardar</span>
           </label>
           <p className="text-sm text-gray-500 mt-1">
             Si marcas esta opción, se creará automáticamente una transacción de ingreso
-            cuando guardes la factura, independientemente de su estado.
+            cuando guardes la factura. Esto te ahorrará el paso de registrar el ingreso manualmente.
+            <br/>
+            <span className="italic">Nota: Si marcas la factura como "Pagada", se creará una transacción automáticamente incluso si no activas esta opción.</span>
           </p>
         </div>
       </div>

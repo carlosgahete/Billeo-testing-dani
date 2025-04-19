@@ -120,9 +120,24 @@ export default function CreateInvoicePage() {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      // Personalizar el mensaje de éxito según si se creó una transacción o no
+      let successMessage = "Factura creada correctamente";
+      
+      // Si el servidor nos dice que se creó una transacción automáticamente
+      if (data && data.transaction) {
+        successMessage += "\nSe ha creado automáticamente una transacción de ingreso por " + 
+          (typeof data.transaction.amount === 'string' ? data.transaction.amount : data.transaction.amount.toFixed(2)) + 
+          "€";
+      }
+      // Si la factura se marcó como pagada pero no hay transacción
+      else if (data && data.invoice && data.invoice.status === 'paid') {
+        successMessage += "\nLa factura ha sido marcada como pagada";
+      }
+      
       // Mostrar mensaje de éxito
-      alert("Factura creada correctamente");
+      alert(successMessage);
+      
       // Navegar a la lista de facturas después de crear exitosamente
       navigate("/invoices");
     },
