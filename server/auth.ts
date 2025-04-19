@@ -5,6 +5,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
+import { sql } from "./db";
 import { User as SelectUser } from "@shared/schema";
 
 declare global {
@@ -209,23 +210,58 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/login", async (req, res, next) => {
     console.log("Procesando solicitud de inicio de sesión para:", req.body.username);
     
-    passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
-      if (err) {
-        console.error("Error en autenticación:", err);
-        return next(err);
+    try {
+      // Usar SQL directo para evitar problemas con el esquema
+      const result = await sql`
+        SELECT * FROM users WHERE username = ${req.body.username}
+      `;
+      
+      console.log("Resultado de búsqueda de usuario:", result.length > 0 ? "Usuario encontrado" : "Usuario no encontrado");
+      
+      if (result.length === 0) {
+        return res.status(401).json({ message: "Credenciales inválidas" });
       }
       
-      if (!user) {
-        console.log("Autenticación fallida para:", req.body.username);
+      const user = result[0];
+      
+      // Verificar contraseña
+      let passwordMatches = false;
+      
+      if (user.password.includes(".")) {
+        // Formato de contraseña segura (hash.salt)
+        passwordMatches = await comparePasswords(req.body.password, user.password);
+      } else {
+        // Formato de contraseña simple (solo para compatibilidad)
+        passwordMatches = user.password === req.body.password;
+      }
+      
+      if (!passwordMatches) {
+        console.log("Contraseña incorrecta para:", req.body.username);
         return res.status(401).json({ message: "Credenciales inválidas" });
       }
       
       console.log("Usuario autenticado correctamente:", user.username);
       
-      req.login(user, async (err: any) => {
+      // Crear un objeto de usuario compatible con el esquema
+      const completeUser = {
+        id: user.id,
+        username: user.username,
+        password: user.password,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'user',
+        businessType: user.business_type || null,
+        profileImage: user.profile_image || null,
+        resetToken: user.reset_token || null,
+        resetTokenExpiry: user.reset_token_expiry || null,
+        securityQuestion: user.security_question || null,
+        securityAnswer: user.security_answer || null
+      };
+      
+      req.login(completeUser, async (err: any) => {
         if (err) {
           console.error("Error en login:", err);
           return next(err);
@@ -235,7 +271,7 @@ export function setupAuth(app: Express) {
         try {
           // Precargamos el módulo de sesión para no tener problemas con imports asíncronos
           const sessionHelper = await import('./session-helper.js');
-          sessionHelper.enhanceUserSession(req, user);
+          sessionHelper.enhanceUserSession(req, completeUser);
           
           // Guardamos la sesión explícitamente para asegurar que se almacene
           if (req.session) {
@@ -252,19 +288,22 @@ export function setupAuth(app: Express) {
             });
           }
           
-          console.log("Sesión mejorada para el usuario:", user.username);
+          console.log("Sesión mejorada para el usuario:", completeUser.username);
         } catch (sessionError) {
           console.error("Error al mejorar la sesión:", sessionError);
           // Continuar a pesar del error en la mejora de sesión
         }
         
         // Omitir la contraseña en la respuesta
-        const { password, ...userWithoutPassword } = user;
+        const { password, ...userWithoutPassword } = completeUser;
         
         console.log("Login completo, enviando respuesta");
         return res.status(200).json(userWithoutPassword);
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error("Error en proceso de login:", error);
+      return next(error);
+    }
   });
 
   app.post("/api/logout", async (req, res, next) => {
@@ -321,9 +360,32 @@ export function setupAuth(app: Express) {
     if (req.session && req.session.userId) {
       try {
         console.log("Usuario no autenticado por passport, pero tiene userId en sesión:", req.session.userId);
-        const user = await storage.getUser(req.session.userId);
-        if (user) {
-          const { password, ...userWithoutPassword } = user;
+        
+        // Usar SQL directo en lugar del método getUser de storage
+        const result = await sql`
+          SELECT * FROM users WHERE id = ${req.session.userId}
+        `;
+        
+        if (result.length > 0) {
+          const user = result[0];
+          
+          // Crear un objeto de usuario compatible con el esquema
+          const completeUser = {
+            id: user.id,
+            username: user.username,
+            password: user.password,
+            name: user.name,
+            email: user.email,
+            role: user.role || 'user',
+            businessType: user.business_type || null,
+            profileImage: user.profile_image || null,
+            resetToken: user.reset_token || null,
+            resetTokenExpiry: user.reset_token_expiry || null,
+            securityQuestion: user.security_question || null,
+            securityAnswer: user.security_answer || null
+          };
+          
+          const { password, ...userWithoutPassword } = completeUser;
           return res.status(200).json(userWithoutPassword);
         }
       } catch (error) {
