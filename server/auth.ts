@@ -22,11 +22,30 @@ export async function hashPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 
+// Verificar contraseña en formato hash.salt (propio del sistema)
 export async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    // Si la contraseña guardada comienza con $2a$ o $2b$, está en formato bcrypt
+    if (stored.startsWith('$2a$') || stored.startsWith('$2b$')) {
+      // En este caso, comparamos directamente con la contraseña suministrada
+      // ya que bcrypt tiene su propio formato que incluye el salt y hash
+      return supplied === stored;
+    }
+    
+    // Formato propio: hash.salt
+    if (stored.includes('.')) {
+      const [hashed, salt] = stored.split(".");
+      const hashedBuf = Buffer.from(hashed, "hex");
+      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+      return timingSafeEqual(hashedBuf, suppliedBuf);
+    }
+    
+    // Si no está en ninguno de los formatos anteriores, comparar directamente
+    return supplied === stored;
+  } catch (error) {
+    console.error("Error al comparar contraseñas:", error);
+    return false;
+  }
 }
 
 // Middleware para requerir autenticación
@@ -95,20 +114,14 @@ export function setupAuth(app: Express) {
           return done(null, false);
         }
         
-        // Si la contraseña no tiene formato hashPassword.salt (usuario antiguo)
-        if (!user.password.includes('.')) {
-          if (user.password !== password) {
+        // Verificación unificada de contraseñas
+        try {
+          const passwordMatches = await comparePasswords(password, user.password);
+          if (!passwordMatches) {
             return done(null, false);
           }
-          
-          // Actualizar a formato seguro para próximas autenticaciones
-          const hashedPassword = await hashPassword(password);
-          await storage.updateUserProfile(user.id, { password: hashedPassword });
-          return done(null, user);
-        }
-        
-        // Contraseña en formato seguro
-        if (!(await comparePasswords(password, user.password))) {
+        } catch (error) {
+          console.error("Error al verificar contraseña:", error);
           return done(null, false);
         }
         
@@ -230,12 +243,13 @@ export function setupAuth(app: Express) {
       // Verificar contraseña
       let passwordMatches = false;
       
-      if (user.password.includes(".")) {
-        // Formato de contraseña segura (hash.salt)
+      try {
+        // Usamos la función unificada de comparación de contraseñas que soporta múltiples formatos
         passwordMatches = await comparePasswords(req.body.password, user.password);
-      } else {
-        // Formato de contraseña simple (solo para compatibilidad)
-        passwordMatches = user.password === req.body.password;
+        console.log("Verificación de contraseña completada");
+      } catch (error) {
+        console.error("Error en verificación de contraseña:", error);
+        passwordMatches = false;
       }
       
       if (!passwordMatches) {
