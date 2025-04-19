@@ -235,19 +235,30 @@ const MarkAsPaidButton = ({
         throw new Error(`Error al actualizar: ${errorData.message || updateResponse.status}`);
       }
       
-      // Invalidar queries para actualizar datos en la UI
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      // Actualizar los datos en la UI sin recargar la página
+      console.log("🔄 Actualizando UI sin recargar la página...");
+      
+      // Primero remover consultas para forzar recarga completa
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Luego refetch inmediato para actualizar UI
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["/api/invoices"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] })
+      ]);
+      
+      // Disparar eventos personalizados para componentes que escuchan estos eventos
+      window.dispatchEvent(new CustomEvent('invoice-paid', { 
+        detail: { invoiceId: invoice.id }
+      }));
+      window.dispatchEvent(new CustomEvent('updateInvoices'));
       
       toast({
         title: "Factura marcada como pagada",
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
       
-      // Usar un enfoque más seguro, dirigiendo directamente a la página de facturas
-      setTimeout(() => {
-        window.location.href = '/invoices';
-      }, 500);
     } catch (error: any) {
       console.error("Error al marcar como pagada:", error);
       toast({
@@ -1357,19 +1368,29 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
         throw new Error(`Error al actualizar: ${errorData.message || updateResponse.status}`);
       }
       
-      // Invalidar queries para actualizar datos en la UI
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      // Actualizar los datos en la UI sin recargar la página
+      console.log("[Móvil] 🔄 Actualizando UI sin recargar...");
+      
+      // Primero remover consultas para forzar recarga completa
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Luego refetch inmediato para actualizar UI
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["/api/invoices"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] })
+      ]);
+      
+      // Disparar eventos personalizados para componentes que escuchan estos eventos
+      window.dispatchEvent(new CustomEvent('invoice-paid', { 
+        detail: { invoiceId: invoice.id }
+      }));
+      window.dispatchEvent(new CustomEvent('updateInvoices'));
       
       toast({
         title: "Factura marcada como pagada",
         description: `La factura ${invoice.invoiceNumber} ha sido marcada como pagada y se ha registrado en los ingresos totales.`,
       });
-      
-      // Redireccionar a la página de facturas
-      setTimeout(() => {
-        window.location.href = '/invoices';
-      }, 500);
     } catch (error: any) {
       console.error("[Móvil] Error al marcar como pagada:", error);
       toast({
