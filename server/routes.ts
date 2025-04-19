@@ -87,6 +87,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(401).json({ message: "Not authenticated" });
   };
   
+  // Cache para almacenar categorías por usuario para optimizar rendimiento
+  const categoriesCache: Record<number, {id: number, name: string, type: string}[]> = {};
+  
   // Inicializar la base de datos
   try {
     await storage.initializeDatabase();
@@ -1857,133 +1860,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Si la factura se marcó como pagada, crear una transacción de ingreso automáticamente
       if (statusChangingToPaid) {
-        // Utilizamos Promise.all para ejecutar operaciones en paralelo
-        const createTransactionPromise = (async () => {
-          try {
-            console.log("[SERVER] ⭐⭐⭐ Factura marcada como pagada. Creando transacción de ingreso automática");
-            
-            // Consultamos cliente y categoría en paralelo
-            const [clientResult, categoriesResult] = await Promise.all([
-              // Obtener información del cliente
-              (async () => {
-                try {
-                  if (!invoice.clientId) return 'Cliente';
-                  const client = await storage.getClient(invoice.clientId);
-                  return client ? client.name : 'Cliente';
-                } catch (error) {
-                  console.error("[SERVER] Error al obtener información del cliente:", error);
-                  return 'Cliente';
-                }
-              })(),
-              
-              // Obtener categoría de ingreso
-              (async () => {
-                try {
-                  const categories = await storage.getCategoriesByUserId(req.session.userId);
-                  const defaultCategory = categories.find(cat => cat.type === 'income');
-                  if (defaultCategory) {
-                    console.log(`[SERVER] Usando categoría de ingreso: ${defaultCategory.name} (ID: ${defaultCategory.id})`);
-                    return defaultCategory.id;
-                  }
-                  return null;
-                } catch (error) {
-                  console.error("[SERVER] Error al buscar categoría de ingreso:", error);
-                  return null;
-                }
-              })()
-            ]);
-            
-            const clientName = clientResult;
-            const incomeCategory = categoriesResult;
-            
-            console.log("[SERVER] ⭐⭐⭐ Información de factura actualizada para transacción:", JSON.stringify({
-              invoiceId: updatedInvoice.id,
-              invoiceNumber: updatedInvoice.invoiceNumber,
-              status: updatedInvoice.status,
-              clientId: updatedInvoice.clientId,
-              total: updatedInvoice.total,
-              userId: req.session.userId
-            }, null, 2));
-            
-            // Crear datos para la transacción de ingreso - aseguramos que amount sea un string
-            const total = typeof updatedInvoice.total === 'number' ? 
-              updatedInvoice.total.toString() : updatedInvoice.total;
-              
-            const transactionData = {
-              userId: req.session.userId,
-              title: clientName,
-              description: `Factura ${updatedInvoice.invoiceNumber} cobrada`,
-              amount: total,
-              date: new Date(),
-              type: 'income',
-              paymentMethod: 'transfer',
-              notes: `Generado automáticamente al marcar la factura ${updatedInvoice.invoiceNumber} como pagada`,
-              categoryId: incomeCategory,
-              attachments: []
-            };
-            
-            console.log("[SERVER] ⭐⭐⭐ Datos de transacción a crear:", JSON.stringify(transactionData, null, 2));
-            
-            // Crear transacción directamente, sin validación adicional para mayor velocidad
-            const directTransaction = await storage.createTransaction(transactionData);
-            console.log("[SERVER] ⭐⭐⭐ Transacción creada directamente:", JSON.stringify({
-              transactionId: directTransaction.id,
-              type: directTransaction.type,
-              amount: directTransaction.amount
-            }, null, 2));
-            
-            return directTransaction;
-          } catch (transactionError) {
-            console.error("[SERVER] ⭐⭐⭐ Error al crear transacción de ingreso automática:", transactionError);
-            // No bloqueamos la actualización de la factura si falla la creación de la transacción
-            return null;
+        try {
+          // Obtener información del cliente de forma rápida o usar valor predeterminado
+          let clientName = 'Cliente';
+          if (invoice.clientId) {
+            // Buscar en caché de clientes o realizar consulta rápida
+            try {
+              const client = await storage.getClient(invoice.clientId);
+              if (client) clientName = client.name;
+            } catch {}
           }
-        })();
-        
-        // Procesamos los items y obtenemos la transacción
-        const [transaction, invoiceItems] = await Promise.all([
-          createTransactionPromise,
-          // Procesamos los items y los obtenemos al final
-          (async () => {
-            // Procesar los items solo si se proporcionan
-            if (items && Array.isArray(items)) {
-              // Eliminar items existentes y crear nuevos en paralelo
-              await Promise.all([
-                // Eliminar items existentes
-                (async () => {
-                  console.log("[SERVER] Eliminando items existentes para la factura:", invoiceId);
-                  const existingItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
-                  await Promise.all(existingItems.map(item => storage.deleteInvoiceItem(item.id)));
-                })(),
-                
-                // Crear nuevos items
-                (async () => {
-                  console.log("[SERVER] Creando nuevos items para la factura:", items.length);
-                  await Promise.all(items.map(item => {
-                    const itemData = { ...item, invoiceId };
-                    const itemResult = insertInvoiceItemSchema.safeParse(itemData);
-                    if (itemResult.success) {
-                      return storage.createInvoiceItem(itemResult.data);
-                    }
-                    return Promise.resolve();
-                  }));
-                })()
-              ]);
-            }
+          
+          // Buscar categoría de ingresos usando caché para acelerar
+          let incomeCategory = null;
+          if (req.session && req.session.userId) {
+            const userId = req.session.userId;
+            try {
+              // Usar categoría en caché si existe
+              if (!categoriesCache[userId]) {
+                categoriesCache[userId] = await storage.getCategoriesByUserId(userId);
+              }
+              
+              const defaultCategory = categoriesCache[userId].find(cat => cat.type === 'income');
+              if (defaultCategory) {
+                incomeCategory = defaultCategory.id;
+              }
+            } catch {}
+          }
+          
+          // Crear datos para la transacción de ingreso - aseguramos que amount sea un string
+          const total = typeof updatedInvoice.total === 'number' ? 
+            updatedInvoice.total.toString() : updatedInvoice.total;
             
-            // Obtener los items actualizados
-            return storage.getInvoiceItemsByInvoiceId(invoiceId);
-          })()
-        ]);
-        
-        // Responder con la factura, items y transacción
-        console.log("[SERVER] Factura actualizada correctamente con transacción");
-        return res.status(200).json({ 
-          invoice: updatedInvoice, 
-          items: invoiceItems,
-          transaction: transaction,
-          message: transaction ? "Factura actualizada con transacción automática" : "Factura actualizada"
-        });
+          const transactionData = {
+            userId: req.session!.userId!,
+            title: clientName,
+            description: `Factura ${updatedInvoice.invoiceNumber} cobrada`,
+            amount: total,
+            date: new Date(),
+            type: 'income' as 'income',
+            paymentMethod: 'transfer',
+            notes: `Generado automáticamente al marcar la factura ${updatedInvoice.invoiceNumber} como pagada`,
+            categoryId: incomeCategory || 1,
+            attachments: [] as string[]
+          };
+          
+          // Crear transacción y procesar items en paralelo (más rápido)
+          const [transaction, invoiceItems] = await Promise.all([
+            storage.createTransaction(transactionData),
+            
+            // Procesar items en paralelo
+            (async () => {
+              // Solo procesar si se proporcionan nuevos items
+              if (items && Array.isArray(items)) {
+                // Primero eliminar todos los items existentes
+                const existingItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+                await Promise.all(existingItems.map(item => storage.deleteInvoiceItem(item.id)));
+                
+                // Luego crear todos los nuevos items
+                await Promise.all(items.map(item => {
+                  const itemData = { ...item, invoiceId };
+                  const itemResult = insertInvoiceItemSchema.safeParse(itemData);
+                  return itemResult.success ? storage.createInvoiceItem(itemResult.data) : Promise.resolve();
+                }));
+              }
+              
+              // Devolver los items actualizados
+              return storage.getInvoiceItemsByInvoiceId(invoiceId);
+            })()
+          ]);
+          
+          // Responder con éxito
+          return res.status(200).json({ 
+            invoice: updatedInvoice,
+            items: invoiceItems,
+            transaction,
+            message: "Factura actualizada con transacción automática"
+          });
+        } catch (error) {
+          console.error("[SERVER] Error al procesar transacción:", error);
+          
+          // Devolver respuesta básica si hay error
+          const invoiceItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+          return res.status(200).json({ 
+            invoice: updatedInvoice,
+            items: invoiceItems,
+            message: "Factura actualizada"
+          });
+        }
       }
       
       // Procesar los items solo si se proporcionan
