@@ -184,15 +184,34 @@ export async function generateInvoicePDF(
   // Add company logo and info using real data from company profile
   doc.setFontSize(20);
   doc.setTextColor(25, 118, 210); // primary color
-  // Usar datos de la empresa real si están disponibles, o valores por defecto si no
-  const companyName = "Eventos gaper"; // Valor predeterminado basado en la imagen proporcionada
+  
+  // Obtener datos de la empresa del servidor
+  let companyData;
+  try {
+    const resp = await fetch('/api/company');
+    if (resp.ok) {
+      companyData = await resp.json();
+    }
+  } catch (error) {
+    console.error("Error obteniendo datos de empresa para PDF:", error);
+  }
+  
+  // Usar los datos de la empresa del servidor o valores de respaldo
+  const companyName = companyData?.name || "Empresa";
   doc.text(companyName, 14, 22);
   
   doc.setFontSize(10);
   doc.setTextColor(0);
-  doc.text(`CIF/NIF: B55410351`, 14, 30); // Valor predeterminado basado en la imagen proporcionada
-  doc.text(`Playa de sitges 22b`, 14, 35); // Valor predeterminado basado en la imagen proporcionada
-  doc.text(`28232 Las Rozas, España`, 14, 40); // Valores predeterminados basados en la imagen proporcionada
+  doc.text(`CIF/NIF: ${companyData?.taxId || ""}`, 14, 30);
+  doc.text(`${companyData?.address || ""}`, 14, 35);
+  
+  // Ciudad, código postal y país
+  const locationParts = [];
+  if (companyData?.postalCode) locationParts.push(companyData.postalCode);
+  if (companyData?.city) locationParts.push(companyData.city);
+  if (companyData?.country) locationParts.push(companyData.country);
+  
+  doc.text(`${locationParts.join(", ")}`, 14, 40);
   
   // Add invoice title and number
   doc.setFontSize(16);
@@ -311,7 +330,9 @@ export async function generateInvoicePDF(
   if (!notesHaveBankInfo) {
     doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
     notesYPosition += 6;
-    doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, notesYPosition);
+    // Usar cuenta bancaria de los datos de la empresa o valor por defecto
+    const bankAccount = companyData?.bankAccount || "ES12 3456 7890 1234 5678 9012";
+    doc.text(`IBAN: ${bankAccount}`, 14, notesYPosition);
     notesYPosition += 10;
   }
   
@@ -420,15 +441,34 @@ export async function generateInvoicePDFAsBase64(
     // Add company logo and info using real data from company profile
     doc.setFontSize(20);
     doc.setTextColor(25, 118, 210); // primary color
-    // Usar datos de la empresa real si están disponibles, o valores por defecto si no
-    const companyName = "Eventos gaper"; // Valor predeterminado basado en la imagen proporcionada
+    
+    // Obtener datos de la empresa del servidor
+    let companyData;
+    try {
+      const resp = await fetch('/api/company');
+      if (resp.ok) {
+        companyData = await resp.json();
+      }
+    } catch (error) {
+      console.error("Error obteniendo datos de empresa para PDF:", error);
+    }
+    
+    // Usar los datos de la empresa del servidor o valores de respaldo
+    const companyName = companyData?.name || "Empresa";
     doc.text(companyName, 14, 22);
     
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(`CIF/NIF: B55410351`, 14, 30); // Valor predeterminado basado en la imagen proporcionada
-    doc.text(`Playa de sitges 22b`, 14, 35); // Valor predeterminado basado en la imagen proporcionada
-    doc.text(`28232 Las Rozas, España`, 14, 40); // Valores predeterminados basados en la imagen proporcionada
+    doc.text(`CIF/NIF: ${companyData?.taxId || ""}`, 14, 30);
+    doc.text(`${companyData?.address || ""}`, 14, 35);
+    
+    // Ciudad, código postal y país
+    const locationParts = [];
+    if (companyData?.postalCode) locationParts.push(companyData.postalCode);
+    if (companyData?.city) locationParts.push(companyData.city);
+    if (companyData?.country) locationParts.push(companyData.country);
+    
+    doc.text(`${locationParts.join(", ")}`, 14, 40);
     
     // Add invoice title and number
     doc.setFontSize(16);
