@@ -185,33 +185,41 @@ export async function generateInvoicePDF(
   doc.setFontSize(20);
   doc.setTextColor(25, 118, 210); // primary color
   
-  // Obtener datos de la empresa del servidor
+  // Usar datos de empresa desde sessionStorage o valores predeterminados
   let companyData;
   try {
-    const resp = await fetch('/api/company');
-    if (resp.ok) {
-      companyData = await resp.json();
+    // Intentar obtener los datos de empresa almacenados en sessionStorage
+    const companyJson = sessionStorage.getItem('companyData');
+    if (companyJson) {
+      companyData = JSON.parse(companyJson);
+      console.log("Usando datos de empresa desde sessionStorage:", companyData);
     }
   } catch (error) {
-    console.error("Error obteniendo datos de empresa para PDF:", error);
+    console.error("Error obteniendo datos de empresa desde sessionStorage:", error);
   }
   
-  // Usar los datos de la empresa del servidor o valores de respaldo
-  const companyName = companyData?.name || "Empresa";
+  // Usar los datos de la empresa o valores de respaldo
+  const companyName = companyData?.name || "Daniel Perla";
   doc.text(companyName, 14, 22);
   
   doc.setFontSize(10);
   doc.setTextColor(0);
-  doc.text(`CIF/NIF: ${companyData?.taxId || ""}`, 14, 30);
-  doc.text(`${companyData?.address || ""}`, 14, 35);
+  doc.text(`CIF/NIF: ${companyData?.taxId || "50459323D"}`, 14, 30);
+  doc.text(`${companyData?.address || "Calle Diogenes 8"}`, 14, 35);
   
   // Ciudad, código postal y país
-  const locationParts = [];
-  if (companyData?.postalCode) locationParts.push(companyData.postalCode);
-  if (companyData?.city) locationParts.push(companyData.city);
-  if (companyData?.country) locationParts.push(companyData.country);
+  let locationText = "";
+  if (companyData) {
+    const locationParts = [];
+    if (companyData.postalCode) locationParts.push(companyData.postalCode);
+    if (companyData.city) locationParts.push(companyData.city);
+    if (companyData.country) locationParts.push(companyData.country);
+    locationText = locationParts.join(", ");
+  } else {
+    locationText = "28022 Madrid, España";
+  }
   
-  doc.text(`${locationParts.join(", ")}`, 14, 40);
+  doc.text(locationText, 14, 40);
   
   // Add invoice title and number
   doc.setFontSize(16);
@@ -442,33 +450,41 @@ export async function generateInvoicePDFAsBase64(
     doc.setFontSize(20);
     doc.setTextColor(25, 118, 210); // primary color
     
-    // Obtener datos de la empresa del servidor
+    // Usar datos de empresa desde sessionStorage o valores predeterminados
     let companyData;
     try {
-      const resp = await fetch('/api/company');
-      if (resp.ok) {
-        companyData = await resp.json();
+      // Intentar obtener los datos de empresa almacenados en sessionStorage
+      const companyJson = sessionStorage.getItem('companyData');
+      if (companyJson) {
+        companyData = JSON.parse(companyJson);
+        console.log("Usando datos de empresa desde sessionStorage para PDF base64:", companyData);
       }
     } catch (error) {
-      console.error("Error obteniendo datos de empresa para PDF:", error);
+      console.error("Error obteniendo datos de empresa desde sessionStorage para PDF base64:", error);
     }
     
-    // Usar los datos de la empresa del servidor o valores de respaldo
-    const companyName = companyData?.name || "Empresa";
+    // Usar los datos de la empresa o valores de respaldo
+    const companyName = companyData?.name || "Daniel Perla";
     doc.text(companyName, 14, 22);
     
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(`CIF/NIF: ${companyData?.taxId || ""}`, 14, 30);
-    doc.text(`${companyData?.address || ""}`, 14, 35);
+    doc.text(`CIF/NIF: ${companyData?.taxId || "50459323D"}`, 14, 30);
+    doc.text(`${companyData?.address || "Calle Diogenes 8"}`, 14, 35);
     
     // Ciudad, código postal y país
-    const locationParts = [];
-    if (companyData?.postalCode) locationParts.push(companyData.postalCode);
-    if (companyData?.city) locationParts.push(companyData.city);
-    if (companyData?.country) locationParts.push(companyData.country);
+    let locationText = "";
+    if (companyData) {
+      const locationParts = [];
+      if (companyData.postalCode) locationParts.push(companyData.postalCode);
+      if (companyData.city) locationParts.push(companyData.city);
+      if (companyData.country) locationParts.push(companyData.country);
+      locationText = locationParts.join(", ");
+    } else {
+      locationText = "28022 Madrid, España";
+    }
     
-    doc.text(`${locationParts.join(", ")}`, 14, 40);
+    doc.text(locationText, 14, 40);
     
     // Add invoice title and number
     doc.setFontSize(16);
@@ -678,13 +694,42 @@ export async function generateQuotePDF(
     // Add company logo and info using real data from company profile
     doc.setFontSize(20);
     doc.setTextColor(25, 118, 210); // primary color
-    doc.text("Eventos gaper", 14, 22);
+    
+    // Usar datos de empresa desde sessionStorage o valores predeterminados
+    let companyData;
+    try {
+      // Intentar obtener los datos de empresa almacenados en sessionStorage
+      const companyJson = sessionStorage.getItem('companyData');
+      if (companyJson) {
+        companyData = JSON.parse(companyJson);
+        console.log("Usando datos de empresa desde sessionStorage para presupuesto:", companyData);
+      }
+    } catch (error) {
+      console.error("Error obteniendo datos de empresa desde sessionStorage para presupuesto:", error);
+    }
+    
+    // Usar los datos de la empresa o valores de respaldo
+    const companyName = companyData?.name || "Daniel Perla";
+    doc.text(companyName, 14, 22);
     
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(`CIF/NIF: B55410351`, 14, 30);
-    doc.text(`Playa de sitges 22b`, 14, 35);
-    doc.text(`28232 Las Rozas, España`, 14, 40);
+    doc.text(`CIF/NIF: ${companyData?.taxId || "50459323D"}`, 14, 30);
+    doc.text(`${companyData?.address || "Calle Diogenes 8"}`, 14, 35);
+    
+    // Ciudad, código postal y país
+    let locationText = "";
+    if (companyData) {
+      const locationParts = [];
+      if (companyData.postalCode) locationParts.push(companyData.postalCode);
+      if (companyData.city) locationParts.push(companyData.city);
+      if (companyData.country) locationParts.push(companyData.country);
+      locationText = locationParts.join(", ");
+    } else {
+      locationText = "28022 Madrid, España";
+    }
+    
+    doc.text(locationText, 14, 40);
     
     // Add quote title and number
     doc.setFontSize(16);
@@ -872,7 +917,22 @@ export async function generateReportPDF(
   // Add company logo and title
   doc.setFontSize(20);
   doc.setTextColor(25, 118, 210); // primary color
-  doc.text("Eventos gaper", 14, 22);
+  
+  // Usar datos de empresa desde sessionStorage o valores predeterminados
+  let companyData;
+  try {
+    // Intentar obtener los datos de empresa almacenados en sessionStorage
+    const companyJson = sessionStorage.getItem('companyData');
+    if (companyJson) {
+      companyData = JSON.parse(companyJson);
+    }
+  } catch (error) {
+    console.error("Error obteniendo datos de empresa desde sessionStorage para informe:", error);
+  }
+  
+  // Usar el nombre de la empresa o valor por defecto
+  const companyName = companyData?.name || "Daniel Perla";
+  doc.text(companyName, 14, 22);
   
   doc.setFontSize(16);
   doc.text(title, 14, 35);
