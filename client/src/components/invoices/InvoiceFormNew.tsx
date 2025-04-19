@@ -404,18 +404,34 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
       {/* Sección de notas */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Información adicional</h2>
-        <div>
-          <label className="block mb-1">Método de pago</label>
-          <select
-            {...register('paymentMethod')}
-            className="w-full p-2 border rounded mb-4"
-          >
-            <option value="">Seleccionar método de pago</option>
-            <option value="transferencia">Transferencia bancaria</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta de crédito/débito</option>
-            <option value="bizum">Bizum</option>
-          </select>
+        
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block mb-1">Estado de la factura</label>
+            <select
+              {...register('status')}
+              className="w-full p-2 border rounded"
+            >
+              <option value="pending">Pendiente de pago</option>
+              <option value="paid">Pagada</option>
+              <option value="overdue">Vencida</option>
+              <option value="canceled">Cancelada</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block mb-1">Método de pago</label>
+            <select
+              {...register('paymentMethod')}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Seleccionar método de pago</option>
+              <option value="transferencia">Transferencia bancaria</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta de crédito/débito</option>
+              <option value="bizum">Bizum</option>
+            </select>
+          </div>
         </div>
         
         <div>
@@ -434,6 +450,21 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
             className="w-full p-2 border rounded h-24"
             placeholder="Condiciones de pago, notas importantes, etc."
           />
+        </div>
+        
+        <div className="mt-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              {...register('createTransaction')}
+              className="mr-2 h-4 w-4"
+            />
+            <span>Registrar automáticamente como ingreso al guardar</span>
+          </label>
+          <p className="text-sm text-gray-500 mt-1">
+            Si marcas esta opción, se creará automáticamente una transacción de ingreso
+            cuando guardes la factura, independientemente de su estado.
+          </p>
         </div>
       </div>
     </div>

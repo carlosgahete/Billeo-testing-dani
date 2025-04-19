@@ -27,6 +27,8 @@ export default function CreateInvoicePage() {
     subtotal?: number;
     taxes?: number;
     total?: number;
+    status: string;
+    createTransaction: boolean;
   }
 
   const form = useForm<InvoiceFormValues>({
@@ -45,6 +47,8 @@ export default function CreateInvoicePage() {
       subtotal: 0,
       taxes: 0,
       total: 0,
+      status: 'pending',
+      createTransaction: false, // Por defecto no crear transacción
     },
   })
 
@@ -139,7 +143,8 @@ export default function CreateInvoicePage() {
       subtotal: String(data.subtotal || 0), // Convertir a string para el servidor
       tax: String(data.taxes || 0), // Convertir a string para el servidor
       total: String(data.total || 0), // Convertir a string para el servidor
-      status: "pending",
+      status: data.status || "pending", // Usar el estado seleccionado o "pending" por defecto
+      createTransaction: data.createTransaction || false, // Indicar si debe crear transacción
       notes: `${data.customerName} - ${data.customerNif}\n${data.customerEmail || ''}\n${data.customerAddress || ''}\n\nMétodo de pago: ${data.paymentMethod || 'No especificado'}\nCuenta: ${data.bankAccount || 'No especificada'}\n\n${data.notes || ''}`,
     };
     
