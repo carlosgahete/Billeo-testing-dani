@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useCallback } from "react";
+import { createContext, ReactNode, useContext, useCallback, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -44,12 +44,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
   
+  // Efecto para cargar los datos de la empresa al iniciar la app si el usuario está autenticado
+  useEffect(() => {
+    if (user) {
+      console.log("Usuario autenticado al iniciar, cargando datos de empresa para PDFs");
+      fetch('/api/company')
+        .then(res => {
+          if (res.ok) return res.json();
+          return null;
+        })
+        .then(companyData => {
+          if (companyData) {
+            sessionStorage.setItem('companyData', JSON.stringify(companyData));
+            console.log("Datos de empresa iniciales guardados en sessionStorage");
+          }
+        })
+        .catch(err => {
+          console.error("Error cargando datos iniciales de empresa:", err);
+        });
+    }
+  }, [user]);
+  
   // Función para refrescar manualmente los datos del usuario
   const refreshUser = useCallback(() => {
     console.log('Refrescando datos del usuario...');
     queryClient.invalidateQueries({queryKey: ["/api/user"]});
     refetch();
-  }, [refetch]);
+    
+    // También cargar datos de la empresa si el usuario está autenticado
+    if (user) {
+      fetch('/api/company')
+        .then(res => {
+          if (res.ok) return res.json();
+          return null;
+        })
+        .then(companyData => {
+          if (companyData) {
+            sessionStorage.setItem('companyData', JSON.stringify(companyData));
+            console.log("Datos de empresa actualizados en sessionStorage en refreshUser");
+          }
+        })
+        .catch(err => {
+          console.error("Error actualizando datos de empresa:", err);
+        });
+    }
+  }, [refetch, user]);
 
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
@@ -83,6 +122,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Invalidar la query para forzar una recarga fresca
       queryClient.invalidateQueries({queryKey: ["/api/user"]});
+      
+      // Cargar los datos de la empresa y guardarlos en sessionStorage para los PDFs
+      fetch('/api/company')
+        .then(res => {
+          if (res.ok) return res.json();
+          return null;
+        })
+        .then(companyData => {
+          if (companyData) {
+            // Guardar en sessionStorage para uso en generación de PDFs
+            sessionStorage.setItem('companyData', JSON.stringify(companyData));
+            console.log("Datos de empresa guardados en sessionStorage:", companyData);
+          }
+        })
+        .catch(err => {
+          console.error("Error cargando datos de empresa:", err);
+        });
       
       toast({
         title: "Inicio de sesión exitoso",
@@ -155,6 +211,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      
+      // Limpiar datos de empresa del sessionStorage al cerrar sesión
+      try {
+        sessionStorage.removeItem('companyData');
+        console.log("Datos de empresa eliminados de sessionStorage");
+      } catch (err) {
+        console.error("Error limpiando sessionStorage:", err);
+      }
+      
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente",

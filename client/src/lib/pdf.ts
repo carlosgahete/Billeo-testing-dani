@@ -399,6 +399,9 @@ export async function generateInvoicePDFAsBase64(
   companyLogo?: string | null
 ): Promise<string> {
   try {
+    // Declarar la variable companyData al principio para evitar duplicaciones
+    let companyData;
+    
     // Create a new PDF
     const doc = new jsPDF();
     
@@ -451,7 +454,7 @@ export async function generateInvoicePDFAsBase64(
     doc.setTextColor(25, 118, 210); // primary color
     
     // Usar datos de empresa desde sessionStorage o valores predeterminados
-    let companyData;
+    // Variable ya declarada al inicio de la función
     try {
       // Intentar obtener los datos de empresa almacenados en sessionStorage
       const companyJson = sessionStorage.getItem('companyData');
@@ -603,7 +606,10 @@ export async function generateInvoicePDFAsBase64(
     if (!notesHaveBankInfo) {
       doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
       notesYPosition += 6;
-      doc.text("IBAN: ES12 3456 7890 1234 5678 9012", 14, notesYPosition);
+      
+      // Usar el IBAN de los datos de empresa o valor por defecto
+      const bankAccount = companyData?.bankAccount || "ES12 3456 7890 1234 5678 9012";
+      doc.text(`IBAN: ${bankAccount}`, 14, notesYPosition);
       notesYPosition += 10;
     }
     
@@ -643,6 +649,9 @@ export async function generateQuotePDF(
   companyLogo?: string | null
 ): Promise<void | Blob | string> {
   try {
+    // Declarar la variable companyData al principio para evitar duplicaciones
+    let companyData;
+    
     // Create a new PDF
     const doc = new jsPDF();
     
@@ -696,7 +705,7 @@ export async function generateQuotePDF(
     doc.setTextColor(25, 118, 210); // primary color
     
     // Usar datos de empresa desde sessionStorage o valores predeterminados
-    let companyData;
+    // Variable ya declarada al inicio de la función
     try {
       // Intentar obtener los datos de empresa almacenados en sessionStorage
       const companyJson = sessionStorage.getItem('companyData');
