@@ -247,8 +247,19 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
 
   // Función para añadir un impuesto adicional
   const addTax = () => {
-    const currentTaxes = [...additionalTaxes]
-    setValue('additionalTaxes', [...currentTaxes, { name: 'IVA', rate: 21 }])
+    // Verificar si ya existe un impuesto con el nombre IVA
+    const hasIVA = additionalTaxes.some(tax => 
+      tax.name === 'IVA' || tax.name.toLowerCase().includes('iva')
+    );
+    
+    // Añadir un impuesto con nombre diferente si IVA ya existe
+    const newTax = hasIVA ? 
+      { name: 'IRPF', rate: -15 } : // Si IVA ya existe, añadir IRPF (-15%)
+      { name: 'IVA', rate: 21 };    // Si no, añadir IVA (21%)
+    
+    const currentTaxes = [...additionalTaxes];
+    setValue('additionalTaxes', [...currentTaxes, newTax]);
+    
     // Calcular totales inmediatamente
     setTimeout(calculateTotals, 0);
   }
