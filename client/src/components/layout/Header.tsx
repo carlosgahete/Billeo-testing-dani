@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, Bell, User } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ interface Notification {
 }
 
 const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
+  const [, navigate] = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([
     { 
       id: 1, 
@@ -79,12 +81,19 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
         </div>
 
         <div className="flex items-center">
-          <img 
-            src={billeoLogo} 
-            alt="Billeo Logo" 
-            className="h-8"
-            loading="eager"
-          />
+          <div 
+            onClick={() => navigate("/")} 
+            className="cursor-pointer transition-opacity hover:opacity-80"
+            role="button"
+            aria-label="Ir a la página de inicio"
+          >
+            <img 
+              src={billeoLogo} 
+              alt="Billeo Logo" 
+              className="h-8"
+              loading="eager"
+            />
+          </div>
         </div>
 
         <DropdownMenu>
