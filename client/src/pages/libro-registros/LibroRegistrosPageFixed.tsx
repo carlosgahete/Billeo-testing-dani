@@ -417,12 +417,46 @@ export default function LibroRegistrosPageFixed() {
       // Contenido de facturas
       let facturaY = facturaHeaderY + 7;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8); // Tamaño de letra más pequeño para caber más registros
       
       if (displayInvoices.length === 0) {
         doc.setFont('helvetica', 'italic');
         doc.text("No hay facturas en este período", margin + 5, facturaY);
       } else {
-        for (let i = 0; i < Math.min(displayInvoices.length, 5); i++) {
+        // Mostrar todas las facturas disponibles
+        for (let i = 0; i < displayInvoices.length; i++) {
+          // Añadir nueva página si es necesario
+          if (facturaY > doc.internal.pageSize.height - 20) {
+            doc.addPage();
+            facturaY = 30;
+            
+            // Repetir encabezado en nueva página
+            doc.setFillColor(28, 100, 242);
+            doc.rect(0, 0, pageWidth, 15, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text("BILLEO - LIBRO DE REGISTROS (cont.)", margin, 10);
+            
+            // Repetir cabecera de facturas
+            drawColorBox(facturaY - 15, 60, 'blue', 'FACTURAS (continuación)');
+            
+            // Regenerar cabecera de tabla
+            facturaY += 0;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.text("Número", numeroX, facturaY);
+            doc.text("Fecha", fechaX, facturaY);
+            doc.text("Cliente", clienteX, facturaY);
+            doc.text("Estado", estadoX, facturaY);
+            doc.text("Importe", importeX, facturaY, { align: 'right' });
+            
+            drawHorizontalLine(facturaY + 2, pageWidth - 2 * margin - 10);
+            facturaY += 7;
+          }
+          
           const factura = displayInvoices[i];
           // Cortar textos largos
           const clienteText = factura.clientName.length > 15 ? factura.clientName.substring(0, 12) + "..." : factura.clientName;
@@ -444,17 +478,9 @@ export default function LibroRegistrosPageFixed() {
           facturaY += 7;
           
           // Línea separadora excepto para la última
-          if (i < Math.min(displayInvoices.length, 5) - 1) {
+          if (i < displayInvoices.length - 1) {
             drawHorizontalLine(facturaY - 3.5, pageWidth - 2 * margin - 10);
           }
-        }
-        
-        // Si hay más facturas de las que se muestran
-        if (displayInvoices.length > 5) {
-          facturaY += 3;
-          doc.setFont('helvetica', 'italic');
-          doc.setFontSize(7);
-          doc.text(`... y ${displayInvoices.length - 5} facturas más`, pageWidth / 2, facturaY, { align: 'center' });
         }
       }
       
@@ -487,12 +513,45 @@ export default function LibroRegistrosPageFixed() {
       // Contenido de gastos
       let gastoY = gastoHeaderY + 7;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8); // Tamaño de letra más pequeño para caber más registros
       
       if (displayExpenses.length === 0) {
         doc.setFont('helvetica', 'italic');
         doc.text("No hay gastos en este período", margin + 5, gastoY);
       } else {
-        for (let i = 0; i < Math.min(displayExpenses.length, 5); i++) {
+        // Mostrar todos los gastos disponibles
+        for (let i = 0; i < displayExpenses.length; i++) {
+          // Añadir nueva página si es necesario
+          if (gastoY > doc.internal.pageSize.height - 20) {
+            doc.addPage();
+            gastoY = 30;
+            
+            // Repetir encabezado en nueva página
+            doc.setFillColor(28, 100, 242);
+            doc.rect(0, 0, pageWidth, 15, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text("BILLEO - LIBRO DE REGISTROS (cont.)", margin, 10);
+            
+            // Repetir cabecera de gastos
+            drawColorBox(gastoY - 15, 60, 'amber', 'GASTOS (continuación)');
+            
+            // Regenerar cabecera de tabla
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.text("Fecha", margin + 5, gastoY);
+            doc.text("Descripción", descripcionX, gastoY);
+            doc.text("Categoría", categoriaX, gastoY);
+            doc.text("Tipo", tipoX, gastoY);
+            doc.text("Importe", importeX, gastoY, { align: 'right' });
+            
+            drawHorizontalLine(gastoY + 2, pageWidth - 2 * margin - 10);
+            gastoY += 7;
+          }
+          
           const t = displayExpenses[i];
           // Limitar longitud de textos
           const descripcionText = t.description.length > 20 ? t.description.substring(0, 17) + "..." : t.description;
@@ -510,18 +569,10 @@ export default function LibroRegistrosPageFixed() {
           
           gastoY += 7;
           
-          // Líneas separadoras
-          if (i < Math.min(displayExpenses.length, 5) - 1) {
+          // Líneas separadoras excepto para la última
+          if (i < displayExpenses.length - 1) {
             drawHorizontalLine(gastoY - 3.5, pageWidth - 2 * margin - 10);
           }
-        }
-        
-        // Si hay más gastos de los que se muestran
-        if (displayExpenses.length > 5) {
-          gastoY += 3;
-          doc.setFont('helvetica', 'italic');
-          doc.setFontSize(7);
-          doc.text(`... y ${displayExpenses.length - 5} gastos más`, pageWidth / 2, gastoY, { align: 'center' });
         }
       }
       
