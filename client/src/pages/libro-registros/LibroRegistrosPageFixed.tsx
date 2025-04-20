@@ -272,109 +272,107 @@ export default function LibroRegistrosPageFixed() {
       
       {/* Filtros y botones de exportación - Rediseñados para mejor estructura */}
       <div className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Primera columna: Selector de cliente */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
-              <Users size={14} /> Cliente
-            </label>
-            <Select 
-              value={selectedUserId} 
-              onValueChange={setSelectedUserId}
-              disabled={loadingUsers}
-            >
-              <SelectTrigger className="w-full h-10">
-                <SelectValue placeholder="Seleccionar usuario" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="current">Usuario actual</SelectItem>
-                {usersList.map((userOption: UserOption) => (
-                  <SelectItem key={userOption.id} value={userOption.id.toString()}>
-                    {userOption.name || userOption.username}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Segunda columna: Rango de fechas */}
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Rango de fechas</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-xs text-gray-500 mb-1">
-                  <CalendarIcon size={12} className="inline mr-1" /> Desde
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-10 justify-start text-left font-normal",
-                        !dateRange.from && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : "Seleccionar"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateRange.from}
-                      onSelect={(date) => {
-                        setDateRange((prev: any) => ({ ...prev, from: date }));
-                        setStartDate(date ? format(date, 'yyyy-MM-dd') : null);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+        {/* Selector de cliente - Optimizado para móvil */}
+        <div className="space-y-2 mb-5">
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
+            <Users size={14} /> Cliente
+          </label>
+          <Select 
+            value={selectedUserId} 
+            onValueChange={setSelectedUserId}
+            disabled={loadingUsers}
+          >
+            <SelectTrigger className="w-full h-10">
+              <SelectValue placeholder="Seleccionar usuario" />
+            </SelectTrigger>
+            <SelectContent side="bottom" position="popper" align="start" className="max-h-[var(--radix-select-content-available-height)] overflow-y-auto w-[var(--radix-select-trigger-width)]">
+              <SelectItem value="current">Usuario actual</SelectItem>
+              {usersList.map((userOption: UserOption) => (
+                <SelectItem key={userOption.id} value={userOption.id.toString()}>
+                  {userOption.name || userOption.username}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Rango de fechas */}
+        <div className="space-y-2 mb-5">
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Rango de fechas</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-xs text-gray-500 mb-1">
+                <CalendarIcon size={12} className="inline mr-1" /> Desde
               </div>
-              
-              <div className="space-y-1">
-                <div className="text-xs text-gray-500 mb-1">
-                  <CalendarIcon size={12} className="inline mr-1" /> Hasta
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-10 justify-start text-left font-normal",
-                        !dateRange.to && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : "Seleccionar"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateRange.to}
-                      onSelect={(date) => {
-                        setDateRange((prev: any) => ({ ...prev, to: date }));
-                        setEndDate(date ? format(date, 'yyyy-MM-dd') : null);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-10 justify-start text-left font-normal",
+                      !dateRange.from && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : "Seleccionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.from}
+                    onSelect={(date) => {
+                      setDateRange((prev: any) => ({ ...prev, from: date }));
+                      setStartDate(date ? format(date, 'yyyy-MM-dd') : null);
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-xs text-gray-500 mb-1">
+                <CalendarIcon size={12} className="inline mr-1" /> Hasta
               </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-10 justify-start text-left font-normal",
+                      !dateRange.to && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : "Seleccionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.to}
+                    onSelect={(date) => {
+                      setDateRange((prev: any) => ({ ...prev, to: date }));
+                      setEndDate(date ? format(date, 'yyyy-MM-dd') : null);
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
         
         {/* Botones de exportación */}
-        <div className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3 justify-end">
           <Button variant="outline" size="sm" className="h-10">
             <FileUp className="h-4 w-4 mr-2" />
-            Exportar CSV
+            <span className="hidden sm:inline">Exportar</span> CSV
           </Button>
           <Button variant="outline" size="sm" className="h-10">
             <FileText className="h-4 w-4 mr-2" />
-            Informe PDF
+            <span className="hidden sm:inline">Informe</span> PDF
           </Button>
         </div>
       </div>
