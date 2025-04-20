@@ -20,6 +20,7 @@ import ExpensesByCategoryApple from "./ExpensesByCategoryApple";
 import ExpensesByCategory from "./ExpensesByCategory";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSimpleDashboardFilters } from "@/hooks/useSimpleDashboardFilters";
+import { useWebSocketDashboard } from "@/hooks/useWebSocketDashboard";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 import { queryClient } from "@/lib/queryClient";
 
@@ -39,9 +40,25 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
-  // Ya no necesitamos este efecto aquí porque ahora está en useDashboardData 
-  // y manejará automáticamente los eventos y la actualización de datos
-  // Si necesitamos alguna lógica específica después de detectar cambios, podemos añadirla aquí
+  // Callback para actualizar datos cuando recibimos notificación por WebSocket
+  const handleWebSocketRefresh = useCallback(() => {
+    console.log("🔄 WebSocket solicitó actualización del dashboard - refrescando datos...");
+    refetch();
+  }, [refetch]);
+  
+  // Conectarnos al WebSocket para recibir actualizaciones en tiempo real
+  const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
+  
+  // Mostrar estado de conexión en la consola
+  useEffect(() => {
+    if (isConnected) {
+      console.log("✅ Dashboard WebSocket conectado y listo para recibir actualizaciones");
+    }
+  }, [isConnected]);
+  
+  // Ya no necesitamos un efecto específico aquí porque useDashboardData 
+  // maneja automáticamente los eventos y la actualización de datos
+  // Ahora agregamos la conexión WebSocket para actualizaciones en tiempo real
   
   // Estados locales para UI
   // Importante: Usamos directamente los filtros del hook global
@@ -248,6 +265,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
         
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-2">
+          {/* Indicador de conexión WebSocket */}
+          <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
+            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+            <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
+          </div>
+          
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
           <div className="relative w-[45%] sm:w-auto">
             <button 
