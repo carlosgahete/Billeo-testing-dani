@@ -265,10 +265,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
         
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-2">
-          {/* Indicador de conexión WebSocket */}
+          {/* Indicador de conexión WebSocket - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
             <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
+          </div>
+          
+          {/* Indicador de conexión WebSocket - Versión para móvil (solo punto) */}
+          <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
+                 title={isConnected ? 'Conectado en tiempo real' : 'Desconectado'}></div>
           </div>
           
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
