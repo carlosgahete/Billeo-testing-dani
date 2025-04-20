@@ -95,10 +95,13 @@ export default function LibroRegistrosPageFixed() {
     queryKey: ['/api/libro-registros', selectedUserId, startDate, endDate],
     queryFn: async () => {
       let url = '/api/libro-registros';
+      // Si estamos en la vista de usuario actual, obtener datos de su propio userId
+      const userId = selectedUserId === 'current' ? '' : selectedUserId;
+      
       const params = new URLSearchParams();
       
-      if (selectedUserId !== 'current') {
-        params.append('userId', selectedUserId);
+      if (userId) {
+        params.append('userId', userId);
       }
       
       if (startDate) {
@@ -114,19 +117,51 @@ export default function LibroRegistrosPageFixed() {
         url += `?${queryString}`;
       }
       
+      // Primero obtenemos el usuario actual para saber su ID
+      const userResponse = await fetch('/api/user');
+      const userData = await userResponse.json();
+      
+      // Si estamos obteniendo datos del usuario actual y no se especificó un ID
+      if (selectedUserId === 'current' && userData && userData.id) {
+        // Usamos directamente el endpoint que incluye su ID
+        url = `/api/libro-registros/${userData.id}`;
+        console.log("Usando URL específica con ID:", url);
+      }
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Error al cargar datos');
       }
       
-      return response.json() as Promise<LibroRegistrosData>;
-    }
+      const responseData = await response.json() as LibroRegistrosData;
+      console.log("Datos obtenidos correctamente:", responseData);
+      return responseData;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    staleTime: 60000 // 1 minuto
   });
   
-  // Datos para mostrar
-  const displayInvoices = data?.invoices || [];
-  const displayTransactions = data?.transactions || [];
-  const displayQuotes = data?.quotes || [];
+  // Estado para manejar datos en dispositivos móviles/escritorio uniformemente
+  const [displayInvoices, setDisplayInvoices] = useState<InvoiceRecord[]>([]);
+  const [displayTransactions, setDisplayTransactions] = useState<TransactionRecord[]>([]);
+  const [displayQuotes, setDisplayQuotes] = useState<QuoteRecord[]>([]);
+  
+  // Actualizar los datos siempre que cambie la respuesta de la API
+  useEffect(() => {
+    if (data) {
+      setDisplayInvoices(data.invoices || []);
+      setDisplayTransactions(data.transactions || []);
+      setDisplayQuotes(data.quotes || []);
+      
+      // Log para debugging
+      console.log("Datos cargados en componente:", {
+        invoices: data.invoices?.length || 0,
+        transactions: data.transactions?.length || 0,
+        quotes: data.quotes?.length || 0
+      });
+    }
+  }, [data]);
   
   // Cargar usuarios para el superadmin
   useEffect(() => {
@@ -373,23 +408,24 @@ export default function LibroRegistrosPageFixed() {
           <div className="text-sm text-gray-500">{displayInvoices.length} registros</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div className="overflow-x-auto">
             {/* Título para móvil */}
             <div className="bg-blue-100 dark:bg-gray-800 py-2 px-4 border-b border-blue-200 dark:border-gray-700 sm:hidden">
-              <h3 className="text-sm font-medium text-blue-700">Facturas emitidas</h3>
+              <h3 className="text-sm font-medium text-blue-700 dark:text-blue-400">Facturas emitidas</h3>
             </div>
             
-            <div className="min-w-full">
-              <Table className="w-full table-fixed sm:table-auto">
-                <TableHeader className="hidden sm:table-header-group">
+            {/* Versión para escritorio */}
+            <div className="hidden sm:block">
+              <Table className="w-full">
+                <TableHeader>
                   <TableRow>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 w-[80px] sm:w-auto">Número</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 w-[80px] sm:w-auto">Fecha</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 hidden sm:table-cell">Cliente</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 text-right w-[70px] sm:w-auto">Base</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 hidden sm:table-cell">IVA</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 w-[70px] sm:w-auto">Total</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-blue-100 dark:bg-gray-800 text-xs text-blue-700 font-medium border-b border-blue-200 dark:border-gray-700 w-[90px] sm:w-auto">Estado</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700">Número</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700">Fecha</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700">Cliente</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700 text-right">Base</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700">IVA</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700 text-right">Total</TableHead>
+                    <TableHead className="py-3 px-4 bg-blue-100 dark:bg-gray-800 text-sm text-blue-700 dark:text-blue-400 font-medium border-b border-blue-200 dark:border-gray-700">Estado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -405,31 +441,30 @@ export default function LibroRegistrosPageFixed() {
                         key={invoice.id} 
                         className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
                       >
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm truncate sm:whitespace-normal">
-                          <span className="inline sm:hidden text-gray-500 mr-1 text-[10px]">Nº:</span>
+                        <TableCell className="py-3 px-4 text-sm">
                           {invoice.number}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm">
                           {formatDate(invoice.date)}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">
+                        <TableCell className="py-3 px-4 text-sm">
                           {invoice.clientName}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm text-right truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm text-right">
                           {formatCurrency(parseFloat(invoice.subtotal))}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm text-right hidden sm:table-cell">
+                        <TableCell className="py-3 px-4 text-sm">
                           {formatCurrency(parseFloat(invoice.tax))}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm font-medium text-right truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm font-medium text-right">
                           {formatCurrency(parseFloat(invoice.total))}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4">
+                        <TableCell className="py-3 px-4">
                           <Badge 
                             className={`${
                               invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
                               "bg-gray-100 text-gray-800 hover:bg-gray-100 border border-gray-200"
-                            } px-2 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-medium shadow-sm max-w-[80px] sm:max-w-none truncate`}
+                            } px-3 py-1 rounded-full text-xs font-medium shadow-sm`}
                           >
                             {invoice.status === 'paid' ? 'Pagada' : invoice.status}
                           </Badge>
@@ -439,6 +474,53 @@ export default function LibroRegistrosPageFixed() {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            
+            {/* Versión para móvil: tarjetas en lugar de tabla */}
+            <div className="sm:hidden">
+              {displayInvoices.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">
+                  No hay facturas en este período
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {displayInvoices.map((invoice) => (
+                    <div key={invoice.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-sm font-medium">{invoice.number}</div>
+                          <div className="text-xs text-gray-500 mt-1">{formatDate(invoice.date)}</div>
+                        </div>
+                        <Badge 
+                          className={`${
+                            invoice.status === 'paid' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
+                            "bg-gray-100 text-gray-800 hover:bg-gray-100 border border-gray-200"
+                          } px-2 py-0.5 rounded-full text-xs font-medium shadow-sm`}
+                        >
+                          {invoice.status === 'paid' ? 'Pagada' : invoice.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-xs mt-1 text-gray-600">{invoice.clientName}</div>
+                      
+                      <div className="grid grid-cols-3 gap-2 mt-2 text-sm">
+                        <div>
+                          <div className="text-xs text-gray-500">Base</div>
+                          <div className="font-medium">{formatCurrency(parseFloat(invoice.subtotal))}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">IVA</div>
+                          <div className="font-medium">{formatCurrency(parseFloat(invoice.tax))}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Total</div>
+                          <div className="font-medium text-blue-700">{formatCurrency(parseFloat(invoice.total))}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -451,21 +533,22 @@ export default function LibroRegistrosPageFixed() {
           <div className="text-sm text-gray-500">{displayTransactions.length} registros</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div className="overflow-x-auto">
             {/* Título para móvil */}
             <div className="bg-amber-100 dark:bg-gray-800 py-2 px-4 border-b border-amber-200 dark:border-gray-700 sm:hidden">
-              <h3 className="text-sm font-medium text-amber-700">Gastos y transacciones</h3>
+              <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400">Gastos y transacciones</h3>
             </div>
             
-            <div className="min-w-full">
-              <Table className="w-full table-fixed sm:table-auto">
-                <TableHeader className="hidden sm:table-header-group">
+            {/* Versión para escritorio */}
+            <div className="hidden sm:block">
+              <Table className="w-full">
+                <TableHeader>
                   <TableRow>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-amber-100 dark:bg-gray-800 text-xs text-amber-700 font-medium border-b border-amber-200 dark:border-gray-700 w-[80px] sm:w-auto">Fecha</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-amber-100 dark:bg-gray-800 text-xs text-amber-700 font-medium border-b border-amber-200 dark:border-gray-700">Descripción</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-amber-100 dark:bg-gray-800 text-xs text-amber-700 font-medium border-b border-amber-200 dark:border-gray-700 hidden sm:table-cell">Categoría</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-amber-100 dark:bg-gray-800 text-xs text-amber-700 font-medium border-b border-amber-200 dark:border-gray-700 w-[70px] sm:w-auto">Tipo</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-amber-100 dark:bg-gray-800 text-xs text-amber-700 font-medium border-b border-amber-200 dark:border-gray-700 w-[80px] sm:w-auto">Importe</TableHead>
+                    <TableHead className="py-3 px-4 bg-amber-100 dark:bg-gray-800 text-sm text-amber-700 dark:text-amber-400 font-medium border-b border-amber-200 dark:border-gray-700">Fecha</TableHead>
+                    <TableHead className="py-3 px-4 bg-amber-100 dark:bg-gray-800 text-sm text-amber-700 dark:text-amber-400 font-medium border-b border-amber-200 dark:border-gray-700">Descripción</TableHead>
+                    <TableHead className="py-3 px-4 bg-amber-100 dark:bg-gray-800 text-sm text-amber-700 dark:text-amber-400 font-medium border-b border-amber-200 dark:border-gray-700">Categoría</TableHead>
+                    <TableHead className="py-3 px-4 bg-amber-100 dark:bg-gray-800 text-sm text-amber-700 dark:text-amber-400 font-medium border-b border-amber-200 dark:border-gray-700">Tipo</TableHead>
+                    <TableHead className="py-3 px-4 bg-amber-100 dark:bg-gray-800 text-sm text-amber-700 dark:text-amber-400 font-medium border-b border-amber-200 dark:border-gray-700 text-right">Importe</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -481,24 +564,24 @@ export default function LibroRegistrosPageFixed() {
                         key={transaction.id} 
                         className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
                       >
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm">
                           {formatDate(transaction.date)}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm">
                           {transaction.description}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">
+                        <TableCell className="py-3 px-4 text-sm">
                           {transaction.category || '-'}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4">
+                        <TableCell className="py-3 px-4">
                           <Badge className={`${
                             transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
                             "bg-red-100 text-red-800 hover:bg-red-100 border border-red-200"
-                          } px-2 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-medium shadow-sm max-w-[80px] sm:max-w-none truncate`}>
+                          } px-3 py-1 rounded-full text-xs font-medium shadow-sm`}>
                             {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                           </Badge>
                         </TableCell>
-                        <TableCell className={`py-2 px-2 sm:px-4 text-xs sm:text-sm font-medium truncate sm:whitespace-normal ${transaction.type === 'expense' ? "text-red-600" : ""}`}>
+                        <TableCell className={`py-3 px-4 text-sm font-medium text-right ${transaction.type === 'expense' ? "text-red-600" : ""}`}>
                           {formatCurrency(parseFloat(transaction.amount))}
                         </TableCell>
                       </TableRow>
@@ -506,6 +589,42 @@ export default function LibroRegistrosPageFixed() {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            
+            {/* Versión para móvil: tarjetas en lugar de tabla */}
+            <div className="sm:hidden">
+              {displayTransactions.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">
+                  No hay transacciones en este período
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {displayTransactions.map((transaction) => (
+                    <div key={transaction.id} className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="text-xs text-gray-500">{formatDate(transaction.date)}</div>
+                        <Badge className={`${
+                          transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
+                          "bg-red-100 text-red-800 hover:bg-red-100 border border-red-200"
+                        } px-2 py-0.5 rounded-full text-xs font-medium shadow-sm`}>
+                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-sm font-medium mb-1">{transaction.description}</div>
+                      
+                      <div className="flex justify-between items-end">
+                        <div className="text-xs text-gray-500">
+                          {transaction.category || 'Sin categoría'}
+                        </div>
+                        <div className={`text-sm font-medium ${transaction.type === 'expense' ? "text-red-600" : "text-green-600"}`}>
+                          {formatCurrency(parseFloat(transaction.amount))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -518,21 +637,22 @@ export default function LibroRegistrosPageFixed() {
           <div className="text-sm text-gray-500">{displayQuotes.length} registros</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div className="overflow-x-auto">
             {/* Título para móvil */}
-            <div className="bg-green-100 dark:bg-gray-800 py-2 px-4 border-b border-green-200 dark:border-gray-700 sm:hidden">
-              <h3 className="text-sm font-medium text-green-700">Presupuestos</h3>
+            <div className="bg-purple-100 dark:bg-gray-800 py-2 px-4 border-b border-purple-200 dark:border-gray-700 sm:hidden">
+              <h3 className="text-sm font-medium text-purple-700 dark:text-purple-400">Presupuestos</h3>
             </div>
             
-            <div className="min-w-full">
-              <Table className="w-full table-fixed sm:table-auto">
-                <TableHeader className="hidden sm:table-header-group">
+            {/* Versión para escritorio */}
+            <div className="hidden sm:block">
+              <Table className="w-full">
+                <TableHeader>
                   <TableRow>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-green-100 dark:bg-gray-800 text-xs text-green-700 font-medium border-b border-green-200 dark:border-gray-700 w-[80px] sm:w-auto">Número</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-green-100 dark:bg-gray-800 text-xs text-green-700 font-medium border-b border-green-200 dark:border-gray-700 w-[80px] sm:w-auto">Fecha</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-green-100 dark:bg-gray-800 text-xs text-green-700 font-medium border-b border-green-200 dark:border-gray-700 hidden sm:table-cell">Cliente</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-green-100 dark:bg-gray-800 text-xs text-green-700 font-medium border-b border-green-200 dark:border-gray-700 w-[80px] sm:w-auto">Total</TableHead>
-                    <TableHead className="py-2 px-2 sm:px-4 bg-green-100 dark:bg-gray-800 text-xs text-green-700 font-medium border-b border-green-200 dark:border-gray-700 w-[90px] sm:w-auto">Estado</TableHead>
+                    <TableHead className="py-3 px-4 bg-purple-100 dark:bg-gray-800 text-sm text-purple-700 dark:text-purple-400 font-medium border-b border-purple-200 dark:border-gray-700">Número</TableHead>
+                    <TableHead className="py-3 px-4 bg-purple-100 dark:bg-gray-800 text-sm text-purple-700 dark:text-purple-400 font-medium border-b border-purple-200 dark:border-gray-700">Fecha</TableHead>
+                    <TableHead className="py-3 px-4 bg-purple-100 dark:bg-gray-800 text-sm text-purple-700 dark:text-purple-400 font-medium border-b border-purple-200 dark:border-gray-700">Cliente</TableHead>
+                    <TableHead className="py-3 px-4 bg-purple-100 dark:bg-gray-800 text-sm text-purple-700 dark:text-purple-400 font-medium border-b border-purple-200 dark:border-gray-700 text-right">Total</TableHead>
+                    <TableHead className="py-3 px-4 bg-purple-100 dark:bg-gray-800 text-sm text-purple-700 dark:text-purple-400 font-medium border-b border-purple-200 dark:border-gray-700">Estado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -548,26 +668,25 @@ export default function LibroRegistrosPageFixed() {
                         key={quote.id} 
                         className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/10"
                       >
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm truncate sm:whitespace-normal">
-                          <span className="inline sm:hidden text-gray-500 mr-1 text-[10px]">Nº:</span>
+                        <TableCell className="py-3 px-4 text-sm">
                           {quote.number}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm">
                           {formatDate(quote.date)}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">
+                        <TableCell className="py-3 px-4 text-sm">
                           {quote.clientName}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4 text-xs sm:text-sm font-medium truncate sm:whitespace-normal">
+                        <TableCell className="py-3 px-4 text-sm font-medium text-right">
                           {formatCurrency(parseFloat(quote.total))}
                         </TableCell>
-                        <TableCell className="py-2 px-2 sm:px-4">
+                        <TableCell className="py-3 px-4">
                           <Badge 
                             className={`${
                               quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
                               quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100 border border-red-200" : 
                               "bg-gray-100 text-gray-800 hover:bg-gray-100 border border-gray-200"
-                            } px-2 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-medium shadow-sm max-w-[80px] sm:max-w-none truncate`}
+                            } px-3 py-1 rounded-full text-xs font-medium shadow-sm`}
                           >
                             {quote.status === 'accepted' ? 'Aceptado' : 
                              quote.status === 'rejected' ? 'Rechazado' : 
@@ -579,6 +698,47 @@ export default function LibroRegistrosPageFixed() {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            
+            {/* Versión para móvil: tarjetas en lugar de tabla */}
+            <div className="sm:hidden">
+              {displayQuotes.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">
+                  No hay presupuestos en este período
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {displayQuotes.map((quote) => (
+                    <div key={quote.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-sm font-medium">{quote.number}</div>
+                          <div className="text-xs text-gray-500 mt-1">{formatDate(quote.date)}</div>
+                        </div>
+                        <Badge 
+                          className={`${
+                            quote.status === 'accepted' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
+                            quote.status === 'rejected' ? "bg-red-100 text-red-800 hover:bg-red-100 border border-red-200" : 
+                            "bg-gray-100 text-gray-800 hover:bg-gray-100 border border-gray-200"
+                          } px-2 py-0.5 rounded-full text-xs font-medium shadow-sm`}
+                        >
+                          {quote.status === 'accepted' ? 'Aceptado' : 
+                           quote.status === 'rejected' ? 'Rechazado' : 
+                           quote.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-xs mt-1 text-gray-600">{quote.clientName}</div>
+                      
+                      <div className="flex justify-end mt-2">
+                        <div className="text-sm font-medium text-purple-700">
+                          {formatCurrency(parseFloat(quote.total))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
