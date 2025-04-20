@@ -530,8 +530,35 @@ export default function LibroRegistrosPageFixed() {
       doc.setTextColor(150, 150, 150);
       doc.text(`Billeo - Generado ${formatDate(new Date().toISOString())}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
       
-      // Guardar documento
-      doc.save(`Billeo-Libro-Registros${dateRange.from ? '-desde-' + format(dateRange.from, "ddMMyyyy") : ''}${dateRange.to ? '-hasta-' + format(dateRange.to, "ddMMyyyy") : ''}.pdf`);
+      // Guardar documento utilizando una técnica compatible con dispositivos móviles
+      try {
+        // Generar el PDF como blob
+        const pdfBlob = doc.output('blob');
+        
+        // Crear una URL temporal para el blob
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        
+        // Crear un elemento de enlace para la descarga
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `Billeo-Libro-Registros${dateRange.from ? '-desde-' + format(dateRange.from, "ddMMyyyy") : ''}${dateRange.to ? '-hasta-' + format(dateRange.to, "ddMMyyyy") : ''}.pdf`;
+        link.style.display = 'none';
+        
+        // Añadir el enlace al DOM
+        document.body.appendChild(link);
+        
+        // Simular un clic en el enlace para iniciar la descarga
+        link.click();
+        
+        // Eliminar el enlace y liberar la URL
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+      } catch (downloadError) {
+        console.error("Error específico en la descarga:", downloadError);
+        throw new Error("Error al descargar el PDF");
+      }
       
       toast({
         title: "Éxito",
@@ -614,14 +641,33 @@ export default function LibroRegistrosPageFixed() {
         });
       }
       
-      // Codificar y descargar
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Billeo-Libro-Registros${dateRange.from ? '-desde-' + format(dateRange.from, "ddMMyyyy") : ''}${dateRange.to ? '-hasta-' + format(dateRange.to, "ddMMyyyy") : ''}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Codificar y descargar con manejo mejorado para dispositivos móviles
+      try {
+        // Crear un Blob con el contenido CSV
+        const blob = new Blob([csvContent.substring(22)], { type: 'text/csv;charset=utf-8;' });
+        
+        // Crear URL para el blob
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // Crear un enlace de descarga
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.style.display = "none";
+        link.download = `Billeo-Libro-Registros${dateRange.from ? '-desde-' + format(dateRange.from, "ddMMyyyy") : ''}${dateRange.to ? '-hasta-' + format(dateRange.to, "ddMMyyyy") : ''}.csv`;
+        
+        // Añadir al DOM, clicar y luego eliminar
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpiar después de un breve retraso
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+      } catch (downloadError) {
+        console.error("Error específico en la descarga del CSV:", downloadError);
+        throw new Error("Error al descargar el archivo CSV");
+      }
       
       toast({
         title: "Éxito",
