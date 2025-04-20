@@ -151,7 +151,7 @@ const TaxRow = ({
         <div className="col-span-8">
           <input
             {...register(`additionalTaxes.${index}.name`)}
-            placeholder="Nombre del impuesto (ej. IVA, IRPF)"
+            placeholder="Ej: IVA, IRPF, Retención, etc."
             className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors"
             onKeyDown={handleKeyDown}
             onChange={handleChange}
@@ -162,7 +162,7 @@ const TaxRow = ({
             <input
               {...register(`additionalTaxes.${index}.rate`)}
               type="number"
-              placeholder="Porcentaje"
+              placeholder="Positivo o negativo (ej: 21, -15)"
               className="w-full px-3 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors"
               onKeyDown={handleKeyDown}
               onChange={(e) => {
@@ -247,18 +247,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
 
   // Función para añadir un impuesto adicional
   const addTax = () => {
-    // Verificar si ya existe un impuesto con el nombre IVA
-    const hasIVA = additionalTaxes.some(tax => 
-      tax.name === 'IVA' || tax.name.toLowerCase().includes('iva')
-    );
-    
-    // Añadir un impuesto con nombre diferente si IVA ya existe
-    const newTax = hasIVA ? 
-      { name: 'IRPF', rate: -15 } : // Si IVA ya existe, añadir IRPF (-15%)
-      { name: 'IVA', rate: 21 };    // Si no, añadir IVA (21%)
-    
     const currentTaxes = [...additionalTaxes];
-    setValue('additionalTaxes', [...currentTaxes, newTax]);
+    setValue('additionalTaxes', [...currentTaxes, { name: '', rate: 0 }]);
     
     // Calcular totales inmediatamente
     setTimeout(calculateTotals, 0);
