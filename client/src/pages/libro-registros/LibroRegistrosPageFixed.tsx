@@ -82,16 +82,91 @@ interface UserOption {
 }
 
 export default function LibroRegistrosPageFixed() {
-  // Estado y funciones simuladas para que compile
+  // Estado para filtros y datos
   const [selectedUserId, setSelectedUserId] = useState<string>('current');
   const [dateRange, setDateRange] = useState<any>({ from: null, to: null });
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [displayInvoices, setDisplayInvoices] = useState<InvoiceRecord[]>([]);
-  const [displayTransactions, setDisplayTransactions] = useState<TransactionRecord[]>([]);
-  const [displayQuotes, setDisplayQuotes] = useState<QuoteRecord[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [usersList, setUsersList] = useState<UserOption[]>([]);
+  
+  // Consulta para obtener los datos
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/libro-registros', selectedUserId, startDate, endDate],
+    queryFn: async () => {
+      let url = '/api/libro-registros';
+      const params = new URLSearchParams();
+      
+      if (selectedUserId !== 'current') {
+        params.append('userId', selectedUserId);
+      }
+      
+      if (startDate) {
+        params.append('startDate', startDate);
+      }
+      
+      if (endDate) {
+        params.append('endDate', endDate);
+      }
+      
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Error al cargar datos');
+      }
+      
+      return response.json() as Promise<LibroRegistrosData>;
+    }
+  });
+  
+  // Datos para mostrar
+  const displayInvoices = data?.invoices || [];
+  const displayTransactions = data?.transactions || [];
+  const displayQuotes = data?.quotes || [];
+  
+  // Cargar usuarios para el superadmin
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoadingUsers(true);
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const data = await response.json();
+          setUsersList(data);
+        }
+      } catch (error) {
+        console.error("Error al cargar usuarios", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los usuarios",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    
+    // Solo cargar usuarios si el usuario actual es superadmin
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData.role === 'superadmin') {
+            fetchUsers();
+          }
+        }
+      } catch (error) {
+        console.error("Error al verificar rol", error);
+      }
+    };
+    
+    checkUserRole();
+  }, []);
 
   // Funciones de utilidad
   const formatDate = (dateString: string) => {
@@ -222,6 +297,7 @@ export default function LibroRegistrosPageFixed() {
       
       {/* Paneles de resumen */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Panel de facturas */}
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 flex items-center">
             <FileText className="h-5 w-5 text-white mr-2" />
@@ -233,6 +309,54 @@ export default function LibroRegistrosPageFixed() {
             </div>
             <div className="text-gray-500 text-sm">
               Facturas en el período seleccionado
+            </div>
+          </div>
+        </div>
+
+        {/* Panel de gastos */}
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 flex items-center">
+            <FileText className="h-5 w-5 text-white mr-2" />
+            <h3 className="text-white font-medium">Gastos</h3>
+          </div>
+          <div className="p-4">
+            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+              {displayTransactions.length}
+            </div>
+            <div className="text-gray-500 text-sm">
+              Gastos en el período seleccionado
+            </div>
+          </div>
+        </div>
+
+        {/* Panel de presupuestos */}
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-3 flex items-center">
+            <FileText className="h-5 w-5 text-white mr-2" />
+            <h3 className="text-white font-medium">Presupuestos</h3>
+          </div>
+          <div className="p-4">
+            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+              {displayQuotes.length}
+            </div>
+            <div className="text-gray-500 text-sm">
+              Presupuestos en el período seleccionado
+            </div>
+          </div>
+        </div>
+
+        {/* Panel de balance */}
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 flex items-center">
+            <FileText className="h-5 w-5 text-white mr-2" />
+            <h3 className="text-white font-medium">Balance</h3>
+          </div>
+          <div className="p-4">
+            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+              {data?.summary ? formatCurrency(data.summary.balance) : "€0.00"}
+            </div>
+            <div className="text-gray-500 text-sm">
+              Balance neto en el período
             </div>
           </div>
         </div>
