@@ -90,44 +90,68 @@ export default function LibroRegistrosPageFixed() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [usersList, setUsersList] = useState<UserOption[]>([]);
   
+  // Referencia al usuario actual para asegurar su ID siempre esté disponible
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  
+  // Cargar el ID del usuario actual una sola vez
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userResponse = await fetch('/api/user');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData && userData.id) {
+            console.log("ID de usuario actual obtenido:", userData.id);
+            setCurrentUserId(userData.id);
+          }
+        }
+      } catch (error) {
+        console.error("Error al obtener usuario actual:", error);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+  
   // Consulta para obtener los datos
   const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/libro-registros', selectedUserId, startDate, endDate],
+    queryKey: ['/api/libro-registros', selectedUserId, startDate, endDate, currentUserId],
     queryFn: async () => {
-      let url = '/api/libro-registros';
-      // Si estamos en la vista de usuario actual, obtener datos de su propio userId
-      const userId = selectedUserId === 'current' ? '' : selectedUserId;
+      // Si no tenemos el ID del usuario actual, esperar
+      if (selectedUserId === 'current' && !currentUserId) {
+        throw new Error('Esperando ID de usuario');
+      }
       
+      // Determinar la URL base
+      let url;
+      
+      // Cuando es usuario actual o se selecciona específicamente un ID
+      if (selectedUserId === 'current' && currentUserId) {
+        // Uso directo del endpoint con ID para usuario actual
+        url = `/api/libro-registros/${currentUserId}`;
+        console.log("Usando URL específica con ID usuario actual:", url);
+      } else if (selectedUserId !== 'current') {
+        // Uso directo del endpoint con ID para otro usuario
+        url = `/api/libro-registros/${selectedUserId}`;
+        console.log("Usando URL específica con ID seleccionado:", url);
+      } else {
+        // Fallback a la URL general (no debería ocurrir)
+        url = '/api/libro-registros';
+        console.log("Usando URL general (fallback):", url);
+      }
+      
+      // Añadir parámetros de fecha si existen
       const params = new URLSearchParams();
-      
-      if (userId) {
-        params.append('userId', userId);
-      }
-      
-      if (startDate) {
-        params.append('startDate', startDate);
-      }
-      
-      if (endDate) {
-        params.append('endDate', endDate);
-      }
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
       
       const queryString = params.toString();
       if (queryString) {
         url += `?${queryString}`;
       }
       
-      // Primero obtenemos el usuario actual para saber su ID
-      const userResponse = await fetch('/api/user');
-      const userData = await userResponse.json();
-      
-      // Si estamos obteniendo datos del usuario actual y no se especificó un ID
-      if (selectedUserId === 'current' && userData && userData.id) {
-        // Usamos directamente el endpoint que incluye su ID
-        url = `/api/libro-registros/${userData.id}`;
-        console.log("Usando URL específica con ID:", url);
-      }
-      
+      // Realizar la petición HTTP
+      console.log("URL final para petición:", url);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Error al cargar datos');
@@ -135,11 +159,20 @@ export default function LibroRegistrosPageFixed() {
       
       const responseData = await response.json() as LibroRegistrosData;
       console.log("Datos obtenidos correctamente:", responseData);
+      console.log("Facturas:", responseData.invoices?.length || 0);
+      console.log("Transacciones:", responseData.transactions?.length || 0);
+      console.log("Presupuestos:", responseData.quotes?.length || 0);
+      
       return responseData;
     },
+    // No recargar automáticamente para evitar doble carga
     refetchOnWindowFocus: false,
+    // Recargar siempre al montar el componente
     refetchOnMount: true,
-    staleTime: 60000 // 1 minuto
+    // Refrescar solo si cambia el usuario actual
+    enabled: selectedUserId === 'current' ? !!currentUserId : true,
+    // Mantener datos frescos por 1 minuto
+    staleTime: 60000
   });
   
   // Estado para manejar datos en dispositivos móviles/escritorio uniformemente
