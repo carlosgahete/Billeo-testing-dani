@@ -6,10 +6,13 @@ import { useLocation } from 'wouter'
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { calculateInvoice } from '@/components/invoices/invoiceEngine'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { FileText, ChevronLeft, Save, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function CreateInvoicePage() {
   const [, navigate] = useLocation();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Definir el tipo de datos del formulario
   type InvoiceFormValues = {
@@ -122,24 +125,27 @@ export default function CreateInvoicePage() {
     },
     onSuccess: (data: any) => {
       // Personalizar el mensaje de éxito según si se creó una transacción o no
-      let successMessage = "Factura creada correctamente";
+      let message = "Factura creada correctamente";
       
       // Si el servidor nos dice que se creó una transacción automáticamente
       if (data && data.transaction) {
-        successMessage += "\nSe ha creado automáticamente una transacción de ingreso por " + 
+        message += "\nSe ha creado automáticamente una transacción de ingreso por " + 
           (typeof data.transaction.amount === 'string' ? data.transaction.amount : data.transaction.amount.toFixed(2)) + 
           "€";
       }
       // Si la factura se marcó como pagada pero no hay transacción
       else if (data && data.invoice && data.invoice.status === 'paid') {
-        successMessage += "\nLa factura ha sido marcada como pagada";
+        message += "\nLa factura ha sido marcada como pagada";
       }
       
-      // Mostrar mensaje de éxito
-      alert(successMessage);
+      // Mostrar mensaje de éxito usando el estado
+      setSuccessMessage(message);
+      setShowSuccess(true);
       
-      // Navegar a la lista de facturas después de crear exitosamente
-      navigate("/invoices");
+      // Navegar a la lista de facturas después de un breve retraso
+      setTimeout(() => {
+        navigate("/invoices");
+      }, 2000);
     },
     onError: (error: any) => {
       console.error("Error al crear la factura:", error);
@@ -191,26 +197,89 @@ export default function CreateInvoicePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Crear Factura</h1>
+    <div className="relative max-w-5xl mx-auto px-4 py-6 bg-[#f5f7fb]">
+      {/* Header con diseño estilo Apple */}
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center">
+          <button
+            type="button"
+            onClick={() => navigate("/invoices")}
+            className="mr-4 p-2 rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
+            aria-label="Volver"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-medium text-gray-900 flex items-center">
+            <FileText className="mr-3 h-6 w-6 text-blue-500" strokeWidth={1.5} />
+            Nueva Factura
+          </h1>
+        </div>
+        
         <button
           type="button"
-          onClick={() => navigate("/invoices")}
-          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+          onClick={handleSubmit(onSubmit)}
+          disabled={invoiceMutation.isPending}
+          className={`
+            inline-flex items-center px-5 py-2.5 rounded-xl font-medium shadow-sm text-white
+            ${invoiceMutation.isPending ? 
+              'bg-blue-400 cursor-not-allowed' : 
+              'bg-blue-500 hover:bg-blue-600 active:bg-blue-700'
+            }
+            transition-all duration-200 ease-in-out
+          `}
         >
-          Volver
+          {invoiceMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Guardando...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Guardar factura
+            </>
+          )}
         </button>
       </div>
       
-      <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Notificación de éxito estilo Apple */}
+      {showSuccess && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm border border-gray-100 px-4 py-3 rounded-xl shadow-lg">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <p className="text-gray-800">{successMessage}</p>
+          </div>
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <InvoiceFormNew form={form} onCalculate={updateCalculations} />
-        <div className="mt-6 flex justify-end">
+        
+        {/* Botón fijo inferior en móviles */}
+        <div className="sticky bottom-0 left-0 right-0 mt-8 py-4 px-4 bg-white/90 backdrop-blur-sm rounded-t-xl shadow-[0_-1px_3px_rgba(0,0,0,0.1)] md:hidden">
           <button
             type="submit"
-            className="bg-[#329FAD] hover:bg-[#2b8b96] text-white px-6 py-2 rounded-md"
+            disabled={invoiceMutation.isPending}
+            className={`
+              w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-medium text-white
+              ${invoiceMutation.isPending ? 
+                'bg-blue-400 cursor-not-allowed' : 
+                'bg-blue-500 hover:bg-blue-600 active:bg-blue-700'
+              }
+              transition-all duration-200 ease-in-out
+            `}
           >
-            Guardar factura
+            {invoiceMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Guardar factura
+              </>
+            )}
           </button>
         </div>
       </form>
