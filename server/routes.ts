@@ -4322,6 +4322,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // El servidor WebSocket ya está configurado anteriormente en el código
+  console.log('Usando servidor WebSocket existente para actualizaciones del dashboard');
+  
   return httpServer;
 }
 // Nueva implementación simplificada del endpoint de dashboard
