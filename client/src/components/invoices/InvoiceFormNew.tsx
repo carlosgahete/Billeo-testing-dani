@@ -3,6 +3,17 @@ import { UseFormReturn } from 'react-hook-form'
 import { calculateInvoice } from './invoiceEngine'
 import { Plus, Minus, X, ArrowRight, Euro, CalendarDays, FileText, Receipt, CreditCard, BanknoteIcon, Trash2 } from 'lucide-react'
 
+interface InvoiceItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+interface TaxItem {
+  name: string;
+  rate: number;
+}
+
 interface InvoiceFormProps {
   form: UseFormReturn<any>;
   onCalculate?: () => void;
@@ -370,7 +381,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
               <div className="col-span-3">Precio</div>
             </div>
             
-            {items.map((_, index: number) => (
+            {items.map((_: any, index: number) => (
               <ItemRow
                 key={index}
                 index={index}
@@ -420,7 +431,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
                   <div className="col-span-4">Porcentaje</div>
                 </div>
                 
-                {additionalTaxes.map((_, index) => (
+                {additionalTaxes.map((_: any, index: number) => (
                   <TaxRow
                     key={index}
                     index={index}
@@ -463,7 +474,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
             {/* Desglose de impuestos por nombre - solo si hay impuestos definidos */}
             {additionalTaxes.length > 0 && (
               <>
-                {additionalTaxes.map((tax, index) => (
+                {additionalTaxes.map((tax: { name: string; rate: number }, index: number) => (
                   <React.Fragment key={index}>
                     <div className="text-gray-500 text-sm">
                       {tax.name || 'Impuesto'} ({tax.rate}%):
