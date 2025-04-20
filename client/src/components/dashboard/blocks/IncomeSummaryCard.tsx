@@ -36,8 +36,9 @@ const IncomeSummaryCard: React.FC<IncomeSummaryCardProps> = ({ data, isLoading }
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', { 
       minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
-    }).format(value / 100);
+      maximumFractionDigits: 2,
+      useGrouping: true
+    }).format(value);
   };
   
   return (
