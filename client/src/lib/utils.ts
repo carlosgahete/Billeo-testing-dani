@@ -18,6 +18,7 @@ export function formatCurrency(value: number | undefined | null) {
     style: 'currency',
     currency: 'EUR',
     maximumFractionDigits: 2,
-    minimumFractionDigits: 2
+    minimumFractionDigits: 2,
+    useGrouping: true
   }).format(safeValue);
 }

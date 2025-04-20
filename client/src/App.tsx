@@ -273,6 +273,11 @@ function Router() {
         </Layout>
       </Route>
       
+      {/* Ruta para prueba de formateo de números */}
+      <Route path="/test-format">
+        <TestFormat />
+      </Route>
+      
       <Route path="*" component={NotFound} />
     </Switch>
   );
