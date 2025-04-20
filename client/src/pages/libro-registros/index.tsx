@@ -1,3 +1,3 @@
-import LibroRegistrosPage from "./LibroRegistrosPage";
+import LibroRegistrosPageFixed from "./LibroRegistrosPageFixed";
 
-export default LibroRegistrosPage;
+export default LibroRegistrosPageFixed;
