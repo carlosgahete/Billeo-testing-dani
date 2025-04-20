@@ -8,6 +8,11 @@ import { requireAuth, requireAdmin } from './auth-middleware';
 import testEmailRoutes from './test-email';
 import { WebSocketServer, WebSocket } from 'ws';
 
+// Declaración de tipos globales para WebSocket
+declare global {
+  var notifyDashboardUpdate: (type: string, data?: any) => void;
+}
+
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
   interface SessionData {
@@ -1096,6 +1101,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Create HTTP server
   const httpServer = createServer(app);
+
+  // Configurar servidor WebSocket para actualizaciones en tiempo real
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Almacenar conexiones activas
+  const clients = new Set<WebSocket>();
+  
+  wss.on('connection', (ws) => {
+    console.log('Nueva conexión WebSocket establecida');
+    
+    // Añadir cliente a la lista de conexiones activas
+    clients.add(ws);
+    
+    // Eliminar la conexión cuando se cierra
+    ws.on('close', () => {
+      console.log('Conexión WebSocket cerrada');
+      clients.delete(ws);
+    });
+    
+    // Opcional: Manejar mensajes entrantes del cliente
+    ws.on('message', (message) => {
+      console.log('Mensaje recibido:', message.toString());
+    });
+    
+    // Enviar un mensaje inicial para confirmar la conexión
+    ws.send(JSON.stringify({
+      type: 'connection',
+      message: 'Conexión WebSocket establecida con éxito'
+    }));
+  });
+  
+  // Función global para notificar a todos los clientes
+  global.notifyDashboardUpdate = (type: string, data?: any) => {
+    const message = JSON.stringify({
+      type,
+      timestamp: new Date().toISOString(),
+      data
+    });
+    
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+    console.log(`WebSocket: Notificación enviada (${type}) a ${clients.size} clientes`);
+  };
 
   // Auth routes are now handled by the setupAuth function
 
@@ -2904,6 +2955,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Intentar crear directamente la transacción sin validación Zod
         const newTransaction = await storage.createTransaction(transactionData);
         console.log("Transacción creada exitosamente:", JSON.stringify(newTransaction, null, 2));
+        
+        // Notificar a todos los clientes conectados por WebSocket
+        if (global.notifyDashboardUpdate) {
+          global.notifyDashboardUpdate('transaction-created', {
+            id: newTransaction.id,
+            type: newTransaction.type,
+            amount: newTransaction.amount,
+            date: newTransaction.date
+          });
+          console.log("Notificación WebSocket enviada para actualización de dashboard (nueva transacción)");
+        }
+        
         return res.status(201).json(newTransaction);
       } catch (storageError) {
         console.error("Error al guardar en storage:", storageError);
@@ -2972,6 +3035,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!updatedTransaction) {
         return res.status(404).json({ message: "Failed to update transaction" });
+      }
+      
+      // Notificar a todos los clientes conectados por WebSocket
+      if (global.notifyDashboardUpdate) {
+        global.notifyDashboardUpdate('transaction-updated', {
+          id: updatedTransaction.id,
+          type: updatedTransaction.type,
+          amount: updatedTransaction.amount,
+          date: updatedTransaction.date
+        });
+        console.log("Notificación WebSocket enviada para actualización de dashboard (transacción actualizada)");
       }
       
       return res.status(200).json(updatedTransaction);
