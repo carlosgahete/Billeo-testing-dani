@@ -29,30 +29,16 @@ export async function comparePasswords(supplied: string, stored: string) {
     if (stored.startsWith('$2a$') || stored.startsWith('$2b$')) {
       console.log("Contraseña en formato bcrypt detectada");
       
-      // Para usuario demo con contraseña 'demo'
-      if (stored === '$2a$10$w0XTw9GkO9Sqd6mE88BfCe83pDdvE.8iWwLcPDYA9Yz7nOKf2JPxW' && supplied === 'demo') {
-        console.log("Contraseña de usuario demo verificada correctamente");
-        return true;
+      // Para usuario demo - contraseña única es 'demo'
+      if (stored === '$2a$10$w0XTw9GkO9Sqd6mE88BfCe83pDdvE.8iWwLcPDYA9Yz7nOKf2JPxW') {
+        const isValid = supplied === 'demo';
+        if (isValid) console.log("Contraseña verificada correctamente para usuario con hash específico");
+        return isValid;
       }
       
-      // Para usuarios con contraseña '123456' y hash específico
-      if (stored === '$2b$10$cXFYeKMbD//3xFrRcpIB8.9j1yp9OGVwKY6/gCK4ZnUw6YkrEQWN2') {
-        if (supplied === '123456') {
-          console.log("Contraseña verificada correctamente para usuario con hash específico");
-          return true;
-        }
-        // Para usuarios cuyos passwords originales se han perdido y que usaban otras contraseñas
-        // Permitimos acceder con diferentes combinaciones para desarrollo
-        if (supplied === 'Kersuin1' || supplied === 'Kersuin1.' || supplied === 'loberillagay123.' || supplied === 'danielperlatareas') {
-          console.log("Contraseña verificada con valor alternativo");
-          return true;
-        }
-      }
-      
-      // Código de respaldo para otros usuarios
-      // En producción esto debería usar bcrypt.compare
-      console.log("Intento de acceso para usuario con contraseña bcrypt no controlada");
-      return supplied === '123456'; // Permitir acceso con contraseña estándar para desarrollo
+      // Para otros usuarios con formato bcrypt, derivamos a una biblioteca de verificación
+      console.log("La contraseña bcrypt no tiene una verificación personalizada");
+      return false; // En una implementación real, usaríamos bcrypt.compare
     }
     
     // Formato propio: hash.salt
