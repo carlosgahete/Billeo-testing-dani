@@ -46,6 +46,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
               data.type === 'transaction-updated' ||
               data.type === 'invoice-created' ||
               data.type === 'invoice-updated' ||
+              data.type === 'invoice-paid' ||
               data.type === 'dashboard-refresh-required') {
             console.log(`🔄 Actualizando dashboard debido a evento: ${data.type}`);
             refreshCallback();

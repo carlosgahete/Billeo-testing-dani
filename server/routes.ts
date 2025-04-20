@@ -1847,6 +1847,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(newInvoice.id);
       
+      // Notificar a todos los clientes conectados sobre la nueva factura
+      if (global.notifyDashboardUpdate) {
+        console.log("Enviando notificación WebSocket por factura creada");
+        global.notifyDashboardUpdate('invoice-created', {
+          invoiceId: newInvoice.id,
+          userId: newInvoice.userId,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       return res.status(201).json({ invoice: newInvoice, items: invoiceItems });
     } catch (error: any) {
       console.error("Error al crear factura:", error);
@@ -1982,6 +1992,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             })()
           ]);
           
+          // Notificar a todos los clientes sobre la factura actualizada a estado pagado
+          if (global.notifyDashboardUpdate) {
+            console.log("Enviando notificación WebSocket por factura marcada como pagada");
+            global.notifyDashboardUpdate('invoice-paid', {
+              invoiceId: updatedInvoice.id,
+              userId: updatedInvoice.userId,
+              status: 'paid',
+              transactionId: transaction.id,
+              timestamp: new Date().toISOString()
+            });
+          }
+          
           // Responder con éxito
           return res.status(200).json({ 
             invoice: updatedInvoice,
@@ -2031,6 +2053,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Obtener los items actualizados
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
+      
+      // Notificar a todos los clientes conectados sobre la factura actualizada
+      if (global.notifyDashboardUpdate) {
+        console.log("Enviando notificación WebSocket por factura actualizada");
+        global.notifyDashboardUpdate('invoice-updated', {
+          invoiceId: updatedInvoice.id,
+          userId: updatedInvoice.userId,
+          status: updatedInvoice.status,
+          timestamp: new Date().toISOString()
+        });
+      }
       
       console.log("[SERVER] Factura actualizada correctamente");
       return res.status(200).json({ invoice: updatedInvoice, items: invoiceItems });

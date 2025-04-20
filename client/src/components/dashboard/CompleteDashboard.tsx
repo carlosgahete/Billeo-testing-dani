@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, Calculator } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, Calculator, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import { useSimpleDashboardFilters } from "@/hooks/useSimpleDashboardFilters";
 import { useWebSocketDashboard } from "@/hooks/useWebSocketDashboard";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 import { queryClient } from "@/lib/queryClient";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CompleteDashboardProps {
   className?: string;
@@ -31,6 +32,9 @@ interface CompleteDashboardProps {
 const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [comparisonViewType, setComparisonViewType] = useState<"quarterly" | "yearly">("quarterly");
   const [_, navigate] = useLocation();
+  const [updateFlash, setUpdateFlash] = useState(false);
+  const [lastUpdateType, setLastUpdateType] = useState<string | null>(null);
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Año actual como string para uso en cálculos
   const currentYearStr = new Date().getFullYear().toString();
@@ -43,11 +47,44 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Callback para actualizar datos cuando recibimos notificación por WebSocket
   const handleWebSocketRefresh = useCallback(() => {
     console.log("🔄 WebSocket solicitó actualización del dashboard - refrescando datos...");
+    
+    // Activar animación de actualización
+    setUpdateFlash(true);
+    
+    // Cancelar cualquier temporizador existente
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+    }
+    
+    // Configurar un temporizador para desactivar la animación después de 1.5 segundos
+    updateTimerRef.current = setTimeout(() => {
+      setUpdateFlash(false);
+    }, 1500);
+    
+    // Actualizar los datos
     refetch();
   }, [refetch]);
   
   // Conectarnos al WebSocket para recibir actualizaciones en tiempo real
   const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
+  
+  // Detectar tipo de actualización para mostrar indicador específico
+  useEffect(() => {
+    if (lastMessage?.type) {
+      setLastUpdateType(lastMessage.type);
+      // También se resetea automáticamente después de un tiempo
+      setTimeout(() => setLastUpdateType(null), 3000);
+    }
+  }, [lastMessage]);
+  
+  // Limpiar el temporizador al desmontar
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
   
   // Mostrar estado de conexión en la consola
   useEffect(() => {
@@ -269,12 +306,48 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
             <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
+            
+            {/* Notificación de actualización en tiempo real */}
+            <AnimatePresence>
+              {updateFlash && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center ml-2 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                  <span>
+                    {lastUpdateType === 'invoice-created' && 'Nueva factura'}
+                    {lastUpdateType === 'invoice-updated' && 'Factura actualizada'}
+                    {lastUpdateType === 'invoice-paid' && 'Factura pagada'}
+                    {lastUpdateType === 'transaction-created' && 'Nuevo movimiento'}
+                    {lastUpdateType === 'transaction-updated' && 'Movimiento actualizado'}
+                    {!lastUpdateType && 'Actualizando...'}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           {/* Indicador de conexión WebSocket - Versión para móvil (solo punto) */}
           <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
                  title={isConnected ? 'Conectado en tiempo real' : 'Desconectado'}></div>
+            
+            {/* Notificación móvil */}
+            <AnimatePresence>
+              {updateFlash && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="ml-1"
+                >
+                  <RefreshCw className="w-3 h-3 text-green-600 animate-spin" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
