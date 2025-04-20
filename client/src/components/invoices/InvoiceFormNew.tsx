@@ -51,22 +51,22 @@ const ItemRow = ({
   
   return (
     <div className="group relative mb-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-6">
+      <div className="grid grid-cols-12 gap-2 md:gap-4">
+        <div className="col-span-6 overflow-hidden">
           <input
             {...register(`items.${index}.name`)}
-            placeholder="Descripción del servicio o producto"
-            className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors"
+            placeholder="Descripción"
+            className="w-full px-2 sm:px-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors text-sm sm:text-base"
             onKeyDown={handleKeyDown}
           />
         </div>
-        <div className="col-span-3">
+        <div className="col-span-3 overflow-hidden">
           <div className="flex items-center bg-gray-50 rounded-lg overflow-hidden">
             <input
               {...register(`items.${index}.quantity`)}
               type="number"
-              placeholder="Cantidad"
-              className="w-full px-3 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors"
+              placeholder="Cant."
+              className="w-full px-2 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors text-sm sm:text-base"
               onKeyDown={handleKeyDown}
               onChange={(e) => {
                 handleChange();
@@ -79,14 +79,14 @@ const ItemRow = ({
             />
           </div>
         </div>
-        <div className="col-span-3">
+        <div className="col-span-3 overflow-hidden">
           <div className="flex items-center bg-gray-50 rounded-lg overflow-hidden">
-            <span className="pl-3 text-gray-500">€</span>
+            <span className="pl-1 sm:pl-3 text-gray-500">€</span>
             <input
               {...register(`items.${index}.price`)}
               type="number"
               placeholder="Precio"
-              className="w-full px-2 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors"
+              className="w-full px-1 sm:px-2 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors text-sm sm:text-base"
               onKeyDown={handleKeyDown}
               onChange={(e) => {
                 handleChange();
@@ -148,22 +148,22 @@ const TaxRow = ({
   return (
     <div className="group relative mb-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-8">
+        <div className="col-span-8 overflow-hidden">
           <input
             {...register(`additionalTaxes.${index}.name`)}
-            placeholder="Ej: IVA, IRPF, Retención, etc."
-            className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors"
+            placeholder="Ej: IVA, IRPF, etc."
+            className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors text-sm sm:text-base"
             onKeyDown={handleKeyDown}
             onChange={handleChange}
           />
         </div>
-        <div className="col-span-4">
+        <div className="col-span-4 overflow-hidden">
           <div className="flex items-center bg-gray-50 rounded-lg overflow-hidden">
             <input
               {...register(`additionalTaxes.${index}.rate`)}
               type="number"
-              placeholder="Positivo o negativo (ej: 21, -15)"
-              className="w-full px-3 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors"
+              placeholder="21, -15"
+              className="w-full px-3 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors text-sm sm:text-base"
               onKeyDown={handleKeyDown}
               onChange={(e) => {
                 handleChange();
@@ -263,7 +263,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-hidden">
       {/* Sección de detalles del cliente */}
       <div className="bg-white rounded-xl overflow-hidden shadow-sm">
         <div 
@@ -376,10 +376,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
         
         {activeSection === "items" && (
           <div className="p-5 bg-white border-t border-gray-100">
-            <div className="grid grid-cols-12 gap-4 mb-4 text-sm font-medium text-gray-600 px-4">
+            <div className="grid grid-cols-12 gap-2 md:gap-4 mb-4 text-sm font-medium text-gray-600 px-4">
               <div className="col-span-6">Descripción</div>
-              <div className="col-span-3">Cantidad</div>
-              <div className="col-span-3">Precio</div>
+              <div className="col-span-3 text-center sm:text-left">Cant.</div>
+              <div className="col-span-3 text-center sm:text-left">Precio</div>
             </div>
             
             {items.map((_: any, index: number) => (
@@ -427,9 +427,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
           <div className="p-5 bg-white border-t border-gray-100">
             {additionalTaxes.length > 0 ? (
               <>
-                <div className="grid grid-cols-12 gap-4 mb-4 text-sm font-medium text-gray-600 px-4">
-                  <div className="col-span-8">Nombre del impuesto</div>
-                  <div className="col-span-4">Porcentaje</div>
+                <div className="grid grid-cols-12 gap-2 md:gap-4 mb-4 text-sm font-medium text-gray-600 px-4">
+                  <div className="col-span-8">Impuesto</div>
+                  <div className="col-span-4 text-center sm:text-left">%</div>
                 </div>
                 
                 {additionalTaxes.map((_: any, index: number) => (
