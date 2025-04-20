@@ -178,19 +178,31 @@ export default function LibroRegistrosPageFixed() {
   // Estado para manejar datos en dispositivos móviles/escritorio uniformemente
   const [displayInvoices, setDisplayInvoices] = useState<InvoiceRecord[]>([]);
   const [displayTransactions, setDisplayTransactions] = useState<TransactionRecord[]>([]);
+  const [displayExpenses, setDisplayExpenses] = useState<TransactionRecord[]>([]);
   const [displayQuotes, setDisplayQuotes] = useState<QuoteRecord[]>([]);
   
   // Actualizar los datos siempre que cambie la respuesta de la API
   useEffect(() => {
     if (data) {
+      // Establecer facturas y presupuestos
       setDisplayInvoices(data.invoices || []);
-      setDisplayTransactions(data.transactions || []);
       setDisplayQuotes(data.quotes || []);
+      
+      // Establecer todas las transacciones
+      const allTransactions = data.transactions || [];
+      setDisplayTransactions(allTransactions);
+      
+      // Filtrar solo los gastos para la vista móvil
+      const expensesOnly = allTransactions.filter(transaction => 
+        transaction.type === 'expense' || transaction.type === 'gasto'
+      );
+      setDisplayExpenses(expensesOnly);
       
       // Log para debugging
       console.log("Datos cargados en componente:", {
         invoices: data.invoices?.length || 0,
-        transactions: data.transactions?.length || 0,
+        allTransactions: allTransactions.length,
+        expensesOnly: expensesOnly.length,
         quotes: data.quotes?.length || 0
       });
     }
@@ -393,7 +405,7 @@ export default function LibroRegistrosPageFixed() {
           </div>
           <div className="p-4">
             <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-              {displayTransactions.length}
+              {displayExpenses.length}
             </div>
             <div className="text-gray-500 text-sm">
               Gastos en el período seleccionado
@@ -563,16 +575,20 @@ export default function LibroRegistrosPageFixed() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Gastos y transacciones</h3>
-          <div className="text-sm text-gray-500">{displayTransactions.length} registros</div>
+          {/* En escritorio, mostramos todas las transacciones, en móvil solo gastos */}
+          <div className="text-sm text-gray-500">
+            <span className="hidden sm:inline">{displayTransactions.length} registros</span>
+            <span className="sm:hidden">{displayExpenses.length} gastos</span>
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
           <div className="overflow-x-auto">
             {/* Título para móvil */}
             <div className="bg-amber-100 dark:bg-gray-800 py-2 px-4 border-b border-amber-200 dark:border-gray-700 sm:hidden">
-              <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400">Gastos y transacciones</h3>
+              <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400">Gastos</h3>
             </div>
             
-            {/* Versión para escritorio */}
+            {/* Versión para escritorio (todas las transacciones) */}
             <div className="hidden sm:block">
               <Table className="w-full">
                 <TableHeader>
@@ -624,34 +640,31 @@ export default function LibroRegistrosPageFixed() {
               </Table>
             </div>
             
-            {/* Versión para móvil: tarjetas en lugar de tabla */}
+            {/* Versión para móvil: sólo gastos, en tarjetas */}
             <div className="sm:hidden">
-              {displayTransactions.length === 0 ? (
+              {displayExpenses.length === 0 ? (
                 <div className="text-center py-6 text-gray-400">
-                  No hay transacciones en este período
+                  No hay gastos en este período
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {displayTransactions.map((transaction) => (
-                    <div key={transaction.id} className="p-4">
+                  {displayExpenses.map((expense) => (
+                    <div key={expense.id} className="p-4">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs text-gray-500">{formatDate(transaction.date)}</div>
-                        <Badge className={`${
-                          transaction.type === 'income' ? "bg-green-100 text-green-800 hover:bg-green-100 border border-green-200" : 
-                          "bg-red-100 text-red-800 hover:bg-red-100 border border-red-200"
-                        } px-2 py-0.5 rounded-full text-xs font-medium shadow-sm`}>
-                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                        <div className="text-xs text-gray-500">{formatDate(expense.date)}</div>
+                        <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border border-red-200 px-2 py-0.5 rounded-full text-xs font-medium shadow-sm">
+                          Gasto
                         </Badge>
                       </div>
                       
-                      <div className="text-sm font-medium mb-1">{transaction.description}</div>
+                      <div className="text-sm font-medium mb-1">{expense.description}</div>
                       
                       <div className="flex justify-between items-end">
                         <div className="text-xs text-gray-500">
-                          {transaction.category || 'Sin categoría'}
+                          {expense.category || 'Sin categoría'}
                         </div>
-                        <div className={`text-sm font-medium ${transaction.type === 'expense' ? "text-red-600" : "text-green-600"}`}>
-                          {formatCurrency(parseFloat(transaction.amount))}
+                        <div className="text-sm font-medium text-red-600">
+                          {formatCurrency(parseFloat(expense.amount))}
                         </div>
                       </div>
                     </div>
