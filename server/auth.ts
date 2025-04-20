@@ -238,10 +238,22 @@ export function setupAuth(app: Express) {
     console.log("Procesando solicitud de inicio de sesión para:", req.body.username);
     
     try {
-      // Usar SQL directo para evitar problemas con el esquema
-      const result = await sql`
-        SELECT * FROM users WHERE username = ${req.body.username}
-      `;
+      // Comprobar si es un email o un nombre de usuario
+      const isEmail = req.body.username.includes('@');
+      
+      // Usar SQL directo para buscar por username o email
+      let result;
+      if (isEmail) {
+        console.log("Detectado inicio de sesión con email:", req.body.username);
+        result = await sql`
+          SELECT * FROM users WHERE email = ${req.body.username}
+        `;
+      } else {
+        console.log("Detectado inicio de sesión con username:", req.body.username);
+        result = await sql`
+          SELECT * FROM users WHERE username = ${req.body.username}
+        `;
+      }
       
       console.log("Resultado de búsqueda de usuario:", result.length > 0 ? "Usuario encontrado" : "Usuario no encontrado");
       
