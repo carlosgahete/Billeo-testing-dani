@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 /**
  * Hook para manejar la conexión WebSocket para actualizaciones del dashboard en tiempo real
@@ -10,20 +10,45 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const maxRetries = 10; // Aumentado de 3 a 10 para más persistencia
 
-  // Efectuar conexión al WebSocket cuando el componente se monta
-  useEffect(() => {
-    // No intentar conectar si ya hay máximos intentos o ya está conectado
-    if (connectionAttempts > 3 || socket) {
+  // Función para limpiar recursos de WebSocket
+  const cleanupWebSocket = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    
+    if (socket) {
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+        socket.close();
+      }
+      setSocket(null);
+    }
+  }, [socket]);
+
+  // Función para conectar al WebSocket
+  const connectWebSocket = useCallback(() => {
+    // Limpiar cualquier conexión anterior
+    cleanupWebSocket();
+    
+    // No intentar conectar si ya hay máximos intentos
+    if (connectionAttempts >= maxRetries) {
+      console.warn('⚠️ Máximo de intentos de reconexión alcanzado');
+      // Reset después de un tiempo prolongado
+      reconnectTimerRef.current = setTimeout(() => {
+        setConnectionAttempts(0);
+      }, 60000); // 1 minuto
       return;
     }
 
-    // Determinar el protocolo correcto (ws o wss) basado en HTTPS
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    console.log(`🔌 Intentando conectar al WebSocket: ${wsUrl}`);
-
     try {
+      // Determinar el protocolo correcto (ws o wss) basado en HTTPS
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      console.log(`🔌 Intentando conectar al WebSocket: ${wsUrl}`);
+
       const newSocket = new WebSocket(wsUrl);
       setSocket(newSocket);
 
@@ -47,9 +72,12 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
               data.type === 'invoice-created' ||
               data.type === 'invoice-updated' ||
               data.type === 'invoice-paid' ||
-              data.type === 'dashboard-refresh-required') {
-            console.log(`🔄 Actualizando dashboard debido a evento: ${data.type}`);
-            refreshCallback();
+              data.type === 'dashboard-refresh-required' ||
+              data.type === 'connection') {
+            if (data.type !== 'connection') {
+              console.log(`🔄 Actualizando dashboard debido a evento: ${data.type}`);
+              refreshCallback();
+            }
           }
         } catch (error) {
           console.error('Error al procesar mensaje WebSocket:', error);
@@ -59,6 +87,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       // Manejar errores de conexión
       newSocket.onerror = (error) => {
         console.error('❌ Error en conexión WebSocket:', error);
+        // No cerramos aquí, dejamos que onclose maneje la reconexión
       };
 
       // Manejar cierre de conexión y reintentar si es necesario
@@ -72,37 +101,65 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           const nextAttempt = connectionAttempts + 1;
           setConnectionAttempts(nextAttempt);
           
-          if (nextAttempt <= 3) {
-            const timeout = Math.min(1000 * Math.pow(2, nextAttempt - 1), 10000);
-            console.log(`🔄 Reintentando conexión en ${timeout}ms (intento ${nextAttempt})`);
-            setTimeout(() => {
-              setSocket(null); // Forzar reconexión
+          if (nextAttempt <= maxRetries) {
+            // Backoff exponencial con límite máximo (15 segundos)
+            const baseDelay = 1000; // 1 segundo
+            const maxDelay = 15000; // 15 segundos
+            const exponentialBackoff = baseDelay * Math.pow(1.5, Math.min(nextAttempt, 10));
+            const jitter = Math.random() * 1000; // Añadir algo de aleatoriedad
+            const timeout = Math.min(exponentialBackoff + jitter, maxDelay);
+            
+            console.log(`🔄 Reintentando conexión en ${Math.round(timeout)}ms (intento ${nextAttempt}/${maxRetries})`);
+            
+            reconnectTimerRef.current = setTimeout(() => {
+              connectWebSocket(); // Intentar reconectar
             }, timeout);
           } else {
-            console.warn('⚠️ Máximo de intentos de reconexión alcanzado');
+            console.warn(`⚠️ Máximo de intentos de reconexión alcanzado (${maxRetries})`);
+            
+            // Intentar un último intento después de 60 segundos
+            reconnectTimerRef.current = setTimeout(() => {
+              console.log('🔄 Realizando intento final de reconexión...');
+              setConnectionAttempts(0); // Reset contador para permitir nuevos intentos
+              connectWebSocket();
+            }, 60000);
           }
         }
       };
-
-      // Limpiar conexión al desmontar
-      return () => {
-        console.log('🔌 Cerrando conexión WebSocket (cleanup)');
-        if (newSocket && newSocket.readyState === WebSocket.OPEN) {
-          newSocket.close();
-        }
-        setSocket(null);
-        setIsConnected(false);
-      };
     } catch (error) {
       console.error('❌ Error al crear conexión WebSocket:', error);
+      // Incrementar contador y programar reintento
       setConnectionAttempts(prev => prev + 1);
-      return () => {}; // Cleanup vacío para este caso
+      
+      reconnectTimerRef.current = setTimeout(() => {
+        connectWebSocket();
+      }, 3000); // Reintento rápido si hay error al crear
     }
-  }, [socket, connectionAttempts, refreshCallback]);
+  }, [connectionAttempts, cleanupWebSocket, refreshCallback]);
+
+  // Efectuar conexión al WebSocket cuando el componente se monta
+  useEffect(() => {
+    connectWebSocket();
+    
+    // Limpiar todos los recursos al desmontar
+    return () => {
+      console.log('🔌 Cerrando conexión WebSocket (cleanup)');
+      cleanupWebSocket();
+    };
+  }, [connectWebSocket, cleanupWebSocket]);
+
+  // Función para reconexión manual
+  const reconnect = useCallback(() => {
+    console.log('🔄 Reconexión manual solicitada');
+    cleanupWebSocket();
+    setConnectionAttempts(0); // Reset contador
+    connectWebSocket();
+  }, [cleanupWebSocket, connectWebSocket]);
 
   return {
     isConnected,
     lastMessage,
-    connectionAttempts
+    connectionAttempts,
+    reconnect // Exponemos la función de reconexión manual por si es necesaria
   };
 }
