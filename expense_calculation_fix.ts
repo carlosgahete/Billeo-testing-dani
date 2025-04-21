@@ -352,6 +352,60 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         return parseFloat(value.toFixed(2)); // Redondeo a 2 decimales
       };
       
+      // Preparar datos trimestrales para la visualización en el dashboard
+      const quarterlyData: Record<string, { Ingresos: number; Gastos: number; Resultado: number }> = {
+        "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        "Q3": { Ingresos: 0, Gastos: 0, Resultado: 0 },
+        "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
+      };
+      
+      // Rellenar datos trimestrales por fechas reales de facturas y gastos
+      if (validPeriod === 'all') {
+        // Agrupar facturas por trimestre para el año actual
+        filteredInvoices.forEach(invoice => {
+          if (invoice.status === 'pagada' || invoice.status === 'paid') {
+            const invoiceDate = new Date(invoice.issueDate);
+            const quarter = getQuarter(invoiceDate);
+            const quarterKey = `Q${quarter}`;
+            
+            // Añadir a los datos del trimestre correspondiente
+            const baseImponible = parseFloat(invoice.subtotal);
+            if (!isNaN(baseImponible)) {
+              quarterlyData[quarterKey].Ingresos += baseImponible;
+            }
+          }
+        });
+        
+        // Agrupar gastos por trimestre
+        filteredTransactions.forEach(txn => {
+          const txnDate = new Date(txn.date);
+          const quarter = getQuarter(txnDate);
+          const quarterKey = `Q${quarter}`;
+          
+          // Añadir a los gastos del trimestre
+          const baseImponible = txn.baseImponible || txn.amount;
+          if (!isNaN(baseImponible)) {
+            quarterlyData[quarterKey].Gastos += baseImponible;
+          }
+        });
+        
+        // Calcular resultados por trimestre
+        Object.keys(quarterlyData).forEach(quarter => {
+          quarterlyData[quarter].Resultado = 
+            quarterlyData[quarter].Ingresos - quarterlyData[quarter].Gastos;
+        });
+      } 
+      // Si estamos filtrando por un trimestre específico, ponemos todos los datos en ese trimestre
+      else if (validPeriod.startsWith('q')) {
+        const quarterKey = `Q${requestedQuarter}`;
+        quarterlyData[quarterKey].Ingresos = baseImponible;
+        quarterlyData[quarterKey].Gastos = baseImponibleGastos;
+        quarterlyData[quarterKey].Resultado = balance;
+      }
+      
+      console.log('Datos trimestrales calculados:', quarterlyData);
+
       // Preparar respuesta con valores seguros
       return res.status(200).json({
         // Valores principales 
@@ -432,7 +486,10 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         rejectedQuotes: rejectedQuotesCount,
         pendingQuotesCount,
         pendingQuotesTotal: safeNumber(pendingQuotesTotal),
-        lastQuoteDate
+        lastQuoteDate,
+        
+        // Datos trimestrales para la visualización en gráficos
+        quarterlyData
       });
     } catch (error) {
       console.error("Error en el cálculo de datos del dashboard:", error);

@@ -256,7 +256,20 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         // Si tenemos datos trimestrales del backend, los usamos
         Object.entries(stats.quarterlyData).forEach(([quarter, data]) => {
           if (quarterlyData[quarter]) {
-            quarterlyData[quarter] = data;
+            // Asegurarnos de que es un objeto con la estructura correcta
+            if (typeof data === 'object' && data !== null) {
+              const typedData = data as {
+                Ingresos: number;
+                Gastos: number;
+                Resultado: number;
+              };
+              
+              quarterlyData[quarter] = {
+                Ingresos: typedData.Ingresos || 0,
+                Gastos: typedData.Gastos || 0,
+                Resultado: typedData.Resultado || 0
+              };
+            }
           }
         });
       } 
