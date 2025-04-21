@@ -20,7 +20,7 @@ import ExpensesByCategoryApple from "./ExpensesByCategoryApple";
 import ExpensesByCategory from "./ExpensesByCategory";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSimpleDashboardFilters } from "@/hooks/useSimpleDashboardFilters";
-import { useWebSocketDashboard } from "@/hooks/useWebSocketDashboard";
+import { useDashboardPolling } from "@/hooks/useDashboardPolling";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 import { queryClient } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,9 +44,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
-  // Callback para actualizar datos cuando recibimos notificación por WebSocket
-  const handleWebSocketRefresh = useCallback(() => {
-    console.log("🔄 WebSocket solicitó actualización del dashboard - refrescando datos...");
+  // Callback para actualizar datos cuando detectamos cambios mediante polling
+  const handleDashboardRefresh = useCallback(() => {
+    console.log("🔄 Cambios detectados en el dashboard - refrescando datos...");
     
     // Activar animación de actualización
     setUpdateFlash(true);
@@ -65,8 +65,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     refetch();
   }, [refetch]);
   
-  // Conectarnos al WebSocket para recibir actualizaciones en tiempo real
-  const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
+  // Usamos polling en lugar de WebSockets para monitorear actualizaciones del dashboard
+  const { isConnected, lastMessage } = useDashboardPolling(handleDashboardRefresh);
   
   // Detectar tipo de actualización para mostrar indicador específico
   useEffect(() => {
@@ -89,13 +89,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Mostrar estado de conexión en la consola
   useEffect(() => {
     if (isConnected) {
-      console.log("✅ Dashboard WebSocket conectado y listo para recibir actualizaciones");
+      console.log("✅ Sistema de actualización automática activado");
     }
   }, [isConnected]);
   
-  // Ya no necesitamos un efecto específico aquí porque useDashboardData 
-  // maneja automáticamente los eventos y la actualización de datos
-  // Ahora agregamos la conexión WebSocket para actualizaciones en tiempo real
+  // Ya no necesitamos WebSockets, estamos usando un sistema de polling
+  // que es más robusto en conexiones inestables
   
   // Estados locales para UI
   // Importante: Usamos directamente los filtros del hook global
@@ -302,7 +301,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
         
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-2">
-          {/* Indicador de conexión WebSocket - Versión para escritorio */}
+          {/* Indicador de estado del sistema de sincronización - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
             <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
