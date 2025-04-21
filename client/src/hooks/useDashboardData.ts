@@ -122,7 +122,7 @@ export function useDashboardData(
       
       try {
         // Refrescar los datos forzando una solicitud fresca
-        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}] con parámetros year=${finalYear}, period=${finalPeriod}`);
+        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
         
         // Intentar primero con el endpoint fijo
         const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
@@ -131,19 +131,8 @@ export function useDashboardData(
         
         if (response.ok) {
           const data = await response.json();
-          console.log("✅ Datos actualizados del dashboard cargados correctamente:", {
-            year: finalYear,
-            period: finalPeriod,
-            income: data.income,
-            expenses: data.expenses
-          });
-          
-          // Asegurar que los datos incluyan el año y periodo correctos
-          return {
-            ...data,
-            year: finalYear,
-            period: finalPeriod
-          };
+          console.log("✅ Datos actualizados del dashboard cargados correctamente");
+          return data;
         }
         
         // Si falla, intentar con el endpoint original
@@ -154,17 +143,8 @@ export function useDashboardData(
         
         if (originalResponse.ok) {
           const data = await originalResponse.json();
-          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original):", {
-            year: finalYear,
-            period: finalPeriod
-          });
-          
-          // Asegurar que los datos incluyan el año y periodo correctos
-          return {
-            ...data,
-            year: finalYear,
-            period: finalPeriod
-          };
+          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original)");
+          return data;
         }
         
         // Si ambos fallan, lanzar error

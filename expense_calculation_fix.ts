@@ -28,114 +28,27 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
       console.log("Años de transacciones:", uniqueYears);
       
-      // Función para determinar el trimestre de una fecha
-      const getQuarter = (date: Date): number => {
-        const month = date.getMonth();
-        return Math.floor(month / 3) + 1; // 1-4 para Q1-Q4
-      };
-      
-      console.log("Fecha de ejemplo:", new Date().toISOString(), "Trimestre:", getQuarter(new Date()));
-      
-      // Validar el formato del periodo
-      let validPeriod = period;
-      let requestedQuarter = 0;
-      
-      if (period && period !== 'all') {
-        if (period.startsWith('q') && period.length === 2) {
-          requestedQuarter = parseInt(period.substring(1));
-          if (requestedQuarter < 1 || requestedQuarter > 4) {
-            console.log(`Trimestre no válido: ${requestedQuarter}, usando 'all'`);
-            validPeriod = 'all';
-            requestedQuarter = 0;
-          }
-        } else {
-          console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
-          validPeriod = 'all';
-        }
-      }
-      
-      console.log(`Periodo validado: ${validPeriod}, Trimestre solicitado: ${requestedQuarter}`);
-      
-      // Filtrar facturas por año y trimestre si se proporcionan
-      const filteredInvoices = invoices.filter(invoice => {
-        const invoiceDate = new Date(invoice.issueDate);
-        const invoiceYear = invoiceDate.getFullYear().toString();
+      // Filtrar facturas por año si se proporciona
+      const filteredInvoices = year 
+        ? invoices.filter(invoice => {
+            const invoiceYear = new Date(invoice.issueDate).getFullYear();
+            return invoiceYear.toString() === year;
+          })
+        : invoices;
         
-        // Primero filtramos por año
-        if (year && invoiceYear !== year) {
-          return false;
-        }
-        
-        // Luego filtramos por trimestre si está especificado
-        if (validPeriod !== 'all' && requestedQuarter > 0) {
-          const quarter = getQuarter(invoiceDate);
-          console.log(`Factura: ID=${invoice.id}, Fecha=${invoiceDate.toISOString()}, Trimestre=${quarter}`);
-          
-          // Comparar con el trimestre solicitado
-          if (quarter !== requestedQuarter) {
-            return false;
-          }
-        }
-        
-        // Si pasó los filtros, incluimos la factura
-        return true;
-      });
-      
       // Obtener datos de transacciones
       const transactions = await storage.getTransactionsByUserId(userId);
       
-      // Filtrar transacciones por año y trimestre
-      const filteredTransactions = transactions.filter(txn => {
-        const txnDate = new Date(txn.date);
-        const txnYear = txnDate.getFullYear().toString();
-        
-        // Primero filtramos por año
-        if (year && txnYear !== year) {
-          return false;
-        }
-        
-        // Luego filtramos por trimestre si está especificado
-        if (validPeriod !== 'all' && requestedQuarter > 0) {
-          const quarter = getQuarter(txnDate);
-          console.log(`Transacción: ID=${txn.id}, Fecha=${txnDate.toISOString()}, Trimestre=${quarter}, Comparando con trimestre solicitado=${requestedQuarter}`);
-          
-          // Comparar con el trimestre solicitado
-          if (quarter !== requestedQuarter) {
-            return false;
-          }
-        }
-        
-        // Si pasó los filtros, incluimos la transacción
-        return true;
-      });
+      // Filtrar transacciones por año
+      const filteredTransactions = year 
+        ? transactions.filter(txn => {
+            const txnYear = new Date(txn.date).getFullYear();
+            return txnYear.toString() === year;
+          })
+        : transactions;
         
       // Obtener datos de presupuestos
       const quotes = await storage.getQuotesByUserId(userId);
-      
-      // Filtrar presupuestos por año y trimestre
-      const filteredQuotes = quotes.filter(quote => {
-        const quoteDate = new Date(quote.issueDate);
-        const quoteYear = quoteDate.getFullYear().toString();
-        
-        // Primero filtramos por año
-        if (year && quoteYear !== year) {
-          return false;
-        }
-        
-        // Luego filtramos por trimestre si está especificado
-        if (validPeriod !== 'all' && requestedQuarter > 0) {
-          const quarter = getQuarter(quoteDate);
-          console.log(`Presupuesto: ID=${quote.id}, Fecha=${quoteDate.toISOString()}, Trimestre=${quarter}`);
-          
-          // Comparar con el trimestre solicitado
-          if (quarter !== requestedQuarter) {
-            return false;
-          }
-        }
-        
-        // Si pasó los filtros, incluimos el presupuesto
-        return true;
-      });
       
       // CÁLCULOS BÁSICOS
       
@@ -287,21 +200,21 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       // 11. Balance de IRPF
       const incomeTaxFinal = irpfRetenidoIngresos > 0 ? irpfRetenidoIngresos : 0;
       
-      // 12. Presupuestos - Usar los presupuestos filtrados
-      const pendingQuotesTotal = filteredQuotes
+      // 12. Presupuestos
+      const pendingQuotesTotal = quotes
         .filter(quote => quote.status === 'pending')
         .reduce((sum, quote) => {
           const total = parseFloat(quote.total || '0');
           return isNaN(total) ? sum : sum + total;
         }, 0);
       
-      const pendingQuotesCount = filteredQuotes.filter(quote => quote.status === 'pending').length;
-      const acceptedQuotesCount = filteredQuotes.filter(quote => quote.status === 'accepted').length;
-      const rejectedQuotesCount = filteredQuotes.filter(quote => quote.status === 'rejected').length;
-      const allQuotesCount = filteredQuotes.length;
+      const pendingQuotesCount = quotes.filter(quote => quote.status === 'pending').length;
+      const acceptedQuotesCount = quotes.filter(quote => quote.status === 'accepted').length;
+      const rejectedQuotesCount = quotes.filter(quote => quote.status === 'rejected').length;
+      const allQuotesCount = quotes.length;
       
       // 13. Fecha del último presupuesto
-      const lastQuote = filteredQuotes.sort((a, b) => 
+      const lastQuote = quotes.sort((a, b) => 
         new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
       )[0];
       
@@ -352,60 +265,6 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         return parseFloat(value.toFixed(2)); // Redondeo a 2 decimales
       };
       
-      // Preparar datos trimestrales para la visualización en el dashboard
-      const quarterlyData: Record<string, { Ingresos: number; Gastos: number; Resultado: number }> = {
-        "Q1": { Ingresos: 0, Gastos: 0, Resultado: 0 },
-        "Q2": { Ingresos: 0, Gastos: 0, Resultado: 0 },
-        "Q3": { Ingresos: 0, Gastos: 0, Resultado: 0 },
-        "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
-      };
-      
-      // Rellenar datos trimestrales por fechas reales de facturas y gastos
-      if (validPeriod === 'all') {
-        // Agrupar facturas por trimestre para el año actual
-        filteredInvoices.forEach(invoice => {
-          if (invoice.status === 'pagada' || invoice.status === 'paid') {
-            const invoiceDate = new Date(invoice.issueDate);
-            const quarter = getQuarter(invoiceDate);
-            const quarterKey = `Q${quarter}`;
-            
-            // Añadir a los datos del trimestre correspondiente
-            const baseImponible = parseFloat(invoice.subtotal);
-            if (!isNaN(baseImponible)) {
-              quarterlyData[quarterKey].Ingresos += baseImponible;
-            }
-          }
-        });
-        
-        // Agrupar gastos por trimestre
-        filteredTransactions.forEach(txn => {
-          const txnDate = new Date(txn.date);
-          const quarter = getQuarter(txnDate);
-          const quarterKey = `Q${quarter}`;
-          
-          // Añadir a los gastos del trimestre
-          const baseImponible = txn.baseImponible || txn.amount;
-          if (!isNaN(baseImponible)) {
-            quarterlyData[quarterKey].Gastos += baseImponible;
-          }
-        });
-        
-        // Calcular resultados por trimestre
-        Object.keys(quarterlyData).forEach(quarter => {
-          quarterlyData[quarter].Resultado = 
-            quarterlyData[quarter].Ingresos - quarterlyData[quarter].Gastos;
-        });
-      } 
-      // Si estamos filtrando por un trimestre específico, ponemos todos los datos en ese trimestre
-      else if (validPeriod.startsWith('q')) {
-        const quarterKey = `Q${requestedQuarter}`;
-        quarterlyData[quarterKey].Ingresos = baseImponible;
-        quarterlyData[quarterKey].Gastos = baseImponibleGastos;
-        quarterlyData[quarterKey].Resultado = balance;
-      }
-      
-      console.log('Datos trimestrales calculados:', quarterlyData);
-
       // Preparar respuesta con valores seguros
       return res.status(200).json({
         // Valores principales 
@@ -486,10 +345,7 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         rejectedQuotes: rejectedQuotesCount,
         pendingQuotesCount,
         pendingQuotesTotal: safeNumber(pendingQuotesTotal),
-        lastQuoteDate,
-        
-        // Datos trimestrales para la visualización en gráficos
-        quarterlyData
+        lastQuoteDate
       });
     } catch (error) {
       console.error("Error en el cálculo de datos del dashboard:", error);

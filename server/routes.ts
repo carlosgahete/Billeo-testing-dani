@@ -84,26 +84,6 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Endpoint público para verificar el estado del servidor - no requiere autenticación
-  app.get("/api/health", (req, res) => {
-    // Comprobamos que esté usando la API directamente y no desde el navegador
-    const isApiRequest = req.headers.accept?.includes('application/json') || 
-                         req.headers['user-agent']?.includes('curl') ||
-                         req.query.format === 'json';
-                         
-    // Si no es solicitud API, redirigir al frontend
-    if (!isApiRequest) {
-      return res.redirect('/');
-    }
-    
-    return res.status(200).json({
-      status: "ok",
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      message: "Server running"
-    });
-  });
-
   // Middleware para verificar autenticación de manera consistente
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     // Verificar si el usuario está autenticado mediante passport o mediante sesión
@@ -1125,240 +1105,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configurar servidor WebSocket para actualizaciones en tiempo real
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  // Almacenar conexiones activas asociadas a usuarios autenticados
-  const clients = new Map<number, Set<WebSocket>>(); // userId -> Set<WebSocket>
+  // Almacenar conexiones activas
+  const clients = new Set<WebSocket>();
   
-  // Conexiones que aún no están asociadas a un usuario autenticado
-  const pendingClients = new Set<WebSocket>();
-  
-  // Configurar tiempos más cortos para mantener conexiones activas
-  const INACTIVE_TIMEOUT = 45000; // 45 segundos sin actividad = desconexión
-  const checkInactiveConnections = setInterval(() => {
-    const now = Date.now();
-    
-    // Comprobar conexiones pendientes
-    pendingClients.forEach(ws => {
-      const lastActivity = (ws as any).lastActivity || 0;
-      if (now - lastActivity > INACTIVE_TIMEOUT) {
-        console.log('Cerrando conexión WebSocket inactiva (pendiente)');
-        ws.terminate();
-        pendingClients.delete(ws);
-      }
-    });
-    
-    // Comprobar conexiones autenticadas
-    clients.forEach((userSockets, userId) => {
-      userSockets.forEach(ws => {
-        const lastActivity = (ws as any).lastActivity || 0;
-        if (now - lastActivity > INACTIVE_TIMEOUT) {
-          console.log(`Cerrando conexión WebSocket inactiva (usuario: ${userId})`);
-          ws.terminate();
-          userSockets.delete(ws);
-          
-          // Si no quedan conexiones para este usuario, eliminar la entrada
-          if (userSockets.size === 0) {
-            clients.delete(userId);
-          }
-        }
-      });
-    });
-  }, 15000); // Comprobar cada 15 segundos
-  
-  wss.on('connection', (ws, req) => {
+  wss.on('connection', (ws) => {
     console.log('Nueva conexión WebSocket establecida');
     
-    // Añadir cliente a la lista de pendientes
-    pendingClients.add(ws);
-    
-    // Enviar mensaje indicando que debe autenticarse
-    ws.send(JSON.stringify({
-      type: 'auth_required',
-      timestamp: new Date().toISOString(),
-      message: 'Es necesario autenticarse para recibir actualizaciones'
-    }));
-    
-    // Configurar intervalo de heartbeat para mantener la conexión
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        try {
-          // Enviar ping para mantener la conexión
-          ws.ping();
-          // Y también un mensaje de ping en formato JSON para que el cliente lo procese
-          ws.send(JSON.stringify({
-            type: 'ping',
-            timestamp: new Date().toISOString()
-          }));
-        } catch (err) {
-          console.error('Error enviando ping a cliente WebSocket:', err);
-        }
-      } else if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
-        // Si el socket está cerrado, limpiar el intervalo
-        clearInterval(pingInterval);
-      }
-    }, 15000); // Cada 15 segundos
-    
-    // Manejar errores de conexión
-    ws.on('error', (error) => {
-      console.error('Error en conexión WebSocket:', error);
-    });
+    // Añadir cliente a la lista de conexiones activas
+    clients.add(ws);
     
     // Eliminar la conexión cuando se cierra
-    ws.on('close', (code, reason) => {
-      console.log(`Conexión WebSocket cerrada. Código: ${code}, Razón: ${reason || 'No especificada'}`);
-      clearInterval(pingInterval);
-      
-      // Obtener el userId asociado al socket
-      const userId = (ws as any).userId;
-      
-      // Si el socket estaba autenticado, eliminarlo de clients
-      if (userId && clients.has(userId)) {
-        const userClients = clients.get(userId);
-        if (userClients) {
-          userClients.delete(ws);
-          // Si no quedan conexiones para este usuario, eliminar la entrada
-          if (userClients.size === 0) {
-            clients.delete(userId);
-          }
-        }
-      } else {
-        // Si no estaba autenticado, eliminarlo de pendingClients
-        pendingClients.delete(ws);
-      }
+    ws.on('close', () => {
+      console.log('Conexión WebSocket cerrada');
+      clients.delete(ws);
     });
     
-    // Manejar mensajes entrantes del cliente
+    // Opcional: Manejar mensajes entrantes del cliente
     ws.on('message', (message) => {
-      try {
-        const parsedMessage = JSON.parse(message.toString());
-        console.log('Mensaje WebSocket recibido:', parsedMessage);
-        
-        // Manejar diferentes tipos de mensajes
-        if (parsedMessage.type === 'ping') {
-          console.log('Ping recibido, enviando pong a cliente');
-          ws.send(JSON.stringify({
-            type: 'pong',
-            timestamp: new Date().toISOString(),
-            clientTimestamp: parsedMessage.timestamp || null // Devolver el timestamp del cliente para medición
-          }));
-        }
-        
-        // Autenticación del socket
-        if (parsedMessage.type === 'auth') {
-          // Obtener el userId enviado por el cliente
-          const userId = parsedMessage.userId;
-          
-          if (!userId || typeof userId !== 'number') {
-            ws.send(JSON.stringify({
-              type: 'auth_error',
-              message: 'UserId inválido',
-              timestamp: new Date().toISOString()
-            }));
-            return;
-          }
-          
-          // Comprobar si el usuario existe en la base de datos
-          storage.getUser(userId)
-            .then(user => {
-              if (!user) {
-                ws.send(JSON.stringify({
-                  type: 'auth_error',
-                  message: 'Usuario no encontrado',
-                  timestamp: new Date().toISOString()
-                }));
-                return;
-              }
-              
-              // Usuario autenticado correctamente
-              // Eliminar de pendingClients
-              pendingClients.delete(ws);
-              
-              // Añadir a clients
-              if (!clients.has(userId)) {
-                clients.set(userId, new Set());
-              }
-              clients.get(userId)?.add(ws);
-              
-              // Asociar userId al objeto WebSocket para futuras referencias
-              (ws as any).userId = userId;
-              
-              console.log(`WebSocket autenticado para usuario ${userId}`);
-              
-              // Enviar confirmación de autenticación
-              ws.send(JSON.stringify({
-                type: 'auth_success',
-                userId: userId,
-                message: 'Autenticado correctamente para actualizaciones en tiempo real',
-                timestamp: new Date().toISOString()
-              }));
-            })
-            .catch(error => {
-              console.error('Error verificando usuario para WebSocket:', error);
-              ws.send(JSON.stringify({
-                type: 'auth_error',
-                message: 'Error verificando credenciales',
-                timestamp: new Date().toISOString()
-              }));
-            });
-        }
-      } catch (error) {
-        console.error('Error procesando mensaje WebSocket:', error);
-      }
-    });
-    
-    // Establecer timestamp para última actividad
-    (ws as any).lastActivity = Date.now();
-    
-    // Responder a pongs para verificar que la conexión sigue activa
-    ws.on('pong', () => {
-      // Actualizar timestamp de última actividad
-      (ws as any).lastActivity = Date.now();
+      console.log('Mensaje recibido:', message.toString());
     });
     
     // Enviar un mensaje inicial para confirmar la conexión
     ws.send(JSON.stringify({
       type: 'connection',
-      status: 'success',
-      message: 'Conexión WebSocket establecida con éxito',
-      timestamp: new Date().toISOString()
+      message: 'Conexión WebSocket establecida con éxito'
     }));
   });
   
   // Función global para notificar a todos los clientes
-  global.notifyDashboardUpdate = (type: string, data?: any, targetUserId?: number) => {
+  global.notifyDashboardUpdate = (type: string, data?: any) => {
     const message = JSON.stringify({
       type,
       timestamp: new Date().toISOString(),
       data
     });
     
-    // Contador de clientes notificados
-    let notifiedClients = 0;
-    
-    // Si se especifica un usuario específico, notificar solo a ese usuario
-    if (targetUserId && clients.has(targetUserId)) {
-      const userClients = clients.get(targetUserId);
-      if (userClients) {
-        userClients.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
-            notifiedClients++;
-          }
-        });
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
       }
-      console.log(`WebSocket: Notificación específica (${type}) enviada al usuario ${targetUserId} (${notifiedClients} conexiones)`);
-    } 
-    // Si no se especifica usuario, notificar a todos
-    else {
-      clients.forEach((userClients, userId) => {
-        userClients.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
-            notifiedClients++;
-          }
-        });
-      });
-      console.log(`WebSocket: Notificación global (${type}) enviada a ${clients.size} usuarios (${notifiedClients} conexiones)`);
-    }
+    });
+    console.log(`WebSocket: Notificación enviada (${type}) a ${clients.size} clientes`);
   };
 
   // Auth routes are now handled by the setupAuth function
@@ -4570,34 +4357,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // El servidor WebSocket ya está configurado anteriormente en el código
   console.log('Usando servidor WebSocket existente para actualizaciones del dashboard');
-  
-  // Configurar limpieza cuando el servidor se cierre
-  const cleanup = () => {
-    console.log('Cerrando servidor WebSocket y limpiando recursos...');
-    clearInterval(checkInactiveConnections);
-    
-    // Cerrar todas las conexiones
-    wss.clients.forEach(ws => {
-      try {
-        ws.close(1000, 'Servidor cerrándose');
-      } catch (err) {
-        console.error('Error cerrando conexión WebSocket:', err);
-      }
-    });
-    
-    // Terminar el servidor WebSocket
-    wss.close((err) => {
-      if (err) {
-        console.error('Error cerrando servidor WebSocket:', err);
-      } else {
-        console.log('Servidor WebSocket cerrado correctamente');
-      }
-    });
-  };
-  
-  // Manejar señales de cierre
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
   
   return httpServer;
 }

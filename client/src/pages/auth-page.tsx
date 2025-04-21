@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -64,32 +63,7 @@ export default function AuthPage() {
       
       // Usar el método estándar de inicio de sesión
       console.log("Utilizando el método normal de login");
-      loginMutation.mutate(loginFormData, {
-        onSuccess: (data) => {
-          // Guardar datos de usuario en sessionStorage
-          try {
-            // Guardar el usuario para que esté disponible para el WebSocket
-            sessionStorage.setItem('userData', JSON.stringify(data));
-            console.log("Datos de usuario guardados correctamente en sessionStorage");
-            
-            // Forzar una redirección inmediata
-            setTimeout(() => {
-              console.log("Redirigiendo al dashboard después de login exitoso");
-              navigate("/");
-            }, 200);
-          } catch (err) {
-            console.error("Error guardando datos de usuario:", err);
-          }
-        },
-        onError: (error) => {
-          console.error("Error en login:", error);
-          toast({
-            title: "Error de inicio de sesión",
-            description: error.message || "Credenciales incorrectas",
-            variant: "destructive"
-          });
-        }
-      });
+      loginMutation.mutate(loginFormData);
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       toast({
@@ -110,28 +84,6 @@ export default function AuthPage() {
         <div className="absolute top-1/4 -left-20 w-60 h-60 rounded-full bg-gradient-to-tr from-indigo-100/30 to-indigo-200/20 blur-3xl"></div>
         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-screen h-1/3 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
       </div>
-      
-      {/* Mensaje de estado de conexión */}
-      {isLoading && (
-        <Card className="fixed top-4 left-1/2 transform -translate-x-1/2 p-2 px-3 bg-yellow-50 border-yellow-200">
-          <div className="flex items-center gap-2 text-xs text-yellow-700">
-            <svg className="animate-spin h-3 w-3 text-yellow-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Verificando estado de sesión...
-          </div>
-        </Card>
-      )}
-      
-      {loginMutation.isError && (
-        <Card className="fixed top-4 left-1/2 transform -translate-x-1/2 p-2 px-3 bg-red-50 border-red-200">
-          <div className="flex items-center gap-2 text-xs text-red-700">
-            <AlertCircle className="h-3 w-3" />
-            Error de conexión. Intente nuevamente.
-          </div>
-        </Card>
-      )}
       
       {/* Logo y cabecera central */}
       <div className="text-center mb-10 relative z-10 animate-fadeIn">
@@ -227,36 +179,7 @@ export default function AuthPage() {
               )}
             </Button>
             
-            {/* Credenciales demo para facilitar pruebas */}
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="flex items-center mb-2">
-                <AlertCircle className="h-4 w-4 text-blue-500 mr-2" />
-                <span className="text-sm font-medium text-blue-700">Acceso rápido demo</span>
-              </div>
-              <p className="text-xs text-blue-600 mb-2">Usuario: <span className="font-medium">demo</span></p>
-              <p className="text-xs text-blue-600 mb-2">Contraseña: <span className="font-medium">demobilleo</span></p>
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full text-xs h-8 border-blue-200 bg-blue-100/50 hover:bg-blue-200 hover:text-blue-800 text-blue-700"
-                onClick={() => {
-                  // Prellenar el formulario con las credenciales de demo
-                  setLoginFormData({
-                    username: "demo",
-                    password: "demobilleo"
-                  });
-                  
-                  // Esperar un momento y luego enviar el formulario automáticamente
-                  setTimeout(() => {
-                    handleLoginSubmit({ preventDefault: () => {} } as React.FormEvent);
-                  }, 300);
-                }}
-              >
-                Iniciar sesión con demo
-              </Button>
-              <p className="text-xs mt-2 text-blue-500 italic">Solo para fines de demostración</p>
-            </div>
+            {/* Se eliminaron credenciales demo y opciones de diagnóstico */}
           </form>
         </div>
       </div>
