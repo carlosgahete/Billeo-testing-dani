@@ -1103,49 +1103,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Configurar servidor WebSocket para actualizaciones en tiempo real
-  console.log('Configurando servidor WebSocket en path: /ws');
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
   // Almacenar conexiones activas
   const clients = new Set<WebSocket>();
   
-  // Configurar heartbeat para detectar conexiones muertas
-  function heartbeat() {
-    (this as any).isAlive = true;
-  }
-  
-  // Función para enviar ping a todos los clientes
-  function ping() {
-    wss.clients.forEach((ws: WebSocket & { isAlive?: boolean }) => {
-      if (ws.isAlive === false) {
-        console.log('Eliminando conexión WebSocket inactiva');
-        return ws.terminate();
-      }
-      
-      ws.isAlive = false;
-      try {
-        ws.ping();
-      } catch (e) {
-        console.log('Error al enviar ping a cliente WebSocket', e);
-        ws.terminate();
-      }
-    });
-  }
-  
-  // Iniciar heartbeat
-  const pingInterval = setInterval(ping, 30000);
-  
-  // Limpiar intervalo cuando el servidor se apaga
-  wss.on('close', () => {
-    clearInterval(pingInterval);
-  });
-  
-  wss.on('connection', (ws: WebSocket & { isAlive?: boolean }) => {
+  wss.on('connection', (ws) => {
     console.log('Nueva conexión WebSocket establecida');
-    
-    // Inicializar heartbeat
-    ws.isAlive = true;
-    ws.on('pong', heartbeat);
     
     // Añadir cliente a la lista de conexiones activas
     clients.add(ws);
@@ -1156,58 +1120,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       clients.delete(ws);
     });
     
-    // Manejar errores para evitar caídas en el servidor
-    ws.on('error', (error) => {
-      console.error('Error en conexión WebSocket:', error);
-      try {
-        clients.delete(ws);
-        ws.terminate();
-      } catch (e) {
-        console.error('Error al cerrar WebSocket con error:', e);
-      }
-    });
-    
-    // Manejar mensajes entrantes del cliente
+    // Opcional: Manejar mensajes entrantes del cliente
     ws.on('message', (message) => {
-      try {
-        // Intentamos parsear como JSON por si el cliente envía datos
-        const parsed = JSON.parse(message.toString());
-        console.log('Mensaje recibido:', parsed);
-        
-        // Si el cliente solicita un estado de conexión, responder
-        if (parsed.type === 'ping' || parsed.type === 'check-connection') {
-          ws.send(JSON.stringify({
-            type: 'pong',
-            timestamp: new Date().toISOString(),
-            message: 'Conexión activa'
-          }));
-        }
-      } catch (e) {
-        // Si no es JSON, simplemente loguear el mensaje como texto
-        console.log('Mensaje no-JSON recibido:', message.toString());
-      }
+      console.log('Mensaje recibido:', message.toString());
     });
     
-    // Enviar un mensaje de confirmación de conexión
-    try {
-      ws.send(JSON.stringify({
-        type: 'connection',
-        timestamp: new Date().toISOString(),
-        message: 'Conexión WebSocket establecida con éxito',
-        clientCount: clients.size
-      }));
-    } catch (e) {
-      console.error('Error al enviar mensaje de confirmación de conexión:', e);
-    }
-    
-    // Enviar un ping inicial para probar la conexión
-    setTimeout(() => {
-      try {
-        ws.ping(); 
-      } catch (e) {
-        console.error('Error en ping inicial:', e);
-      }
-    }, 1000);
+    // Enviar un mensaje inicial para confirmar la conexión
+    ws.send(JSON.stringify({
+      type: 'connection',
+      message: 'Conexión WebSocket establecida con éxito'
+    }));
   });
   
   // Función global para notificar a todos los clientes
@@ -1218,33 +1140,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       data
     });
     
-    let successCount = 0;
-    let failCount = 0;
-    
     clients.forEach((client) => {
-      try {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(message);
-          successCount++;
-        } else {
-          failCount++;
-        }
-      } catch (e) {
-        console.error('Error al enviar mensaje WebSocket:', e);
-        failCount++;
-        try {
-          client.terminate();
-          clients.delete(client);
-        } catch (closeErr) {
-          console.error('Error al cerrar cliente con error:', closeErr);
-        }
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
       }
     });
-    
-    console.log(
-      `WebSocket: Notificación enviada (${type}) a ${successCount} clientes activos. ` +
-      `Fallos: ${failCount}. Total clientes: ${clients.size}`
-    );
+    console.log(`WebSocket: Notificación enviada (${type}) a ${clients.size} clientes`);
   };
 
   // Auth routes are now handled by the setupAuth function

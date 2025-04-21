@@ -66,31 +66,14 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }, [refetch]);
   
   // Conectarnos al WebSocket para recibir actualizaciones en tiempo real
-  const { isConnected, lastMessage, reconnect } = useWebSocketDashboard(handleWebSocketRefresh);
+  const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
   
   // Detectar tipo de actualización para mostrar indicador específico
-  // y disparar eventos personalizados para que otros componentes puedan reaccionar
   useEffect(() => {
     if (lastMessage?.type) {
-      // Actualizar estado visual
       setLastUpdateType(lastMessage.type);
-      
       // También se resetea automáticamente después de un tiempo
       setTimeout(() => setLastUpdateType(null), 3000);
-      
-      // Crear un evento personalizado para que otros componentes puedan escucharlo
-      // Esto permite que componentes como ExpensesByCategoryApple puedan reaccionar
-      // a actualizaciones del dashboard sin tener que reimplementar la lógica de WebSocket
-      const customEvent = new CustomEvent('dashboard-websocket-event', { 
-        detail: lastMessage,
-        bubbles: true,
-        cancelable: true
-      });
-      
-      // Disparar el evento
-      window.dispatchEvent(customEvent);
-      
-      console.log(`📢 Evento websocket "${lastMessage.type}" disparado para componentes del dashboard`);
     }
   }, [lastMessage]);
   
@@ -321,20 +304,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-2">
           {/* Indicador de conexión WebSocket - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
-            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`}></div>
-            <span className="text-xs" style={{ minWidth: '70px' }}>{isConnected ? 'Tiempo real' : 'Conectando...'}</span>
-            
-            {/* Botón de reconexión manual cuando está desconectado */}
-            {!isConnected && (
-              <button 
-                onClick={reconnect}
-                className="ml-2 p-1 text-xs text-blue-600 hover:text-blue-800 flex items-center"
-                title="Intentar reconectar"
-              >
-                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                <span>Reconectar</span>
-              </button>
-            )}
+            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+            <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
             
             {/* Notificación de actualización en tiempo real */}
             <AnimatePresence>
@@ -361,12 +332,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           
           {/* Indicador de conexión WebSocket - Versión para móvil (solo punto) */}
           <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
-            <div 
-              className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-amber-500 animate-spin'}`} 
-              title={isConnected ? 'Conectado en tiempo real' : 'Conectando...'}
-              onClick={!isConnected ? reconnect : undefined}
-              style={!isConnected ? {cursor: 'pointer'} : {}}
-            ></div>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
+                 title={isConnected ? 'Conectado en tiempo real' : 'Desconectado'}></div>
             
             {/* Notificación móvil */}
             <AnimatePresence>

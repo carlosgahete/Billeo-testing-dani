@@ -388,27 +388,7 @@ export async function generateInvoicePDFBlob(
     return pdfBlob;
   } catch (error) {
     console.error("Error generando PDF como blob:", error);
-    
-    // En lugar de propagar el error, intentamos generar un PDF sin logo
-    try {
-      console.log("Intentando generar PDF sin logo como fallback...");
-      const pdfBlob = await generateInvoicePDF(invoice, client, items, true, null) as Blob;
-      return pdfBlob;
-    } catch (fallbackError) {
-      console.error("Error generando PDF de respaldo:", fallbackError);
-      
-      // Si todo falla, crear un PDF básico con información mínima
-      const doc = new jsPDF();
-      doc.setFont("helvetica");
-      doc.setFontSize(16);
-      doc.text(`FACTURA ${invoice.invoiceNumber}`, 105, 20, { align: "center" });
-      doc.setFontSize(12);
-      doc.text(`Error al generar el PDF completo.`, 105, 30, { align: "center" });
-      doc.text(`Cliente: ${client.name}`, 105, 40, { align: "center" });
-      doc.text(`Importe: ${invoice.total.toFixed(2)} €`, 105, 50, { align: "center" });
-      
-      return doc.output('blob');
-    }
+    throw error;
   }
 }
 
@@ -466,7 +446,6 @@ export async function generateInvoicePDFAsBase64(
         console.log("Logo añadido correctamente al PDF base64 con dimensiones:", width, height);
       } catch (logoError) {
         console.error("Error añadiendo logo al PDF base64:", logoError);
-        // Continuamos sin el logo, no interrumpimos el proceso
       }
     }
     
@@ -485,7 +464,6 @@ export async function generateInvoicePDFAsBase64(
       }
     } catch (error) {
       console.error("Error obteniendo datos de empresa desde sessionStorage para PDF base64:", error);
-      // Continuamos con valores por defecto
     }
     
     // Usar los datos de la empresa o valores de respaldo
@@ -548,150 +526,118 @@ export async function generateInvoicePDFAsBase64(
     doc.setTextColor(25, 118, 210);
     doc.text("DETALLES DE LA FACTURA", 14, 110);
     
-    try {
-      // Create the table with items
-      autoTable(doc, {
-        startY: 115,
-        head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
-        body: items.map(item => [
-          item.description,
-          Number(item.quantity).toFixed(2),
-          `${Number(item.unitPrice).toFixed(2)} €`,
-          `${Number(item.taxRate).toFixed(2)} %`,
-          `${Number(item.subtotal).toFixed(2)} €`
-        ]),
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [25, 118, 210], textColor: [255, 255, 255] },
-        columnStyles: {
-          0: { cellWidth: 'auto' },
-          1: { cellWidth: 20, halign: 'right' },
-          2: { cellWidth: 30, halign: 'right' },
-          3: { cellWidth: 20, halign: 'right' },
-          4: { cellWidth: 30, halign: 'right' }
-        },
-        margin: { left: 14, right: 14 }
+    // Create the table with items
+    autoTable(doc, {
+      startY: 115,
+      head: [['Descripción', 'Cantidad', 'Precio Unitario', 'IVA %', 'Subtotal']],
+      body: items.map(item => [
+        item.description,
+        Number(item.quantity).toFixed(2),
+        `${Number(item.unitPrice).toFixed(2)} €`,
+        `${Number(item.taxRate).toFixed(2)} %`,
+        `${Number(item.subtotal).toFixed(2)} €`
+      ]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [25, 118, 210], textColor: [255, 255, 255] },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 20, halign: 'right' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 20, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+    
+    // Add totals
+    // @ts-ignore
+    const finalY = doc.lastAutoTable.finalY + 10;
+    let yOffset = 0;
+    
+    doc.setFontSize(10);
+    doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+    yOffset += 6;
+    
+    doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+    yOffset += 6;
+    
+    // Add additional taxes if they exist
+    if (invoice.additionalTaxes && invoice.additionalTaxes.length > 0) {
+      invoice.additionalTaxes.forEach(tax => {
+        let taxText = tax.name;
+        let taxAmount = tax.amount;
+        
+        // Si es un porcentaje, calculamos el valor real
+        if (tax.isPercentage) {
+          taxText = `${tax.name} (${tax.amount}%)`;
+          taxAmount = (invoice.subtotal * tax.amount) / 100;
+        }
+        
+        doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
+        doc.text(`${Number(taxAmount).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+        yOffset += 6;
       });
-    } catch (tableError) {
-      console.error("Error generando tabla de elementos de factura:", tableError);
-      // Si falla la tabla, añadimos un mensaje simple
-      doc.setFontSize(10);
-      doc.setTextColor(0);
-      doc.text("Error al generar la tabla de elementos", 14, 120);
     }
     
-    try {
-      // Add totals
-      // @ts-ignore
-      const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 130;
-      let yOffset = 0;
+    // Add total with a line above
+    doc.setDrawColor(200);
+    doc.line(140, finalY + yOffset, 195, finalY + yOffset);
+    yOffset += 4;
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL:", 140, finalY + yOffset, { align: "right" });
+    doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
+    
+    // Add payment details and notes
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    
+    let notesYPosition = finalY + 30;
+    
+    // Comprueba si las notas ya contienen información bancaria
+    const notesHaveBankInfo = invoice.notes && 
+      (invoice.notes.toLowerCase().includes("transferencia bancaria") || 
+       invoice.notes.toLowerCase().includes("iban"));
+    
+    // Si las notas no contienen información bancaria, la añadimos
+    if (!notesHaveBankInfo) {
+      doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
+      notesYPosition += 6;
       
-      doc.setFontSize(10);
-      doc.text("Subtotal:", 140, finalY + yOffset, { align: "right" });
-      doc.text(`${Number(invoice.subtotal).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-      yOffset += 6;
-      
-      doc.text("IVA:", 140, finalY + yOffset, { align: "right" });
-      doc.text(`${Number(invoice.tax).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-      yOffset += 6;
-      
-      // Add additional taxes if they exist
-      if (invoice.additionalTaxes && invoice.additionalTaxes.length > 0) {
-        invoice.additionalTaxes.forEach(tax => {
-          let taxText = tax.name;
-          let taxAmount = tax.amount;
-          
-          // Si es un porcentaje, calculamos el valor real
-          if (tax.isPercentage) {
-            taxText = `${tax.name} (${tax.amount}%)`;
-            taxAmount = (invoice.subtotal * tax.amount) / 100;
-          }
-          
-          doc.text(`${taxText}:`, 140, finalY + yOffset, { align: "right" });
-          doc.text(`${Number(taxAmount).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-          yOffset += 6;
-        });
-      }
-      
-      // Add total with a line above
-      doc.setDrawColor(200);
-      doc.line(140, finalY + yOffset, 195, finalY + yOffset);
-      yOffset += 4;
-      
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("TOTAL:", 140, finalY + yOffset, { align: "right" });
-      doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, finalY + yOffset, { align: "right" });
-      
-      // Add payment details and notes
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      
-      let notesYPosition = finalY + 30;
-      
-      // Comprueba si las notas ya contienen información bancaria
-      const notesHaveBankInfo = invoice.notes && 
-        (invoice.notes.toLowerCase().includes("transferencia bancaria") || 
-         invoice.notes.toLowerCase().includes("iban"));
-      
-      // Si las notas no contienen información bancaria, la añadimos
-      if (!notesHaveBankInfo) {
-        doc.text("FORMA DE PAGO: Transferencia bancaria", 14, notesYPosition);
-        notesYPosition += 6;
-        
-        // Usar el IBAN de los datos de empresa o valor por defecto
-        const bankAccount = companyData?.bankAccount || "ES12 3456 7890 1234 5678 9012";
-        doc.text(`IBAN: ${bankAccount}`, 14, notesYPosition);
-        notesYPosition += 10;
-      }
-      
-      // Add notes if they exist
-      if (invoice.notes) {
-        doc.text("NOTAS:", 14, notesYPosition);
-        notesYPosition += 6;
-        doc.text(invoice.notes, 14, notesYPosition);
-      }
-      
-      // Add footer
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(
-          "Billeo - Gestión financiera",
-          105, 285, { align: "center" }
-        );
-        doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
-      }
-    } catch (totalsError) {
-      console.error("Error generando totales de factura:", totalsError);
-      // Si falla algo en los totales o notas, añadimos una simple suma
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("TOTAL:", 140, 200, { align: "right" });
-      doc.text(`${Number(invoice.total).toFixed(2)} €`, 195, 200, { align: "right" });
+      // Usar el IBAN de los datos de empresa o valor por defecto
+      const bankAccount = companyData?.bankAccount || "ES12 3456 7890 1234 5678 9012";
+      doc.text(`IBAN: ${bankAccount}`, 14, notesYPosition);
+      notesYPosition += 10;
+    }
+    
+    // Add notes if they exist
+    if (invoice.notes) {
+      doc.text("NOTAS:", 14, notesYPosition);
+      notesYPosition += 6;
+      doc.text(invoice.notes, 14, notesYPosition);
+    }
+    
+    // Add footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        "Billeo - Gestión financiera",
+        105, 285, { align: "center" }
+      );
+      doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: "right" });
     }
     
     // Devolver como base64
     return doc.output('datauristring').split(',')[1];
   } catch (error) {
     console.error("Error generando PDF como base64:", error);
-    
-    // Generar un PDF mínimo como fallback
-    try {
-      const doc = new jsPDF();
-      doc.setFont("helvetica");
-      doc.setFontSize(16);
-      doc.text(`FACTURA ${invoice.invoiceNumber}`, 105, 20, { align: "center" });
-      doc.setFontSize(12);
-      doc.text(`Cliente: ${client.name}`, 105, 40, { align: "center" });
-      doc.text(`Importe: ${Number(invoice.total).toFixed(2)} €`, 105, 50, { align: "center" });
-      doc.text(`Error recuperable generando PDF completo`, 105, 70, { align: "center" });
-      return doc.output('datauristring').split(',')[1];
-    } catch (fallbackError) {
-      console.error("Error generando PDF fallback:", fallbackError);
-      throw new Error("No se pudo generar el PDF");
-    }
+    throw error;
   }
 }
 
