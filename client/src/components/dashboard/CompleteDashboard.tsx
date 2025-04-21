@@ -34,7 +34,6 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [_, navigate] = useLocation();
   const [updateFlash, setUpdateFlash] = useState(false);
   const [lastUpdateType, setLastUpdateType] = useState<string | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Año actual como string para uso en cálculos
@@ -67,14 +66,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }, [refetch]);
   
   // Usamos polling en lugar de WebSockets para monitorear actualizaciones del dashboard
-  const { isConnected, lastMessage } = useDashboardPolling(handleDashboardRefresh);
-  
-  // Actualizar el timestamp cuando recibimos un mensaje
-  useEffect(() => {
-    if (lastMessage) {
-      setLastUpdatedAt(Date.now());
-    }
-  }, [lastMessage]);
+  const { isConnected, lastMessage, lastUpdatedAt } = useDashboardPolling(handleDashboardRefresh);
   
   // Detectar tipo de actualización para mostrar indicador específico
   useEffect(() => {

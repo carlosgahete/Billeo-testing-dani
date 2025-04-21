@@ -108,6 +108,7 @@ export function useDashboardPolling(
   return {
     isConnected: isActive, // Mantenemos el mismo nombre que en useWebSocketDashboard para compatibilidad
     lastMessage,
+    lastUpdatedAt,
     errorCount
   };
 }
