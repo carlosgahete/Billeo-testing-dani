@@ -91,6 +91,12 @@ export function useDashboardData(
   useEffect(() => {
     // Función para manejar eventos que requieren actualización del dashboard
     const handleUpdateEvent = (event: Event) => {
+      // Si es un evento de cambio de filtros, ya nos encargamos separadamente
+      if ((event as CustomEvent).type === 'dashboard-filters-changed') {
+        console.log(`📊 Evento de cambio de filtros detectado, ya manejado por filtersRefreshTrigger`);
+        return;
+      }
+      
       console.log(`🔄 Evento ${(event as CustomEvent).type} detectado en useDashboardData, forzando actualización...`);
       // Incrementar el contador para forzar la recarga
       setRefreshTrigger((prev: number) => prev + 1);
@@ -108,7 +114,8 @@ export function useDashboardData(
     window.addEventListener('dashboard-refresh-required', handleUpdateEvent);
     
     // Evento específico para cambios en los filtros
-    window.addEventListener('dashboard-filters-changed', handleUpdateEvent);
+    // Ya no lo añadimos aquí, se maneja en el efecto de filtersRefreshTrigger
+    // window.addEventListener('dashboard-filters-changed', handleUpdateEvent);
     
     // Limpiar todos los listeners al desmontar
     return () => {
@@ -122,13 +129,18 @@ export function useDashboardData(
       
       // General
       window.removeEventListener('dashboard-refresh-required', handleUpdateEvent);
-      window.removeEventListener('dashboard-filters-changed', handleUpdateEvent);
+      // Ya no lo eliminamos, no lo añadimos
+      // window.removeEventListener('dashboard-filters-changed', handleUpdateEvent);
     };
   }, []);
 
   // Utilizamos el endpoint fix y pasamos los parámetros de filtrado explícitamente
   const dashboardQuery = useQuery({
+    // Reducir cantidad de peticiones manteniendo solo un refreshTrigger (o el filtersRefreshTrigger o nuestro propio trigger)
     queryKey: [`/api/stats/dashboard-fix`, finalYear, finalPeriod, refreshTrigger],
+    // Esta configuración es clave para evitar múltiples llamadas innecesarias
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
       console.log(`📊 Cargando datos frescos del dashboard: año=${year}, periodo=${period} [${trigger}]...`);
