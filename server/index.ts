@@ -10,6 +10,8 @@ import { configureOptionsRoutes } from "./routes-options";
 import { configureSimpleExpensesRoutes } from "./routes-simple-expenses";
 import { configureExpensesRoutes } from "./routes-expenses";
 import { configureFileRoutes } from "./routes-files-new";
+import { registerDashboardStateRoutes } from "./routes-dashboard-state";
+import { updateDashboardState } from "./dashboard-state";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Obtener el equivalente a __dirname en ESM
@@ -121,6 +123,10 @@ app.use((req, res, next) => {
   
   // Configurar middleware para CORS y opciones comunes
   configureOptionsRoutes(app);
+  
+  // Registrar las rutas del nuevo estado del dashboard
+  registerDashboardStateRoutes(app);
+  console.log('Sistema de estado del dashboard mejorado registrado correctamente');
   
   // Ruta HTML pura para presupuestos - acceso directo sin autenticación
   app.get('/mobile-quotes', (req, res) => {

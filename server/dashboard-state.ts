@@ -10,7 +10,12 @@ import { dashboardEvents, dashboardState } from "../shared/schema";
  * @param data - Datos adicionales relacionados con el evento (no se almacena)
  * @param userId - ID del usuario que realizó la acción
  */
-export async function updateDashboardState(type: string, data: any = null, userId: number) {
+export async function updateDashboardState(type: string, data: any = null, userId: number | undefined) {
+  // Verificar que userId sea un número válido
+  if (userId === undefined) {
+    console.error('updateDashboardState: userId es undefined, se requiere un ID de usuario válido');
+    return;
+  }
   try {
     // Comprobar si ya existe un registro para este usuario
     const [existing] = await db.select()
@@ -54,6 +59,6 @@ global.registerDashboardEvent = updateDashboardState; // Alias para compatibilid
 
 // Ampliar la declaración global
 declare global {
-  var updateDashboardState: (type: string, data?: any, userId?: number) => Promise<void>;
-  var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
+  var updateDashboardState: (type: string, data?: any, userId?: number | undefined) => Promise<void>;
+  var registerDashboardEvent: (type: string, data?: any, userId?: number | undefined) => Promise<void>;
 }
