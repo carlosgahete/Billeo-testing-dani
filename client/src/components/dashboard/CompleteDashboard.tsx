@@ -34,6 +34,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [_, navigate] = useLocation();
   const [updateFlash, setUpdateFlash] = useState(false);
   const [lastUpdateType, setLastUpdateType] = useState<string | null>(null);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false); // Estado local para controlar la visualización de carga
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Año actual como string para uso en cálculos
@@ -105,6 +106,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     if (filters) {
       console.log("APLICANDO CAMBIO DE AÑO DIRECTO:", newYear);
       
+      // Mostrar indicador de carga mientras cambiamos año
+      setIsLoadingLocal(true);
+      
       // 1. Limpiar la caché completamente
       queryClient.clear();
       
@@ -114,15 +118,25 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       // 3. Forzar actualización directa de datos
       window.sessionStorage.setItem('dashboard_force_refresh', Date.now().toString());
       
-      // 4. Forzar una navegación para recargar el dashboard con el nuevo año
-      // Esta es una solución drástica pero efectiva
-      window.location.href = `/?year=${newYear}&refresh=${Date.now()}`;
+      // 4. Usar un pequeño retraso para permitir que la UI muestre el estado de carga
+      setTimeout(() => {
+        // 5. Forzar una navegación para recargar el dashboard con el nuevo año
+        // Esta es una solución drástica pero efectiva
+        window.location.href = `/?year=${newYear}&refresh=${Date.now()}`;
+      }, 300);
+      
+      // Mostrar un mensaje de transición al usuario
+      setUpdateFlash(true);
+      setLastUpdateType(`cambiando-año-${newYear}`);
     }
   }, [filters]);
   
   const handleChangePeriod = useCallback((newPeriod: string) => {
     if (filters) {
       console.log("APLICANDO CAMBIO DE PERIODO DIRECTO:", newPeriod);
+      
+      // Mostrar indicador de carga mientras cambiamos periodo
+      setIsLoadingLocal(true);
       
       // 1. Limpiar la caché completamente
       queryClient.clear();
@@ -133,8 +147,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       // 3. Forzar actualización directa de datos
       window.sessionStorage.setItem('dashboard_force_refresh', Date.now().toString());
       
-      // 4. Forzar una navegación para recargar el dashboard con el nuevo periodo
-      window.location.href = `/?period=${newPeriod}&year=${filters.year}&refresh=${Date.now()}`;
+      // 4. Usar un pequeño retraso para permitir que la UI muestre el estado de carga
+      setTimeout(() => {
+        // 5. Forzar una navegación para recargar el dashboard con el nuevo periodo
+        // Esta es una solución drástica pero efectiva
+        window.location.href = `/?period=${newPeriod}&year=${filters.year}&refresh=${Date.now()}`;
+      }, 300);
+      
+      // Mostrar un mensaje de transición al usuario
+      setUpdateFlash(true);
+      setLastUpdateType(`cambiando-periodo-${newPeriod}`);
     }
   }, [filters]);
   
@@ -302,10 +324,36 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     </div>;
   }
   
-  if (isLoading) {
+  // Mostrar estado de carga si está cargando datos o si estamos en transición local
+  if (isLoading || isLoadingLocal) {
+    // Detectar si estamos cambiando año o periodo basado en el tipo de mensaje
+    const isChangingYear = lastUpdateType ? lastUpdateType.startsWith('cambiando-año-') : false;
+    const isChangingPeriod = lastUpdateType ? lastUpdateType.startsWith('cambiando-periodo-') : false;
+    
+    let yearValue = '';
+    if (isChangingYear && lastUpdateType) {
+      yearValue = lastUpdateType.replace('cambiando-año-', '');
+    }
+    
+    let periodValue = '';
+    if (isChangingPeriod && lastUpdateType) {
+      periodValue = lastUpdateType.replace('cambiando-periodo-', '');
+      // Formatear periodos para ser más legibles
+      if (periodValue === 'all') periodValue = 'todo el año';
+      else if (periodValue === 'Q1' || periodValue === 'q1') periodValue = 'trimestre 1';
+      else if (periodValue === 'Q2' || periodValue === 'q2') periodValue = 'trimestre 2';
+      else if (periodValue === 'Q3' || periodValue === 'q3') periodValue = 'trimestre 3';
+      else if (periodValue === 'Q4' || periodValue === 'q4') periodValue = 'trimestre 4';
+    }
+    
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-sm text-gray-600">
+          {isChangingYear ? `Cambiando al año ${yearValue}...` : 
+           isChangingPeriod ? `Filtrando por ${periodValue}...` : 
+           isLoadingLocal ? 'Cambiando filtros...' : 'Cargando datos...'}
+        </p>
       </div>
     );
   }
@@ -336,20 +384,25 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 // Forzar una actualización global cambiando el refreshTrigger
                 filters.forceRefresh();
                 // También refrescar directamente los datos
-                refetch().then(() => {
+                // Primero realizamos una actualización de estado
+                setUpdateFlash(true);
+                setLastUpdateType("manual");
+                
+                // Luego refrescamos los datos
+                refetch();
+                
+                // Registramos el resultado en consola
+                console.log("✅ Refresco manual solicitado");
+                
+                // Quitar el flash después de 2 segundos
+                if (updateTimerRef.current) {
+                  clearTimeout(updateTimerRef.current);
+                }
+                
+                updateTimerRef.current = setTimeout(() => {
+                  setUpdateFlash(false);
                   console.log("✅ Refresco manual completado");
-                  setUpdateFlash(true);
-                  setLastUpdateType("manual");
-                  
-                  // Quitar el flash después de 2 segundos
-                  if (updateTimerRef.current) {
-                    clearTimeout(updateTimerRef.current);
-                  }
-                  
-                  updateTimerRef.current = setTimeout(() => {
-                    setUpdateFlash(false);
-                  }, 2000);
-                });
+                }, 2000);
               }}
               className="ml-2 p-1 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
               title="Refrescar datos manualmente"
