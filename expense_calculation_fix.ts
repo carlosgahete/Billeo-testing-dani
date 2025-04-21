@@ -49,8 +49,12 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
           const quarter = getQuarter(invoiceDate);
           
           // Comparar con el trimestre solicitado (q1, q2, q3, q4)
-          const requestedQuarter = parseInt(period.substring(1));
-          return quarter === requestedQuarter;
+          if (period.startsWith('q') && period.length === 2) {
+            const requestedQuarter = parseInt(period.substring(1));
+            return quarter === requestedQuarter;
+          } else {
+            console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          }
         }
         
         // Si no hay filtro de periodo o es 'all', incluimos la factura
@@ -75,8 +79,12 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
           const quarter = getQuarter(txnDate);
           
           // Comparar con el trimestre solicitado (q1, q2, q3, q4)
-          const requestedQuarter = parseInt(period.substring(1));
-          return quarter === requestedQuarter;
+          if (period.startsWith('q') && period.length === 2) {
+            const requestedQuarter = parseInt(period.substring(1));
+            return quarter === requestedQuarter;
+          } else {
+            console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          }
         }
         
         // Si no hay filtro de periodo o es 'all', incluimos la transacción
@@ -101,8 +109,12 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
           const quarter = getQuarter(quoteDate);
           
           // Comparar con el trimestre solicitado (q1, q2, q3, q4)
-          const requestedQuarter = parseInt(period.substring(1));
-          return quarter === requestedQuarter;
+          if (period.startsWith('q') && period.length === 2) {
+            const requestedQuarter = parseInt(period.substring(1));
+            return quarter === requestedQuarter;
+          } else {
+            console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          }
         }
         
         // Si no hay filtro de periodo o es 'all', incluimos el presupuesto

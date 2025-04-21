@@ -110,6 +110,17 @@ export function useSimpleDashboardFilters() {
   const changePeriod = useCallback((newPeriod: string) => {
     console.log('Hook: Solicitando cambio de periodo a:', newPeriod);
     
+    // Verificar que el periodo tiene un formato válido
+    const isValidPeriod = newPeriod === 'all' || 
+                         (newPeriod.startsWith('q') && 
+                          newPeriod.length === 2 && 
+                          ['1', '2', '3', '4'].includes(newPeriod.charAt(1)));
+    
+    if (!isValidPeriod) {
+      console.error(`Formato de periodo no válido: ${newPeriod}, usando 'all' como fallback`);
+      newPeriod = 'all';
+    }
+    
     // Actualizar estado global (que a su vez actualizará el estado local vía subscription)
     filtersInstance.setState('period', newPeriod);
     
