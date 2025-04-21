@@ -2,17 +2,17 @@ import { Request, Response } from 'express';
 import { IStorage } from '../storage';
 
 /**
- * Endpoint simplificado para el dashboard que solo realiza cálculos básicos
- * para garantizar que los datos se muestren correctamente
+ * Endpoint mejorado para el dashboard que incluye mejor manejo de filtros
+ * y soporte para autenticación y debugging
  */
-export function setupSimplifiedDashboardEndpoint(
+export function setupEnhancedDashboardEndpoint(
   app: any, 
   requireAuth: any, 
   storage: IStorage
 ) {
   // Crear un middleware personalizado para debug de autenticación
   const authDebugMiddleware = (req: Request, res: Response, next: any) => {
-    console.log("⚠️ Información de sesión en /api/stats/dashboard-fix:");
+    console.log("⚠️ Información de sesión en /api/stats/dashboard-enhanced:");
     console.log("- Session existe:", !!req.session);
     console.log("- Session ID:", req.session?.id);
     console.log("- IsAuthenticated:", req.isAuthenticated?.());
@@ -42,17 +42,10 @@ export function setupSimplifiedDashboardEndpoint(
     next();
   };
   
-  // Aplicar el mismo middleware de depuración al endpoint original también
-  app.get("/api/stats/dashboard", authDebugMiddleware, async (req: Request, res: Response) => {
-    // Simplemente redirigir a la versión fix
-    console.log("🔀 Redirigiendo de /api/stats/dashboard al endpoint fix...");
-    req.url = req.url.replace('/api/stats/dashboard', '/api/stats/dashboard-fix');
-    app._router.handle(req, res);
-  });
-  
-  app.get("/api/stats/dashboard-fix", authDebugMiddleware, async (req: Request, res: Response) => {
+  // Registrar rutas con el middleware personalizado
+  app.get("/api/stats/dashboard-enhanced", authDebugMiddleware, async (req: Request, res: Response) => {
     try {
-      console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
+      console.log("📊 Iniciando manejo de solicitud a /api/stats/dashboard-enhanced - VERSIÓN MEJORADA");
       
       // Configurar encabezados para evitar almacenamiento en caché de datos financieros
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -60,11 +53,13 @@ export function setupSimplifiedDashboardEndpoint(
       res.setHeader('Pragma', 'no-cache');
       
       // Obtener parámetros de filtrado del usuario
-      const { year, period, timestamp } = req.query;
+      const { year, period } = req.query;
+      
+      // Obtener año actual para filtros por defecto
+      const currentYear = new Date().getFullYear();
       
       // Registrar la consulta para depuración
-      const formattedDate = timestamp ? new Date(timestamp as string).toISOString() : new Date().toISOString();
-      console.log(`📊 Consultando datos fiscales [SIMPLIFICADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
+      console.log(`📊 Consultando datos fiscales [ENHANCED]: { year: '${year || currentYear}', period: '${period || 'all'}' }`);
       
       // Obtener el ID del usuario autenticado
       const userId = req.session.userId;
@@ -74,7 +69,12 @@ export function setupSimplifiedDashboardEndpoint(
         const invoices = await storage.getInvoicesByUserId(userId);
         
         // Calcular años únicos para mostrar en filtros
-        const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
+        const uniqueYearsSet = new Set<number>();
+        invoices.forEach(inv => {
+          const invYear = new Date(inv.issueDate).getFullYear();
+          uniqueYearsSet.add(invYear);
+        });
+        const uniqueYears = Array.from(uniqueYearsSet);
         console.log("Años de transacciones:", uniqueYears);
         
         // Filtrar facturas por año si se proporciona
@@ -203,9 +203,6 @@ export function setupSimplifiedDashboardEndpoint(
             totalBaseImponibleGastos += baseAmount;
             totalIvaSoportado += ivaAmount;
             totalIrpfGastos += irpfAmount;
-            
-            // Log para depuración
-            console.log(`Gasto procesado: ID=${transaction.id}, Total=${totalAmount}, Base=${baseAmount}, IVA=${ivaAmount}, IRPF=${irpfAmount}`);
           } catch (error) {
             console.error("Error procesando gasto:", error);
           }
@@ -286,36 +283,18 @@ export function setupSimplifiedDashboardEndpoint(
         
         // 16. Estadísticas de períodos
         const quarterIncome = invoiceIncome;
-        const quarterCount = filteredInvoices.length;
-        const yearIncome = invoiceIncome;
-        const yearCount = filteredInvoices.length;
+        const quarterInvoiceCount = issuedCount;
         
-        // Estructura para organizar información fiscal
-        const taxStats = {
-          ivaRepercutido,
-          ivaSoportado,
-          ivaLiquidar: vatBalanceFinal,
-          irpfRetenido: irpfRetenidoIngresos,
-          irpfTotal: irpfRetenidoIngresos + totalIrpfFromExpensesInvoices,
-          irpfPagar: incomeTaxFinal
-        };
+        // 17. Pendientes por pagar
+        const pendingInvoicesTotal = pendingInvoices.reduce((sum, invoice) => {
+          const total = parseFloat(invoice.total || '0');
+          return isNaN(total) ? sum : sum + total;
+        }, 0);
         
-        // Calculamos expenses como la suma total por compatibilidad con logs antiguos
-        const expenses = totalBaseImponibleGastos + totalIvaSoportado;
+        // 18. IRPF acumulado
+        const totalIrpfRetenido = irpfRetenidoIngresos + totalIrpfFromExpensesInvoices;
         
-        console.log("=== RESUMEN DE CÁLCULOS SIMPLIFICADOS ===");
-        console.log(`Ingresos (facturas pagadas): ${invoiceIncome}€`);
-        console.log(`Base imponible ingresos: ${baseImponible}€`);
-        console.log(`IVA repercutido: ${ivaRepercutido}€`);
-        console.log(`Gastos (transacciones): ${expenses}€`);
-        console.log(`Base imponible gastos: ${baseImponibleGastos}€`);
-        console.log(`IVA soportado: ${ivaSoportado}€`);
-        console.log(`IRPF retenido: ${irpfRetenidoIngresos}€`);
-        console.log(`IRPF en gastos: ${totalIrpfGastos}€`);
-        console.log(`Balance bruto: ${balance}€`);
-        console.log(`Resultado neto: ${result}€`);
-        
-        // Preparar respuesta segura
+        // Mostrar resumen para depuración
         
         // Función para asegurar valores numéricos
         const safeNumber = (value: any): number => {
@@ -334,7 +313,7 @@ export function setupSimplifiedDashboardEndpoint(
           // Valores principales 
           income: safeNumber(baseImponible),
           expenses: safeNumber(baseImponibleGastos),
-          pendingInvoices: safeNumber(pendingInvoices.reduce((sum, i) => sum + parseFloat(i.total || '0'), 0)),
+          pendingInvoices: safeNumber(pendingInvoicesTotal),
           pendingCount,
           pendingQuotes: safeNumber(pendingQuotesTotal),
           pendingQuotesCount,
@@ -381,10 +360,10 @@ export function setupSimplifiedDashboardEndpoint(
           
           // Contadores
           issuedCount,
-          quarterCount,
+          quarterCount: quarterInvoiceCount,
           quarterIncome: safeNumber(quarterIncome),
-          yearCount,
-          yearIncome: safeNumber(yearIncome),
+          yearCount: issuedCount,
+          yearIncome: safeNumber(invoiceIncome),
           
           // Información de facturas
           invoices: {
@@ -422,7 +401,7 @@ export function setupSimplifiedDashboardEndpoint(
           
           // Información de diagnóstico
           _debug: {
-            version: 'fix-3.1',
+            version: 'enhanced-1.0',
             timestamp: Date.now(),
             userId,
             totalInvoices: invoices.length,
@@ -432,7 +411,8 @@ export function setupSimplifiedDashboardEndpoint(
             requestPath: req.path,
             method: req.method
           }
-        });
+        };
+        
         // Establecer encabezados para debugging y cache control
         res.setHeader('X-Dashboard-Year', appliedYear);
         res.setHeader('X-Dashboard-Period', appliedPeriod);
@@ -458,8 +438,14 @@ export function setupSimplifiedDashboardEndpoint(
           result: 0,
           baseImponible: 0,
           baseImponibleGastos: 0,
-          period,
-          year,
+          period: defaultPeriod,
+          year: defaultYear,
+          filter: {
+            appliedYear: defaultYear,
+            appliedPeriod: defaultPeriod,
+            wasFiltered: Boolean(year) || Boolean(period),
+            error: true
+          },
           taxStats: {
             ivaRepercutido: 0,
             ivaSoportado: 0,
@@ -472,6 +458,10 @@ export function setupSimplifiedDashboardEndpoint(
       }
     } catch (error) {
       console.error("Error crítico en el endpoint de dashboard:", error);
+      
+      // Fecha actual como fallback
+      const fallbackYear = new Date().getFullYear().toString();
+      
       return res.status(200).json({ 
         message: "Internal server error",
         income: 0, 
@@ -479,8 +469,21 @@ export function setupSimplifiedDashboardEndpoint(
         pendingInvoices: 0, 
         pendingCount: 0,
         period: req.query.period || 'all',
-        year: req.query.year || new Date().getFullYear().toString()
+        year: req.query.year || fallbackYear,
+        filter: {
+          appliedYear: req.query.year || fallbackYear,
+          appliedPeriod: req.query.period || 'all',
+          error: true
+        }
       });
     }
+  });
+  
+  // También redirigir el endpoint normal al enhanced
+  app.get("/api/stats/dashboard", authDebugMiddleware, async (req: Request, res: Response) => {
+    // Simplemente redirigir a la versión enhanced
+    console.log("🔀 Redirigiendo de /api/stats/dashboard al endpoint enhanced...");
+    req.url = req.url.replace('/api/stats/dashboard', '/api/stats/dashboard-enhanced');
+    app._router.handle(req, res);
   });
 }
