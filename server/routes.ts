@@ -1125,14 +1125,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configurar servidor WebSocket para actualizaciones en tiempo real
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  // Almacenar conexiones activas
-  const clients = new Set<WebSocket>();
+  // Almacenar conexiones activas asociadas a usuarios autenticados
+  const clients = new Map<number, Set<WebSocket>>(); // userId -> Set<WebSocket>
+  
+  // Conexiones que aún no están asociadas a un usuario autenticado
+  const pendingClients = new Set<WebSocket>();
   
   wss.on('connection', (ws, req) => {
     console.log('Nueva conexión WebSocket establecida');
     
-    // Añadir cliente a la lista de conexiones activas
-    clients.add(ws);
+    // Añadir cliente a la lista de pendientes
+    pendingClients.add(ws);
+    
+    // Enviar mensaje indicando que debe autenticarse
+    ws.send(JSON.stringify({
+      type: 'auth_required',
+      timestamp: new Date().toISOString(),
+      message: 'Es necesario autenticarse para recibir actualizaciones'
+    }));
     
     // Configurar intervalo de heartbeat para mantener la conexión
     const pingInterval = setInterval(() => {
@@ -1154,7 +1164,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('close', (code, reason) => {
       console.log(`Conexión WebSocket cerrada. Código: ${code}, Razón: ${reason || 'No especificada'}`);
       clearInterval(pingInterval);
-      clients.delete(ws);
+      
+      // Obtener el userId asociado al socket
+      const userId = (ws as any).userId;
+      
+      // Si el socket estaba autenticado, eliminarlo de clients
+      if (userId && clients.has(userId)) {
+        const userClients = clients.get(userId);
+        if (userClients) {
+          userClients.delete(ws);
+          // Si no quedan conexiones para este usuario, eliminar la entrada
+          if (userClients.size === 0) {
+            clients.delete(userId);
+          }
+        }
+      } else {
+        // Si no estaba autenticado, eliminarlo de pendingClients
+        pendingClients.delete(ws);
+      }
     });
     
     // Manejar mensajes entrantes del cliente
@@ -1169,6 +1196,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'pong',
             timestamp: new Date().toISOString()
           }));
+        }
+        
+        // Autenticación del socket
+        if (parsedMessage.type === 'auth') {
+          // Obtener el userId enviado por el cliente
+          const userId = parsedMessage.userId;
+          
+          if (!userId || typeof userId !== 'number') {
+            ws.send(JSON.stringify({
+              type: 'auth_error',
+              message: 'UserId inválido',
+              timestamp: new Date().toISOString()
+            }));
+            return;
+          }
+          
+          // Comprobar si el usuario existe en la base de datos
+          storage.getUser(userId)
+            .then(user => {
+              if (!user) {
+                ws.send(JSON.stringify({
+                  type: 'auth_error',
+                  message: 'Usuario no encontrado',
+                  timestamp: new Date().toISOString()
+                }));
+                return;
+              }
+              
+              // Usuario autenticado correctamente
+              // Eliminar de pendingClients
+              pendingClients.delete(ws);
+              
+              // Añadir a clients
+              if (!clients.has(userId)) {
+                clients.set(userId, new Set());
+              }
+              clients.get(userId)?.add(ws);
+              
+              // Asociar userId al objeto WebSocket para futuras referencias
+              (ws as any).userId = userId;
+              
+              console.log(`WebSocket autenticado para usuario ${userId}`);
+              
+              // Enviar confirmación de autenticación
+              ws.send(JSON.stringify({
+                type: 'auth_success',
+                userId: userId,
+                message: 'Autenticado correctamente para actualizaciones en tiempo real',
+                timestamp: new Date().toISOString()
+              }));
+            })
+            .catch(error => {
+              console.error('Error verificando usuario para WebSocket:', error);
+              ws.send(JSON.stringify({
+                type: 'auth_error',
+                message: 'Error verificando credenciales',
+                timestamp: new Date().toISOString()
+              }));
+            });
         }
       } catch (error) {
         console.error('Error procesando mensaje WebSocket:', error);

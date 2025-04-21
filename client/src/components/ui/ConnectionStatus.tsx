@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ConnectionState } from '@/hooks/useWebSocketDashboard';
-import { AlertCircle, ArrowRightCircle, RefreshCw, LogIn } from 'lucide-react';
+import { AlertCircle, ArrowRightCircle, RefreshCw, LogIn, Check, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
 
 interface ConnectionStatusProps {
@@ -11,41 +11,66 @@ interface ConnectionStatusProps {
   onReconnect: () => void;
   className?: string;
   errorMessage?: string | null;
+  connectionAttempts?: number;
+  lastMessage?: any;
 }
 
 /**
  * Componente para mostrar el estado de conexión y permitir reconectar
+ * Versión mejorada con animaciones y mejor información visual
  */
 export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   connectionState,
   onReconnect,
   className,
-  errorMessage
+  errorMessage,
+  connectionAttempts = 0,
+  lastMessage
 }) => {
+  // Estado local para indicar cuándo hubo un mensaje reciente
+  const [recentMessage, setRecentMessage] = useState(false);
+  
+  // Efecto para mostrar animación cuando llega un nuevo mensaje
+  useEffect(() => {
+    if (lastMessage) {
+      setRecentMessage(true);
+      const timer = setTimeout(() => setRecentMessage(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastMessage]);
+  
   // Definir el color y el texto según el estado
   let statusColor = 'bg-gray-400';
   let statusText = 'Desconectado';
+  let statusIcon = <WifiOff className="h-3 w-3 mr-1" />;
   
   switch (connectionState) {
     case ConnectionState.CONNECTED:
-      statusColor = 'bg-green-500 animate-pulse';
-      statusText = 'Tiempo real';
+      statusColor = recentMessage ? 'bg-blue-500 animate-ping' : 'bg-green-500 animate-pulse';
+      statusText = recentMessage ? 'Recibiendo datos...' : 'Tiempo real';
+      statusIcon = recentMessage ? 
+        <RefreshCw className="h-3 w-3 mr-1 text-blue-500 animate-spin" /> : 
+        <Check className="h-3 w-3 mr-1 text-green-500" />;
       break;
     case ConnectionState.CONNECTING:
       statusColor = 'bg-yellow-500 animate-pulse';
       statusText = 'Conectando...';
+      statusIcon = <RefreshCw className="h-3 w-3 mr-1 text-yellow-500 animate-spin" />;
       break;
     case ConnectionState.RECONNECTING:
       statusColor = 'bg-yellow-500 animate-pulse';
-      statusText = 'Reconectando...';
+      statusText = `Reconectando (${connectionAttempts})...`;
+      statusIcon = <RefreshCw className="h-3 w-3 mr-1 text-yellow-500 animate-spin" />;
       break;
     case ConnectionState.FAILED:
       statusColor = 'bg-red-500';
-      statusText = 'Error de conexión';
+      statusText = errorMessage || 'Error de conexión';
+      statusIcon = <AlertCircle className="h-3 w-3 mr-1 text-red-500" />;
       break;
     default:
       statusColor = 'bg-gray-400';
       statusText = 'Desconectado';
+      statusIcon = <WifiOff className="h-3 w-3 mr-1" />;
   }
 
   // Versión móvil - sólo icono
