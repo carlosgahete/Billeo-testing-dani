@@ -7,6 +7,7 @@ import { dashboardState } from "../shared/schema";
 app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
   try {
     console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
+    console.log('Recibido en dashboard-fix:', req.query);
     
     // Configurar encabezados para evitar almacenamiento en caché de datos financieros
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');

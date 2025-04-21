@@ -11,9 +11,15 @@ import { dashboardEvents, dashboardState } from "../shared/schema";
  * @param userId - ID del usuario que realizó la acción
  */
 export async function updateDashboardState(type: string, data: any = null, userId: number | undefined) {
+  // Imprimir información de diagnóstico
+  console.log(`🔄 LLAMADA A updateDashboardState:`);
+  console.log(`🔑 userId: ${userId} (tipo: ${typeof userId})`);
+  console.log(`📝 type: ${type}`);
+  console.log(`📦 data:`, JSON.stringify(data));
+  
   // Verificar que userId sea un número válido
   if (userId === undefined) {
-    console.error('updateDashboardState: userId es undefined, se requiere un ID de usuario válido');
+    console.error('❌ updateDashboardState: userId es undefined, se requiere un ID de usuario válido');
     return;
   }
   try {
@@ -22,14 +28,26 @@ export async function updateDashboardState(type: string, data: any = null, userI
       .from(dashboardState)
       .where(eq(dashboardState.userId, userId));
     
+    console.log(`🔍 Registro actual: ${existing ? JSON.stringify(existing) : 'No existe'}`);
+    
     if (existing) {
-      // Actualizar el registro existente
+      const updatedAt = new Date();
+      console.log(`⏱️ Actualizando con nueva fecha: ${updatedAt.toISOString()}`);
+      
+      // Actualizar el registro existente con fecha explícita
       await db.update(dashboardState)
         .set({
           lastEventType: type,
-          updatedAt: new Date()
+          updatedAt: updatedAt
         })
         .where(eq(dashboardState.userId, userId));
+      
+      // Verificar que se haya actualizado
+      const [afterUpdate] = await db.select()
+        .from(dashboardState)
+        .where(eq(dashboardState.userId, userId));
+      
+      console.log(`✅ Estado después de actualizar: ${JSON.stringify(afterUpdate)}`);
     } else {
       // Crear un nuevo registro
       await db.insert(dashboardState).values({
