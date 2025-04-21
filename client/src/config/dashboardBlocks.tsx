@@ -20,7 +20,8 @@ import {
   ReceiptText,
   ArrowUpFromLine,
   ArrowDownToLine,
-  PiggyBank
+  PiggyBank,
+  FileBarChart
 } from "lucide-react";
 import ResultSummary from "@/components/dashboard/blocks/ResultSummary";
 import QuotesSummary from "@/components/dashboard/blocks/QuotesSummary";
@@ -31,6 +32,7 @@ import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
 import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
 import ExpensesByCategoryModerno from "@/components/dashboard/ExpensesByCategoryModerno";
+import ExpensesByCategoryApple from "@/components/dashboard/ExpensesByCategoryApple";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -219,6 +221,14 @@ export const DASHBOARD_BLOCKS = {
     description: "Visualización moderna de gastos por categoría con gráfico estilo Apple",
     component: ExpensesByCategoryModerno,
     icon: <PieChart className="h-8 w-8 text-red-600" />,
+    type: "cards"
+  },
+  "expenses-by-category-apple": {
+    id: "expenses-by-category-apple",
+    title: "Gastos por Categoría",
+    description: "Visualización elegante de gastos por categoría con estilo Apple",
+    component: ExpensesByCategoryApple,
+    icon: <FileBarChart className="h-8 w-8 text-gray-800" />,
     type: "cards"
   }
 };
@@ -413,6 +423,40 @@ export const DASHBOARD_BLOCK_CATALOG = [
           <div className="flex items-center justify-between">
             <span className="text-[7px]">IRPF a Pagar</span>
             <span className="text-[7px] font-semibold">30.000 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-apple"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-gray-50 py-1 px-2 flex items-center border-b">
+          <FileBarChart className="h-3 w-3 text-gray-600 mr-1" />
+          <span className="text-[10px] font-medium text-gray-800">Gastos por Categoría</span>
+        </div>
+        <div className="flex-1 p-1 flex flex-col justify-center">
+          <div className="flex items-center justify-between pb-0.5 mb-1">
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-blue-100 flex items-center justify-center mr-1">
+                <span className="text-[5px]">💼</span>
+              </div>
+              <span className="text-[6px]">Software</span>
+            </div>
+            <span className="text-[6px] font-medium">500,00 €</span>
+          </div>
+          <div className="flex items-center justify-between pb-0.5">
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-green-100 flex items-center justify-center mr-1">
+                <span className="text-[5px]">🚗</span>
+              </div>
+              <span className="text-[6px]">Transporte</span>
+            </div>
+            <span className="text-[6px] font-medium">320,00 €</span>
+          </div>
+          <div className="h-1 w-full mt-1 bg-gray-100 rounded-full">
+            <div className="h-full rounded-full bg-blue-500" style={{ width: '65%' }}></div>
           </div>
         </div>
       </div>
