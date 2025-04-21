@@ -321,8 +321,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-2">
           {/* Indicador de conexión WebSocket - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
-            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}></div>
-            <span className="text-xs">{isConnected ? 'Tiempo real' : 'Conectando...'}</span>
+            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`}></div>
+            <span className="text-xs" style={{ minWidth: '70px' }}>{isConnected ? 'Tiempo real' : 'Conectando...'}</span>
             
             {/* Botón de reconexión manual cuando está desconectado */}
             {!isConnected && (
