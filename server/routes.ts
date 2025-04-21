@@ -1128,27 +1128,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Almacenar conexiones activas
   const clients = new Set<WebSocket>();
   
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
     console.log('Nueva conexión WebSocket establecida');
     
     // Añadir cliente a la lista de conexiones activas
     clients.add(ws);
     
+    // Configurar intervalo de heartbeat para mantener la conexión
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.ping(); // Enviar ping para mantener la conexión
+        } catch (err) {
+          console.error('Error enviando ping a cliente WebSocket:', err);
+        }
+      }
+    }, 30000); // Cada 30 segundos
+    
+    // Manejar errores de conexión
+    ws.on('error', (error) => {
+      console.error('Error en conexión WebSocket:', error);
+    });
+    
     // Eliminar la conexión cuando se cierra
-    ws.on('close', () => {
-      console.log('Conexión WebSocket cerrada');
+    ws.on('close', (code, reason) => {
+      console.log(`Conexión WebSocket cerrada. Código: ${code}, Razón: ${reason || 'No especificada'}`);
+      clearInterval(pingInterval);
       clients.delete(ws);
     });
     
-    // Opcional: Manejar mensajes entrantes del cliente
+    // Manejar mensajes entrantes del cliente
     ws.on('message', (message) => {
-      console.log('Mensaje recibido:', message.toString());
+      try {
+        const parsedMessage = JSON.parse(message.toString());
+        console.log('Mensaje WebSocket recibido:', parsedMessage);
+        
+        // Manejar diferentes tipos de mensajes
+        if (parsedMessage.type === 'ping') {
+          ws.send(JSON.stringify({
+            type: 'pong',
+            timestamp: new Date().toISOString()
+          }));
+        }
+      } catch (error) {
+        console.error('Error procesando mensaje WebSocket:', error);
+      }
+    });
+    
+    // Responder a pongs para verificar que la conexión sigue activa
+    ws.on('pong', () => {
+      // Conexión sigue viva, podríamos actualizar un timestamp aquí si fuera necesario
     });
     
     // Enviar un mensaje inicial para confirmar la conexión
     ws.send(JSON.stringify({
       type: 'connection',
-      message: 'Conexión WebSocket establecida con éxito'
+      status: 'success',
+      message: 'Conexión WebSocket establecida con éxito',
+      timestamp: new Date().toISOString()
     }));
   });
   

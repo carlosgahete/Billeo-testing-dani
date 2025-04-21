@@ -33,28 +33,13 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     // Verificar si hay un usuario autenticado - verificando diferentes fuentes
     const isAuthenticated = () => {
       try {
-        // 1. Comprobamos si hay datos del usuario en sessionStorage o localStorage
-        const userDataSession = sessionStorage.getItem('userData');
-        const userDataLocal = localStorage.getItem('userData');
-        
-        // 2. Comprobamos si hay datos en la cache de React Query
-        const userQueryData = sessionStorage.getItem('reactQuery-/api/user');
-        
-        // 3. Comprobamos si hay una cookie de sesión
-        const hasCookies = document.cookie.includes('connect.sid');
-        
-        // Registrar la información de autenticación para debugging
-        console.log('🔍 Estado de autenticación:', {
-          sessionStorage: !!userDataSession,
-          localStorage: !!userDataLocal,
-          reactQuery: !!userQueryData,
-          cookies: hasCookies
-        });
-        
-        return (userDataSession || userDataLocal || userQueryData || hasCookies) ? true : false;
+        // 0. Siempre intentamos la conexión WebSocket, ya que el servidor verificará la autenticación
+        // y recibiremos el error correspondiente si no estamos autenticados
+        // Esto es útil en casos donde la sesión existe en el servidor pero no tenemos datos locales
+        return true;
       } catch (err) {
         console.warn("Error comprobando autenticación:", err);
-        return false;
+        return true; // Seguimos intentando conectar de todas formas
       }
     };
 
@@ -78,12 +63,27 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       const newSocket = new WebSocket(wsUrl);
       setSocket(newSocket);
 
+      // Variable para el intervalo de ping
+      let pingInterval: NodeJS.Timeout | null = null;
+      
       // Manejar eventos de conexión
       newSocket.onopen = () => {
         console.log('✅ Conexión WebSocket establecida');
         setConnectionState(ConnectionState.CONNECTED);
         setConnectionAttempts(0); // Reiniciar contador de intentos al conectar exitosamente
         setErrorMessage(null);
+        
+        // Iniciar envío periódico de pings para mantener la conexión viva
+        pingInterval = setInterval(() => {
+          if (newSocket.readyState === WebSocket.OPEN) {
+            try {
+              // Enviar mensaje de ping al servidor
+              newSocket.send(JSON.stringify({ type: 'ping', timestamp: new Date().toISOString() }));
+            } catch (err) {
+              console.error('Error enviando ping:', err);
+            }
+          }
+        }, 25000); // Ping cada 25 segundos
       };
 
       // Manejar mensajes recibidos

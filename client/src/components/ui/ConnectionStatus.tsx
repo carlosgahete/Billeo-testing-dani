@@ -95,10 +95,62 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     </div>
   );
 
+  // Mensaje de error por falta de autenticación
+  const authenticationError = 
+    connectionState === ConnectionState.FAILED && 
+    errorMessage && 
+    errorMessage.includes('iniciar sesión');
+  
+  // Componente de mensaje de autenticación
+  const AuthenticationMessage = () => (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn("hidden md:flex items-center text-xs bg-red-50 border border-red-100 text-red-700 px-3 py-2 rounded-md ml-4", className)}
+    >
+      <AlertCircle className="h-3 w-3 mr-2" />
+      <span>
+        Es necesario {' '}
+        <Link to="/auth" className="text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2">
+          iniciar sesión
+        </Link>
+        {' '} para recibir actualizaciones en tiempo real
+      </span>
+    </motion.div>
+  );
+  
+  // Componente para dispositivos móviles que muestra un botón para iniciar sesión
+  const MobileAuthButton = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="md:hidden ml-1"
+    >
+      <Link to="/auth">
+        <Button
+          variant="ghost" 
+          size="icon"
+          className="h-6 w-6 text-red-600"
+          title="Iniciar sesión para actualizaciones en tiempo real"
+        >
+          <LogIn className="h-4 w-4" />
+        </Button>
+      </Link>
+    </motion.div>
+  );
+
   return (
     <>
-      <MobileVersion />
-      <DesktopVersion />
+      <div className="flex items-center">
+        <MobileVersion />
+        <DesktopVersion />
+        
+        {/* Mostrar botón de login en móvil si hay error de autenticación */}
+        {authenticationError && <MobileAuthButton />}
+      </div>
+      
+      {/* Mostrar mensaje de error de autenticación en desktop */}
+      {authenticationError && <AuthenticationMessage />}
     </>
   );
 };
