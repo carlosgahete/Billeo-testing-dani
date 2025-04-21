@@ -1,6 +1,9 @@
 // Nueva implementación simplificada del endpoint de dashboard
 // Añadir al final de routes.ts
 
+import { eq } from "drizzle-orm";
+import { dashboardState } from "../shared/schema";
+
 app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
   try {
     console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
@@ -371,10 +374,22 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       };
       
       // Actualizar el estado del dashboard para que la marca de tiempo se actualice
+      console.log('🔄 Intentando actualizar el estado del dashboard con filtros');
+      console.log(`🔍 Contexto: updateDashboardState=${typeof global.updateDashboardState}, userId=${userId}`);
+      
       if (global.updateDashboardState && userId) {
-        const eventData = { filtered: true, year, period };
-        await global.updateDashboardState('dashboard-filtered', eventData, userId);
-        console.log(`✅ Estado del dashboard actualizado con filtros: año=${year}, trimestre=${period}`);
+        try {
+          const eventData = { filtered: true, year, period };
+          console.log('📤 Llamando a updateDashboardState con:', { type: 'dashboard-filtered', eventData, userId });
+          await global.updateDashboardState('dashboard-filtered', eventData, userId);
+          console.log(`✅ Estado del dashboard actualizado con filtros: año=${year}, trimestre=${period}`);
+          
+          // Verificar la tabla después de la actualización
+          const result = await db.select().from(dashboardState).where(eq(dashboardState.userId, userId));
+          console.log(`🔎 Estado actual del dashboard después de actualizar:`, result[0]);
+        } catch (error) {
+          console.error('❌ Error al actualizar estado del dashboard:', error);
+        }
       } else {
         console.warn(`⚠️ No se pudo actualizar el estado del dashboard: updateDashboardState=${!!global.updateDashboardState}, userId=${userId}`);
       }

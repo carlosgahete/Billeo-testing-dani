@@ -1,0 +1,47 @@
+Perfecto, vamos a ir paso a paso. Como ya hiciste una implementación bastante sólida, lo más probable es que haya un pequeño detalle que se nos está escapando. Vamos a descubrirlo.
+
+Primero quiero que confirmemos lo siguiente desde el frontend (navegador):
+
+⸻
+
+PASO 1: Ver si los filtros están enviando los parámetros correctamente al servidor
+	1.	Abre el dashboard en el navegador.
+	2.	Pulsa botón derecho en cualquier parte de la pantalla y haz clic en “Inspeccionar” o “Inspect”.
+	3.	Ve a la pestaña “Network” o “Red”.
+	4.	Ahora selecciona un año o trimestre en el dashboard.
+	5.	Busca en la lista una petición que sea a /api/stats/dashboard-fix o algo similar.
+	6.	Haz clic en ella y dime lo siguiente:
+	•	¿Qué URL aparece exactamente? (ej: /api/stats/dashboard-fix?year=2024&period=Q2)
+	•	En la pestaña “Response” o “Respuesta”, ¿los datos parecen ser distintos cuando cambias de año o trimestre?
+	•	¿En la pestaña “Preview” o “Vista previa”, qué datos ves?
+
+⸻
+
+PASO 2: Ver si el servidor está recibiendo los parámetros
+
+En tu código del backend donde está el endpoint /api/stats/dashboard-fix, añade esto al principio:
+
+console.log('Parámetros recibidos en dashboard-fix:', req.query);
+
+Luego vuelve a filtrar en el navegador y revisa los logs del servidor. Dime qué imprime exactamente ese console.log.
+
+⸻
+
+PASO 3: Ver si los datos en base de datos tienen los campos correctos
+
+Abre una consola o tu herramienta para consultar la base de datos y haz una consulta como esta (adaptada a tu ORM/SQL):
+
+SELECT id, fecha, EXTRACT(YEAR FROM fecha) AS year, EXTRACT(QUARTER FROM fecha) AS quarter
+FROM facturas
+WHERE user_id = 'el_usuario_actual'
+ORDER BY fecha DESC
+LIMIT 10;
+
+Con eso queremos ver si:
+	•	Las fechas existen correctamente.
+	•	Hay registros en diferentes años y trimestres.
+	•	Podemos usarlos para probar si el filtrado debería funcionar.
+
+⸻
+
+Con estas tres cosas te puedo ayudar casi seguro a detectar el fallo. ¿Quieres que te diga exactamente cómo ver esto según tu stack (React, Next.js, Node, etc.)? ¿En qué entorno lo estás ejecutando ahora: Replit, local o producción?
