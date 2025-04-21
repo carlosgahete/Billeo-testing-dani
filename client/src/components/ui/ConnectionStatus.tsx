@@ -46,8 +46,8 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   
   switch (connectionState) {
     case ConnectionState.CONNECTED:
-      statusColor = recentMessage ? 'bg-blue-500 animate-ping' : 'bg-green-500 animate-pulse';
-      statusText = recentMessage ? 'Recibiendo datos...' : 'Tiempo real';
+      statusColor = recentMessage ? 'bg-blue-500' : 'bg-green-500';
+      statusText = recentMessage ? 'Recibiendo datos...' : 'Conectado';
       statusIcon = recentMessage ? 
         <RefreshCw className="h-3 w-3 mr-1 text-blue-500 animate-spin" /> : 
         <Check className="h-3 w-3 mr-1 text-green-500" />;
@@ -70,7 +70,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     default:
       statusColor = 'bg-gray-400';
       statusText = 'Desconectado';
-      statusIcon = <WifiOff className="h-3 w-3 mr-1" />;
+      statusIcon = <WifiOff className="h-3 w-3 mr-1 text-gray-500" />;
   }
 
   // Versión móvil - sólo icono

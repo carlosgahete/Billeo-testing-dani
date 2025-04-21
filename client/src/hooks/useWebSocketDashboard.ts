@@ -12,6 +12,14 @@ export enum ConnectionState {
   FAILED = 'failed'
 }
 
+// Predeclaración de tipos para evitar referencias circulares
+type ReconnectFunction = () => void;
+type CheckConnectionFunction = () => boolean;
+type CreateWebSocketConnectionFunction = () => void;
+
+// Variable para almacenar la función de reconexión (resuelve la referencia circular)
+let reconnectFn: ReconnectFunction;
+
 // Constantes para la lógica de reconexión
 const PING_INTERVAL = 15000; // 15 segundos entre pings
 const INITIAL_RECONNECT_DELAY = 1000; // 1 segundo
@@ -70,30 +78,80 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     reconnectInProgressRef.current = false;
   }, []);
 
+  // Tipo para resolver referencia circular
+  type CheckConnectionFunction = () => boolean;
+  
   // Función para verificar la salud del WebSocket
-  const checkConnection = useCallback(() => {
-    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      console.log('Verificación de salud: Socket no está abierto, intentando reconectar...');
-      reconnect();
+  const checkConnection: CheckConnectionFunction = useCallback(() => {
+    // Si no hay socket o no está abierto, reconectar inmediatamente
+    if (!socketRef.current) {
+      console.log('Verificación de salud: Socket no existe, intentando reconectar...');
+      if (typeof reconnect === 'function') {
+        reconnect();
+      } else {
+        console.error('🔴 reconnect no disponible en checkConnection');
+      }
       return false;
     }
     
-    // Verificar si hemos recibido algo del servidor en el último tiempo
-    const now = Date.now();
-    const timeSinceLastHeartbeat = now - heartbeatTimeRef.current;
-    
-    // Si han pasado más de 45 segundos sin actividad, reconectar
-    if (timeSinceLastHeartbeat > PING_INTERVAL * 3) {
-      console.log(`Sin actividad por ${timeSinceLastHeartbeat}ms, reconectando...`);
-      reconnect();
-      return false;
+    // Verificar el estado actual del socket y actuar según corresponda
+    switch (socketRef.current.readyState) {
+      case WebSocket.CONNECTING:
+        // Si lleva mucho tiempo intentando conectar, cancelar y reintentar
+        const connectingTime = Date.now() - heartbeatTimeRef.current;
+        if (connectingTime > 10000) { // 10 segundos es demasiado tiempo para establecer conexión
+          console.log('Socket atascado en estado CONNECTING por más de 10s, reiniciando...');
+          reconnect();
+          return false;
+        }
+        console.log('Socket en estado CONNECTING, esperando...');
+        return false;
+        
+      case WebSocket.CLOSING:
+      case WebSocket.CLOSED:
+        console.log(`Socket en estado ${socketRef.current.readyState === WebSocket.CLOSING ? 'CLOSING' : 'CLOSED'}, reconectando...`);
+        reconnect();
+        return false;
+        
+      case WebSocket.OPEN:
+        // Verificar si hemos recibido algo del servidor en el último tiempo
+        const now = Date.now();
+        const timeSinceLastHeartbeat = now - heartbeatTimeRef.current;
+        
+        // Si han pasado más de 30 segundos sin actividad, reconectar
+        if (timeSinceLastHeartbeat > PING_INTERVAL * 2) {
+          console.log(`Sin actividad por ${timeSinceLastHeartbeat}ms, reconectando...`);
+          reconnect();
+          return false;
+        }
+        
+        // Realizar un ping manual para comprobar conexión
+        try {
+          if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({ 
+              type: 'ping', 
+              timestamp: new Date().toISOString(),
+              userId: auth?.user?.id,
+              connectionCheck: true
+            }));
+          }
+        } catch (err) {
+          console.error('Error enviando ping de verificación:', err);
+          reconnect();
+          return false;
+        }
+        
+        return true;
     }
     
-    return true;
-  }, []);
+    return false; // Por defecto, considerar que la conexión no es saludable
+  }, [reconnect, auth?.user?.id]);
 
+  // Tipo para la función de creación de conexión
+  type CreateWebSocketConnectionFunction = () => void;
+  
   // Función para crear una nueva conexión WebSocket
-  const createWebSocketConnection = useCallback(() => {
+  const createWebSocketConnection: CreateWebSocketConnectionFunction = useCallback(() => {
     // Evitar múltiples intentos simultáneos
     if (reconnectInProgressRef.current) {
       console.log('Ya hay una reconexión en progreso, ignorando solicitud');
@@ -314,7 +372,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
   }, [auth.user, connectionAttempts, cleanup, refreshCallback, checkConnection]);
 
   // Función para reconectar manualmente
-  const reconnect = useCallback(() => {
+  const reconnect: ReconnectFunction = useCallback(() => {
     console.log('🔄 Reconectando manualmente...');
     
     // Limpiar recursos existentes
@@ -326,9 +384,18 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     
     // Reconectar inmediatamente
     setTimeout(() => {
-      createWebSocketConnection();
+      // Aquí usamos la función almacenada en la variable global
+      // Esto evita problemas de referencia circular
+      if (typeof createWebSocketConnection === 'function') {
+        createWebSocketConnection();
+      } else {
+        console.error('createWebSocketConnection no está disponible durante la reconexión');
+      }
     }, 100);
-  }, [cleanup, createWebSocketConnection]);
+  }, [cleanup]);
+  
+  // Almacenar la función en la variable global para resolver referencia circular
+  reconnectFn = reconnect;
 
   // Establecer conexión inicial
   useEffect(() => {
