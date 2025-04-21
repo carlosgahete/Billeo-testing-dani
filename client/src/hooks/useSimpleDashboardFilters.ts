@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Variable global para el timestamp de actualización manual
@@ -31,6 +31,7 @@ export function useSimpleDashboardFilters() {
   // Función para cambiar el año
   const changeYear = useCallback((newYear: string) => {
     console.log('🗓️ Cambiando año a:', newYear);
+    console.log('Cambiando año directamente a:', newYear);
     
     // Actualizamos el timestamp global para forzar una nueva consulta
     globalRefreshTrigger = Date.now();
@@ -44,10 +45,15 @@ export function useSimpleDashboardFilters() {
     setYear(newYear);
     
     // Invalidar cualquier consulta relacionada con el dashboard para forzar recargas
-    queryClient.invalidateQueries({
+    queryClient.removeQueries({
       predicate: (query) => {
-        const key = query.queryKey[0];
-        return typeof key === 'string' && key.includes('dashboard');
+        // Solo queremos eliminar las consultas que refieran a años diferentes al seleccionado
+        const key = query.queryKey;
+        if (key.length >= 3 && key[0] === '/api/stats/dashboard-fix') {
+          const queryYear = key[1] as string;
+          return queryYear !== newYear;
+        }
+        return false;
       },
     });
     
@@ -61,6 +67,7 @@ export function useSimpleDashboardFilters() {
   // Función para cambiar el periodo
   const changePeriod = useCallback((newPeriod: string) => {
     console.log('🔢 Cambiando periodo a:', newPeriod);
+    console.log('Cambiando periodo directamente a:', newPeriod);
     
     // Asegurarnos que el formato del periodo es el correcto (backend espera Q1, Q2, etc.)
     const formattedPeriod = newPeriod.toLowerCase() === 'all' ? 'all' : 
@@ -88,11 +95,17 @@ export function useSimpleDashboardFilters() {
     // Después cambiar el estado para que futuras consultas usen el nuevo periodo
     setPeriod(formattedPeriod);
     
-    // Invalidar cualquier consulta relacionada con el dashboard para forzar recargas
-    queryClient.invalidateQueries({
+    // Eliminar cualquier consulta relacionada con el dashboard para forzar recargas completas
+    // Esto es más agresivo que invalidar, pero garantiza datos frescos en cada cambio
+    queryClient.removeQueries({
       predicate: (query) => {
-        const key = query.queryKey[0];
-        return typeof key === 'string' && key.includes('dashboard');
+        // Solo queremos eliminar las consultas que refieran a periodos diferentes al seleccionado
+        const key = query.queryKey;
+        if (key.length >= 3 && key[0] === '/api/stats/dashboard-fix') {
+          const queryPeriod = key[2] as string;
+          return queryPeriod !== formattedPeriod;
+        }
+        return false;
       },
     });
     
@@ -104,20 +117,32 @@ export function useSimpleDashboardFilters() {
   }, [queryClient, year, period]);
   
   // Efecto para notificar cambios visualmente cuando cambian los filtros
+  // Utilizamos una referencia para controlar la inicialización
+  const isInitialMount = React.useRef(true);
+  
   useEffect(() => {
+    // Evitar la ejecución en el montaje inicial
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      console.log('🚀 Inicialización de los filtros - sin disparar eventos ni sobrecargar');
+      return;
+    }
+    
+    // Solo propagamos eventos después del montaje inicial
+    console.log(`📊 Filtros del dashboard actualizados: año=${year}, periodo=${period}, trigger=${globalRefreshTrigger}`);
+    
     // Disparamos un evento personalizado para que otros componentes puedan reaccionar
     const event = new CustomEvent('dashboard-filters-changed', { 
       detail: { year, period, timestamp: globalRefreshTrigger } 
     });
     window.dispatchEvent(event);
     
-    console.log(`📊 Filtros del dashboard actualizados: año=${year}, periodo=${period}, trigger=${globalRefreshTrigger}`);
-    
     // Forzamos una actualización de los datos al cambiar los filtros
+    // pero usando un enfoque más selectivo
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix'],
+      queryKey: ['/api/stats/dashboard-fix', year, period],
     });
-  }, [year, period, queryClient]);
+  }, [year, period, queryClient, globalRefreshTrigger]);
   
   return {
     year,

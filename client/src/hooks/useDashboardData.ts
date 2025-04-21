@@ -141,17 +141,23 @@ export function useDashboardData(
     // Esta configuración es clave para evitar múltiples llamadas innecesarias
     refetchOnMount: false,
     refetchOnReconnect: false,
+    enabled: true, // Aseguramos que se ejecuta cuando cambian los parámetros
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
+      
+      // Usamos los parámetros de la queryKey que React Query mantiene actualizados
+      // No usamos valores capturados en closures que podrían estar obsoletos
       console.log(`📊 Cargando datos frescos del dashboard: año=${year}, periodo=${period} [${trigger}]...`);
       
-      // Construir URL con los parámetros de filtro
+      // Construir URL con los parámetros de filtro correctos
       const url = `${endpoint}?year=${year}&period=${period}`;
       
       try {
         // Obtener el timestamp actual para prevenir el caché
         const timestamp = new Date().getTime();
         const urlWithTimestamp = `${url}&_t=${timestamp}`;
+        
+        console.log("🔍 Solicitando URL:", urlWithTimestamp);
         
         // Incluir los parámetros de filtro en la URL
         const data = await fetch(urlWithTimestamp, {
