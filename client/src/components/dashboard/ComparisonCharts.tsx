@@ -35,21 +35,22 @@ const ComparisonCharts = () => {
   // Datos para los gráficos - Año completo
   const { data, isLoading } = useQuery<DashboardStats>({
     // Incluimos comparisonType en la queryKey para que se recargue cuando cambie
-    queryKey: ["/api/stats/dashboard", { year: selectedYear, period: "all", comparisonType }],
+    queryKey: ["/api/stats/dashboard-fix", { year: selectedYear, period: "all", comparisonType }],
     queryFn: async () => {
-      const res = await fetch(`/api/stats/dashboard?year=${selectedYear}&period=all`);
+      const res = await fetch(`/api/stats/dashboard-fix?year=${selectedYear}&period=all`);
       if (!res.ok) throw new Error("Error al cargar estadísticas");
       
       // Si estamos en modo trimestral, cargamos los datos de cada trimestre
       const data = await res.json();
       
       if (comparisonType === "quarterly") {
-        // Hacemos consultas paralelas para cada trimestre
+        // Hacemos consultas paralelas para cada trimestre usando el endpoint correcto
+        // Cambiamos a usar el endpoint -fix que tiene la lógica corregida
         const [q1Data, q2Data, q3Data, q4Data] = await Promise.all([
-          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q1`).then(r => r.ok ? r.json() : null),
-          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q2`).then(r => r.ok ? r.json() : null),
-          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q3`).then(r => r.ok ? r.json() : null),
-          fetch(`/api/stats/dashboard?year=${selectedYear}&period=q4`).then(r => r.ok ? r.json() : null)
+          fetch(`/api/stats/dashboard-fix?year=${selectedYear}&period=Q1`).then(r => r.ok ? r.json() : null),
+          fetch(`/api/stats/dashboard-fix?year=${selectedYear}&period=Q2`).then(r => r.ok ? r.json() : null),
+          fetch(`/api/stats/dashboard-fix?year=${selectedYear}&period=Q3`).then(r => r.ok ? r.json() : null),
+          fetch(`/api/stats/dashboard-fix?year=${selectedYear}&period=Q4`).then(r => r.ok ? r.json() : null)
         ]);
         
         // Añadimos los datos trimestrales al resultado
