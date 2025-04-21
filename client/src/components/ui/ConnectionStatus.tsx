@@ -96,11 +96,14 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   // Versión desktop - con texto
   const DesktopVersion = () => (
     <div className={cn("hidden md:flex items-center text-xs text-gray-600", className)}>
-      <div className={`w-2 h-2 rounded-full mr-1 ${statusColor}`} />
-      <span className="text-xs">{statusText}</span>
+      <div className="flex items-center">
+        <div className={`w-2 h-2 rounded-full mr-1 ${statusColor}`} />
+        <span className="text-xs mr-1">{statusText}</span>
+        {statusIcon}
+      </div>
       
-      {/* Botón de reconexión solo visible cuando la conexión falla */}
-      {connectionState === ConnectionState.FAILED && (
+      {/* Botón de reconexión visible cuando la conexión falla o está reconectando */}
+      {(connectionState === ConnectionState.FAILED || connectionState === ConnectionState.RECONNECTING) && (
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
