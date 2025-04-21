@@ -30,6 +30,27 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       return;
     }
 
+    // Verificar si hay un usuario autenticado - verificando sessionStorage y localStorage
+    const isAuthenticated = () => {
+      try {
+        // Comprobamos si hay datos del usuario en sessionStorage o localStorage
+        const userData = sessionStorage.getItem('userData') || localStorage.getItem('userData');
+        const userQueryData = sessionStorage.getItem('reactQuery-/api/user');
+        return userData || userQueryData ? true : false;
+      } catch (err) {
+        console.warn("Error comprobando autenticación:", err);
+        return false;
+      }
+    };
+
+    // Si no hay un usuario autenticado, no intentamos conectar
+    if (!isAuthenticated()) {
+      console.log('⚠️ No hay usuario autenticado, postergando conexión WebSocket');
+      setConnectionState(ConnectionState.FAILED);
+      setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
+      return null;
+    }
+    
     // Determinar el protocolo correcto (ws o wss) basado en HTTPS
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
