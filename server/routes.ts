@@ -1131,8 +1131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Conexiones que aún no están asociadas a un usuario autenticado
   const pendingClients = new Set<WebSocket>();
   
-  // Configurar limpieza de conexiones inactivas
-  const INACTIVE_TIMEOUT = 90000; // 90 segundos sin actividad = desconexión
+  // Configurar tiempos más cortos para mantener conexiones activas
+  const INACTIVE_TIMEOUT = 45000; // 45 segundos sin actividad = desconexión
   const checkInactiveConnections = setInterval(() => {
     const now = Date.now();
     
@@ -1162,7 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     });
-  }, 30000); // Comprobar cada 30 segundos
+  }, 15000); // Comprobar cada 15 segundos
   
   wss.on('connection', (ws, req) => {
     console.log('Nueva conexión WebSocket establecida');
@@ -1181,12 +1181,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         try {
-          ws.ping(); // Enviar ping para mantener la conexión
+          // Enviar ping para mantener la conexión
+          ws.ping();
+          // Y también un mensaje de ping en formato JSON para que el cliente lo procese
+          ws.send(JSON.stringify({
+            type: 'ping',
+            timestamp: new Date().toISOString()
+          }));
         } catch (err) {
           console.error('Error enviando ping a cliente WebSocket:', err);
         }
+      } else if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+        // Si el socket está cerrado, limpiar el intervalo
+        clearInterval(pingInterval);
       }
-    }, 30000); // Cada 30 segundos
+    }, 15000); // Cada 15 segundos
     
     // Manejar errores de conexión
     ws.on('error', (error) => {
