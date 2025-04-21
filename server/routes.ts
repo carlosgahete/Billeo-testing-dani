@@ -1131,6 +1131,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Conexiones que aún no están asociadas a un usuario autenticado
   const pendingClients = new Set<WebSocket>();
   
+  // Configurar limpieza de conexiones inactivas
+  const INACTIVE_TIMEOUT = 90000; // 90 segundos sin actividad = desconexión
+  const checkInactiveConnections = setInterval(() => {
+    const now = Date.now();
+    
+    // Comprobar conexiones pendientes
+    pendingClients.forEach(ws => {
+      const lastActivity = (ws as any).lastActivity || 0;
+      if (now - lastActivity > INACTIVE_TIMEOUT) {
+        console.log('Cerrando conexión WebSocket inactiva (pendiente)');
+        ws.terminate();
+        pendingClients.delete(ws);
+      }
+    });
+    
+    // Comprobar conexiones autenticadas
+    clients.forEach((userSockets, userId) => {
+      userSockets.forEach(ws => {
+        const lastActivity = (ws as any).lastActivity || 0;
+        if (now - lastActivity > INACTIVE_TIMEOUT) {
+          console.log(`Cerrando conexión WebSocket inactiva (usuario: ${userId})`);
+          ws.terminate();
+          userSockets.delete(ws);
+          
+          // Si no quedan conexiones para este usuario, eliminar la entrada
+          if (userSockets.size === 0) {
+            clients.delete(userId);
+          }
+        }
+      });
+    });
+  }, 30000); // Comprobar cada 30 segundos
+  
   wss.on('connection', (ws, req) => {
     console.log('Nueva conexión WebSocket establecida');
     
@@ -1192,9 +1225,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Manejar diferentes tipos de mensajes
         if (parsedMessage.type === 'ping') {
+          console.log('Ping recibido, enviando pong a cliente');
           ws.send(JSON.stringify({
             type: 'pong',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            clientTimestamp: parsedMessage.timestamp || null // Devolver el timestamp del cliente para medición
           }));
         }
         
@@ -1261,9 +1296,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Establecer timestamp para última actividad
+    (ws as any).lastActivity = Date.now();
+    
     // Responder a pongs para verificar que la conexión sigue activa
     ws.on('pong', () => {
-      // Conexión sigue viva, podríamos actualizar un timestamp aquí si fuera necesario
+      // Actualizar timestamp de última actividad
+      (ws as any).lastActivity = Date.now();
     });
     
     // Enviar un mensaje inicial para confirmar la conexión
@@ -4522,6 +4561,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // El servidor WebSocket ya está configurado anteriormente en el código
   console.log('Usando servidor WebSocket existente para actualizaciones del dashboard');
+  
+  // Configurar limpieza cuando el servidor se cierre
+  const cleanup = () => {
+    console.log('Cerrando servidor WebSocket y limpiando recursos...');
+    clearInterval(checkInactiveConnections);
+    
+    // Cerrar todas las conexiones
+    wss.clients.forEach(ws => {
+      try {
+        ws.close(1000, 'Servidor cerrándose');
+      } catch (err) {
+        console.error('Error cerrando conexión WebSocket:', err);
+      }
+    });
+    
+    // Terminar el servidor WebSocket
+    wss.close((err) => {
+      if (err) {
+        console.error('Error cerrando servidor WebSocket:', err);
+      } else {
+        console.log('Servidor WebSocket cerrado correctamente');
+      }
+    });
+  };
+  
+  // Manejar señales de cierre
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
   
   return httpServer;
 }

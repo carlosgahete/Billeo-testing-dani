@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useAuth } from './use-auth';
 
 /**
  * Estados posibles de conexión WebSocket
@@ -13,43 +14,79 @@ export enum ConnectionState {
 
 /**
  * Hook para manejar la conexión WebSocket para actualizaciones del dashboard en tiempo real
+ * Versión mejorada con autenticación basada en userId y reconexión más estable
+ * 
  * @param refreshCallback - Función a llamar cuando se reciba una notificación de actualización
  * @returns Object con el estado de la conexión y funciones para controlarla
  */
 export function useWebSocketDashboard(refreshCallback: () => void) {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  // Obtener información del usuario para la autenticación
+  const auth = useAuth();
+  
+  // Referencias para mantener información a través de re-renders
+  const socketRef = useRef<WebSocket | null>(null);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectInProgressRef = useRef<boolean>(false);
+  
+  // Estados para UI y lógica
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.DISCONNECTED);
   const [lastMessage, setLastMessage] = useState<any>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Limpieza de intervalos y timeouts
+  const cleanup = useCallback(() => {
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
+    
+    if (connectTimeoutRef.current) {
+      clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = null;
+    }
+    
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      try {
+        socketRef.current.close();
+      } catch (err) {
+        console.error('Error al cerrar socket:', err);
+      }
+    }
+    
+    socketRef.current = null;
+    reconnectInProgressRef.current = false;
+  }, []);
 
   // Función para crear una nueva conexión WebSocket
   const createWebSocketConnection = useCallback(() => {
-    // Si ya hay una conexión activa, no hacemos nada
-    if (socket) {
+    // Evitar múltiples intentos simultáneos
+    if (reconnectInProgressRef.current) {
+      console.log('Ya hay una reconexión en progreso, ignorando solicitud');
       return;
     }
-
-    // Verificar si hay un usuario autenticado - verificando diferentes fuentes
-    const isAuthenticated = () => {
-      try {
-        // 0. Siempre intentamos la conexión WebSocket, ya que el servidor verificará la autenticación
-        // y recibiremos el error correspondiente si no estamos autenticados
-        // Esto es útil en casos donde la sesión existe en el servidor pero no tenemos datos locales
-        return true;
-      } catch (err) {
-        console.warn("Error comprobando autenticación:", err);
-        return true; // Seguimos intentando conectar de todas formas
-      }
-    };
-
-    // Si no hay un usuario autenticado, no intentamos conectar
-    if (!isAuthenticated()) {
+    
+    // Si ya hay un socket activo, no creamos otro
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      console.log('Socket ya está abierto, no es necesario reconectar');
+      return;
+    }
+    
+    // Verificar si hay un usuario autenticado
+    if (!auth.user || !auth.user.id) {
       console.log('⚠️ No hay usuario autenticado, postergando conexión WebSocket');
       setConnectionState(ConnectionState.FAILED);
       setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
-      return null;
+      return;
     }
+    
+    // Limpiar recursos existentes
+    cleanup();
+    
+    // Iniciar reconexión
+    reconnectInProgressRef.current = true;
     
     // Determinar el protocolo correcto (ws o wss) basado en HTTPS
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -61,45 +98,87 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
 
     try {
       const newSocket = new WebSocket(wsUrl);
-      setSocket(newSocket);
+      socketRef.current = newSocket;
 
-      // Variable para el intervalo de ping
-      let pingInterval: NodeJS.Timeout | null = null;
-      
-      // Manejar eventos de conexión
+      // Eventos del socket
       newSocket.onopen = () => {
         console.log('✅ Conexión WebSocket establecida');
         setConnectionState(ConnectionState.CONNECTED);
-        setConnectionAttempts(0); // Reiniciar contador de intentos al conectar exitosamente
+        setConnectionAttempts(0); // Reiniciar contador al conectar
         setErrorMessage(null);
+        reconnectInProgressRef.current = false;
         
-        // Iniciar envío periódico de pings para mantener la conexión viva
-        pingInterval = setInterval(() => {
+        // Autenticar usando el ID del usuario
+        if (auth.user && auth.user.id) {
+          try {
+            newSocket.send(JSON.stringify({
+              type: 'auth',
+              userId: auth.user.id,
+              timestamp: new Date().toISOString()
+            }));
+            console.log(`🔐 Enviando autenticación para usuario ${auth.user.id}`);
+          } catch (err) {
+            console.error('Error enviando autenticación:', err);
+          }
+        }
+        
+        // Configurar ping periódico
+        pingIntervalRef.current = setInterval(() => {
           if (newSocket.readyState === WebSocket.OPEN) {
             try {
-              // Enviar mensaje de ping al servidor
-              newSocket.send(JSON.stringify({ type: 'ping', timestamp: new Date().toISOString() }));
+              newSocket.send(JSON.stringify({ 
+                type: 'ping', 
+                timestamp: new Date().toISOString() 
+              }));
             } catch (err) {
               console.error('Error enviando ping:', err);
             }
           }
-        }, 25000); // Ping cada 25 segundos
+        }, 30000); // Ping cada 30 segundos
       };
 
       // Manejar mensajes recibidos
       newSocket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('📝 Mensaje WebSocket recibido:', data);
+          
+          // Filtrar logs de ping/pong para reducir ruido
+          if (data.type !== 'ping' && data.type !== 'pong') {
+            console.log('📝 Mensaje WebSocket recibido:', data);
+          }
+          
           setLastMessage(data);
 
-          // Si es un mensaje de actualización, refrescar los datos del dashboard
-          if (data.type === 'transaction-created' || 
-              data.type === 'transaction-updated' ||
-              data.type === 'invoice-created' ||
-              data.type === 'invoice-updated' ||
-              data.type === 'invoice-paid' ||
-              data.type === 'dashboard-refresh-required') {
+          // Manejar diferentes tipos de mensajes
+          if (data.type === 'auth_success') {
+            console.log('✅ Autenticación WebSocket exitosa');
+          } else if (data.type === 'auth_error') {
+            console.error('❌ Error autenticando WebSocket:', data.message);
+            setErrorMessage(`Error de autenticación: ${data.message}`);
+          } else if (data.type === 'auth_required') {
+            // El servidor requiere autenticación, enviamos credenciales
+            if (auth.user && auth.user.id) {
+              try {
+                newSocket.send(JSON.stringify({
+                  type: 'auth',
+                  userId: auth.user.id,
+                  timestamp: new Date().toISOString()
+                }));
+                console.log(`🔐 Enviando autenticación para usuario ${auth.user.id}`);
+              } catch (err) {
+                console.error('Error enviando autenticación:', err);
+              }
+            }
+          }
+          // Mensajes que requieren actualización de datos
+          else if (
+            data.type === 'transaction-created' || 
+            data.type === 'transaction-updated' ||
+            data.type === 'invoice-created' ||
+            data.type === 'invoice-updated' ||
+            data.type === 'invoice-paid' ||
+            data.type === 'dashboard-refresh-required'
+          ) {
             console.log(`🔄 Actualizando dashboard debido a evento: ${data.type}`);
             refreshCallback();
           }
@@ -114,91 +193,99 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         setErrorMessage('Error de conexión al servidor en tiempo real');
       };
 
-      // Manejar cierre de conexión y reintentar si es necesario
+      // Manejar cierre de conexión
       newSocket.onclose = (event) => {
-        console.log(`🔌 Conexión WebSocket cerrada: ${event.code} - ${event.reason}`);
+        console.log(`🔌 Conexión WebSocket cerrada: ${event.code} - ${event.reason || 'Sin razón'}`);
         setConnectionState(ConnectionState.DISCONNECTED);
-        setSocket(null);
         
-        // Limpiar intervalo de ping si existe
-        if (pingInterval) {
-          clearInterval(pingInterval);
-          pingInterval = null;
+        // Limpiar recursos
+        if (pingIntervalRef.current) {
+          clearInterval(pingIntervalRef.current);
+          pingIntervalRef.current = null;
         }
-
-        // Intentar reconectar después de un tiempo si no fue un cierre limpio
-        if (event.code !== 1000) { // 1000 es un cierre normal
+        
+        socketRef.current = null;
+        reconnectInProgressRef.current = false;
+        
+        // Intentar reconectar si no fue un cierre normal y hay usuario autenticado
+        if (event.code !== 1000 && auth.user) {
           const nextAttempt = connectionAttempts + 1;
           setConnectionAttempts(nextAttempt);
           
-          // Reintentamos indefinidamente con un tiempo máximo de espera
+          // Establecer un tiempo de espera progresivo antes de reconectar
           setConnectionState(ConnectionState.RECONNECTING);
-          const timeout = Math.min(1000 * Math.pow(1.5, Math.min(nextAttempt - 1, 6)), 10000);
-          console.log(`🔄 Reintentando conexión en ${timeout}ms (intento ${nextAttempt})`);
-          setTimeout(() => {
-            setSocket(null); // Forzar reconexión
-          }, timeout);
+          
+          // Calculamos el tiempo de espera con backoff exponencial 
+          // con un máximo de 20 segundos entre intentos
+          const delay = Math.min(2000 * Math.pow(1.5, Math.min(nextAttempt - 1, 6)), 20000);
+          console.log(`🔄 Programando reconexión en ${delay}ms (intento ${nextAttempt})`);
+          
+          // Esperar un tiempo antes de intentar reconectar
+          connectTimeoutRef.current = setTimeout(() => {
+            createWebSocketConnection();
+          }, delay);
+        } else if (!auth.user) {
+          // Si no hay usuario, establecer estado fallido
+          setConnectionState(ConnectionState.FAILED);
+          setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
         }
       };
-
-      return newSocket;
     } catch (error) {
       console.error('❌ Error al crear conexión WebSocket:', error);
       setConnectionAttempts(prev => prev + 1);
       setConnectionState(ConnectionState.FAILED);
       setErrorMessage('No se pudo establecer la conexión');
-      return null;
+      reconnectInProgressRef.current = false;
     }
-  }, [socket, connectionAttempts, refreshCallback]);
+  }, [auth.user, connectionAttempts, cleanup, refreshCallback]);
 
   // Función para reconectar manualmente
   const reconnect = useCallback(() => {
     console.log('🔄 Reconectando manualmente...');
     
-    // Cerrar socket existente si hay alguno
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.close();
-    }
+    // Limpiar recursos existentes
+    cleanup();
     
-    // Reiniciar contadores y estado
+    // Reiniciar contadores
     setConnectionAttempts(0);
-    setSocket(null);
     setErrorMessage(null);
     
-    // Forzar un pequeño retraso antes de reconectar para permitir que los estados se actualicen
+    // Reconectar después de un pequeño retraso
     setTimeout(() => {
       createWebSocketConnection();
     }, 500);
-  }, [socket, createWebSocketConnection]);
+  }, [cleanup, createWebSocketConnection]);
 
-  // Efectuar conexión al WebSocket cuando el componente se monta
+  // Establecer conexión inicial
   useEffect(() => {
-    // No intentar conectar si ya hay un socket activo
-    if (socket) {
-      return;
+    // Iniciar conexión solo si hay usuario autenticado y no estamos ya conectados
+    if (auth.user && !isInitialized) {
+      setIsInitialized(true);
+      createWebSocketConnection();
+    } else if (!auth.user && connectionState !== ConnectionState.FAILED) {
+      // Si no hay usuario, establecer estado fallido
+      setConnectionState(ConnectionState.FAILED);
+      setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
     }
+    
+    // Limpiar recursos al desmontar
+    return cleanup;
+  }, [auth.user, connectionState, createWebSocketConnection, isInitialized, cleanup]);
 
-    // Mantener referencia a los intervalos creados para poder limpiarlos
-    const pingIntervals: NodeJS.Timeout[] = [];
-    
-    const newSocket = createWebSocketConnection();
-    
-    // Limpiar conexión al desmontar
-    return () => {
-      console.log('🔌 Cerrando conexión WebSocket (cleanup)');
-      if (newSocket && newSocket.readyState === WebSocket.OPEN) {
-        newSocket.close();
+  // Reconectar si el usuario cambia (login/logout)
+  useEffect(() => {
+    if (isInitialized) {
+      if (auth.user) {
+        // Si hay un nuevo usuario, reconectar
+        reconnect();
+      } else {
+        // Si no hay usuario, limpiar y establecer estado fallido
+        cleanup();
+        setConnectionState(ConnectionState.FAILED);
+        setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
       }
-      
-      // Limpiar todos los intervalos de ping existentes
-      if (pingIntervals.length > 0) {
-        pingIntervals.forEach(interval => clearInterval(interval));
-      }
-      
-      setSocket(null);
-      setConnectionState(ConnectionState.DISCONNECTED);
-    };
-  }, [socket, connectionAttempts, connectionState, createWebSocketConnection]);
+    }
+  }, [auth.user?.id, isInitialized, reconnect, cleanup]);
 
   return {
     connectionState,
@@ -208,6 +295,6 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     lastMessage,
     connectionAttempts,
     errorMessage,
-    reconnect // Exponemos la función de reconexión
+    reconnect
   };
 }

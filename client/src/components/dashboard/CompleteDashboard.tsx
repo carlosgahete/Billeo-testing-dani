@@ -98,8 +98,12 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   useEffect(() => {
     if (isConnected) {
       console.log("✅ Dashboard WebSocket conectado y listo para recibir actualizaciones");
+    } else if (connectionState === ConnectionState.FAILED) {
+      console.error(`❌ Error de conexión WebSocket: ${errorMessage || 'Error desconocido'}`);
+    } else if (connectionState === ConnectionState.RECONNECTING) {
+      console.log(`🔄 Intentando reconectar WebSocket (intento ${connectionAttempts})...`);
     }
-  }, [isConnected]);
+  }, [isConnected, connectionState, errorMessage, connectionAttempts]);
   
   // Ya no necesitamos un efecto específico aquí porque useDashboardData 
   // maneja automáticamente los eventos y la actualización de datos
