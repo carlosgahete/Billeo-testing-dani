@@ -241,9 +241,11 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
           try {
+            // Normalizamos a mayúsculas para tener consistencia
+            const periodUpper = period.toString().toUpperCase();
             // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
-            if (period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
-              const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+            if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+              const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
               return txnQuarter === requestedQuarter;
             } else {
               console.log(`⚠️ Formato de period no reconocido para transacciones: '${period}'`);
@@ -275,9 +277,11 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
           try {
+            // Normalizamos a mayúsculas para tener consistencia
+            const periodUpper = period.toString().toUpperCase();
             // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
-            if (period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
-              const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+            if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+              const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
               return quoteQuarter === requestedQuarter;
             } else {
               console.log(`⚠️ Formato de period no reconocido para presupuestos: '${period}'`);
