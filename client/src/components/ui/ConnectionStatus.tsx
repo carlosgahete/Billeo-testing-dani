@@ -53,33 +53,45 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         <Check className="h-3 w-3 mr-1 text-green-500" />;
       break;
     case ConnectionState.CONNECTING:
-      statusColor = 'bg-yellow-500 animate-pulse';
+      statusColor = 'bg-amber-500 animate-pulse';
       statusText = 'Conectando...';
-      statusIcon = <RefreshCw className="h-3 w-3 mr-1 text-yellow-500 animate-spin" />;
+      statusIcon = <RefreshCw className="h-3 w-3 mr-1 text-amber-500 animate-spin" />;
       break;
     case ConnectionState.RECONNECTING:
-      statusColor = 'bg-yellow-500 animate-pulse';
-      statusText = `Reconectando (${connectionAttempts})...`;
-      statusIcon = <RefreshCw className="h-3 w-3 mr-1 text-yellow-500 animate-spin" />;
+      statusColor = 'bg-amber-500 animate-pulse';
+      statusText = `Reconectando${connectionAttempts > 0 ? ` (${connectionAttempts})` : ''}...`;
+      statusIcon = <RefreshCw className="h-3 w-3 mr-1 text-amber-500 animate-spin" />;
       break;
     case ConnectionState.FAILED:
       statusColor = 'bg-red-500';
-      statusText = errorMessage || 'Error de conexión';
+      statusText = errorMessage ? 
+        (errorMessage.length > 30 ? `${errorMessage.substring(0, 30)}...` : errorMessage) : 
+        'Error de conexión';
       statusIcon = <AlertCircle className="h-3 w-3 mr-1 text-red-500" />;
       break;
-    default:
+    case ConnectionState.DISCONNECTED:
       statusColor = 'bg-gray-400';
       statusText = 'Desconectado';
       statusIcon = <WifiOff className="h-3 w-3 mr-1 text-gray-500" />;
+      break;
+    default:
+      statusColor = 'bg-gray-400';
+      statusText = 'Estado desconocido';
+      statusIcon = <WifiOff className="h-3 w-3 mr-1 text-gray-500" />;
   }
 
-  // Versión móvil - sólo icono
+  // Versión móvil - sólo icono con tooltip
   const MobileVersion = () => (
     <div className="flex md:hidden items-center">
-      <div className={`w-2 h-2 rounded-full ${statusColor}`} title={statusText} />
+      <div 
+        className={`w-2 h-2 rounded-full ${statusColor}`} 
+        title={`Estado: ${statusText}${errorMessage ? ` - ${errorMessage}` : ''}`} 
+      />
       
-      {/* Botón de reconexión solo visible cuando la conexión falla */}
-      {connectionState === ConnectionState.FAILED && (
+      {/* Botón de reconexión visible cuando la conexión falla o está reconectando */}
+      {(connectionState === ConnectionState.FAILED || 
+        connectionState === ConnectionState.DISCONNECTED || 
+        connectionState === ConnectionState.RECONNECTING) && (
         <Button
           variant="ghost"
           size="icon"
@@ -87,35 +99,41 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
           onClick={onReconnect}
           title="Reconectar"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className={`h-4 w-4 ${connectionState === ConnectionState.RECONNECTING ? 'animate-spin' : ''}`} />
         </Button>
       )}
     </div>
   );
 
-  // Versión desktop - con texto
+  // Versión desktop - con texto y animación mejorada
   const DesktopVersion = () => (
     <div className={cn("hidden md:flex items-center text-xs text-gray-600", className)}>
       <div className="flex items-center">
-        <div className={`w-2 h-2 rounded-full mr-1 ${statusColor}`} />
+        <div 
+          className={`w-2 h-2 rounded-full mr-1 ${statusColor}`} 
+          title={errorMessage || statusText}
+        />
         <span className="text-xs mr-1">{statusText}</span>
         {statusIcon}
       </div>
       
-      {/* Botón de reconexión visible cuando la conexión falla o está reconectando */}
-      {(connectionState === ConnectionState.FAILED || connectionState === ConnectionState.RECONNECTING) && (
+      {/* Botón de reconexión visible cuando la conexión falla, está desconectada o reconectando */}
+      {(connectionState === ConnectionState.FAILED || 
+        connectionState === ConnectionState.RECONNECTING || 
+        connectionState === ConnectionState.DISCONNECTED) && (
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
           className="ml-2"
         >
           <Button
-            variant="outline"
+            variant={connectionState === ConnectionState.FAILED ? "destructive" : "outline"}
             size="sm"
-            className="h-6 px-2 py-0 ml-1 text-xs"
+            className={`h-6 px-2 py-0 ml-1 text-xs ${connectionState === ConnectionState.RECONNECTING ? 'bg-amber-50' : ''}`}
             onClick={onReconnect}
           >
-            <RefreshCw className="h-3 w-3 mr-1" />
+            <RefreshCw className={`h-3 w-3 mr-1 ${connectionState === ConnectionState.RECONNECTING ? 'animate-spin' : ''}`} />
             Reconectar
           </Button>
         </motion.div>

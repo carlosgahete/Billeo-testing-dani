@@ -86,10 +86,10 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     // Si no hay socket o no está abierto, reconectar inmediatamente
     if (!socketRef.current) {
       console.log('Verificación de salud: Socket no existe, intentando reconectar...');
-      if (typeof reconnect === 'function') {
-        reconnect();
+      if (typeof reconnectFn === 'function') {
+        reconnectFn();
       } else {
-        console.error('🔴 reconnect no disponible en checkConnection');
+        console.error('🔴 reconnectFn no disponible en checkConnection');
       }
       return false;
     }
@@ -101,7 +101,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         const connectingTime = Date.now() - heartbeatTimeRef.current;
         if (connectingTime > 10000) { // 10 segundos es demasiado tiempo para establecer conexión
           console.log('Socket atascado en estado CONNECTING por más de 10s, reiniciando...');
-          reconnect();
+          reconnectFn();
           return false;
         }
         console.log('Socket en estado CONNECTING, esperando...');
@@ -110,7 +110,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       case WebSocket.CLOSING:
       case WebSocket.CLOSED:
         console.log(`Socket en estado ${socketRef.current.readyState === WebSocket.CLOSING ? 'CLOSING' : 'CLOSED'}, reconectando...`);
-        reconnect();
+        reconnectFn();
         return false;
         
       case WebSocket.OPEN:
@@ -121,7 +121,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         // Si han pasado más de 30 segundos sin actividad, reconectar
         if (timeSinceLastHeartbeat > PING_INTERVAL * 2) {
           console.log(`Sin actividad por ${timeSinceLastHeartbeat}ms, reconectando...`);
-          reconnect();
+          reconnectFn();
           return false;
         }
         
@@ -137,7 +137,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           }
         } catch (err) {
           console.error('Error enviando ping de verificación:', err);
-          reconnect();
+          reconnectFn();
           return false;
         }
         
@@ -145,7 +145,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     }
     
     return false; // Por defecto, considerar que la conexión no es saludable
-  }, [reconnect, auth?.user?.id]);
+  }, [auth?.user?.id]);
 
   // Tipo para la función de creación de conexión
   type CreateWebSocketConnectionFunction = () => void;
