@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 
 /**
  * Hook para manejar actualizaciones del dashboard mediante polling
- * Reemplaza a useWebSocketDashboard con un enfoque más robusto
+ * Reemplaza a useWebSocketDashboard con un enfoque más robusto y eficiente
  * @param refreshCallback - Función a llamar cuando se detecte un cambio
  * @param pollingInterval - Intervalo de consulta en ms (por defecto 10000ms = 10s)
  * @returns Estado de la conexión y último mensaje recibido
@@ -44,9 +44,13 @@ export function useDashboardPolling(
       
       const data = await response.json();
       
-      // Si es la primera consulta o si detectamos un cambio
-      if (lastUpdatedAt === null || (data.updated_at && data.updated_at > lastUpdatedAt)) {
-        console.log('🔄 Cambio detectado en el dashboard:', data);
+      // Imprimir logs para depuración
+      console.log('🕒 Última actualización local:', lastUpdatedAt);
+      console.log('🕒 Última actualización del servidor:', data.updated_at);
+      
+      // Si es la primera consulta o si detectamos un cambio (con margen de seguridad de 100ms)
+      if (lastUpdatedAt === null || (data.updated_at && data.updated_at > lastUpdatedAt + 100)) {
+        console.log('🔄 Cambio significativo detectado en el dashboard:', data);
         setLastUpdatedAt(data.updated_at);
         setLastMessage({ type: data.lastEvent || 'dashboard-refresh-required' });
         

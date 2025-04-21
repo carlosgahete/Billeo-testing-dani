@@ -1,0 +1,80 @@
+Perfecto, eso suena a que el updated_at no cambia, o que el valor de lastUpdate en el cliente nunca se iguala correctamente al de la base de datos, y por eso siempre entra al refreshCallback una y otra vez.
+
+Vamos a depurarlo paso a paso:
+
+⸻
+
+Posible causa 1: updated_at es igual o menor a lastUpdate siempre
+
+Esto puede pasar si:
+	•	El cliente y el servidor no están sincronizados en hora.
+	•	El servidor devuelve updated_at como string y no lo estás convirtiendo bien.
+	•	Estás insertando muchos eventos repetidos con el mismo timestamp.
+
+⸻
+
+Solución simple: añade logs para comprobar valores
+
+En el useDashboardInteractionListener, agrega logs así:
+
+console.log("🕒 Última actualización local:", lastUpdate);
+console.log("🕒 Última actualización del servidor:", data.updated_at);
+
+Y antes de hacer el refreshCallback, cambia la condición a:
+
+if (data.updated_at && data.updated_at > lastUpdate + 100) {
+  setLastUpdate(data.updated_at);
+  refreshCallback();
+}
+
+Esto añade un margen de seguridad de 100ms para evitar que entren en bucle si los timestamps son prácticamente iguales.
+
+⸻
+
+Posible causa 2: Estás insertando un evento dashboard_events en cada refresh
+
+Si tu refetch() dispara una llamada a una API que también vuelve a insertar un dashboard_event, entonces creas un bucle infinito:
+	•	Se actualiza algo
+	•	Se inserta un evento
+	•	El cliente lo detecta
+	•	Llama a refetch()
+	•	Eso vuelve a insertar el evento
+	•	Y así infinitamente…
+
+⸻
+
+Solución a eso: separa bien los eventos
+
+Solo deberías insertar un evento en el servidor cuando hay una acción externa del usuario o backend, no durante la actualización del dashboard. Si quieres protegerlo, puedes hacer una lógica como:
+
+// Solo insertar evento si es algo relevante
+if (!esUnaPeticionDeRefresco) {
+  await db.query('INSERT INTO dashboard_events (updated_at) VALUES (NOW())');
+}
+
+
+
+⸻
+
+Alternativa definitiva (mejor diseño): usa solo una fila con updated_at
+
+Evita tener 1000 filas de eventos si solo necesitas saber “¿hubo algún cambio?”:
+
+CREATE TABLE dashboard_state (
+  id INT PRIMARY KEY DEFAULT 1,
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+Y cada vez que haces un cambio real:
+
+await db.query('UPDATE dashboard_state SET updated_at = NOW() WHERE id = 1');
+
+Y tu endpoint:
+
+const result = await db.query('SELECT updated_at FROM dashboard_state WHERE id = 1');
+
+Así todo es más limpio y eficiente.
+
+⸻
+
+¿Quieres que te lo pase todo ya con esa última implementación (con una sola fila)? Es la mejor opción si no necesitas historial de eventos.

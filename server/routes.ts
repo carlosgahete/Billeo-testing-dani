@@ -1105,31 +1105,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // La función registerDashboardEvent se define aquí
   
   /**
-   * Función para registrar un evento de actualización del dashboard
+   * Función para actualizar el estado del dashboard de un usuario
    * Esta función reemplaza a la antigua función notifyDashboardUpdate de WebSockets
+   * Usa una única fila por usuario para mayor eficiencia
    * @param type - Tipo de evento (invoice-created, transaction-updated, etc.)
-   * @param data - Datos adicionales relacionados con el evento
+   * @param data - Datos adicionales relacionados con el evento (no se almacena)
    * @param userId - ID del usuario que realizó la acción
    */
-  async function registerDashboardEvent(type: string, data: any = null, userId: number) {
+  async function updateDashboardState(type: string, data: any = null, userId: number) {
     try {
+      // Comprobar si ya existe un registro para este usuario
+      const [existing] = await db.select()
+        .from(dashboardState)
+        .where(eq(dashboardState.userId, userId));
+      
+      if (existing) {
+        // Actualizar el registro existente
+        await db.update(dashboardState)
+          .set({
+            lastEventType: type,
+            updatedAt: new Date()
+          })
+          .where(eq(dashboardState.userId, userId));
+      } else {
+        // Crear un nuevo registro
+        await db.insert(dashboardState).values({
+          userId,
+          lastEventType: type,
+          // id y updatedAt tienen valores por defecto
+        });
+      }
+      
+      // Aún registramos el evento completo para historial (opcional)
       await db.insert(dashboardEvents).values({
         type,
         data,
         userId,
         updatedAt: new Date()
       });
-      console.log(`Evento de dashboard registrado: ${type} para usuario ${userId}`);
+      
+      console.log(`Estado del dashboard actualizado: ${type} para usuario ${userId}`);
     } catch (error) {
-      console.error(`Error al registrar evento de dashboard:`, error);
+      console.error(`Error al actualizar estado del dashboard:`, error);
     }
   }
   
-  // Hacer la función disponible globalmente (reemplaza a notifyDashboardUpdate)
-  global.registerDashboardEvent = registerDashboardEvent;
+  // Hacer la función disponible globalmente (reemplaza a notifyDashboardUpdate y registerDashboardEvent)
+  global.updateDashboardState = updateDashboardState;
+  global.registerDashboardEvent = updateDashboardState; // Alias para compatibilidad
   
   // Declaración global para TypeScript
   declare global {
+    var updateDashboardState: (type: string, data?: any, userId?: number) => Promise<void>;
     var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
   }
 
@@ -1140,17 +1167,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      // Obtenemos la última actualización del dashboard para este usuario
-      const [lastUpdate] = await db.select()
-        .from(dashboardEvents)
-        .where(eq(dashboardEvents.userId, req.session.userId))
-        .orderBy(desc(dashboardEvents.updatedAt))
-        .limit(1);
+      // Obtenemos el estado actual del dashboard para este usuario
+      const [state] = await db.select()
+        .from(dashboardState)
+        .where(eq(dashboardState.userId, req.session.userId));
+      
+      if (!state) {
+        // Si no existe, creamos un registro inicial
+        const [newState] = await db.insert(dashboardState)
+          .values({
+            userId: req.session.userId,
+            lastEventType: 'initial',
+            // id y updatedAt tienen valores por defecto
+          })
+          .returning();
+        
+        return res.status(200).json({
+          updated_at: newState.updatedAt.getTime(),
+          lastEvent: newState.lastEventType
+        });
+      }
       
       // Devolvemos la fecha de la última actualización
       return res.status(200).json({
-        updated_at: lastUpdate ? lastUpdate.updatedAt.getTime() : Date.now(),
-        lastEvent: lastUpdate ? lastUpdate.type : null
+        updated_at: state.updatedAt.getTime(),
+        lastEvent: state.lastEventType
       });
     } catch (error) {
       console.error("Error al obtener estado del dashboard:", error);

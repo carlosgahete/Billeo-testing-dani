@@ -11,11 +11,24 @@ export const dashboardEvents = pgTable("dashboard_events", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Tabla para estado del dashboard (sistema de actualización optimizado)
+export const dashboardState = pgTable("dashboard_state", {
+  id: integer("id").primaryKey().default(1),
+  userId: integer("user_id").notNull(),
+  lastEventType: text("last_event_type").notNull().default('refresh'),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertDashboardEventSchema = createInsertSchema(dashboardEvents)
   .omit({ id: true });
 
+export const insertDashboardStateSchema = createInsertSchema(dashboardState)
+  .omit({ id: true, updatedAt: true });
+
 export type InsertDashboardEvent = z.infer<typeof insertDashboardEventSchema>;
 export type DashboardEvent = typeof dashboardEvents.$inferSelect;
+export type InsertDashboardState = z.infer<typeof insertDashboardStateSchema>;
+export type DashboardState = typeof dashboardState.$inferSelect;
 
 // User Model
 export const users = pgTable("users", {
