@@ -66,12 +66,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
   
   // Función para refrescar manualmente los datos del usuario
-  // Función deshabilitada para evitar intentos constantes de autenticación
   const refreshUser = useCallback(() => {
-    console.log('Función refreshUser deshabilitada en entorno Replit para prevenir llamadas excesivas');
-    // No hacemos nada para evitar los bucles de autenticación
-    // Esto evita el problema de reconexiones constantes en Replit
-  }, []);
+    console.log('Refrescando datos del usuario...');
+    queryClient.invalidateQueries({queryKey: ["/api/user"]});
+    refetch();
+    
+    // También cargar datos de la empresa si el usuario está autenticado
+    if (user) {
+      fetch('/api/company')
+        .then(res => {
+          if (res.ok) return res.json();
+          return null;
+        })
+        .then(companyData => {
+          if (companyData) {
+            sessionStorage.setItem('companyData', JSON.stringify(companyData));
+            console.log("Datos de empresa actualizados en sessionStorage en refreshUser");
+          }
+        })
+        .catch(err => {
+          console.error("Error actualizando datos de empresa:", err);
+        });
+    }
+  }, [refetch, user]);
 
   const loginMutation = useMutation<Omit<SelectUser, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
