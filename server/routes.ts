@@ -1899,8 +1899,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(newInvoice.id);
       
       // Notificar a todos los clientes conectados sobre la nueva factura
-      if (global.notifyDashboardUpdate) {
-        console.log("Enviando notificación WebSocket por factura creada");
+      console.log("Actualizando estado del dashboard (factura creada)");
+      
+      if (global.updateDashboardState) {
+        global.updateDashboardState('invoice-created', {
+          invoiceId: newInvoice.id,
+          timestamp: new Date().toISOString()
+        }, req.session.userId);
+      } else if (global.notifyDashboardUpdate) {
+        // Compatibilidad con método antiguo
+        console.log("Enviando notificación WebSocket por factura creada (método antiguo)");
         global.notifyDashboardUpdate('invoice-created', {
           invoiceId: newInvoice.id,
           userId: newInvoice.userId,
@@ -2106,8 +2114,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
       
       // Notificar a todos los clientes conectados sobre la factura actualizada
-      if (global.notifyDashboardUpdate) {
-        console.log("Enviando notificación WebSocket por factura actualizada");
+      console.log("Actualizando estado del dashboard (factura actualizada)");
+      
+      if (global.updateDashboardState) {
+        global.updateDashboardState('invoice-updated', {
+          invoiceId: updatedInvoice.id,
+          status: updatedInvoice.status,
+          timestamp: new Date().toISOString()
+        }, req.session.userId);
+      } else if (global.notifyDashboardUpdate) {
+        // Compatibilidad con método antiguo
+        console.log("Enviando notificación WebSocket por factura actualizada (método antiguo)");
         global.notifyDashboardUpdate('invoice-updated', {
           invoiceId: updatedInvoice.id,
           userId: updatedInvoice.userId,
