@@ -69,14 +69,23 @@ export function useDashboardData(
   isError: boolean;
   refetch: () => void;
 } {
-  const { year, period } = useSimpleDashboardFilters();
+  // Obtenemos los filtros y el trigger de actualización del hook centralizado
+  const filters = useSimpleDashboardFilters();
+  const { year, period, refreshTrigger: filtersRefreshTrigger } = filters;
   
   // Usar el endpoint alternativo para evitar errores
   const finalYear = forcedYear || year;
   const finalPeriod = forcedPeriod || period;
   
-  // Definimos un estado para forzar actualizaciones manuales
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+  // Definimos un estado para forzar actualizaciones manuales, inicializado con el valor global
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(filtersRefreshTrigger || Date.now());
+  
+  // Efecto para responder a cambios en el filtro global
+  useEffect(() => {
+    // Cuando el filtro global cambia, actualizar nuestro trigger local
+    console.log(`📊 useDashboardData: Detectado cambio en refreshTrigger: ${filtersRefreshTrigger}`);
+    setRefreshTrigger(filtersRefreshTrigger || Date.now());
+  }, [filtersRefreshTrigger]);
   
   // Efecto para escuchar eventos de creación/actualización de facturas y transacciones
   useEffect(() => {
@@ -98,6 +107,9 @@ export function useDashboardData(
     // Evento general de refresco del dashboard
     window.addEventListener('dashboard-refresh-required', handleUpdateEvent);
     
+    // Evento específico para cambios en los filtros
+    window.addEventListener('dashboard-filters-changed', handleUpdateEvent);
+    
     // Limpiar todos los listeners al desmontar
     return () => {
       // Facturas
@@ -110,6 +122,7 @@ export function useDashboardData(
       
       // General
       window.removeEventListener('dashboard-refresh-required', handleUpdateEvent);
+      window.removeEventListener('dashboard-filters-changed', handleUpdateEvent);
     };
   }, []);
 

@@ -308,6 +308,34 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               {lastUpdatedAt ? `Última actualización: hace ${Math.round((Date.now() - lastUpdatedAt) / 1000)}s` : 'Sincronizando...'}
             </span>
             
+            {/* Botón de refresco manual */}
+            <button 
+              onClick={() => {
+                console.log("Botón de refresco manual pulsado");
+                // Forzar una actualización global cambiando el refreshTrigger
+                filters.forceRefresh();
+                // También refrescar directamente los datos
+                refetch().then(() => {
+                  console.log("✅ Refresco manual completado");
+                  setUpdateFlash(true);
+                  setLastUpdateType("manual");
+                  
+                  // Quitar el flash después de 2 segundos
+                  if (updateTimerRef.current) {
+                    clearTimeout(updateTimerRef.current);
+                  }
+                  
+                  updateTimerRef.current = setTimeout(() => {
+                    setUpdateFlash(false);
+                  }, 2000);
+                });
+              }}
+              className="ml-2 p-1 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+              title="Refrescar datos manualmente"
+            >
+              <RefreshCw className="h-3.5 w-3.5 text-primary" />
+            </button>
+            
             {/* Notificación de actualización en tiempo real */}
             <AnimatePresence>
               {updateFlash && (

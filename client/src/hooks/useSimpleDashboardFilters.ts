@@ -31,39 +31,61 @@ export function useSimpleDashboardFilters() {
   // Función para cambiar el año
   const changeYear = useCallback((newYear: string) => {
     console.log('🗓️ Cambiando año a:', newYear);
-    setYear(newYear);
     
     // Actualizamos el timestamp global para forzar una nueva consulta
     globalRefreshTrigger = Date.now();
     
-    // Invalidamos específicamente las consultas con el año actual
+    // Primero invalidar las consultas con los parámetros antiguos
     queryClient.invalidateQueries({
       queryKey: ['/api/stats/dashboard-fix', year, period],
     });
     
-    // También invalidamos sin parámetros para asegurar actualización
+    // Después cambiar el estado para que futuras consultas usen el nuevo año
+    setYear(newYear);
+    
+    // Invalidar cualquier consulta relacionada con el dashboard para forzar recargas
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix'],
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && key.includes('dashboard');
+      },
     });
+    
+    // Disparamos manualmente un evento para notificar a otros componentes
+    const event = new CustomEvent('dashboard-filters-changed', {
+      detail: { year: newYear, period, timestamp: globalRefreshTrigger }
+    });
+    window.dispatchEvent(event);
   }, [queryClient, year, period]);
   
   // Función para cambiar el periodo
   const changePeriod = useCallback((newPeriod: string) => {
     console.log('🔢 Cambiando periodo a:', newPeriod);
-    setPeriod(newPeriod);
     
     // Actualizamos el timestamp global para forzar una nueva consulta
     globalRefreshTrigger = Date.now();
     
-    // Invalidamos específicamente las consultas con el periodo actual
+    // Primero invalidar las consultas con los parámetros antiguos
     queryClient.invalidateQueries({
       queryKey: ['/api/stats/dashboard-fix', year, period],
     });
     
-    // También invalidamos sin parámetros para asegurar actualización
+    // Después cambiar el estado para que futuras consultas usen el nuevo periodo
+    setPeriod(newPeriod);
+    
+    // Invalidar cualquier consulta relacionada con el dashboard para forzar recargas
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix'],
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && key.includes('dashboard');
+      },
     });
+    
+    // Disparamos manualmente un evento para notificar a otros componentes
+    const event = new CustomEvent('dashboard-filters-changed', {
+      detail: { year, period: newPeriod, timestamp: globalRefreshTrigger }
+    });
+    window.dispatchEvent(event);
   }, [queryClient, year, period]);
   
   // Efecto para notificar cambios visualmente cuando cambian los filtros
