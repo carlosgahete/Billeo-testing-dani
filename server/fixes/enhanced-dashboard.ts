@@ -52,17 +52,40 @@ export function setupEnhancedDashboardEndpoint(
       res.setHeader('Expires', '0');
       res.setHeader('Pragma', 'no-cache');
       
-      // Obtener parámetros de filtrado del usuario
-      const { year, period } = req.query;
+      // Obtener parámetros de filtrado del usuario desde la query
+      const { year: queryYear, period: queryPeriod } = req.query;
       
       // Obtener año actual para filtros por defecto
       const currentYear = new Date().getFullYear();
       
-      // Registrar la consulta para depuración
-      console.log(`📊 Consultando datos fiscales [ENHANCED]: { year: '${year || currentYear}', period: '${period || 'all'}' }`);
-      
       // Obtener el ID del usuario autenticado
       const userId = req.session.userId;
+      
+      // Intentar obtener preferencias guardadas para este usuario
+      let storedPreferences: any = undefined;
+      try {
+        storedPreferences = await storage.getFilterPreferences(userId, 'dashboard');
+        console.log("🔍 Preferencias de filtro encontradas:", storedPreferences ? "Sí" : "No");
+      } catch (error) {
+        console.error("❌ Error al obtener preferencias de filtro:", error);
+      }
+      
+      // Determinar el año y periodo a utilizar (prioridad: query > almacenado > default)
+      const year = queryYear || (storedPreferences?.year?.toString()) || currentYear.toString();
+      const period = queryPeriod || (storedPreferences?.period) || 'all';
+      
+      // Registrar la consulta para depuración
+      console.log(`📊 Consultando datos fiscales [ENHANCED]: { year: '${year}', period: '${period}' }`);
+      
+      // Si se proporcionaron filtros en la query o no hay preferencias guardadas, guardar las nuevas preferencias
+      if ((queryYear || queryPeriod) || !storedPreferences) {
+        try {
+          console.log("💾 Guardando nuevas preferencias de filtro:", { userId, year, period });
+          await storage.saveFilterPreferences(userId, 'dashboard', parseInt(year.toString()), period.toString());
+        } catch (error) {
+          console.error("❌ Error al guardar preferencias de filtro:", error);
+        }
+      }
       
       try {
         // Obtener datos de facturas
@@ -77,24 +100,64 @@ export function setupEnhancedDashboardEndpoint(
         const uniqueYears = Array.from(uniqueYearsSet);
         console.log("Años de transacciones:", uniqueYears);
         
-        // Filtrar facturas por año si se proporciona
-        const filteredInvoices = year 
-          ? invoices.filter(invoice => {
-              const invoiceYear = new Date(invoice.issueDate).getFullYear();
-              return invoiceYear.toString() === year;
-            })
-          : invoices;
+        // Filtrar facturas por año y periodo si se proporciona
+        let filteredInvoices = invoices;
+        
+        // Primero filtrar por año
+        if (year) {
+          filteredInvoices = invoices.filter(invoice => {
+            const invoiceDate = new Date(invoice.issueDate);
+            const invoiceYear = invoiceDate.getFullYear();
+            return invoiceYear.toString() === year.toString();
+          });
+        }
+        
+        // Luego filtrar por trimestre si es necesario
+        if (period && period !== 'all') {
+          filteredInvoices = filteredInvoices.filter(invoice => {
+            const invoiceDate = new Date(invoice.issueDate);
+            const month = invoiceDate.getMonth() + 1; // Meses van de 0-11
+            
+            switch(period.toLowerCase()) {
+              case 'q1': return month >= 1 && month <= 3;
+              case 'q2': return month >= 4 && month <= 6;
+              case 'q3': return month >= 7 && month <= 9;
+              case 'q4': return month >= 10 && month <= 12;
+              default: return true;
+            }
+          });
+        }
           
         // Obtener datos de transacciones
         const transactions = await storage.getTransactionsByUserId(userId);
         
-        // Filtrar transacciones por año
-        const filteredTransactions = year 
-          ? transactions.filter(txn => {
-              const txnYear = new Date(txn.date).getFullYear();
-              return txnYear.toString() === year;
-            })
-          : transactions;
+        // Filtrar transacciones por año y periodo
+        let filteredTransactions = transactions;
+        
+        // Primero filtrar por año
+        if (year) {
+          filteredTransactions = transactions.filter(txn => {
+            const txnDate = new Date(txn.date);
+            const txnYear = txnDate.getFullYear();
+            return txnYear.toString() === year.toString();
+          });
+        }
+        
+        // Luego filtrar por trimestre si es necesario
+        if (period && period !== 'all') {
+          filteredTransactions = filteredTransactions.filter(txn => {
+            const txnDate = new Date(txn.date);
+            const month = txnDate.getMonth() + 1; // Meses van de 0-11
+            
+            switch(period.toLowerCase()) {
+              case 'q1': return month >= 1 && month <= 3;
+              case 'q2': return month >= 4 && month <= 6;
+              case 'q3': return month >= 7 && month <= 9;
+              case 'q4': return month >= 10 && month <= 12;
+              default: return true;
+            }
+          });
+        }
           
         // Obtener datos de presupuestos
         const quotes = await storage.getQuotesByUserId(userId);
@@ -396,7 +459,8 @@ export function setupEnhancedDashboardEndpoint(
             appliedPeriod,
             wasFiltered: Boolean(year) || Boolean(period),
             yearOptions: Array.from(new Set([...uniqueYears, currentYear])).sort((a, b) => b - a),
-            periodOptions: ['all', 'q1', 'q2', 'q3', 'q4']
+            periodOptions: ['all', 'q1', 'q2', 'q3', 'q4'],
+            storedPreferencesFound: !!storedPreferences
           },
           
           // Información de diagnóstico
