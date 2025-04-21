@@ -39,7 +39,10 @@ import {
   DashboardBlock,
   files,
   File,
-  InsertFile
+  InsertFile,
+  filterPreferences,
+  InsertFilterPreferences,
+  FilterPreferences
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { db, sql } from "./db";
@@ -72,6 +75,10 @@ export interface IStorage {
   // Dashboard preferences operations
   getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
   saveDashboardPreferences(userId: number, data: { layout?: { blocks: any[] }, emailNotifications?: boolean }): Promise<DashboardPreferences>;
+  
+  // Filter preferences operations
+  getFilterPreferences(userId: number, screenKey: string): Promise<any>;
+  saveFilterPreferences(userId: number, screenKey: string, year: number, period: string, extraFilters?: any): Promise<any>;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
@@ -164,6 +171,71 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Métodos para gestionar preferencias de filtros
+  async getFilterPreferences(userId: number, screenKey: string): Promise<FilterPreferences | undefined> {
+    try {
+      // Buscar la preferencia del usuario y pantalla específica
+      const result = await db.select().from(filterPreferences)
+        .where(and(
+          eq(filterPreferences.userId, userId),
+          eq(filterPreferences.screenKey, screenKey)
+        ));
+      
+      if (result.length > 0) {
+        // Actualizar el timestamp de último uso
+        await db.update(filterPreferences)
+          .set({ lastUsed: new Date() })
+          .where(eq(filterPreferences.id, result[0].id));
+          
+        return result[0];
+      }
+      
+      // Si no existe, devolver undefined
+      return undefined;
+    } catch (error) {
+      console.error('Error al obtener preferencias de filtro:', error);
+      return undefined;
+    }
+  }
+  
+  async saveFilterPreferences(userId: number, screenKey: string, year: number, period: string, extraFilters?: any): Promise<FilterPreferences> {
+    try {
+      // Buscar si ya existe una preferencia para este usuario y pantalla
+      const existing = await this.getFilterPreferences(userId, screenKey);
+      
+      // Preparar los datos a insertar/actualizar
+      const preferenceData = {
+        userId,
+        screenKey,
+        year,
+        period,
+        extraFilters: extraFilters ? extraFilters : null,
+        updatedAt: new Date(),
+        lastUsed: new Date()
+      };
+      
+      if (existing) {
+        // Actualizar preferencia existente
+        const result = await db.update(filterPreferences)
+          .set(preferenceData)
+          .where(eq(filterPreferences.id, existing.id))
+          .returning();
+          
+        return result[0];
+      } else {
+        // Crear nueva preferencia
+        const result = await db.insert(filterPreferences)
+          .values(preferenceData)
+          .returning();
+          
+        return result[0];
+      }
+    } catch (error) {
+      console.error('Error al guardar preferencias de filtro:', error);
+      throw error;
+    }
+  }
+  
   // Métodos para manejar archivos
   async createFile(file: InsertFile): Promise<File> {
     const result = await db.insert(files).values(file).returning();
