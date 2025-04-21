@@ -708,7 +708,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="p-0">
             <div className="h-[400px]">
               {/* Usamos el componente Apple sin filtros propios */}
-              <ExpensesByCategoryApple />
+              <ExpensesByCategoryApple year={filters.year} period={filters.period} />
             </div>
           </div>
         </div>
