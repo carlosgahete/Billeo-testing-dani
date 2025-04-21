@@ -84,6 +84,26 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Endpoint público para verificar el estado del servidor - no requiere autenticación
+  app.get("/api/health", (req, res) => {
+    // Comprobamos que esté usando la API directamente y no desde el navegador
+    const isApiRequest = req.headers.accept?.includes('application/json') || 
+                         req.headers['user-agent']?.includes('curl') ||
+                         req.query.format === 'json';
+                         
+    // Si no es solicitud API, redirigir al frontend
+    if (!isApiRequest) {
+      return res.redirect('/');
+    }
+    
+    return res.status(200).json({
+      status: "ok",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      message: "Server running"
+    });
+  });
+
   // Middleware para verificar autenticación de manera consistente
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     // Verificar si el usuario está autenticado mediante passport o mediante sesión

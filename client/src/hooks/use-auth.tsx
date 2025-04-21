@@ -123,6 +123,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Invalidar la query para forzar una recarga fresca
       queryClient.invalidateQueries({queryKey: ["/api/user"]});
       
+      // Guardar los datos del usuario autenticado en sessionStorage y localStorage
+      try {
+        // Persistir datos en sessionStorage (para la sesión actual)
+        sessionStorage.setItem('userData', JSON.stringify(userData));
+        
+        // Persistir datos en localStorage (para recuperar sesión después)
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        console.log("Datos de usuario guardados correctamente en storage");
+      } catch (err) {
+        console.error("Error guardando datos de usuario en storage:", err);
+      }
+      
       // Cargar los datos de la empresa y guardarlos en sessionStorage para los PDFs
       fetch('/api/company')
         .then(res => {
@@ -212,12 +225,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
       
-      // Limpiar datos de empresa del sessionStorage al cerrar sesión
+      // Limpiar todos los datos del usuario y empresa en sessionStorage y localStorage
       try {
+        // Limpiar datos de sessionStorage
         sessionStorage.removeItem('companyData');
-        console.log("Datos de empresa eliminados de sessionStorage");
+        sessionStorage.removeItem('userData');
+        
+        // Limpiar datos de localStorage
+        localStorage.removeItem('userData');
+        
+        console.log("Datos de usuario y empresa eliminados correctamente de Storage");
       } catch (err) {
-        console.error("Error limpiando sessionStorage:", err);
+        console.error("Error limpiando Storage:", err);
       }
       
       toast({

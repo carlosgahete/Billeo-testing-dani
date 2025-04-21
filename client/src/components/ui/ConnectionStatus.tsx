@@ -1,14 +1,16 @@
 import React from 'react';
 import { ConnectionState } from '@/hooks/useWebSocketDashboard';
-import { RefreshCw } from 'lucide-react';
+import { AlertCircle, ArrowRightCircle, RefreshCw, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Link } from 'wouter';
 
 interface ConnectionStatusProps {
   connectionState: ConnectionState;
   onReconnect: () => void;
   className?: string;
+  errorMessage?: string | null;
 }
 
 /**
@@ -17,7 +19,8 @@ interface ConnectionStatusProps {
 export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   connectionState,
   onReconnect,
-  className
+  className,
+  errorMessage
 }) => {
   // Definir el color y el texto según el estado
   let statusColor = 'bg-gray-400';

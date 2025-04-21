@@ -64,7 +64,32 @@ export default function AuthPage() {
       
       // Usar el método estándar de inicio de sesión
       console.log("Utilizando el método normal de login");
-      loginMutation.mutate(loginFormData);
+      loginMutation.mutate(loginFormData, {
+        onSuccess: (data) => {
+          // Guardar datos de usuario en sessionStorage
+          try {
+            // Guardar el usuario para que esté disponible para el WebSocket
+            sessionStorage.setItem('userData', JSON.stringify(data));
+            console.log("Datos de usuario guardados correctamente en sessionStorage");
+            
+            // Forzar una redirección inmediata
+            setTimeout(() => {
+              console.log("Redirigiendo al dashboard después de login exitoso");
+              navigate("/");
+            }, 200);
+          } catch (err) {
+            console.error("Error guardando datos de usuario:", err);
+          }
+        },
+        onError: (error) => {
+          console.error("Error en login:", error);
+          toast({
+            title: "Error de inicio de sesión",
+            description: error.message || "Credenciales incorrectas",
+            variant: "destructive"
+          });
+        }
+      });
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       toast({

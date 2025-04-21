@@ -30,13 +30,28 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       return;
     }
 
-    // Verificar si hay un usuario autenticado - verificando sessionStorage y localStorage
+    // Verificar si hay un usuario autenticado - verificando diferentes fuentes
     const isAuthenticated = () => {
       try {
-        // Comprobamos si hay datos del usuario en sessionStorage o localStorage
-        const userData = sessionStorage.getItem('userData') || localStorage.getItem('userData');
+        // 1. Comprobamos si hay datos del usuario en sessionStorage o localStorage
+        const userDataSession = sessionStorage.getItem('userData');
+        const userDataLocal = localStorage.getItem('userData');
+        
+        // 2. Comprobamos si hay datos en la cache de React Query
         const userQueryData = sessionStorage.getItem('reactQuery-/api/user');
-        return userData || userQueryData ? true : false;
+        
+        // 3. Comprobamos si hay una cookie de sesión
+        const hasCookies = document.cookie.includes('connect.sid');
+        
+        // Registrar la información de autenticación para debugging
+        console.log('🔍 Estado de autenticación:', {
+          sessionStorage: !!userDataSession,
+          localStorage: !!userDataLocal,
+          reactQuery: !!userQueryData,
+          cookies: hasCookies
+        });
+        
+        return (userDataSession || userDataLocal || userQueryData || hasCookies) ? true : false;
       } catch (err) {
         console.warn("Error comprobando autenticación:", err);
         return false;
