@@ -12,6 +12,12 @@ export enum ConnectionState {
   FAILED = 'failed'
 }
 
+// Constantes para la lógica de reconexión
+const PING_INTERVAL = 15000; // 15 segundos entre pings
+const INITIAL_RECONNECT_DELAY = 1000; // 1 segundo
+const MAX_RECONNECT_DELAY = 10000; // 10 segundos máximo
+const RECONNECT_FACTOR = 1.3; // Factor de crecimiento
+
 /**
  * Hook para manejar la conexión WebSocket para actualizaciones del dashboard en tiempo real
  * Versión mejorada con autenticación basada en userId y reconexión más estable
@@ -28,6 +34,8 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectInProgressRef = useRef<boolean>(false);
+  const lastAuthTimeRef = useRef<number>(0);
+  const heartbeatTimeRef = useRef<number>(Date.now());
   
   // Estados para UI y lógica
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.DISCONNECTED);
@@ -48,9 +56,11 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       connectTimeoutRef.current = null;
     }
     
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    if (socketRef.current) {
       try {
-        socketRef.current.close();
+        console.log('Cerrando socket existente...');
+        // El código 1000 indica cierre normal
+        socketRef.current.close(1000, 'Cierre controlado');
       } catch (err) {
         console.error('Error al cerrar socket:', err);
       }
@@ -58,6 +68,28 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     
     socketRef.current = null;
     reconnectInProgressRef.current = false;
+  }, []);
+
+  // Función para verificar la salud del WebSocket
+  const checkConnection = useCallback(() => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      console.log('Verificación de salud: Socket no está abierto, intentando reconectar...');
+      reconnect();
+      return false;
+    }
+    
+    // Verificar si hemos recibido algo del servidor en el último tiempo
+    const now = Date.now();
+    const timeSinceLastHeartbeat = now - heartbeatTimeRef.current;
+    
+    // Si han pasado más de 45 segundos sin actividad, reconectar
+    if (timeSinceLastHeartbeat > PING_INTERVAL * 3) {
+      console.log(`Sin actividad por ${timeSinceLastHeartbeat}ms, reconectando...`);
+      reconnect();
+      return false;
+    }
+    
+    return true;
   }, []);
 
   // Función para crear una nueva conexión WebSocket
@@ -68,10 +100,13 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       return;
     }
     
-    // Si ya hay un socket activo, no creamos otro
+    // Si ya hay un socket activo y abierto, verificar que esté saludable
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      console.log('Socket ya está abierto, no es necesario reconectar');
-      return;
+      console.log('Socket ya está abierto, verificando estado...');
+      if (checkConnection()) {
+        console.log('Socket está saludable, manteniendo conexión actual');
+        return;
+      }
     }
     
     // Verificar si hay un usuario autenticado
@@ -97,8 +132,12 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     setErrorMessage(null);
 
     try {
+      // Crear nueva conexión WebSocket con manejo de timeout
       const newSocket = new WebSocket(wsUrl);
       socketRef.current = newSocket;
+      
+      // Actualizar timestamp de salud
+      heartbeatTimeRef.current = Date.now();
 
       // Eventos del socket
       newSocket.onopen = () => {
@@ -108,38 +147,60 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         setErrorMessage(null);
         reconnectInProgressRef.current = false;
         
+        // Actualizar timestamp de salud
+        heartbeatTimeRef.current = Date.now();
+        
         // Autenticar usando el ID del usuario
         if (auth.user && auth.user.id) {
           try {
-            newSocket.send(JSON.stringify({
+            const authMessage = JSON.stringify({
               type: 'auth',
               userId: auth.user.id,
               timestamp: new Date().toISOString()
-            }));
+            });
+            
+            newSocket.send(authMessage);
             console.log(`🔐 Enviando autenticación para usuario ${auth.user.id}`);
+            
+            // Registrar el tiempo de autenticación
+            lastAuthTimeRef.current = Date.now();
           } catch (err) {
             console.error('Error enviando autenticación:', err);
           }
         }
         
-        // Configurar ping periódico
+        // Configurar ping periódico - más frecuente para mantener conexión activa
         pingIntervalRef.current = setInterval(() => {
           if (newSocket.readyState === WebSocket.OPEN) {
             try {
-              newSocket.send(JSON.stringify({ 
+              const pingMessage = JSON.stringify({ 
                 type: 'ping', 
-                timestamp: new Date().toISOString() 
-              }));
+                timestamp: new Date().toISOString(),
+                userId: auth.user?.id 
+              });
+              
+              newSocket.send(pingMessage);
+              
+              // También verificamos que la conexión sea saludable
+              checkConnection();
             } catch (err) {
               console.error('Error enviando ping:', err);
+              // Si hay error al enviar ping, reconectar
+              reconnect();
             }
+          } else if (newSocket.readyState === WebSocket.CLOSED || newSocket.readyState === WebSocket.CLOSING) {
+            console.log('Socket cerrado o cerrándose durante ping, reconectando...');
+            reconnect();
           }
-        }, 30000); // Ping cada 30 segundos
+        }, PING_INTERVAL);
       };
 
       // Manejar mensajes recibidos
       newSocket.onmessage = (event) => {
         try {
+          // Actualizar timestamp de salud al recibir cualquier mensaje
+          heartbeatTimeRef.current = Date.now();
+          
           const data = JSON.parse(event.data);
           
           // Filtrar logs de ping/pong para reducir ruido
@@ -159,16 +220,24 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
             // El servidor requiere autenticación, enviamos credenciales
             if (auth.user && auth.user.id) {
               try {
-                newSocket.send(JSON.stringify({
+                const authMessage = JSON.stringify({
                   type: 'auth',
                   userId: auth.user.id,
                   timestamp: new Date().toISOString()
-                }));
+                });
+                
+                newSocket.send(authMessage);
                 console.log(`🔐 Enviando autenticación para usuario ${auth.user.id}`);
+                
+                // Registrar el tiempo de autenticación
+                lastAuthTimeRef.current = Date.now();
               } catch (err) {
                 console.error('Error enviando autenticación:', err);
               }
             }
+          } else if (data.type === 'pong') {
+            // No es necesario hacer nada especial con los pongs, solo actualizar el heartbeat
+            // que ya se hizo al inicio de esta función
           }
           // Mensajes que requieren actualización de datos
           else if (
@@ -191,6 +260,8 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       newSocket.onerror = (error) => {
         console.error('❌ Error en conexión WebSocket:', error);
         setErrorMessage('Error de conexión al servidor en tiempo real');
+        
+        // No intentamos reconectar aquí, dejamos que onclose se encargue
       };
 
       // Manejar cierre de conexión
@@ -198,7 +269,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         console.log(`🔌 Conexión WebSocket cerrada: ${event.code} - ${event.reason || 'Sin razón'}`);
         setConnectionState(ConnectionState.DISCONNECTED);
         
-        // Limpiar recursos
+        // Limpiar intervalos
         if (pingIntervalRef.current) {
           clearInterval(pingIntervalRef.current);
           pingIntervalRef.current = null;
@@ -215,9 +286,12 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           // Establecer un tiempo de espera progresivo antes de reconectar
           setConnectionState(ConnectionState.RECONNECTING);
           
-          // Calculamos el tiempo de espera con backoff exponencial 
-          // con un máximo de 20 segundos entre intentos
-          const delay = Math.min(2000 * Math.pow(1.5, Math.min(nextAttempt - 1, 6)), 20000);
+          // Calculamos el tiempo de espera con backoff exponencial pero con límite
+          const delay = Math.min(
+            INITIAL_RECONNECT_DELAY * Math.pow(RECONNECT_FACTOR, Math.min(nextAttempt - 1, 5)), 
+            MAX_RECONNECT_DELAY
+          );
+          
           console.log(`🔄 Programando reconexión en ${delay}ms (intento ${nextAttempt})`);
           
           // Esperar un tiempo antes de intentar reconectar
@@ -237,7 +311,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       setErrorMessage('No se pudo establecer la conexión');
       reconnectInProgressRef.current = false;
     }
-  }, [auth.user, connectionAttempts, cleanup, refreshCallback]);
+  }, [auth.user, connectionAttempts, cleanup, refreshCallback, checkConnection]);
 
   // Función para reconectar manualmente
   const reconnect = useCallback(() => {
@@ -250,10 +324,10 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     setConnectionAttempts(0);
     setErrorMessage(null);
     
-    // Reconectar después de un pequeño retraso
+    // Reconectar inmediatamente
     setTimeout(() => {
       createWebSocketConnection();
-    }, 500);
+    }, 100);
   }, [cleanup, createWebSocketConnection]);
 
   // Establecer conexión inicial
@@ -286,6 +360,17 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       }
     }
   }, [auth.user?.id, isInitialized, reconnect, cleanup]);
+  
+  // Agregar un verificador periódico de salud para detectar problemas de conexión
+  useEffect(() => {
+    const healthCheck = setInterval(() => {
+      if (auth.user && socketRef.current) {
+        checkConnection();
+      }
+    }, PING_INTERVAL * 2);
+    
+    return () => clearInterval(healthCheck);
+  }, [auth.user, checkConnection]);
 
   return {
     connectionState,
