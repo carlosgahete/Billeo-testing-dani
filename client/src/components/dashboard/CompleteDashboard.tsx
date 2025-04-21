@@ -41,7 +41,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const currentYearStr = new Date().getFullYear().toString();
   
   // Usamos el hook centralizado para obtener datos del dashboard
-  const { data: dashboardData, isLoading, isError, refetch } = useDashboardData();
+  const { data: dashboardData, isLoading, isError, refetch: refetchData } = useDashboardData();
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
@@ -63,8 +63,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     }, 1500);
     
     // Actualizar los datos
-    refetch();
-  }, [refetch]);
+    refetchData();
+  }, [refetchData]);
   
   // Usamos polling en lugar de WebSockets para monitorear actualizaciones del dashboard
   const { isConnected, lastMessage, lastUpdatedAt } = useDashboardPolling(handleDashboardRefresh);
@@ -315,7 +315,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           Ha ocurrido un error al cargar los datos del dashboard. Este problema está siendo revisado por nuestro equipo.
         </p>
         <Button 
-          onClick={() => refetch()} 
+          onClick={() => refetchData()} 
           className="bg-red-600 hover:bg-red-700 text-white"
         >
           Intentar nuevamente
@@ -389,7 +389,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 setLastUpdateType("manual");
                 
                 // Luego refrescamos los datos
-                refetch();
+                refetchData();
                 
                 // Registramos el resultado en consola
                 console.log("✅ Refresco manual solicitado");
