@@ -304,7 +304,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           {/* Indicador de estado del sistema de sincronización - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-            <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
+            <span className="text-xs">{isConnected ? 'Sincronizado' : 'Sin conexión'}</span>
             
             {/* Notificación de actualización en tiempo real */}
             <AnimatePresence>
@@ -329,10 +329,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </AnimatePresence>
           </div>
           
-          {/* Indicador de conexión WebSocket - Versión para móvil (solo punto) */}
+          {/* Indicador de estado de sincronización - Versión para móvil (solo punto) */}
           <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                 title={isConnected ? 'Conectado en tiempo real' : 'Desconectado'}></div>
+                 title={isConnected ? 'Datos sincronizados' : 'Sin sincronización'}></div>
             
             {/* Notificación móvil */}
             <AnimatePresence>
