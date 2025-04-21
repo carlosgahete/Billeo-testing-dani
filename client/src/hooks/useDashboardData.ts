@@ -137,7 +137,13 @@ export function useDashboardData(
             income: data.income,
             expenses: data.expenses
           });
-          return data;
+          
+          // Asegurar que los datos incluyan el año y periodo correctos
+          return {
+            ...data,
+            year: finalYear,
+            period: finalPeriod
+          };
         }
         
         // Si falla, intentar con el endpoint original
@@ -152,7 +158,13 @@ export function useDashboardData(
             year: finalYear,
             period: finalPeriod
           });
-          return data;
+          
+          // Asegurar que los datos incluyan el año y periodo correctos
+          return {
+            ...data,
+            year: finalYear,
+            period: finalPeriod
+          };
         }
         
         // Si ambos fallan, lanzar error
