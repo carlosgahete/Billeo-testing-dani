@@ -66,7 +66,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }, [refetch]);
   
   // Conectarnos al WebSocket para recibir actualizaciones en tiempo real
-  const { isConnected, lastMessage, connectionAttempts, errorMessage, reconnect } = useWebSocketDashboard(handleWebSocketRefresh);
+  const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
   
   // Detectar tipo de actualización para mostrar indicador específico
   useEffect(() => {
@@ -305,18 +305,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           {/* Indicador de conexión WebSocket - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-            <span className="text-xs">
-              {errorMessage || (isConnected ? 'Tiempo real' : 'Desconectado')}
-              {!isConnected && !errorMessage && connectionAttempts > 0 && ` (intento ${connectionAttempts}/3)`}
-            </span>
-            {!isConnected && connectionAttempts >= 3 && !errorMessage && (
-              <button 
-                onClick={reconnect}
-                className="ml-2 text-xs text-blue-600 hover:underline"
-              >
-                Reintentar
-              </button>
-            )}
+            <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
             
             {/* Notificación de actualización en tiempo real */}
             <AnimatePresence>
@@ -344,7 +333,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           {/* Indicador de conexión WebSocket - Versión para móvil (solo punto) */}
           <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                 title={errorMessage || (isConnected ? 'Conectado en tiempo real' : 'Desconectado')}></div>
+                 title={isConnected ? 'Conectado en tiempo real' : 'Desconectado'}></div>
             
             {/* Notificación móvil */}
             <AnimatePresence>
