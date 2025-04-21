@@ -44,6 +44,66 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
       console.log("Años de transacciones:", uniqueYears);
       
+      // Verificar si el año solicitado tiene datos - esto es crítico para no mostrar datos incorrectos
+      const hasDataForRequestedYear = !year || uniqueYears.includes(parseInt(year as string));
+      if (!hasDataForRequestedYear && year) {
+        console.log(`⚠️ No hay datos para el año ${year} - devolviendo objeto con valores cero`);
+        return res.status(200).json({
+          // Valores principales con ceros
+          income: 0,
+          expenses: 0,
+          pendingInvoices: 0,
+          pendingCount: 0,
+          pendingQuotes: 0,
+          pendingQuotesCount: 0,
+          balance: 0,
+          result: 0,
+          baseImponible: 0,
+          baseImponibleGastos: 0,
+          ivaRepercutido: 0,
+          ivaSoportado: 0,
+          irpfRetenidoIngresos: 0,
+          period: period || 'all',
+          year,
+          totalWithholdings: 0,
+          netIncome: 0,
+          netExpenses: 0,
+          netResult: 0,
+          taxes: { vat: 0, incomeTax: 0, ivaALiquidar: 0 },
+          taxStats: {
+            ivaRepercutido: 0,
+            ivaSoportado: 0,
+            ivaLiquidar: 0,
+            irpfRetenido: 0,
+            irpfTotal: 0,
+            irpfPagar: 0
+          },
+          issuedCount: 0,
+          quarterCount: 0,
+          quarterIncome: 0,
+          yearCount: 0,
+          yearIncome: 0,
+          invoices: {
+            total: 0,
+            pending: 0,
+            paid: 0,
+            overdue: 0,
+            totalAmount: 0
+          },
+          quotes: {
+            total: 0,
+            pending: 0,
+            accepted: 0,
+            rejected: 0
+          },
+          allQuotes: 0,
+          acceptedQuotes: 0,
+          rejectedQuotes: 0,
+          pendingQuotesTotal: 0,
+          lastQuoteDate: null
+        });
+      }
+      
       // Función auxiliar para obtener el trimestre de una fecha (1-4)
       const getQuarterFromDate = (date: Date): number => {
         const month = date.getMonth();
@@ -86,6 +146,81 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       
       // Obtener datos de transacciones
       const transactions = await storage.getTransactionsByUserId(userId);
+      
+      // Si el periodo es un trimestre específico, verificar si hay datos
+      if (period && period !== 'all' && period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
+        const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+        
+        // Verificar si hay facturas en este trimestre
+        const hasInvoicesInQuarter = filteredInvoices.length > 0;
+        
+        // Verificar si hay transacciones en este trimestre
+        const hasTransactionsInQuarter = transactions.some(txn => {
+          const txnDate = new Date(txn.date);
+          const txnYear = txnDate.getFullYear().toString();
+          const txnQuarter = getQuarterFromDate(txnDate);
+          return txnYear === year && txnQuarter === requestedQuarter;
+        });
+        
+        // Si no hay datos para este trimestre, devolver ceros
+        if (!hasInvoicesInQuarter && !hasTransactionsInQuarter) {
+          console.log(`⚠️ No hay datos para el trimestre ${period} del año ${year} - devolviendo objeto con valores cero`);
+          return res.status(200).json({
+            // Valores principales con ceros
+            income: 0,
+            expenses: 0,
+            pendingInvoices: 0,
+            pendingCount: 0,
+            pendingQuotes: 0,
+            pendingQuotesCount: 0,
+            balance: 0,
+            result: 0,
+            baseImponible: 0,
+            baseImponibleGastos: 0,
+            ivaRepercutido: 0,
+            ivaSoportado: 0,
+            irpfRetenidoIngresos: 0,
+            period,
+            year,
+            totalWithholdings: 0,
+            netIncome: 0,
+            netExpenses: 0,
+            netResult: 0,
+            taxes: { vat: 0, incomeTax: 0, ivaALiquidar: 0 },
+            taxStats: {
+              ivaRepercutido: 0,
+              ivaSoportado: 0,
+              ivaLiquidar: 0,
+              irpfRetenido: 0,
+              irpfTotal: 0,
+              irpfPagar: 0
+            },
+            issuedCount: 0,
+            quarterCount: 0,
+            quarterIncome: 0,
+            yearCount: 0,
+            yearIncome: 0,
+            invoices: {
+              total: 0,
+              pending: 0,
+              paid: 0,
+              overdue: 0,
+              totalAmount: 0
+            },
+            quotes: {
+              total: 0,
+              pending: 0,
+              accepted: 0,
+              rejected: 0
+            },
+            allQuotes: 0,
+            acceptedQuotes: 0,
+            rejectedQuotes: 0,
+            pendingQuotesTotal: 0,
+            lastQuoteDate: null
+          });
+        }
+      }
       
       // Filtrar transacciones por año y trimestre
       const filteredTransactions = transactions.filter(txn => {
