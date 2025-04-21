@@ -1112,41 +1112,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param data - Datos adicionales relacionados con el evento (no se almacena)
    * @param userId - ID del usuario que realizó la acción
    */
-  async function updateDashboardState(type: string, data: any = null, userId: number) {
+  async function updateDashboardState(type: string, data: any = null, userId: number | undefined) {
+    // Imprimir información de diagnóstico
+    console.log(`🔄 LLAMADA A updateDashboardState (routes.ts):`);
+    console.log(`🔑 userId: ${userId} (tipo: ${typeof userId})`);
+    console.log(`📝 type: ${type}`);
+    
+    // Verificar que userId sea un número válido
+    if (userId === undefined || userId === null) {
+      console.error('❌ updateDashboardState: userId es undefined/null, se requiere un ID de usuario válido');
+      return;
+    }
+    
+    // Convertir userId a número si es string
+    const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+    
+    // Si no es un número válido después de la conversión, abortamos
+    if (isNaN(userIdNum)) {
+      console.error(`❌ updateDashboardState: userId inválido (${userId})`);
+      return;
+    }
+  
     try {
+      // Generar timestamp exacto para la actualización
+      const now = new Date();
+      console.log(`⏱️ Timestamp generado para actualización: ${now.toISOString()} (${now.getTime()})`);
+      
       // Comprobar si ya existe un registro para este usuario
       const [existing] = await db.select()
         .from(dashboardState)
-        .where(eq(dashboardState.userId, userId));
+        .where(eq(dashboardState.userId, userIdNum));
       
       if (existing) {
-        // Actualizar el registro existente
-        await db.update(dashboardState)
+        console.log(`⏱️ Actualizando con nueva fecha: ${now.toISOString()}`);
+        
+        // Actualizar el registro existente con fecha explícita
+        const updateResult = await db.update(dashboardState)
           .set({
             lastEventType: type,
-            updatedAt: new Date()
+            updatedAt: now
           })
-          .where(eq(dashboardState.userId, userId));
+          .where(eq(dashboardState.userId, userIdNum))
+          .returning();
+        
+        console.log(`🔄 Resultado de la actualización:`, updateResult);
       } else {
         // Crear un nuevo registro
-        await db.insert(dashboardState).values({
-          userId,
+        console.log(`📝 Creando nuevo registro de estado para usuario ${userIdNum}`);
+        const insertResult = await db.insert(dashboardState).values({
+          userId: userIdNum,
           lastEventType: type,
-          // id y updatedAt tienen valores por defecto
-        });
+          updatedAt: now  // Explícitamente definimos el timestamp
+        }).returning();
+        
+        console.log(`✅ Registro creado:`, insertResult);
       }
       
-      // Aún registramos el evento completo para historial (opcional)
+      // Aún registramos el evento completo para historial
       await db.insert(dashboardEvents).values({
         type,
         data,
-        userId,
-        updatedAt: new Date()
+        userId: userIdNum,
+        updatedAt: now // Mismo timestamp para consistencia
       });
       
-      console.log(`Estado del dashboard actualizado: ${type} para usuario ${userId}`);
+      console.log(`✅ Estado del dashboard actualizado: ${type} para usuario ${userIdNum}`);
     } catch (error) {
-      console.error(`Error al actualizar estado del dashboard:`, error);
+      console.error(`❌ Error al actualizar estado del dashboard:`, error);
     }
   }
   
@@ -1156,8 +1188,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Declaración global para TypeScript
   declare global {
-    var updateDashboardState: (type: string, data?: any, userId?: number) => Promise<void>;
-    var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
+    var updateDashboardState: (type: string, data?: any, userId?: number | undefined) => Promise<boolean | undefined>;
+    var registerDashboardEvent: (type: string, data?: any, userId?: number | undefined) => Promise<boolean | undefined>;
   }
 
   // Endpoint para verificar estado de actualización del dashboard (reemplaza WebSocket)

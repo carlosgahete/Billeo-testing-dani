@@ -128,6 +128,6 @@ global.registerDashboardEvent = updateDashboardState; // Alias para compatibilid
 
 // Ampliar la declaración global
 declare global {
-  var updateDashboardState: (type: string, data?: any, userId?: number | undefined) => Promise<void>;
-  var registerDashboardEvent: (type: string, data?: any, userId?: number | undefined) => Promise<void>;
+  var updateDashboardState: (type: string, data?: any, userId?: number | undefined) => Promise<boolean | undefined>;
+  var registerDashboardEvent: (type: string, data?: any, userId?: number | undefined) => Promise<boolean | undefined>;
 }
