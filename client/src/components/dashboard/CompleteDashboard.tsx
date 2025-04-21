@@ -103,17 +103,38 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Creamos funciones específicas para cada acción de filtro para evitar la confusión
   const handleChangeYear = useCallback((newYear: string) => {
     if (filters) {
-      console.log("Cambiando año directamente a:", newYear);
-      // Llamamos directamente a la función del hook global
+      console.log("APLICANDO CAMBIO DE AÑO DIRECTO:", newYear);
+      
+      // 1. Limpiar la caché completamente
+      queryClient.clear();
+      
+      // 2. Cambiar el año usando el hook global
       filters.changeYear(newYear);
+      
+      // 3. Forzar actualización directa de datos
+      window.sessionStorage.setItem('dashboard_force_refresh', Date.now().toString());
+      
+      // 4. Forzar una navegación para recargar el dashboard con el nuevo año
+      // Esta es una solución drástica pero efectiva
+      window.location.href = `/?year=${newYear}&refresh=${Date.now()}`;
     }
   }, [filters]);
   
   const handleChangePeriod = useCallback((newPeriod: string) => {
     if (filters) {
-      console.log("Cambiando periodo directamente a:", newPeriod);
-      // Llamamos directamente a la función del hook global
+      console.log("APLICANDO CAMBIO DE PERIODO DIRECTO:", newPeriod);
+      
+      // 1. Limpiar la caché completamente
+      queryClient.clear();
+      
+      // 2. Cambiar el periodo usando el hook global
       filters.changePeriod(newPeriod);
+      
+      // 3. Forzar actualización directa de datos
+      window.sessionStorage.setItem('dashboard_force_refresh', Date.now().toString());
+      
+      // 4. Forzar una navegación para recargar el dashboard con el nuevo periodo
+      window.location.href = `/?period=${newPeriod}&year=${filters.year}&refresh=${Date.now()}`;
     }
   }, [filters]);
   

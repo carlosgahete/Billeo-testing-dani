@@ -5,9 +5,61 @@ import { useQueryClient } from '@tanstack/react-query';
 let globalRefreshTrigger = Date.now();
 
 export function useSimpleDashboardFilters() {
-  const [year, setYear] = useState(new Date().getFullYear().toString());
-  const [period, setPeriod] = useState('all');
+  // Detectar parámetros de URL al inicializar para sincronizar con la URL actual
+  const getInitialFiltersFromUrl = () => {
+    if (typeof window === 'undefined') return { year: new Date().getFullYear().toString(), period: 'all' };
+    
+    // Obtener los parámetros de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const yearParam = urlParams.get('year');
+    const periodParam = urlParams.get('period');
+    
+    console.log("📃 PARÁMETROS INICIALES DE URL:", { yearParam, periodParam });
+    
+    // Usar los parámetros de la URL o los valores predeterminados
+    return {
+      year: yearParam && /^\d{4}$/.test(yearParam) ? yearParam : new Date().getFullYear().toString(),
+      period: periodParam || 'all'
+    };
+  };
+  
+  // Inicializar estados con los valores de la URL
+  const initialFilters = getInitialFiltersFromUrl();
+  const [year, setYear] = useState(initialFilters.year);
+  const [period, setPeriod] = useState(initialFilters.period);
   const queryClient = useQueryClient();
+  
+  // Efecto para sincronizar los filtros con la URL cuando cambia la ubicación
+  useEffect(() => {
+    const syncFiltersWithUrl = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const yearParam = urlParams.get('year');
+      const periodParam = urlParams.get('period');
+      
+      console.log("🔄 SINCRONIZANDO DESDE URL:", { yearParam, periodParam, currentYear: year, currentPeriod: period });
+      
+      // Actualizar estado solo si los parámetros existen y son diferentes a los actuales
+      if (yearParam && yearParam !== year && /^\d{4}$/.test(yearParam)) {
+        console.log(`🗓️ Actualizando año desde URL: ${year} -> ${yearParam}`);
+        setYear(yearParam);
+      }
+      
+      if (periodParam && periodParam !== period) {
+        console.log(`📅 Actualizando periodo desde URL: ${period} -> ${periodParam}`);
+        setPeriod(periodParam);
+      }
+    };
+    
+    // Sincronizar al montar el componente
+    syncFiltersWithUrl();
+    
+    // Agregar listener para popstate (cuando usas botón de atrás/adelante)
+    window.addEventListener('popstate', syncFiltersWithUrl);
+    
+    return () => {
+      window.removeEventListener('popstate', syncFiltersWithUrl);
+    };
+  }, [year, period]);
   
   // Función para forzar una actualización manual incrementando el trigger
   const forceRefresh = useCallback(() => {

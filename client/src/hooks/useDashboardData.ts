@@ -147,7 +147,7 @@ export function useDashboardData(
       
       // Usamos los parámetros de la queryKey que React Query mantiene actualizados
       // No usamos valores capturados en closures que podrían estar obsoletos
-      console.log(`📊 Cargando datos frescos del dashboard: año=${year}, periodo=${period} [${trigger}]...`);
+      console.log(`📊 FORZANDO CARGA AGRESIVA: año=${year}, periodo=${period} [${trigger}]...`);
       
       // Construir URL con los parámetros de filtro correctos - asegurarnos de estar pasando año y periodo
       if (!year || year === "undefined") {
@@ -155,16 +155,23 @@ export function useDashboardData(
         throw new Error("Año no definido en la solicitud del dashboard");
       }
       
-      const url = `${endpoint}?year=${year}&period=${period}`;
-      
+      // Forzar actualización limpiando cualquier dato en sessionStorage
       try {
-        // Obtener el timestamp actual para prevenir el caché
+        // Limpiar cualquier estado almacenado para asegurar datos frescos
+        sessionStorage.removeItem('dashboard_last_data');
+        sessionStorage.removeItem('dashboard_cache');
+        
+        // Crear una URL con parámetros explícitos y una marca de tiempo aleatoria para evitar caché
+        const randomParam = Math.random().toString(36).substring(2, 15);
+        const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}`;
+        
+        // Obtener el timestamp actual para prevenir aún más el caché
         const timestamp = new Date().getTime();
         const urlWithTimestamp = `${url}&_t=${timestamp}`;
         
-        console.log("🔍 Solicitando URL:", urlWithTimestamp);
+        console.log("🔍 SOLICITUD DIRECTA CON BYPASS DE CACHÉ:", urlWithTimestamp);
         
-        // Incluir los parámetros de filtro en la URL
+        // Incluir los parámetros de filtro en la URL y headers adicionales
         const data = await fetch(urlWithTimestamp, {
           credentials: "include", // Importante: incluir las cookies en la petición
           headers: { 
@@ -173,7 +180,9 @@ export function useDashboardData(
             'Expires': '0',
             'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
             'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
-            'X-Dashboard-Period': period // Añadimos periodo como header para facilitar depuración
+            'X-Dashboard-Period': period, // Añadimos periodo como header para facilitar depuración
+            'X-Force-Refresh': 'true', // Header adicional para indicar que es un refresco forzado
+            'X-Random': randomParam // Header adicional para evitar caché
           }
         }).then(res => {
           if (!res.ok) {
