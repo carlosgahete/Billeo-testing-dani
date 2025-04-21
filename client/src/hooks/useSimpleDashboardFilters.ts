@@ -44,14 +44,13 @@ export function useSimpleDashboardFilters() {
     // Después cambiar el estado para que futuras consultas usen el nuevo año
     setYear(newYear);
     
-    // Invalidar cualquier consulta relacionada con el dashboard para forzar recargas
+    // Limpiar TODAS las consultas al cambiar de año para asegurar datos frescos
     queryClient.removeQueries({
       predicate: (query) => {
-        // Solo queremos eliminar las consultas que refieran a años diferentes al seleccionado
+        // Eliminar cualquier consulta relacionada con el dashboard
         const key = query.queryKey;
-        if (key.length >= 3 && key[0] === '/api/stats/dashboard-fix') {
-          const queryYear = key[1] as string;
-          return queryYear !== newYear;
+        if (Array.isArray(key) && key.length > 0) {
+          return key[0] === '/api/stats/dashboard-fix';
         }
         return false;
       },
@@ -99,11 +98,10 @@ export function useSimpleDashboardFilters() {
     // Esto es más agresivo que invalidar, pero garantiza datos frescos en cada cambio
     queryClient.removeQueries({
       predicate: (query) => {
-        // Solo queremos eliminar las consultas que refieran a periodos diferentes al seleccionado
+        // Eliminar todas las consultas relacionadas con el dashboard al cambiar el periodo
         const key = query.queryKey;
-        if (key.length >= 3 && key[0] === '/api/stats/dashboard-fix') {
-          const queryPeriod = key[2] as string;
-          return queryPeriod !== formattedPeriod;
+        if (Array.isArray(key) && key.length > 0) {
+          return key[0] === '/api/stats/dashboard-fix';
         }
         return false;
       },

@@ -149,7 +149,12 @@ export function useDashboardData(
       // No usamos valores capturados en closures que podrían estar obsoletos
       console.log(`📊 Cargando datos frescos del dashboard: año=${year}, periodo=${period} [${trigger}]...`);
       
-      // Construir URL con los parámetros de filtro correctos
+      // Construir URL con los parámetros de filtro correctos - asegurarnos de estar pasando año y periodo
+      if (!year || year === "undefined") {
+        console.error("❌ Error: Año no definido en la solicitud del dashboard");
+        throw new Error("Año no definido en la solicitud del dashboard");
+      }
+      
       const url = `${endpoint}?year=${year}&period=${period}`;
       
       try {
