@@ -124,11 +124,17 @@ export function useDashboardData(
       const url = `${endpoint}?year=${year}&period=${period}`;
       
       try {
+        // Obtener el timestamp actual para prevenir el caché
+        const timestamp = new Date().getTime();
+        const urlWithTimestamp = `${url}&_t=${timestamp}`;
+        
         // Incluir los parámetros de filtro en la URL
-        const data = await fetch(url, {
+        const data = await fetch(urlWithTimestamp, {
           credentials: "include", // Importante: incluir las cookies en la petición
           headers: { 
             'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
             'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
             'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
             'X-Dashboard-Period': period // Añadimos periodo como header para facilitar depuración
