@@ -17,12 +17,24 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
     const formattedDate = timestamp ? new Date(timestamp as string).toISOString() : new Date().toISOString();
     console.log(`📊 Consultando datos fiscales [SIMPLIFICADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
     
+    // Más logs para depuración
+    console.log(`📅 Tipo de period: ${typeof period}, Valor: '${period}'`);
+    if (period && period !== 'all' && period.includes('Q')) {
+      const trimestre = parseInt(period.replace('Q', ''));
+      console.log(`🔢 Trimestre seleccionado: ${trimestre} (extraído de '${period}')`);
+    } else {
+      console.log(`⚠️ period no tiene formato de trimestre o es 'all': '${period}'`);
+    }
+    
     // Obtener el ID del usuario autenticado
     const userId = req.session.userId;
     
     try {
       // Obtener datos de facturas
       const invoices = await storage.getInvoicesByUserId(userId);
+      
+      // Añadir log para verificar cuántas facturas hay en total
+      console.log(`📊 Total de facturas encontradas: ${invoices.length}`);
       
       // Calcular años únicos para mostrar en filtros
       const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
@@ -51,9 +63,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
-          // period puede ser 'Q1', 'Q2', 'Q3', 'Q4'
-          const requestedQuarter = parseInt(period.replace('Q', ''));
-          return invoiceQuarter === requestedQuarter;
+          try {
+            // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
+            if (period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
+              const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+              return invoiceQuarter === requestedQuarter;
+            } else {
+              console.log(`⚠️ Formato de period no reconocido: '${period}'`);
+            }
+          } catch (error) {
+            console.error(`❌ Error procesando period '${period}':`, error);
+          }
         }
         
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
@@ -77,9 +97,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
-          // period puede ser 'Q1', 'Q2', 'Q3', 'Q4'
-          const requestedQuarter = parseInt(period.replace('Q', ''));
-          return txnQuarter === requestedQuarter;
+          try {
+            // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
+            if (period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
+              const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+              return txnQuarter === requestedQuarter;
+            } else {
+              console.log(`⚠️ Formato de period no reconocido para transacciones: '${period}'`);
+            }
+          } catch (error) {
+            console.error(`❌ Error procesando period '${period}' para transacciones:`, error);
+          }
         }
         
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
@@ -103,9 +131,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
-          // period puede ser 'Q1', 'Q2', 'Q3', 'Q4'
-          const requestedQuarter = parseInt(period.replace('Q', ''));
-          return quoteQuarter === requestedQuarter;
+          try {
+            // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
+            if (period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
+              const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+              return quoteQuarter === requestedQuarter;
+            } else {
+              console.log(`⚠️ Formato de period no reconocido para presupuestos: '${period}'`);
+            }
+          } catch (error) {
+            console.error(`❌ Error procesando period '${period}' para presupuestos:`, error);
+          }
         }
         
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
@@ -113,6 +149,13 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       });
       
       // CÁLCULOS BÁSICOS
+      
+      // Mostrar resumen de filtrado para debugging
+      console.log(`🔍 RESULTADOS DE FILTRADO:`);
+      console.log(`📅 Filtros aplicados - Año: ${year || 'todos'}, Trimestre: ${period || 'todos'}`);
+      console.log(`📄 Facturas: ${invoices.length} totales -> ${filteredInvoices.length} filtradas`);
+      console.log(`💸 Transacciones: ${transactions.length} totales -> ${filteredTransactions.length} filtradas`);
+      console.log(`📋 Presupuestos: ${quotes.length} totales -> ${filteredQuotes.length} filtrados`);
       
       // 1. Facturas
       const issuedCount = filteredInvoices.length;

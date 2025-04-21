@@ -1,0 +1,73 @@
+Entiendo, si siempre devuelve la misma información, eso sugiere que el filtro no está aplicando correctamente los parámetros year y period en el backend. Vamos a revisar paso a paso lo que podría estar fallando y cómo solucionarlo.
+
+Posibles Causas y Soluciones:
+
+1. Verificar que los Parámetros de Filtro se Están Enviando Correctamente
+	•	Primero, asegúrate de que el frontend esté enviando correctamente los parámetros de filtro (year y period) al backend. Puedes hacer esto abriendo las herramientas de desarrollo en el navegador y verificando las solicitudes de red.
+	•	Revisa si la URL de la solicitud GET que envías contiene los parámetros correctamente formateados:
+
+GET /api/stats/dashboard-fix?year=2023&period=Q1
+
+
+	•	Si no ves los parámetros year y period o están vacíos, entonces el problema puede estar en cómo se capturan o se envían esos valores en el frontend.
+
+2. Verificar que el Backend Recibe y Procesa Correctamente los Parámetros
+	•	Asegúrate de que en el backend estás recibiendo los parámetros year y period correctamente. Si tienes logs, deberías ver algo como esto en el servidor:
+
+Filtrando datos para el año 2023 y el trimestre Q1
+
+
+	•	Si los parámetros no llegan correctamente o están vacíos, verifica cómo los estás recuperando en el servidor. Asegúrate de que el código que maneja los parámetros esté algo así:
+
+app.get('/api/stats/dashboard-fix', (req, res) => {
+  const { year, period } = req.query;
+  console.log(`Filtrando por año: ${year}, trimestre: ${period}`);
+  // Aquí va la lógica de filtrado
+});
+
+
+
+3. Verificar la Lógica de Filtrado en el Backend
+	•	Revisa la lógica de filtrado que estás usando en el servidor. Asegúrate de que se esté aplicando correctamente en la consulta de la base de datos.
+	•	Si estás utilizando una función como getQuarterFromDate, verifica que esté devolviendo el trimestre correcto. Asegúrate de que las fechas de las transacciones, facturas o presupuestos en la base de datos coincidan con el formato y el valor que se espera.
+
+Ejemplo de código para la consulta:
+
+const { year, period } = req.query;
+
+// Filtrar por año y trimestre
+const filteredData = await db.select('transactions')
+  .where('year', year) // Filtra por año
+  .andWhere('quarter', period); // Filtra por trimestre
+  
+console.log(filteredData); // Verifica que los datos filtrados sean correctos
+res.json(filteredData);
+
+Si la consulta no está devolviendo datos correctos, el problema puede estar en cómo se está formulando la consulta. Por ejemplo, si year es 2023 y period es Q1, pero no existe un campo exacto en la base de datos que coincida con esos valores, la consulta devolverá resultados vacíos.
+
+4. Revisar la Consulta de la Base de Datos
+	•	Si la consulta en la base de datos no está aplicando los filtros correctamente, asegúrate de que los campos de year y quarter en la base de datos contengan datos correctamente formateados.
+	•	A veces, los problemas de filtrado ocurren debido a formatos inconsistentes en las fechas o campos relacionados con trimestres. Si estás utilizando fechas en formato Date en la base de datos, asegúrate de que las comparaciones estén usando el mismo formato.
+
+5. Comprobar la Respuesta y Actualización en el Frontend
+	•	Una vez que el backend está devolviendo la información filtrada, asegúrate de que la respuesta se esté manejando correctamente en el frontend.
+	•	Verifica que el frontend esté recibiendo la respuesta de la solicitud y actualizando el dashboard con los datos filtrados.
+
+fetch(`/api/stats/dashboard-fix?year=2023&period=Q1`)
+  .then(response => response.json())
+  .then(data => {
+    console.log("Datos filtrados:", data); // Asegúrate de que los datos son correctos
+    updateDashboard(data);  // Actualiza el dashboard con los datos filtrados
+  })
+  .catch(error => console.error("Error al filtrar los datos:", error));
+
+6. Verificar el Estado de los Filtros en el Frontend
+	•	Si el frontend está usando estado para almacenar el año y el trimestre seleccionados, verifica que este estado se esté actualizando correctamente cada vez que el usuario seleccione un filtro nuevo. Asegúrate de que los filtros se estén aplicando correctamente y no se estén quedando en un estado previo.
+
+Pasos para Diagnosticar el Problema:
+	1.	Revisa las Solicitudes en el Navegador: Verifica si los parámetros de filtro (year y period) están correctamente enviados en la solicitud.
+	2.	Revisa los Logs del Backend: Asegúrate de que el backend esté recibiendo y utilizando correctamente esos parámetros para filtrar los datos.
+	3.	Verifica la Consulta a la Base de Datos: Asegúrate de que la lógica de filtrado esté correcta y que la consulta a la base de datos esté funcionando como se espera.
+	4.	Verifica la Actualización en el Frontend: Asegúrate de que el frontend actualice correctamente los resultados del dashboard con los datos filtrados.
+
+Si después de estos pasos el problema persiste, comparte los logs o fragmentos de código que estés utilizando para que pueda ayudarte a identificarlos.
