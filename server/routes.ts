@@ -1103,32 +1103,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Configurar servidor WebSocket para actualizaciones en tiempo real
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const WEBSOCKET_PATH = '/ws';
   
-  // Almacenar conexiones activas
+  // Configuración específica para entorno Replit
+  let wss: WebSocketServer;
+
+  try {
+    // Configurar WebSocketServer con un ping periódico para mantener la conexión viva en Replit
+    wss = new WebSocketServer({ 
+      server: httpServer, 
+      path: WEBSOCKET_PATH,
+      perMessageDeflate: false, // Deshabilitar compresión que podría causar problemas
+      clientTracking: true      // Seguimiento automático de clientes
+    });
+
+    console.log(`WebSocket server inicializado en ${WEBSOCKET_PATH}`);
+  } catch (error) {
+    console.error('Error al inicializar WebSocketServer:', error);
+    // Crear un servidor vacío que no haga nada para prevenir errores
+    // @ts-ignore - Crear un mock para evitar errores
+    wss = { on: () => {}, clients: new Set() };
+  }
+  
+  // Almacenar conexiones activas manualmente para más control
   const clients = new Set<WebSocket>();
   
+  // Manejar nuevas conexiones
   wss.on('connection', (ws) => {
     console.log('Nueva conexión WebSocket establecida');
     
-    // Añadir cliente a la lista de conexiones activas
+    // Añadir cliente a nuestra lista personalizada de conexiones activas
     clients.add(ws);
+    
+    // Configurar un ping cada 30 segundos para mantener la conexión viva
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'ping',
+          timestamp: new Date().toISOString()
+        }));
+      }
+    }, 30000);
+    
+    // Solicitar autenticación
+    ws.send(JSON.stringify({
+      type: 'auth_required',
+      message: 'Es necesario autenticarse para recibir actualizaciones',
+      timestamp: new Date().toISOString()
+    }));
     
     // Eliminar la conexión cuando se cierra
     ws.on('close', () => {
       console.log('Conexión WebSocket cerrada');
       clients.delete(ws);
+      clearInterval(pingInterval); // Limpiar el intervalo de ping
+    });
+    
+    // Manejar errores en la conexión
+    ws.on('error', (error) => {
+      console.error('Error en WebSocket:', error);
+      clients.delete(ws);
+      clearInterval(pingInterval);
     });
     
     // Opcional: Manejar mensajes entrantes del cliente
     ws.on('message', (message) => {
-      console.log('Mensaje recibido:', message.toString());
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Mensaje WebSocket recibido:', data);
+        
+        // Aquí podemos implementar manejo de autenticación y otros mensajes
+      } catch (error) {
+        console.error('Error al procesar mensaje WebSocket:', error);
+      }
     });
     
     // Enviar un mensaje inicial para confirmar la conexión
     ws.send(JSON.stringify({
       type: 'connection',
-      message: 'Conexión WebSocket establecida con éxito'
+      status: 'success',
+      message: 'Conexión WebSocket establecida con éxito',
+      timestamp: new Date().toISOString()
     }));
   });
   
