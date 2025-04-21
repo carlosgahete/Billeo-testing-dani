@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { BarChart, BarChartHorizontal, PieChart, FileBarChart } from "lucide-react";
+import { BarChart, BarChartHorizontal, PieChart, FileBarChart, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -18,6 +18,7 @@ interface ExpenseCategoryItem {
 interface ExpensesByCategoryProps {
   year?: string;
   period?: string;
+  className?: string;
 }
 
 // Colores estilo Apple
@@ -52,49 +53,76 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Salud": "🏥",
   "Seguros": "🔒",
   "Impuestos": "📊",
+  "Suministros": "🔌",
+  "Oficina": "📎",
   "Otros": "📋"
 };
 
 // Componente principal
 const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({ 
   year = new Date().getFullYear().toString(),
-  period = "all"
+  period = "all",
+  className
 }) => {
   // Estados
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [processedData, setProcessedData] = useState<ExpenseCategoryItem[]>([]);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Obtener transacciones
-  const { data: transactions = [], isLoading: txLoading } = useQuery<any[]>({
+  // Obtener transacciones con refetch para actualizar datos
+  const { 
+    data: transactions = [], 
+    isLoading: txLoading,
+    refetch: refetchTransactions 
+  } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
+    staleTime: 30000 // 30 segundos antes de considerar los datos antiguos
   });
   
   // Obtener categorías
-  const { data: categories = [], isLoading: catLoading } = useQuery<any[]>({
+  const { 
+    data: categories = [], 
+    isLoading: catLoading
+  } = useQuery<any[]>({
     queryKey: ["/api/categories"],
+    staleTime: 60000 // 1 minuto antes de considerar los datos antiguos
   });
 
+  // Función para refrescar datos manualmente
+  const refreshData = useCallback(async () => {
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
+    try {
+      await refetchTransactions();
+      setTimeout(() => setIsUpdating(false), 700); // Efecto visual de actualización
+    } catch (error) {
+      console.error("Error al actualizar datos de gastos por categoría:", error);
+      setIsUpdating(false);
+    }
+  }, [refetchTransactions, isUpdating]);
+
   // Formateo de números
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount);
-  };
+  }, []);
 
   // Formateo de porcentajes
-  const formatPercentage = (percentage: number) => {
+  const formatPercentage = useCallback((percentage: number) => {
     return new Intl.NumberFormat('es-ES', {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
       style: 'percent'
     }).format(percentage / 100);
-  };
+  }, []);
 
   // Función para filtrar transacciones por periodo
-  const filterTransactionsByPeriod = (transactions: any[]) => {
+  const filterTransactionsByPeriod = useCallback((transactions: any[]) => {
     return transactions.filter(tx => {
       // Solo incluir gastos
       if (tx.type !== 'expense') return false;
@@ -119,79 +147,119 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
       
       return true;
     });
-  };
+  }, [year, period]);
 
-  // Efecto para procesar los datos
-  useEffect(() => {
-    if (!txLoading && !catLoading && transactions.length > 0 && categories.length > 0) {
-      setIsLoading(true);
+  // Procesamiento de datos memoizado 
+  const processData = useCallback(() => {
+    if (txLoading || catLoading || !transactions.length || !categories.length) {
+      return { processedData: [], totalExpenses: 0 };
+    }
+    
+    // Crear un mapa de categorías por ID para acceso rápido
+    const categoryMap = new Map();
+    categories.forEach(category => {
+      categoryMap.set(category.id, category);
+    });
+    
+    // Filtrar transacciones según el periodo seleccionado
+    const filteredTransactions = filterTransactionsByPeriod(transactions);
+    
+    // Si no hay transacciones filtradas, mostrar datos vacíos
+    if (filteredTransactions.length === 0) {
+      return { processedData: [], totalExpenses: 0 };
+    }
+    
+    // Agrupar por categoría
+    const expensesByCategory: Record<string, ExpenseCategoryItem> = {};
+    
+    // Usar el campo baseImponible si está disponible, de lo contrario usar amount
+    filteredTransactions.forEach(tx => {
+      const categoryId = tx.categoryId;
+      const category = categoryId ? categoryMap.get(categoryId) : null;
+      const categoryName = category ? category.name : "Sin categoría";
+      // Asignar un color consistente basado en el nombre de la categoría si no tiene uno
+      const colorIndex = !category?.color ? categoryName.charCodeAt(0) % APPLE_COLORS.length : 0;
+      const categoryColor = category?.color || APPLE_COLORS[colorIndex];
+      const categoryIcon = category?.icon || CATEGORY_ICONS[categoryName] || "📋";
       
-      // Crear un mapa de categorías por ID para acceso rápido
-      const categoryMap = new Map();
-      categories.forEach(category => {
-        categoryMap.set(category.id, category);
-      });
+      // Usar baseImponible si existe, de lo contrario usar amount
+      const amount = Math.abs(parseFloat(tx.baseImponible || tx.amount));
       
-      // Filtrar transacciones según el periodo seleccionado
-      const filteredTransactions = filterTransactionsByPeriod(transactions);
-      
-      // Si no hay transacciones filtradas, mostrar datos vacíos
-      if (filteredTransactions.length === 0) {
-        setProcessedData([]);
-        setTotalExpenses(0);
-        setIsLoading(false);
-        return;
+      // Inicializar o actualizar categoría
+      if (!expensesByCategory[categoryName]) {
+        expensesByCategory[categoryName] = {
+          name: categoryName,
+          amount: 0,
+          count: 0,
+          color: categoryColor,
+          icon: categoryIcon,
+          percentage: 0
+        };
       }
       
-      // Agrupar por categoría
-      const expensesByCategory: Record<string, ExpenseCategoryItem> = {};
+      // Acumular
+      expensesByCategory[categoryName].amount += amount;
+      expensesByCategory[categoryName].count += 1;
+    });
+    
+    // Calcular totales y porcentajes
+    const total = Object.values(expensesByCategory).reduce((sum, cat) => sum + cat.amount, 0);
+    
+    // Convertir a array y calcular porcentajes
+    const data = Object.values(expensesByCategory).map(cat => ({
+      ...cat,
+      percentage: total > 0 ? (cat.amount / total) * 100 : 0
+    }));
+    
+    // Ordenar de mayor a menor
+    data.sort((a, b) => b.amount - a.amount);
+    
+    return { processedData: data, totalExpenses: total };
+  }, [transactions, categories, filterTransactionsByPeriod, txLoading, catLoading]);
+
+  // Efecto para procesar los datos cuando cambian las dependencias
+  useEffect(() => {
+    const { processedData: newData, totalExpenses: newTotal } = processData();
+    setProcessedData(newData);
+    setTotalExpenses(newTotal);
+  }, [processData]);
+
+  // Efecto para registrar un listener para actualizaciones de transacciones
+  useEffect(() => {
+    // Función para observar eventos de websocket e invalidar la cache cuando se necesite
+    const handleWebsocketEvent = (event: any) => {
+      // Extraer datos del evento personalizado
+      const messageData = event.detail || event;
       
-      // Usar el campo baseImponible si está disponible, de lo contrario usar amount
-      filteredTransactions.forEach(tx => {
-        const categoryId = tx.categoryId;
-        const category = categoryId ? categoryMap.get(categoryId) : null;
-        const categoryName = category ? category.name : "Sin categoría";
-        const categoryColor = category?.color || APPLE_COLORS[0];
-        const categoryIcon = category?.icon || CATEGORY_ICONS[categoryName] || "📋";
+      if (
+        messageData.type === 'transaction-created' || 
+        messageData.type === 'transaction-updated' || 
+        messageData.type === 'invoice-paid' ||
+        messageData.type === 'dashboard-refresh-required'
+      ) {
+        console.log(`🔄 ExpensesByCategoryApple: Detectado evento ${messageData.type}, actualizando datos...`);
         
-        // Usar baseImponible si existe, de lo contrario usar amount
-        const amount = Math.abs(parseFloat(tx.baseImponible || tx.amount));
+        // Invalidar la caché para que se recarguen los datos
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
-        // Inicializar o actualizar categoría
-        if (!expensesByCategory[categoryName]) {
-          expensesByCategory[categoryName] = {
-            name: categoryName,
-            amount: 0,
-            count: 0,
-            color: categoryColor,
-            icon: categoryIcon,
-            percentage: 0
-          };
-        }
-        
-        // Acumular
-        expensesByCategory[categoryName].amount += amount;
-        expensesByCategory[categoryName].count += 1;
-      });
-      
-      // Calcular totales y porcentajes
-      const total = Object.values(expensesByCategory).reduce((sum, cat) => sum + cat.amount, 0);
-      setTotalExpenses(total);
-      
-      // Convertir a array y calcular porcentajes
-      const data = Object.values(expensesByCategory).map(cat => ({
-        ...cat,
-        percentage: total > 0 ? (cat.amount / total) * 100 : 0
-      }));
-      
-      // Ordenar de mayor a menor
-      data.sort((a, b) => b.amount - a.amount);
-      
-      // Actualizar estado
-      setProcessedData(data);
-      setIsLoading(false);
-    }
-  }, [transactions, categories, year, period, txLoading, catLoading]);
+        // También podríamos optar por un refresh manual inmediato
+        setIsUpdating(true);
+        setTimeout(() => {
+          refetchTransactions().finally(() => {
+            setIsUpdating(false);
+          });
+        }, 300);
+      }
+    };
+    
+    // Registrar el listener en el objeto global window para eventos personalizados
+    window.addEventListener('dashboard-websocket-event', handleWebsocketEvent);
+    
+    // Limpiar el listener al desmontar
+    return () => {
+      window.removeEventListener('dashboard-websocket-event', handleWebsocketEvent);
+    };
+  }, [queryClient, refetchTransactions]);
 
   // Texto del periodo para mostrar
   const periodText = useMemo(() => {
@@ -203,10 +271,13 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
     return `Año ${year}`;
   }, [year, period]);
 
+  // Determinar si estamos en estado de carga
+  const isLoading = txLoading || catLoading;
+
   // Estado de carga
-  if (isLoading) {
+  if (isLoading && !isUpdating) {
     return (
-      <Card className="h-full overflow-hidden">
+      <Card className={`h-full overflow-hidden ${className}`}>
         <CardHeader className="p-4 flex justify-between items-center">
           <h3 className="text-lg font-medium">Gastos por Categoría</h3>
         </CardHeader>
@@ -225,11 +296,14 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
   }
 
   // Si no hay datos, mostrar mensaje
-  if (processedData.length === 0) {
+  if (processedData.length === 0 && !isUpdating) {
     return (
-      <Card className="h-full overflow-hidden">
+      <Card className={`h-full overflow-hidden ${className}`}>
         <CardHeader className="p-4 border-b">
-          <h3 className="text-lg font-medium">Gastos por Categoría</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Gastos por Categoría</h3>
+            <span className="text-sm font-medium text-gray-600">{periodText}</span>
+          </div>
         </CardHeader>
         <CardContent className="p-4 flex flex-col items-center justify-center h-[200px]">
           <FileBarChart className="h-12 w-12 text-gray-300 mb-4" />
@@ -242,11 +316,20 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
 
   // Renderizado del componente con datos
   return (
-    <Card className="h-full overflow-hidden">
+    <Card className={`h-full overflow-hidden ${className}`}>
       <CardHeader className="p-4 border-b">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Gastos por Categoría</h3>
-          <span className="text-sm font-medium text-gray-600">{periodText}</span>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-600">{periodText}</span>
+            <button 
+              onClick={refreshData}
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              title="Actualizar datos"
+            >
+              <RefreshCw className={`h-4 w-4 text-gray-500 ${isUpdating ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-4">
@@ -283,7 +366,7 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryProps> = ({
           <span className="font-bold">{formatCurrency(totalExpenses)} €</span>
         </div>
         
-        {/* Gráfico de barras sencillo */}
+        {/* Gráfico de barras estilo Apple */}
         <div className="mt-4 space-y-3">
           {processedData.slice(0, 5).map((category, index) => (
             <div key={index} className="space-y-1">

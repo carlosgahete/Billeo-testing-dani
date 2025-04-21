@@ -69,11 +69,28 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const { isConnected, lastMessage, reconnect } = useWebSocketDashboard(handleWebSocketRefresh);
   
   // Detectar tipo de actualización para mostrar indicador específico
+  // y disparar eventos personalizados para que otros componentes puedan reaccionar
   useEffect(() => {
     if (lastMessage?.type) {
+      // Actualizar estado visual
       setLastUpdateType(lastMessage.type);
+      
       // También se resetea automáticamente después de un tiempo
       setTimeout(() => setLastUpdateType(null), 3000);
+      
+      // Crear un evento personalizado para que otros componentes puedan escucharlo
+      // Esto permite que componentes como ExpensesByCategoryApple puedan reaccionar
+      // a actualizaciones del dashboard sin tener que reimplementar la lógica de WebSocket
+      const customEvent = new CustomEvent('dashboard-websocket-event', { 
+        detail: lastMessage,
+        bubbles: true,
+        cancelable: true
+      });
+      
+      // Disparar el evento
+      window.dispatchEvent(customEvent);
+      
+      console.log(`📢 Evento websocket "${lastMessage.type}" disparado para componentes del dashboard`);
     }
   }, [lastMessage]);
   

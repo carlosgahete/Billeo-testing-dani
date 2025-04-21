@@ -10,28 +10,119 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [lastPingTime, setLastPingTime] = useState<number | null>(null);
+  const [lastPongTime, setLastPongTime] = useState<number | null>(null);
+  
+  // Referencias para los timers
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const maxRetries = 10; // Aumentado de 3 a 10 para más persistencia
+  const pingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const healthCheckTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Configuración
+  const maxRetries = 10; // Intentos máximos de reconexión
+  const pingInterval = 15000; // 15 segundos entre pings
+  const pingTimeout = 10000; // 10 segundos de espera para pong
+  const healthCheckInterval = 30000; // 30 segundos entre verificaciones de salud
+  
+  // Estado de conexión actual en referencia para evitar problemas con closures
+  const isConnectedRef = useRef(false);
+  const socketRef = useRef<WebSocket | null>(null);
 
-  // Función para limpiar recursos de WebSocket
-  const cleanupWebSocket = useCallback(() => {
+  // Función para limpiar todos los timers y recursos
+  const cleanupResources = useCallback(() => {
+    // Limpiar todos los timers
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
     
+    if (pingTimerRef.current) {
+      clearTimeout(pingTimerRef.current);
+      pingTimerRef.current = null;
+    }
+    
+    if (healthCheckTimerRef.current) {
+      clearTimeout(healthCheckTimerRef.current);
+      healthCheckTimerRef.current = null;
+    }
+    
+    // Cerrar socket si existe
     if (socket) {
       if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-        socket.close();
+        try {
+          socket.close();
+        } catch (e) {
+          console.error('Error al cerrar socket:', e);
+        }
       }
       setSocket(null);
+      socketRef.current = null;
     }
   }, [socket]);
 
+  // Función para enviar ping al servidor
+  const sendPing = useCallback(() => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      try {
+        console.log('📤 Enviando ping al servidor WebSocket');
+        const pingMessage = {
+          type: 'ping',
+          timestamp: new Date().toISOString()
+        };
+        
+        socket.send(JSON.stringify(pingMessage));
+        setLastPingTime(Date.now());
+        
+        // Configurar timeout para verificar respuesta
+        pingTimerRef.current = setTimeout(() => {
+          const elapsed = lastPongTime ? Date.now() - lastPongTime : null;
+          
+          // Si no hemos recibido respuesta en el tiempo esperado, consideramos la conexión perdida
+          if (!lastPongTime || (elapsed && elapsed > pingTimeout)) {
+            console.warn('⚠️ No se recibió respuesta al ping, reconectando...');
+            setIsConnected(false);
+            isConnectedRef.current = false;
+            
+            // Forzar reconexión
+            cleanupResources();
+            setConnectionAttempts(0);
+            connectWebSocket();
+          }
+        }, pingTimeout);
+      } catch (e) {
+        console.error('Error al enviar ping:', e);
+      }
+    }
+  }, [socket, lastPongTime, cleanupResources]);
+
+  // Función para verificar el estado de salud de la conexión
+  const checkConnectionHealth = useCallback(() => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.log('🔍 Verificación de salud: Socket no está abierto, reconectando...');
+      setIsConnected(false);
+      isConnectedRef.current = false;
+      
+      // Forzar reconexión
+      cleanupResources();
+      setConnectionAttempts(0);
+      setTimeout(() => {
+        connectWebSocket();
+      }, 1000);
+      
+      return;
+    }
+    
+    // También podríamos enviar un ping aquí
+    sendPing();
+    
+    // Programar siguiente verificación
+    healthCheckTimerRef.current = setTimeout(checkConnectionHealth, healthCheckInterval);
+  }, [socket, sendPing, cleanupResources]);
+
   // Función para conectar al WebSocket
   const connectWebSocket = useCallback(() => {
-    // Limpiar cualquier conexión anterior
-    cleanupWebSocket();
+    // Limpiar recursos primero
+    cleanupResources();
     
     // No intentar conectar si ya hay máximos intentos
     if (connectionAttempts >= maxRetries) {
@@ -51,12 +142,22 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
 
       const newSocket = new WebSocket(wsUrl);
       setSocket(newSocket);
+      socketRef.current = newSocket;
 
       // Manejar eventos de conexión
       newSocket.onopen = () => {
         console.log('✅ Conexión WebSocket establecida');
         setIsConnected(true);
+        isConnectedRef.current = true;
         setConnectionAttempts(0); // Reiniciar contador de intentos al conectar exitosamente
+        
+        // Programar ping inicial después de la conexión
+        setTimeout(() => {
+          sendPing();
+        }, 1000);
+        
+        // Iniciar verificaciones periódicas
+        healthCheckTimerRef.current = setTimeout(checkConnectionHealth, healthCheckInterval);
       };
 
       // Manejar mensajes recibidos
@@ -65,6 +166,20 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           const data = JSON.parse(event.data);
           console.log('📝 Mensaje WebSocket recibido:', data);
           setLastMessage(data);
+
+          // Manejar respuesta de ping (pong)
+          if (data.type === 'pong') {
+            console.log('📨 Respuesta pong recibida');
+            setLastPongTime(Date.now());
+            
+            // Programar el siguiente ping
+            if (pingTimerRef.current) {
+              clearTimeout(pingTimerRef.current);
+            }
+            pingTimerRef.current = setTimeout(sendPing, pingInterval);
+            
+            return;
+          }
 
           // Si es un mensaje de actualización, refrescar los datos del dashboard
           if (data.type === 'transaction-created' || 
@@ -94,7 +209,20 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       newSocket.onclose = (event) => {
         console.log(`🔌 Conexión WebSocket cerrada: ${event.code} - ${event.reason}`);
         setIsConnected(false);
+        isConnectedRef.current = false;
         setSocket(null);
+        socketRef.current = null;
+
+        // Limpiar timers asociados
+        if (pingTimerRef.current) {
+          clearTimeout(pingTimerRef.current);
+          pingTimerRef.current = null;
+        }
+        
+        if (healthCheckTimerRef.current) {
+          clearTimeout(healthCheckTimerRef.current);
+          healthCheckTimerRef.current = null;
+        }
 
         // Intentar reconectar después de un tiempo si no fue un cierre limpio
         if (event.code !== 1000) { // 1000 es un cierre normal
@@ -135,7 +263,34 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         connectWebSocket();
       }, 3000); // Reintento rápido si hay error al crear
     }
-  }, [connectionAttempts, cleanupWebSocket, refreshCallback]);
+  }, [connectionAttempts, cleanupResources, refreshCallback, sendPing, checkConnectionHealth]);
+
+  // Efecto para manejar ventana en primer/segundo plano
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('📱 Ventana visible nuevamente, verificando conexión WebSocket...');
+        
+        // Si el socket debería estar conectado pero no responde, reconectar
+        if (isConnectedRef.current && (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN)) {
+          console.log('🔄 Reconectando debido a cambio de visibilidad');
+          cleanupResources();
+          setConnectionAttempts(0);
+          connectWebSocket();
+        } else if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          // Enviar ping para verificar conexión
+          sendPing();
+        }
+      }
+    };
+    
+    // Registrar evento para detectar cuando la ventana vuelve al primer plano
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [cleanupResources, connectWebSocket, sendPing]);
 
   // Efectuar conexión al WebSocket cuando el componente se monta
   useEffect(() => {
@@ -144,22 +299,32 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     // Limpiar todos los recursos al desmontar
     return () => {
       console.log('🔌 Cerrando conexión WebSocket (cleanup)');
-      cleanupWebSocket();
+      cleanupResources();
     };
-  }, [connectWebSocket, cleanupWebSocket]);
+  }, [connectWebSocket, cleanupResources]);
 
   // Función para reconexión manual
   const reconnect = useCallback(() => {
     console.log('🔄 Reconexión manual solicitada');
-    cleanupWebSocket();
+    cleanupResources();
     setConnectionAttempts(0); // Reset contador
     connectWebSocket();
-  }, [cleanupWebSocket, connectWebSocket]);
+  }, [cleanupResources, connectWebSocket]);
+
+  // Función para forzar refresco de datos
+  const forceRefresh = useCallback(() => {
+    console.log('🔄 Refresco manual de datos solicitado');
+    refreshCallback();
+    
+    // También enviamos un ping para verificar la conexión
+    sendPing();
+  }, [refreshCallback, sendPing]);
 
   return {
     isConnected,
     lastMessage,
     connectionAttempts,
-    reconnect // Exponemos la función de reconexión manual por si es necesaria
+    reconnect, // Exponemos la función de reconexión manual
+    forceRefresh // Exponemos función para forzar refresco de datos
   };
 }
