@@ -122,7 +122,7 @@ export function useDashboardData(
       
       try {
         // Refrescar los datos forzando una solicitud fresca
-        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
+        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}] con parámetros year=${finalYear}, period=${finalPeriod}`);
         
         // Intentar primero con el endpoint fijo
         const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
@@ -131,7 +131,12 @@ export function useDashboardData(
         
         if (response.ok) {
           const data = await response.json();
-          console.log("✅ Datos actualizados del dashboard cargados correctamente");
+          console.log("✅ Datos actualizados del dashboard cargados correctamente:", {
+            year: finalYear,
+            period: finalPeriod,
+            income: data.income,
+            expenses: data.expenses
+          });
           return data;
         }
         
@@ -143,7 +148,10 @@ export function useDashboardData(
         
         if (originalResponse.ok) {
           const data = await originalResponse.json();
-          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original)");
+          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original):", {
+            year: finalYear,
+            period: finalPeriod
+          });
           return data;
         }
         
