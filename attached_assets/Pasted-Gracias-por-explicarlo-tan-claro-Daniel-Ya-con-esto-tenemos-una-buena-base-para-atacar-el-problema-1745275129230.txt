@@ -1,0 +1,96 @@
+Gracias por explicarlo tan claro, Daniel. Ya con esto tenemos una buena base para atacar el problema desde la raíz. Lo que estás describiendo indica que hay dos problemas distintos:
+
+⸻
+
+PROBLEMA 1: El filtrado (por año y trimestre) no funciona
+
+¿Qué implica?
+	•	Estás cambiando los filtros en el frontend, pero el backend sigue devolviendo la misma información.
+	•	Esto significa que el frontend probablemente no está enviando los parámetros, o el backend los ignora.
+
+⸻
+
+PROBLEMA 2: La información no se actualiza en tiempo real
+
+¿Qué implica?
+	•	El mensaje “Última actualización hace 31.428 segundos” indica que el updated_at nunca cambia, o no se vuelve a consultar.
+	•	Esto nos dice que la función updateDashboardState no se está invocando después de nuevas acciones (como crear facturas o transacciones), o el polling está roto.
+
+⸻
+
+Vamos a resolverlo paso por paso contigo guiando como quieres:
+
+⸻
+
+PASO A: Asegurarnos de que el filtrado llega al backend
+
+Quiero que busques esto en tu código frontend donde llamas al endpoint /api/stats/dashboard-fix (quizás en useDashboardData):
+
+Asegúrate de que el fetch incluye year y period:
+
+fetch(`/api/stats/dashboard-fix?year=${selectedYear}&period=${selectedPeriod}`)
+
+Luego ve al navegador:
+	1.	Abre el panel de Network (Inspeccionar > pestaña “Red” o “Network”).
+	2.	Cambia el año o el trimestre en el dashboard.
+	3.	Mira si la URL que aparece en la petición contiene los parámetros year y period.
+
+Dime qué ves.
+
+⸻
+
+PASO B: Ver si el backend está recibiendo esos parámetros
+
+En tu archivo backend donde tienes la ruta /api/stats/dashboard-fix, añade esto al inicio:
+
+console.log("Parámetros recibidos:", req.query);
+
+Luego cambia el filtro en el dashboard y dime qué aparece en la consola del servidor.
+
+Esto nos dice si el frontend está enviando bien los filtros y si el servidor los está recibiendo correctamente.
+
+⸻
+
+PASO C: Confirmar que la query del backend está usando esos filtros
+
+Muéstrame el código donde filtras los datos según año y trimestre. Deberías tener algo así:
+
+const { year, period } = req.query;
+
+const startDate = new Date(`${year}-01-01`);
+const endDate = ...; // según el trimestre
+
+await db.query.facturas.findMany({
+  where: and(
+    eq(facturas.userId, userId),
+    gte(facturas.fecha, startDate),
+    lte(facturas.fecha, endDate)
+  )
+});
+
+Pásame esa parte de tu código si puedes.
+
+⸻
+
+PASO D: Diagnóstico del “Última actualización hace X segundos”
+
+Confirma:
+	1.	¿Se está llamando a updateDashboardState cada vez que creas/eliminas/actualizas una factura o transacción?
+	2.	¿Tienes este tipo de log cuando se llama?:
+
+console.log(`Estado del dashboard actualizado: ${type} para usuario ${userId}`);
+
+
+	3.	En la tabla dashboard_state, ¿el campo updated_at cambia?
+
+Podemos hacer una consulta rápida:
+
+SELECT updated_at FROM dashboard_state WHERE user_id = 'el_usuario_actual';
+
+
+
+⸻
+
+Dime por dónde quieres empezar o si quieres que revise tu código de filtrado o backend. Si me das el fragmento de código, te señalo exactamente dónde puede estar fallando.
+
+¿Vamos por el filtro primero o el updated_at?
