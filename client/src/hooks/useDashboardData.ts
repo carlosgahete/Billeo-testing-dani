@@ -113,19 +113,25 @@ export function useDashboardData(
     };
   }, []);
 
-  // Utilizamos el endpoint fix aquí y añadimos el refreshTrigger al queryKey
+  // Utilizamos el endpoint fix y pasamos los parámetros de filtrado explícitamente
   const dashboardQuery = useQuery({
-    queryKey: [`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}`, refreshTrigger],
+    queryKey: [`/api/stats/dashboard-fix`, finalYear, finalPeriod, refreshTrigger],
     queryFn: async ({ queryKey }) => {
-      console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
+      const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
+      console.log(`📊 Cargando datos frescos del dashboard: año=${year}, periodo=${period} [${trigger}]...`);
+      
+      // Construir URL con los parámetros de filtro
+      const url = `${endpoint}?year=${year}&period=${period}`;
       
       try {
-        // Usamos directamente el queryKey como URL para asegurar que se manejen correctamente las cookies
-        const data = await fetch(queryKey[0] as string, {
+        // Incluir los parámetros de filtro en la URL
+        const data = await fetch(url, {
           credentials: "include", // Importante: incluir las cookies en la petición
           headers: { 
             'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'X-Refresh-Trigger': refreshTrigger.toString() // Enviamos el refreshTrigger como header
+            'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
+            'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
+            'X-Dashboard-Period': period // Añadimos periodo como header para facilitar depuración
           }
         }).then(res => {
           if (!res.ok) {
@@ -134,7 +140,7 @@ export function useDashboardData(
           return res.json();
         });
         
-        console.log("✅ Datos actualizados del dashboard cargados correctamente");
+        console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
         return data;
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);

@@ -28,27 +28,89 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
       console.log("Años de transacciones:", uniqueYears);
       
-      // Filtrar facturas por año si se proporciona
-      const filteredInvoices = year 
-        ? invoices.filter(invoice => {
-            const invoiceYear = new Date(invoice.issueDate).getFullYear();
-            return invoiceYear.toString() === year;
-          })
-        : invoices;
+      // Función auxiliar para obtener el trimestre de una fecha (1-4)
+      const getQuarterFromDate = (date: Date): number => {
+        const month = date.getMonth();
+        if (month < 3) return 1; // Q1: Ene-Mar
+        if (month < 6) return 2; // Q2: Abr-Jun
+        if (month < 9) return 3; // Q3: Jul-Sep
+        return 4; // Q4: Oct-Dic
+      };
+      
+      // Filtrar facturas por año y trimestre si se proporcionan
+      const filteredInvoices = invoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.issueDate);
+        const invoiceYear = invoiceDate.getFullYear().toString();
+        const invoiceQuarter = getQuarterFromDate(invoiceDate);
         
+        // Si no hay filtro de año, mostramos todas
+        if (!year) return true;
+        
+        // Si el año no coincide, filtramos
+        if (invoiceYear !== year) return false;
+        
+        // Si hay filtro de trimestre específico
+        if (period && period !== 'all') {
+          // period puede ser 'Q1', 'Q2', 'Q3', 'Q4'
+          const requestedQuarter = parseInt(period.replace('Q', ''));
+          return invoiceQuarter === requestedQuarter;
+        }
+        
+        // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+        return true;
+      });
+      
       // Obtener datos de transacciones
       const transactions = await storage.getTransactionsByUserId(userId);
       
-      // Filtrar transacciones por año
-      const filteredTransactions = year 
-        ? transactions.filter(txn => {
-            const txnYear = new Date(txn.date).getFullYear();
-            return txnYear.toString() === year;
-          })
-        : transactions;
+      // Filtrar transacciones por año y trimestre
+      const filteredTransactions = transactions.filter(txn => {
+        const txnDate = new Date(txn.date);
+        const txnYear = txnDate.getFullYear().toString();
+        const txnQuarter = getQuarterFromDate(txnDate);
+        
+        // Si no hay filtro de año, mostramos todas
+        if (!year) return true;
+        
+        // Si el año no coincide, filtramos
+        if (txnYear !== year) return false;
+        
+        // Si hay filtro de trimestre específico
+        if (period && period !== 'all') {
+          // period puede ser 'Q1', 'Q2', 'Q3', 'Q4'
+          const requestedQuarter = parseInt(period.replace('Q', ''));
+          return txnQuarter === requestedQuarter;
+        }
+        
+        // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+        return true;
+      });
         
       // Obtener datos de presupuestos
       const quotes = await storage.getQuotesByUserId(userId);
+      
+      // Filtrar presupuestos por año y trimestre
+      const filteredQuotes = quotes.filter(quote => {
+        const quoteDate = new Date(quote.issueDate);
+        const quoteYear = quoteDate.getFullYear().toString();
+        const quoteQuarter = getQuarterFromDate(quoteDate);
+        
+        // Si no hay filtro de año, mostramos todas
+        if (!year) return true;
+        
+        // Si el año no coincide, filtramos
+        if (quoteYear !== year) return false;
+        
+        // Si hay filtro de trimestre específico
+        if (period && period !== 'all') {
+          // period puede ser 'Q1', 'Q2', 'Q3', 'Q4'
+          const requestedQuarter = parseInt(period.replace('Q', ''));
+          return quoteQuarter === requestedQuarter;
+        }
+        
+        // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+        return true;
+      });
       
       // CÁLCULOS BÁSICOS
       
@@ -200,21 +262,21 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       // 11. Balance de IRPF
       const incomeTaxFinal = irpfRetenidoIngresos > 0 ? irpfRetenidoIngresos : 0;
       
-      // 12. Presupuestos
-      const pendingQuotesTotal = quotes
+      // 12. Presupuestos (utilizando los presupuestos filtrados)
+      const pendingQuotesTotal = filteredQuotes
         .filter(quote => quote.status === 'pending')
         .reduce((sum, quote) => {
           const total = parseFloat(quote.total || '0');
           return isNaN(total) ? sum : sum + total;
         }, 0);
       
-      const pendingQuotesCount = quotes.filter(quote => quote.status === 'pending').length;
-      const acceptedQuotesCount = quotes.filter(quote => quote.status === 'accepted').length;
-      const rejectedQuotesCount = quotes.filter(quote => quote.status === 'rejected').length;
-      const allQuotesCount = quotes.length;
+      const pendingQuotesCount = filteredQuotes.filter(quote => quote.status === 'pending').length;
+      const acceptedQuotesCount = filteredQuotes.filter(quote => quote.status === 'accepted').length;
+      const rejectedQuotesCount = filteredQuotes.filter(quote => quote.status === 'rejected').length;
+      const allQuotesCount = filteredQuotes.length;
       
-      // 13. Fecha del último presupuesto
-      const lastQuote = quotes.sort((a, b) => 
+      // 13. Fecha del último presupuesto (filtrado por año/trimestre)
+      const lastQuote = filteredQuotes.sort((a, b) => 
         new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
       )[0];
       
