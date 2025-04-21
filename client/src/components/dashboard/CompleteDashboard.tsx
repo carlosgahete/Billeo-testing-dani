@@ -447,33 +447,45 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             
             {/* Dropdown años */}
             <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
-              <button
-                onClick={() => {
-                  handleChangeYear("2025");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                2025
-              </button>
-              <button
-                onClick={() => {
-                  handleChangeYear("2024");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                2024
-              </button>
-              <button
-                onClick={() => {
-                  handleChangeYear("2023");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                2023
-              </button>
+              {/* Años disponibles */}
+              {["2025", "2024", "2023", "2022"].map(yearOption => (
+                <button
+                  key={`year-option-${yearOption}`}
+                  onClick={() => {
+                    console.log(`🔍 Seleccionando año ${yearOption} (dropdown)`);
+                    handleChangeYear(yearOption);
+                    document.getElementById('year-dropdown')?.classList.add('hidden');
+                    
+                    // Forzar actualización con valor fijo
+                    setTimeout(() => {
+                      console.log(`🔄 Forzando actualización de datos para año ${yearOption}`);
+                      
+                      // Hacer una solicitud directa a la API para obtener datos frescos
+                      fetch(`/api/stats/dashboard-fix?year=${yearOption}&period=${filters?.period || 'all'}&_cb=${Date.now()}`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: { 
+                          'Cache-Control': 'no-cache, no-store, must-revalidate',
+                          'Accept': 'application/json'
+                        }
+                      }).then(response => {
+                        if (response.ok) {
+                          console.log('✅ Datos obtenidos correctamente para año', yearOption);
+                          // Desencadenar actualización de UI
+                          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+                        } else {
+                          console.error('❌ Error al obtener datos para año', yearOption);
+                        }
+                      }).catch(error => {
+                        console.error('❌ Error de red al obtener datos:', error);
+                      });
+                    }, 100);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === yearOption ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                >
+                  {yearOption}
+                </button>
+              ))}
             </div>
           </div>
           
@@ -499,51 +511,53 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             
             {/* Dropdown periodos - Ancho completo en móvil */}
             <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
-              <button
-                onClick={() => {
-                  handleChangePeriod("all");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                Todo el año
-              </button>
-              <button
-                onClick={() => {
-                  handleChangePeriod("q1");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                Trimestre 1
-              </button>
-              <button
-                onClick={() => {
-                  handleChangePeriod("q2");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                Trimestre 2
-              </button>
-              <button
-                onClick={() => {
-                  handleChangePeriod("q3");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                Trimestre 3
-              </button>
-              <button
-                onClick={() => {
-                  handleChangePeriod("q4");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
-                }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
-              >
-                Trimestre 4
-              </button>
+              {/* Periodos disponibles */}
+              {[
+                { value: "all", label: "Todo el año" },
+                { value: "q1", label: "Trimestre 1" },
+                { value: "q2", label: "Trimestre 2" },
+                { value: "q3", label: "Trimestre 3" },
+                { value: "q4", label: "Trimestre 4" }
+              ].map(periodOption => (
+                <button
+                  key={`period-option-${periodOption.value}`}
+                  onClick={() => {
+                    console.log(`🔍 Seleccionando periodo ${periodOption.label} (${periodOption.value}) (dropdown)`);
+                    handleChangePeriod(periodOption.value);
+                    document.getElementById('period-dropdown')?.classList.add('hidden');
+                    
+                    // Forzar actualización con valor fijo
+                    setTimeout(() => {
+                      console.log(`🔄 Forzando actualización de datos para periodo ${periodOption.value}`);
+                      
+                      // Hacer una solicitud directa a la API para obtener datos frescos
+                      fetch(`/api/stats/dashboard-fix?year=${filters?.year || '2025'}&period=${periodOption.value}&_cb=${Date.now()}`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: { 
+                          'Cache-Control': 'no-cache, no-store, must-revalidate',
+                          'Accept': 'application/json'
+                        }
+                      }).then(response => {
+                        if (response.ok) {
+                          console.log('✅ Datos obtenidos correctamente para periodo', periodOption.value);
+                          // Desencadenar actualización de UI
+                          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+                        } else {
+                          console.error('❌ Error al obtener datos para periodo', periodOption.value);
+                        }
+                      }).catch(error => {
+                        console.error('❌ Error de red al obtener datos:', error);
+                      });
+                    }, 100);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                    filters?.period === periodOption.value ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"
+                  }`}
+                >
+                  {periodOption.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
