@@ -172,6 +172,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       console.log('⚠️ No hay usuario autenticado, postergando conexión WebSocket');
       setConnectionState(ConnectionState.FAILED);
       setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
+      reconnectInProgressRef.current = false;
       return;
     }
     

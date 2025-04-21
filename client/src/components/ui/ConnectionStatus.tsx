@@ -142,10 +142,14 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   );
 
   // Mensaje de error por falta de autenticación
+  // Ampliamos la detección del error de autenticación para hacerla más robusta
   const authenticationError = 
-    connectionState === ConnectionState.FAILED && 
+    (connectionState === ConnectionState.FAILED || connectionState === ConnectionState.DISCONNECTED) && 
     errorMessage && 
-    errorMessage.includes('iniciar sesión');
+    (errorMessage.includes('iniciar sesión') || 
+     errorMessage.includes('autenticación') || 
+     errorMessage.includes('login') || 
+     errorMessage.includes('auth'));
   
   // Componente de mensaje de autenticación
   const AuthenticationMessage = () => (
@@ -157,7 +161,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       <AlertCircle className="h-3 w-3 mr-2" />
       <span>
         Es necesario {' '}
-        <Link to="/auth" className="text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2">
+        <Link to="/auth" className="text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1">
           iniciar sesión
         </Link>
         {' '} para recibir actualizaciones en tiempo real
@@ -176,7 +180,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         <Button
           variant="ghost" 
           size="icon"
-          className="h-6 w-6 text-red-600"
+          className="h-6 w-6 text-red-600 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:outline-none"
           title="Iniciar sesión para actualizaciones en tiempo real"
         >
           <LogIn className="h-4 w-4" />
