@@ -97,11 +97,20 @@ export function useSimpleDashboardFilters() {
       queryKey: ['dashboard'],
     });
     
+    // Usar endpoint fix directamente para evitar problemas con cache
+    console.log(`🔄 Forzando actualización desde changeYear con periodo ${filters.period}`);
+    fetch(`/api/stats/dashboard-fix?year=${newYear}&period=${filters.period}&_cb=${Date.now()}`, {
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    });
+    
     // Forzar refetch explícito para asegurar que se actualicen los datos
     setTimeout(() => {
       queryClient.refetchQueries({
         queryKey: ['dashboard', newYear, filters.period],
       });
+      
+      // Disparar evento para actualización a través del hook de useDashboardData
+      window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
     }, 50);
     
   }, [queryClient, filters.period]);
@@ -129,11 +138,20 @@ export function useSimpleDashboardFilters() {
       queryKey: ['dashboard'],
     });
     
+    // Usar endpoint fix directamente para evitar problemas con cache
+    console.log(`🔄 Forzando actualización desde changePeriod con año ${filters.year}`);
+    fetch(`/api/stats/dashboard-fix?year=${filters.year}&period=${newPeriod}&_cb=${Date.now()}`, {
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    });
+    
     // Forzar refetch explícito para asegurar que se actualicen los datos
     setTimeout(() => {
       queryClient.refetchQueries({
         queryKey: ['dashboard', filters.year, newPeriod],
       });
+      
+      // Disparar evento para actualización a través del hook de useDashboardData
+      window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
     }, 50);
     
   }, [queryClient, filters.year]);
