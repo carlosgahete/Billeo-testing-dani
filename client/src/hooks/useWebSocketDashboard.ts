@@ -25,6 +25,7 @@ const PING_INTERVAL = 15000; // 15 segundos entre pings
 const INITIAL_RECONNECT_DELAY = 1000; // 1 segundo
 const MAX_RECONNECT_DELAY = 10000; // 10 segundos máximo
 const RECONNECT_FACTOR = 1.3; // Factor de crecimiento
+const MAX_RECONNECT_ATTEMPTS = 3; // Número máximo de intentos antes de detenerse
 
 /**
  * Hook para manejar la conexión WebSocket para actualizaciones del dashboard en tiempo real
@@ -342,6 +343,14 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           const nextAttempt = connectionAttempts + 1;
           setConnectionAttempts(nextAttempt);
           
+          // Verificar si hemos alcanzado el número máximo de intentos
+          if (nextAttempt > MAX_RECONNECT_ATTEMPTS) {
+            console.log(`❌ Alcanzado el máximo de intentos de reconexión (${MAX_RECONNECT_ATTEMPTS}), deteniendo reintentos.`);
+            setConnectionState(ConnectionState.FAILED);
+            setErrorMessage("No se pudo reconectar al servidor. Haz clic en 'Reconectar' para intentarlo de nuevo.");
+            return;
+          }
+          
           // Establecer un tiempo de espera progresivo antes de reconectar
           setConnectionState(ConnectionState.RECONNECTING);
           
@@ -351,7 +360,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
             MAX_RECONNECT_DELAY
           );
           
-          console.log(`🔄 Programando reconexión en ${delay}ms (intento ${nextAttempt})`);
+          console.log(`🔄 Programando reconexión en ${delay}ms (intento ${nextAttempt}/${MAX_RECONNECT_ATTEMPTS})`);
           
           // Esperar un tiempo antes de intentar reconectar
           connectTimeoutRef.current = setTimeout(() => {
@@ -361,6 +370,10 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           // Si no hay usuario, establecer estado fallido
           setConnectionState(ConnectionState.FAILED);
           setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
+        } else if (event.code === 1000) {
+          // Cierre normal, establecer estado desconectado sin error
+          setConnectionState(ConnectionState.DISCONNECTED);
+          setErrorMessage(null);
         }
       };
     } catch (error) {
