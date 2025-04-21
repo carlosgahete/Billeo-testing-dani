@@ -115,40 +115,27 @@ export function useDashboardData(
 
   // Utilizamos el endpoint fix aquí y añadimos el refreshTrigger al queryKey
   const dashboardQuery = useQuery({
-    queryKey: ['dashboard', finalYear, finalPeriod, refreshTrigger],
-    queryFn: async () => {
-      // Crear un nuevo cache param al momento de la llamada para evitar caché
-      const queryTimestamp = `_cb=${Date.now()}`;
+    queryKey: [`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}`, refreshTrigger],
+    queryFn: async ({ queryKey }) => {
+      console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
       
       try {
-        // Refrescar los datos forzando una solicitud fresca
-        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
-        
-        // Intentar primero con el endpoint fijo
-        const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        // Usamos directamente el queryKey como URL para asegurar que se manejen correctamente las cookies
+        const data = await fetch(queryKey[0] as string, {
+          credentials: "include", // Importante: incluir las cookies en la petición
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'X-Refresh-Trigger': refreshTrigger.toString() // Enviamos el refreshTrigger como header
+          }
+        }).then(res => {
+          if (!res.ok) {
+            throw new Error(`Error al cargar datos: ${res.status}`);
+          }
+          return res.json();
         });
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log("✅ Datos actualizados del dashboard cargados correctamente");
-          return data;
-        }
-        
-        // Si falla, intentar con el endpoint original
-        console.log("⚠️ El endpoint fix falló, probando con el original...");
-        const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-        });
-        
-        if (originalResponse.ok) {
-          const data = await originalResponse.json();
-          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original)");
-          return data;
-        }
-        
-        // Si ambos fallan, lanzar error
-        throw new Error('No se pudo obtener los datos del dashboard');
+        console.log("✅ Datos actualizados del dashboard cargados correctamente");
+        return data;
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);
         
