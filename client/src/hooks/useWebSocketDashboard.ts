@@ -244,11 +244,11 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
             } catch (err) {
               console.error('Error enviando ping:', err);
               // Si hay error al enviar ping, reconectar
-              reconnect();
+              reconnectFn();
             }
           } else if (newSocket.readyState === WebSocket.CLOSED || newSocket.readyState === WebSocket.CLOSING) {
             console.log('Socket cerrado o cerrándose durante ping, reconectando...');
-            reconnect();
+            reconnectFn();
           }
         }, PING_INTERVAL);
       };
@@ -418,7 +418,7 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     if (isInitialized) {
       if (auth.user) {
         // Si hay un nuevo usuario, reconectar
-        reconnect();
+        reconnectFn();
       } else {
         // Si no hay usuario, limpiar y establecer estado fallido
         cleanup();
