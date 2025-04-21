@@ -89,18 +89,13 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
           const nextAttempt = connectionAttempts + 1;
           setConnectionAttempts(nextAttempt);
           
-          if (nextAttempt <= 3) {
-            setConnectionState(ConnectionState.RECONNECTING);
-            const timeout = Math.min(1000 * Math.pow(2, nextAttempt - 1), 10000);
-            console.log(`🔄 Reintentando conexión en ${timeout}ms (intento ${nextAttempt})`);
-            setTimeout(() => {
-              setSocket(null); // Forzar reconexión
-            }, timeout);
-          } else {
-            console.warn('⚠️ Máximo de intentos de reconexión alcanzado');
-            setConnectionState(ConnectionState.FAILED);
-            setErrorMessage('Conexión fallida después de varios intentos');
-          }
+          // Reintentamos indefinidamente con un tiempo máximo de espera
+          setConnectionState(ConnectionState.RECONNECTING);
+          const timeout = Math.min(1000 * Math.pow(1.5, Math.min(nextAttempt - 1, 6)), 10000);
+          console.log(`🔄 Reintentando conexión en ${timeout}ms (intento ${nextAttempt})`);
+          setTimeout(() => {
+            setSocket(null); // Forzar reconexión
+          }, timeout);
         }
       };
 
@@ -136,8 +131,8 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
 
   // Efectuar conexión al WebSocket cuando el componente se monta
   useEffect(() => {
-    // No intentar conectar si ya hay un socket o estamos en estado FAILED con demasiados intentos
-    if (socket || (connectionState === ConnectionState.FAILED && connectionAttempts > 3)) {
+    // No intentar conectar si ya hay un socket activo
+    if (socket) {
       return;
     }
 
