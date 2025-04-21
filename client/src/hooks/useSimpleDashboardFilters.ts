@@ -33,34 +33,38 @@ export function useSimpleDashboardFilters() {
     console.log('🗓️ Cambiando año a:', newYear);
     console.log('Cambiando año directamente a:', newYear);
     
-    // Actualizamos el timestamp global para forzar una nueva consulta
+    // Método drástico: actualizar el año y forzar una recarga completa del dashboard
+    
+    // 1. Actualizar el timestamp global para forzar consultas nuevas
     globalRefreshTrigger = Date.now();
     
-    // Primero invalidar las consultas con los parámetros antiguos
-    queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix', year, period],
+    // 2. Eliminar TODAS las consultas cache relacionadas con el dashboard
+    queryClient.removeQueries({
+      queryKey: ['/api/stats/dashboard-fix'],
     });
     
-    // Después cambiar el estado para que futuras consultas usen el nuevo año
+    // 3. Cambiar el año en el estado local
     setYear(newYear);
     
-    // Limpiar TODAS las consultas al cambiar de año para asegurar datos frescos
-    queryClient.removeQueries({
-      predicate: (query) => {
-        // Eliminar cualquier consulta relacionada con el dashboard
-        const key = query.queryKey;
-        if (Array.isArray(key) && key.length > 0) {
-          return key[0] === '/api/stats/dashboard-fix';
-        }
-        return false;
-      },
-    });
+    // 4. Vaciar completamente el caché de la consulta (más agresivo)
+    queryClient.clear();
     
-    // Disparamos manualmente un evento para notificar a otros componentes
-    const event = new CustomEvent('dashboard-filters-changed', {
+    // 5. Log detallado para entender qué año estamos realmente usando
+    console.log(`⚠️ CAMBIO DRÁSTICO DE AÑO: anterior=${year}, nuevo=${newYear}, timestamp=${globalRefreshTrigger}`);
+    
+    // 6. Disparar un evento personalizado con el nuevo año
+    const event = new CustomEvent('dashboard-year-changed', {
       detail: { year: newYear, period, timestamp: globalRefreshTrigger }
     });
+    
+    // 7. Disparar un evento normal de cambio de filtros
+    const filterEvent = new CustomEvent('dashboard-filters-changed', {
+      detail: { year: newYear, period, timestamp: globalRefreshTrigger }
+    });
+    
+    // 8. Emitir ambos eventos
     window.dispatchEvent(event);
+    window.dispatchEvent(filterEvent);
   }, [queryClient, year, period]);
   
   // Función para cambiar el periodo
