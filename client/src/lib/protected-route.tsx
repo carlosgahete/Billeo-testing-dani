@@ -43,13 +43,8 @@ function ProtectedRouteGuard({
     );
   }
 
-  // Si no hay usuario, intentar refrescar una vez y mostrar mensaje de redirección
+  // Si no hay usuario, mostrar mensaje de redirección
   if (!user) {
-    // Refrescar datos de usuario por si acaso hay una sesión activa
-    // que no se ha detectado correctamente
-    console.log(`🔄 ProtectedRouteGuard: Intentando refrescar datos de usuario para ${route}`);
-    refreshUser();
-    
     console.log(`⛔ ProtectedRouteGuard: Acceso denegado a ${route} - Usuario no autenticado (Redirigiendo...)`);
     
     // Redirección explícita
@@ -104,13 +99,8 @@ function ProtectedAdminRouteGuard({
     );
   }
 
-  // Si no hay usuario, intentar refrescar y mostrar mensaje de redirección
+  // Si no hay usuario, mostrar mensaje de redirección
   if (!user) {
-    // Refrescar datos de usuario por si acaso hay una sesión activa
-    // que no se ha detectado correctamente
-    console.log(`🔄 ProtectedAdminRouteGuard: Intentando refrescar datos de usuario para ${route}`);
-    refreshUser();
-    
     console.log(`⛔ ProtectedAdminRouteGuard: Acceso denegado a ${route} - Usuario no autenticado (Redirigiendo...)`);
     
     // Redirección explícita
