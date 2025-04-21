@@ -435,10 +435,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             >
               <span>
                 {filters?.period === "all" ? "Todo el año" : 
-                filters?.period === "q1" ? "Trimestre 1" : 
-                filters?.period === "q2" ? "Trimestre 2" : 
-                filters?.period === "q3" ? "Trimestre 3" : 
-                filters?.period === "q4" ? "Trimestre 4" : "Todo el año"}
+                filters?.period === "Q1" || filters?.period === "q1" ? "Trimestre 1" : 
+                filters?.period === "Q2" || filters?.period === "q2" ? "Trimestre 2" : 
+                filters?.period === "Q3" || filters?.period === "q3" ? "Trimestre 3" : 
+                filters?.period === "Q4" || filters?.period === "q4" ? "Trimestre 4" : "Todo el año"}
               </span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -458,37 +458,37 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               </button>
               <button
                 onClick={() => {
-                  handleChangePeriod("q1");
+                  handleChangePeriod("Q1");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q1" || filters?.period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 1
               </button>
               <button
                 onClick={() => {
-                  handleChangePeriod("q2");
+                  handleChangePeriod("Q2");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q2" || filters?.period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 2
               </button>
               <button
                 onClick={() => {
-                  handleChangePeriod("q3");
+                  handleChangePeriod("Q3");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q3" || filters?.period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 3
               </button>
               <button
                 onClick={() => {
-                  handleChangePeriod("q4");
+                  handleChangePeriod("Q4");
                   document.getElementById('period-dropdown')?.classList.add('hidden');
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q4" || filters?.period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 4
               </button>

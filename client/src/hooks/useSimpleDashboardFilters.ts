@@ -62,6 +62,12 @@ export function useSimpleDashboardFilters() {
   const changePeriod = useCallback((newPeriod: string) => {
     console.log('🔢 Cambiando periodo a:', newPeriod);
     
+    // Asegurarnos que el formato del periodo es el correcto (backend espera Q1, Q2, etc.)
+    const formattedPeriod = newPeriod.toLowerCase() === 'all' ? 'all' : 
+                           newPeriod.startsWith('q') ? newPeriod.toUpperCase() : newPeriod;
+    
+    console.log('🔢 Periodo formateado para backend:', formattedPeriod);
+    
     // Actualizamos el timestamp global para forzar una nueva consulta
     globalRefreshTrigger = Date.now();
     
@@ -70,8 +76,17 @@ export function useSimpleDashboardFilters() {
       queryKey: ['/api/stats/dashboard-fix', year, period],
     });
     
+    // También invalidar posibles consultas con formato inconsistente
+    if (period.toLowerCase() !== 'all') {
+      const alternativePeriod = period.startsWith('q') ? period.toUpperCase() : 
+                               period.startsWith('Q') ? period.toLowerCase() : period;
+      queryClient.invalidateQueries({
+        queryKey: ['/api/stats/dashboard-fix', year, alternativePeriod],
+      });
+    }
+    
     // Después cambiar el estado para que futuras consultas usen el nuevo periodo
-    setPeriod(newPeriod);
+    setPeriod(formattedPeriod);
     
     // Invalidar cualquier consulta relacionada con el dashboard para forzar recargas
     queryClient.invalidateQueries({
@@ -83,7 +98,7 @@ export function useSimpleDashboardFilters() {
     
     // Disparamos manualmente un evento para notificar a otros componentes
     const event = new CustomEvent('dashboard-filters-changed', {
-      detail: { year, period: newPeriod, timestamp: globalRefreshTrigger }
+      detail: { year, period: formattedPeriod, timestamp: globalRefreshTrigger }
     });
     window.dispatchEvent(event);
   }, [queryClient, year, period]);
