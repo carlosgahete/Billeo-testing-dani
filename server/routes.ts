@@ -32,7 +32,7 @@ import { setupAuth } from "./auth";
 import { sendInvoiceEmail, sendQuoteEmail } from "./services/emailService";
 import * as visionService from "./services/visionService";
 import { db } from "./db";
-import { eq, gte, lt, inArray } from "drizzle-orm";
+import { eq, gte, lt, inArray, desc, asc } from "drizzle-orm";
 import { 
   insertUserSchema, 
   insertCompanySchema,
@@ -1132,6 +1132,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   declare global {
     var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
   }
+
+  // Endpoint para verificar estado de actualización del dashboard (reemplaza WebSocket)
+  app.get("/api/dashboard-status", requireAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Obtenemos la última actualización del dashboard para este usuario
+      const [lastUpdate] = await db.select()
+        .from(dashboardEvents)
+        .where(eq(dashboardEvents.userId, req.session.userId))
+        .orderBy(desc(dashboardEvents.updatedAt))
+        .limit(1);
+      
+      // Devolvemos la fecha de la última actualización
+      return res.status(200).json({
+        updated_at: lastUpdate ? lastUpdate.updatedAt.getTime() : Date.now(),
+        lastEvent: lastUpdate ? lastUpdate.type : null
+      });
+    } catch (error) {
+      console.error("Error al obtener estado del dashboard:", error);
+      return res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
 
   // Auth routes are now handled by the setupAuth function
 
