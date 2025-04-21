@@ -125,8 +125,19 @@ export function useSimpleDashboardFilters() {
     console.log('Cambiando periodo directamente a:', newPeriod);
     
     // Asegurarnos que el formato del periodo es el correcto (backend espera Q1, Q2, etc.)
-    const formattedPeriod = newPeriod.toLowerCase() === 'all' ? 'all' : 
-                           newPeriod.startsWith('q') ? newPeriod.toUpperCase() : newPeriod;
+    // Corregir: siempre normalizar a Q1, Q2, etc. en mayúsculas para consistencia
+    let formattedPeriod: string;
+    
+    if (newPeriod.toLowerCase() === 'all') {
+      formattedPeriod = 'all';
+    } else if (newPeriod.toLowerCase().startsWith('q') && ['q1', 'q2', 'q3', 'q4', 'Q1', 'Q2', 'Q3', 'Q4'].includes(newPeriod)) {
+      // Convertir siempre a formato Q1, Q2, Q3, Q4 (en mayúsculas)
+      formattedPeriod = newPeriod.toUpperCase();
+    } else {
+      // Si no es un formato reconocido, usar 'all' como fallback
+      console.warn(`⚠️ Formato de periodo no reconocido: ${newPeriod}, usando 'all' como fallback`);
+      formattedPeriod = 'all';
+    }
     
     console.log('🔢 Periodo formateado para backend:', formattedPeriod);
     

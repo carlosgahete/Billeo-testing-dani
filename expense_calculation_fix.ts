@@ -128,12 +128,14 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
           try {
-            // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
-            if (period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
-              const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+            // Si period comienza con 'Q' o 'q' y tiene un número después (Q1, q1, etc.)
+            // Normalizamos siempre a mayúsculas para la comparación
+            const periodUpper = period.toString().toUpperCase();
+            if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+              const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
               return invoiceQuarter === requestedQuarter;
             } else {
-              console.log(`⚠️ Formato de period no reconocido: '${period}'`);
+              console.log(`⚠️ Formato de period no reconocido: '${period}', se esperaba Q1-Q4`);
             }
           } catch (error) {
             console.error(`❌ Error procesando period '${period}':`, error);
@@ -148,8 +150,10 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       const transactions = await storage.getTransactionsByUserId(userId);
       
       // Si el periodo es un trimestre específico, verificar si hay datos
-      if (period && period !== 'all' && period.toString().startsWith('Q') && /^Q[1-4]$/.test(period.toString())) {
-        const requestedQuarter = parseInt(period.toString().replace('Q', ''));
+      // Normalizamos a mayúsculas para asegurar consistencia
+      const periodUpper = period ? period.toString().toUpperCase() : '';
+      if (period && period !== 'all' && periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+        const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
         
         // Verificar si hay facturas en este trimestre
         const hasInvoicesInQuarter = filteredInvoices.length > 0;
