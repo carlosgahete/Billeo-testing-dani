@@ -72,6 +72,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     lastMessage, 
     connectionState, 
     errorMessage, 
+    connectionAttempts,
     reconnect 
   } = useWebSocketDashboard(handleWebSocketRefresh);
   
@@ -315,6 +316,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               connectionState={connectionState} 
               onReconnect={reconnect}
               errorMessage={errorMessage}
+              connectionAttempts={connectionAttempts}
+              lastMessage={lastMessage}
               className="mr-3"
             />
             
@@ -347,6 +350,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               connectionState={connectionState} 
               onReconnect={reconnect}
               errorMessage={errorMessage}
+              connectionAttempts={connectionAttempts}
+              lastMessage={lastMessage}
             />
             
             {/* Notificación móvil */}

@@ -1276,19 +1276,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Función global para notificar a todos los clientes
-  global.notifyDashboardUpdate = (type: string, data?: any) => {
+  global.notifyDashboardUpdate = (type: string, data?: any, targetUserId?: number) => {
     const message = JSON.stringify({
       type,
       timestamp: new Date().toISOString(),
       data
     });
     
-    clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
+    // Contador de clientes notificados
+    let notifiedClients = 0;
+    
+    // Si se especifica un usuario específico, notificar solo a ese usuario
+    if (targetUserId && clients.has(targetUserId)) {
+      const userClients = clients.get(targetUserId);
+      if (userClients) {
+        userClients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+            notifiedClients++;
+          }
+        });
       }
-    });
-    console.log(`WebSocket: Notificación enviada (${type}) a ${clients.size} clientes`);
+      console.log(`WebSocket: Notificación específica (${type}) enviada al usuario ${targetUserId} (${notifiedClients} conexiones)`);
+    } 
+    // Si no se especifica usuario, notificar a todos
+    else {
+      clients.forEach((userClients, userId) => {
+        userClients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+            notifiedClients++;
+          }
+        });
+      });
+      console.log(`WebSocket: Notificación global (${type}) enviada a ${clients.size} usuarios (${notifiedClients} conexiones)`);
+    }
   };
 
   // Auth routes are now handled by the setupAuth function
