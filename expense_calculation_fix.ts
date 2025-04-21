@@ -34,6 +34,28 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         return Math.floor(month / 3) + 1; // 1-4 para Q1-Q4
       };
       
+      console.log("Fecha de ejemplo:", new Date().toISOString(), "Trimestre:", getQuarter(new Date()));
+      
+      // Validar el formato del periodo
+      let validPeriod = period;
+      let requestedQuarter = 0;
+      
+      if (period && period !== 'all') {
+        if (period.startsWith('q') && period.length === 2) {
+          requestedQuarter = parseInt(period.substring(1));
+          if (requestedQuarter < 1 || requestedQuarter > 4) {
+            console.log(`Trimestre no válido: ${requestedQuarter}, usando 'all'`);
+            validPeriod = 'all';
+            requestedQuarter = 0;
+          }
+        } else {
+          console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          validPeriod = 'all';
+        }
+      }
+      
+      console.log(`Periodo validado: ${validPeriod}, Trimestre solicitado: ${requestedQuarter}`);
+      
       // Filtrar facturas por año y trimestre si se proporcionan
       const filteredInvoices = invoices.filter(invoice => {
         const invoiceDate = new Date(invoice.issueDate);
@@ -45,19 +67,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         }
         
         // Luego filtramos por trimestre si está especificado
-        if (period && period !== 'all') {
+        if (validPeriod !== 'all' && requestedQuarter > 0) {
           const quarter = getQuarter(invoiceDate);
+          console.log(`Factura: ID=${invoice.id}, Fecha=${invoiceDate.toISOString()}, Trimestre=${quarter}`);
           
-          // Comparar con el trimestre solicitado (q1, q2, q3, q4)
-          if (period.startsWith('q') && period.length === 2) {
-            const requestedQuarter = parseInt(period.substring(1));
-            return quarter === requestedQuarter;
-          } else {
-            console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          // Comparar con el trimestre solicitado
+          if (quarter !== requestedQuarter) {
+            return false;
           }
         }
         
-        // Si no hay filtro de periodo o es 'all', incluimos la factura
+        // Si pasó los filtros, incluimos la factura
         return true;
       });
       
@@ -75,19 +95,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         }
         
         // Luego filtramos por trimestre si está especificado
-        if (period && period !== 'all') {
+        if (validPeriod !== 'all' && requestedQuarter > 0) {
           const quarter = getQuarter(txnDate);
+          console.log(`Transacción: ID=${txn.id}, Fecha=${txnDate.toISOString()}, Trimestre=${quarter}, Comparando con trimestre solicitado=${requestedQuarter}`);
           
-          // Comparar con el trimestre solicitado (q1, q2, q3, q4)
-          if (period.startsWith('q') && period.length === 2) {
-            const requestedQuarter = parseInt(period.substring(1));
-            return quarter === requestedQuarter;
-          } else {
-            console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          // Comparar con el trimestre solicitado
+          if (quarter !== requestedQuarter) {
+            return false;
           }
         }
         
-        // Si no hay filtro de periodo o es 'all', incluimos la transacción
+        // Si pasó los filtros, incluimos la transacción
         return true;
       });
         
@@ -105,19 +123,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         }
         
         // Luego filtramos por trimestre si está especificado
-        if (period && period !== 'all') {
+        if (validPeriod !== 'all' && requestedQuarter > 0) {
           const quarter = getQuarter(quoteDate);
+          console.log(`Presupuesto: ID=${quote.id}, Fecha=${quoteDate.toISOString()}, Trimestre=${quarter}`);
           
-          // Comparar con el trimestre solicitado (q1, q2, q3, q4)
-          if (period.startsWith('q') && period.length === 2) {
-            const requestedQuarter = parseInt(period.substring(1));
-            return quarter === requestedQuarter;
-          } else {
-            console.log(`Formato de periodo no reconocido: ${period}, usando 'all'`);
+          // Comparar con el trimestre solicitado
+          if (quarter !== requestedQuarter) {
+            return false;
           }
         }
         
-        // Si no hay filtro de periodo o es 'all', incluimos el presupuesto
+        // Si pasó los filtros, incluimos el presupuesto
         return true;
       });
       
