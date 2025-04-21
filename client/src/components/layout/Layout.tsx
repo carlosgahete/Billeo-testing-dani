@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useScrollToTop } from "@/hooks/use-scroll-to-top";
+import { ConnectionStatusBar } from "./ConnectionStatusBar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -29,6 +30,9 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
+      {/* Barra de estado de conexión global */}
+      <ConnectionStatusBar />
+      
       {/* Mobile header */}
       {isMobile && (
         <Header 
