@@ -234,11 +234,40 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         "Q4": { Ingresos: 0, Gastos: 0, Resultado: 0 }
       };
 
-      // Asignamos los datos al trimestre correcto basándonos en la información disponible
-      // Sabemos que los ingresos están en Q2 (abril) según los logs
-      quarterlyData["Q2"].Ingresos = baseImponibleIngresos;
-      quarterlyData["Q2"].Gastos = baseImponibleGastos;
-      quarterlyData["Q2"].Resultado = baseImponibleIngresos - baseImponibleGastos;
+      // Si estamos filtrando por un trimestre específico, colocamos los datos en ese trimestre
+      if (filters?.period && filters.period.startsWith('q') && filters.period.length === 2) {
+        const trimestre = filters.period.charAt(1);
+        if (['1', '2', '3', '4'].includes(trimestre)) {
+          const quarterKey = `Q${trimestre}`;
+          // Asignamos los datos al trimestre específico que estamos viendo
+          quarterlyData[quarterKey].Ingresos = baseImponibleIngresos;
+          quarterlyData[quarterKey].Gastos = baseImponibleGastos;
+          quarterlyData[quarterKey].Resultado = baseImponibleIngresos - baseImponibleGastos;
+          
+          console.log(`Mostrando datos para el trimestre específico ${quarterKey}:`, {
+            Ingresos: baseImponibleIngresos,
+            Gastos: baseImponibleGastos,
+            Resultado: baseImponibleIngresos - baseImponibleGastos
+          });
+        }
+      } 
+      // Si estamos viendo todos los trimestres, intentamos distribuir según la data recibida
+      else if (filters?.period === 'all' && stats.quarterlyData) {
+        // Si tenemos datos trimestrales del backend, los usamos
+        Object.entries(stats.quarterlyData).forEach(([quarter, data]) => {
+          if (quarterlyData[quarter]) {
+            quarterlyData[quarter] = data;
+          }
+        });
+      } 
+      // Fallback: Si no tenemos datos específicos de trimestres, asignamos todo al trimestre actual
+      else {
+        // Determinar el trimestre actual
+        const currentQuarter = `Q${Math.floor((new Date().getMonth()) / 3) + 1}`;
+        quarterlyData[currentQuarter].Ingresos = baseImponibleIngresos;
+        quarterlyData[currentQuarter].Gastos = baseImponibleGastos;
+        quarterlyData[currentQuarter].Resultado = baseImponibleIngresos - baseImponibleGastos;
+      }
       
       console.log("Quarterly data for financial comparison (net values):", quarterlyData);
 
