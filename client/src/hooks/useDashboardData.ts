@@ -125,13 +125,13 @@ export function useDashboardData(
         console.log(`📊 Cargando datos frescos del dashboard [Trigger: ${refreshTrigger}]`);
         console.log(`📅 Filtros aplicados: Año=${finalYear}, Periodo=${finalPeriod}`);
         
-        // Construir la URL con los parámetros de filtro
-        const url = new URL('/api/stats/dashboard-fix', window.location.origin);
+        // Construir la URL con los parámetros de filtro - Ahora usar el endpoint enhanced
+        const url = new URL('/api/stats/dashboard-enhanced', window.location.origin);
         url.searchParams.append('year', finalYear);
         url.searchParams.append('period', finalPeriod);
         url.searchParams.append('_cb', queryTimestamp);
         
-        // Primera opción: usar el endpoint fix con fetch usando credentials y reintento
+        // Primera opción: usar el endpoint enhanced con fetch usando credentials y reintento
         console.log(`🔄 Intentando cargar datos desde: ${url.toString()}`);
         
         // Configuración completa del fetch con credenciales y headers mejorados
@@ -142,11 +142,12 @@ export function useDashboardData(
             'Accept': 'application/json',
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
-            'X-Requested-With': 'XMLHttpRequest' // Ayuda a evitar problemas de CORS
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Dashboard-Client': 'true' // Identificar solicitudes del cliente
           }
         };
         
-        // Intentar primero con el endpoint fix
+        // Intentar primero con el endpoint enhanced
         let response = await fetch(url.toString(), fetchOptions);
         
         // Si está autorizado pero hay otro error
@@ -177,8 +178,8 @@ export function useDashboardData(
           return data;
         }
         
-        // Si falla, intentar con el endpoint original como respaldo
-        console.warn("⚠️ El endpoint fix falló, probando con el endpoint original...");
+        // Si falla, intentar con otro endpoint como respaldo
+        console.warn("⚠️ El endpoint enhanced falló, probando con el endpoint original...");
         
         const fallbackUrl = new URL('/api/stats/dashboard', window.location.origin);
         fallbackUrl.searchParams.append('year', finalYear);
@@ -196,7 +197,7 @@ export function useDashboardData(
         // Si ambos intentos fallan, probar sin parámetros como último intento
         console.warn("⚠️ Ambos endpoints fallaron. Último intento sin parámetros...");
         
-        const lastAttemptResponse = await fetch('/api/stats/dashboard-fix', {
+        const lastAttemptResponse = await fetch('/api/stats/dashboard-enhanced', {
           ...fetchOptions,
           cache: 'no-store'
         });
