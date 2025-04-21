@@ -386,27 +386,6 @@ export const dashboardBlockSchema = z.object({
   config: z.record(z.any()).optional(), // Configuración específica del bloque
 });
 
-// Filter Preferences
-export const filterPreferences = pgTable("filter_preferences", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  screenKey: text("screen_key").notNull(), // 'dashboard', 'invoices', 'expenses', etc.
-  year: integer("year").notNull(),
-  period: text("period").notNull(), // 'Q1', 'Q2', 'Q3', 'Q4', 'all'
-  extraFilters: jsonb("extra_filters"), // Para filtros adicionales específicos de la pantalla
-  lastUsed: timestamp("last_used").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const insertFilterPreferencesSchema = createInsertSchema(filterPreferences).omit({ 
-  id: true, 
-  lastUsed: true,
-  updatedAt: true
-});
-
-export type InsertFilterPreferences = z.infer<typeof insertFilterPreferencesSchema>;
-export type FilterPreferences = typeof filterPreferences.$inferSelect;
-
 export type DashboardBlock = z.infer<typeof dashboardBlockSchema>;
 export type InsertDashboardPreferences = z.infer<typeof insertDashboardPreferencesSchema>;
 export type DashboardPreferences = typeof dashboardPreferences.$inferSelect;

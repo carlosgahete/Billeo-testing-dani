@@ -121,103 +121,39 @@ export function useDashboardData(
       const queryTimestamp = `_cb=${Date.now()}`;
       
       try {
-        // Logging para depuración
-        console.log(`📊 Cargando datos frescos del dashboard [Trigger: ${refreshTrigger}]`);
-        console.log(`📅 Filtros aplicados: Año=${finalYear}, Periodo=${finalPeriod}`);
+        // Refrescar los datos forzando una solicitud fresca
+        console.log(`📊 Cargando datos frescos del dashboard [${refreshTrigger}]...`);
         
-        // Construir la URL con los parámetros de filtro - Ahora usar el endpoint enhanced
-        const url = new URL('/api/stats/dashboard-enhanced', window.location.origin);
-        url.searchParams.append('year', finalYear);
-        url.searchParams.append('period', finalPeriod);
-        url.searchParams.append('_cb', queryTimestamp);
+        // Intentar primero con el endpoint fijo
+        const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        });
         
-        // Primera opción: usar el endpoint enhanced con fetch usando credentials y reintento
-        console.log(`🔄 Intentando cargar datos desde: ${url.toString()}`);
-        
-        // Configuración completa del fetch con credenciales y headers mejorados
-        const fetchOptions = {
-          method: 'GET',
-          credentials: 'include' as RequestCredentials,
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Dashboard-Client': 'true' // Identificar solicitudes del cliente
-          }
-        };
-        
-        // Intentar primero con el endpoint enhanced
-        let response = await fetch(url.toString(), fetchOptions);
-        
-        // Si está autorizado pero hay otro error
-        if (response.status === 401 || response.status === 403) {
-          console.warn("⚠️ Error de autenticación. Reintentando con sessionStorage...");
-          
-          // Intentar restaurar la sesión si es necesario antes de reintentar
-          const sessionRetryResponse = await fetch('/api/session/refresh', {
-            method: 'GET',
-            credentials: 'include'
-          });
-          
-          if (sessionRetryResponse.ok) {
-            console.log("✅ Sesión refrescada correctamente, reintentando carga de datos...");
-            response = await fetch(url.toString(), fetchOptions);
-          }
-        }
-        
-        // Si el endpoint fix funciona correctamente
         if (response.ok) {
           const data = await response.json();
-          console.log("✅ Datos del dashboard cargados correctamente", {
-            año: data.year,
-            periodo: data.period,
-            ingresos: data.income,
-            gastos: data.expenses
-          });
+          console.log("✅ Datos actualizados del dashboard cargados correctamente");
           return data;
         }
         
-        // Si falla, intentar con otro endpoint como respaldo
-        console.warn("⚠️ El endpoint enhanced falló, probando con el endpoint original...");
-        
-        const fallbackUrl = new URL('/api/stats/dashboard', window.location.origin);
-        fallbackUrl.searchParams.append('year', finalYear);
-        fallbackUrl.searchParams.append('period', finalPeriod);
-        fallbackUrl.searchParams.append('_cb', queryTimestamp);
-        
-        const originalResponse = await fetch(fallbackUrl.toString(), fetchOptions);
+        // Si falla, intentar con el endpoint original
+        console.log("⚠️ El endpoint fix falló, probando con el original...");
+        const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        });
         
         if (originalResponse.ok) {
           const data = await originalResponse.json();
-          console.log("✅ Datos del dashboard cargados (endpoint original)");
+          console.log("✅ Datos actualizados del dashboard cargados correctamente (endpoint original)");
           return data;
         }
         
-        // Si ambos intentos fallan, probar sin parámetros como último intento
-        console.warn("⚠️ Ambos endpoints fallaron. Último intento sin parámetros...");
-        
-        const lastAttemptResponse = await fetch('/api/stats/dashboard-enhanced', {
-          ...fetchOptions,
-          cache: 'no-store'
-        });
-        
-        if (lastAttemptResponse.ok) {
-          const data = await lastAttemptResponse.json();
-          console.log("⚠️ Datos cargados sin filtros (fallback)");
-          // Añadir manualmente los filtros que queríamos
-          data.year = finalYear;
-          data.period = finalPeriod;
-          return data;
-        }
-        
-        // Si todos los intentos fallan, lanzar error
-        throw new Error(`No se pudo obtener los datos del dashboard (Código: ${response.status})`);
+        // Si ambos fallan, lanzar error
+        throw new Error('No se pudo obtener los datos del dashboard');
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);
         
         // Proporcionar una estructura de datos base para que la UI no falle
-        const fallbackData = {
+        return {
           income: 0,
           expenses: 0,
           pendingInvoices: 0,
@@ -243,21 +179,12 @@ export function useDashboardData(
             irpfPagar: 0
           },
           year: finalYear,
-          period: finalPeriod,
-          error: error instanceof Error ? error.message : 'Error desconocido',
-          filterParams: { year: finalYear, period: finalPeriod }
+          period: finalPeriod
         };
-        
-        return fallbackData;
       }
     },
-    staleTime: 30 * 1000, // Reducido a 30 segundos para permitir actualizaciones más frecuentes
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    // Estrategia de reintento mejorada
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000)
+    staleTime: 60 * 1000, // Reducido a 1 minuto para permitir actualizaciones más frecuentes
+    refetchOnWindowFocus: true, // Ahora sí refrescamos al cambiar el foco para obtener datos actualizados
   });
 
   // Depuración

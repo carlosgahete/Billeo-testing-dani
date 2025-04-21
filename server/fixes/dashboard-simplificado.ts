@@ -10,47 +10,7 @@ export function setupSimplifiedDashboardEndpoint(
   requireAuth: any, 
   storage: IStorage
 ) {
-  // Crear un middleware personalizado para debug de autenticación
-  const authDebugMiddleware = (req: Request, res: Response, next: any) => {
-    console.log("⚠️ Información de sesión en /api/stats/dashboard-fix:");
-    console.log("- Session existe:", !!req.session);
-    console.log("- Session ID:", req.session?.id);
-    console.log("- IsAuthenticated:", req.isAuthenticated?.());
-    console.log("- Session userId:", req.session?.userId);
-    console.log("- User object:", req.user ? "presente" : "ausente");
-    console.log("- Query params:", req.query);
-    
-    // Verificar autenticación usando tanto passport como userId en sesión
-    if (req.isAuthenticated?.() || (req.session && req.session.userId)) {
-      console.log("✅ Usuario autenticado correctamente");
-      return next();
-    }
-    
-    // Para propósitos de depuración, permitimos acceso temporal sin autenticación
-    // Esto es sólo para desarrollo y debe ser eliminado en producción
-    console.log("⚠️ Permitiendo acceso sin autenticación para depurar el dashboard");
-    
-    if (!req.session) {
-      req.session = {} as any;
-    }
-    
-    req.session.userId = 1; // Temporalmente usar ID de usuario 1 para pruebas
-    
-    // Establecer una bandera para indicar que el usuario está en modo desarrollo
-    (req as any).devMode = true;
-    
-    next();
-  };
-  
-  // Aplicar el mismo middleware de depuración al endpoint original también
-  app.get("/api/stats/dashboard", authDebugMiddleware, async (req: Request, res: Response) => {
-    // Simplemente redirigir a la versión fix
-    console.log("🔀 Redirigiendo de /api/stats/dashboard al endpoint fix...");
-    req.url = req.url.replace('/api/stats/dashboard', '/api/stats/dashboard-fix');
-    app._router.handle(req, res);
-  });
-  
-  app.get("/api/stats/dashboard-fix", authDebugMiddleware, async (req: Request, res: Response) => {
+  app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
     try {
       console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
       
@@ -323,14 +283,8 @@ export function setupSimplifiedDashboardEndpoint(
           return parseFloat(value.toFixed(2)); // Redondeo a 2 decimales
         };
         
-        // Determinar el año y periodo aplicados (valores de consulta o por defecto)
-        const appliedYear = year ? year.toString() : currentYear.toString();
-        const appliedPeriod = period ? period.toString() : 'all';
-        
-        console.log(`🔍 Enviando respuesta filtrada por: Año=${appliedYear}, Periodo=${appliedPeriod}`);
-        
-        // Preparar respuesta con valores seguros y mejorados
-        const dashboardResponse = {
+        // Preparar respuesta con valores seguros
+        return res.status(200).json({
           // Valores principales 
           income: safeNumber(baseImponible),
           expenses: safeNumber(baseImponibleGastos),
@@ -350,9 +304,9 @@ export function setupSimplifiedDashboardEndpoint(
           ivaSoportado: safeNumber(ivaSoportado),
           irpfRetenidoIngresos: safeNumber(irpfRetenidoIngresos),
           
-          // Datos para filtrado - MUY IMPORTANTES
-          period: appliedPeriod,
-          year: appliedYear,
+          // Datos para filtrado
+          period,
+          year,
           
           // Datos internos
           totalWithholdings: safeNumber(totalIrpfFromExpensesInvoices),
@@ -409,44 +363,10 @@ export function setupSimplifiedDashboardEndpoint(
           rejectedQuotes: rejectedQuotesCount,
           pendingQuotesCount,
           pendingQuotesTotal: safeNumber(pendingQuotesTotal),
-          lastQuoteDate,
-          
-          // Información adicional sobre el filtrado
-          filter: {
-            appliedYear,
-            appliedPeriod,
-            wasFiltered: Boolean(year) || Boolean(period),
-            yearOptions: Array.from(new Set([...uniqueYears, currentYear])).sort((a, b) => b - a),
-            periodOptions: ['all', 'q1', 'q2', 'q3', 'q4']
-          },
-          
-          // Información de diagnóstico
-          _debug: {
-            version: 'fix-3.1',
-            timestamp: Date.now(),
-            userId,
-            totalInvoices: invoices.length,
-            filteredInvoices: filteredInvoices.length,
-            authStatus: (req as any).devMode ? 'development' : 'authenticated',
-            queryParams: req.query,
-            requestPath: req.path,
-            method: req.method
-          }
+          lastQuoteDate
         });
-        // Establecer encabezados para debugging y cache control
-        res.setHeader('X-Dashboard-Year', appliedYear);
-        res.setHeader('X-Dashboard-Period', appliedPeriod);
-        res.setHeader('X-Dashboard-Filter-Applied', 'true');
-        res.setHeader('Cache-Control', 'no-store, private, max-age=0');
-        
-        // Retornar la respuesta completa
-        return res.status(200).json(dashboardResponse);
       } catch (error) {
         console.error("Error en el cálculo de datos del dashboard:", error);
-        
-        // Determinar valores por defecto para los filtros
-        const defaultYear = req.query.year?.toString() || new Date().getFullYear().toString();
-        const defaultPeriod = req.query.period?.toString() || 'all';
         
         // En caso de error, devolver una respuesta mínima pero válida
         return res.status(200).json({

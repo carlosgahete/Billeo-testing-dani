@@ -157,13 +157,13 @@ app.use((req, res, next) => {
     console.error('Error al cargar el módulo de prueba de correo:', err);
   });
   
-  // Añadir el endpoint mejorado para el dashboard
-  import('./fixes/enhanced-dashboard').then((module) => {
+  // Añadir el endpoint simplificado para el dashboard
+  import('./fixes/dashboard-simplificado').then((module) => {
     // Obtener el middleware de autenticación y el storage
     import('./auth').then((authModule) => {
       import('./storage').then((storageModule) => {
-        module.setupEnhancedDashboardEndpoint(app, authModule.requireAuth, storageModule.storage);
-        console.log('Endpoint mejorado del dashboard (/api/stats/dashboard-enhanced) configurado');
+        module.setupSimplifiedDashboardEndpoint(app, authModule.requireAuth, storageModule.storage);
+        console.log('Endpoint simplificado del dashboard (/api/stats/dashboard-fix) configurado');
       }).catch(err => {
         console.error('Error al cargar el módulo de storage:', err);
       });
@@ -171,15 +171,7 @@ app.use((req, res, next) => {
       console.error('Error al cargar el módulo de autenticación:', err);
     });
   }).catch(err => {
-    console.error('Error al cargar el módulo de dashboard mejorado:', err);
-  });
-  
-  // Intentar cargar el endpoint simplificado como fallback
-  import('./fixes/dashboard-simplificado').then((module) => {
-    console.log('Endpoint simplificado del dashboard cargado como fallback');
-    // No lo inicializamos aquí para evitar conflictos
-  }).catch(err => {
-    console.log('Nota: Endpoint simplificado no disponible, usando solo el endpoint mejorado');
+    console.error('Error al cargar el módulo de dashboard simplificado:', err);
   });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
