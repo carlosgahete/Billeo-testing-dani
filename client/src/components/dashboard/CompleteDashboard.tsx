@@ -34,6 +34,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [_, navigate] = useLocation();
   const [updateFlash, setUpdateFlash] = useState(false);
   const [lastUpdateType, setLastUpdateType] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Año actual como string para uso en cálculos
@@ -67,6 +68,13 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   
   // Usamos polling en lugar de WebSockets para monitorear actualizaciones del dashboard
   const { isConnected, lastMessage } = useDashboardPolling(handleDashboardRefresh);
+  
+  // Actualizar el timestamp cuando recibimos un mensaje
+  useEffect(() => {
+    if (lastMessage) {
+      setLastUpdatedAt(Date.now());
+    }
+  }, [lastMessage]);
   
   // Detectar tipo de actualización para mostrar indicador específico
   useEffect(() => {
@@ -304,7 +312,9 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           {/* Indicador de estado del sistema de sincronización - Versión para escritorio */}
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-            <span className="text-xs">{isConnected ? 'Sincronizado' : 'Sin conexión'}</span>
+            <span className="text-xs">
+              {lastUpdatedAt ? `Última actualización: hace ${Math.round((Date.now() - lastUpdatedAt) / 1000)}s` : 'Sincronizando...'}
+            </span>
             
             {/* Notificación de actualización en tiempo real */}
             <AnimatePresence>
@@ -332,7 +342,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           {/* Indicador de estado de sincronización - Versión para móvil (solo punto) */}
           <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                 title={isConnected ? 'Datos sincronizados' : 'Sin sincronización'}></div>
+                 title={lastUpdatedAt ? `Última actualización: hace ${Math.round((Date.now() - lastUpdatedAt) / 1000)}s` : 'Sincronizando...'}></div>
             
             {/* Notificación móvil */}
             <AnimatePresence>

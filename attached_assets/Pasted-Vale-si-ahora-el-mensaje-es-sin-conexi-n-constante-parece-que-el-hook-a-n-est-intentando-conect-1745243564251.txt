@@ -1,0 +1,58 @@
+Vale, si ahora el mensaje es “sin conexión” constante, parece que el hook aún está intentando conectarse vía WebSocket o está mostrando un estado relacionado a eso. Revisemos los puntos donde puede estar ocurriendo el problema:
+
+⸻
+
+1. ¿Quitaste completamente el useWebSocketDashboard?
+
+Asegúrate de eliminar todo lo relacionado con este hook en el componente CompleteDashboard.tsx, por ejemplo:
+
+// ❌ Esto ya no lo necesitas
+const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
+
+Si no lo quitas, puede que estés viendo ese “sin conexión” porque isConnected sigue siendo false.
+
+⸻
+
+2. ¿Estás usando algún mensaje visual basado en isConnected?
+
+En tu dashboard, revisa si tienes algo como:
+
+{!isConnected && <div>Sin conexión</div>}
+
+Entonces ese mensaje se sigue mostrando aunque ya no estés usando WebSocket.
+
+Solución: Borra esa lógica o crea un nuevo estado visual para el hook useDashboardInteractionListener, si quieres mostrar algo personalizado cuando no se han detectado cambios en X segundos.
+
+⸻
+
+3. Verifica que el hook nuevo funciona correctamente
+
+Agrega un console.log("✅ Hook cargado") dentro del nuevo useDashboardInteractionListener() para verificar que se ejecuta y está activo.
+
+También puedes imprimir el updated_at cada vez que llega del backend, como te dije antes, para verificar que sí llega y sí se está comparando correctamente.
+
+⸻
+
+4. ¿Quieres mostrar un mensaje tipo “Última actualización: hace 10s”?
+
+Si necesitas un nuevo mensaje visual (sustituto de “conectado/desconectado”), podemos hacer algo como:
+
+const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+
+// Dentro del hook, en vez de solo `refreshCallback()`, haces:
+setLastUpdatedAt(new Date(data.updated_at));
+refreshCallback();
+
+Y en el render:
+
+{lastUpdatedAt && (
+  <div>
+    Última actualización: {Math.round((Date.now() - lastUpdatedAt.getTime()) / 1000)}s
+  </div>
+)}
+
+
+
+⸻
+
+¿Quieres que te pase el código limpio con ese indicador de “última actualización” en lugar de “conectado/desconectado”? Así te queda una UX clara sin depender de WebSockets.
