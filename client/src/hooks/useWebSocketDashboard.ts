@@ -416,7 +416,20 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
     // Iniciar conexión solo si hay usuario autenticado y no estamos ya conectados
     if (auth.user && !isInitialized) {
       setIsInitialized(true);
-      createWebSocketConnection();
+      
+      // Para evitar problemas de reconexión constante en entornos donde no funciona el WebSocket,
+      // verificaremos si la URL actual es de Replit, ya que es un entorno conocido con problemas
+      const isReplitEnvironment = window.location.host.includes('replit');
+      
+      if (isReplitEnvironment) {
+        // En Replit, no intentamos conectar el WebSocket para evitar problemas
+        console.log('⚠️ Entorno Replit detectado, desactivando WebSocket para evitar problemas de reconexión');
+        setConnectionState(ConnectionState.FAILED);
+        setErrorMessage("WebSocket desactivado en este entorno para evitar problemas de conexión");
+      } else {
+        // En entornos normales, intentamos la conexión
+        createWebSocketConnection();
+      }
     } else if (!auth.user && connectionState !== ConnectionState.FAILED) {
       // Si no hay usuario, establecer estado fallido
       setConnectionState(ConnectionState.FAILED);
@@ -430,20 +443,34 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
   // Reconectar si el usuario cambia (login/logout)
   useEffect(() => {
     if (isInitialized) {
-      if (auth.user) {
-        // Si hay un nuevo usuario, reconectar
+      // Verificar si estamos en Replit para evitar reconexiones innecesarias
+      const isReplitEnvironment = window.location.host.includes('replit');
+      
+      if (auth.user && !isReplitEnvironment) {
+        // Si hay un nuevo usuario y no estamos en Replit, reconectar
         reconnectFn();
       } else {
-        // Si no hay usuario, limpiar y establecer estado fallido
+        // Si no hay usuario o estamos en Replit, limpiar y establecer estado fallido
         cleanup();
         setConnectionState(ConnectionState.FAILED);
-        setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
+        
+        if (!auth.user) {
+          setErrorMessage("Es necesario iniciar sesión para actualizaciones en tiempo real");
+        } else if (isReplitEnvironment) {
+          setErrorMessage("WebSocket desactivado en este entorno para evitar problemas de conexión");
+        }
       }
     }
   }, [auth.user?.id, isInitialized, reconnect, cleanup]);
   
   // Agregar un verificador periódico de salud para detectar problemas de conexión
   useEffect(() => {
+    // En entorno Replit, no configuramos verificación de salud
+    const isReplitEnvironment = window.location.host.includes('replit');
+    if (isReplitEnvironment) {
+      return; // No hacemos nada en entorno Replit
+    }
+    
     const healthCheck = setInterval(() => {
       if (auth.user && socketRef.current) {
         checkConnection();
