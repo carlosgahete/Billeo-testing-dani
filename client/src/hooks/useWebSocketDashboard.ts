@@ -119,6 +119,12 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         console.log(`🔌 Conexión WebSocket cerrada: ${event.code} - ${event.reason}`);
         setConnectionState(ConnectionState.DISCONNECTED);
         setSocket(null);
+        
+        // Limpiar intervalo de ping si existe
+        if (pingInterval) {
+          clearInterval(pingInterval);
+          pingInterval = null;
+        }
 
         // Intentar reconectar después de un tiempo si no fue un cierre limpio
         if (event.code !== 1000) { // 1000 es un cierre normal
@@ -172,6 +178,9 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       return;
     }
 
+    // Mantener referencia a los intervalos creados para poder limpiarlos
+    const pingIntervals: NodeJS.Timeout[] = [];
+    
     const newSocket = createWebSocketConnection();
     
     // Limpiar conexión al desmontar
@@ -180,6 +189,12 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       if (newSocket && newSocket.readyState === WebSocket.OPEN) {
         newSocket.close();
       }
+      
+      // Limpiar todos los intervalos de ping existentes
+      if (pingIntervals.length > 0) {
+        pingIntervals.forEach(interval => clearInterval(interval));
+      }
+      
       setSocket(null);
       setConnectionState(ConnectionState.DISCONNECTED);
     };

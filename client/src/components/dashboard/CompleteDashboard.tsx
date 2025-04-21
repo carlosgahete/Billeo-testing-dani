@@ -20,8 +20,9 @@ import ExpensesByCategoryApple from "./ExpensesByCategoryApple";
 import ExpensesByCategory from "./ExpensesByCategory";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSimpleDashboardFilters } from "@/hooks/useSimpleDashboardFilters";
-import { useWebSocketDashboard } from "@/hooks/useWebSocketDashboard";
+import { useWebSocketDashboard, ConnectionState } from "@/hooks/useWebSocketDashboard";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
+import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
 import { queryClient } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 

@@ -231,11 +231,31 @@ export default function AuthPage() {
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
               <div className="flex items-center mb-2">
                 <AlertCircle className="h-4 w-4 text-blue-500 mr-2" />
-                <span className="text-sm font-medium text-blue-700">Usuario demo</span>
+                <span className="text-sm font-medium text-blue-700">Acceso rápido demo</span>
               </div>
-              <p className="text-xs text-blue-600 mb-1">Usuario: <span className="font-medium">demo</span></p>
-              <p className="text-xs text-blue-600">Contraseña: <span className="font-medium">demobilleo</span></p>
-              <p className="text-xs mt-2 text-blue-500 italic">Estas credenciales solo son para mostrar la funcionalidad</p>
+              <p className="text-xs text-blue-600 mb-2">Usuario: <span className="font-medium">demo</span></p>
+              <p className="text-xs text-blue-600 mb-2">Contraseña: <span className="font-medium">demobilleo</span></p>
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs h-8 border-blue-200 bg-blue-100/50 hover:bg-blue-200 hover:text-blue-800 text-blue-700"
+                onClick={() => {
+                  // Prellenar el formulario con las credenciales de demo
+                  setLoginFormData({
+                    username: "demo",
+                    password: "demobilleo"
+                  });
+                  
+                  // Esperar un momento y luego enviar el formulario automáticamente
+                  setTimeout(() => {
+                    handleLoginSubmit({ preventDefault: () => {} } as React.FormEvent);
+                  }, 300);
+                }}
+              >
+                Iniciar sesión con demo
+              </Button>
+              <p className="text-xs mt-2 text-blue-500 italic">Solo para fines de demostración</p>
             </div>
           </form>
         </div>
