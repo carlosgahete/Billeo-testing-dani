@@ -18,56 +18,107 @@ export async function updateDashboardState(type: string, data: any = null, userI
   console.log(`📦 data:`, JSON.stringify(data));
   
   // Verificar que userId sea un número válido
-  if (userId === undefined) {
-    console.error('❌ updateDashboardState: userId es undefined, se requiere un ID de usuario válido');
+  if (userId === undefined || userId === null) {
+    console.error('❌ updateDashboardState: userId es undefined/null, se requiere un ID de usuario válido');
     return;
   }
+  
+  // Convertir userId a número si es string
+  const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+  
+  // Si no es un número válido después de la conversión, abortamos
+  if (isNaN(userIdNum)) {
+    console.error(`❌ updateDashboardState: userId inválido (${userId})`);
+    return;
+  }
+  
   try {
+    // Generar timestamp exacto para la actualización (con precisión de milisegundos)
+    const now = new Date();
+    console.log(`⏱️ Timestamp generado para actualización: ${now.toISOString()} (${now.getTime()})`);
+    
     // Comprobar si ya existe un registro para este usuario
     const [existing] = await db.select()
       .from(dashboardState)
-      .where(eq(dashboardState.userId, userId));
+      .where(eq(dashboardState.userId, userIdNum));
     
     console.log(`🔍 Registro actual: ${existing ? JSON.stringify(existing) : 'No existe'}`);
     
     if (existing) {
-      const updatedAt = new Date();
-      console.log(`⏱️ Actualizando con nueva fecha: ${updatedAt.toISOString()}`);
+      console.log(`⏱️ Actualizando con nueva fecha: ${now.toISOString()}`);
       
-      // Actualizar el registro existente con fecha explícita
-      await db.update(dashboardState)
+      // Actualizar el registro existente con fecha explícita (FORZANDO)
+      const updateResult = await db.update(dashboardState)
         .set({
           lastEventType: type,
-          updatedAt: updatedAt
+          updatedAt: now
         })
-        .where(eq(dashboardState.userId, userId));
+        .where(eq(dashboardState.userId, userIdNum))
+        .returning();
+      
+      console.log(`🔄 Resultado de la actualización:`, updateResult);
       
       // Verificar que se haya actualizado
       const [afterUpdate] = await db.select()
         .from(dashboardState)
-        .where(eq(dashboardState.userId, userId));
+        .where(eq(dashboardState.userId, userIdNum));
       
-      console.log(`✅ Estado después de actualizar: ${JSON.stringify(afterUpdate)}`);
+      if (afterUpdate) {
+        console.log(`✅ Estado después de actualizar: ${JSON.stringify(afterUpdate)}`);
+        
+        // Verificación adicional del timestamp
+        const oldTimestamp = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+        const newTimestamp = new Date(afterUpdate.updatedAt).getTime();
+        
+        if (oldTimestamp === newTimestamp) {
+          console.warn(`⚠️ ¡ADVERTENCIA! El timestamp no cambió después de la actualización`);
+          
+          // Intento alternativo con SQL directo
+          try {
+            console.log(`🔧 Intentando actualización alternativa con SQL directo`);
+            await db.execute(`
+              UPDATE dashboard_state 
+              SET last_event_type = $1, updated_at = $2
+              WHERE user_id = $3
+            `, [type, now, userIdNum]);
+            
+            const [afterDirectUpdate] = await db.select()
+              .from(dashboardState)
+              .where(eq(dashboardState.userId, userIdNum));
+              
+            console.log(`✅ Estado después de actualización directa: ${JSON.stringify(afterDirectUpdate)}`);
+          } catch (sqlError) {
+            console.error(`❌ Error con actualización SQL directa:`, sqlError);
+          }
+        } else {
+          console.log(`✅ Timestamp actualizado correctamente: ${oldTimestamp} -> ${newTimestamp}`);
+        }
+      }
     } else {
       // Crear un nuevo registro
-      await db.insert(dashboardState).values({
-        userId,
+      console.log(`📝 Creando nuevo registro de estado para usuario ${userIdNum}`);
+      const insertResult = await db.insert(dashboardState).values({
+        userId: userIdNum,
         lastEventType: type,
-        // id y updatedAt tienen valores por defecto
-      });
+        updatedAt: now  // Explícitamente definimos el timestamp
+      }).returning();
+      
+      console.log(`✅ Registro creado:`, insertResult);
     }
     
     // Aún registramos el evento completo para historial (opcional)
     await db.insert(dashboardEvents).values({
       type,
       data,
-      userId,
-      updatedAt: new Date()
+      userId: userIdNum,
+      updatedAt: now // Mismo timestamp para consistencia
     });
     
-    console.log(`Estado del dashboard actualizado: ${type} para usuario ${userId}`);
+    console.log(`✅ Estado del dashboard actualizado: ${type} para usuario ${userIdNum} con timestamp ${now.toISOString()}`);
+    return true;
   } catch (error) {
-    console.error(`Error al actualizar estado del dashboard:`, error);
+    console.error(`❌ Error al actualizar estado del dashboard:`, error);
+    return false;
   }
 }
 

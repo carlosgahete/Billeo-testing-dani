@@ -13,8 +13,8 @@ export const dashboardEvents = pgTable("dashboard_events", {
 
 // Tabla para estado del dashboard (sistema de actualización optimizado)
 export const dashboardState = pgTable("dashboard_state", {
-  id: integer("id").primaryKey().default(1),
-  userId: integer("user_id").notNull(),
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
   lastEventType: text("last_event_type").notNull().default('refresh'),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
