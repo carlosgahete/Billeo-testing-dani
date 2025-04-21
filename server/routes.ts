@@ -3057,15 +3057,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newTransaction = await storage.createTransaction(transactionData);
         console.log("Transacción creada exitosamente:", JSON.stringify(newTransaction, null, 2));
         
-        // Notificar a todos los clientes conectados por WebSocket
-        if (global.notifyDashboardUpdate) {
+        // Notificar a todos los clientes conectados sobre la nueva transacción
+        console.log("Actualizando estado del dashboard (transacción creada)");
+        
+        if (global.updateDashboardState) {
+          global.updateDashboardState('transaction-created', {
+            id: newTransaction.id,
+            type: newTransaction.type,
+            amount: newTransaction.amount,
+            date: newTransaction.date,
+            timestamp: new Date().toISOString()
+          }, req.session.userId);
+          console.log("Estado del dashboard actualizado para nueva transacción");
+        } else if (global.notifyDashboardUpdate) {
+          // Compatibilidad con método antiguo
           global.notifyDashboardUpdate('transaction-created', {
             id: newTransaction.id,
             type: newTransaction.type,
             amount: newTransaction.amount,
             date: newTransaction.date
           });
-          console.log("Notificación WebSocket enviada para actualización de dashboard (nueva transacción)");
+          console.log("Notificación WebSocket enviada para actualización de dashboard (método antiguo)");
         }
         
         return res.status(201).json(newTransaction);
@@ -3138,15 +3150,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Failed to update transaction" });
       }
       
-      // Notificar a todos los clientes conectados por WebSocket
-      if (global.notifyDashboardUpdate) {
+      // Notificar a todos los clientes conectados sobre la transacción actualizada
+      console.log("Actualizando estado del dashboard (transacción actualizada)");
+      
+      if (global.updateDashboardState) {
+        global.updateDashboardState('transaction-updated', {
+          id: updatedTransaction.id,
+          type: updatedTransaction.type,
+          amount: updatedTransaction.amount,
+          date: updatedTransaction.date,
+          timestamp: new Date().toISOString()
+        }, req.session.userId);
+        console.log("Estado del dashboard actualizado para transacción actualizada");
+      } else if (global.notifyDashboardUpdate) {
+        // Compatibilidad con método antiguo
         global.notifyDashboardUpdate('transaction-updated', {
           id: updatedTransaction.id,
           type: updatedTransaction.type,
           amount: updatedTransaction.amount,
           date: updatedTransaction.date
         });
-        console.log("Notificación WebSocket enviada para actualización de dashboard (transacción actualizada)");
+        console.log("Notificación WebSocket enviada para actualización de dashboard (método antiguo)");
       }
       
       return res.status(200).json(updatedTransaction);
@@ -3195,6 +3219,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!deleted) {
         return res.status(500).json({ message: "Failed to delete transaction" });
+      }
+      
+      // Notificar a todos los clientes conectados sobre la transacción eliminada
+      console.log("Actualizando estado del dashboard (transacción eliminada)");
+      
+      if (global.updateDashboardState) {
+        global.updateDashboardState('transaction-deleted', {
+          id: transactionId,
+          timestamp: new Date().toISOString()
+        }, req.session.userId);
+        console.log("Estado del dashboard actualizado para transacción eliminada");
+      } else if (global.notifyDashboardUpdate) {
+        // Compatibilidad con método antiguo
+        global.notifyDashboardUpdate('transaction-deleted', {
+          id: transactionId,
+          userId: req.session.userId,
+          timestamp: new Date().toISOString()
+        });
+        console.log("Notificación WebSocket enviada para eliminación de transacción (método antiguo)");
       }
       
       return res.status(200).json({ message: "Transaction deleted successfully" });
