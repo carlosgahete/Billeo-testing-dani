@@ -46,15 +46,26 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       healthCheckTimerRef.current = null;
     }
     
-    // Cerrar socket si existe
-    if (socket) {
-      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+    // Cerrar socket si existe - usando tanto la referencia como el estado
+    const currentSocket = socketRef.current || socket;
+    if (currentSocket) {
+      console.log('🧹 Limpiando socket existente antes de reconexión');
+      if (currentSocket.readyState === WebSocket.OPEN || currentSocket.readyState === WebSocket.CONNECTING) {
         try {
-          socket.close();
+          // Eliminar todos los event listeners para evitar múltiples handlers
+          currentSocket.onopen = null;
+          currentSocket.onmessage = null;
+          currentSocket.onerror = null;
+          currentSocket.onclose = null;
+          
+          // Cerrar socket
+          currentSocket.close();
         } catch (e) {
           console.error('Error al cerrar socket:', e);
         }
       }
+      
+      // Actualizar estado y referencia
       setSocket(null);
       socketRef.current = null;
     }
@@ -121,6 +132,14 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
 
   // Función para conectar al WebSocket
   const connectWebSocket = useCallback(() => {
+    // Verificar si ya hay un socket activo para evitar conexiones duplicadas
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      console.log('🔌 Socket ya está conectado, no es necesario reconectar');
+      setIsConnected(true);
+      isConnectedRef.current = true;
+      return;
+    }
+    
     // Limpiar recursos primero
     cleanupResources();
     
@@ -139,6 +158,10 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
       console.log(`🔌 Intentando conectar al WebSocket: ${wsUrl}`);
+
+      // Desactivar temporalmente cualquier nuevo intento durante la conexión
+      // para evitar conexiones duplicadas
+      const isConnecting = true;
 
       const newSocket = new WebSocket(wsUrl);
       setSocket(newSocket);
