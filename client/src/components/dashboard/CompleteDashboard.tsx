@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, Calculator, RefreshCw } from "lucide-react";
+import { 
+  Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, 
+  InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, 
+  Calculator, RefreshCw, Wifi, WifiOff, AlertCircle
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +28,12 @@ import { useWebSocketDashboard } from "@/hooks/useWebSocketDashboard";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 import { queryClient } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CompleteDashboardProps {
   className?: string;
@@ -66,7 +76,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }, [refetch]);
   
   // Conectarnos al WebSocket para recibir actualizaciones en tiempo real
-  const { isConnected, lastMessage } = useWebSocketDashboard(handleWebSocketRefresh);
+  const { isConnected, lastMessage, connectionStatus, reconnect } = useWebSocketDashboard(handleWebSocketRefresh);
   
   // Detectar tipo de actualización para mostrar indicador específico
   useEffect(() => {
@@ -303,52 +313,123 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         
         <div className="flex items-center w-full gap-1 sm:gap-3 sm:flex-wrap sm:w-auto mt-[-10px] sm:mt-2">
           {/* Indicador de conexión WebSocket - Versión para escritorio */}
-          <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
-            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-            <span className="text-xs">{isConnected ? 'Tiempo real' : 'Desconectado'}</span>
+          <TooltipProvider>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className="hidden md:flex items-center mr-1 text-xs text-gray-600 cursor-pointer">
+                  {connectionStatus === 'connected' && (
+                    <>
+                      <Wifi className="w-3 h-3 mr-1 text-green-500" />
+                      <span className="text-xs">Tiempo real</span>
+                    </>
+                  )}
+                  {connectionStatus === 'connecting' && (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1 text-amber-500 animate-spin" />
+                      <span className="text-xs">Conectando...</span>
+                    </>
+                  )}
+                  {(connectionStatus === 'disconnected' || connectionStatus === 'error') && (
+                    <>
+                      <WifiOff className="w-3 h-3 mr-1 text-gray-400" />
+                      <span className="text-xs">Desconectado</span>
+                    </>
+                  )}
+                  {connectionStatus === 'max_attempts_reached' && (
+                    <>
+                      <AlertCircle className="w-3 h-3 mr-1 text-red-500" />
+                      <span className="text-xs">Reconexión fallida</span>
+                    </>
+                  )}
+                  
+                  {/* Botón de reconexión si está desconectado */}
+                  {(connectionStatus === 'disconnected' || connectionStatus === 'error' || connectionStatus === 'max_attempts_reached') && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="w-5 h-5 ml-1 p-0"
+                      onClick={reconnect}
+                    >
+                      <RefreshCw className="w-3 h-3 text-gray-500 hover:text-primary" />
+                    </Button>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {connectionStatus === 'connected' && 'Conectado en tiempo real. Estás recibiendo actualizaciones automáticas.'}
+                {connectionStatus === 'connecting' && 'Estableciendo conexión...'}
+                {connectionStatus === 'disconnected' && 'Desconectado. Algunas actualizaciones pueden no aparecer automáticamente.'}
+                {connectionStatus === 'error' && 'Error de conexión. Haz clic para intentar reconectar.'}
+                {connectionStatus === 'max_attempts_reached' && 'Múltiples intentos de reconexión fallidos. Haz clic para intentar manualmente.'}
+              </TooltipContent>
+            </UITooltip>
+          </TooltipProvider>
             
-            {/* Notificación de actualización en tiempo real */}
-            <AnimatePresence>
-              {updateFlash && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center ml-2 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs"
-                >
-                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                  <span>
-                    {lastUpdateType === 'invoice-created' && 'Nueva factura'}
-                    {lastUpdateType === 'invoice-updated' && 'Factura actualizada'}
-                    {lastUpdateType === 'invoice-paid' && 'Factura pagada'}
-                    {lastUpdateType === 'transaction-created' && 'Nuevo movimiento'}
-                    {lastUpdateType === 'transaction-updated' && 'Movimiento actualizado'}
-                    {!lastUpdateType && 'Actualizando...'}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Notificación de actualización en tiempo real */}
+          <AnimatePresence>
+            {updateFlash && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                className="hidden md:flex items-center ml-2 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs"
+              >
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                <span>
+                  {lastUpdateType === 'invoice-created' && 'Nueva factura'}
+                  {lastUpdateType === 'invoice-updated' && 'Factura actualizada'}
+                  {lastUpdateType === 'invoice-paid' && 'Factura pagada'}
+                  {lastUpdateType === 'transaction-created' && 'Nuevo movimiento'}
+                  {lastUpdateType === 'transaction-updated' && 'Movimiento actualizado'}
+                  {!lastUpdateType && 'Actualizando...'}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           {/* Indicador de conexión WebSocket - Versión para móvil (solo punto) */}
-          <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                 title={isConnected ? 'Conectado en tiempo real' : 'Desconectado'}></div>
-            
-            {/* Notificación móvil */}
-            <AnimatePresence>
-              {updateFlash && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="ml-1"
-                >
-                  <RefreshCw className="w-3 h-3 text-green-600 animate-spin" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <TooltipProvider>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2 cursor-pointer"
+                     onClick={connectionStatus !== 'connected' ? reconnect : undefined}>
+                  {connectionStatus === 'connected' && (
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  )}
+                  {connectionStatus === 'connecting' && (
+                    <Loader2 className="w-3 h-3 text-amber-500 animate-spin" />
+                  )}
+                  {(connectionStatus === 'disconnected' || connectionStatus === 'error') && (
+                    <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                  )}
+                  {connectionStatus === 'max_attempts_reached' && (
+                    <AlertCircle className="w-3 h-3 text-red-500" />
+                  )}
+                
+                  {/* Notificación móvil */}
+                  <AnimatePresence>
+                    {updateFlash && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="ml-1"
+                      >
+                        <RefreshCw className="w-3 h-3 text-green-600 animate-spin" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {connectionStatus === 'connected' && 'Conectado en tiempo real'}
+                {connectionStatus === 'connecting' && 'Estableciendo conexión...'}
+                {connectionStatus === 'disconnected' && 'Desconectado. Toca para reconectar.'}
+                {connectionStatus === 'error' && 'Error de conexión. Toca para reconectar.'}
+                {connectionStatus === 'max_attempts_reached' && 'Múltiples fallos. Toca para intentar de nuevo.'}
+              </TooltipContent>
+            </UITooltip>
+          </TooltipProvider>
           
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
           <div className="relative w-[45%] sm:w-auto">
