@@ -2,6 +2,21 @@ import { pgTable, text, serial, decimal, integer, boolean, timestamp, json, json
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Tabla para eventos del dashboard (sistema de actualización sin WebSocket)
+export const dashboardEvents = pgTable("dashboard_events", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // Tipo de evento: invoice-created, transaction-updated, etc.
+  data: json("data"), // Datos adicionales sobre el evento
+  userId: integer("user_id").notNull(), // Usuario que realizó la acción
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDashboardEventSchema = createInsertSchema(dashboardEvents)
+  .omit({ id: true });
+
+export type InsertDashboardEvent = z.infer<typeof insertDashboardEventSchema>;
+export type DashboardEvent = typeof dashboardEvents.$inferSelect;
+
 // User Model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

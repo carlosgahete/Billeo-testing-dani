@@ -1,0 +1,82 @@
+Gracias por compartir todo el código, está muy bien estructurado.
+
+Tu sistema usa WebSocket exclusivamente para notificar eventos que deben disparar una actualización del dashboard. Esto significa que puedes reemplazar esa parte sin perder funcionalidad si adaptas tu sistema a un enfoque basado en fetch directo desde el cliente al detectar una acción que tú ya conoces (como la creación de factura, pago, transacción, etc.).
+
+⸻
+
+Alternativa sin WebSocket (misma lógica, diferente medio)
+
+En lugar de emitir notificaciones por WebSocket, puedes:
+
+1. Enviar una petición HTTP desde el cliente al detectar cambios
+
+Cuando el cliente realiza una acción (por ejemplo, crea una factura), puedes simplemente llamar a tu endpoint /api/dashboard-status para refrescar datos.
+
+2. O lanzar eventos desde el servidor y comunicarlo al cliente cuando el cliente lo solicite
+
+Si lo que quieres es actualizar el dashboard cuando otro usuario modifica datos (como un admin creando una factura que otro cliente debe ver), puedes usar un sistema simple con una base de datos de eventos o un sistema temporal (como Redis o un campo updated_at) para indicar si hay cambios.
+
+⸻
+
+¿Cómo lo haces en tu caso?
+
+Aquí tienes una forma de hacer lo mismo que hace notifyDashboardUpdate(...), pero sin WebSocket:
+
+Cliente - Sustituir el useWebSocketDashboard
+
+export function useDashboardEventListener(refreshCallback: () => void) {
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const checkUpdates = async () => {
+      try {
+        const res = await fetch('/api/dashboard-status');
+        const data = await res.json();
+
+        if (data.updated_at && data.updated_at > lastUpdate) {
+          setLastUpdate(data.updated_at);
+          refreshCallback(); // actualiza dashboard
+        }
+      } catch (err) {
+        console.error("Error comprobando estado del dashboard:", err);
+      }
+    };
+
+    // Escuchar ciertos eventos manuales del cliente (por ejemplo, clicks)
+    const triggerUpdateCheck = () => checkUpdates();
+
+    window.addEventListener('click', triggerUpdateCheck);
+    window.addEventListener('keydown', triggerUpdateCheck);
+
+    return () => {
+      window.removeEventListener('click', triggerUpdateCheck);
+      window.removeEventListener('keydown', triggerUpdateCheck);
+    };
+  }, [refreshCallback, lastUpdate]);
+}
+
+Servidor - Endpoint /api/dashboard-status
+
+Este endpoint puede devolver un updated_at de una tabla de control, un count(*) de transacciones, o cualquier valor que indique que ha habido cambios.
+
+app.get('/api/dashboard-status', async (req, res) => {
+  const result = await db.query('SELECT MAX(updated_at) as updated_at FROM dashboard_events');
+  res.json({ updated_at: new Date(result.rows[0].updated_at).getTime() });
+});
+
+Y cuando creas/modificas algo, solo haces:
+
+await db.query('INSERT INTO dashboard_events (updated_at) VALUES (NOW())');
+
+
+
+⸻
+
+En resumen:
+	•	Puedes deshacerte de WebSocket manteniendo la funcionalidad exacta.
+	•	Lo más simple es usar fetch bajo demanda cuando el usuario interactúe (como tú querías).
+	•	Si necesitas que el dashboard se actualice por acciones hechas desde otros usuarios o sistemas, puedes almacenar un updated_at en la base de datos y consultarlo cuando el cliente haga cualquier acción.
+
+⸻
+
+¿Quieres que te adapte esta lógica al stack que estás usando (Node + React + tu ORM o DB)? Te puedo dejar un refactor limpio.

@@ -6,18 +6,16 @@ import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { requireAuth, requireAdmin } from './auth-middleware';
 import testEmailRoutes from './test-email';
-import { WebSocketServer, WebSocket } from 'ws';
-
-// Declaración de tipos globales para WebSocket
-declare global {
-  var notifyDashboardUpdate: (type: string, data?: any) => void;
-}
-
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
   interface SessionData {
     userId: number;
   }
+}
+
+// Declaración de tipos globales para la función de actualización del dashboard
+declare global {
+  var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
 }
 
 const scryptAsync = promisify(scrypt);
@@ -49,6 +47,7 @@ import {
   insertTransactionSchema,
   transactionFlexibleSchema,
   insertTaskSchema,
+  insertDashboardEventSchema,
   // Tablas para consultas directas a base de datos
   users,
   invoices,
@@ -56,7 +55,8 @@ import {
   quotes,
   clients,
   categories,
-  companies
+  companies,
+  dashboardEvents
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -1102,51 +1102,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
-  // Configurar servidor WebSocket para actualizaciones en tiempo real
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  // La función registerDashboardEvent se define aquí
   
-  // Almacenar conexiones activas
-  const clients = new Set<WebSocket>();
+  /**
+   * Función para registrar un evento de actualización del dashboard
+   * Esta función reemplaza a la antigua función notifyDashboardUpdate de WebSockets
+   * @param type - Tipo de evento (invoice-created, transaction-updated, etc.)
+   * @param data - Datos adicionales relacionados con el evento
+   * @param userId - ID del usuario que realizó la acción
+   */
+  async function registerDashboardEvent(type: string, data: any = null, userId: number) {
+    try {
+      await db.insert(dashboardEvents).values({
+        type,
+        data,
+        userId,
+        updatedAt: new Date()
+      });
+      console.log(`Evento de dashboard registrado: ${type} para usuario ${userId}`);
+    } catch (error) {
+      console.error(`Error al registrar evento de dashboard:`, error);
+    }
+  }
   
-  wss.on('connection', (ws) => {
-    console.log('Nueva conexión WebSocket establecida');
-    
-    // Añadir cliente a la lista de conexiones activas
-    clients.add(ws);
-    
-    // Eliminar la conexión cuando se cierra
-    ws.on('close', () => {
-      console.log('Conexión WebSocket cerrada');
-      clients.delete(ws);
-    });
-    
-    // Opcional: Manejar mensajes entrantes del cliente
-    ws.on('message', (message) => {
-      console.log('Mensaje recibido:', message.toString());
-    });
-    
-    // Enviar un mensaje inicial para confirmar la conexión
-    ws.send(JSON.stringify({
-      type: 'connection',
-      message: 'Conexión WebSocket establecida con éxito'
-    }));
-  });
+  // Hacer la función disponible globalmente (reemplaza a notifyDashboardUpdate)
+  global.registerDashboardEvent = registerDashboardEvent;
   
-  // Función global para notificar a todos los clientes
-  global.notifyDashboardUpdate = (type: string, data?: any) => {
-    const message = JSON.stringify({
-      type,
-      timestamp: new Date().toISOString(),
-      data
-    });
-    
-    clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
-    console.log(`WebSocket: Notificación enviada (${type}) a ${clients.size} clientes`);
-  };
+  // Declaración global para TypeScript
+  declare global {
+    var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
+  }
 
   // Auth routes are now handled by the setupAuth function
 
