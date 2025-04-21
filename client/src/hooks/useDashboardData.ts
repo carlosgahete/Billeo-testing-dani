@@ -126,7 +126,12 @@ export function useDashboardData(
         
         // Intentar primero con el endpoint fijo
         const response = await fetch(`/api/stats/dashboard-fix?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+          method: 'GET',
+          credentials: 'include', // Importante: incluir credenciales para la autenticación
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Accept': 'application/json'
+          }
         });
         
         if (response.ok) {
@@ -138,7 +143,12 @@ export function useDashboardData(
         // Si falla, intentar con el endpoint original
         console.log("⚠️ El endpoint fix falló, probando con el original...");
         const originalResponse = await fetch(`/api/stats/dashboard?year=${finalYear}&period=${finalPeriod}&${queryTimestamp}`, {
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+          method: 'GET',
+          credentials: 'include', // Importante: incluir credenciales para la autenticación
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Accept': 'application/json'
+          }
         });
         
         if (originalResponse.ok) {

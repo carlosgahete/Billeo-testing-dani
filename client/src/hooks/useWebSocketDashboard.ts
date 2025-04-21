@@ -20,10 +20,13 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
   
   // Función para autenticar con el servidor WebSocket
   const authenticate = useCallback((ws: WebSocket) => {
-    // Cuando recibamos una solicitud de autenticación, enviar token
+    // Cuando recibamos una solicitud de autenticación, enviar token o cookie de sesión
     try {
       // Obtener el token del localStorage o sessionStorage si está disponible
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      // También enviar la cookie de sesión para autenticación del lado del servidor
+      // Las cookies se envían automáticamente con la solicitud WebSocket si comparten dominio
       
       if (token && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
@@ -32,7 +35,13 @@ export function useWebSocketDashboard(refreshCallback: () => void) {
         }));
         console.log('🔐 Token de autenticación enviado al WebSocket');
       } else {
-        console.log('⚠️ No hay token disponible para autenticación WebSocket');
+        // Podemos enviar un mensaje de autenticación con userId de la sesión
+        // Esto es útil para servidores que usan sesiones en lugar de tokens JWT
+        ws.send(JSON.stringify({
+          type: 'authenticate',
+          method: 'session' // Indicamos que use la autenticación basada en sesión
+        }));
+        console.log('🔐 Autenticación basada en sesión enviada al WebSocket');
       }
     } catch (error) {
       console.error('Error al autenticar WebSocket:', error);
