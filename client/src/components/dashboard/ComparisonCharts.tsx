@@ -76,85 +76,81 @@ const ComparisonCharts = () => {
   
   // Generar datos basados en los datos reales por trimestre
   const generateQuarterlyData = (): ChartData[] => {
-    // Datos para cada trimestre
-    const fetchTrimesterData = async (quarter: string): Promise<ChartData> => {
-      try {
-        const result = await fetch(`/api/stats/dashboard?year=${selectedYear}&period=${quarter}`);
-        const data = await result.json();
-        return {
-          name: quarter.toUpperCase(),
-          ingresos: data.income || 0,
-          gastos: data.expenses || 0,
-          resultado: (data.income || 0) - (data.expenses || 0)
-        };
-      } catch (error) {
-        console.error(`Error obteniendo datos del ${quarter}:`, error);
-        return {
-          name: quarter.toUpperCase(),
-          ingresos: 0,
-          gastos: 0,
-          resultado: 0
-        };
-      }
-    };
-    
     // Usar los datos del trimestre recibido de la API
     const quarterData = data?.quarterData || {};
     
-    // Usar valores correctos para el trimestre 2 (donde están los datos) y cero para los demás
-    return [
+    // Extraer los datos de cada trimestre
+    const q1Data = quarterData.q1 || {};
+    const q2Data = quarterData.q2 || {};
+    const q3Data = quarterData.q3 || {};
+    const q4Data = quarterData.q4 || {};
+    
+    // Crear un array con los datos reales de cada trimestre
+    const result = [
       { 
         name: "Q1", 
-        ingresos: 0,
-        gastos: 0,
-        resultado: 0
+        ingresos: q1Data.income || 0,
+        gastos: q1Data.expenses || 0,
+        resultado: (q1Data.income || 0) - (q1Data.expenses || 0)
       },
       { 
         name: "Q2", 
-        ingresos: 10000, // Base imponible sin IVA
-        gastos: 1000, // Base imponible sin IVA
-        resultado: 9000 // Resultado correcto
+        ingresos: q2Data.income || 0,
+        gastos: q2Data.expenses || 0,
+        resultado: (q2Data.income || 0) - (q2Data.expenses || 0)
       },
       { 
         name: "Q3", 
-        ingresos: 0,
-        gastos: 0,
-        resultado: 0
+        ingresos: q3Data.income || 0,
+        gastos: q3Data.expenses || 0,
+        resultado: (q3Data.income || 0) - (q3Data.expenses || 0)
       },
       { 
         name: "Q4", 
-        ingresos: 0,
-        gastos: 0,
-        resultado: 0
+        ingresos: q4Data.income || 0,
+        gastos: q4Data.expenses || 0,
+        resultado: (q4Data.income || 0) - (q4Data.expenses || 0)
       }
     ];
+    
+    console.log("Quarterly data for financial comparison (net values):", {
+      Q1: { Ingresos: result[0].ingresos, Gastos: result[0].gastos, Resultado: result[0].resultado },
+      Q2: { Ingresos: result[1].ingresos, Gastos: result[1].gastos, Resultado: result[1].resultado },
+      Q3: { Ingresos: result[2].ingresos, Gastos: result[2].gastos, Resultado: result[2].resultado },
+      Q4: { Ingresos: result[3].ingresos, Gastos: result[3].gastos, Resultado: result[3].resultado }
+    });
+    
+    return result;
   };
   
   const generateYearlyData = (): ChartData[] => {
-    // Utilizamos los valores correctos de base imponible
-    const incomeBase = 10000; // Base imponible ingresos
-    const expensesBase = 1000; // Base imponible gastos
-    const resultado = incomeBase - expensesBase; // 9000
+    // Usar los datos reales del año actual
+    const currentYearData = data || {};
     
-    // Usamos datos reales para 2025 y ceros para los demás años (demo)
+    // Extraer los valores reales del año seleccionado
+    const incomeBase = currentYearData.income || 0;
+    const expensesBase = currentYearData.expenses || 0;
+    const resultado = incomeBase - expensesBase;
+    
+    // Usamos datos reales para el año seleccionado y ceros para los demás (demo)
     return [
       { 
         name: "2023", 
-        ingresos: 0, 
-        gastos: 0, 
-        resultado: 0
+        ingresos: selectedYear === "2023" ? incomeBase : 0, 
+        gastos: selectedYear === "2023" ? expensesBase : 0, 
+        resultado: selectedYear === "2023" ? resultado : 0
       },
       { 
         name: "2024", 
-        ingresos: 0, 
-        gastos: 0, 
-        resultado: 0
+        ingresos: selectedYear === "2024" ? incomeBase : 0, 
+        gastos: selectedYear === "2024" ? expensesBase : 0, 
+        resultado: selectedYear === "2024" ? resultado : 0
       },
       { 
         name: "2025", 
-        ingresos: incomeBase, 
-        gastos: expensesBase, 
-        resultado: resultado
+        ingresos: selectedYear === "2025" ? incomeBase : 0, 
+        gastos: selectedYear === "2025" ? expensesBase : 0, 
+        resultado: selectedYear === "2025" ? resultado : 0
       },
     ];
   };
@@ -280,8 +276,8 @@ const ComparisonCharts = () => {
           </h3>
           <p className="text-xs text-slate-600 mt-1">
             {comparisonType === "quarterly" 
-              ? `Ingresos: ${formatCurrency(10000)} | Gastos: ${formatCurrency(1000)} | Resultado: ${formatCurrency(9000)}`
-              : `En ${selectedYear} los ingresos totales ascienden a ${formatCurrency(10000)} con un resultado neto de ${formatCurrency(9000)}.`}
+              ? `Ingresos: ${formatCurrency(data?.income || 0)} | Gastos: ${formatCurrency(data?.expenses || 0)} | Resultado: ${formatCurrency((data?.income || 0) - (data?.expenses || 0))}`
+              : `En ${selectedYear} los ingresos totales ascienden a ${formatCurrency(data?.income || 0)} con un resultado neto de ${formatCurrency((data?.income || 0) - (data?.expenses || 0))}.`}
           </p>
         </div>
       </CardContent>
