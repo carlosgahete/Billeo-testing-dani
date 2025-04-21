@@ -370,6 +370,15 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         return parseFloat(value.toFixed(2)); // Redondeo a 2 decimales
       };
       
+      // Actualizar el estado del dashboard para que la marca de tiempo se actualice
+      if (global.updateDashboardState && userId) {
+        const eventData = { filtered: true, year, period };
+        await global.updateDashboardState('dashboard-filtered', eventData, userId);
+        console.log(`✅ Estado del dashboard actualizado con filtros: año=${year}, trimestre=${period}`);
+      } else {
+        console.warn(`⚠️ No se pudo actualizar el estado del dashboard: updateDashboardState=${!!global.updateDashboardState}, userId=${userId}`);
+      }
+      
       // Preparar respuesta con valores seguros
       return res.status(200).json({
         // Valores principales 
@@ -455,6 +464,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
     } catch (error) {
       console.error("Error en el cálculo de datos del dashboard:", error);
       
+      // Intentar actualizar el estado del dashboard incluso en caso de error
+      try {
+        if (global.updateDashboardState && userId) {
+          const eventData = { filtered: true, year, period, error: true };
+          await global.updateDashboardState('dashboard-filter-error', eventData, userId);
+          console.log(`⚠️ Estado del dashboard actualizado con error de filtro: año=${year}, trimestre=${period}`);
+        }
+      } catch (e) {
+        console.error("Error al actualizar estado del dashboard tras error:", e);
+      }
+      
       // En caso de error, devolver una respuesta mínima pero válida
       return res.status(200).json({
         income: 0,
@@ -479,6 +499,24 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
     }
   } catch (error) {
     console.error("Error crítico en el endpoint de dashboard:", error);
+    
+    // Intentar actualizar el estado del dashboard incluso en caso de error crítico
+    try {
+      if (global.updateDashboardState && req.session.userId) {
+        const errorEventData = { 
+          critical: true, 
+          year: req.query.year, 
+          period: req.query.period,
+          errorType: error?.name || 'Unknown',
+          errorMessage: error?.message || 'Error no especificado'
+        };
+        await global.updateDashboardState('dashboard-critical-error', errorEventData, req.session.userId);
+        console.log(`🛑 Estado del dashboard actualizado con error crítico`);
+      }
+    } catch (e) {
+      console.error("Error al actualizar estado del dashboard tras error crítico:", e);
+    }
+    
     return res.status(200).json({ 
       message: "Internal server error",
       income: 0, 
