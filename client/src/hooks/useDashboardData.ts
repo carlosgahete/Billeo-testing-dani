@@ -113,10 +113,6 @@ export function useDashboardData(
     // Evento general de refresco del dashboard
     window.addEventListener('dashboard-refresh-required', handleUpdateEvent);
     
-    // Evento específico para cambios en los filtros
-    // Ya no lo añadimos aquí, se maneja en el efecto de filtersRefreshTrigger
-    // window.addEventListener('dashboard-filters-changed', handleUpdateEvent);
-    
     // Limpiar todos los listeners al desmontar
     return () => {
       // Facturas
@@ -129,14 +125,48 @@ export function useDashboardData(
       
       // General
       window.removeEventListener('dashboard-refresh-required', handleUpdateEvent);
-      // Ya no lo eliminamos, no lo añadimos
-      // window.removeEventListener('dashboard-filters-changed', handleUpdateEvent);
     };
   }, []);
 
+  // Función auxiliar para obtener datos frescos del servidor
+  const fetchFreshData = async (endpoint: string, year: string, period: string, trigger: number): Promise<DashboardStats> => {
+    // Crear una URL con parámetros explícitos y una marca de tiempo aleatoria para evitar caché
+    const randomParam = Math.random().toString(36).substring(2, 15);
+    const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}`;
+    
+    // Obtener el timestamp actual para prevenir aún más el caché
+    const timestamp = new Date().getTime();
+    const urlWithTimestamp = `${url}&_t=${timestamp}`;
+    
+    console.log("🔍 SOLICITUD DIRECTA:", urlWithTimestamp);
+    
+    // Incluir los parámetros de filtro en la URL y headers adicionales
+    const response = await fetch(urlWithTimestamp, {
+      credentials: "include", // Importante: incluir las cookies en la petición
+      headers: { 
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Refresh-Trigger': trigger.toString(),
+        'X-Dashboard-Year': year,
+        'X-Dashboard-Period': period,
+        'X-Force-Refresh': 'true',
+        'X-Random': randomParam
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error al cargar datos: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
+    return data;
+  };
+  
   // Utilizamos el endpoint fix y pasamos los parámetros de filtrado explícitamente
   const dashboardQuery = useQuery({
-    // Reducir cantidad de peticiones manteniendo solo un refreshTrigger (o el filtersRefreshTrigger o nuestro propio trigger)
+    // Reducir cantidad de peticiones manteniendo solo un refreshTrigger
     queryKey: [`/api/stats/dashboard-fix`, finalYear, finalPeriod, refreshTrigger],
     // Esta configuración es clave para evitar múltiples llamadas innecesarias
     refetchOnMount: false,
@@ -145,53 +175,63 @@ export function useDashboardData(
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
       
-      // Usamos los parámetros de la queryKey que React Query mantiene actualizados
-      // No usamos valores capturados en closures que podrían estar obsoletos
-      console.log(`📊 FORZANDO CARGA AGRESIVA: año=${year}, periodo=${period} [${trigger}]...`);
+      console.log(`📊 Cargando dashboard: año=${year}, periodo=${period} [${trigger}]...`);
       
-      // Construir URL con los parámetros de filtro correctos - asegurarnos de estar pasando año y periodo
+      // Validar parámetros
       if (!year || year === "undefined") {
         console.error("❌ Error: Año no definido en la solicitud del dashboard");
         throw new Error("Año no definido en la solicitud del dashboard");
       }
       
-      // Forzar actualización limpiando cualquier dato en sessionStorage
+      // Intento de recuperar datos de sessionStorage para mostrar algo rápidamente mientras cargamos
       try {
-        // Limpiar cualquier estado almacenado para asegurar datos frescos
-        sessionStorage.removeItem('dashboard_last_data');
-        sessionStorage.removeItem('dashboard_cache');
+        const cacheKey = `dashboard_${year}_${period}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
         
-        // Crear una URL con parámetros explícitos y una marca de tiempo aleatoria para evitar caché
-        const randomParam = Math.random().toString(36).substring(2, 15);
-        const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}`;
-        
-        // Obtener el timestamp actual para prevenir aún más el caché
-        const timestamp = new Date().getTime();
-        const urlWithTimestamp = `${url}&_t=${timestamp}`;
-        
-        console.log("🔍 SOLICITUD DIRECTA CON BYPASS DE CACHÉ:", urlWithTimestamp);
-        
-        // Incluir los parámetros de filtro en la URL y headers adicionales
-        const data = await fetch(urlWithTimestamp, {
-          credentials: "include", // Importante: incluir las cookies en la petición
-          headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
-            'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
-            'X-Dashboard-Period': period, // Añadimos periodo como header para facilitar depuración
-            'X-Force-Refresh': 'true', // Header adicional para indicar que es un refresco forzado
-            'X-Random': randomParam // Header adicional para evitar caché
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          const timestamp = parsed.timestamp || 0;
+          
+          // Usar caché solo si es reciente (menos de 5 minutos)
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            console.log(`🔍 Usando datos en caché para ${year}/${period} mientras refrescamos...`);
+            
+            // Actualizar en segundo plano
+            setTimeout(() => {
+              fetchFreshData(endpoint, year, period, trigger)
+                .then(freshData => {
+                  // Actualizar la caché con datos frescos
+                  sessionStorage.setItem(cacheKey, JSON.stringify({
+                    data: freshData,
+                    timestamp: Date.now()
+                  }));
+                  console.log(`✅ Datos actualizados en segundo plano para ${year}/${period}`);
+                })
+                .catch(e => console.error('Error actualizando datos en segundo plano:', e));
+            }, 500);
+            
+            return parsed.data;
           }
-        }).then(res => {
-          if (!res.ok) {
-            throw new Error(`Error al cargar datos: ${res.status}`);
-          }
-          return res.json();
-        });
+        }
+      } catch (e) {
+        console.error('Error leyendo caché:', e);
+      }
+      
+      // Si no hay caché o está obsoleta, cargar datos frescos
+      try {
+        const data = await fetchFreshData(endpoint, year, period, trigger);
         
-        console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
+        // Guardar en sessionStorage para acceso rápido
+        try {
+          const cacheKey = `dashboard_${year}_${period}`;
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            data,
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          console.error('Error guardando en caché:', e);
+        }
+        
         return data;
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);
@@ -222,15 +262,15 @@ export function useDashboardData(
             irpfTotal: 0,
             irpfPagar: 0
           },
-          year: finalYear,
-          period: finalPeriod
+          year,
+          period
         };
       }
     },
-    staleTime: 60 * 1000, // Reducido a 1 minuto para permitir actualizaciones más frecuentes
-    refetchOnWindowFocus: true, // Ahora sí refrescamos al cambiar el foco para obtener datos actualizados
+    staleTime: 60 * 1000, // 1 minuto para permitir actualizaciones más frecuentes
+    refetchOnWindowFocus: true,
   });
-
+  
   // Depuración
   if (dashboardQuery.data) {
     console.log("Dashboard stats", {
