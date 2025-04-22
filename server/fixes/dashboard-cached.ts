@@ -53,7 +53,7 @@ export function setupCachedDashboardEndpoint(
         
         // Emitir una notificación de actualización de dashboard (sin afectar caché)
         try {
-          updateDashboardState(Number(userId), 'dashboard-stats-cached' as any, {
+          updateDashboardState('dashboard-stats-cached', {
             year,
             period,
             filterInfo: {
@@ -134,17 +134,17 @@ export function setupCachedDashboardEndpoint(
       // Calcular ingresos totales (solo facturas pagadas)
       const income = filteredInvoices
         .filter((invoice: Invoice) => invoice.status === 'paid')
-        .reduce((total: number, invoice: Invoice) => total + (invoice.subtotal || 0), 0);
+        .reduce((total: number, invoice: Invoice) => total + (Number(invoice.subtotal) || 0), 0);
         
       // Calcular gastos totales
       const expenses = filteredTransactions
         .filter((transaction: Transaction) => transaction.type === 'expense')
-        .reduce((total: number, transaction: Transaction) => total + (transaction.amount || 0), 0);
+        .reduce((total: number, transaction: Transaction) => total + (Number(transaction.amount) || 0), 0);
         
       // Calcular facturas pendientes
       const pendingInvoices = filteredInvoices
         .filter((invoice: Invoice) => invoice.status === 'pending')
-        .reduce((total: number, invoice: Invoice) => total + (invoice.total || 0), 0);
+        .reduce((total: number, invoice: Invoice) => total + (Number(invoice.total) || 0), 0);
       
       const pendingCount = filteredInvoices
         .filter((invoice: Invoice) => invoice.status === 'pending').length;

@@ -3,15 +3,16 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 /**
  * Hook para manejar actualizaciones del dashboard mediante polling
  * Reemplaza a useWebSocketDashboard con un enfoque más robusto y eficiente
+ * Optimizado con soporte de caché en servidor para reducir carga
  * @param refreshCallback - Función a llamar cuando se detecte un cambio
- * @param pollingInterval - Intervalo de consulta en ms (por defecto 15000ms = 15s)
- * @param minInterval - Intervalo mínimo entre actualizaciones forzadas (por defecto 5000ms = 5s)
+ * @param pollingInterval - Intervalo de consulta en ms (por defecto 20000ms = 20s)
+ * @param minInterval - Intervalo mínimo entre actualizaciones forzadas (por defecto 8000ms = 8s)
  * @returns Estado de la conexión y último mensaje recibido
  */
 export function useDashboardPolling(
   refreshCallback: () => void,
-  pollingInterval: number = 15000,
-  minInterval: number = 5000
+  pollingInterval: number = 20000, // Aumentado de 15s a 20s para reducir carga del servidor
+  minInterval: number = 8000 // Aumentado de 5s a 8s para dar más tiempo a la caché
 ) {
   const [isActive, setIsActive] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
@@ -45,16 +46,13 @@ export function useDashboardPolling(
       // Crear un nuevo AbortController para esta petición
       abortControllerRef.current = new AbortController();
       
-      // Realizar la petición con señal de aborto y caché
+      // Realizar la petición con señal de aborto y aprovechar caché
       const cacheKey = `/api/dashboard-status-${now}`;
       
       // Realizar la petición con señal de aborto
       const response = await fetch('/api/dashboard-status', {
         signal: abortControllerRef.current.signal,
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+        // No enviamos headers de no-cache para permitir que se use la caché del servidor
       });
       
       if (!response.ok) {
