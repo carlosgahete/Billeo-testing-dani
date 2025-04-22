@@ -142,6 +142,7 @@ export function useDashboardData(
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true, // Aseguramos que se ejecuta cuando cambian los parámetros
+    placeholderData: (previousData) => previousData, // Mantener datos anteriores mientras se cargan los nuevos
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
       
@@ -234,18 +235,21 @@ export function useDashboardData(
 
   // Depuración
   if (dashboardQuery.data) {
+    const data = dashboardQuery.data as DashboardStats;
     console.log("Dashboard stats", {
-      income: dashboardQuery.data.income,
-      expenses: dashboardQuery.data.expenses,
-      baseImponible: dashboardQuery.data.baseImponible,
-      result: dashboardQuery.data.result
+      income: data?.income,
+      expenses: data?.expenses,
+      baseImponible: data?.baseImponible,
+      result: data?.result
     });
   }
 
   return {
-    data: dashboardQuery.data,
+    data: dashboardQuery.data as DashboardStats | undefined,
     isLoading: dashboardQuery.isLoading,
     isError: dashboardQuery.isError,
-    refetch: dashboardQuery.refetch
+    refetch: dashboardQuery.refetch,
+    isFetching: dashboardQuery.isFetching,  // Útil para mostrar indicador de carga mientras se actualiza
+    dataUpdatedAt: dashboardQuery.dataUpdatedAt,  // Timestamp de la última actualización
   };
 }

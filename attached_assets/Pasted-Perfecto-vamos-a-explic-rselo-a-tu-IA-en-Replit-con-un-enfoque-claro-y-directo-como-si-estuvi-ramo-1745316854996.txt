@@ -1,0 +1,57 @@
+Perfecto, vamos a explicárselo a tu IA en Replit con un enfoque claro y directo, como si estuviéramos integrando la experiencia Apple-like paso a paso.
+
+⸻
+
+Mensaje para la IA de Replit: mejora de experiencia estilo Apple
+
+⸻
+
+Objetivo: Mejorar la experiencia del usuario al cambiar filtros (año/trimestre) en el dashboard. Actualmente, la pantalla se queda en blanco mientras se cargan los datos, lo que da una mala impresión. Queremos que la experiencia sea fluida, elegante y rápida, como una app de Apple.
+
+⸻
+
+Indicaciones técnicas para aplicar:
+
+1. Mantener los datos anteriores en pantalla mientras se cargan los nuevos
+
+Cuando se cambia el filtro, no borrar el dashboard ni dejar la pantalla en blanco. En su lugar, mantener los datos anteriores visibles y mostrar una transición suave cuando se actualicen los nuevos datos.
+
+2. Añadir indicador de carga suave (estilo Apple)
+
+En vez de un spinner genérico o pantalla vacía, usar:
+	•	Placeholder con opacity o blur
+	•	animate-pulse o Skeleton para las tarjetas mientras cargan
+
+Ejemplo en React + Tailwind:
+
+<div className={`transition-opacity duration-300 ${isFetching ? 'opacity-50' : 'opacity-100'}`}>
+  <Dashboard data={data} />
+</div>
+
+3. Usar keepPreviousData si estamos usando React Query
+
+Esto evita el “pantallazo en blanco” y mantiene la UI estable mientras se actualizan los datos en segundo plano:
+
+const { data, isLoading, isFetching } = useQuery(
+  ['dashboardData', year, period],
+  () => fetchDashboardData({ year, period }),
+  {
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
+  }
+);
+
+4. Evitar reloads completos de los componentes
+
+Si se está forzando una re-renderización completa al cambiar el filtro, evitarlo. Actualizar solo los datos, no toda la vista.
+
+⸻
+
+Resultado esperado
+	•	El dashboard nunca desaparece
+	•	Al cambiar el año o trimestre, los datos se actualizan suavemente
+	•	El usuario tiene una experiencia fluida y moderna, como lo tendría usando un iPad o una app de escritorio de Apple
+
+⸻
+
+Si necesitas más detalles o snippets exactos para adaptar lo que ya tienes en Replit, puedo darte el código listo para integrar. ¿Le decimos que estás usando useDashboardData y useDashboardPolling o prefieres que lo adaptemos directamente con React Query?
