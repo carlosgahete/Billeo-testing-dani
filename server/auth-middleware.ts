@@ -11,30 +11,47 @@ declare module 'express-session' {
 
 // Middleware para verificar autenticación
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  // Verificar si el usuario está autenticado
-  if (!req.session || !req.session.user) {
-    return res.status(401).json({ message: 'Not authenticated' });
+  // Verificar autenticación mediante passport
+  if (req.isAuthenticated()) {
+    return next();
   }
   
-  // Añadir el usuario a la solicitud para acceso en rutas protegidas
-  req.user = req.session.user;
-  next();
+  // Verificar autenticación mediante userId en sesión como respaldo
+  if (req.session && req.session.userId) {
+    console.log("Usuario autenticado mediante userId en sesión:", req.session.userId);
+    return next();
+  }
+  
+  // Si no está autenticado, devolver 401
+  console.log("Autenticación fallida - No autenticado");
+  return res.status(401).json({ message: 'Not authenticated' });
 };
 
 // Middleware para roles de administrador
 export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
   // Primero verificar autenticación
-  if (!req.session || !req.session.user) {
+  if (req.isAuthenticated()) {
+    const user = req.user as User;
+    if (user.role === 'admin') {
+      return next();
+    } else {
+      return res.status(403).json({ message: 'No tienes permisos de administrador' });
+    }
+  }
+  
+  // Verificar mediante datos en sesión como respaldo
+  if (req.session && req.session.userId && req.session.userRole === 'admin') {
+    console.log("Admin autenticado mediante sesión:", req.session.userId);
+    return next();
+  }
+  
+  // Si no está autenticado, devolver 401
+  if (!req.isAuthenticated() && (!req.session || !req.session.userId)) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
   
-  // Luego verificar rol de administrador
-  if (req.session.user.role !== 'admin') {
-    return res.status(403).json({ message: 'No tienes permisos de administrador' });
-  }
-  
-  req.user = req.session.user;
-  next();
+  // Si está autenticado pero no es admin
+  return res.status(403).json({ message: 'No tienes permisos de administrador' });
 };
 
 // Extender tipo Request para incluir el usuario
