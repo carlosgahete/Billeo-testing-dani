@@ -80,12 +80,12 @@ export const requireAuth = (req: any, res: any, next: any) => {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'financial-app-secret-key',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     cookie: { 
       secure: false, // Set to true if using https
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
       sameSite: 'lax',
       path: '/'
@@ -389,7 +389,6 @@ export function setupAuth(app: Express) {
     
     // Verificar si el usuario está autenticado mediante passport
     if (req.isAuthenticated()) {
-      console.log("Usuario autenticado mediante passport");
       const { password, ...userWithoutPassword } = req.user as SelectUser;
       return res.status(200).json(userWithoutPassword);
     }
@@ -399,19 +398,7 @@ export function setupAuth(app: Express) {
       try {
         console.log("Usuario no autenticado por passport, pero tiene userId en sesión:", req.session.userId);
         
-        // Verificar si hay datos completos en la sesión mejorada primero
-        const sessionHelper = await import('./session-helper.js');
-        const userFromSession = sessionHelper.getUserFromSession(req);
-        
-        if (userFromSession) {
-          console.log("Recuperando usuario desde sesión mejorada");
-          // Enviar los datos del usuario desde la sesión mejorada, sin la contraseña
-          const { password, ...userWithoutPassword } = userFromSession;
-          return res.status(200).json(userWithoutPassword);
-        }
-        
-        // Si no hay datos en sesión, buscar el usuario en la base de datos
-        console.log("Recuperando usuario desde base de datos");
+        // Usar SQL directo en lugar del método getUser de storage
         const result = await sql`
           SELECT * FROM users WHERE id = ${req.session.userId}
         `;
@@ -434,9 +421,6 @@ export function setupAuth(app: Express) {
             securityQuestion: user.security_question || null,
             securityAnswer: user.security_answer || null
           };
-          
-          // También almacenar estos datos en la sesión para futuras solicitudes
-          sessionHelper.enhanceUserSession(req, completeUser);
           
           const { password, ...userWithoutPassword } = completeUser;
           return res.status(200).json(userWithoutPassword);

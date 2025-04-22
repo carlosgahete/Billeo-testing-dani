@@ -24,7 +24,6 @@ import { useDashboardPolling } from "@/hooks/useDashboardPolling";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 import { queryClient } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
-import { AnimatedCard } from "@/components/ui/animated-card";
 
 interface CompleteDashboardProps {
   className?: string;
@@ -41,15 +40,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Año actual como string para uso en cálculos
   const currentYearStr = new Date().getFullYear().toString();
   
-  // Usamos el hook centralizado para obtener datos del dashboard con información mejorada
-  const { 
-    data: dashboardData, 
-    isLoading, 
-    isError, 
-    refetch: refetchData,
-    isFetching, // Para mostrar indicadores de carga mientras se actualizan datos
-    dataUpdatedAt // Para mostrar tiempo desde última actualización
-  } = useDashboardData();
+  // Usamos el hook centralizado para obtener datos del dashboard
+  const { data: dashboardData, isLoading, isError, refetch: refetchData } = useDashboardData();
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
@@ -366,58 +358,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     );
   }
 
-  // Configuración de animaciones para Framer Motion
-  const containerVariants = {
-    hidden: { opacity: 0.7, scale: 0.98 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      transition: { 
-        duration: 0.3, 
-        ease: "easeOut",
-        staggerChildren: 0.1
-      } 
-    }
-  };
-  
-  // Variantes para elementos hijos con animación escalonada
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.3, ease: "easeOut" } 
-    }
-  };
-
   return (
-    <motion.div 
-      className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4 pb-36 mb-12 -mt-6", className)}
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      {/* Indicador de carga flotante (estilo Apple) */}
-      <AnimatePresence>
-        {isFetching && !isLoading && (
-          <motion.div 
-            className="fixed top-4 right-4 bg-white/80 backdrop-blur-sm rounded-full shadow-md p-2 z-50"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <motion.div 
-              className="text-primary"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            >
-              <Loader2 className="h-5 w-5" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4 pb-36 mb-12 -mt-6", className)}>
       {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
       <div className="section-header px-0 pt-0 md:pt-0 pb-0 md:px-4 md:py-4">
         <div className="flex items-center justify-center md:justify-start mt-[-15px] md:mt-0">
@@ -628,313 +570,149 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
       </div>
-      
-      {/* Primera Fila - KPIs */}
-      <AnimatedCard 
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mt-8 md:mt-12 mb-4 md:mb-6"
-        isFetching={isFetching}
-      >
-        {/* Tarjeta de Ingresos */}
-        <Card className="dashboard-card relative overflow-hidden">
+
+      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
+          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4">
+        {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
-            <div className="flex flex-col justify-between h-full sm:p-4 p-2">
-              <div className="space-y-1">
-                <div className="flex items-center">
-                  <PiggyBank className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Ingresos</h3>
-                </div>
-                <p className="text-xl sm:text-2xl font-semibold">
-                  {formatCurrency(baseImponibleIngresos)}
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Base Imponible
-                </p>
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
               </div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full mr-1.5 ${baseImponibleIngresos > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span className="text-xs sm:text-sm text-gray-600">
-                  iva: {formatCurrency(ivaRepercutido)}
-                  </span>
-                </div>
-                <Link href="/invoices" className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 flex items-center">
-                  <span>Ver facturas</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
               </div>
             </div>
-          </div>
-        </Card>
-        
-        {/* Tarjeta de Gastos */}
-        <Card className="dashboard-card relative overflow-hidden">
-          <div className="md:p-6 p-3 sm:p-1">
-            <div className="flex flex-col justify-between h-full sm:p-4 p-2">
-              <div className="space-y-1">
-                <div className="flex items-center">
-                  <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 mr-2" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Gastos</h3>
-                </div>
-                <p className="text-xl sm:text-2xl font-semibold">
-                  {formatCurrency(baseImponibleGastos)}
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Base Imponible
-                </p>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full mr-1.5 ${baseImponibleGastos > 0 ? 'bg-amber-500' : 'bg-gray-300'}`}></div>
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    iva: {formatCurrency(ivaSoportado)}
-                  </span>
-                </div>
-                <Link href="/expenses" className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 flex items-center">
-                  <span>Ver gastos</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Card>
-        
-        {/* Tarjeta de Resultado */}
-        <Card className="dashboard-card relative overflow-hidden">
-          <div className="md:p-6 p-3 sm:p-1">
-            <div className="flex flex-col justify-between h-full sm:p-4 p-2">
-              <div className="space-y-1">
-                <div className="flex items-center">
-                  <Calculator className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 mr-2" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Resultado</h3>
-                </div>
-                <p className={`text-xl sm:text-2xl font-semibold ${isPositiveResult ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatCurrency(finalResult)}
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Base Imponible
-                </p>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full mr-1.5 ${isPositiveResult ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    Rentabilidad
-                  </span>
-                </div>
-                <span className="text-xs sm:text-sm font-medium text-gray-600">
-                  {baseImponibleIngresos > 0 
-                    ? `${Math.round((finalResult / baseImponibleIngresos) * 100)}%` 
-                    : '-'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-        
-        {/* Tarjeta de IVA */}
-        <Card className="dashboard-card relative overflow-hidden">
-          <div className="md:p-6 p-3 sm:p-1">
-            <div className="flex flex-col justify-between h-full sm:p-4 p-2">
-              <div className="space-y-1">
-                <div className="flex items-center">
-                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 mr-2" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">IVA a liquidar</h3>
-                </div>
-                <p className={`text-xl sm:text-2xl font-semibold ${ivaALiquidar >= 0 ? 'text-amber-600' : 'text-green-600'}`}>
-                  {formatCurrency(ivaALiquidar)}
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {filters?.period !== "all" ? `Trimestre ${filters?.period?.substring(1)}` : `Año ${filters?.year}`}
-                </p>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full mr-1.5 bg-amber-500`}></div>
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    Soportado: {formatCurrency(ivaSoportado)}
-                  </span>
-                </div>
-                <span className="text-xs sm:text-sm text-blue-600">
-                  {formatCurrency(ivaRepercutido)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </AnimatedCard>
-      
-      {/* Segunda Fila - KPIs secundarios */}
-      <AnimatedCard 
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4"
-        isFetching={isFetching}
-        delay={1}
-      >
-        {/* Tarjeta de IRPF */}
-        <Card className="dashboard-card relative overflow-hidden">
-          <div className="p-6">
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <InfoIcon className="h-5 w-5 text-blue-500 mr-2" />
-                  <h3 className="text-base font-medium text-gray-800">IRPF</h3>
-                </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>{filters?.period !== "all" ? `Trimestre ${filters?.period?.substring(1)}` : `Año ${filters?.year}`}</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 space-y-4">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Retenciones recibidas:</span>
-                    <span className="text-sm font-medium text-gray-800">{formatCurrency(retencionesIrpf)}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '25%' }}></div>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">IRPF facturas de gastos:</span>
-                    <span className="text-sm font-medium text-gray-800">{formatCurrency(irpfRetenciones)}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '15%' }}></div>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 font-medium">Total:</span>
-                    <span className="text-sm font-medium text-blue-600">{formatCurrency(retencionesIrpf + irpfRetenciones)}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '40%' }}></div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-end mt-2">
-                  <Link href="/taxes" className="text-xs text-blue-600 hover:text-blue-800 flex items-center">
-                    <span>Ver detalles</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-        
-        {/* Tarjeta de Pendientes */}
-        <Card className="dashboard-card relative overflow-hidden">
-          <div className="p-6">
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <ClipboardCheck className="h-5 w-5 text-amber-500 mr-2" />
-                  <h3 className="text-base font-medium text-gray-800">Pendientes</h3>
-                </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>{new Date().toLocaleDateString('es-ES', { month: 'long' })}</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 space-y-4">
-                <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">Facturas por cobrar</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-800 mr-2">{stats.pendingCount || 0}</span>
-                      <span className="text-xs font-medium bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full">
-                        {formatCurrency(stats.pendingInvoices || 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">Presupuestos enviados</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-800 mr-2">{stats.pendingQuotesCount || 0}</span>
-                      <span className="text-xs font-medium bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded-full">
-                        {formatCurrency(stats.pendingQuotes || 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-end mt-2">
-                  <Link href="/invoices?status=pending" className="text-xs text-blue-600 hover:text-blue-800 flex items-center">
-                    <span>Ver pendientes</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-        
-        {/* Link a Libro de Registro */}
-        <div className="dashboard-card fade-in border border-gray-200 rounded-md bg-gradient-to-br from-blue-50 to-white shadow-sm">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <FileText className="h-6 w-6 text-blue-500 mr-3" />
-                <h3 className="text-lg font-medium text-gray-800">Libro de Registro</h3>
-              </div>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-4">
-              Accede al libro de registro completo con todos tus movimientos, filtros avanzados y exportación para la gestión fiscal.
-            </p>
-            
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md">
-                Facturas emitidas
-              </span>
-              <span className="inline-flex items-center px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-md">
-                Facturas recibidas
-              </span>
-              <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-md">
-                Exportación
-              </span>
-            </div>
-            
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                onClick={() => navigate('/record-book')}
-              >
-                <span>Abrir libro de registro</span>
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </Button>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-[#34C759]">{formatCurrency(baseImponibleIngresos)}</div>
+              <div className="text-sm text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleIngresos + ivaRepercutido)}</div>
             </div>
           </div>
         </div>
-      </AnimatedCard>
-      
+
+        {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#FFECEC] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Gastos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-[#FF3B30]">{formatCurrency(baseImponibleGastos)}</div>
+              <div className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleGastos + ivaSoportado)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Widget de Resultado - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-blue-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-blue-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-blue-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-blue-600">
+                {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
+              </div>
+              <div className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(ivaALiquidar)}</div>
+              <div className="text-sm text-gray-500">Retenciones IRPF: {formatCurrency(retencionesIrpf)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Segunda fila: Widgets secundarios - Row 2 - De 2 columnas en tablet, 1 columna en móvil */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-2 md:mt-4">
+        {/* Widget de Facturas pendientes - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-purple-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-purple-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <Receipt className="md:h-5 md:w-5 h-4 w-4 text-purple-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Facturas pendientes</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Por cobrar</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-purple-600">{formatCurrency(stats.pendingInvoices)}</div>
+              <div className="text-sm text-gray-500">{stats.pendingCount} {stats.pendingCount === 1 ? 'factura' : 'facturas'}</div>
+              <Link href="/invoices" className="text-sm text-purple-600 mt-2 flex items-center hover:text-purple-800 hover:underline">
+                <span>Ver facturas</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Widget de Presupuestos pendientes - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-amber-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-amber-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <ClipboardCheck className="md:h-5 md:w-5 h-4 w-4 text-amber-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Presupuestos pendientes</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Por aceptar</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-amber-600">{formatCurrency(stats.pendingQuotes || 0)}</div>
+              <div className="text-sm text-gray-500">{stats.pendingQuotesCount} {stats.pendingQuotesCount === 1 ? 'presupuesto' : 'presupuestos'}</div>
+              <Link href="/quotes" className="text-sm text-amber-600 mt-2 flex items-center hover:text-amber-800 hover:underline">
+                <span>Ver presupuestos</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Widget de Impuestos - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-emerald-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-emerald-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <Calculator className="md:h-5 md:w-5 h-4 w-4 text-emerald-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Impuestos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Resumen fiscal</p>
+              </div>
+            </div>
+            <div className="flex flex-col mt-2">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-base text-gray-700 font-medium">IVA a liquidar:</span>
+                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(stats.taxes?.ivaALiquidar || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-base text-gray-700 font-medium">IRPF retenido en facturas:</span>
+                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(retencionesIrpf)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Tercera Fila - Gráficos */}
-      <AnimatedCard 
-        className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 mt-2 md:mt-4"
-        isFetching={isFetching}
-        delay={2}
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 mt-2 md:mt-4">
         {/* Gráfico de Comparativa Financiera - Estilo Apple - Col-span-1 en tablet+ */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="p-6">
@@ -1004,8 +782,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </div>
           </div>
         </div>
-      </AnimatedCard>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

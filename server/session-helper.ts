@@ -4,27 +4,6 @@
 
 import { Request } from 'express';
 import { users } from '../shared/schema';
-import 'express-session';
-
-// Extender la declaración de SessionData para incluir nuestras propiedades personalizadas
-declare module 'express-session' {
-  interface SessionData {
-    userId: number;
-    userRole: string;
-    userName: string;
-    loginTime: number;
-    sessionEnhanced: boolean;
-    userDetails: {
-      id: number;
-      username: string;
-      name: string;
-      email: string;
-      role: string;
-      businessType: string | null;
-      lastAccess: string;
-    };
-  }
-}
 
 // Definir un tipo compatible con los usuarios de la aplicación
 type SelectUser = typeof users.$inferSelect;
@@ -51,26 +30,6 @@ export function enhanceUserSession(req: Request, user: SelectUser): void {
     // Marcador de estado de la sesión
     req.session.sessionEnhanced = true;
     
-    // Añadir información más completa del usuario
-    req.session.userDetails = {
-      id: user.id,
-      username: user.username,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      businessType: user.businessType,
-      lastAccess: new Date().toISOString()
-    };
-    
-    // Guardar la sesión de forma explícita
-    req.session.save((err) => {
-      if (err) {
-        console.error("Error al guardar la sesión mejorada:", err);
-      } else {
-        console.log("Sesión mejorada guardada correctamente");
-      }
-    });
-    
     console.log("Datos adicionales guardados en la sesión del usuario:", {
       userId: req.session.userId,
       role: req.session.userRole,
@@ -96,61 +55,7 @@ export function clearEnhancedSession(req: Request): void {
     delete req.session.userName;
     delete req.session.loginTime;
     delete req.session.sessionEnhanced;
-    delete req.session.userDetails;
-    
-    // Guardar la sesión tras limpiarla
-    req.session.save((err) => {
-      if (err) {
-        console.error("Error al guardar la sesión después de limpiarla:", err);
-      }
-    });
     
     console.log("Datos adicionales de sesión eliminados");
   }
-}
-
-/**
- * Recuperar la información del usuario desde la sesión
- * Útil cuando passport no está disponible o la sesión está parcialmente degradada
- */
-export function getUserFromSession(req: Request): SelectUser | null {
-  if (req.session && req.session.userDetails) {
-    // Reconstruir un objeto de usuario básico a partir de los datos en sesión
-    return {
-      id: req.session.userDetails.id,
-      username: req.session.userDetails.username,
-      name: req.session.userDetails.name, 
-      email: req.session.userDetails.email,
-      role: req.session.userDetails.role,
-      password: '[PROTECTED]', // Valor ficticio, nunca guardar contraseñas en sesión
-      businessType: req.session.userDetails.businessType,
-      profileImage: null,
-      resetToken: null,
-      resetTokenExpiry: null,
-      securityQuestion: null,
-      securityAnswer: null
-    } as SelectUser;
-  }
-  
-  // Si no hay datos de usuario en la sesión, pero hay un userId
-  if (req.session && req.session.userId) {
-    console.log("Hay userId en sesión pero no detalles completos:", req.session.userId);
-    // Devolver un objeto básico solo con el ID
-    return {
-      id: req.session.userId,
-      username: '',
-      name: req.session.userName || '',
-      email: '',
-      role: req.session.userRole || 'user',
-      password: '[PROTECTED]',
-      businessType: null,
-      profileImage: null,
-      resetToken: null,
-      resetTokenExpiry: null,
-      securityQuestion: null,
-      securityAnswer: null
-    } as SelectUser;
-  }
-  
-  return null;
 }

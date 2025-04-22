@@ -68,8 +68,6 @@ export function useDashboardData(
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;
-  isFetching?: boolean; // Para indicadores de carga durante actualizaciones
-  dataUpdatedAt?: number; // Timestamp de última actualización
 } {
   // Obtenemos los filtros y el trigger de actualización del hook centralizado
   const filters = useSimpleDashboardFilters();
@@ -136,21 +134,20 @@ export function useDashboardData(
     };
   }, []);
 
-  // Utilizamos el endpoint con caché y pasamos los parámetros de filtrado explícitamente
+  // Utilizamos el endpoint fix y pasamos los parámetros de filtrado explícitamente
   const dashboardQuery = useQuery({
     // Reducir cantidad de peticiones manteniendo solo un refreshTrigger (o el filtersRefreshTrigger o nuestro propio trigger)
-    queryKey: [`/api/stats/dashboard-cached`, finalYear, finalPeriod, refreshTrigger],
+    queryKey: [`/api/stats/dashboard-fix`, finalYear, finalPeriod, refreshTrigger],
     // Esta configuración es clave para evitar múltiples llamadas innecesarias
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true, // Aseguramos que se ejecuta cuando cambian los parámetros
-    placeholderData: (previousData) => previousData, // Mantener datos anteriores mientras se cargan los nuevos
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
       
       // Usamos los parámetros de la queryKey que React Query mantiene actualizados
       // No usamos valores capturados en closures que podrían estar obsoletos
-      console.log(`📊 CONSULTA OPTIMIZADA CON CACHÉ: año=${year}, periodo=${period} [${trigger}]...`);
+      console.log(`📊 FORZANDO CARGA AGRESIVA: año=${year}, periodo=${period} [${trigger}]...`);
       
       // Construir URL con los parámetros de filtro correctos - asegurarnos de estar pasando año y periodo
       if (!year || year === "undefined") {
@@ -158,35 +155,34 @@ export function useDashboardData(
         throw new Error("Año no definido en la solicitud del dashboard");
       }
       
-      // Evitamos limpiar la caché del sessionStorage, para aprovechar la caché del servidor
-      
+      // Forzar actualización limpiando cualquier dato en sessionStorage
       try {
-        // Determinar si forzamos refresco o usamos caché
-        const forceRefresh = trigger !== filtersRefreshTrigger; // Solo forzar si es un trigger manual
+        // Limpiar cualquier estado almacenado para asegurar datos frescos
+        sessionStorage.removeItem('dashboard_last_data');
+        sessionStorage.removeItem('dashboard_cache');
         
-        // Crear una URL con parámetros explícitos
+        // Crear una URL con parámetros explícitos y una marca de tiempo aleatoria para evitar caché
         const randomParam = Math.random().toString(36).substring(2, 15);
-        const url = `${endpoint}?year=${year}&period=${period}${forceRefresh ? '&forceRefresh=true' : ''}&random=${randomParam}`;
+        const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}`;
         
-        // Obtener el timestamp actual
+        // Obtener el timestamp actual para prevenir aún más el caché
         const timestamp = new Date().getTime();
         const urlWithTimestamp = `${url}&_t=${timestamp}`;
         
-        console.log(forceRefresh ? "🔍 CONSULTA CON BYPASS DE CACHÉ:" : "🚀 CONSULTA USANDO CACHÉ:", urlWithTimestamp);
+        console.log("🔍 SOLICITUD DIRECTA CON BYPASS DE CACHÉ:", urlWithTimestamp);
         
         // Incluir los parámetros de filtro en la URL y headers adicionales
         const data = await fetch(urlWithTimestamp, {
           credentials: "include", // Importante: incluir las cookies en la petición
           headers: { 
-            // Solo invalidar caché si es un refresco forzado
-            ...(forceRefresh ? {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0',
-            } : {}),
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
             'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
             'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
-            'X-Dashboard-Period': period // Añadimos periodo como header para facilitar depuración
+            'X-Dashboard-Period': period, // Añadimos periodo como header para facilitar depuración
+            'X-Force-Refresh': 'true', // Header adicional para indicar que es un refresco forzado
+            'X-Random': randomParam // Header adicional para evitar caché
           }
         }).then(res => {
           if (!res.ok) {
@@ -195,7 +191,7 @@ export function useDashboardData(
           return res.json();
         });
         
-        console.log(`✅ Datos ${forceRefresh ? 'actualizados' : 'cargados'} del dashboard (${year}/${period}) correctamente`);
+        console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
         return data;
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);
@@ -237,21 +233,18 @@ export function useDashboardData(
 
   // Depuración
   if (dashboardQuery.data) {
-    const data = dashboardQuery.data as DashboardStats;
     console.log("Dashboard stats", {
-      income: data?.income,
-      expenses: data?.expenses,
-      baseImponible: data?.baseImponible,
-      result: data?.result
+      income: dashboardQuery.data.income,
+      expenses: dashboardQuery.data.expenses,
+      baseImponible: dashboardQuery.data.baseImponible,
+      result: dashboardQuery.data.result
     });
   }
 
   return {
-    data: dashboardQuery.data as DashboardStats | undefined,
+    data: dashboardQuery.data,
     isLoading: dashboardQuery.isLoading,
     isError: dashboardQuery.isError,
-    refetch: dashboardQuery.refetch,
-    isFetching: dashboardQuery.isFetching,  // Útil para mostrar indicador de carga mientras se actualiza
-    dataUpdatedAt: dashboardQuery.dataUpdatedAt,  // Timestamp de la última actualización
+    refetch: dashboardQuery.refetch
   };
 }

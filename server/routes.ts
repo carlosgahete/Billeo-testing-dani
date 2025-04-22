@@ -84,35 +84,14 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Middleware para debug de sesiones
-  const debugSessionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    if (req.path.includes('/api/')) {
-      console.log('------- DEBUG SESIÓN -------');
-      console.log(`Ruta: ${req.method} ${req.path}`);
-      console.log(`isAuthenticated: ${req.isAuthenticated?.() || false}`);
-      console.log(`userId en sesión: ${req.session?.userId || 'No disponible'}`);
-      console.log(`sessionID: ${req.sessionID || 'No disponible'}`);
-      console.log('---------------------------');
+  // Middleware para verificar autenticación de manera consistente
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    // Verificar si el usuario está autenticado mediante passport o mediante sesión
+    if (req.isAuthenticated() || (req.session && req.session.userId)) {
+      return next();
     }
-    next();
+    return res.status(401).json({ message: "Not authenticated" });
   };
-  
-  // Usar middleware de debug para todas las rutas API
-  app.use(debugSessionMiddleware);
-  
-  // Añadir un endpoint para verificar la sesión (para debugging)
-  app.get('/api/auth/session', (req, res) => {
-    res.json({
-      authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
-      user: req.user || null,
-      sessionID: req.sessionID || null,
-      userId: req.session?.userId || null,
-      cookie: req.session?.cookie ? {
-        expires: req.session.cookie.expires,
-        maxAge: req.session.cookie.maxAge
-      } : null
-    });
-  });
   
   // Cache para almacenar categorías por usuario para optimizar rendimiento
   const categoriesCache: Record<number, {id: number, name: string, type: string}[]> = {};

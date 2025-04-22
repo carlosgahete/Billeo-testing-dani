@@ -170,14 +170,6 @@ app.use((req, res, next) => {
       import('./storage').then((storageModule) => {
         module.setupSimplifiedDashboardEndpoint(app, authModule.requireAuth, storageModule.storage);
         console.log('Endpoint simplificado del dashboard (/api/stats/dashboard-fix) configurado');
-        
-        // Una vez configurado el endpoint simplificado, configurar también el endpoint con caché
-        import('./fixes/dashboard-cached').then((cacheModule) => {
-          cacheModule.setupCachedDashboardEndpoint(app, authModule.requireAuth, storageModule.storage);
-          console.log('Endpoint optimizado con caché para el dashboard (/api/stats/dashboard-cached) configurado');
-        }).catch(err => {
-          console.error('Error al cargar el módulo con caché de dashboard:', err);
-        });
       }).catch(err => {
         console.error('Error al cargar el módulo de storage:', err);
       });
