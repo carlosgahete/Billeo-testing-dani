@@ -427,6 +427,36 @@ export function setupSimplifiedDashboardEndpoint(
           return parseFloat(value.toFixed(2)); // Redondeo a 2 decimales
         };
         
+        // Registramos el evento de cálculo en el estado del dashboard, 
+        // incluyendo información sobre los filtros aplicados
+        try {
+          if (typeof global.updateDashboardState === 'function') {
+            // Incluimos los filtros en el evento para que el cliente sepa qué filtro se aplicó
+            await global.updateDashboardState('dashboard-stats-calculated', { 
+              year, 
+              period, 
+              filterInfo: {
+                year,
+                quarter: period,
+                timestamp: new Date().toISOString()
+              },
+              // Resumen de datos para debugging
+              summary: {
+                income: safeNumber(baseImponible),
+                expenses: safeNumber(expenses),
+                invoiceCount: filteredInvoices.length,
+                transactionCount: filteredTransactions.length
+              }
+            }, userId);
+            
+            console.log(`✅ Estado del dashboard actualizado correctamente con filtros: año=${year}, trimestre=${period}`);
+          } else {
+            console.warn("⚠️ global.updateDashboardState no disponible. El estado del dashboard no será actualizado.");
+          }
+        } catch (notifyError) {
+          console.error("❌ Error al actualizar estado del dashboard:", notifyError);
+        }
+        
         // Preparar respuesta con valores seguros
         return res.status(200).json({
           // Valores principales 
@@ -512,6 +542,22 @@ export function setupSimplifiedDashboardEndpoint(
       } catch (error) {
         console.error("Error en el cálculo de datos del dashboard:", error);
         
+        // Actualizar el estado del dashboard para indicar el error
+        try {
+          if (typeof global.updateDashboardState === 'function') {
+            await global.updateDashboardState('dashboard-calculation-error', { 
+              year, 
+              period, 
+              errorType: error?.name || 'Unknown',
+              errorTime: new Date().toISOString()
+            }, userId);
+            
+            console.log(`⚠️ Estado del dashboard actualizado con error de cálculo: año=${year}, trimestre=${period}`);
+          }
+        } catch (notifyError) {
+          console.error("❌ Error al actualizar estado del dashboard tras error:", notifyError);
+        }
+        
         // En caso de error, devolver una respuesta mínima pero válida
         return res.status(200).json({
           income: 0,
@@ -536,6 +582,26 @@ export function setupSimplifiedDashboardEndpoint(
       }
     } catch (error) {
       console.error("Error crítico en el endpoint de dashboard:", error);
+      
+      // Intentar actualizar el estado del dashboard incluso en caso de error crítico
+      try {
+        if (typeof global.updateDashboardState === 'function' && req.user?.id) {
+          const errorEventData = { 
+            critical: true, 
+            year: req.query.year, 
+            period: req.query.period,
+            errorType: error?.name || 'Unknown',
+            errorMessage: error?.message || 'Error desconocido',
+            errorTime: new Date().toISOString()
+          };
+          
+          await global.updateDashboardState('dashboard-critical-error', errorEventData, req.user.id);
+          console.log(`⚠️ Estado del dashboard actualizado con error crítico`);
+        }
+      } catch (notifyError) {
+        console.error("Error secundario al notificar error crítico:", notifyError);
+      }
+      
       return res.status(200).json({ 
         message: "Internal server error",
         income: 0, 
