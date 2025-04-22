@@ -108,16 +108,100 @@ export function setupSimplifiedDashboardEndpoint(
         // Obtener datos de transacciones
         const transactions = await storage.getTransactionsByUserId(userId);
         
-        // Filtrar transacciones por año
-        const filteredTransactions = year 
-          ? transactions.filter(txn => {
-              const txnYear = new Date(txn.date).getFullYear();
-              return txnYear.toString() === year;
-            })
-          : transactions;
+        // Filtrar transacciones por año y trimestre
+        const filteredTransactions = transactions.filter(txn => {
+          const txnDate = new Date(txn.date);
+          const txnYear = txnDate.getFullYear().toString();
+          const txnQuarter = getQuarterFromDate(txnDate);
+          
+          console.log(`💰 DEBUG TRANSACCIÓN: ID=${txn.id}, fecha=${txn.date}, año=${txnYear}, trimestre=Q${txnQuarter}, tipo=${txn.type}`);
+          
+          // Si no hay filtro de año, mostramos todas
+          if (!year) {
+            console.log(`✅ Transacción ${txn.id} incluida (no hay filtro de año)`);
+            return true;
+          }
+          
+          // Si el año no coincide, filtramos
+          if (txnYear !== year) {
+            console.log(`❌ Transacción ${txn.id} filtrada por año: ${txnYear} ≠ ${year}`);
+            return false;
+          }
+          
+          // Si hay filtro de trimestre específico
+          if (period && period !== 'all') {
+            try {
+              // Normalizamos a mayúsculas para tener consistencia
+              const periodUpper = period.toString().toUpperCase();
+              // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
+              if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+                const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
+                const matches = txnQuarter === requestedQuarter;
+                console.log(`🔍 Comparando trimestre de transacción: ${txnQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+                return matches;
+              } else {
+                console.log(`⚠️ Formato de period no reconocido para transacciones: '${period}'`);
+              }
+            } catch (error) {
+              console.error(`❌ Error procesando period '${period}' para transacciones:`, error);
+            }
+            // Si hay un error o el formato no es reconocido, devolvemos false para ser conservadores
+            return false;
+          }
+          
+          // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+          console.log(`✅ Transacción ${txn.id} incluida (año ${txnYear})`);
+          return true;
+        });
           
         // Obtener datos de presupuestos
         const quotes = await storage.getQuotesByUserId(userId);
+        
+        // Filtrar presupuestos por año y trimestre
+        const filteredQuotes = quotes.filter(quote => {
+          const quoteDate = new Date(quote.issueDate);
+          const quoteYear = quoteDate.getFullYear().toString();
+          const quoteQuarter = getQuarterFromDate(quoteDate);
+          
+          console.log(`📝 DEBUG PRESUPUESTO: ID=${quote.id}, fecha=${quote.issueDate}, año=${quoteYear}, trimestre=Q${quoteQuarter}`);
+          
+          // Si no hay filtro de año, mostramos todos
+          if (!year) {
+            console.log(`✅ Presupuesto ${quote.id} incluido (no hay filtro de año)`);
+            return true;
+          }
+          
+          // Si el año no coincide, filtramos
+          if (quoteYear !== year) {
+            console.log(`❌ Presupuesto ${quote.id} filtrado por año: ${quoteYear} ≠ ${year}`);
+            return false;
+          }
+          
+          // Si hay filtro de trimestre específico
+          if (period && period !== 'all') {
+            try {
+              // Normalizamos a mayúsculas para tener consistencia
+              const periodUpper = period.toString().toUpperCase();
+              // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
+              if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+                const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
+                const matches = quoteQuarter === requestedQuarter;
+                console.log(`🔍 Comparando trimestre de presupuesto: ${quoteQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+                return matches;
+              } else {
+                console.log(`⚠️ Formato de period no reconocido para presupuestos: '${period}'`);
+              }
+            } catch (error) {
+              console.error(`❌ Error procesando period '${period}' para presupuestos:`, error);
+            }
+            // Si hay un error o el formato no es reconocido, devolvemos false para ser conservadores
+            return false;
+          }
+          
+          // Si tiene el año correcto y no hay filtro de trimestre, lo incluimos
+          console.log(`✅ Presupuesto ${quote.id} incluido (año ${quoteYear})`);
+          return true;
+        });
         
         // CÁLCULOS BÁSICOS
         
