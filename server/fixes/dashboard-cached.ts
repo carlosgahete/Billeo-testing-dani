@@ -162,14 +162,50 @@ export function setupCachedDashboardEndpoint(
       const pendingCount = filteredInvoices
         .filter((invoice: Invoice) => invoice.status === 'pending').length;
       
-      // Datos completos para respuesta
+      // Datos completos para respuesta, incluyendo campos adicionales necesarios para el dashboard
       const result = {
         income,
         expenses,
         pendingInvoices,
         pendingCount,
         invoiceCount: filteredInvoices.length,
-        transactionCount: filteredTransactions.length
+        transactionCount: filteredTransactions.length,
+        
+        // Campos adicionales para cálculos fiscales
+        baseImponible: income,
+        baseImponibleGastos: expenses,
+        ivaRepercutido: income * 0.21, // Cálculo aproximado para IVA (21%)
+        ivaSoportado: expenses * 0.21, // Cálculo aproximado para IVA (21%)
+        irpfRetenidoIngresos: income * 0.15, // Cálculo aproximado para IRPF (15%)
+        totalWithholdings: expenses * 0.15, // Cálculo aproximado para retenciones
+        
+        // Campos adicionales para balances
+        balance: income - expenses,
+        result: income - expenses,
+        netIncome: income * 0.85, // Ingresos netos (menos IRPF aproximado)
+        netExpenses: expenses,
+        netResult: (income * 0.85) - expenses,
+        
+        // Datos fiscales agregados
+        taxes: {
+          vat: (income * 0.21) - (expenses * 0.21),
+          incomeTax: income * 0.15,
+          ivaALiquidar: (income * 0.21) - (expenses * 0.21)
+        },
+        
+        // Estadísticas detalladas de impuestos
+        taxStats: {
+          ivaRepercutido: income * 0.21,
+          ivaSoportado: expenses * 0.21,
+          ivaLiquidar: (income * 0.21) - (expenses * 0.21),
+          irpfRetenido: income * 0.15,
+          irpfTotal: income * 0.15,
+          irpfPagar: income * 0.15
+        },
+        
+        // Información de filtros aplicados
+        year,
+        period
       };
       
       // Guardar en caché con nueva expiración
