@@ -148,21 +148,28 @@ export function setupCachedDashboardEndpoint(
       console.log(`Procesando ${allInvoices.length} facturas y ${allTransactions.length} transacciones`);
       console.log(`Filtradas: ${filteredInvoices.length} facturas y ${filteredTransactions.length} transacciones`);
         
-      // Calcular ingresos totales (incluir todas las facturas para pruebas)
-      const income = 1500; // Valor fijo para pruebas
-      console.log(`Ingresos fijos para pruebas: ${income}`);
+      // Calcular ingresos totales (facturas pagadas)
+      const income = filteredInvoices
+        .filter((invoice: Invoice) => invoice.status === 'paid')
+        .reduce((total: number, invoice: Invoice) => total + (Number(invoice.total) || 0), 0);
+      console.log(`Ingresos calculados de facturas pagadas: ${income}`);
         
-      // Calcular gastos totales (valor fijo para pruebas)
-      const expenses = 800; // Valor fijo para pruebas
-      console.log(`Gastos fijos para pruebas: ${expenses}`);
+      // Calcular gastos totales
+      const expenses = filteredTransactions
+        .filter((transaction: Transaction) => transaction.type === 'expense')
+        .reduce((total: number, transaction: Transaction) => total + (Number(transaction.amount) || 0), 0);
+      console.log(`Gastos calculados: ${expenses}`);
         
-      // Calcular facturas pendientes (valor fijo para pruebas)
-      const pendingInvoices = 500;
-      console.log(`Facturas pendientes para pruebas: ${pendingInvoices}`);
+      // Calcular facturas pendientes
+      const pendingInvoices = filteredInvoices
+        .filter((invoice: Invoice) => invoice.status === 'pending')
+        .reduce((total: number, invoice: Invoice) => total + (Number(invoice.total) || 0), 0);
+      console.log(`Total de facturas pendientes: ${pendingInvoices}`);
       
-      // Contar facturas pendientes (valor fijo para pruebas)
-      const pendingCount = 2;
-      console.log(`Número de facturas pendientes para pruebas: ${pendingCount}`);
+      // Contar facturas pendientes
+      const pendingCount = filteredInvoices
+        .filter((invoice: Invoice) => invoice.status === 'pending').length;
+      console.log(`Número de facturas pendientes: ${pendingCount}`);
       
       // Datos completos para respuesta, incluyendo campos adicionales necesarios para el dashboard
       const result = {
