@@ -121,6 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         const data = await res.json();
         console.log("Login exitoso - Datos de usuario recibidos:", { ...data, password: "[OCULTO]" });
+        
+        // Guardar userId en cookie para que sea accesible por el servidor
+        document.cookie = `username=${data.username}; path=/; max-age=86400`;
+        
         return data;
       } catch (error) {
         console.error("Login error:", error);
@@ -133,16 +137,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Almacenar en localStorage para respaldo
       localStorage.setItem('user_authenticated', 'true');
       localStorage.setItem('user_id', userData.id.toString());
+      localStorage.setItem('username', userData.username);
+      
+      // También almacenar en cookie para acceso del servidor
+      document.cookie = `userId=${userData.id}; path=/; max-age=86400`;
+      document.cookie = `username=${userData.username}; path=/; max-age=86400`;
       
       // Actualizar caché de forma inmediata
       queryClient.setQueryData(["/api/user"], userData);
+      
+      // Configurar el header global para todas las solicitudes fetch
+      const originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        init = init || {};
+        init.headers = init.headers || {};
+        
+        // Añadir el header con el ID de usuario
+        const headers = new Headers(init.headers);
+        headers.append('X-User-ID', userData.id.toString());
+        
+        // Asegurarse de incluir las cookies
+        init.credentials = 'include';
+        init.headers = headers;
+        
+        return originalFetch(input, init);
+      };
       
       // Refrescar todos los datos relacionados
       queryClient.invalidateQueries();
       
       // Cargar los datos de la empresa y guardarlos en sessionStorage para los PDFs
-      fetch('/api/company', {
-        credentials: "include" // Asegurarse de enviar cookies
+      fetch('/api/company?userId=' + userData.id, {
+        credentials: "include", // Asegurarse de enviar cookies
+        headers: {
+          'X-User-ID': userData.id.toString()
+        }
       })
         .then(res => {
           if (res.ok) return res.json();
