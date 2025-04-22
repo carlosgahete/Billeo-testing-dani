@@ -1193,7 +1193,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Endpoint para verificar estado de actualización del dashboard (reemplaza WebSocket)
-  app.get("/api/dashboard-status", requireAuth, async (req: Request, res: Response) => {
+  // Importamos el middleware de autenticación mejorado para demostración
+  const { requiereDemoAuth } = await import('./fixes/autenticacion-mejorada');
+  
+  app.get("/api/dashboard-status", requiereDemoAuth, async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
         return res.status(401).json({ message: "Not authenticated" });
