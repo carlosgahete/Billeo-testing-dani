@@ -119,11 +119,16 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         const invoiceYear = invoiceDate.getFullYear().toString();
         const invoiceQuarter = getQuarterFromDate(invoiceDate);
         
+        console.log(`📋 DEBUG FACTURA: ID=${invoice.id}, fecha=${invoice.issueDate}, año=${invoiceYear}, trimestre=${invoiceQuarter}`);
+        
         // Si no hay filtro de año, mostramos todas
         if (!year) return true;
         
         // Si el año no coincide, filtramos
-        if (invoiceYear !== year) return false;
+        if (invoiceYear !== year) {
+          console.log(`❌ Factura ${invoice.id} filtrada por año: ${invoiceYear} ≠ ${year}`);
+          return false;
+        }
         
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
@@ -133,16 +138,21 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
             const periodUpper = period.toString().toUpperCase();
             if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
               const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
-              return invoiceQuarter === requestedQuarter;
+              const matches = invoiceQuarter === requestedQuarter;
+              console.log(`🔍 Comparando trimestre de factura: ${invoiceQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+              return matches;
             } else {
               console.log(`⚠️ Formato de period no reconocido: '${period}', se esperaba Q1-Q4`);
             }
           } catch (error) {
             console.error(`❌ Error procesando period '${period}':`, error);
           }
+          // Si hay un error o el formato no es reconocido, devolvemos false
+          return false;
         }
         
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+        console.log(`✅ Factura ${invoice.id} incluida (año ${invoiceYear})`);
         return true;
       });
       
@@ -232,11 +242,16 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         const txnYear = txnDate.getFullYear().toString();
         const txnQuarter = getQuarterFromDate(txnDate);
         
+        console.log(`💰 DEBUG TRANSACCIÓN: ID=${txn.id}, fecha=${txn.date}, año=${txnYear}, trimestre=${txnQuarter}, tipo=${txn.type}`);
+        
         // Si no hay filtro de año, mostramos todas
         if (!year) return true;
         
         // Si el año no coincide, filtramos
-        if (txnYear !== year) return false;
+        if (txnYear !== year) {
+          console.log(`❌ Transacción ${txn.id} filtrada por año: ${txnYear} ≠ ${year}`);
+          return false;
+        }
         
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
@@ -246,16 +261,21 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
             // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
             if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
               const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
-              return txnQuarter === requestedQuarter;
+              const matches = txnQuarter === requestedQuarter;
+              console.log(`🔍 Comparando trimestre de transacción: ${txnQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+              return matches;
             } else {
               console.log(`⚠️ Formato de period no reconocido para transacciones: '${period}'`);
             }
           } catch (error) {
             console.error(`❌ Error procesando period '${period}' para transacciones:`, error);
           }
+          // Si hay un error o el formato no es reconocido, devolvemos false
+          return false;
         }
         
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+        console.log(`✅ Transacción ${txn.id} incluida (año ${txnYear})`);
         return true;
       });
         
@@ -268,11 +288,16 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         const quoteYear = quoteDate.getFullYear().toString();
         const quoteQuarter = getQuarterFromDate(quoteDate);
         
+        console.log(`📝 DEBUG PRESUPUESTO: ID=${quote.id}, fecha=${quote.issueDate}, año=${quoteYear}, trimestre=${quoteQuarter}`);
+        
         // Si no hay filtro de año, mostramos todas
         if (!year) return true;
         
         // Si el año no coincide, filtramos
-        if (quoteYear !== year) return false;
+        if (quoteYear !== year) {
+          console.log(`❌ Presupuesto ${quote.id} filtrado por año: ${quoteYear} ≠ ${year}`);
+          return false;
+        }
         
         // Si hay filtro de trimestre específico
         if (period && period !== 'all') {
@@ -282,16 +307,21 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
             // Si period comienza con 'Q' y tiene un número después (Q1, Q2, etc.)
             if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
               const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
-              return quoteQuarter === requestedQuarter;
+              const matches = quoteQuarter === requestedQuarter;
+              console.log(`🔍 Comparando trimestre de presupuesto: ${quoteQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+              return matches;
             } else {
               console.log(`⚠️ Formato de period no reconocido para presupuestos: '${period}'`);
             }
           } catch (error) {
             console.error(`❌ Error procesando period '${period}' para presupuestos:`, error);
           }
+          // Si hay un error o el formato no es reconocido, devolvemos false
+          return false;
         }
         
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
+        console.log(`✅ Presupuesto ${quote.id} incluido (año ${quoteYear})`);
         return true;
       });
       
