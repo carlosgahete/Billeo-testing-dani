@@ -3,6 +3,23 @@ import { IStorage } from '../storage';
 import { updateDashboardState } from '../dashboard-state';
 import { Invoice, Transaction } from '@shared/schema';
 
+// Función para enviar actualización al estado del dashboard con mejor manejo de errores
+async function sendDashboardUpdate(type: string, data: any, userId: number | string | undefined) {
+  if (userId === undefined || userId === null) {
+    console.error('❌ userId indefinido o nulo en sendDashboardUpdate');
+    return;
+  }
+  
+  // Asegurar que userId sea un número
+  const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+  
+  try {
+    await updateDashboardState(type, data, userIdNum);
+  } catch (error) {
+    console.error(`❌ Error al enviar actualización al dashboard: ${error}`);
+  }
+}
+
 // Estructura para la caché
 interface DashboardResult {
   data: any;
@@ -52,20 +69,17 @@ export function setupCachedDashboardEndpoint(
         console.log(`🚀 Usando datos en caché para dashboard (${year}/${period})`);
         
         // Emitir una notificación de actualización de dashboard (sin afectar caché)
-        try {
-          updateDashboardState('dashboard-stats-cached', {
+        // Usar el wrapper sendDashboardUpdate para mejor manejo
+        sendDashboardUpdate('dashboard-stats-cached', {
+          year,
+          period,
+          filterInfo: {
             year,
-            period,
-            filterInfo: {
-              year,
-              quarter: period,
-              timestamp: new Date().toISOString()
-            },
-            summary: cachedResult.data
-          });
-        } catch (error) {
-          console.error('Error al actualizar estado del dashboard (no crítico):', error);
-        }
+            quarter: period,
+            timestamp: new Date().toISOString()
+          },
+          summary: cachedResult.data
+        }, userId);
         
         // Devolver datos en caché
         return res.status(200).json(cachedResult.data);
@@ -168,7 +182,7 @@ export function setupCachedDashboardEndpoint(
       
       // Emitir evento de actualización
       try {
-        updateDashboardState(Number(userId), 'dashboard-stats-calculated', {
+        updateDashboardState('dashboard-stats-calculated', {
           year,
           period,
           filterInfo: {
@@ -177,7 +191,7 @@ export function setupCachedDashboardEndpoint(
             timestamp: new Date().toISOString()
           },
           summary: result
-        });
+        }, Number(userId));
       } catch (error) {
         console.error('Error al actualizar estado del dashboard:', error);
       }
