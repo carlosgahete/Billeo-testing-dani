@@ -69,7 +69,6 @@ export function setupCachedDashboardEndpoint(
         console.log(`🚀 Usando datos en caché para dashboard (${year}/${period})`);
         
         // Emitir una notificación de actualización de dashboard (sin afectar caché)
-        // Usar el wrapper sendDashboardUpdate para mejor manejo
         sendDashboardUpdate('dashboard-stats-cached', {
           year,
           period,
@@ -181,20 +180,16 @@ export function setupCachedDashboardEndpoint(
       };
       
       // Emitir evento de actualización
-      try {
-        updateDashboardState('dashboard-stats-calculated', {
+      sendDashboardUpdate('dashboard-stats-calculated', {
+        year,
+        period,
+        filterInfo: {
           year,
-          period,
-          filterInfo: {
-            year,
-            quarter: period,
-            timestamp: new Date().toISOString()
-          },
-          summary: result
-        }, Number(userId));
-      } catch (error) {
-        console.error('Error al actualizar estado del dashboard:', error);
-      }
+          quarter: period,
+          timestamp: new Date().toISOString()
+        },
+        summary: result
+      }, userId);
       
       // Responder con los datos calculados
       return res.status(200).json(result);
