@@ -134,10 +134,10 @@ export function useDashboardData(
     };
   }, []);
 
-  // Utilizamos el endpoint fix y pasamos los parámetros de filtrado explícitamente
+  // Utilizamos el endpoint con caché y pasamos los parámetros de filtrado explícitamente
   const dashboardQuery = useQuery({
     // Reducir cantidad de peticiones manteniendo solo un refreshTrigger (o el filtersRefreshTrigger o nuestro propio trigger)
-    queryKey: [`/api/stats/dashboard-fix`, finalYear, finalPeriod, refreshTrigger],
+    queryKey: [`/api/stats/dashboard-cached`, finalYear, finalPeriod, refreshTrigger],
     // Esta configuración es clave para evitar múltiples llamadas innecesarias
     refetchOnMount: false,
     refetchOnReconnect: false,
@@ -147,7 +147,7 @@ export function useDashboardData(
       
       // Usamos los parámetros de la queryKey que React Query mantiene actualizados
       // No usamos valores capturados en closures que podrían estar obsoletos
-      console.log(`📊 FORZANDO CARGA AGRESIVA: año=${year}, periodo=${period} [${trigger}]...`);
+      console.log(`📊 CONSULTA OPTIMIZADA CON CACHÉ: año=${year}, periodo=${period} [${trigger}]...`);
       
       // Construir URL con los parámetros de filtro correctos - asegurarnos de estar pasando año y periodo
       if (!year || year === "undefined") {
@@ -155,34 +155,35 @@ export function useDashboardData(
         throw new Error("Año no definido en la solicitud del dashboard");
       }
       
-      // Forzar actualización limpiando cualquier dato en sessionStorage
+      // Evitamos limpiar la caché del sessionStorage, para aprovechar la caché del servidor
+      
       try {
-        // Limpiar cualquier estado almacenado para asegurar datos frescos
-        sessionStorage.removeItem('dashboard_last_data');
-        sessionStorage.removeItem('dashboard_cache');
+        // Determinar si forzamos refresco o usamos caché
+        const forceRefresh = trigger !== filtersRefreshTrigger; // Solo forzar si es un trigger manual
         
-        // Crear una URL con parámetros explícitos y una marca de tiempo aleatoria para evitar caché
+        // Crear una URL con parámetros explícitos
         const randomParam = Math.random().toString(36).substring(2, 15);
-        const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}`;
+        const url = `${endpoint}?year=${year}&period=${period}${forceRefresh ? '&forceRefresh=true' : ''}&random=${randomParam}`;
         
-        // Obtener el timestamp actual para prevenir aún más el caché
+        // Obtener el timestamp actual
         const timestamp = new Date().getTime();
         const urlWithTimestamp = `${url}&_t=${timestamp}`;
         
-        console.log("🔍 SOLICITUD DIRECTA CON BYPASS DE CACHÉ:", urlWithTimestamp);
+        console.log(forceRefresh ? "🔍 CONSULTA CON BYPASS DE CACHÉ:" : "🚀 CONSULTA USANDO CACHÉ:", urlWithTimestamp);
         
         // Incluir los parámetros de filtro en la URL y headers adicionales
         const data = await fetch(urlWithTimestamp, {
           credentials: "include", // Importante: incluir las cookies en la petición
           headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
+            // Solo invalidar caché si es un refresco forzado
+            ...(forceRefresh ? {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+            } : {}),
             'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
             'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
-            'X-Dashboard-Period': period, // Añadimos periodo como header para facilitar depuración
-            'X-Force-Refresh': 'true', // Header adicional para indicar que es un refresco forzado
-            'X-Random': randomParam // Header adicional para evitar caché
+            'X-Dashboard-Period': period // Añadimos periodo como header para facilitar depuración
           }
         }).then(res => {
           if (!res.ok) {
@@ -191,7 +192,7 @@ export function useDashboardData(
           return res.json();
         });
         
-        console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
+        console.log(`✅ Datos ${forceRefresh ? 'actualizados' : 'cargados'} del dashboard (${year}/${period}) correctamente`);
         return data;
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);
