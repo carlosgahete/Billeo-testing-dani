@@ -114,6 +114,15 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       };
       
       // Filtrar facturas por año y trimestre si se proporcionan
+      console.log(`🔎🔎🔎 DEBUG DE FILTRADO DE FACTURAS - año: ${year}, trimestre: ${period}`);
+      
+      // Lista completa de facturas antes de filtrar
+      console.log(`📊 Total de facturas antes de filtrar: ${invoices.length}`);
+      invoices.forEach(invoice => {
+        const invoiceDate = new Date(invoice.issueDate);
+        console.log(`📑 Factura ID=${invoice.id}, fecha=${invoice.issueDate}, estado=${invoice.status}`);
+      });
+      
       const filteredInvoices = invoices.filter(invoice => {
         const invoiceDate = new Date(invoice.issueDate);
         const invoiceYear = invoiceDate.getFullYear().toString();
@@ -122,7 +131,10 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         console.log(`📋 DEBUG FACTURA: ID=${invoice.id}, fecha=${invoice.issueDate}, año=${invoiceYear}, trimestre=${invoiceQuarter}`);
         
         // Si no hay filtro de año, mostramos todas
-        if (!year) return true;
+        if (!year) {
+          console.log(`✅ Factura ${invoice.id} incluida (no hay filtro de año)`);
+          return true;
+        }
         
         // Si el año no coincide, filtramos
         if (invoiceYear !== year) {
@@ -154,6 +166,13 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
         // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
         console.log(`✅ Factura ${invoice.id} incluida (año ${invoiceYear})`);
         return true;
+      });
+      
+      // Lista de facturas después de filtrar
+      console.log(`📊 Total de facturas después de filtrar: ${filteredInvoices.length}`);
+      filteredInvoices.forEach(invoice => {
+        const invoiceDate = new Date(invoice.issueDate);
+        console.log(`📑 Factura filtrada ID=${invoice.id}, fecha=${invoice.issueDate}`);
       });
       
       // Obtener datos de transacciones
