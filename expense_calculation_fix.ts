@@ -37,7 +37,17 @@ app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Respo
       // Obtener datos de facturas
       const invoices = await storage.getInvoicesByUserId(userId);
       
-      // Añadir log para verificar cuántas facturas hay en total
+      // Añadir logs detallados para todas las facturas antes de filtrar
+      console.log(`\n===== DETALLE DE TODAS LAS FACTURAS ANTES DEL FILTRADO =====`);
+      console.log(`Total de facturas sin filtrar: ${invoices.length}`);
+      invoices.forEach(invoice => {
+        // Mostrar información detallada de cada factura
+        const fecha = new Date(invoice.issueDate);
+        const mes = fecha.getMonth() + 1; // getMonth() devuelve 0-11
+        const trimestre = Math.ceil(mes / 3); // Calcula el trimestre (1-4)
+        console.log(`Factura ID=${invoice.id}, Fecha=${fecha.toISOString().split('T')[0]}, Mes=${mes}, Trimestre=Q${trimestre}, Estado=${invoice.status}, Total=${invoice.total}`);
+      });
+      console.log(`===== FIN DETALLE FACTURAS SIN FILTRAR =====\n`);
       console.log(`📊 Total de facturas encontradas: ${invoices.length}`);
       
       // Calcular años únicos para mostrar en filtros
