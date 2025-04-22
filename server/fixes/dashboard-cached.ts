@@ -149,10 +149,17 @@ export function setupCachedDashboardEndpoint(
       console.log(`Filtradas: ${filteredInvoices.length} facturas y ${filteredTransactions.length} transacciones`);
         
       // Calcular ingresos totales (facturas pagadas)
-      const income = filteredInvoices
-        .filter((invoice: Invoice) => invoice.status === 'paid')
-        .reduce((total: number, invoice: Invoice) => total + (Number(invoice.total) || 0), 0);
-      console.log(`Ingresos calculados de facturas pagadas: ${income}`);
+      const paidInvoices = filteredInvoices.filter((invoice: Invoice) => invoice.status === 'paid');
+      const income = paidInvoices.reduce((total: number, invoice: Invoice) => total + (Number(invoice.subtotal) || 0), 0);
+      console.log(`Ingresos calculados de facturas pagadas (base imponible): ${income}`);
+      
+      // Calcular el IVA repercutido basado en cada factura individual
+      const ivaRepercutido = paidInvoices.reduce((total: number, invoice: Invoice) => {
+        // Calcular el IVA basado en la diferencia entre total y subtotal para cada factura
+        const ivaInvoice = (Number(invoice.total) || 0) - (Number(invoice.subtotal) || 0);
+        return total + ivaInvoice;
+      }, 0);
+      console.log(`IVA repercutido calculado directamente de facturas: ${ivaRepercutido}`);
         
       // Calcular gastos totales
       const expenses = filteredTransactions
@@ -171,6 +178,27 @@ export function setupCachedDashboardEndpoint(
         .filter((invoice: Invoice) => invoice.status === 'pending').length;
       console.log(`Número de facturas pendientes: ${pendingCount}`);
       
+      // Calcular IVA soportado basado en transacciones de gastos
+      const ivaSoportado = filteredTransactions
+        .filter((transaction: Transaction) => transaction.type === 'expense')
+        .reduce((total: number, transaction: Transaction) => {
+          // Si el gasto tiene IVA explícito, usarlo, de lo contrario aproximar (21%)
+          const ivaAmount = transaction.taxAmount ? Number(transaction.taxAmount) : Number(transaction.amount) * 0.21;
+          return total + ivaAmount;
+        }, 0);
+      console.log(`IVA soportado calculado: ${ivaSoportado}`);
+      
+      // Calcular IRPF retenido en ingresos
+      const irpfRetenidoIngresos = paidInvoices.reduce((total: number, invoice: Invoice) => {
+        // Si la factura tiene una retención especificada, usarla
+        if (invoice.retentionAmount) {
+          return total + Number(invoice.retentionAmount);
+        }
+        // De lo contrario, calcular 15% de retención
+        return total + (Number(invoice.subtotal) * 0.15);
+      }, 0);
+      console.log(`IRPF retenido en ingresos calculado: ${irpfRetenidoIngresos}`);
+      
       // Datos completos para respuesta, incluyendo campos adicionales necesarios para el dashboard
       const result = {
         income,
@@ -183,33 +211,33 @@ export function setupCachedDashboardEndpoint(
         // Campos adicionales para cálculos fiscales
         baseImponible: income,
         baseImponibleGastos: expenses,
-        ivaRepercutido: income * 0.21, // Cálculo aproximado para IVA (21%)
-        ivaSoportado: expenses * 0.21, // Cálculo aproximado para IVA (21%)
-        irpfRetenidoIngresos: income * 0.15, // Cálculo aproximado para IRPF (15%)
-        totalWithholdings: expenses * 0.15, // Cálculo aproximado para retenciones
+        ivaRepercutido: ivaRepercutido, // Usado el IVA calculado de las facturas
+        ivaSoportado: ivaSoportado, // Usado el IVA calculado de los gastos
+        irpfRetenidoIngresos: irpfRetenidoIngresos, // IRPF calculado de las facturas
+        totalWithholdings: expenses * 0.15, // Aproximado para retenciones de gastos
         
         // Campos adicionales para balances
         balance: income - expenses,
         result: income - expenses,
-        netIncome: income * 0.85, // Ingresos netos (menos IRPF aproximado)
+        netIncome: income - irpfRetenidoIngresos, // Ingresos menos IRPF calculado
         netExpenses: expenses,
-        netResult: (income * 0.85) - expenses,
+        netResult: (income - irpfRetenidoIngresos) - expenses,
         
         // Datos fiscales agregados
         taxes: {
-          vat: (income * 0.21) - (expenses * 0.21),
-          incomeTax: income * 0.15,
-          ivaALiquidar: (income * 0.21) - (expenses * 0.21)
+          vat: ivaRepercutido - ivaSoportado,
+          incomeTax: irpfRetenidoIngresos,
+          ivaALiquidar: ivaRepercutido - ivaSoportado
         },
         
         // Estadísticas detalladas de impuestos
         taxStats: {
-          ivaRepercutido: income * 0.21,
-          ivaSoportado: expenses * 0.21,
-          ivaLiquidar: (income * 0.21) - (expenses * 0.21),
-          irpfRetenido: income * 0.15,
-          irpfTotal: income * 0.15,
-          irpfPagar: income * 0.15
+          ivaRepercutido: ivaRepercutido,
+          ivaSoportado: ivaSoportado,
+          ivaLiquidar: ivaRepercutido - ivaSoportado,
+          irpfRetenido: irpfRetenidoIngresos,
+          irpfTotal: irpfRetenidoIngresos,
+          irpfPagar: irpfRetenidoIngresos
         },
         
         // Información de filtros aplicados
