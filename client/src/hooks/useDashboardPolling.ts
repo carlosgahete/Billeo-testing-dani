@@ -33,12 +33,19 @@ export function useDashboardPolling(
       // Crear un nuevo AbortController para esta petición
       abortControllerRef.current = new AbortController();
       
-      // Realizar la petición con señal de aborto
+      // Obtener ID de usuario del localStorage para enviarlo como header
+      const userId = localStorage.getItem('user_id') || '';
+      const username = localStorage.getItem('username') || '';
+      
+      // Realizar la petición con señal de aborto y credenciales de usuario
       const response = await fetch('/api/dashboard-status', {
         signal: abortControllerRef.current.signal,
+        credentials: 'include', // Importante para enviar cookies
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'X-User-ID': userId,
+          'X-Username': username
         }
       });
       

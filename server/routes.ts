@@ -1246,42 +1246,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/dashboard-status", requiereDemoAuth, async (req: Request, res: Response) => {
-    try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Obtenemos el estado actual del dashboard para este usuario
-      const [state] = await db.select()
-        .from(dashboardState)
-        .where(eq(dashboardState.userId, req.session.userId));
-      
-      if (!state) {
-        // Si no existe, creamos un registro inicial
-        const [newState] = await db.insert(dashboardState)
-          .values({
-            userId: req.session.userId,
-            lastEventType: 'initial',
-            // id y updatedAt tienen valores por defecto
-          })
-          .returning();
-        
-        return res.status(200).json({
-          updated_at: newState.updatedAt.getTime(),
-          lastEvent: newState.lastEventType
-        });
-      }
-      
-      // Devolvemos la fecha de la última actualización
-      return res.status(200).json({
-        updated_at: state.updatedAt.getTime(),
-        lastEvent: state.lastEventType
-      });
-    } catch (error) {
-      console.error("Error al obtener estado del dashboard:", error);
-      return res.status(500).json({ message: "Error interno del servidor" });
-    }
+  // Usar el handler mejorado para el estado del dashboard
+  app.get("/api/dashboard-status", async (req: Request, res: Response) => {
+    // Importar el handler mejorado para evitar problemas con el código existente
+    const { handleDashboardStatus } = require('./fixes/dashboard-status-mejorado');
+    return handleDashboardStatus(req, res);
+  
   });
 
   // Auth routes are now handled by the setupAuth function
