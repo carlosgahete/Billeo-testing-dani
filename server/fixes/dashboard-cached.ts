@@ -155,11 +155,22 @@ export function setupCachedDashboardEndpoint(
       
       // Calcular el IVA repercutido basado en cada factura individual
       const ivaRepercutido = paidInvoices.reduce((total: number, invoice: Invoice) => {
-        // Calcular el IVA basado en la diferencia entre total y subtotal para cada factura
-        const ivaInvoice = (Number(invoice.total) || 0) - (Number(invoice.subtotal) || 0);
+        // Obtener valores numéricos
+        const subtotal = Number(invoice.subtotal) || 0;
+        const invoiceTotal = Number(invoice.total) || 0;
+        
+        // Calcular IRPF basado en 15% del subtotal
+        const retentionEstimated = subtotal * 0.15;
+        
+        // Calcular el IVA correctamente considerando IRPF
+        // IVA = (total + IRPF) - subtotal
+        const ivaInvoice = (invoiceTotal + retentionEstimated) - subtotal;
+        
+        console.log(`Factura ${invoice.id}: subtotal=${subtotal}, total=${invoiceTotal}, retención estimada=${retentionEstimated}, IVA calculado=${ivaInvoice}`);
+        
         return total + ivaInvoice;
       }, 0);
-      console.log(`IVA repercutido calculado directamente de facturas: ${ivaRepercutido}`);
+      console.log(`IVA repercutido calculado correctamente (considerando IRPF): ${ivaRepercutido}`);
         
       // Calcular gastos totales
       const expenses = filteredTransactions
@@ -182,22 +193,19 @@ export function setupCachedDashboardEndpoint(
       const ivaSoportado = filteredTransactions
         .filter((transaction: Transaction) => transaction.type === 'expense')
         .reduce((total: number, transaction: Transaction) => {
-          // Si el gasto tiene IVA explícito, usarlo, de lo contrario aproximar (21%)
-          const ivaAmount = transaction.taxAmount ? Number(transaction.taxAmount) : Number(transaction.amount) * 0.21;
+          // Usar aproximación del 21% para el IVA ya que las transacciones no tienen campo de IVA específico
+          const ivaAmount = Number(transaction.amount) * 0.21;
           return total + ivaAmount;
         }, 0);
-      console.log(`IVA soportado calculado: ${ivaSoportado}`);
+      console.log(`IVA soportado calculado (21% estándar): ${ivaSoportado}`);
       
-      // Calcular IRPF retenido en ingresos
+      // Calcular IRPF retenido en ingresos (usando estimación estándar del 15%)
       const irpfRetenidoIngresos = paidInvoices.reduce((total: number, invoice: Invoice) => {
-        // Si la factura tiene una retención especificada, usarla
-        if (invoice.retentionAmount) {
-          return total + Number(invoice.retentionAmount);
-        }
-        // De lo contrario, calcular 15% de retención
-        return total + (Number(invoice.subtotal) * 0.15);
+        // Calcular 15% de retención estándar para autónomos
+        const retention = Number(invoice.subtotal) * 0.15;
+        return total + retention;
       }, 0);
-      console.log(`IRPF retenido en ingresos calculado: ${irpfRetenidoIngresos}`);
+      console.log(`IRPF retenido en ingresos calculado (15% estándar): ${irpfRetenidoIngresos}`);
       
       // Datos completos para respuesta, incluyendo campos adicionales necesarios para el dashboard
       const result = {
