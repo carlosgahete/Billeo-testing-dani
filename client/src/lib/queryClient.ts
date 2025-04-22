@@ -46,14 +46,20 @@ export async function apiRequest<T = any>(
     headers["Content-Type"] = "application/json";
   }
   
+  // Añadir Accept siempre para mejorar la comunicación
+  headers["Accept"] = "application/json";
+  
+  // Añadir X-Requested-With para ayudar al servidor a identificar las peticiones AJAX
+  headers["X-Requested-With"] = "XMLHttpRequest";
+  
   // Performance optimization: Usamos el método más rápido para convertir data a JSON
   const bodyData = data ? 
     (typeof data === 'string' ? data : JSON.stringify(data)) 
     : undefined;
   
-  // Agregamos cache-control para optimizar el rendimiento de las peticiones
+  // Optimizamos el rendimiento de peticiones GET
   if (validMethod === 'GET') {
-    headers["Cache-Control"] = "max-age=30"; // 30 segundos de caché para GETs
+    headers["Cache-Control"] = "no-cache"; // Evitar problemas con caché
   }
   
   try {
@@ -61,7 +67,9 @@ export async function apiRequest<T = any>(
       method: validMethod,
       headers,
       body: bodyData,
-      credentials: "include",
+      credentials: "include", // Importante para cookies
+      mode: 'cors', // Ayuda en desarrollo
+      cache: 'no-cache', // Evitar problemas de caché
     });
     
     // Logging mínimo solo para errores críticos
@@ -90,9 +98,14 @@ export const getQueryFn: <T>(options: {
     };
     
     try {
+      // Añadimos opciones adicionales para manejar mejor las cookies
       const res = await fetch(queryKey[0] as string, {
-        credentials: "include",
-        headers
+        credentials: "include", // Importante para las cookies
+        headers,
+        // Añadimos esto para evitar problemas con CORS en desarrollo
+        mode: 'cors',
+        // Caché explícita - ayuda a que las peticiones sean consistentes
+        cache: 'no-cache'
       });
   
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
