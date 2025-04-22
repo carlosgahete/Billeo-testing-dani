@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, ArrowDownToLine, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -39,56 +39,73 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryAppleProps> = ({
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [cachedData, setCachedData] = useState<{[key: string]: {categories: ExpenseCategory[], total: number}}>({});
 
   // Obtener las categorías
   const { data: categoriesData } = useQuery<any[]>({
     queryKey: ['/api/categories'],
+    staleTime: 5 * 60 * 1000, // 5 minutos de caché
   });
 
   // Obtener las transacciones (gastos)
   const { data: transactionsData } = useQuery<any[]>({
     queryKey: ['/api/transactions'],
+    staleTime: 30 * 1000, // 30 segundos de caché
   });
 
-  // Procesar datos cuando estén disponibles
+  // Crear una clave de caché basada en los filtros actuales
+  const cacheKey = useMemo(() => `${currentYear}-${currentPeriod}`, [currentYear, currentPeriod]);
+
+  // Filtrar transacciones - función memoizada para evitar recálculos innecesarios
+  const filteredTransactions = useMemo(() => {
+    if (!transactionsData) return [];
+    
+    return transactionsData.filter(transaction => {
+      // Solo considerar gastos, no ingresos
+      if (transaction.type !== 'expense') return false;
+
+      // Convertir la fecha de string a objeto Date
+      const transactionDate = new Date(transaction.date);
+      const transactionYear = transactionDate.getFullYear().toString();
+      
+      // Verificar si coincide con el año seleccionado
+      if (transactionYear !== currentYear) return false;
+      
+      // Si estamos filtrando por trimestre específico (no "all")
+      if (currentPeriod !== 'all' && currentPeriod.startsWith('q')) {
+        const transactionQuarter = getQuarterFromDate(transactionDate);
+        const filterQuarter = currentPeriod.toUpperCase();
+        return transactionQuarter === filterQuarter;
+      }
+      
+      // Si estamos filtrando por mes específico
+      if (currentPeriod !== 'all' && currentPeriod.startsWith('m')) {
+        const transactionMonth = transactionDate.getMonth() + 1; // getMonth es 0-indexed
+        const filterMonth = parseInt(currentPeriod.substring(1));
+        return transactionMonth === filterMonth;
+      }
+      
+      // Si no hay filtro específico (all), incluir todas las transacciones del año
+      return true;
+    });
+  }, [transactionsData, currentYear, currentPeriod]);
+
+  // Procesar datos cuando estén disponibles - usando memoización
   useEffect(() => {
-    if (transactionsData && categoriesData) {
+    // Si tenemos datos en caché para esta combinación de filtros, usarlos
+    if (cachedData[cacheKey]) {
+      setCategories(cachedData[cacheKey].categories);
+      setTotalExpenses(cachedData[cacheKey].total);
+      setIsLoading(false);
+      return;
+    }
+
+    if (filteredTransactions.length > 0 && categoriesData) {
       setIsLoading(true);
       
       try {
-        // Filtrar transacciones por año y trimestre si es necesario
-        const filteredTransactions = transactionsData.filter(transaction => {
-          // Solo considerar gastos, no ingresos
-          if (transaction.type !== 'expense') return false;
-
-          // Convertir la fecha de string a objeto Date
-          const transactionDate = new Date(transaction.date);
-          const transactionYear = transactionDate.getFullYear().toString();
-          
-          // Verificar si coincide con el año seleccionado
-          if (transactionYear !== currentYear) return false;
-          
-          // Si estamos filtrando por trimestre específico (no "all")
-          if (currentPeriod !== 'all' && currentPeriod.startsWith('q')) {
-            const transactionQuarter = getQuarterFromDate(transactionDate);
-            const filterQuarter = currentPeriod.toUpperCase();
-            return transactionQuarter === filterQuarter;
-          }
-          
-          // Si estamos filtrando por mes específico
-          if (currentPeriod !== 'all' && currentPeriod.startsWith('m')) {
-            const transactionMonth = transactionDate.getMonth() + 1; // getMonth es 0-indexed
-            const filterMonth = parseInt(currentPeriod.substring(1));
-            return transactionMonth === filterMonth;
-          }
-          
-          // Si no hay filtro específico (all), incluir todas las transacciones del año
-          return true;
-        });
-
         // Calcular el total de gastos
         const total = filteredTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-        setTotalExpenses(total);
 
         // Crear un mapa de categorías con sus gastos asociados
         const categoryMap: Record<number, ExpenseCategory> = {};
@@ -123,7 +140,19 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryAppleProps> = ({
           }))
           .sort((a, b) => b.value - a.value); // Ordenar de mayor a menor
 
+        // Guardar los datos procesados en caché
+        const cacheData = {
+          categories: processedCategories,
+          total: total
+        };
+        setCachedData(prevCache => ({
+          ...prevCache,
+          [cacheKey]: cacheData
+        }));
+        
+        // Actualizar estado con los datos procesados
         setCategories(processedCategories);
+        setTotalExpenses(total);
         setIsLoading(false);
       } catch (err) {
         console.error('Error al procesar datos de gastos por categoría:', err);

@@ -1,26 +1,38 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
 /**
  * Hook para manejar actualizaciones del dashboard mediante polling
  * Reemplaza a useWebSocketDashboard con un enfoque más robusto y eficiente
  * @param refreshCallback - Función a llamar cuando se detecte un cambio
- * @param pollingInterval - Intervalo de consulta en ms (por defecto 10000ms = 10s)
+ * @param pollingInterval - Intervalo de consulta en ms (por defecto 15000ms = 15s)
+ * @param minInterval - Intervalo mínimo entre actualizaciones forzadas (por defecto 5000ms = 5s)
  * @returns Estado de la conexión y último mensaje recibido
  */
 export function useDashboardPolling(
   refreshCallback: () => void,
-  pollingInterval: number = 10000
+  pollingInterval: number = 15000,
+  minInterval: number = 5000
 ) {
   const [isActive, setIsActive] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [errorCount, setErrorCount] = useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
   const intervalRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Cache para evitar refrescos innecesarios
+  const [cacheData, setCacheData] = useState<{[key: string]: any}>({});
   
   // Función para realizar la consulta al endpoint de estado
   const checkForUpdates = useCallback(async () => {
     try {
+      // Evitar actualizaciones demasiado frecuentes
+      const now = Date.now();
+      if (now - lastRefreshTime < minInterval) {
+        return;
+      }
+      
       // Cancelar consulta anterior si existe
       try {
         if (abortControllerRef.current && typeof abortControllerRef.current.abort === 'function') {
@@ -32,6 +44,9 @@ export function useDashboardPolling(
       
       // Crear un nuevo AbortController para esta petición
       abortControllerRef.current = new AbortController();
+      
+      // Realizar la petición con señal de aborto y caché
+      const cacheKey = `/api/dashboard-status-${now}`;
       
       // Realizar la petición con señal de aborto
       const response = await fetch('/api/dashboard-status', {
@@ -86,10 +101,16 @@ export function useDashboardPolling(
     }
   }, [lastUpdatedAt, errorCount, refreshCallback]);
   
+  // Función para actualizar el timestamp de refresco
+  const updateRefreshTime = useCallback(() => {
+    setLastRefreshTime(Date.now());
+  }, []);
+
   // Iniciar el polling cuando el componente se monta
   useEffect(() => {
     // Realizar una consulta inicial
     checkForUpdates();
+    updateRefreshTime();
     
     // Configurar el intervalo para consultas periódicas
     intervalRef.current = window.setInterval(() => {
@@ -111,7 +132,7 @@ export function useDashboardPolling(
         console.warn('Error al abortar petición:', err);
       }
     };
-  }, [checkForUpdates, pollingInterval]);
+  }, [checkForUpdates, pollingInterval, updateRefreshTime]);
   
   return {
     isConnected: isActive, // Mantenemos el mismo nombre que en useWebSocketDashboard para compatibilidad
