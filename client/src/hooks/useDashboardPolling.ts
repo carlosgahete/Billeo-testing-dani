@@ -22,8 +22,12 @@ export function useDashboardPolling(
   const checkForUpdates = useCallback(async () => {
     try {
       // Cancelar consulta anterior si existe
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      try {
+        if (abortControllerRef.current && typeof abortControllerRef.current.abort === 'function') {
+          abortControllerRef.current.abort();
+        }
+      } catch (err) {
+        console.warn('Error al abortar petición previa:', err);
       }
       
       // Crear un nuevo AbortController para esta petición
@@ -99,8 +103,12 @@ export function useDashboardPolling(
       }
       
       // Cancelar cualquier petición pendiente
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      try {
+        if (abortControllerRef.current && typeof abortControllerRef.current.abort === 'function') {
+          abortControllerRef.current.abort();
+        }
+      } catch (err) {
+        console.warn('Error al abortar petición:', err);
       }
     };
   }, [checkForUpdates, pollingInterval]);
