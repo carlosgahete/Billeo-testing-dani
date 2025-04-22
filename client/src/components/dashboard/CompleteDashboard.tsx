@@ -24,7 +24,6 @@ import { useDashboardPolling } from "@/hooks/useDashboardPolling";
 import { AuthenticationStatus } from "@/components/auth/AuthenticationStatus";
 import { queryClient } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
-import { SkeletonDashboard } from "@/components/ui/skeleton-dashboard";
 
 interface CompleteDashboardProps {
   className?: string;
@@ -297,21 +296,35 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         Ingresos: data.Ingresos,
         Gastos: data.Gastos,
         Resultado: data.Resultado
-      }));
+      })).reverse(); // Ordenamos de año más antiguo a más reciente
     }
   };
 
-  // Valor neto (restando impuestos) - Implementación incompleta para futuras versiones
-  if (dashboardData?.year === "none") {
-    return <div className="flex justify-center items-center h-64">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-        <p>Cargando información del dashboard...</p>
+  // Datos para el gráfico de comparativa financiera
+  const financialComparisonData = prepareFinancialComparisonData();
+  
+  // Verificar si hay algún tipo de error
+  if (isError) {
+    console.error("Error en dashboard: No se pudieron obtener los datos");
+    
+    // Error del servidor (500 u otros)
+    return <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] px-4 text-center">
+      <div className="bg-red-100 border border-red-300 rounded-lg p-6 max-w-lg">
+        <h2 className="text-xl font-semibold text-red-800 mb-2">Error al cargar datos</h2>
+        <p className="text-gray-700 mb-4">
+          Ha ocurrido un error al cargar los datos del dashboard. Este problema está siendo revisado por nuestro equipo.
+        </p>
+        <Button 
+          onClick={() => refetchData()} 
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          Intentar nuevamente
+        </Button>
       </div>
     </div>;
   }
-
-  // Mostrar estado de carga con skeleton y mensajes informativos
+  
+  // Mostrar estado de carga si está cargando datos o si estamos en transición local
   if (isLoading || isLoadingLocal) {
     // Detectar si estamos cambiando año o periodo basado en el tipo de mensaje
     const isChangingYear = lastUpdateType ? lastUpdateType.startsWith('cambiando-año-') : false;
@@ -333,26 +346,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       else if (periodValue === 'Q4' || periodValue === 'q4') periodValue = 'trimestre 4';
     }
     
-    // Determinar el mensaje de carga adecuado
-    const loadingMessage = isChangingYear 
-      ? `Cambiando al año ${yearValue}...` 
-      : isChangingPeriod 
-        ? `Filtrando por ${periodValue}...` 
-        : isLoadingLocal 
-          ? 'Actualizando filtros...' 
-          : 'Cargando dashboard...';
-    
-    // Mensaje adicional contextual para los tiempos de carga
-    const submessage = (isChangingYear || isChangingPeriod) 
-      ? "El filtrado de datos puede tardar más tiempo la primera vez para cada periodo"
-      : undefined;
-    
-    // Usar el componente de skeleton con los mensajes adecuados
-    return <SkeletonDashboard 
-      message={loadingMessage} 
-      submessage={submessage} 
-      className={className} 
-    />;
+    return (
+      <div className="flex flex-col justify-center items-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-sm text-gray-600">
+          {isChangingYear ? `Cambiando al año ${yearValue}...` : 
+           isChangingPeriod ? `Filtrando por ${periodValue}...` : 
+           isLoadingLocal ? 'Cambiando filtros...' : 'Cargando datos...'}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -567,317 +570,217 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
       </div>
-      
-      {/* Contadores KPI y stats principales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mx-2 md:mx-4">
-        {/* Ingresos Base Imponible */}
-        <Card className="p-4 shadow-sm rounded-xl hover:shadow-md transition-shadow overflow-hidden bg-white">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="text-sm font-normal text-gray-600">Base imponible (Ingresos)</h3>
-              <p className="text-2xl sm:text-3xl font-semibold text-green-600">
-                {formatCurrency(baseImponibleIngresos)}
-              </p>
-              <p className="text-xs text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)}</p>
+
+      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
+          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4">
+        {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <ArrowUp className="md:h-5 md:w-5 h-4 w-4 text-[#34C759]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Ingresos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+              </div>
             </div>
-            <div className="p-2 rounded-full bg-green-50 text-green-600 mt-1">
-              <ArrowUp className="h-4 w-4" />
-            </div>
-          </div>
-        </Card>
-        
-        {/* Gastos Base Imponible */}
-        <Card className="p-4 shadow-sm rounded-xl hover:shadow-md transition-shadow overflow-hidden bg-white">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="text-sm font-normal text-gray-600">Base imponible (Gastos)</h3>
-              <p className="text-2xl sm:text-3xl font-semibold text-red-600">
-                {formatCurrency(baseImponibleGastos)}
-              </p>
-              <p className="text-xs text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)}</p>
-            </div>
-            <div className="p-2 rounded-full bg-red-50 text-red-600 mt-1">
-              <ArrowDown className="h-4 w-4" />
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-[#34C759]">{formatCurrency(baseImponibleIngresos)}</div>
+              <div className="text-sm text-gray-500">IVA repercutido: {formatCurrency(ivaRepercutido)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleIngresos + ivaRepercutido)}</div>
             </div>
           </div>
-        </Card>
-        
-        {/* Resultado (Beneficio/Pérdida) */}
-        <Card className="p-4 shadow-sm rounded-xl hover:shadow-md transition-shadow overflow-hidden bg-white">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="text-sm font-normal text-gray-600">Resultado neto</h3>
-              <p 
-                className={`text-2xl sm:text-3xl font-semibold ${
-                  isPositiveResult ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {formatCurrency(finalResult)}
-              </p>
-              <p className="text-xs text-gray-500">
-                IVA a liquidar: {formatCurrency(ivaALiquidar)}
-              </p>
+        </div>
+
+        {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-[#FFECEC] md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Gastos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+              </div>
             </div>
-            <div className={`p-2 rounded-full ${
-              isPositiveResult ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-            } mt-1`}>
-              {isPositiveResult ? (
-                <PiggyBank className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-[#FF3B30]">{formatCurrency(baseImponibleGastos)}</div>
+              <div className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)}</div>
+              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleGastos + ivaSoportado)}</div>
             </div>
           </div>
-        </Card>
+        </div>
+
+        {/* Widget de Resultado - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-blue-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-blue-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-blue-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-blue-600">
+                {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
+              </div>
+              <div className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(ivaALiquidar)}</div>
+              <div className="text-sm text-gray-500">Retenciones IRPF: {formatCurrency(retencionesIrpf)}</div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      {/* Gráficos comparativos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8 mx-2 md:mx-4">
-        {/* Comparativa ingresos vs gastos por trimestre/año */}
-        <Card className="p-4 shadow-sm rounded-xl overflow-hidden bg-white">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-gray-700">Comparativa financiera</h3>
-            <div className="flex space-x-1 bg-gray-100 p-1 rounded-md">
-              <button
-                onClick={() => setComparisonViewType("quarterly")}
-                className={`px-2 py-1 text-xs rounded ${
-                  comparisonViewType === "quarterly" 
-                    ? "bg-white shadow-sm text-blue-600" 
-                    : "text-gray-600"
-                }`}
-              >
-                Trimestral
-              </button>
-              <button
-                onClick={() => setComparisonViewType("yearly")}
-                className={`px-2 py-1 text-xs rounded ${
-                  comparisonViewType === "yearly" 
-                    ? "bg-white shadow-sm text-blue-600" 
-                    : "text-gray-600"
-                }`}
-              >
-                Anual
-              </button>
+
+      {/* Segunda fila: Widgets secundarios - Row 2 - De 2 columnas en tablet, 1 columna en móvil */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-2 md:mt-4">
+        {/* Widget de Facturas pendientes - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-purple-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-purple-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <Receipt className="md:h-5 md:w-5 h-4 w-4 text-purple-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Facturas pendientes</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Por cobrar</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-purple-600">{formatCurrency(stats.pendingInvoices)}</div>
+              <div className="text-sm text-gray-500">{stats.pendingCount} {stats.pendingCount === 1 ? 'factura' : 'facturas'}</div>
+              <Link href="/invoices" className="text-sm text-purple-600 mt-2 flex items-center hover:text-purple-800 hover:underline">
+                <span>Ver facturas</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
             </div>
           </div>
-          
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={prepareFinancialComparisonData()}
-                margin={{ top: 5, right: 0, left: -20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                <XAxis 
-                  dataKey="quarter" 
-                  tick={{ fontSize: 12 }}
-                  axisLine={{ stroke: '#E5E7EB' }}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  formatter={(value) => [`${formatCurrency(value as number)}`, undefined]}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
-                />
-                <Legend iconType="circle" iconSize={8} />
-                <Bar dataKey="Ingresos" name="Ingresos" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="Gastos" name="Gastos" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="Resultado" name="Resultado" fill="#6366F1" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+        </div>
+
+        {/* Widget de Presupuestos pendientes - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-amber-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-amber-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <ClipboardCheck className="md:h-5 md:w-5 h-4 w-4 text-amber-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Presupuestos pendientes</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Por aceptar</p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-amber-600">{formatCurrency(stats.pendingQuotes || 0)}</div>
+              <div className="text-sm text-gray-500">{stats.pendingQuotesCount} {stats.pendingQuotesCount === 1 ? 'presupuesto' : 'presupuestos'}</div>
+              <Link href="/quotes" className="text-sm text-amber-600 mt-2 flex items-center hover:text-amber-800 hover:underline">
+                <span>Ver presupuestos</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
           </div>
-        </Card>
-        
-        {/* Distribución de gastos por categoría */}
-        <Card className="p-4 shadow-sm rounded-xl overflow-hidden bg-white">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-gray-700">Gastos por categoría</h3>
-            <InfoIcon className="h-4 w-4 text-gray-400" />
+        </div>
+
+        {/* Widget de Impuestos - Col-span-1 siempre */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-emerald-500">
+          <div className="md:p-6 p-3 sm:p-1">
+            <div className="flex items-center md:mb-5 mb-2">
+              <div className="bg-emerald-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
+                <Calculator className="md:h-5 md:w-5 h-4 w-4 text-emerald-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Impuestos</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Resumen fiscal</p>
+              </div>
+            </div>
+            <div className="flex flex-col mt-2">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-base text-gray-700 font-medium">IVA a liquidar:</span>
+                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(stats.taxes?.ivaALiquidar || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-base text-gray-700 font-medium">IRPF retenido en facturas:</span>
+                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(retencionesIrpf)}</span>
+              </div>
+            </div>
           </div>
-          
-          <div className="h-64 sm:h-72">
-            <ExpensesByCategoryApple 
-              // Para versiones futuras se podría pasar datos reales
-              // Por ahora utilizamos datos estáticos para mostrar la idea
-              data={[
-                { name: "Material oficina", value: 120 },
-                { name: "Servicios profesionales", value: 350 },
-                { name: "Alquiler", value: 500 },
-                { name: "Suministros", value: 200 },
-                { name: "Otros gastos", value: 180 },
-              ]}
-            />
-          </div>
-        </Card>
+        </div>
       </div>
-      
-      {/* Tarjetas de impuestos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-8 mx-2 md:mx-4">
-        {/* Tarjeta de IVA */}
-        <Card className="p-4 shadow-sm rounded-xl hover:shadow-md transition-shadow overflow-hidden bg-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
-              <Receipt className="h-5 w-5" />
+
+      {/* Tercera Fila - Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 mt-2 md:mt-4">
+        {/* Gráfico de Comparativa Financiera - Estilo Apple - Col-span-1 en tablet+ */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <BarChart3 className="h-5 w-5 text-blue-500 mr-3" strokeWidth={1.5} />
+                <h3 className="text-lg font-medium text-gray-800">Comparativa Financiera</h3>
+              </div>
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setComparisonViewType("quarterly")}
+                  className={`px-2 py-1 rounded-md mr-1 ${comparisonViewType === "quarterly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
+                >
+                  Trimestral
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setComparisonViewType("yearly")}
+                  className={`px-2 py-1 rounded-md ${comparisonViewType === "yearly" ? "bg-gray-100 text-gray-800" : "text-gray-500"}`}
+                >
+                  Anual
+                </Button>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-700">IVA a liquidar (trimestral)</h3>
-              <p className="text-lg font-semibold text-gray-900 mt-1">
-                {formatCurrency(ivaALiquidar)}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">IVA repercutido</span>
-              <span className="font-medium text-gray-700">{formatCurrency(ivaRepercutido)}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">IVA soportado</span>
-              <span className="font-medium text-gray-700">-{formatCurrency(ivaSoportado)}</span>
-            </div>
-            <div className="pt-2 mt-2 border-t border-gray-100 flex justify-between text-sm">
-              <span className="font-medium text-gray-500">Resultado</span>
-              <span className="font-medium text-blue-600">{formatCurrency(ivaALiquidar)}</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-xs h-8"
-              onClick={() => navigate("/taxes")}
-            >
-              <Calculator className="h-3.5 w-3.5 mr-1" />
-              Ver detalles de impuestos
-            </Button>
-          </div>
-        </Card>
-        
-        {/* Tarjeta de IRPF */}
-        <Card className="p-4 shadow-sm rounded-xl hover:shadow-md transition-shadow overflow-hidden bg-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-50 text-green-600">
-              <ClipboardCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-700">IRPF retenido</h3>
-              <p className="text-lg font-semibold text-gray-900 mt-1">
-                {formatCurrency(retencionesIrpf)}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">Retenciones ingresos</span>
-              <span className="font-medium text-gray-700">{formatCurrency(retencionesIrpf)}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">Retenciones gastos</span>
-              <span className="font-medium text-gray-700">{formatCurrency(irpfRetenciones)}</span>
-            </div>
-            <div className="pt-2 mt-2 border-t border-gray-100 flex justify-between text-sm">
-              <span className="font-medium text-gray-500">Total retenciones</span>
-              <span className="font-medium text-green-600">{formatCurrency(retencionesIrpf + irpfRetenciones)}</span>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={financialComparisonData}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="quarter" 
+                    tick={{ fontSize: 12 }}
+                    axisLine={{ stroke: '#e0e0e0' }}
+                    tickLine={{ stroke: '#e0e0e0' }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `${value}€`} 
+                    tick={{ fontSize: 12 }}
+                    axisLine={{ stroke: '#e0e0e0' }}
+                    tickLine={{ stroke: '#e0e0e0' }}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${formatCurrency(Number(value))}`, undefined]}
+                    labelFormatter={(label) => comparisonViewType === "quarterly" ? `Trimestre ${label.substring(1)}` : `Año ${label}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="Ingresos" fill="#34C759" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Gastos" fill="#FF3B30" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Resultado" fill="#007AFF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-xs h-8"
-              onClick={() => navigate("/taxes")}
-            >
-              <Calculator className="h-3.5 w-3.5 mr-1" />
-              Ver desglose completo
-            </Button>
-          </div>
-        </Card>
-        
-        {/* Tarjeta de documentos pendientes */}
-        <Card className="p-4 shadow-sm rounded-xl hover:shadow-md transition-shadow overflow-hidden bg-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-700">Documentos pendientes</h3>
-              <p className="text-lg font-semibold text-gray-900 mt-1">
-                {stats.pendingCount || 0} facturas
-              </p>
+        </div>
+
+        {/* Gastos por Categoría - Estilo Apple (sin título) */}
+        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+          <div className="p-0">
+            <div className="h-[400px]">
+              {/* Usamos el componente Apple sin filtros propios */}
+              <ExpensesByCategoryApple />
             </div>
           </div>
-          <div className="mt-3 space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">Facturas pendientes</span>
-              <span className="font-medium text-gray-700">{stats.pendingCount || 0}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">Presupuestos pendientes</span>
-              <span className="font-medium text-gray-700">{stats.pendingQuotesCount || 0}</span>
-            </div>
-            <div className="pt-2 mt-2 border-t border-gray-100 flex justify-between text-sm">
-              <span className="font-medium text-gray-500">Importe pendiente</span>
-              <span className="font-medium text-amber-600">{formatCurrency(stats.pendingInvoices || 0)}</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-xs h-8"
-              onClick={() => navigate("/invoices")}
-            >
-              <ExternalLink className="h-3.5 w-3.5 mr-1" />
-              Ver facturas pendientes
-            </Button>
-          </div>
-        </Card>
-      </div>
-      
-      {/* Footer con información de acceso a otras secciones */}
-      <div className="mt-10 text-center text-xs text-gray-500">
-        <p>Datos actualizados para el periodo: <span className="font-medium text-gray-600">
-          {filters?.period === "all" 
-            ? `Año ${filters?.year}` 
-            : `${filters?.period === "Q1" || filters?.period === "q1" ? "Trimestre 1" : 
-                filters?.period === "Q2" || filters?.period === "q2" ? "Trimestre 2" : 
-                filters?.period === "Q3" || filters?.period === "q3" ? "Trimestre 3" : 
-                filters?.period === "Q4" || filters?.period === "q4" ? "Trimestre 4" : ""} de ${filters?.year}`}
-        </span></p>
-        
-        <div className="mt-8 flex justify-center gap-2 sm:gap-4">
-          <Button 
-            variant="link" 
-            size="sm" 
-            className="text-xs h-8 text-gray-600"
-            onClick={() => navigate("/invoices")}
-          >
-            <FileText className="h-3.5 w-3.5 mr-1" />
-            Facturas
-          </Button>
-          <Button 
-            variant="link" 
-            size="sm" 
-            className="text-xs h-8 text-gray-600"
-            onClick={() => navigate("/expenses")}
-          >
-            <ArrowDown className="h-3.5 w-3.5 mr-1" />
-            Gastos
-          </Button>
-          <Button 
-            variant="link" 
-            size="sm" 
-            className="text-xs h-8 text-gray-600"
-            onClick={() => navigate("/taxes")}
-          >
-            <Calculator className="h-3.5 w-3.5 mr-1" />
-            Impuestos
-          </Button>
         </div>
       </div>
     </div>
