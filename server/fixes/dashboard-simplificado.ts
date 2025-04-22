@@ -10,6 +10,14 @@ export function setupSimplifiedDashboardEndpoint(
   requireAuth: any, 
   storage: IStorage
 ) {
+  // Importamos el middleware de autenticación mejorado
+  import('../fixes/autenticacion-mejorada').then(({ requiereDemoAuth }) => {
+    // Reemplazamos requireAuth con requiereDemoAuth en la implementación
+    requireAuth = requiereDemoAuth;
+    console.log("✅ Middleware de autenticación reemplazado con éxito en el dashboard simplificado");
+  }).catch(err => {
+    console.error("❌ Error al cargar el middleware mejorado:", err);
+  });
   app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
     try {
       console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");

@@ -1196,6 +1196,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Importamos el middleware de autenticación mejorado para demostración
   const { requiereDemoAuth } = await import('./fixes/autenticacion-mejorada');
   
+  // Reemplazamos también el requireAuth en las rutas de api/company, api/categories y api/transactions
+  app.get('/api/company', requiereDemoAuth, async (req, res) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const company = await storage.getCompanyByUserId(req.session.userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      return res.status(200).json(company);
+    } catch (error) {
+      console.error("Error en /api/company:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Categorías
+  app.get("/api/categories", requiereDemoAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const categories = await storage.getCategoriesByUserId(req.session.userId);
+      return res.status(200).json(categories);
+    } catch (error) {
+      console.error("Error en /api/categories:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Transacciones
+  app.get("/api/transactions", requiereDemoAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const transactions = await storage.getTransactionsByUserId(req.session.userId);
+      return res.status(200).json(transactions);
+    } catch (error) {
+      console.error("Error en /api/transactions:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   app.get("/api/dashboard-status", requiereDemoAuth, async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
