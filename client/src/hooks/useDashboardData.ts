@@ -68,6 +68,8 @@ export function useDashboardData(
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;
+  isFetching: boolean; // Para indicadores de carga durante actualizaciones
+  dataUpdatedAt: number; // Timestamp de última actualización
 } {
   // Obtenemos los filtros y el trigger de actualización del hook centralizado
   const filters = useSimpleDashboardFilters();

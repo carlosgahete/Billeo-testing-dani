@@ -40,8 +40,15 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Año actual como string para uso en cálculos
   const currentYearStr = new Date().getFullYear().toString();
   
-  // Usamos el hook centralizado para obtener datos del dashboard
-  const { data: dashboardData, isLoading, isError, refetch: refetchData } = useDashboardData();
+  // Usamos el hook centralizado para obtener datos del dashboard con información mejorada
+  const { 
+    data: dashboardData, 
+    isLoading, 
+    isError, 
+    refetch: refetchData,
+    isFetching, // Para mostrar indicadores de carga mientras se actualizan datos
+    dataUpdatedAt // Para mostrar tiempo desde última actualización
+  } = useDashboardData();
   // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
@@ -571,9 +578,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
+      {/* Indicador de carga durante actualización */}
+      {isFetching && !isLoading && (
+        <div className="fixed top-4 right-4 bg-white/80 backdrop-blur-sm rounded-full shadow-md p-2 z-50">
+          <div className="animate-spin text-primary">
+            <Loader2 className="h-5 w-5" />
+          </div>
+        </div>
+      )}
+      
       {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
           En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4">
+      <div 
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4 transition-all duration-300 ease-in-out ${isFetching ? 'opacity-80 scale-[0.99] blur-[0.3px]' : 'opacity-100 scale-100 blur-0'}`}>
         {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
