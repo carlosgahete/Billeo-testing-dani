@@ -131,6 +131,11 @@ const Sidebar = ({
       label: "Dashboard" 
     },
     { 
+      href: "/apple-dashboard-demo", 
+      icon: <PieChart size={20} />, 
+      label: "Dashboard Apple" 
+    },
+    { 
       href: "/invoices", 
       icon: <Receipt size={20} />, 
       label: "Facturas" 
