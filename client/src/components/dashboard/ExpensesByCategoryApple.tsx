@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, ArrowDownToLine, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useDashboardFilters } from '@/hooks/useDashboardFilters';
+import { useSimpleDashboardFilters } from '@/hooks/useSimpleDashboardFilters';
 import { useQuery } from '@tanstack/react-query';
 
 // Definición de tipos
@@ -34,7 +34,7 @@ const ExpensesByCategoryApple: React.FC<ExpensesByCategoryAppleProps> = ({
   className = '', 
   showTitle = true 
 }) => {
-  const { currentYear, currentPeriod } = useDashboardFilters();
+  const { year: currentYear, period: currentPeriod } = useSimpleDashboardFilters();
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);

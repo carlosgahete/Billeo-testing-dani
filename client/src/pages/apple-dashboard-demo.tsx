@@ -16,12 +16,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { useDashboardFilters } from '@/hooks/useDashboardFilters';
+import { useSimpleDashboardFilters } from '@/hooks/useSimpleDashboardFilters';
 import { useLocation } from 'wouter';
 
 const AppleDashboardDemo: React.FC = () => {
   const [, navigate] = useLocation();
-  const { currentYear, currentPeriod, setYear, setPeriod } = useDashboardFilters();
+  const { year: currentYear, period: currentPeriod, changeYear: setYear, changePeriod: setPeriod } = useSimpleDashboardFilters();
   
   // Obtener datos de usuario para verificar autenticación
   const { data: user, isLoading: userLoading } = useQuery<any>({
