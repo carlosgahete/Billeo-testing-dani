@@ -80,12 +80,12 @@ export const requireAuth = (req: any, res: any, next: any) => {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'financial-app-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Cambio a true para asegurar que la sesión se guarde en cada request
+    saveUninitialized: true, // Cambio a true para guardar sesiones nuevas
     store: storage.sessionStore,
     cookie: { 
       secure: false, // Set to true if using https
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
       httpOnly: true,
       sameSite: 'lax',
       path: '/'

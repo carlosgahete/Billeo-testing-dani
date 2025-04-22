@@ -94,7 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: LoginData) => {
       try {
         console.log("Iniciando proceso de login - Antes de la petición API");
-        const res = await apiRequest("POST", "/api/login", credentials);
+        
+        // Usamos fetch directamente para tener más control sobre las cookies
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify(credentials),
+          credentials: "include" // Muy importante para las cookies
+        });
+        
         console.log("Login API respuesta status:", res.status);
         
         if (!res.ok) {
@@ -118,13 +129,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (userData: Omit<SelectUser, "password">) => {
       console.log("Login mutation onSuccess - Actualizando query cache");
+      
+      // Almacenar en localStorage para respaldo
+      localStorage.setItem('user_authenticated', 'true');
+      localStorage.setItem('user_id', userData.id.toString());
+      
+      // Actualizar caché de forma inmediata
       queryClient.setQueryData(["/api/user"], userData);
       
-      // Invalidar la query para forzar una recarga fresca
-      queryClient.invalidateQueries({queryKey: ["/api/user"]});
+      // Refrescar todos los datos relacionados
+      queryClient.invalidateQueries();
       
       // Cargar los datos de la empresa y guardarlos en sessionStorage para los PDFs
-      fetch('/api/company')
+      fetch('/api/company', {
+        credentials: "include" // Asegurarse de enviar cookies
+      })
         .then(res => {
           if (res.ok) return res.json();
           return null;
