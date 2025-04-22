@@ -430,31 +430,53 @@ export function setupSimplifiedDashboardEndpoint(
         // Registramos el evento de cálculo en el estado del dashboard, 
         // incluyendo información sobre los filtros aplicados
         try {
-          if (typeof global.updateDashboardState === 'function') {
-            // Incluimos los filtros en el evento para que el cliente sepa qué filtro se aplicó
-            await global.updateDashboardState('dashboard-stats-calculated', { 
-              year, 
-              period, 
-              filterInfo: {
-                year,
-                quarter: period,
-                timestamp: new Date().toISOString()
-              },
-              // Resumen de datos para debugging
-              summary: {
-                income: safeNumber(baseImponible),
-                expenses: safeNumber(expenses),
-                invoiceCount: filteredInvoices.length,
-                transactionCount: filteredTransactions.length
-              }
-            }, userId);
+          // Importar directamente el módulo de dashboard-state para asegurar que usamos la implementación correcta
+          import('../dashboard-state').then(async (module) => {
+            try {
+              // Usar la función del módulo, no la global
+              await module.updateDashboardState('dashboard-stats-calculated', { 
+                year, 
+                period, 
+                filterInfo: {
+                  year,
+                  quarter: period,
+                  timestamp: new Date().toISOString()
+                },
+                // Resumen de datos para debugging
+                summary: {
+                  income: safeNumber(baseImponible),
+                  expenses: safeNumber(expenses),
+                  invoiceCount: filteredInvoices.length,
+                  transactionCount: filteredTransactions.length
+                }
+              }, userId);
+              
+              console.log(`✅ Estado del dashboard actualizado correctamente con filtros: año=${year}, trimestre=${period}`);
+            } catch (importError) {
+              console.error(`❌ Error al actualizar el dashboard usando el módulo importado:`, importError);
+            }
+          }).catch(importError => {
+            console.error(`❌ Error al importar el módulo de dashboard-state:`, importError);
             
-            console.log(`✅ Estado del dashboard actualizado correctamente con filtros: año=${year}, trimestre=${period}`);
-          } else {
-            console.warn("⚠️ global.updateDashboardState no disponible. El estado del dashboard no será actualizado.");
-          }
+            // Intento alternativo usando la función global si está disponible
+            if (typeof global.updateDashboardState === 'function') {
+              try {
+                // Usar la función global como último recurso
+                global.updateDashboardState('dashboard-stats-calculated', { 
+                  year, period, 
+                  fallback: true, // Marcar como intento alternativo
+                  timestamp: new Date().toISOString()
+                }, userId);
+                console.log(`✅ Estado del dashboard actualizado usando función global alternativa`);
+              } catch (globalError) {
+                console.error(`❌ Error usando updateDashboardState global:`, globalError);
+              }
+            } else {
+              console.warn("⚠️ No se pudo acceder a ninguna implementación de updateDashboardState");
+            }
+          });
         } catch (notifyError) {
-          console.error("❌ Error al actualizar estado del dashboard:", notifyError);
+          console.error("❌ Error general al actualizar estado del dashboard:", notifyError);
         }
         
         // Preparar respuesta con valores seguros
@@ -544,18 +566,34 @@ export function setupSimplifiedDashboardEndpoint(
         
         // Actualizar el estado del dashboard para indicar el error
         try {
-          if (typeof global.updateDashboardState === 'function') {
-            await global.updateDashboardState('dashboard-calculation-error', { 
-              year, 
-              period, 
-              errorType: error?.name || 'Unknown',
-              errorTime: new Date().toISOString()
-            }, userId);
-            
-            console.log(`⚠️ Estado del dashboard actualizado con error de cálculo: año=${year}, trimestre=${period}`);
-          }
+          // Importar directamente el módulo
+          import('../dashboard-state').then(async (module) => {
+            try {
+              await module.updateDashboardState('dashboard-calculation-error', { 
+                year, 
+                period, 
+                errorType: error?.name || 'Unknown',
+                errorTime: new Date().toISOString()
+              }, userId);
+              
+              console.log(`⚠️ Estado del dashboard actualizado con error de cálculo: año=${year}, trimestre=${period}`);
+            } catch (moduleError) {
+              console.error(`❌ Error al actualizar estado con módulo importado:`, moduleError);
+            }
+          }).catch(() => {
+            // Caer de vuelta a la implementación global si el import falla
+            if (typeof global.updateDashboardState === 'function') {
+              try {
+                global.updateDashboardState('dashboard-calculation-error', { 
+                  year, period, fallback: true
+                }, userId);
+              } catch (globalError) {
+                console.error(`❌ Error con método global:`, globalError);
+              }
+            }
+          });
         } catch (notifyError) {
-          console.error("❌ Error al actualizar estado del dashboard tras error:", notifyError);
+          console.error("❌ Error general al actualizar estado del dashboard tras error:", notifyError);
         }
         
         // En caso de error, devolver una respuesta mínima pero válida
@@ -585,21 +623,70 @@ export function setupSimplifiedDashboardEndpoint(
       
       // Intentar actualizar el estado del dashboard incluso en caso de error crítico
       try {
-        if (typeof global.updateDashboardState === 'function' && req.user?.id) {
-          const errorEventData = { 
-            critical: true, 
-            year: req.query.year, 
-            period: req.query.period,
-            errorType: error?.name || 'Unknown',
-            errorMessage: error?.message || 'Error desconocido',
-            errorTime: new Date().toISOString()
-          };
-          
-          await global.updateDashboardState('dashboard-critical-error', errorEventData, req.user.id);
-          console.log(`⚠️ Estado del dashboard actualizado con error crítico`);
+        // Este es un error crítico, intentamos todas las opciones disponibles
+        const userId = req.user?.id || req.session?.userId;
+        if (!userId) {
+          console.warn("No se pudo identificar al usuario para notificar error crítico");
+          return;
         }
+        
+        const errorEventData = { 
+          critical: true, 
+          year: req.query.year, 
+          period: req.query.period,
+          errorType: error?.name || 'Unknown',
+          errorMessage: error?.message || 'Error desconocido',
+          errorTime: new Date().toISOString()
+        };
+        
+        // Método 1: Import directo (más confiable)
+        import('../dashboard-state').then(async (module) => {
+          try {
+            await module.updateDashboardState('dashboard-critical-error', errorEventData, userId);
+            console.log(`⚠️ Estado del dashboard actualizado con error crítico (módulo directo)`);
+          } catch (moduleError) {
+            console.error(`❌ Error con importación directa:`, moduleError);
+          }
+        }).catch(async (importError) => {
+          console.error(`❌ Error al importar dashboard-state para error crítico:`, importError);
+          
+          // Método 2: Fallback a función global
+          if (typeof global.updateDashboardState === 'function') {
+            try {
+              await global.updateDashboardState('dashboard-critical-error', {
+                ...errorEventData,
+                fallback: true
+              }, userId);
+              console.log(`⚠️ Estado del dashboard actualizado con error crítico (función global)`);
+            } catch (globalError) {
+              console.error(`❌ Error con método global para error crítico:`, globalError);
+              
+              // Método 3: Última opción - operación directo contra la DB
+              try {
+                const { db } = await import('../db');
+                const { dashboardState } = await import('../../shared/schema');
+                
+                await db.insert(dashboardState).values({
+                  userId: userId,
+                  lastEventType: 'critical-error-fallback',
+                  updatedAt: new Date()
+                }).onConflictDoUpdate({
+                  target: dashboardState.userId,
+                  set: {
+                    lastEventType: 'critical-error-fallback',
+                    updatedAt: new Date()
+                  }
+                });
+                
+                console.log(`⚠️ Estado del dashboard actualizado con error crítico (DB directa)`);
+              } catch (dbError) {
+                console.error(`❌ Error al actualizar DB directamente:`, dbError);
+              }
+            }
+          }
+        });
       } catch (notifyError) {
-        console.error("Error secundario al notificar error crítico:", notifyError);
+        console.error("Error general al notificar error crítico:", notifyError);
       }
       
       return res.status(200).json({ 
