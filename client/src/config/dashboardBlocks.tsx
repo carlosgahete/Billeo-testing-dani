@@ -31,6 +31,7 @@ import TaxSummary from "@/components/dashboard/blocks/TaxSummary";
 import ExpensesByCategory from "@/components/dashboard/blocks/ExpensesByCategory";
 import RecentExpensesByCategory from "@/components/dashboard/blocks/RecentExpensesByCategory";
 import ExpensesByCategoryModerno from "@/components/dashboard/ExpensesByCategoryModerno";
+import ExpensesByCategoryApple from "@/components/dashboard/ExpensesByCategoryApple";
 import IncomeSummaryCard from "@/components/dashboard/blocks/IncomeSummaryCard";
 import ExpensesSummaryCard from "@/components/dashboard/blocks/ExpensesSummaryCard";
 import FinalResultCard from "@/components/dashboard/blocks/FinalResultCard";
@@ -220,6 +221,14 @@ export const DASHBOARD_BLOCKS = {
     component: ExpensesByCategoryModerno,
     icon: <PieChart className="h-8 w-8 text-red-600" />,
     type: "cards"
+  },
+  "expenses-by-category-apple": {
+    id: "expenses-by-category-apple",
+    title: "Gastos por Categoría (Apple)",
+    description: "Visualización avanzada de gastos por categoría con diseño minimalista estilo Apple, respetando filtros por trimestre y año",
+    component: ExpensesByCategoryApple,
+    icon: <PieChart className="h-8 w-8 text-red-500" />,
+    type: "charts"
   }
 };
 
@@ -460,6 +469,32 @@ export const DASHBOARD_BLOCK_CATALOG = [
               <span>IVA sop:</span>
             </div>
             <span className="text-[7px] font-bold">0 €</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    ...DASHBOARD_BLOCKS["expenses-by-category-apple"],
+    preview: (
+      <div className="w-full h-full flex flex-col">
+        <div className="bg-gray-50 py-1 px-2 flex items-center border-b">
+          <PieChart className="h-3 w-3 text-red-500 mr-1" />
+          <span className="text-[10px] font-medium text-gray-800">Gastos por Categoría (Apple)</span>
+        </div>
+        <div className="flex-1 p-1 flex justify-center items-center">
+          <div className="relative w-16 h-16">
+            {/* Círculo base */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 bg-white rounded-full"></div>
+            </div>
+            {/* Gráfico circular simplificado */}
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f5f5f7" strokeWidth="18" />
+              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#FF6B6B" strokeWidth="18" strokeDasharray="50 251" transform="rotate(-90 50 50)" />
+              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#4ECDC4" strokeWidth="18" strokeDasharray="40 251" strokeDashoffset="-50" transform="rotate(-90 50 50)" />
+              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#FF9F1C" strokeWidth="18" strokeDasharray="30 251" strokeDashoffset="-90" transform="rotate(-90 50 50)" />
+            </svg>
           </div>
         </div>
       </div>
