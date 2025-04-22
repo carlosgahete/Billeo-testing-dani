@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { IStorage } from '../storage';
 import { updateDashboardState } from '../dashboard-state';
+import { Invoice, Transaction } from '@shared/schema';
 
 // Estructura para la caché
 interface DashboardResult {
@@ -52,7 +53,7 @@ export function setupCachedDashboardEndpoint(
         
         // Emitir una notificación de actualización de dashboard (sin afectar caché)
         try {
-          updateDashboardState(userId, 'dashboard-stats-cached', {
+          updateDashboardState(Number(userId), 'dashboard-stats-cached' as any, {
             year,
             period,
             filterInfo: {
@@ -72,9 +73,9 @@ export function setupCachedDashboardEndpoint(
       
       console.log(`🔄 Generando datos nuevos para dashboard (${year}/${period})`);
       
-      // Obtener datos de facturas
-      const invoices = await storage.getInvoices(userId);
-      const filteredInvoices = invoices.filter(invoice => {
+      // Obtener datos de facturas utilizando los métodos existentes
+      const allInvoices = await storage.getInvoicesByUserId(Number(userId));
+      const filteredInvoices = allInvoices.filter((invoice: Invoice) => {
         // Convertir el string de fecha a objeto Date
         const invoiceDate = new Date(invoice.issueDate);
         const invoiceYear = invoiceDate.getFullYear().toString();
@@ -101,9 +102,9 @@ export function setupCachedDashboardEndpoint(
         return true;
       });
       
-      // Obtener datos de transacciones
-      const transactions = await storage.getTransactions(userId);
-      const filteredTransactions = transactions.filter(transaction => {
+      // Obtener datos de transacciones utilizando los métodos existentes
+      const allTransactions = await storage.getTransactionsByUserId(Number(userId));
+      const filteredTransactions = allTransactions.filter((transaction: Transaction) => {
         // Convertir el string de fecha a objeto Date
         const transactionDate = new Date(transaction.date);
         const transactionYear = transactionDate.getFullYear().toString();
@@ -132,21 +133,21 @@ export function setupCachedDashboardEndpoint(
       
       // Calcular ingresos totales (solo facturas pagadas)
       const income = filteredInvoices
-        .filter(invoice => invoice.status === 'paid')
-        .reduce((total, invoice) => total + (invoice.subtotal || 0), 0);
+        .filter((invoice: Invoice) => invoice.status === 'paid')
+        .reduce((total: number, invoice: Invoice) => total + (invoice.subtotal || 0), 0);
         
       // Calcular gastos totales
       const expenses = filteredTransactions
-        .filter(transaction => transaction.type === 'expense')
-        .reduce((total, transaction) => total + (transaction.amount || 0), 0);
+        .filter((transaction: Transaction) => transaction.type === 'expense')
+        .reduce((total: number, transaction: Transaction) => total + (transaction.amount || 0), 0);
         
       // Calcular facturas pendientes
       const pendingInvoices = filteredInvoices
-        .filter(invoice => invoice.status === 'pending')
-        .reduce((total, invoice) => total + (invoice.total || 0), 0);
+        .filter((invoice: Invoice) => invoice.status === 'pending')
+        .reduce((total: number, invoice: Invoice) => total + (invoice.total || 0), 0);
       
       const pendingCount = filteredInvoices
-        .filter(invoice => invoice.status === 'pending').length;
+        .filter((invoice: Invoice) => invoice.status === 'pending').length;
       
       // Datos completos para respuesta
       const result = {
@@ -167,7 +168,7 @@ export function setupCachedDashboardEndpoint(
       
       // Emitir evento de actualización
       try {
-        updateDashboardState(userId, 'dashboard-stats-calculated', {
+        updateDashboardState(Number(userId), 'dashboard-stats-calculated', {
           year,
           period,
           filterInfo: {
