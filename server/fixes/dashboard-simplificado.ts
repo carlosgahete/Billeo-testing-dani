@@ -37,13 +37,73 @@ export function setupSimplifiedDashboardEndpoint(
         const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
         console.log("Años de transacciones:", uniqueYears);
         
-        // Filtrar facturas por año si se proporciona
-        const filteredInvoices = year 
-          ? invoices.filter(invoice => {
-              const invoiceYear = new Date(invoice.issueDate).getFullYear();
-              return invoiceYear.toString() === year;
-            })
-          : invoices;
+        // Función auxiliar para obtener el trimestre de una fecha (1-4)
+        const getQuarterFromDate = (date: Date): number => {
+          const month = date.getMonth();
+          if (month < 3) return 1; // Q1: Ene-Mar
+          if (month < 6) return 2; // Q2: Abr-Jun
+          if (month < 9) return 3; // Q3: Jul-Sep
+          return 4; // Q4: Oct-Dic
+        };
+        
+        console.log(`\n===== DETALLE DE TODAS LAS FACTURAS ANTES DEL FILTRADO =====`);
+        console.log(`Total de facturas sin filtrar: ${invoices.length}`);
+        invoices.forEach(invoice => {
+          // Mostrar información detallada de cada factura
+          const fecha = new Date(invoice.issueDate);
+          const mes = fecha.getMonth() + 1; // getMonth() devuelve 0-11
+          const trimestre = Math.ceil(mes / 3); // Calcula el trimestre (1-4)
+          console.log(`Factura ID=${invoice.id}, Fecha=${fecha.toISOString().split('T')[0]}, Mes=${mes}, Trimestre=Q${trimestre}, Estado=${invoice.status}, Total=${invoice.total}`);
+        });
+        console.log(`===== FIN DETALLE FACTURAS SIN FILTRAR =====\n`);
+        
+        // Filtrar facturas por año y trimestre si se proporciona
+        console.log(`🔎🔎🔎 DEBUG DE FILTRADO DE FACTURAS - año: ${year}, trimestre: ${period}`);
+        
+        const filteredInvoices = invoices.filter(invoice => {
+          const invoiceDate = new Date(invoice.issueDate);
+          const invoiceYear = invoiceDate.getFullYear().toString();
+          const invoiceQuarter = getQuarterFromDate(invoiceDate);
+          
+          console.log(`📋 DEBUG FACTURA: ID=${invoice.id}, fecha=${invoice.issueDate}, año=${invoiceYear}, trimestre=Q${invoiceQuarter}`);
+          
+          // Si no hay filtro de año, mostramos todas
+          if (!year) {
+            console.log(`✅ Factura ${invoice.id} incluida (no hay filtro de año)`);
+            return true;
+          }
+          
+          // Si el año no coincide, filtramos
+          if (invoiceYear !== year) {
+            console.log(`❌ Factura ${invoice.id} filtrada por año: ${invoiceYear} ≠ ${year}`);
+            return false;
+          }
+          
+          // Si hay filtro de trimestre específico
+          if (period && period !== 'all') {
+            try {
+              // Si period comienza con 'Q' o 'q' y tiene un número después (Q1, q1, etc.)
+              // Normalizamos siempre a mayúsculas para la comparación
+              const periodUpper = period.toString().toUpperCase();
+              if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
+                const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
+                const matches = invoiceQuarter === requestedQuarter;
+                console.log(`🔍 Comparando trimestre de factura: ${invoiceQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+                return matches;
+              } else {
+                console.log(`⚠️ Formato de period no reconocido: '${period}', se esperaba Q1-Q4`);
+              }
+            } catch (error) {
+              console.error(`❌ Error procesando period '${period}':`, error);
+            }
+            // Si hay un error o el formato no es reconocido, devolvemos false para ser conservadores
+            return false;
+          }
+          
+          // Si tiene el año correcto y no hay filtro de trimestre (o es 'all'), la incluimos
+          console.log(`✅ Factura ${invoice.id} incluida (año ${invoiceYear})`);
+          return true;
+        });
           
         // Obtener datos de transacciones
         const transactions = await storage.getTransactionsByUserId(userId);
