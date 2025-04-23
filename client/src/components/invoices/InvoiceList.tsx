@@ -506,8 +506,12 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
     // Crear función para manejar la actualización forzada
     const handleUpdateInvoices = () => {
       console.log("⚡ Evento de actualización de facturas recibido");
-      // Refrescar datos de facturas inmediatamente
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      // Primero eliminar la consulta para forzar recarga completa
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      
+      // Luego refetch inmediato para actualizar UI - más fuerte que invalidateQueries
+      queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+      console.log("🔄 Refrescando datos de facturas de forma forzada...");
       
       // Actualizar también el dashboard para mantener consistencia
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });

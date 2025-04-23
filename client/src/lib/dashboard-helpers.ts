@@ -34,7 +34,13 @@ export async function notifyDashboardUpdate(eventType: string = 'manual-update')
     
     // Disparar eventos para actualizar componentes (incluido el listado de facturas)
     if (eventType.includes('invoice')) {
-      updateInvoicesList();
+      // Si es una creación o evento específico, forzar una actualización más potente
+      const forceHardRefresh = eventType.includes('created') || 
+                              eventType === 'invoice-created-or-updated' || 
+                              eventType === 'invoice-list-refresh';
+      
+      updateInvoicesList(forceHardRefresh);
+      console.log(`📣 Notificación específica para facturas (${eventType}) - Actualización forzada: ${forceHardRefresh}`);
     }
     
     return true;
@@ -47,10 +53,34 @@ export async function notifyDashboardUpdate(eventType: string = 'manual-update')
 /**
  * Función específica para actualizar la lista de facturas
  * Dispara un evento personalizado que escucha el componente de lista de facturas
+ * @param forceHardRefresh Si es true, además de disparar el evento, forzará eliminación del caché
  */
-export function updateInvoicesList(): void {
+export function updateInvoicesList(forceHardRefresh: boolean = false): void {
   try {
-    console.log("📋 Actualizando lista de facturas...");
+    console.log("📋 Actualizando lista de facturas (forceHardRefresh=" + forceHardRefresh + ")...");
+    
+    // Si se solicita una actualización forzada, primero eliminamos y recargamos las consultas
+    if (forceHardRefresh) {
+      console.log("🔥 Realizando actualización forzada de facturas...");
+      
+      // Importar el cliente de consulta bajo demanda
+      import("@/lib/queryClient").then(({ queryClient }) => {
+        // Remover completamente el caché de facturas para forzar recarga fresca
+        queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+        
+        // Refrescar inmediatamente las consultas relevantes
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+          console.log("⚡ Refrescando todas las consultas de facturas");
+          
+          // Hacer una segunda actualización después de un breve retraso para capturar cambios tardíos
+          setTimeout(() => {
+            queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
+            console.log("🔄 Segunda actualización de consultas de facturas");
+          }, 500);
+        }, 100);
+      });
+    }
     
     // Disparar un evento específico para la lista de facturas
     const event = new CustomEvent('updateInvoices');
