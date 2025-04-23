@@ -1734,9 +1734,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
+      // Configurar cabeceras para evitar cachés
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Agregar una mínima espera para asegurar que la consulta ocurra después de cualquier inserción reciente
+      // Esto ayuda especialmente cuando se acaba de crear una factura
+      if (req.query.fresh === 'true') {
+        console.log('🔄 Solicitud con parámetro fresh - esperando 100ms para obtener datos actualizados');
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      console.log(`📋 Obteniendo facturas para usuario ${req.session.userId}`);
       const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      console.log(`✅ Se encontraron ${invoices.length} facturas`);
+      
       return res.status(200).json(invoices);
     } catch (error) {
+      console.error('❌ Error al obtener facturas:', error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
