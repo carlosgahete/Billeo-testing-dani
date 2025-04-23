@@ -4447,8 +4447,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: targetUser.id,
           username: targetUser.username,
           name: targetUser.name || targetUser.username,
-          email: targetUser.email
+          email: targetUser.email,
         },
+        // Incluimos facturas en el libro de registros
         invoices: responseInvoices,
         transactions: responseTransactions,
         quotes: responseQuotes,
