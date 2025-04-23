@@ -1,0 +1,77 @@
+¡Sí, vamos a implementarlo! Aquí tienes el plan de acción y las mejoras concretas que aplicaré en el endpoint de actualización de facturas (PUT /api/invoices/:id):
+
+📋 Plan de mejoras
+	1.	Detección robusta de cambio a “paid”
+	•	Ya existe:
+
+const statusChangingToPaid =
+  invoice.status !== 'paid' &&
+  invoiceResult.data.status === 'paid';
+
+
+	•	Dejarlo, pero añadiré un log detallado justo después de detectarlo.
+
+	2.	Verificación de transacciones duplicadas
+Antes de crear una nueva transacción, consultaré si ya existe una con:
+
+const existing = await prisma.transaction.findFirst({
+  where: { invoiceId: invoiceResult.data.id }
+});
+if (existing) {
+  console.log(`Transacción ya existe para factura ${invoiceResult.data.id}`);
+  // O devolver la existente en lugar de crear una nueva
+  return;
+}
+
+
+	3.	Crear la transacción con referencia a la factura
+Al crearla, añadiré invoiceId: invoiceResult.data.id en el objeto de datos.
+	4.	Manejo de errores y feedback
+	•	Wrappeo la creación de la transacción en un try/catch.
+	•	En caso de error, lanzo un throw new Error(...) para que el cliente reciba un mensaje claro.
+	•	Logueo con detalle en el servidor.
+
+🚀 Ejemplo de código para el PUT /api/invoices/:id
+
+// ...código anterior de tu controlador...
+// Detectar cambio a paid
+const statusChangingToPaid =
+  invoice.status !== 'paid' &&
+  invoiceResult.data.status === 'paid';
+
+if (statusChangingToPaid) {
+  console.log(`Factura ${invoiceResult.data.id} marcada como pagada, creando transacción…`);
+
+  // 1. Verificar transacción existente
+  const existing = await prisma.transaction.findFirst({
+    where: { invoiceId: invoiceResult.data.id },
+  });
+
+  if (existing) {
+    console.log(`↪️ Transacción ya existe para factura ${invoiceResult.data.id} (ID: ${existing.id})`);
+  } else {
+    // 2. Crear transacción nueva
+    try {
+      await prisma.transaction.create({
+        data: {
+          type: 'income',
+          amount: invoiceResult.data.total,
+          date: new Date(),
+          invoiceId: invoiceResult.data.id,     // referenciamos la factura
+          description: `Ingreso por factura ${invoiceResult.data.invoiceNumber}`,
+        },
+      });
+      console.log(`✅ Transacción creada para factura ${invoiceResult.data.id}`);
+    } catch (txError) {
+      console.error(`❌ Error al crear transacción para factura ${invoiceResult.data.id}:`, txError);
+      throw new Error('No se pudo crear la transacción de ingreso automáticamente.');
+    }
+  }
+}
+
+Con estas mejoras:
+	•	Evitamos duplicados.
+	•	Tendrás logs claros en el servidor.
+	•	Si algo falla, el cliente recibe un error explícito.
+
+¿Quieres que aplique también el mismo patrón en el endpoint de creación (POST /api/invoices) para la lógica inicial “paid”?
