@@ -72,9 +72,10 @@ const Layout = ({ children }: LayoutProps) => {
             ${isMobile ? 'pt-20' : ''}
             ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
             transition-all duration-300
+            w-full
           `}
         >
-          <div className="w-full min-h-screen py-1 lg:py-6 px-0 sm:px-2 lg:px-8 pb-20">
+          <div className="w-full min-h-screen py-1 lg:py-6 px-1 sm:px-2 lg:px-4 pb-20 max-w-full">
             {children}
           </div>
         </div>
