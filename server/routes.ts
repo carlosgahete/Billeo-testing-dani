@@ -1896,8 +1896,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Si la factura se crea con estado "pagada" o si se indica explícitamente createTransaction, 
-      // crear automáticamente una transacción de ingreso
+      // crear automáticamente una transacción de ingreso en la sección de ingresos/gastos
       // MEJORA: Verificamos múltiples condiciones para mayor seguridad
+      // IMPORTANTE: Las facturas deben guardarse en ambos lugares: en facturas y en ingresos/gastos
       if (newInvoice.status === 'paid' || invoiceData.status === 'paid' || invoice.createTransaction === true) {
         try {
           console.log("[SERVER] ⭐⭐⭐ Factura creada como pagada. Creando transacción de ingreso automática");
