@@ -46,6 +46,7 @@ import {
 import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";

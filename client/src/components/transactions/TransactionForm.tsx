@@ -29,6 +29,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
+import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
 import { CalendarIcon, Loader2, FileText, Receipt, Download, Plus, Check } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -251,25 +252,31 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
       queryClient.removeQueries({ queryKey: ["transactions"] });
       queryClient.removeQueries({ queryKey: ["dashboard"] }); // Usar misma clave que en useDashboardData
       
-      // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
-      fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
-      })
-      .then(() => {
-        console.log("⚡ Forzando recarga de datos para dashboard");
-        
-        // Refrescar explícitamente todas las consultas con las claves correctas
+      // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+      // Esto actualiza el estado del dashboard para todos los clientes conectados
+      notifyDashboardUpdate(isEditMode ? 'transaction-updated' : 'transaction-created')
+        .then(success => {
+          if (success) {
+            console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+          } else {
+            console.warn("⚠️ No se pudo enviar la notificación de actualización");
+          }
+        });
+      
+      // Forzar actualización local de los datos del dashboard
+      forceDashboardRefresh({
+        dispatchEvents: true,
+        silentMode: false
+      }).then(() => {
+        // Refrescar explícitamente todas las consultas con claves consistentes
+        console.log("⚡ Refrescando todas las consultas relevantes");
         queryClient.refetchQueries({ queryKey: ["dashboard"] });
         queryClient.refetchQueries({ queryKey: ["transactions"] });
         
-        // Disparar evento para actualización del dashboard (esto forzará la actualización a través del hook)
-        console.log("📣 Disparando evento dashboard-refresh-required");
-        window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
-        
-        // Disparar una segunda actualización después de un breve retraso
+        // Realizar una segunda actualización después de un breve retraso
         setTimeout(() => {
           console.log("🔄 Segunda actualización del dashboard");
-          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+          forceDashboardRefresh({ silentMode: true });
         }, 800);
       })
       .catch(err => console.error("❌ Error al recargar dashboard:", err));
