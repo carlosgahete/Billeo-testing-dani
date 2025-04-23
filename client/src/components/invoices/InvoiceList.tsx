@@ -67,22 +67,48 @@ import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 import RepairInvoiceButton from "./RepairInvoiceButton";
 
 // Función optimizada para forzar la actualización de datos
-const forceDataRefresh = () => {
+const forceDataRefresh = async () => {
   console.log("🔄 Iniciando actualización optimizada de datos...");
   
-  // Eliminar las consultas de caché es más rápido que invalidarlas
-  queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
-  queryClient.removeQueries({ queryKey: ["/api/invoices"] });
-  
-  // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
-  notifyDashboardUpdate('invoice-list-refresh')
-    .then(success => {
-      if (success) {
-        console.log("✅ Notificación de actualización del dashboard enviada correctamente");
-      } else {
-        console.warn("⚠️ No se pudo enviar la notificación de actualización");
-      }
+  try {
+    // Primero notificar al servidor sobre la actualización
+    console.log("📢 Notificando al servidor sobre la actualización...");
+    const serverNotified = await notifyDashboardUpdate('invoice-list-refresh');
+    
+    if (serverNotified) {
+      console.log("✅ Servidor notificado exitosamente");
+    } else {
+      console.log("⚠️ No se pudo notificar al servidor, pero continuamos con la actualización local");
+    }
+    
+    // Desencadenar el mismo proceso que el evento updateInvoices
+    // Usando la nueva función que hemos mejorado
+    const event = new Event('updateInvoices');
+    window.dispatchEvent(event);
+    
+    // Mostrar notificación de éxito
+    toast({
+      title: "Actualizado",
+      description: "Lista de facturas actualizada correctamente",
+      variant: "default",
     });
+  } catch (error) {
+    console.error("❌ Error durante la actualización forzada:", error);
+    
+    // Mostrar notificación de error
+    toast({
+      title: "Error",
+      description: "No se pudo actualizar la lista de facturas",
+      variant: "destructive",
+    });
+    
+    // Intentar con el método tradicional de React Query en caso de error
+    queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+    
+    // Forzar actualización del dashboard
+    forceDashboardRefresh({ silentMode: true });
+  }
   
   // Forzar actualización local de los datos del dashboard
   forceDashboardRefresh({
