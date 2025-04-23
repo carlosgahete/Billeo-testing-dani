@@ -28,6 +28,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoicePDFBlob, generateInvoicePDF } from "@/lib/pdf";
 import { formatInvoiceFileName, downloadFilteredInvoicesAsZip } from "@/lib/zipService";
+import { notifyDashboardUpdate, forceDashboardRefresh } from "@/lib/dashboard-helpers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,23 +74,34 @@ const forceDataRefresh = () => {
   queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
   queryClient.removeQueries({ queryKey: ["/api/invoices"] });
   
-  // Hacer la recarga inmediata de forma asíncrona
-  Promise.all([
-    fetch("/api/invoices?nocache=" + Date.now(), { 
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-    }),
-    fetch("/api/stats/dashboard?nocache=" + Date.now(), { 
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-    })
-  ])
-  .then(() => {
+  // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+  notifyDashboardUpdate('invoice-list-refresh')
+    .then(success => {
+      if (success) {
+        console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+      } else {
+        console.warn("⚠️ No se pudo enviar la notificación de actualización");
+      }
+    });
+  
+  // Forzar actualización local de los datos del dashboard
+  forceDashboardRefresh({
+    dispatchEvents: true,
+    silentMode: false
+  }).then(() => {
     console.log("⚡ Datos actualizados:", new Date().toISOString());
     
     // Refrescar inmediatamente las consultas relevantes
     queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-    queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] });
+    queryClient.refetchQueries({ queryKey: ["dashboard"] });
+    
+    // Realizar una segunda actualización después de un breve retraso
+    setTimeout(() => {
+      console.log("🔄 Segunda actualización del dashboard");
+      forceDashboardRefresh({ silentMode: true });
+    }, 800);
   })
-  .catch(err => console.error("Error al recargar datos:", err));
+  .catch(err => console.error("❌ Error al recargar datos:", err));
 };
 
 interface Invoice {

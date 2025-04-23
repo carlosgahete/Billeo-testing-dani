@@ -551,29 +551,35 @@ const MobileInvoiceForm = ({ invoiceId, initialData }: MobileInvoiceFormProps) =
       queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] }); // Corregir formato de queryKey
       queryClient.removeQueries({ queryKey: ["/api/transactions"] }); // Corregir formato de queryKey
       
-      // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
-      fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
-      })
-      .then(() => {
-        console.log("⚡ Forzando recarga de datos para dashboard desde móvil");
-        
-        // Refrescar explícitamente todas las consultas con las claves correctas
+      // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+      // Esto actualiza el estado del dashboard para todos los clientes conectados
+      notifyDashboardUpdate(isEditMode ? 'invoice-updated-mobile' : 'invoice-created-mobile')
+        .then(success => {
+          if (success) {
+            console.log("✅ Notificación de actualización del dashboard enviada correctamente desde móvil");
+          } else {
+            console.warn("⚠️ No se pudo enviar la notificación de actualización desde móvil");
+          }
+        });
+      
+      // Forzar actualización local de los datos del dashboard
+      forceDashboardRefresh({
+        dispatchEvents: true,
+        silentMode: false
+      }).then(() => {
+        // Refrescar explícitamente todas las consultas relevantes
+        console.log("⚡ Refrescando todas las consultas relevantes desde móvil");
         queryClient.refetchQueries({ queryKey: ["dashboard"] });
         queryClient.refetchQueries({ queryKey: ["invoices"] });
         queryClient.refetchQueries({ queryKey: ["transactions"] });
         
-        // Disparar evento para actualización del dashboard a través del hook
-        console.log("📣 Disparando evento dashboard-refresh-required desde móvil");
-        window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
-        
-        // Disparar segunda actualización del dashboard después de un breve retraso
+        // Realizar una segunda actualización después de un breve retraso
         setTimeout(() => {
           console.log("🔄 Segunda actualización del dashboard desde móvil");
-          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+          forceDashboardRefresh({ silentMode: true });
         }, 800);
       })
-      .catch(err => console.error("Error al recargar dashboard desde móvil:", err));
+      .catch(err => console.error("❌ Error al recargar dashboard desde móvil:", err));
       
       // Redirigir a la página de detalles o lista según la acción
       if (!isEditMode) {
