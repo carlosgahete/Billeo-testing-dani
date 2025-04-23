@@ -12,6 +12,7 @@ import { configureExpensesRoutes } from "./routes-expenses";
 import { configureFileRoutes } from "./routes-files-new";
 import { registerDashboardStateRoutes } from "./routes-dashboard-state";
 import { updateDashboardState } from "./dashboard-state";
+import { registerPollingRoutes } from "./routes-polling";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Obtener el equivalente a __dirname en ESM
@@ -127,6 +128,10 @@ app.use((req, res, next) => {
   // Registrar las rutas del nuevo estado del dashboard
   registerDashboardStateRoutes(app);
   console.log('Sistema de estado del dashboard mejorado registrado correctamente');
+  
+  // Registrar las rutas de polling (siempre permiten acceso)
+  registerPollingRoutes(app);
+  console.log('Sistema de polling del dashboard registrado correctamente');
   
   // Ruta HTML pura para presupuestos - acceso directo sin autenticación
   app.get('/mobile-quotes', (req, res) => {
