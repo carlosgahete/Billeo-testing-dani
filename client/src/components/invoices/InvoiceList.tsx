@@ -67,41 +67,48 @@ import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 import RepairInvoiceButton from "./RepairInvoiceButton";
 
 // Función optimizada para forzar la actualización de datos
-const forceDataRefresh = () => {
+const forceDataRefresh = async () => {
   console.log("🔄 Iniciando actualización optimizada de datos...");
   
-  // Eliminar las consultas de caché es más rápido que invalidarlas
-  queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
-  queryClient.removeQueries({ queryKey: ["/api/invoices"] });
-  
-  // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
-  notifyDashboardUpdate('invoice-list-refresh')
-    .then(success => {
-      if (success) {
-        console.log("✅ Notificación de actualización del dashboard enviada correctamente");
-      } else {
-        console.warn("⚠️ No se pudo enviar la notificación de actualización");
-      }
+  try {
+    // Eliminar las consultas de caché es más rápido que invalidarlas
+    queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+    queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+    
+    // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+    const notificationSuccess = await notifyDashboardUpdate('invoice-list-refresh');
+    
+    if (notificationSuccess) {
+      console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+    } else {
+      console.warn("⚠️ No se pudo enviar la notificación de actualización");
+    }
+    
+    // Forzar actualización local de los datos del dashboard
+    await forceDashboardRefresh({
+      dispatchEvents: true,
+      silentMode: false
     });
-  
-  // Forzar actualización local de los datos del dashboard
-  forceDashboardRefresh({
-    dispatchEvents: true,
-    silentMode: false
-  }).then(() => {
+    
     console.log("⚡ Datos actualizados:", new Date().toISOString());
     
-    // Refrescar inmediatamente las consultas relevantes
-    queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-    queryClient.refetchQueries({ queryKey: ["dashboard"] });
+    // Refrescar inmediatamente las consultas relevantes usando los nuevos queryKeys
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: ["/api/invoices"] }),
+      queryClient.refetchQueries({ queryKey: ["dashboard"] })
+    ]);
     
     // Realizar una segunda actualización después de un breve retraso
     setTimeout(() => {
       console.log("🔄 Segunda actualización del dashboard");
       forceDashboardRefresh({ silentMode: true });
     }, 800);
-  })
-  .catch(err => console.error("❌ Error al recargar datos:", err));
+    
+    return true;
+  } catch (error) {
+    console.error("❌ Error al recargar datos:", error);
+    return false;
+  }
 };
 
 interface Invoice {
@@ -254,10 +261,26 @@ const MarkAsPaidButton = ({
       queryClient.removeQueries({ queryKey: ["/api/invoices"] });
       queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
       
+      // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+      await notifyDashboardUpdate('invoice-paid')
+        .then(success => {
+          if (success) {
+            console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+          } else {
+            console.warn("⚠️ No se pudo enviar la notificación de actualización");
+          }
+        });
+      
+      // Forzar actualización local de los datos del dashboard
+      await forceDashboardRefresh({
+        dispatchEvents: true,
+        silentMode: false
+      });
+      
       // Luego refetch inmediato para actualizar UI
       await Promise.all([
         queryClient.refetchQueries({ queryKey: ["/api/invoices"] }),
-        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] })
+        queryClient.refetchQueries({ queryKey: ["dashboard"] })
       ]);
       
       // Disparar eventos personalizados para componentes que escuchan estos eventos
@@ -337,6 +360,16 @@ const DeleteInvoiceDialog = ({
       // Primero invalidar las consultas para que se actualicen en segundo plano
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+      await notifyDashboardUpdate('invoice-deleted')
+        .then(success => {
+          if (success) {
+            console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+          } else {
+            console.warn("⚠️ No se pudo enviar la notificación de actualización");
+          }
+        });
       
       // Notificar al usuario del éxito
       toast({
