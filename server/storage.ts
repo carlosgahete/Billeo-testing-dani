@@ -899,7 +899,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInvoicesByUserId(userId: number): Promise<Invoice[]> {
-    return await db.select().from(invoices).where(eq(invoices.userId, userId)).orderBy(desc(invoices.issueDate));
+    // Ordenar por ID en orden descendente para garantizar que las facturas más nuevas aparezcan primero
+    // También aplicamos un orden secundario por fecha de emisión para mantener coherencia temporal
+    return await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.userId, userId))
+      .orderBy(desc(invoices.id), desc(invoices.issueDate));
   }
 
   async getRecentInvoicesByUserId(userId: number, limit: number): Promise<Invoice[]> {
@@ -957,7 +963,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuotesByUserId(userId: number): Promise<Quote[]> {
-    return await db.select().from(quotes).where(eq(quotes.userId, userId)).orderBy(desc(quotes.issueDate));
+    // Ordenar por ID en orden descendente para garantizar que los presupuestos más nuevos aparezcan primero
+    // También aplicamos un orden secundario por fecha de emisión para mantener coherencia temporal
+    return await db
+      .select()
+      .from(quotes)
+      .where(eq(quotes.userId, userId))
+      .orderBy(desc(quotes.id), desc(quotes.issueDate));
   }
 
   async getRecentQuotesByUserId(userId: number, limit: number): Promise<Quote[]> {
