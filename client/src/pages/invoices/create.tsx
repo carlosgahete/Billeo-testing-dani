@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import InvoiceFormNew from '@/components/invoices/InvoiceFormNew'
 import { useLocation } from 'wouter'
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { calculateInvoice } from '@/components/invoices/invoiceEngine'
 import { useEffect, useRef, useState } from 'react'
@@ -13,6 +13,7 @@ export default function CreateInvoicePage() {
   const [, navigate] = useLocation();
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const queryClient = useQueryClient();
 
   // Definir el tipo de datos del formulario
   type InvoiceFormValues = {
@@ -141,6 +142,25 @@ export default function CreateInvoicePage() {
       // Mostrar mensaje de éxito usando el estado
       setSuccessMessage(message);
       setShowSuccess(true);
+      
+      // Invalidación agresiva del caché para asegurar que todas las vistas se actualicen correctamente
+      // Primero, limpiamos cualquier caché existente para estos endpoints
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      queryClient.removeQueries({ queryKey: ["/api/transactions"] });
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Luego, forzamos una actualización fresca de los datos
+      Promise.all([
+        queryClient.refetchQueries({ queryKey: ["/api/invoices"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/transactions"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/stats/dashboard"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/dashboard-direct"] }),
+      ]);
+      
+      // Emitir un evento personalizado para notificar a componentes que escuchan sobre la creación de una nueva factura
+      window.dispatchEvent(new CustomEvent('invoice-created', { 
+        detail: { invoiceId: data?.invoice?.id || data?.id || 'new' }
+      }));
       
       // Navegar a la lista de facturas después de un breve retraso
       setTimeout(() => {
