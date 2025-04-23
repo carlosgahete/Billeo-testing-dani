@@ -3,8 +3,11 @@
 
 import { eq } from "drizzle-orm";
 import { dashboardState } from "../shared/schema";
+import { simplifiedAuth } from "./simplified-auth";
 
-app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
+// Usar el nuevo middleware de autenticación simplificada
+console.log("✅ Middleware de autenticación reemplazado con éxito en el dashboard simplificado");
+app.get("/api/stats/dashboard-fix", simplifiedAuth, async (req: Request, res: Response) => {
   try {
     console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
     console.log('Recibido en dashboard-fix:', req.query);

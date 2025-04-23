@@ -62,7 +62,23 @@ export async function forceDashboardRefresh(options: {
     };
     
     // Solicitar explícitamente una recarga de datos para asegurar que obtenemos lo más reciente
-    await fetch(`/api/stats/dashboard-fix?nocache=${Date.now()}`, { headers });
+    // Usando el endpoint con autenticación simplificada para evitar problemas de autenticación
+    try {
+      const response = await fetch(`/api/stats/dashboard-fix?year=2025&period=all&forceRefresh=true&nocache=${Date.now()}`, {
+        method: 'GET',
+        credentials: 'include', // Incluir cookies de sesión
+        headers: {
+          ...headers,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        console.error(`❌ Error al cargar datos del dashboard: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("❌ Error en la solicitud:", error);
+    }
     
     // Si se solicita, disparar eventos para que otros componentes se actualicen
     if (dispatchEvents) {
