@@ -23,8 +23,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Pencil } from "lucide-react";
-import { ClientForm } from "../clients/ClientForm";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 
 // Props del componente
 interface QuoteFormBasicProps {
@@ -45,10 +44,6 @@ const QuoteFormBasic = ({ quoteId }: QuoteFormBasicProps) => {
     { description: "", quantity: "1", unitPrice: "0", taxRate: "21" }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Estados para gestión de clientes
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [clientToEdit, setClientToEdit] = useState<any>(null);
 
   // Cargar clientes
   const { data: clients = [] } = useQuery({
@@ -183,33 +178,6 @@ const QuoteFormBasic = ({ quoteId }: QuoteFormBasicProps) => {
     }
   };
 
-  // Funciones para gestionar clientes
-  const handleClientCreated = (client: any) => {
-    queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-    setClientId(client.id.toString());
-    setShowClientForm(false);
-    setClientToEdit(null);
-    
-    toast({
-      title: clientToEdit ? "Cliente actualizado" : "Cliente creado",
-      description: clientToEdit 
-        ? `El cliente ${client.name} ha sido actualizado correctamente`
-        : `El cliente ${client.name} ha sido creado correctamente`,
-    });
-  };
-  
-  const handleClientModalClose = (open: boolean) => {
-    if (!open) {
-      setClientToEdit(null);
-    }
-    setShowClientForm(open);
-  };
-  
-  const editClient = (client: any) => {
-    setClientToEdit(client);
-    setShowClientForm(true);
-  };
-
   // Formatear moneda
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-ES", {
@@ -250,53 +218,21 @@ const QuoteFormBasic = ({ quoteId }: QuoteFormBasicProps) => {
             
             <div className="space-y-2">
               <Label htmlFor="clientId">Cliente</Label>
-              <div className="flex gap-2">
-                <Select
-                  value={clientId}
-                  onValueChange={setClientId}
-                  className="flex-1"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un cliente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client: any) => (
-                      <div key={client.id} className="group flex items-center justify-between px-2 py-1 hover:bg-accent hover:text-accent-foreground rounded-sm">
-                        <SelectItem value={client.id.toString()} className="p-0">
-                          {client.name}
-                        </SelectItem>
-                        <div className="flex items-center space-x-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              editClient(client);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4 text-blue-500" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    {clients?.length === 0 && (
-                      <div className="px-2 py-3 text-sm text-muted-foreground">
-                        No hay clientes disponibles
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowClientForm(true)}
-                  className="shrink-0"
-                >
-                  Nuevo
-                </Button>
-              </div>
+              <Select
+                value={clientId}
+                onValueChange={setClientId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client: any) => (
+                    <SelectItem key={client.id} value={client.id.toString()}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -464,14 +400,6 @@ const QuoteFormBasic = ({ quoteId }: QuoteFormBasicProps) => {
           </Button>
         </CardFooter>
       </Card>
-      
-      {/* Formulario modal para crear/editar clientes */}
-      <ClientForm
-        open={showClientForm}
-        onOpenChange={handleClientModalClose}
-        onClientCreated={handleClientCreated}
-        client={clientToEdit}
-      />
     </form>
   );
 };
