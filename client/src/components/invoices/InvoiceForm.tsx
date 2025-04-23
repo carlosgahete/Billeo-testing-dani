@@ -614,26 +614,32 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
       queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] }); // Corregir formato de queryKey
       queryClient.removeQueries({ queryKey: ["invoices", "recent"] });
       
-      // Solicitar explícitamente una recarga del dashboard con nocache para forzar datos frescos
-      fetch("/api/stats/dashboard-fix?nocache=" + Date.now(), { 
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
-      })
-      .then(() => {
-        console.log("⚡ Forzando recarga de datos para dashboard");
-        
-        // Refrescar explícitamente todas las consultas con las claves correctas
+      // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+      // Esto actualiza el estado del dashboard para todos los clientes conectados
+      notifyDashboardUpdate(isEditMode ? 'invoice-updated' : 'invoice-created')
+        .then(success => {
+          if (success) {
+            console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+          } else {
+            console.warn("⚠️ No se pudo enviar la notificación de actualización");
+          }
+        });
+      
+      // Forzar actualización local de los datos del dashboard
+      forceDashboardRefresh({
+        dispatchEvents: true,
+        silentMode: false
+      }).then(() => {
+        // Refrescar explícitamente todas las consultas con claves consistentes
+        console.log("⚡ Refrescando todas las consultas relevantes");
         queryClient.refetchQueries({ queryKey: ["dashboard"] });
         queryClient.refetchQueries({ queryKey: ["invoices"] });
         queryClient.refetchQueries({ queryKey: ["invoices", "recent"] });
         
-        // Disparar evento para actualización del dashboard (esto forzará la actualización a través del hook)
-        console.log("📣 Disparando evento dashboard-refresh-required");
-        window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
-        
-        // Disparar una segunda actualización después de un breve retraso
+        // Realizar una segunda actualización después de un breve retraso
         setTimeout(() => {
           console.log("🔄 Segunda actualización del dashboard");
-          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
+          forceDashboardRefresh({ silentMode: true });
         }, 800);
       })
       .catch(err => console.error("❌ Error al recargar dashboard:", err));

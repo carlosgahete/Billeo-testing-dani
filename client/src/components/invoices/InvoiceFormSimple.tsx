@@ -46,6 +46,7 @@ import {
 import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
 import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
@@ -508,16 +509,34 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       queryClient.removeQueries({ queryKey: ["/api/invoices"] });
       queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
       
-      // Solicitar nueva carga de dashboard
-      fetch("/api/stats/dashboard-fix?nocache=" + Date.now())
-        .then(() => {
-          queryClient.refetchQueries({ queryKey: ["dashboard"] });
-          queryClient.refetchQueries({ queryKey: ["invoices"] });
-          
-          // Disparar evento de actualización
-          window.dispatchEvent(new CustomEvent('dashboard-refresh-required'));
-        })
-        .catch(err => console.error("❌ Error al recargar dashboard:", err));
+      // Notificar al servidor sobre el cambio utilizando el nuevo sistema de polling
+      // Esto actualiza el estado del dashboard para todos los clientes conectados
+      notifyDashboardUpdate(isEditMode ? 'invoice-updated' : 'invoice-created')
+        .then(success => {
+          if (success) {
+            console.log("✅ Notificación de actualización del dashboard enviada correctamente");
+          } else {
+            console.warn("⚠️ No se pudo enviar la notificación de actualización");
+          }
+        });
+      
+      // Forzar actualización local de los datos del dashboard
+      forceDashboardRefresh({
+        dispatchEvents: true,
+        silentMode: false
+      }).then(() => {
+        // Refrescar explícitamente todas las consultas relevantes
+        console.log("⚡ Refrescando todas las consultas relevantes");
+        queryClient.refetchQueries({ queryKey: ["dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["invoices"] });
+        
+        // Realizar una segunda actualización después de un breve retraso
+        setTimeout(() => {
+          console.log("🔄 Segunda actualización del dashboard");
+          forceDashboardRefresh({ silentMode: true });
+        }, 800);
+      })
+      .catch(err => console.error("❌ Error al recargar dashboard:", err));
       
       toast({
         title: isEditMode ? "Factura actualizada" : "Factura creada",
