@@ -33,14 +33,15 @@ export function useDashboardPolling(
       // Crear un nuevo AbortController para esta petición
       abortControllerRef.current = new AbortController();
       
-      // Obtener ID de usuario del localStorage para enviarlo como header
+      // Obtener ID de usuario del localStorage para enviarlo como header (lo mantenemos por compatibilidad)
       const userId = localStorage.getItem('user_id') || '';
       const username = localStorage.getItem('username') || '';
       
-      // Realizar la petición con señal de aborto y credenciales de usuario
-      const response = await fetch('/api/dashboard-status', {
+      // Usar la nueva ruta de polling que no requiere autenticación
+      // Esta ruta siempre permite acceso usando el usuario demo
+      const response = await fetch('/api/polling/dashboard-status', {
         signal: abortControllerRef.current.signal,
-        credentials: 'include', // Importante para enviar cookies
+        credentials: 'include', // Mantener por compatibilidad
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
