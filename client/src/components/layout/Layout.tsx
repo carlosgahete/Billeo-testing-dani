@@ -70,7 +70,7 @@ const Layout = ({ children }: LayoutProps) => {
             overflow-y-auto 
             dashboard-wrapper
             ${isMobile ? 'pt-20' : ''}
-            ${sidebarOpen && !isMobile ? 'pl-64' : ''} 
+            ${sidebarOpen && !isMobile ? 'ml-64' : 'ml-0'} 
             transition-all duration-300
             w-full
           `}

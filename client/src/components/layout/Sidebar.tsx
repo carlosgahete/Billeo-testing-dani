@@ -284,9 +284,10 @@ const Sidebar = ({
   if (!isMobile) {
     return (
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-10 transform transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{ visibility: sidebarOpen ? 'visible' : 'hidden' }}
       >
         {/* Logo and toggle button */}
         <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-200">
