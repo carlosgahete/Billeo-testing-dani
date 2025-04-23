@@ -1,13 +1,9 @@
 import { Request, Response } from "express";
-import { dashboardState } from "../../shared/schema";
-import { db } from '../db';
-import { eq } from "drizzle-orm";
+import { sql } from '../db';
 
 /**
- * Handler mejorado para el endpoint de estado del dashboard
- * - Permite autenticación flexible a través de headers o sesión
- * - Registra automáticamente usuarios no registrados con configuración por defecto
- * - Maneja mejor los errores y proporciona logging detallado
+ * Endpoint para la consulta de estado del dashboard
+ * Implementación simplificada con prioridad en acceso permisivo
  */
 export async function handleDashboardStatus(req: Request, res: Response) {
   // Log detallado para depuración
@@ -68,41 +64,49 @@ export async function handleDashboardStatus(req: Request, res: Response) {
       });
     }
     
-    // Obtener estado del dashboard para el usuario
-    const [state] = await db.select()
-      .from(dashboardState)
-      .where(eq(dashboardState.userId, userId));
+    // Consulta SQL directa para evitar problemas con drizzle
+    const stateResult = await sql`
+      SELECT * FROM dashboard_state 
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+    
+    const state = stateResult && stateResult.length > 0 ? stateResult[0] : null;
     
     // Si no existe estado, crear uno nuevo
     if (!state) {
       console.log('🆕 Creando estado inicial del dashboard para usuario:', userId);
       
-      // Crear nuevo estado
-      const [newState] = await db.insert(dashboardState)
-        .values({
-          userId: userId,
-          lastEventType: 'initial',
-          // id y updatedAt tienen valores por defecto
-        })
-        .returning();
+      // Crear nuevo registro de estado
+      const newState = await sql`
+        INSERT INTO dashboard_state (user_id, last_event_type)
+        VALUES (${userId}, 'initial')
+        RETURNING *
+      `;
+      
+      const initialState = newState && newState.length > 0 ? newState[0] : null;
+      
+      if (!initialState) {
+        throw new Error("Error creando estado inicial del dashboard");
+      }
       
       return res.status(200).json({
-        updated_at: newState.updatedAt.getTime(),
-        lastEvent: newState.lastEventType,
+        updated_at: new Date(initialState.updated_at).getTime(),
+        lastEvent: initialState.last_event_type,
         message: "Estado inicial creado"
       });
     }
     
     // Devolver estado actual
     console.log('✅ Estado del dashboard recuperado:', {
-      userId: state.userId,
-      lastEventType: state.lastEventType,
-      updatedAt: state.updatedAt
+      userId: state.user_id,
+      lastEventType: state.last_event_type,
+      updatedAt: state.updated_at
     });
     
     return res.status(200).json({
-      updated_at: state.updatedAt.getTime(),
-      lastEvent: state.lastEventType
+      updated_at: new Date(state.updated_at).getTime(),
+      lastEvent: state.last_event_type
     });
     
   } catch (error) {
