@@ -1,5 +1,5 @@
 /**
- * Helper functions para interacciones con el dashboard
+ * Helper functions para interacciones con el dashboard y actualizaciones en tiempo real
  */
 
 /**
@@ -31,10 +31,34 @@ export async function notifyDashboardUpdate(eventType: string = 'manual-update')
     }
     
     console.log(`📣 Notificación de actualización del dashboard enviada: ${eventType}`);
+    
+    // Disparar eventos para actualizar componentes (incluido el listado de facturas)
+    if (eventType.includes('invoice')) {
+      updateInvoicesList();
+    }
+    
     return true;
   } catch (error) {
     console.error('❌ Error al notificar actualización del dashboard:', error);
     return false;
+  }
+}
+
+/**
+ * Función específica para actualizar la lista de facturas
+ * Dispara un evento personalizado que escucha el componente de lista de facturas
+ */
+export function updateInvoicesList(): void {
+  try {
+    console.log("📋 Actualizando lista de facturas...");
+    
+    // Disparar un evento específico para la lista de facturas
+    const event = new CustomEvent('updateInvoices');
+    window.dispatchEvent(event);
+    
+    console.log("✅ Evento de actualización de facturas disparado correctamente");
+  } catch (error) {
+    console.error("❌ Error al disparar evento de actualización de facturas:", error);
   }
 }
 
