@@ -479,10 +479,25 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const { data: invoicesData = [], isLoading: invoicesLoading, error: invoicesError } = useQuery<Invoice[]>({
+  const { data: invoicesData = [], isLoading: invoicesLoading, error: invoicesError, refetch: refetchInvoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutos
+    // Añadir función personalizada para aprovechar el parámetro 'fresh' que agregamos al endpoint
+    queryFn: async () => {
+      console.log("📋 Obteniendo lista de facturas con parámetro 'fresh=true'");
+      const response = await fetch("/api/invoices?fresh=true", {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Error al obtener facturas: ${response.status}`);
+      }
+      return response.json();
+    }
   });
 
   const { data: clientsData = [], isLoading: clientsLoading, error: clientsError } = useQuery<Client[]>({
@@ -504,17 +519,57 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
   // Escuchar eventos personalizados para actualizar la lista de facturas
   useEffect(() => {
     // Crear función para manejar la actualización forzada
-    const handleUpdateInvoices = () => {
-      console.log("⚡ Evento de actualización de facturas recibido");
-      // Primero eliminar la consulta para forzar recarga completa
+    const handleUpdateInvoices = async (event?: Event) => {
+      console.log("⚡ Evento de actualización de facturas recibido", event ? `(tipo: ${event.type})` : '');
+      
+      // Eliminar primero la caché para forzar una recarga completa
       queryClient.removeQueries({ queryKey: ["/api/invoices"] });
       
-      // Luego refetch inmediato para actualizar UI - más fuerte que invalidateQueries
-      queryClient.refetchQueries({ queryKey: ["/api/invoices"] });
-      console.log("🔄 Refrescando datos de facturas de forma forzada...");
-      
-      // Actualizar también el dashboard para mantener consistencia
-      queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+      try {
+        // Hacer petición directa al endpoint con parámetro fresh=true para obtener los datos más actualizados
+        console.log("🔄 Obteniendo datos frescos del servidor con parámetro fresh=true...");
+        const freshResponse = await fetch("/api/invoices?fresh=true", {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!freshResponse.ok) {
+          throw new Error(`Error al obtener facturas frescas: ${freshResponse.status}`);
+        }
+        
+        // Actualizar la caché de React Query con los datos frescos
+        const freshData = await freshResponse.json();
+        queryClient.setQueryData(["/api/invoices"], freshData);
+        console.log(`✅ Datos actualizados correctamente: ${freshData.length} facturas`);
+        
+        // También hacer refetch para asegurar que cualquier componente dependiente se actualice
+        refetchInvoices();
+        
+        // Actualizar también el dashboard para mantener consistencia
+        console.log("🔄 Actualizando dashboard...");
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+        forceDashboardRefresh();
+        
+        // Mostrar notificación de éxito
+        toast({
+          title: "Actualizado",
+          description: "Lista de facturas actualizada correctamente",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error("❌ Error al actualizar facturas:", error);
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar la lista de facturas",
+          variant: "destructive",
+        });
+        
+        // En caso de error, intentar con el método estándar de React Query
+        refetchInvoices();
+      }
     };
     
     // Agregar el listener de eventos
