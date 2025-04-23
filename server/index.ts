@@ -70,6 +70,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Aplicar fix de autenticación global
+  try {
+    const { registerAuthFixer } = await import('./fixes/auth-fixer');
+    registerAuthFixer(app);
+    console.log('🔐 Fix global de autenticación aplicado correctamente');
+  } catch (error) {
+    console.error('❌ Error al aplicar fix de autenticación:', error);
+  }
+
   // Intentar inicializar el servicio de correo electrónico, pero no bloquear si falla
   try {
     const { initEmailService } = await import('./services/emailService');
