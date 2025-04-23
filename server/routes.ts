@@ -2385,9 +2385,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceItems = await storage.getInvoiceItemsByInvoiceId(invoiceId);
       
       // Notificar a todos los clientes conectados sobre la factura actualizada
-      console.log("Actualizando estado del dashboard (factura actualizada)");
+      console.log("Actualizando estado del dashboard y lista de facturas (factura actualizada)");
       
       if (global.updateDashboardState) {
+        // Primero enviamos el evento específico para la actualización de facturas
+        global.updateDashboardState('invoice-created-or-updated', {
+          invoiceId: updatedInvoice.id,
+          status: updatedInvoice.status,
+          timestamp: new Date().toISOString(),
+          action: 'updated',
+          refreshAll: true // Flag para refrescar todo
+        }, req.session.userId);
+        
+        // También enviamos el evento específico original para compatibilidad
         global.updateDashboardState('invoice-updated', {
           invoiceId: updatedInvoice.id,
           status: updatedInvoice.status,
@@ -2396,6 +2406,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (global.notifyDashboardUpdate) {
         // Compatibilidad con método antiguo
         console.log("Enviando notificación WebSocket por factura actualizada (método antiguo)");
+        // Enviar evento genérico para asegurar que se actualiza todo
+        global.notifyDashboardUpdate('invoice-created-or-updated', {
+          invoiceId: updatedInvoice.id,
+          userId: updatedInvoice.userId,
+          status: updatedInvoice.status,
+          timestamp: new Date().toISOString(),
+          action: 'updated',
+          refreshAll: true
+        });
+        
+        // También enviamos el evento específico original para compatibilidad
         global.notifyDashboardUpdate('invoice-updated', {
           invoiceId: updatedInvoice.id,
           userId: updatedInvoice.userId,
