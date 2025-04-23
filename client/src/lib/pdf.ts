@@ -294,8 +294,8 @@ export async function generateInvoicePDF(
   doc.text(`NIF/CIF: ${clientTaxId}`, 14, 73);
   doc.text(clientAddress, 14, 78);
   doc.text(clientLocation, 14, 83);
-  if (clientEmail) doc.text(`Email: ${clientEmail}`, 14, 88);
-  if (clientPhone) doc.text(`Teléfono: ${clientPhone}`, 14, 93);
+  if (clientEmail && clientEmail.trim() !== '') doc.text(`Email: ${clientEmail}`, 14, 88);
+  if (clientPhone && clientPhone.trim() !== '') doc.text(`Teléfono: ${clientPhone}`, 14, 93);
   
   // Add invoice items
   doc.setFontSize(12);
