@@ -246,12 +246,56 @@ export async function generateInvoicePDF(
   
   doc.setFontSize(10);
   doc.setTextColor(0);
-  doc.text(client.name, 14, 68);
-  doc.text(`NIF/CIF: ${client.taxId}`, 14, 73);
-  doc.text(client.address, 14, 78);
-  doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 14, 83);
-  if (client.email) doc.text(`Email: ${client.email}`, 14, 88);
-  if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 93);
+  
+  // Verificar si los datos del cliente están en las notas (caso de creación de factura nueva)
+  // Formato esperado en las notas: "Nombre Cliente - NIF\nEmail\nDirección\n\nMétodo de pago..."
+  let clientName = client.name;
+  let clientTaxId = client.taxId || "";
+  let clientAddress = client.address || "";
+  let clientLocation = `${client.postalCode || ""} ${client.city || ""}, ${client.country || ""}`;
+  let clientEmail = client.email || "";
+  let clientPhone = client.phone || "";
+  
+  if (invoice.notes) {
+    try {
+      // Intentar extraer datos del cliente de las notas
+      const lines = invoice.notes.split('\n');
+      if (lines.length > 0) {
+        // Primera línea suele contener "Nombre - NIF"
+        const firstLineParts = lines[0].split(' - ');
+        if (firstLineParts.length >= 2) {
+          clientName = firstLineParts[0].trim();
+          clientTaxId = firstLineParts[1].trim();
+          
+          // Si hay más líneas, la segunda puede contener el email
+          if (lines.length > 1 && lines[1].includes('@')) {
+            clientEmail = lines[1].trim();
+          }
+          
+          // La tercera línea puede contener la dirección
+          if (lines.length > 2 && !lines[2].startsWith('Método de pago')) {
+            clientAddress = lines[2].trim();
+          }
+          
+          console.log("Datos de cliente extraídos de las notas:", {
+            name: clientName,
+            taxId: clientTaxId,
+            email: clientEmail,
+            address: clientAddress
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error al extraer datos del cliente de las notas:", error);
+    }
+  }
+  
+  doc.text(clientName, 14, 68);
+  doc.text(`NIF/CIF: ${clientTaxId}`, 14, 73);
+  doc.text(clientAddress, 14, 78);
+  doc.text(clientLocation, 14, 83);
+  if (clientEmail) doc.text(`Email: ${clientEmail}`, 14, 88);
+  if (clientPhone) doc.text(`Teléfono: ${clientPhone}`, 14, 93);
   
   // Add invoice items
   doc.setFontSize(12);
@@ -514,12 +558,56 @@ export async function generateInvoicePDFAsBase64(
     
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(client.name, 14, 68);
-    doc.text(`NIF/CIF: ${client.taxId}`, 14, 73);
-    doc.text(client.address, 14, 78);
-    doc.text(`${client.postalCode} ${client.city}, ${client.country}`, 14, 83);
-    if (client.email) doc.text(`Email: ${client.email}`, 14, 88);
-    if (client.phone) doc.text(`Teléfono: ${client.phone}`, 14, 93);
+    
+    // Verificar si los datos del cliente están en las notas (caso de creación de factura nueva)
+    // Formato esperado en las notas: "Nombre Cliente - NIF\nEmail\nDirección\n\nMétodo de pago..."
+    let clientName = client.name;
+    let clientTaxId = client.taxId || "";
+    let clientAddress = client.address || "";
+    let clientLocation = `${client.postalCode || ""} ${client.city || ""}, ${client.country || ""}`;
+    let clientEmail = client.email || "";
+    let clientPhone = client.phone || "";
+    
+    if (invoice.notes) {
+      try {
+        // Intentar extraer datos del cliente de las notas
+        const lines = invoice.notes.split('\n');
+        if (lines.length > 0) {
+          // Primera línea suele contener "Nombre - NIF"
+          const firstLineParts = lines[0].split(' - ');
+          if (firstLineParts.length >= 2) {
+            clientName = firstLineParts[0].trim();
+            clientTaxId = firstLineParts[1].trim();
+            
+            // Si hay más líneas, la segunda puede contener el email
+            if (lines.length > 1 && lines[1].includes('@')) {
+              clientEmail = lines[1].trim();
+            }
+            
+            // La tercera línea puede contener la dirección
+            if (lines.length > 2 && !lines[2].startsWith('Método de pago')) {
+              clientAddress = lines[2].trim();
+            }
+            
+            console.log("Datos de cliente extraídos de las notas en base64:", {
+              name: clientName,
+              taxId: clientTaxId,
+              email: clientEmail,
+              address: clientAddress
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error al extraer datos del cliente de las notas en base64:", error);
+      }
+    }
+    
+    doc.text(clientName, 14, 68);
+    doc.text(`NIF/CIF: ${clientTaxId}`, 14, 73);
+    doc.text(clientAddress, 14, 78);
+    doc.text(clientLocation, 14, 83);
+    if (clientEmail) doc.text(`Email: ${clientEmail}`, 14, 88);
+    if (clientPhone) doc.text(`Teléfono: ${clientPhone}`, 14, 93);
     
     // Add invoice items
     doc.setFontSize(12);
