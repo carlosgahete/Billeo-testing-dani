@@ -134,11 +134,11 @@ export function useDashboardData(
     };
   }, []);
 
-  // Utilizamos el endpoint fix y pasamos los parámetros de filtrado explícitamente
+  // Utilizamos el endpoint DIRECTO que no requiere autenticación estándar
   const dashboardQuery = useQuery({
-    // Reducir cantidad de peticiones manteniendo solo un refreshTrigger (o el filtersRefreshTrigger o nuestro propio trigger)
-    queryKey: [`/api/stats/dashboard-fix`, finalYear, finalPeriod, refreshTrigger],
-    // Esta configuración es clave para evitar múltiples llamadas innecesarias
+    // Usar el endpoint directo en lugar del fix
+    queryKey: [`/api/dashboard-direct`, finalYear, finalPeriod, refreshTrigger],
+    // Esta configuración evita múltiples llamadas innecesarias
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true, // Aseguramos que se ejecuta cuando cambian los parámetros
@@ -147,7 +147,7 @@ export function useDashboardData(
       
       // Usamos los parámetros de la queryKey que React Query mantiene actualizados
       // No usamos valores capturados en closures que podrían estar obsoletos
-      console.log(`📊 FORZANDO CARGA AGRESIVA: año=${year}, periodo=${period} [${trigger}]...`);
+      console.log(`📊 CONECTANDO A ENDPOINT DIRECTO: año=${year}, periodo=${period} [${trigger}]...`);
       
       // Construir URL con los parámetros de filtro correctos - asegurarnos de estar pasando año y periodo
       if (!year || year === "undefined") {
@@ -169,7 +169,7 @@ export function useDashboardData(
         const timestamp = new Date().getTime();
         const urlWithTimestamp = `${url}&_t=${timestamp}`;
         
-        console.log("🔍 SOLICITUD DIRECTA CON BYPASS DE CACHÉ:", urlWithTimestamp);
+        console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", urlWithTimestamp);
         
         // Incluir los parámetros de filtro en la URL y headers adicionales
         const data = await fetch(urlWithTimestamp, {

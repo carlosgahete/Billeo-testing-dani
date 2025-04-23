@@ -68,14 +68,15 @@ export function useSimpleDashboardFilters() {
     
     // Invalidamos completamente la caché de consultas del dashboard
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix'],
+      queryKey: ['/api/dashboard-direct'],
     });
     
     // También invalidamos cualquier consulta relacionada con el dashboard
     queryClient.invalidateQueries({
       predicate: (query) => {
         const key = query.queryKey[0];
-        return typeof key === 'string' && key.startsWith('/api/stats/dashboard');
+        return typeof key === 'string' && 
+          (key.startsWith('/api/stats/dashboard') || key.startsWith('/api/dashboard-direct'));
       },
     });
   }, [queryClient]);
@@ -92,7 +93,7 @@ export function useSimpleDashboardFilters() {
     
     // 2. Eliminar TODAS las consultas cache relacionadas con el dashboard
     queryClient.removeQueries({
-      queryKey: ['/api/stats/dashboard-fix'],
+      queryKey: ['/api/dashboard-direct'],
     });
     
     // 3. Cambiar el año en el estado local
@@ -146,7 +147,7 @@ export function useSimpleDashboardFilters() {
     
     // Primero invalidar las consultas con los parámetros antiguos
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix', year, period],
+      queryKey: ['/api/dashboard-direct', year, period],
     });
     
     // También invalidar posibles consultas con formato inconsistente
@@ -154,7 +155,7 @@ export function useSimpleDashboardFilters() {
       const alternativePeriod = period.startsWith('q') ? period.toUpperCase() : 
                                period.startsWith('Q') ? period.toLowerCase() : period;
       queryClient.invalidateQueries({
-        queryKey: ['/api/stats/dashboard-fix', year, alternativePeriod],
+        queryKey: ['/api/dashboard-direct', year, alternativePeriod],
       });
     }
     
@@ -168,7 +169,7 @@ export function useSimpleDashboardFilters() {
         // Eliminar todas las consultas relacionadas con el dashboard al cambiar el periodo
         const key = query.queryKey;
         if (Array.isArray(key) && key.length > 0) {
-          return key[0] === '/api/stats/dashboard-fix';
+          return key[0] === '/api/dashboard-direct';
         }
         return false;
       },
@@ -205,7 +206,7 @@ export function useSimpleDashboardFilters() {
     // Forzamos una actualización de los datos al cambiar los filtros
     // pero usando un enfoque más selectivo
     queryClient.invalidateQueries({
-      queryKey: ['/api/stats/dashboard-fix', year, period],
+      queryKey: ['/api/dashboard-direct', year, period],
     });
   }, [year, period, queryClient, globalRefreshTrigger]);
   
