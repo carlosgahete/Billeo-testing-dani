@@ -120,6 +120,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     isPercentage: true
   });
   const [clientToEdit, setClientToEdit] = useState<any>(null);
+  const [selectedClientInfo, setSelectedClientInfo] = useState<any>(null);
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
@@ -415,8 +416,8 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     if (!clientToEdit) {
       form.setValue("clientId", data.id);
-      // Al crear un nuevo cliente, rellenamos todos sus datos automáticamente
-      fillClientFields(data);
+      // Al crear un nuevo cliente, guardamos sus datos para mostrarlos
+      setSelectedClientInfo(data);
     }
     
     setClientToEdit(null);
@@ -438,24 +439,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     setShowClientForm(open);
   };
   
-  // Función para rellenar los campos de cliente automáticamente
-  const fillClientFields = (client: any) => {
-    // Aseguramos que se rellenen todos los campos del cliente, incluyendo el DNI/NIF
-    form.setValue("clientName", client.name || "");
-    form.setValue("clientTaxId", client.taxId || "");
-    form.setValue("clientAddress", client.address || "");
-    form.setValue("clientCity", client.city || "");
-    form.setValue("clientPostalCode", client.postalCode || "");
-    form.setValue("clientCountry", client.country || "");
-    form.setValue("clientEmail", client.email || "");
-    form.setValue("clientPhone", client.phone || "");
-  };
-  
   // Función para manejar la selección de cliente del desplegable
   const handleClientSelection = (clientId: string) => {
     const selectedClient = clients?.find((client: any) => client.id.toString() === clientId);
     if (selectedClient) {
-      fillClientFields(selectedClient);
+      // Guardamos toda la información del cliente seleccionado en el estado
+      setSelectedClientInfo(selectedClient);
     }
   };
 
