@@ -359,8 +359,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("container-apple section-apple bg-[#F9F9F9] px-0 mx-0 sm:px-4 pb-36 mb-12 -mt-6", className)}>
-      {/* Cabecera del dashboard con título centrado y elevado solo en móvil, con icono en desktop */}
+    <div className={cn("container px-0 mx-0 sm:px-4 pb-36 mb-12 -mt-6 bg-background", className)}>
+      {/* Cabecera del dashboard con título centrado */}
       <div className="section-header px-0 pt-0 md:pt-0 pb-0 md:px-4 md:py-4">
         <div className="flex items-center justify-center md:justify-start mt-[-15px] md:mt-0">
           <div className="md:flex hidden items-center mt-8">
@@ -571,11 +571,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Primera fila: Widgets principales - Estilo Apple - Layout expandido 
-          En móvil: Ingresos y Gastos en la misma fila, Resultado abajo */}
+      {/* Primera fila: Widgets principales - Layout responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-0 md:mt-4">
-        {/* Widget de Ingresos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        {/* Widget de Ingresos */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#E2F6ED] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -594,8 +593,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Gastos - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        {/* Widget de Gastos */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-[#FFECEC] md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -614,8 +613,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Resultado - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-blue-500">
+        {/* Widget de Resultado */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-blue-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-blue-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -639,8 +638,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
       {/* Segunda fila: Widgets secundarios - Row 2 - De 2 columnas en tablet, 1 columna en móvil */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mt-2 md:mt-4">
-        {/* Widget de Facturas pendientes - Col-span-1 siempre */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-purple-500">
+        {/* Widget de Facturas pendientes */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-purple-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-purple-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -662,8 +661,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Presupuestos pendientes - Col-span-1 siempre */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-amber-500">
+        {/* Widget de Presupuestos pendientes */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-amber-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-amber-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -685,8 +684,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Widget de Impuestos - Col-span-1 siempre */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-emerald-500">
+        {/* Widget de Impuestos */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-emerald-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
               <div className="bg-emerald-100 md:p-3 p-2 rounded-full mr-3 md:mr-3">
@@ -713,8 +712,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
 
       {/* Tercera Fila - Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 mt-2 md:mt-4">
-        {/* Gráfico de Comparativa Financiera - Estilo Apple - Col-span-1 en tablet+ */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        {/* Gráfico de Comparativa Financiera */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -773,12 +772,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Gastos por Categoría - Estilo Apple (sin título) */}
-        <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1">
+        {/* Gastos por Categoría - Versión estándar */}
+        <div className="card bg-card border border-border rounded-lg shadow-sm fade-in -mx-2 sm:mx-0 px-0 col-span-1">
           <div className="p-0">
             <div className="h-[400px]">
-              {/* Usamos el componente Apple sin filtros propios */}
-              <ExpensesByCategoryApple />
+              {/* Usamos el componente estándar con los datos necesarios */}
+              <ExpensesByCategory 
+                transactions={dashboardData?.transactions || []} 
+                categories={dashboardData?.categories || []}
+                period={filters?.period} 
+              />
             </div>
           </div>
         </div>

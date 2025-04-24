@@ -23,7 +23,7 @@
  
 @layer base {
   :root {
-    /* Fondo general gris super claro (Apple) */
+    /* Fondo general */
     --background: 240 30% 98%;
     --foreground: 240 10% 3.9%;
 
@@ -33,7 +33,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
  
-    /* Azul estilo Apple */
+    /* Color primario */
     --primary: 210 100% 50%;
     --primary-foreground: 0 0% 98%;
  
@@ -63,7 +63,7 @@
   }
  
   .dark {
-    /* Fondo oscuro estilo Apple */
+    /* Fondo oscuro */
     --background: 220 20% 10%;
     --foreground: 210 40% 98%;
  
@@ -75,7 +75,7 @@
     --popover: 220 20% 10%;
     --popover-foreground: 210 40% 98%;
  
-    /* Azul Apple con brillo para modo oscuro */
+    /* Color primario en modo oscuro */
     --primary: 210 100% 60%;
     --primary-foreground: 210 40% 98%;
  
