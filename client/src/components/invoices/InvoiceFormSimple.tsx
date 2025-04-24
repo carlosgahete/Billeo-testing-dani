@@ -415,6 +415,8 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     if (!clientToEdit) {
       form.setValue("clientId", data.id);
+      // Al crear un nuevo cliente, rellenamos todos sus datos automáticamente
+      fillClientFields(data);
     }
     
     setClientToEdit(null);
@@ -434,6 +436,27 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       setClientToEdit(null);
     }
     setShowClientForm(open);
+  };
+  
+  // Función para rellenar los campos de cliente automáticamente
+  const fillClientFields = (client: any) => {
+    // Aseguramos que se rellenen todos los campos del cliente, incluyendo el DNI/NIF
+    form.setValue("clientName", client.name || "");
+    form.setValue("clientTaxId", client.taxId || "");
+    form.setValue("clientAddress", client.address || "");
+    form.setValue("clientCity", client.city || "");
+    form.setValue("clientPostalCode", client.postalCode || "");
+    form.setValue("clientCountry", client.country || "");
+    form.setValue("clientEmail", client.email || "");
+    form.setValue("clientPhone", client.phone || "");
+  };
+  
+  // Función para manejar la selección de cliente del desplegable
+  const handleClientSelection = (clientId: string) => {
+    const selectedClient = clients?.find((client: any) => client.id.toString() === clientId);
+    if (selectedClient) {
+      fillClientFields(selectedClient);
+    }
   };
 
   // =============== SUBMIT DEL FORMULARIO =================
@@ -650,7 +673,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         <div className="flex gap-2 items-start">
                           <div className="flex-1">
                             <Select
-                              onValueChange={(value) => field.onChange(Number(value))}
+                              onValueChange={(value) => {
+                                field.onChange(Number(value));
+                                handleClientSelection(value);
+                              }}
                               value={field.value ? field.value.toString() : undefined}
                             >
                               <FormControl>
