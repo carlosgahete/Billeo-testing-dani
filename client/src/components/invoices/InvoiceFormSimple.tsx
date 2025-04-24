@@ -554,8 +554,13 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           : "La factura se ha creado correctamente",
       });
       
-      // Redireccionar a la página de facturas al completar
-      navigate("/invoices");
+      // Solo redirigir si NO estamos en el modal de cliente
+      if (!showClientForm) {
+        console.log("Redirigiendo a /invoices");
+        navigate("/invoices");
+      } else {
+        console.log("No redirigiendo porque el modal de cliente está abierto");
+      }
     },
     onError: (error) => {
       console.error("❌ Error al guardar factura:", error);
@@ -1082,9 +1087,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   <Button
                     type="button"
                     variant="outline"
-                    size="default"
+                    size="lg"
                     onClick={() => handleAddTax('irpf')}
-                    className="flex items-center px-4 py-2 text-sm font-medium"
+                    className="flex items-center px-5 py-3 text-base font-medium"
                   >
                     <Minus className="mr-2 h-4 w-4" />
                     IRPF (15%)
