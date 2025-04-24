@@ -1,7 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
 import { calculateInvoice } from './invoiceEngine'
-import { Plus, Minus, X, ArrowRight, Euro, CalendarDays, FileText, Receipt, CreditCard, BanknoteIcon, Trash2 } from 'lucide-react'
+import { Plus, Minus, X, ArrowRight, Euro, CalendarDays, FileText, Receipt, CreditCard, BanknoteIcon, Trash2, Search, Users } from 'lucide-react'
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { ClientForm } from "@/components/clients/ClientForm"
+import { useToast } from "@/hooks/use-toast"
+import { apiRequest } from "@/lib/queryClient"
 
 interface InvoiceItem {
   name: string;
