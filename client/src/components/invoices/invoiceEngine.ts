@@ -37,8 +37,12 @@ export function calculateInvoice(data: any) {
   let taxes = 0
   additionalTaxes.forEach((tax: any) => {
     // Permitimos rates negativos (ej: -21 para IRPF)
-    const rate = Number(tax.rate) || 0
+    // .rate es para el formato nuevo y .amount para compatibilidad con formato anterior
+    const rate = Number(tax.rate !== undefined ? tax.rate : tax.amount) || 0
     taxes += subtotal * (rate / 100)
+    
+    // Log para debugging
+    console.log(`Calculando impuesto ${tax.name || 'sin nombre'}: Tasa ${rate}%, Base ${subtotal}€, Resultado: ${(subtotal * (rate / 100)).toFixed(2)}€`);
   })
 
   // No añadir impuestos automáticamente si no hay ninguno definido

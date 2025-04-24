@@ -190,11 +190,15 @@ export default function CreateInvoicePage() {
     };
     
     // Asegurarnos de que los additionalTaxes tienen la estructura correcta
-    const additionalTaxes = data.additionalTaxes.map((tax: any) => ({
-      name: tax.name || 'IVA',
-      amount: String(((data.subtotal || 0) * (parseFloat(tax.rate) || 0) / 100).toFixed(2)), // Calcular y convertir a string
-      rate: String(tax.rate || 0), // Convertir a string
-    }));
+    const additionalTaxes = data.additionalTaxes.map((tax: any) => {
+      const rate = parseFloat(tax.rate) || 0;
+      // Permitimos valores negativos para impuestos (como IRPF -21%)
+      return {
+        name: tax.name || (rate < 0 ? 'IRPF' : 'IVA'),
+        amount: String(((data.subtotal || 0) * (rate / 100)).toFixed(2)), // Calcular y convertir a string
+        rate: String(rate), // Convertir a string, manteniendo el signo
+      };
+    });
     
     // Si hay impuestos, añadirlos al objeto de la factura
     if (additionalTaxes.length > 0) {

@@ -164,7 +164,10 @@ const TaxRow = ({
         <div className="col-span-4 overflow-hidden">
           <div className="flex items-center bg-gray-50 rounded-lg overflow-hidden">
             <input
-              {...register(`additionalTaxes.${index}.rate`)}
+              {...register(`additionalTaxes.${index}.rate`, {
+                valueAsNumber: true,
+                // No restringimos el valor mínimo para permitir valores negativos
+              })}
               type="number"
               min="-100"
               step="any"
