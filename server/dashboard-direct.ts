@@ -5,6 +5,25 @@ import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { dashboardState } from '../shared/schema';
 
+// Interfaz para impuestos adicionales
+interface AdditionalTax {
+  name: string;
+  rate: string;
+  amount?: number;
+}
+
+// Interfaz para facturas
+interface Invoice {
+  id?: number | string;
+  subtotal?: string | number;
+  total?: string | number;
+  status?: string;
+  additionalTaxes?: AdditionalTax[] | null;
+  // otros campos de factura
+  issueDate: string;
+  dueDate: string;
+}
+
 // Validación para detectar si los datos de IRPF son coherentes
 function validateIrpfData(invoices: any[], irpfRetenidoIngresos: number): { isValid: boolean; message: string } {
   try {
@@ -218,25 +237,33 @@ export function registerDirectDashboardEndpoint(app: Express) {
       const ivaSoportado = totalIvaSoportado;
       
       // 8. IRPF retenido (en ingresos)
-      const irpfRetenidoIngresos = paidInvoices.reduce((sum, invoice) => {
+      let irpfRetenidoIngresos = paidInvoices.reduce((sum, invoice) => {
         try {
           // Obtener los impuestos adicionales (donde debería estar el IRPF)
           const additionalTaxes = invoice.additionalTaxes || [];
           
           // Buscar si existe un impuesto de tipo IRPF (con porcentaje negativo)
           let irpfAmount = 0;
-          for (const tax of additionalTaxes) {
+          const taxesArray = Array.isArray(additionalTaxes) ? additionalTaxes : [];
+          for (const tax of taxesArray) {
             // El IRPF generalmente tiene un nombre que lo identifica y un valor negativo
             if (
               tax.name && 
               tax.name.toLowerCase().includes('irpf') && 
-              tax.rate && 
-              parseFloat(tax.rate) < 0
+              tax.rate
             ) {
-              // Calcular el monto del IRPF basado en la base imponible de la factura
-              const subtotal = parseFloat(invoice.subtotal || '0');
-              irpfAmount += subtotal * (Math.abs(parseFloat(tax.rate)) / 100);
-              console.log(`📊 Detectado IRPF en factura ${invoice.id}: ${tax.rate}%, monto: ${irpfAmount.toFixed(2)}€`);
+              // Verificar si es valor negativo (como -15, -7, etc.)
+              const taxRate = parseFloat(tax.rate);
+              // Asegurar que estamos tratando con valores negativos, pero usando su valor absoluto
+              if (taxRate < 0) {
+                // Calcular el monto del IRPF basado en la base imponible de la factura
+                const subtotal = parseFloat(invoice.subtotal || '0');
+                const irpfValue = subtotal * (Math.abs(taxRate) / 100);
+                irpfAmount += irpfValue;
+                console.log(`📊 Detectado IRPF en factura ${invoice.id}: ${tax.rate}%, base: ${subtotal.toFixed(2)}€, monto: ${irpfValue.toFixed(2)}€`);
+              } else {
+                console.warn(`⚠️ IRPF con tasa positiva (${taxRate}%) en factura ${invoice.id}. Debería ser negativo.`);
+              }
             }
           }
           
@@ -244,7 +271,8 @@ export function registerDirectDashboardEndpoint(app: Express) {
         } catch (error) {
           console.error(`Error procesando IRPF de factura ${invoice.id || 'desconocida'}:`, error);
           // Si hay error, mantener el cálculo anterior como fallback
-          const irpfEstimated = parseFloat(invoice.subtotal || '0') * 0.07;
+          const irpfEstimated = parseFloat(invoice.subtotal || '0') * 0.15; // Usar 15% como estimación por defecto
+          console.warn(`⚠️ Usando estimación de IRPF: ${irpfEstimated.toFixed(2)}€ para factura ${invoice.id}`);
           return sum + irpfEstimated;
         }
       }, 0);
@@ -253,10 +281,10 @@ export function registerDirectDashboardEndpoint(app: Express) {
       const ivaALiquidar = ivaRepercutido - ivaSoportado;
       
       // 10. IRPF total
-      const irpfTotal = irpfRetenidoIngresos + totalIrpfGastos;
+      let irpfTotal = irpfRetenidoIngresos + totalIrpfGastos;
       
       // 11. Resultado neto
-      const resultado = baseImponible - baseImponibleGastos - irpfTotal;
+      let resultado = baseImponible - baseImponibleGastos - irpfTotal;
       
       // Validar datos del IRPF antes de actualizar el estado
       const irpfValidation = validateIrpfData(paidInvoices, irpfRetenidoIngresos);
@@ -271,12 +299,20 @@ export function registerDirectDashboardEndpoint(app: Express) {
         console.log(`- Total base imponible: ${baseImponible.toFixed(2)}€`);
         
         // Intentar corregir el valor del IRPF si está muy bajo pero debería tener
+        let irpfCorregido = irpfRetenidoIngresos;
         if (baseImponible > 1000 && irpfRetenidoIngresos < 10) {
           console.log('🔄 Corrigiendo valor de IRPF basado en base imponible');
           // Usar una estimación del 15% sobre la base imponible como último recurso
-          irpfRetenidoIngresos = baseImponible * 0.15;
-          console.log(`- Nuevo valor estimado IRPF: ${irpfRetenidoIngresos.toFixed(2)}€`);
+          irpfCorregido = baseImponible * 0.15;
+          console.log(`- Nuevo valor estimado IRPF: ${irpfCorregido.toFixed(2)}€`);
+          // Actualizamos el valor total
+          irpfTotal = irpfCorregido + totalIrpfGastos;
+          // Recalculamos el resultado
+          resultado = baseImponible - baseImponibleGastos - irpfTotal;
         }
+        
+        // Usar el valor corregido
+        irpfRetenidoIngresos = irpfCorregido;
       }
       
       // Actualizar el estado del dashboard
