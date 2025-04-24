@@ -205,9 +205,84 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
   
   // Estado para el acordeón
   const [activeSection, setActiveSection] = useState<string>("customer");
+  // Estado para el modal de cliente
+  const [showClientForm, setShowClientForm] = useState(false);
+  // Estado para la búsqueda de clientes
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  // Estado para el cliente que se está editando
+  const [clientToEdit, setClientToEdit] = useState<any>(null);
+  // QueryClient para gestionar la caché
+  const queryClient = useQueryClient();
+  // Toast para notificaciones
+  const { toast } = useToast();
+  
+  // Cargar la lista de clientes
+  const { data: clients = [] } = useQuery({
+    queryKey: ['/api/clients'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/clients');
+        if (!response.ok) return [];
+        return await response.json();
+      } catch (error) {
+        console.error('Error al cargar clientes:', error);
+        return [];
+      }
+    }
+  });
   
   const toggleSection = (section: string) => {
     setActiveSection(activeSection === section ? "" : section);
+  };
+  
+  // Función para manejar la creación de un cliente
+  const handleClientCreated = (newClient: any) => {
+    // Actualizar la caché de react-query para incluir el nuevo cliente
+    queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+    
+    // Seleccionar automáticamente el nuevo cliente y rellenar los campos
+    setValue('clientId', newClient.id);
+    setValue('customerName', newClient.name);
+    setValue('customerNif', newClient.taxId);
+    setValue('customerEmail', newClient.email || '');
+    setValue('customerAddress', newClient.address || '');
+    
+    // Limpiar el cliente a editar
+    setClientToEdit(null);
+    
+    toast({
+      title: "Cliente creado",
+      description: `El cliente ${newClient.name} ha sido creado correctamente`,
+    });
+  };
+  
+  // Función para manejar el cierre del modal de cliente
+  const handleClientModalClose = (open: boolean) => {
+    if (!open) {
+      setClientToEdit(null);
+    }
+    setShowClientForm(open);
+  };
+  
+  // Interfaz para representar un cliente
+  interface Client {
+    id: number;
+    name: string;
+    taxId: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    email?: string | null;
+    phone?: string | null;
+  }
+  
+  // Función para seleccionar un cliente existente
+  const selectClient = (client: Client) => {
+    setValue('customerName', client.name);
+    setValue('customerNif', client.taxId);
+    setValue('customerEmail', client.email || '');
+    setValue('customerAddress', `${client.address || ''}, ${client.city || ''}, ${client.postalCode || ''}`);
+    setValue('clientId', client.id);
   };
 
   // Función para calcular totales de la factura
@@ -268,6 +343,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
+      {/* Modal para crear o editar cliente */}
+      <ClientForm 
+        open={showClientForm}
+        onOpenChange={handleClientModalClose}
+        onClientCreated={handleClientCreated}
+        clientToEdit={clientToEdit}
+      />
+      
       {/* Sección de detalles del cliente */}
       <div className="bg-white rounded-xl overflow-hidden shadow-sm">
         <div 
@@ -285,6 +368,81 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
         
         {activeSection === "customer" && (
           <div className="p-5 bg-white border-t border-gray-100">
+            {/* Buscador de clientes */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Buscar cliente existente</label>
+              <div className="flex space-x-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={clientSearchTerm}
+                    onChange={(e) => setClientSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors"
+                    placeholder="Buscar por nombre, NIF o email..."
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowClientForm(true)}
+                  className="px-4 py-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium flex items-center"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" /> Nuevo cliente
+                </button>
+              </div>
+              
+              {/* Lista de clientes filtrados */}
+              {clientSearchTerm && (
+                <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-sm max-h-60 overflow-y-auto">
+                  <ul className="py-1 divide-y divide-gray-100">
+                    {clients
+                      .filter((client: Client) => 
+                        client.name?.toLowerCase().includes(clientSearchTerm.toLowerCase()) || 
+                        client.taxId?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                        (client.email && client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()))
+                      )
+                      .map((client: Client) => (
+                        <li 
+                          key={client.id}
+                          className="px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => {
+                            selectClient(client);
+                            setClientSearchTerm('');
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <Users className="h-5 w-5 text-gray-400 mr-2" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">{client.name}</p>
+                              <p className="text-xs text-gray-500">{client.taxId} {client.email ? `· ${client.email}` : ''}</p>
+                            </div>
+                          </div>
+                        </li>
+                      ))
+                    }
+                    {clients.filter((client: Client) => 
+                      client.name?.toLowerCase().includes(clientSearchTerm.toLowerCase()) || 
+                      client.taxId?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                      (client.email && client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()))
+                    ).length === 0 && (
+                      <li className="px-3 py-3 text-center">
+                        <p className="text-sm text-gray-500">No se encontraron clientes</p>
+                        <button
+                          type="button"
+                          onClick={() => setShowClientForm(true)}
+                          className="text-sm text-blue-600 font-medium hover:text-blue-800 transition-colors mt-1"
+                        >
+                          Crear nuevo cliente
+                        </button>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre/Razón social</label>
@@ -319,6 +477,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ form, onCalculate }) => {
                   placeholder="Calle, Nº, Ciudad, CP"
                 />
               </div>
+              
+              {/* Campo oculto para guardar el ID del cliente seleccionado */}
+              <input
+                type="hidden"
+                {...register('clientId')}
+              />
             </div>
           </div>
         )}
