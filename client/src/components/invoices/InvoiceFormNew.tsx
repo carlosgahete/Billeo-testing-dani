@@ -166,6 +166,8 @@ const TaxRow = ({
             <input
               {...register(`additionalTaxes.${index}.rate`)}
               type="number"
+              min="-100"
+              step="any"
               placeholder="21, -15"
               className="w-full px-3 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors text-sm sm:text-base"
               onKeyDown={handleKeyDown}
