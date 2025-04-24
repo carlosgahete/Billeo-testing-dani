@@ -23,7 +23,7 @@
  
 @layer base {
   :root {
-    /* Fondo general */
+    /* Fondo general gris super claro (Apple) */
     --background: 240 30% 98%;
     --foreground: 240 10% 3.9%;
 
@@ -33,7 +33,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
  
-    /* Color primario */
+    /* Azul estilo Apple */
     --primary: 210 100% 50%;
     --primary-foreground: 0 0% 98%;
  
@@ -63,7 +63,7 @@
   }
  
   .dark {
-    /* Fondo oscuro */
+    /* Fondo oscuro estilo Apple */
     --background: 220 20% 10%;
     --foreground: 210 40% 98%;
  
@@ -75,7 +75,7 @@
     --popover: 220 20% 10%;
     --popover-foreground: 210 40% 98%;
  
-    /* Color primario en modo oscuro */
+    /* Azul Apple con brillo para modo oscuro */
     --primary: 210 100% 60%;
     --primary-foreground: 210 40% 98%;
  
@@ -216,31 +216,64 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400 font-bold;
 }
 
-/* Estilos para cards de dashboard */
+/* Estilos para cards de dashboard con estilo Apple */
 .dashboard-card {
-  @apply p-4 rounded-lg border border-border bg-card text-card-foreground shadow-sm;
+  @apply rounded-3xl border border-gray-100/40 bg-white overflow-hidden dark:border-gray-800;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.01);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.98);
 }
 
-/* Estilos para tarjetas de estadísticas */
+.dashboard-card:hover {
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.07),
+    0 1px 3px rgba(0, 0, 0, 0.02);
+  transform: translateY(-4px);
+}
+
+.dark .dashboard-card {
+  @apply bg-gray-900;
+  border-color: rgba(50, 50, 50, 0.5);
+  background: rgba(30, 30, 35, 0.95);
+}
+
+/* Estilos para estadísticas con estilo Apple */
 .stat-card {
-  @apply p-6 rounded-xl border border-gray-100/50 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-800;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  @apply p-8 rounded-3xl border border-gray-100/50 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-800;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.04),
+    0 1px 1px rgba(0, 0, 0, 0.01),
+    0 3px 5px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .stat-card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 5px 10px rgba(0, 0, 0, 0.03);
+  transform: translateY(-3px);
 }
 
 .stat-value {
-  @apply text-3xl md:text-4xl font-semibold mt-2;
+  @apply text-4xl md:text-5xl font-semibold mt-3;
+  letter-spacing: -0.02em;
   line-height: 1.1;
 }
 
 .stat-label {
   @apply text-base text-gray-500 dark:text-gray-400 mt-2;
+  letter-spacing: -0.01em;
   font-weight: 500;
+}
+
+.dark .stat-card {
+  background: rgba(30, 30, 35, 0.95);
 }
 
 /* Estilos para etiquetas de estado de facturas */
@@ -277,7 +310,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply w-3 h-3 rounded mr-1;
 }
 
-/* Animaciones rápidas y suaves */
+/* Animaciones estilo Apple, rápidas y suaves */
 @keyframes fadeIn {
   from { 
     opacity: 0;
@@ -339,11 +372,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply text-primary;
 }
 
-/* Estilos para botones personalizados */
-.button-custom {
+/* Estilos para botones al estilo Apple */
+.button-apple {
   @apply rounded-full bg-primary font-medium text-white flex items-center justify-center;
   letter-spacing: -0.01em;
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   padding: 0.75rem 1.5rem;
   font-size: 0.9375rem;
   box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
@@ -351,59 +384,59 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   outline: none;
 }
 
-.button-custom:hover {
+.button-apple:hover {
   @apply bg-primary/95;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
 }
 
-.button-custom:active {
+.button-apple:active {
   transform: translateY(0);
   box-shadow: 0 1px 4px rgba(0, 122, 255, 0.2);
   @apply bg-primary/90;
 }
 
-/* Botones secundarios personalizados */
-.button-custom-secondary {
+/* Botones secundarios en estilo Apple */
+.button-apple-secondary {
   @apply rounded-full bg-gray-100 font-medium text-gray-800 flex items-center justify-center dark:bg-gray-800 dark:text-gray-200;
   letter-spacing: -0.01em;
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   padding: 0.75rem 1.5rem;
   font-size: 0.9375rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.button-custom-secondary:hover {
+.button-apple-secondary:hover {
   @apply bg-gray-200 dark:bg-gray-700;
   transform: translateY(-2px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
-.button-custom-secondary:active {
+.button-apple-secondary:active {
   @apply bg-gray-300 dark:bg-gray-600;
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 /* Botones pequeños */
-.button-custom-sm {
+.button-apple-sm {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
 }
 
 /* Botones grandes */
-.button-custom-lg {
+.button-apple-lg {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
 }
 
 /* Botones con íconos */
-.button-custom-icon {
+.button-apple-icon {
   @apply space-x-2;
 }
 
-.button-custom-icon svg {
+.button-apple-icon svg {
   @apply w-4 h-4;
 }
 
@@ -567,11 +600,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: none !important; /* Esconder elementos fijos en la parte inferior */
 }
 
-/* Estilos de contenedores y secciones estándar */
-/* Estilo de contenedor estándar */
+/* Estilos de contenedor Apple */
+.container-apple {
+  @apply px-6 md:px-10 lg:px-12 mx-auto max-w-full;
+  width: 98%;
+}
 
 /* Márgenes consistentes para secciones */
-/* Estilo de sección estándar */
+.section-apple {
+  @apply py-6 md:py-10;
+}
 
 /* Estilo de tarjetas para filtros */
 .filter-card {
@@ -590,31 +628,35 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Áreas de contenido con scroll */
-/* Áreas de scroll estándar */
+.scroll-area-apple {
+  @apply rounded-lg border border-gray-100/60 p-4 dark:border-gray-800;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,1));
+  backdrop-filter: blur(10px);
+}
 
-/* Estilo de tabla personalizada */
-.table-custom {
+/* Estilo de tabla Apple */
+.table-apple {
   @apply w-full border-collapse rounded-lg overflow-hidden bg-white dark:bg-gray-900;
 }
 
-.table-custom thead {
+.table-apple thead {
   @apply bg-gray-50 dark:bg-gray-800/60;
 }
 
-.table-custom th {
+.table-apple th {
   @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300;
   letter-spacing: 0.05em;
 }
 
-.table-custom tbody {
+.table-apple tbody {
   @apply divide-y divide-gray-100 dark:divide-gray-800;
 }
 
-.table-custom td {
+.table-apple td {
   @apply px-4 py-3 text-sm text-gray-700 dark:text-gray-300;
 }
 
-.table-custom tr {
+.table-apple tr {
   @apply hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors;
 }
 
@@ -641,40 +683,40 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Selectores personalizados */
-.select-custom {
+/* Selectores estilo Apple */
+.select-apple {
   @apply rounded-full pl-4 pr-10 py-2 appearance-none bg-white border border-gray-200 text-gray-800 focus:ring-1 focus:ring-primary/30 focus:border-primary dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.75rem center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.select-custom:hover {
-  border-color: var(--primary);
+.select-apple:hover {
+  border-color: #007AFF;
   box-shadow: 0 3px 6px rgba(0, 122, 255, 0.1);
 }
 
 /* Efecto de hover para enlaces */
-a.link-custom {
+a.link-apple {
   @apply text-primary relative no-underline;
   transition: color 0.2s;
 }
 
-a.link-custom::after {
+a.link-apple::after {
   content: '';
   @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary rounded-full;
   transition: width 0.2s ease;
 }
 
-a.link-custom:hover::after {
+a.link-apple:hover::after {
   @apply w-full;
 }
 
-/* Tooltip personalizado */
-.tooltip-custom {
+/* Tooltip estilo Apple */
+.tooltip-apple {
   @apply absolute z-50 px-3 py-2 text-sm text-gray-800 bg-white dark:bg-gray-800 dark:text-gray-200 rounded-lg shadow-lg;
   backdrop-filter: blur(8px);
   max-width: 300px;
@@ -692,11 +734,11 @@ a.link-custom:hover::after {
   @apply bg-gray-900/90 border-gray-800/50;
 }
 
-/* Botones principales personalizados */
-.button-custom-primary {
-  @apply rounded-full bg-primary font-medium text-white flex items-center justify-center;
+/* Botones principales al estilo Apple */
+.button-apple-primary {
+  @apply rounded-full bg-[#007AFF] font-medium text-white flex items-center justify-center;
   letter-spacing: -0.01em;
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   padding: 0.75rem 1.5rem;
   font-size: 0.9375rem;
   box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
@@ -704,46 +746,46 @@ a.link-custom:hover::after {
   outline: none;
 }
 
-.button-custom-primary:hover {
-  @apply bg-primary/90;
+.button-apple-primary:hover {
+  @apply bg-[#0071E3];
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
 }
 
-.button-custom-primary:active {
+.button-apple-primary:active {
   transform: translateY(0);
   box-shadow: 0 1px 4px rgba(0, 122, 255, 0.2);
-  @apply bg-primary/80;
+  @apply bg-[#0062C9];
 }
 
-/* Botones secundarios personalizados */
-.button-custom-secondary {
+/* Botones secundarios en estilo Apple */
+.button-apple-secondary {
   @apply rounded-full bg-gray-100 font-medium text-gray-800 flex items-center justify-center;
   letter-spacing: -0.01em;
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   padding: 0.75rem 1.5rem;
   font-size: 0.9375rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.button-custom-secondary:hover {
+.button-apple-secondary:hover {
   @apply bg-gray-200;
   transform: translateY(-2px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
-.button-custom-secondary:active {
+.button-apple-secondary:active {
   @apply bg-gray-300;
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-/* Botón de peligro personalizado */
-.button-custom-danger {
-  @apply rounded-full bg-destructive font-medium text-white flex items-center justify-center;
+/* Botón de peligro en estilo Apple */
+.button-apple-danger {
+  @apply rounded-full bg-[#FF3B30] font-medium text-white flex items-center justify-center;
   letter-spacing: -0.01em;
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   padding: 0.75rem 1.5rem;
   font-size: 0.9375rem;
   box-shadow: 0 2px 8px rgba(255, 59, 48, 0.25);
@@ -751,34 +793,34 @@ a.link-custom:hover::after {
   outline: none;
 }
 
-.button-custom-danger:hover {
-  @apply bg-destructive/90;
+.button-apple-danger:hover {
+  @apply bg-[#FF2D21];
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 59, 48, 0.35);
 }
 
-.button-custom-danger:active {
+.button-apple-danger:active {
   transform: translateY(0);
   box-shadow: 0 1px 4px rgba(255, 59, 48, 0.2);
-  @apply bg-destructive/80;
+  @apply bg-[#FF1A0D];
 }
 
-/* Botones pequeños personalizados */
-.button-custom-sm {
+/* Botones pequeños en estilo Apple */
+.button-apple-sm {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
 }
 
-/* Campo de búsqueda personalizado */
-.search-field-custom {
-  @apply pl-10 pr-4 py-2 rounded-full border border-gray-200/80 bg-gray-50/80 text-gray-800 focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all;
+/* Icono de búsqueda Apple */
+.search-field-apple {
+  @apply pl-10 pr-4 py-2 rounded-full border border-gray-200/80 bg-gray-50/80 text-gray-800 focus:ring-2 focus:ring-[#007AFF]/10 focus:border-[#007AFF] transition-all;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: 12px center;
   background-size: 16px;
 }
 
-.search-field-custom:focus {
+.search-field-apple:focus {
   @apply bg-white;
   box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
 }
