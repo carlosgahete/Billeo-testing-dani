@@ -171,14 +171,14 @@ const TaxRow = ({
               onKeyDown={handleKeyDown}
               onChange={(e) => {
                 handleChange();
-                // Permitir tanto números positivos como negativos
-                let inputValue = e.target.value;
-                // Si no es un número válido (incluyendo decimales y signo), mantener el valor como string
-                let value = inputValue === '-' ? inputValue : (parseFloat(inputValue) || 0);
-                console.log("Valor ingresado en impuesto:", inputValue, "Convertido a:", value);
+                // Usamos directamente el valor como string sin convertir
+                const inputValue = e.target.value;
+                console.log("Valor ingresado en impuesto:", inputValue);
                 
+                // Solo convertimos a número cuando debemos realizar cálculos
                 setTimeout(() => {
-                  setValue(`additionalTaxes.${index}.rate`, value);
+                  // Guardamos el valor tal cual lo ingresó el usuario
+                  setValue(`additionalTaxes.${index}.rate`, inputValue);
                   if (calculateTotals) calculateTotals();
                 }, 0);
               }}
