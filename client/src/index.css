@@ -217,63 +217,29 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Estilos para cards de dashboard con estilo Apple */
-.dashboard-card {
-  @apply rounded-3xl border border-gray-100/40 bg-white overflow-hidden dark:border-gray-800;
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.01);
-  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.dashboard-card:hover {
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.07),
-    0 1px 3px rgba(0, 0, 0, 0.02);
-  transform: translateY(-4px);
-}
-
-.dark .dashboard-card {
-  @apply bg-gray-900;
-  border-color: rgba(50, 50, 50, 0.5);
-  background: rgba(30, 30, 35, 0.95);
-}
+/* Tarjeta dashboard estándar - reemplazando estilo Apple */
 
 /* Estilos para estadísticas con estilo Apple */
+/* Tarjeta de estadísticas estándar */
 .stat-card {
-  @apply p-8 rounded-3xl border border-gray-100/50 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-800;
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.04),
-    0 1px 1px rgba(0, 0, 0, 0.01),
-    0 3px 5px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
+  @apply p-6 rounded-xl border border-gray-100/50 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-800;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 
-    0 15px 40px rgba(0, 0, 0, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    0 5px 10px rgba(0, 0, 0, 0.03);
-  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .stat-value {
-  @apply text-4xl md:text-5xl font-semibold mt-3;
-  letter-spacing: -0.02em;
+  @apply text-3xl md:text-4xl font-semibold mt-2;
   line-height: 1.1;
 }
 
 .stat-label {
   @apply text-base text-gray-500 dark:text-gray-400 mt-2;
-  letter-spacing: -0.01em;
   font-weight: 500;
-}
-
-.dark .stat-card {
-  background: rgba(30, 30, 35, 0.95);
 }
 
 /* Estilos para etiquetas de estado de facturas */
@@ -601,15 +567,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Estilos de contenedor Apple */
-.container-apple {
-  @apply px-6 md:px-10 lg:px-12 mx-auto max-w-full;
-  width: 98%;
-}
+/* Estilo de contenedor estándar - reemplazando código de Apple */
 
 /* Márgenes consistentes para secciones */
-.section-apple {
-  @apply py-6 md:py-10;
-}
+/* Estilo de sección estándar - reemplazando código de Apple */
 
 /* Estilo de tarjetas para filtros */
 .filter-card {
@@ -628,11 +589,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Áreas de contenido con scroll */
-.scroll-area-apple {
-  @apply rounded-lg border border-gray-100/60 p-4 dark:border-gray-800;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,1));
-  backdrop-filter: blur(10px);
-}
+/* Áreas de scroll estándar - reemplazando código de Apple */
 
 /* Estilo de tabla Apple */
 .table-apple {
