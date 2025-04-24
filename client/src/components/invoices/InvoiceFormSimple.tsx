@@ -1073,31 +1073,31 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={() => handleAddTax('irpf')}
-                    className="flex items-center"
+                    className="flex items-center px-4 py-2 text-sm font-medium"
                   >
-                    <Minus className="mr-1 h-3 w-3" />
+                    <Minus className="mr-2 h-4 w-4" />
                     IRPF (15%)
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={() => handleAddTax('iva')}
-                    className="flex items-center"
+                    className="flex items-center px-4 py-2 text-sm font-medium"
                   >
-                    <Plus className="mr-1 h-3 w-3" />
+                    <Plus className="mr-2 h-4 w-4" />
                     IVA adicional (21%)
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={() => handleAddTax()}
-                    className="flex items-center"
+                    className="flex items-center px-4 py-2 text-sm font-medium"
                   >
-                    <Plus className="mr-1 h-3 w-3" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Impuesto personalizado
                   </Button>
                 </div>
