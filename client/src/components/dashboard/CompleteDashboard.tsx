@@ -16,7 +16,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import ExpensesByCategoryApple from "./ExpensesByCategoryApple";
+// Utilizamos el componente estándar en lugar del componente Apple
 import ExpensesByCategory from "./ExpensesByCategory";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSimpleDashboardFilters } from "@/hooks/useSimpleDashboardFilters";
