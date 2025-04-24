@@ -43,7 +43,7 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from "@/components/ui/accordion";
-import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown, Loader2 } from "lucide-react";
+import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown, Loader2, User } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
@@ -733,6 +733,54 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       </FormItem>
                     )}
                   />
+
+                  {/* Mostrar información del cliente seleccionado */}
+                  {selectedClientInfo && (
+                    <div className="mt-4 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                      <h4 className="text-sm font-semibold mb-2 text-blue-700 flex items-center">
+                        <div className="h-3 w-3 rounded-full bg-blue-500 mr-2"></div>
+                        Datos del cliente seleccionado
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-gray-500">Nombre:</p>
+                          <p className="font-medium">{selectedClientInfo.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">NIF/CIF:</p>
+                          <p className="font-medium">{selectedClientInfo.taxId}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Dirección:</p>
+                          <p className="font-medium">{selectedClientInfo.address}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Ciudad:</p>
+                          <p className="font-medium">{selectedClientInfo.city}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Código Postal:</p>
+                          <p className="font-medium">{selectedClientInfo.postalCode}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">País:</p>
+                          <p className="font-medium">{selectedClientInfo.country}</p>
+                        </div>
+                        {selectedClientInfo.email && (
+                          <div>
+                            <p className="text-gray-500">Email:</p>
+                            <p className="font-medium">{selectedClientInfo.email}</p>
+                          </div>
+                        )}
+                        {selectedClientInfo.phone && (
+                          <div>
+                            <p className="text-gray-500">Teléfono:</p>
+                            <p className="font-medium">{selectedClientInfo.phone}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
