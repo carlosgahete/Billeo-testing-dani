@@ -72,8 +72,8 @@ const invoiceItemSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria"),
   quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor que cero"),
   unitPrice: z.coerce.number().min(0.01, "El precio debe ser mayor que cero"),
-  taxRate: z.coerce.number().min(0, "El IVA no puede ser negativo"),
-  subtotal: z.coerce.number().min(0).optional(),
+  taxRate: z.coerce.number(), // Permitimos valores negativos para impuestos (como IRPF -21%)
+  subtotal: z.coerce.number().optional(), // Permitimos cualquier valor incluido negativo
 });
 
 // Define schema for the whole invoice
@@ -84,9 +84,9 @@ const invoiceSchema = z.object({
   }),
   issueDate: z.string().min(1, "La fecha de emisión es obligatoria"),
   dueDate: z.string().min(1, "La fecha de vencimiento es obligatoria"),
-  subtotal: z.coerce.number().min(0),
-  tax: z.coerce.number().min(0),
-  total: z.coerce.number().min(0),
+  subtotal: z.coerce.number(), // Permitimos cualquier valor de base imponible, incluyendo negativos
+  tax: z.coerce.number(), // Permitimos valores negativos para impuestos
+  total: z.coerce.number(), // Permitimos cualquier valor total
   additionalTaxes: z.array(additionalTaxSchema).optional().default([]),
   status: z.string().min(1, "El estado es obligatorio"),
   notes: z.string().nullable().optional(),
@@ -276,7 +276,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para calcular los totales del formulario (usando valores actuales)
   const calculateTotals = () => {
-    const { items = [], additionalTaxes = [] } = form.getValues();
+    const { items = [], additionalTaxes = [], subtotal: userSubmittedSubtotal } = form.getValues();
     
     // Calculamos subtotales de cada item
     const updatedItems = (items || []).map((item: any) => {
@@ -291,11 +291,20 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       };
     });
     
-    // Calculamos subtotal de la factura
-    const subtotal = updatedItems.reduce(
-      (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
-      0
-    );
+    // Calculamos subtotal de la factura solo si no hay un valor específico ingresado por el usuario
+    // Esto permite al usuario sobrescribir el subtotal calculado si lo desea
+    let subtotal;
+    if (userSubmittedSubtotal !== undefined && userSubmittedSubtotal !== null && userSubmittedSubtotal !== 0) {
+      // Usamos el subtotal ingresado por el usuario
+      subtotal = toNumber(userSubmittedSubtotal);
+      console.log("✅ Respetando valor de base imponible ingresado por el usuario:", subtotal);
+    } else {
+      // Calculamos el subtotal a partir de los ítems
+      subtotal = updatedItems.reduce(
+        (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
+        0
+      );
+    }
     
     // Calculamos IVA basado en la tasa de cada item
     const tax = updatedItems.reduce((sum: number, item: any) => {
@@ -322,7 +331,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       subtotal,
       tax,
       additionalTaxesTotal,
-      total: Math.max(0, total) // Nunca permitir totales negativos
+      total // Permitimos valores negativos para el total
     };
   };
   

@@ -110,7 +110,7 @@ function calculateInvoiceTotals(
   });
   
   const total = subtotal + tax + additionalTaxesTotal;
-  const safeTotal = Math.max(0, total);
+  // Ya no forzamos valores positivos: const safeTotal = Math.max(0, total);
   
   // Si la opción executeUpdate está activada, actualizamos el formulario
   // Esto permite calcular sin actualizar cuando solo necesitamos los valores
@@ -122,7 +122,7 @@ function calculateInvoiceTotals(
       // Actualizamos los totales de la factura sin validar para evitar pérdida de foco
       formInstance.setValue("subtotal", subtotal, { shouldValidate: false });
       formInstance.setValue("tax", tax, { shouldValidate: false });
-      formInstance.setValue("total", safeTotal, { shouldValidate: false });
+      formInstance.setValue("total", total, { shouldValidate: false }); // Permitimos valores negativos
       
       // Log para debug solo si no estamos en modo silencioso
       if (!options.silentMode) {
@@ -130,7 +130,7 @@ function calculateInvoiceTotals(
           subtotal,
           tax,
           additionalTaxesTotal,
-          total: safeTotal,
+          total, // Mostramos el total real sin forzar valores positivos
           desglose: additionalTaxes.map((tax: any) => ({
             nombre: tax.name,
             valor: tax.isPercentage ? 
@@ -145,7 +145,7 @@ function calculateInvoiceTotals(
   }
   
   // Devolvemos los valores calculados para uso inmediato si es necesario
-  return { subtotal, tax, additionalTaxesTotal, total: safeTotal };
+  return { subtotal, tax, additionalTaxesTotal, total }; // Permitimos valores negativos
 }
 
 // Define schema for additional tax
@@ -160,8 +160,8 @@ const invoiceItemSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria"),
   quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor que cero"),
   unitPrice: z.coerce.number().min(0.01, "El precio debe ser mayor que cero"),
-  taxRate: z.coerce.number().min(0, "El IVA no puede ser negativo"),
-  subtotal: z.coerce.number().min(0).optional(),
+  taxRate: z.coerce.number(), // Permitimos valores negativos para impuestos (como IRPF -21%)
+  subtotal: z.coerce.number().optional(), // Permitimos cualquier valor incluido negativo
 });
 
 // Define schema for the whole invoice
@@ -172,9 +172,9 @@ const invoiceSchema = z.object({
   }),
   issueDate: z.string().min(1, "La fecha de emisión es obligatoria"),
   dueDate: z.string().min(1, "La fecha de vencimiento es obligatoria"),
-  subtotal: z.coerce.number().min(0),
-  tax: z.coerce.number().min(0),
-  total: z.coerce.number().min(0),
+  subtotal: z.coerce.number(), // Permitimos cualquier valor de base imponible, incluyendo negativos
+  tax: z.coerce.number(), // Permitimos valores negativos para impuestos
+  total: z.coerce.number(), // Permitimos cualquier valor total
   additionalTaxes: z.array(additionalTaxSchema).optional().default([]),
   status: z.string().min(1, "El estado es obligatorio"),
   notes: z.string().nullable().optional(),
