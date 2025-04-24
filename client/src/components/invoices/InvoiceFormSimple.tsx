@@ -569,8 +569,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Manejar submit del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
-    // Si el modal de cliente está abierto, no procesamos el envío del formulario de factura
+    // Si el modal de cliente está abierto, evitamos enviar el formulario de factura
     if (showClientForm) {
+      console.log("Modal de cliente abierto, ignorando submit de factura");
       return;
     }
     
@@ -578,6 +579,8 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     data.subtotal = calculatedTotals.subtotal;
     data.tax = calculatedTotals.tax;
     data.total = calculatedTotals.total;
+    
+    console.log("Enviando datos de factura", data);
     
     // Enviar datos
     mutation.mutate(data);
