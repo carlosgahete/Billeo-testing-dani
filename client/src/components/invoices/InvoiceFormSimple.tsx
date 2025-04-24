@@ -1083,25 +1083,25 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </div>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-3 mb-6">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="default"
                     size="lg"
                     onClick={() => handleAddTax('irpf')}
-                    className="flex items-center px-5 py-3 text-base font-medium bg-red-50 border-red-200 hover:bg-red-100 hover:text-red-700"
+                    className="flex items-center px-5 py-6 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg"
                   >
-                    <Minus className="mr-2 h-5 w-5" />
+                    <Minus className="mr-3 h-6 w-6" />
                     IRPF (15%)
                   </Button>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="default"
                     size="lg"
                     onClick={() => handleAddTax('iva')}
-                    className="flex items-center px-5 py-3 text-base font-medium bg-blue-50 border-blue-200 hover:bg-blue-100 hover:text-blue-700"
+                    className="flex items-center px-5 py-6 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
                   >
-                    <Plus className="mr-2 h-5 w-5" />
+                    <Plus className="mr-3 h-6 w-6" />
                     IVA adicional (21%)
                   </Button>
                   <Button
@@ -1109,9 +1109,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     variant="outline"
                     size="lg"
                     onClick={() => handleAddTax()}
-                    className="flex items-center px-5 py-3 text-base font-medium bg-gray-50 border-gray-200 hover:bg-gray-100"
+                    className="flex items-center px-5 py-6 text-lg font-medium bg-gray-50 border-gray-300 hover:bg-gray-100"
                   >
-                    <Plus className="mr-2 h-5 w-5" />
+                    <Plus className="mr-3 h-6 w-6" />
                     Impuesto personalizado
                   </Button>
                 </div>
