@@ -1152,9 +1152,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     variant="default"
                     size="lg"
                     onClick={() => handleAddTax('irpf')}
-                    className="flex items-center px-5 py-6 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg"
+                    className="flex items-center justify-center px-6 py-8 text-xl font-bold bg-red-600 hover:bg-red-700 text-white shadow-2xl rounded-xl w-44 h-24"
                   >
-                    <Minus className="mr-3 h-6 w-6" />
+                    <Minus className="mr-3 h-8 w-8" />
                     IRPF (15%)
                   </Button>
                   <Button
@@ -1162,19 +1162,19 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     variant="default"
                     size="lg"
                     onClick={() => handleAddTax('iva')}
-                    className="flex items-center px-5 py-6 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                    className="flex items-center justify-center px-6 py-8 text-xl font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-2xl rounded-xl w-44 h-24"
                   >
-                    <Plus className="mr-3 h-6 w-6" />
-                    IVA adicional (21%)
+                    <Plus className="mr-3 h-8 w-8" />
+                    IVA (21%)
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     size="lg"
                     onClick={() => handleAddTax()}
-                    className="flex items-center px-5 py-6 text-lg font-medium bg-gray-50 border-gray-300 hover:bg-gray-100"
+                    className="flex items-center justify-center px-6 py-8 text-xl font-semibold bg-gray-50 hover:bg-gray-100 border-gray-300 shadow-xl rounded-xl h-24"
                   >
-                    <Plus className="mr-3 h-6 w-6" />
+                    <Plus className="mr-3 h-8 w-8" />
                     Impuesto personalizado
                   </Button>
                 </div>
