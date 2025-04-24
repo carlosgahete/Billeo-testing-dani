@@ -53,7 +53,6 @@ import TestEmailPage from "@/pages/test-email";
 import TaxesPage from "@/pages/taxes";
 import FilterTestPage from "@/pages/FilterTest";
 import FilterTestSimplePage from "@/pages/FilterTestSimple";
-import AppleDashboardDemo from "@/pages/apple-dashboard-demo";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -279,12 +278,7 @@ function Router() {
         <TestFormat />
       </Route>
       
-      {/* Ruta para dashboard con estilo Apple */}
-      <Route path="/apple-dashboard-demo">
-        <Layout>
-          <ProtectedRoute path="/apple-dashboard-demo" component={AppleDashboardDemo} />
-        </Layout>
-      </Route>
+      {/* Ruta eliminada del dashboard con estilo Apple */}
       
       <Route path="*" component={NotFound} />
     </Switch>
