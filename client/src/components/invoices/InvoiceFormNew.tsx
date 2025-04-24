@@ -164,19 +164,19 @@ const TaxRow = ({
         <div className="col-span-4 overflow-hidden">
           <div className="flex items-center bg-gray-50 rounded-lg overflow-hidden">
             <input
-              {...register(`additionalTaxes.${index}.rate`, {
-                valueAsNumber: true,
-                // No restringimos el valor mínimo para permitir valores negativos
-              })}
-              type="number"
-              min="-100"
-              step="any"
+              {...register(`additionalTaxes.${index}.rate`)}
+              type="text"
               placeholder="21, -15"
               className="w-full px-3 py-2.5 bg-transparent border-0 focus:ring-2 focus:ring-blue-100 transition-colors text-sm sm:text-base"
               onKeyDown={handleKeyDown}
               onChange={(e) => {
                 handleChange();
-                const value = parseFloat(e.target.value) || 0;
+                // Permitir tanto números positivos como negativos
+                let inputValue = e.target.value;
+                // Si no es un número válido (incluyendo decimales y signo), mantener el valor como string
+                let value = inputValue === '-' ? inputValue : (parseFloat(inputValue) || 0);
+                console.log("Valor ingresado en impuesto:", inputValue, "Convertido a:", value);
+                
                 setTimeout(() => {
                   setValue(`additionalTaxes.${index}.rate`, value);
                   if (calculateTotals) calculateTotals();

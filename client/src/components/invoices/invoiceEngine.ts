@@ -38,7 +38,16 @@ export function calculateInvoice(data: any) {
   additionalTaxes.forEach((tax: any) => {
     // Permitimos rates negativos (ej: -21 para IRPF)
     // .rate es para el formato nuevo y .amount para compatibilidad con formato anterior
-    const rate = Number(tax.rate !== undefined ? tax.rate : tax.amount) || 0
+    // Manejar casos especiales como cuando el valor es "-" (cuando el usuario está escribiendo)
+    let rateVal = tax.rate !== undefined ? tax.rate : tax.amount;
+    
+    // Si es un string y sólo contiene el signo menos, tratarlo como 0 temporalmente
+    if (rateVal === "-") {
+      console.log("Detectado valor incompleto '-', usando 0 temporalmente");
+      rateVal = 0;
+    }
+    
+    const rate = Number(rateVal) || 0
     taxes += subtotal * (rate / 100)
     
     // Log para debugging
