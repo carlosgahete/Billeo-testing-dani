@@ -135,6 +135,9 @@ const TaxRow = ({
   getValues?: any, 
   calculateTotals?: () => void
 }) => {
+  // Estado para tipo de impuesto
+  const [taxType, setTaxType] = useState<'irpf' | 'iva' | 'other'>('other');
+  
   // Prevenir envío del formulario al presionar Enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -149,6 +152,19 @@ const TaxRow = ({
     }
   };
   
+  // Detectar el tipo de impuesto basado en el nombre
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value.toLowerCase();
+    if (name.includes('irpf')) {
+      setTaxType('irpf');
+    } else if (name.includes('iva')) {
+      setTaxType('iva');
+    } else {
+      setTaxType('other');
+    }
+    handleChange();
+  };
+  
   return (
     <div className="group relative mb-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
       <div className="grid grid-cols-12 gap-4">
@@ -158,8 +174,34 @@ const TaxRow = ({
             placeholder="Ej: IVA, IRPF, etc."
             className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors text-sm sm:text-base"
             onKeyDown={handleKeyDown}
-            onChange={handleChange}
+            onChange={handleNameChange}
           />
+          
+          {/* Botones rápidos para nombre de impuestos */}
+          <div className="flex gap-1 mt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setValue(`additionalTaxes.${index}.name`, "IRPF");
+                setTaxType('irpf');
+                handleChange();
+              }}
+              className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+            >
+              IRPF
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setValue(`additionalTaxes.${index}.name`, "IVA");
+                setTaxType('iva');
+                handleChange();
+              }}
+              className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors"
+            >
+              IVA
+            </button>
+          </div>
         </div>
         <div className="col-span-4 overflow-hidden">
           <div className="flex items-center bg-gray-50 rounded-lg overflow-hidden">
@@ -185,6 +227,68 @@ const TaxRow = ({
             />
             <span className="pr-3 text-gray-500">%</span>
           </div>
+          
+          {/* Botones rápidos para porcentajes según tipo */}
+          {taxType === 'irpf' && (
+            <div className="flex gap-1 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setValue(`additionalTaxes.${index}.rate`, "-15");
+                  if (calculateTotals) calculateTotals();
+                }}
+                className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+              >
+                -15%
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue(`additionalTaxes.${index}.rate`, "-7");
+                  if (calculateTotals) calculateTotals();
+                }}
+                className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+              >
+                -7%
+              </button>
+            </div>
+          )}
+          
+          {/* Botones para IVA */}
+          {taxType === 'iva' && (
+            <div className="flex gap-1 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setValue(`additionalTaxes.${index}.rate`, "21");
+                  if (calculateTotals) calculateTotals();
+                }}
+                className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors"
+              >
+                21%
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue(`additionalTaxes.${index}.rate`, "10");
+                  if (calculateTotals) calculateTotals();
+                }}
+                className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors"
+              >
+                10%
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue(`additionalTaxes.${index}.rate`, "4");
+                  if (calculateTotals) calculateTotals();
+                }}
+                className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors"
+              >
+                4%
+              </button>
+            </div>
+          )}
         </div>
       </div>
       
