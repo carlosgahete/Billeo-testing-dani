@@ -99,7 +99,11 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
           ? "El cliente se ha actualizado correctamente" 
           : "El cliente se ha creado correctamente",
       });
+      
+      // Primero notificamos al componente padre sobre el cliente creado
       onClientCreated(data);
+      
+      // Después cerramos el modal y limpiamos el formulario
       onOpenChange(false);
       form.reset();
     },

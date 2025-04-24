@@ -554,6 +554,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           : "La factura se ha creado correctamente",
       });
       
+      // Redireccionar a la página de facturas al completar
       navigate("/invoices");
     },
     onError: (error) => {
@@ -568,6 +569,11 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Manejar submit del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
+    // Si el modal de cliente está abierto, no procesamos el envío del formulario de factura
+    if (showClientForm) {
+      return;
+    }
+    
     // Actualizar los datos con los totales calculados
     data.subtotal = calculatedTotals.subtotal;
     data.tax = calculatedTotals.tax;
