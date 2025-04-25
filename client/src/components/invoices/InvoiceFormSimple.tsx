@@ -710,14 +710,37 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       }, 2000);
     };
     
+    // Nuevo manejador para el bloqueo total de envíos por tiempo extendido
+    const blockAllSubmissionsHandler = (e: any) => {
+      console.log("🚫 Bloqueando TODOS los envíos de formulario por tiempo extendido:", e.detail);
+      
+      // Desactivar completamente la posibilidad de enviar el formulario
+      setUserInitiatedSubmit(false);
+      setBlockAllSubmits(true);
+      
+      // Mostrar mensaje al usuario
+      toast({
+        title: "Cliente creado con éxito",
+        description: "El cliente ha sido creado. Ahora complete los datos de la factura y haga clic en Crear Factura cuando esté listo.",
+      });
+      
+      // Mantener el bloqueo por un tiempo prolongado (3 segundos)
+      setTimeout(() => {
+        setBlockAllSubmits(false);
+        console.log("✅ Liberado bloqueo extendido de envíos");
+      }, 3000);
+    };
+    
     window.addEventListener('prevent-invoice-submit', preventFormSubmitHandler);
     window.addEventListener('client-form-closing', preventFormSubmitHandler);
     window.addEventListener('client-selected-do-not-submit', clientSelectedHandler);
+    window.addEventListener('block-all-submissions', blockAllSubmissionsHandler);
     
     return () => {
       window.removeEventListener('prevent-invoice-submit', preventFormSubmitHandler);
       window.removeEventListener('client-form-closing', preventFormSubmitHandler);
       window.removeEventListener('client-selected-do-not-submit', clientSelectedHandler);
+      window.removeEventListener('block-all-submissions', blockAllSubmissionsHandler);
     };
   }, []);
   
@@ -866,9 +889,25 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         <form onSubmit={(e) => {
           // Siempre prevenimos el envío automático del formulario
           console.log("⛔ Interceptando envío de formulario");
+          
+          // Detener la propagación del evento
+          e.stopPropagation();
+          
+          // Prevenir el comportamiento predeterminado
           e.preventDefault();
           
+          // Verificar si hay un bloqueo activo
+          if (blockAllSubmits) {
+            console.log("🚫 Formulario bloqueado, ignorando completamente el envío");
+            toast({
+              title: "Formulario bloqueado",
+              description: "Por favor, espere un momento antes de enviar la factura",
+            });
+            return false;
+          }
+          
           // El envío real se hace a través del botón y la validación
+          console.log("⚠️ Envío interceptado, use el botón 'Crear Factura' para enviar cuando esté listo");
           return false;
         }} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -65,15 +65,30 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
     }
   });
   
-  // Mutación para crear cliente
+  // Mutación para crear cliente implementada con fetch directamente para evitar interferencias
   const mutation = useMutation({
     mutationFn: async (data: ClientFormValues) => {
+      console.log("🔄 Iniciando creación de cliente con fetch directo (sin apiRequest)");
       try {
-        const response = await apiRequest("POST", "/api/clients", data);
+        // Usamos fetch directamente en lugar de apiRequest para tener más control
+        const response = await fetch('/api/clients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+          credentials: 'same-origin' // Importante para mantener la sesión
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error en la creación del cliente: ${response.statusText}`);
+        }
+        
         const jsonData = await response.json();
+        console.log("✅ Cliente creado correctamente:", jsonData);
         return jsonData;
       } catch (error) {
-        console.error("Error creando cliente:", error);
+        console.error("❌ Error en la creación del cliente:", error);
         throw error;
       }
     },
@@ -81,8 +96,13 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
       // Mostrar toast de éxito
       toast({
         title: "Cliente creado",
-        description: "El cliente se ha creado correctamente"
+        description: "El cliente se ha creado correctamente y ha sido seleccionado"
       });
+      
+      // Prevenir cualquier envío automático con evento global
+      window.dispatchEvent(new CustomEvent('block-all-submissions', { 
+        detail: { duration: 3000, source: 'client-create' }
+      }));
       
       // Actualizar la lista de clientes
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
@@ -90,23 +110,18 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
       // Limpiar y cerrar formulario
       form.reset();
       
-      // Primero cerrar el formulario, luego seleccionar el cliente
-      console.log("Cliente creado exitosamente con ID:", data.id);
-      
-      // Disparar evento para prevenir envío automático
-      window.dispatchEvent(new CustomEvent('prevent-invoice-submit'));
-      
-      // Cerrar primero el formulario
+      // Cerrar primero el formulario antes de hacer nada más
       onClose();
       
-      // Después de un tiempo, seleccionar el cliente (pero sin que se envíe el formulario)
+      // Esperar a que todo se estabilice antes de seleccionar al cliente
       setTimeout(() => {
-        console.log("Seleccionando nuevo cliente:", data.id);
+        console.log("🔍 Seleccionando cliente con ID:", data.id);
         onClientSelect(data.id);
         
-        // Notificar que el cliente ha sido seleccionado pero que no se debe enviar el formulario
+        // Enviar evento para notificar selección pero evitar envío
         window.dispatchEvent(new CustomEvent('client-selected-do-not-submit'));
-      }, 500);
+        window.dispatchEvent(new CustomEvent('prevent-invoice-submit'));
+      }, 1000);
     },
     onError: (error: any) => {
       toast({
@@ -141,7 +156,16 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={(e) => {
+            // Detener explícitamente la propagación de eventos
+            e.stopPropagation();
+            
+            // Ahora procesamos el formulario con react-hook-form
+            form.handleSubmit(onSubmit)(e);
+            
+            // Esa fue una doble prevención por si acaso
+            return false;
+          }} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -280,10 +304,40 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
             </div>
 
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={onClose}>
+              <Button variant="outline" type="button" onClick={(e) => {
+                // Prevenir cualquier propagación para evitar que afecte al formulario principal
+                e.stopPropagation();
+                onClose();
+              }}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="button" 
+                disabled={isSubmitting}
+                onClick={(e) => {
+                  // Prevenir cualquier propagación
+                  e.stopPropagation();
+                  e.preventDefault();
+                  
+                  // En lugar de enviar el formulario (que podría causar efectos secundarios),
+                  // procesamos el formulario manualmente
+                  console.log("🔄 Procesando formulario de cliente mediante botón (no submit)");
+                  
+                  // Verificar validez del formulario
+                  form.trigger().then(isValid => {
+                    if (isValid) {
+                      // Obtener los datos validados
+                      const formData = form.getValues();
+                      
+                      // Ejecutar la mutación directamente
+                      mutation.mutate(formData);
+                    } else {
+                      console.log("❌ Formulario de cliente con errores, no se envía");
+                    }
+                  });
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
                 {isSubmitting ? "Guardando..." : "Guardar cliente"}
               </Button>
             </DialogFooter>
