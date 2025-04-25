@@ -544,50 +544,14 @@ export function setupAuth(app: Express) {
       }
     }
     
-    // Si no está autenticado y estamos en desarrollo, intentamos con un usuario de demo
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        console.log("Intentando autenticar con usuario demo de development");
-        const result = await sql`SELECT * FROM users WHERE username = 'demo'`;
-        
-        if (result.length > 0) {
-          const user = result[0];
-          
-          // Crear un objeto de usuario compatible con el esquema
-          const completeUser = {
-            id: user.id,
-            username: user.username,
-            password: user.password,
-            name: user.name,
-            email: user.email,
-            role: user.role || 'user',
-            businessType: user.business_type || null,
-            profileImage: user.profile_image || null,
-            resetToken: user.reset_token || null,
-            resetTokenExpiry: user.reset_token_expiry || null,
-            securityQuestion: user.security_question || null,
-            securityAnswer: user.security_answer || null
-          };
-          
-          // Guardar el userId en la sesión para futuras solicitudes
-          if (req.session) {
-            req.session.userId = completeUser.id;
-            try {
-              await new Promise<void>((resolve) => {
-                req.session.save(() => resolve());
-              });
-            } catch (e) {
-              console.error("Error al guardar sesión:", e);
-            }
-          }
-          
-          const { password, ...userWithoutPassword } = completeUser;
-          return res.status(200).json(userWithoutPassword);
-        }
-      } catch (error) {
-        console.error("Error en autenticación de fallback:", error);
-      }
-    }
+    // MULTIUSUARIO: No usamos la autenticación automática con usuario demo 
+    // para permitir que cada usuario tenga su propia sesión
+    
+    // Informamos al cliente que no está autenticado para que muestre el formulario de login
+    return res.status(401).json({
+      message: "No autenticado. Por favor inicie sesión con sus credenciales.",
+      authenticated: false
+    });
     
     // Si ninguna de las comprobaciones anteriores tuvo éxito, no está autenticado
     console.log("Usuario no autenticado ni por passport ni por userId en sesión");
