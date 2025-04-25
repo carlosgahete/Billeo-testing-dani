@@ -1,0 +1,49 @@
+Por lo que describes, parece que hay un fallo en cómo se calcula o se interpreta el IVA en tu sistema al enviar los datos al Dashboard. Vamos a desglosar lo que debería pasar:
+
+Datos correctos de la factura:
+	•	Base imponible: 1.000 €
+	•	IVA (21%): 210 €
+	•	IRPF (-15%): -150 €
+	•	Total factura: 1.000 + 210 - 150 = 1.060 €
+
+Posible error:
+
+Dices que el Dashboard muestra que el IVA es 60 €. Ese dato coincide justamente con el 21% aplicado a 285,71 €, lo cual sugiere varias hipótesis:
+
+Hipótesis de errores comunes:
+	1.	Está aplicando el 21% de IVA sobre la base total después de la retención IRPF
+	•	1.000 € - 150 € = 850 €
+	•	21% de 850 € = 178,5 €, pero no cuadra con los 60 €
+	2.	Está aplicando el 21% sobre el total final (1.060 €)
+	•	21% de 1.060 = 222,6 € → tampoco cuadra
+	3.	Está aplicando el IVA sobre el valor neto tras IRPF y luego restando IRPF otra vez
+	•	Esto puede provocar un doble descuento y alterar el valor del IVA mal calculado
+	4.	El sistema interpreta el IRPF como un tipo positivo y lo suma en lugar de restar
+	•	Eso alteraría la base para el IVA
+	5.	El sistema calcula primero el total, y luego “infiere” cuánto IVA hay dentro del total usando una fórmula de tipo base = total / 1.21, y se lía con la retención
+	•	Si el sistema recibe solo el total (1.060 €), intenta inferir la base imponible:
+	•	base = 1.060 / 1.21 = 876,03 €
+	•	IVA = 1.060 - 876,03 = 183,97 €
+	•	Eso no cuadra con 60 €, pero indica que puede estar haciendo un cálculo inverso incorrectamente
+	6.	Estás enviando al backend los valores incorrectos (por ejemplo, IVA neto en vez de total, o mezclando signos negativos)
+	•	Es común que el IRPF lo mandes como -150 € pero el sistema lo reste otra vez
+
+⸻
+
+¿Qué revisar?
+	1.	¿Qué valores estás enviando al Dashboard?
+Asegúrate de enviar Base Imponible, IVA, IRPF y Total como campos separados.
+	2.	¿Cómo se calcula el IVA en el código backend?
+¿Es algo como iva = base * 0.21? ¿O hace alguna inferencia desde el total?
+	3.	¿Se interpreta el IRPF como una resta o como un valor absoluto?
+¿Lo mandas como -150 o como 150?
+	4.	¿Hay un campo “totalFactura” que se calcula automáticamente?
+Puede que esté mal la fórmula:
+
+total = base + iva - irpf
+
+
+
+⸻
+
+Si quieres, puedo revisar el fragmento de código que manda los datos al Dashboard o que los procesa en el backend. ¿Me lo puedes pegar aquí?
