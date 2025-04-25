@@ -1629,26 +1629,27 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           clientToEdit={clientToEdit}
         />
       ) : (
-        <InvoiceClientCreate 
+        <ClientFormNoSubmit 
           open={showClientForm}
           onClose={() => setShowClientForm(false)}
-          onClientSelect={(clientId) => {
-            // Buscar el cliente por ID
+          onClientCreated={(newClient) => {
+            console.log("✅ Cliente creado con éxito (sin formulario):", newClient);
+            
+            // Buscar el cliente por ID (por si acaso)
             const clients = clientList || [];
-            const selectedClient = Array.isArray(clients) ? 
-              clients.find((client: any) => client.id === clientId) : null;
-              
-            if (selectedClient) {
-              // Establecer el cliente seleccionado en el formulario
-              form.setValue("clientId", clientId);
-              setSelectedClientInfo(selectedClient);
-              
-              // Mostrar mensaje al usuario
-              toast({
-                title: "Cliente seleccionado",
-                description: `Cliente ${selectedClient.name} seleccionado correctamente`,
-              });
-            }
+            
+            // Establecer el cliente seleccionado en el formulario
+            form.setValue("clientId", newClient.id);
+            setSelectedClientInfo(newClient);
+            
+            // Mostrar mensaje al usuario
+            toast({
+              title: "Cliente creado y seleccionado",
+              description: `Cliente ${newClient.name} seleccionado correctamente`,
+            });
+            
+            // Forzar actualización de la lista de clientes
+            queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
           }}
         />
       )}
