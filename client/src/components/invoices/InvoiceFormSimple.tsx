@@ -642,11 +642,27 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     },
   });
   
+  // Una bandera que indica si el usuario ha solicitado explícitamente guardar la factura
+  const [userInitiatedSubmit, setUserInitiatedSubmit] = useState(false);
+  
   // Manejar submit del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
     // Si el modal de cliente está abierto, evitamos enviar el formulario de factura
     if (showClientForm) {
       console.log("⚠️ Modal de cliente abierto, ignorando submit de factura");
+      return;
+    }
+    
+    // Verificamos si el envío fue iniciado explícitamente por el usuario o es un envío automático
+    if (!userInitiatedSubmit) {
+      console.log("⚠️ Detectado envío automático del formulario, bloqueando...");
+      
+      // Prevenimos el envío automático, pero guardamos los datos actuales para referencia
+      const currentFormData = form.getValues();
+      console.log("Datos actuales preservados:", currentFormData);
+      
+      // Marcamos este evento como procesado para evitar procesamientos adicionales
+      setTimeout(() => setUserInitiatedSubmit(false), 100);
       return;
     }
     
@@ -658,6 +674,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         description: "Debes seleccionar un cliente para la factura",
         variant: "destructive",
       });
+      setUserInitiatedSubmit(false);
       return;
     }
     
@@ -669,6 +686,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         description: "Añade al menos un concepto a la factura con descripción e importe",
         variant: "destructive",
       });
+      setUserInitiatedSubmit(false);
       return;
     }
     
@@ -681,6 +699,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     // Enviar datos
     mutation.mutate(data);
+    
+    // Resetear la bandera después de enviar
+    setUserInitiatedSubmit(false);
   };
 
   // =============== DATOS DE LA APLICACIÓN =================
