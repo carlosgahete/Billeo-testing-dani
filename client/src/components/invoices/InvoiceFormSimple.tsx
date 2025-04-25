@@ -1515,10 +1515,42 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </CardContent>
             <div className="p-4 bg-gray-50 flex justify-end">
               <Button 
-                type="submit" 
+                type="button" 
                 className="bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={mutation.isPending}
-                onClick={() => setUserInitiatedSubmit(true)}
+                onClick={() => {
+                  // Verificamos si la factura es válida antes de enviar
+                  const hasClient = !!form.getValues().clientId;
+                  const hasAmount = calculatedTotals.subtotal > 0;
+                  const hasTaxes = calculatedTotals.tax > 0 || (form.getValues().additionalTaxes?.length > 0);
+                  const hasExemptionReason = form.getValues().notes?.toLowerCase().includes('exención') || 
+                                           form.getValues().notes?.toLowerCase().includes('exento') ||
+                                           form.getValues().notes?.toLowerCase().includes('no sujeto');
+                  const hasDate = !!form.getValues().issueDate;
+
+                  // Si todo es válido, entonces enviamos
+                  if (hasClient && hasAmount && (hasTaxes || hasExemptionReason) && hasDate) {
+                    setUserInitiatedSubmit(true);
+                    // Usando setTimeout para que el estado se actualice antes de hacer el submit
+                    setTimeout(() => {
+                      // Buscar el formulario en el DOM
+                      const formElement = document.querySelector('form');
+                      if (formElement) {
+                        const submitBtn = document.createElement("button");
+                        submitBtn.type = "submit";
+                        submitBtn.style.display = "none";
+                        formElement.appendChild(submitBtn);
+                        submitBtn.click();
+                        submitBtn.remove();
+                      } else {
+                        console.error("No se pudo encontrar el elemento del formulario");
+                      }
+                    }, 100);
+                  } else {
+                    // Si no es válido, mostramos el diálogo de validación
+                    setShowValidation(true);
+                  }
+                }}
               >
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? "Actualizar factura" : "Crear factura"}
@@ -1600,12 +1632,23 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       <InvoiceValidationAlert 
         show={showValidation}
         onClose={() => setShowValidation(false)}
-        onSubmit={() => {
+        onSubmit={async () => {
           setShowValidation(false);
           setUserInitiatedSubmit(true);
-          // Dar tiempo para que se actualice el estado antes de hacer clic
+          // Dar tiempo para que se actualice el estado antes de enviar
           setTimeout(() => {
-            document.querySelector('button[type="submit"]')?.click();
+            // Buscar el formulario en el DOM
+            const formElement = document.querySelector('form');
+            if (formElement) {
+              const submitBtn = document.createElement("button");
+              submitBtn.type = "submit";
+              submitBtn.style.display = "none";
+              formElement.appendChild(submitBtn);
+              submitBtn.click();
+              submitBtn.remove();
+            } else {
+              console.error("No se pudo encontrar el elemento del formulario");
+            }
           }, 100);
         }}
         hasClient={!!form.getValues().clientId}
