@@ -230,6 +230,19 @@ function Router() {
         </Layout>
       </Route>
       
+      {/* Rutas para el manejo de clientes */}
+      <Route path="/clients">
+        <Layout>
+          <ProtectedRoute path="/clients" component={ClientsPage} />
+        </Layout>
+      </Route>
+      
+      <Route path="/clients/create">
+        <Layout>
+          <ProtectedRoute path="/clients/create" component={CreateClientPage} />
+        </Layout>
+      </Route>
+      
       {/* Rutas para versiones ultra simples de presupuestos */}
       <Route path="/quotes/simple/list">
         <Layout>
