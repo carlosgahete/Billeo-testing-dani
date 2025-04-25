@@ -2143,6 +2143,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para obtener el próximo número de factura
+  app.get("/api/invoices/next-number", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Generar número de factura siguiendo formato [AÑO]-[NÚMERO] (ej: 2025-001)
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      
+      // Buscar la última factura de este año
+      const invoices = await storage.getInvoicesByUserId(req.session.userId);
+      let lastNumber = 0;
+      
+      // Filtrar facturas del año actual y obtener el último número
+      const currentYearInvoices = invoices.filter(inv => {
+        // Verificar si el número de factura tiene el formato correcto (AÑO-NÚMERO)
+        const match = inv.invoiceNumber.match(/^(\d{4})-(\d+)$/);
+        return match && match[1] === currentYear.toString();
+      });
+      
+      if (currentYearInvoices.length > 0) {
+        // Extraer solo los números de secuencia de las facturas del año actual
+        const sequenceNumbers = currentYearInvoices.map(inv => {
+          const match = inv.invoiceNumber.match(/^(\d{4})-(\d+)$/);
+          return match ? parseInt(match[2]) : 0;
+        }).filter(n => !isNaN(n));
+        
+        if (sequenceNumbers.length > 0) {
+          lastNumber = Math.max(...sequenceNumbers);
+        }
+      }
+      
+      // Generar el nuevo número de factura con formato AÑO-NÚMERO (con padding)
+      const nextNumber = lastNumber + 1;
+      const paddedNumber = nextNumber.toString().padStart(3, '0');
+      const finalInvoiceNumber = `${currentYear}-${paddedNumber}`;
+      
+      console.log(`Generando nuevo número de factura: ${finalInvoiceNumber}`);
+      
+      return res.status(200).json({ invoiceNumber: finalInvoiceNumber });
+    } catch (error) {
+      console.error("Error al generar número de factura:", error);
+      return res.status(500).json({ message: "Error al generar número de factura" });
+    }
+  });
+
   app.put("/api/invoices/:id", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
