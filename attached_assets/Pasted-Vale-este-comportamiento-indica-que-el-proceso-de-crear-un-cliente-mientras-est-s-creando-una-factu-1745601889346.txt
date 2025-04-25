@@ -1,0 +1,54 @@
+Vale, este comportamiento indica que el proceso de crear un cliente mientras estás creando una factura está provocando un reset del estado de la factura, o incluso el disparo anticipado del guardado antes de que esté completa.
+
+⸻
+
+Qué está pasando probablemente:
+	1.	Cambio de estado global o redirección inesperada
+Al guardar el nuevo cliente, puede que se recargue la página, cambie de ruta, o se reinicie el estado de la factura.
+	2.	useEffect o lógica de “auto guardado”
+Si tienes un useEffect que guarda automáticamente cuando hay un cambio (como un nuevo cliente), puede que esté ejecutando un submitFactura() antes de que esté realmente lista.
+	3.	Cambio de idCliente provoca envío de la factura incompleta
+Al guardar el cliente nuevo, cambias el idCliente, y si hay algún efecto que depende de ese campo, puede estar disparando el guardado anticipadamente.
+
+⸻
+
+Cómo podrías solucionarlo:
+
+Opción 1: Evitar el guardado hasta que esté todo completo
+
+Introduce una bandera como facturaConfirmada o listoParaGuardar que solo se activa cuando el usuario realmente pulsa “Guardar Factura”.
+
+const [listoParaGuardar, setListoParaGuardar] = useState(false);
+
+useEffect(() => {
+  if (listoParaGuardar && datosFacturaCompletos) {
+    guardarFactura();
+  }
+}, [listoParaGuardar, datosFactura]);
+
+Opción 2: Guardar el nuevo cliente sin perder el contexto
+
+Cuando creas un cliente desde la pantalla de facturas:
+	•	Usa un modal o formulario inline para crear el cliente
+	•	Después de crearlo, actualiza solo el estado del cliente en la factura, sin navegar ni recargar
+
+const handleClienteCreado = (nuevoCliente) => {
+  setFactura(prev => ({
+    ...prev,
+    clienteId: nuevoCliente.id
+  }));
+};
+
+Opción 3: Evitar guardar facturas incompletas
+
+Valida antes de guardar que la factura tenga contenido:
+
+if (factura.baseImponible === 0 && factura.total === 0) {
+  return; // No guardar si no hay datos reales
+}
+
+
+
+⸻
+
+Si me enseñas cómo estás manejando la creación del cliente y el flujo de la factura (por ejemplo, ¿es una sola página? ¿usas modales? ¿hay useEffect relacionados?), puedo darte una solución más concreta. ¿Cómo lo estás haciendo?

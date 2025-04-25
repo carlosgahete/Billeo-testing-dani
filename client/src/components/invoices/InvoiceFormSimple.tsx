@@ -343,28 +343,60 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para agregar un nuevo impuesto adicional
   const handleAddTax = (taxType?: string) => {
+    // Primero verificamos si ya existe un impuesto del mismo tipo
+    const formValues = form.getValues();
+    const currentTaxes = formValues.additionalTaxes || [];
+    
     if (taxType === 'irpf') {
-      appendTax({ 
-        name: "IRPF", 
-        amount: -15, 
-        isPercentage: true 
-      });
+      // Verificar si ya existe un impuesto IRPF
+      const hasIrpf = currentTaxes.some(tax => tax.name === "IRPF");
+      if (!hasIrpf) {
+        appendTax({ 
+          name: "IRPF", 
+          amount: -15, 
+          isPercentage: true 
+        });
+      }
     } else if (taxType === 'iva') {
-      appendTax({ 
-        name: "IVA adicional", 
-        amount: 21, 
-        isPercentage: true 
-      });
+      // Verificar si ya existe un impuesto IVA adicional
+      const hasIva = currentTaxes.some(tax => tax.name === "IVA adicional");
+      if (!hasIva) {
+        appendTax({ 
+          name: "IVA adicional", 
+          amount: 21, 
+          isPercentage: true 
+        });
+      }
     } else {
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
       setShowTaxDialog(true);
     }
+    
+    // Recalcular totales después de añadir impuestos
+    setTimeout(() => calculateTotals(), 50);
   };
   
   // Función para agregar impuesto desde el diálogo
   const handleAddTaxFromDialog = () => {
-    appendTax(newTaxData);
+    const formValues = form.getValues();
+    const currentTaxes = formValues.additionalTaxes || [];
+    
+    // Verificar si ya existe un impuesto con el mismo nombre
+    const existingTaxIndex = currentTaxes.findIndex(tax => tax.name === newTaxData.name);
+    
+    if (existingTaxIndex >= 0) {
+      // Si ya existe, simplemente actualizamos su valor
+      const updatedTaxes = [...currentTaxes];
+      updatedTaxes[existingTaxIndex] = newTaxData;
+      form.setValue('additionalTaxes', updatedTaxes);
+    } else {
+      // Si no existe, lo añadimos
+      appendTax(newTaxData);
+    }
+    
     setShowTaxDialog(false);
+    // Recalcular totales después de añadir impuestos
+    setTimeout(() => calculateTotals(), 50);
   };
   
   // Función para manejar el evento onBlur en campos numéricos
@@ -412,16 +444,42 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para manejar la creación o actualización de un cliente
   const handleClientCreated = (data: any) => {
-    queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+    // Prevenir cualquier acción automática de guardado de factura
+    const currentValues = form.getValues();
+    const backupValues = { ...currentValues };
+    
+    // Actualizamos la lista de clientes sin disparar eventos que podrían causar un submit
+    queryClient.invalidateQueries({ 
+      queryKey: ["/api/clients"],
+      refetchType: "none" // No refetcheamos automáticamente para evitar efectos secundarios
+    });
+    
+    // Solo después, manualmente actualizamos la referencia local
+    setTimeout(() => {
+      queryClient.refetchQueries({ queryKey: ["/api/clients"] });
+    }, 100);
     
     if (!clientToEdit) {
-      form.setValue("clientId", data.id);
-      // Al crear un nuevo cliente, guardamos sus datos para mostrarlos
+      // Al crear un nuevo cliente, actualizamos el clientId en el formulario
+      form.setValue("clientId", data.id, {
+        shouldDirty: true, 
+        shouldTouch: true,
+        shouldValidate: false // Evitamos validación que podría disparar eventos
+      });
+      
+      // Y guardamos sus datos para mostrarlos
       setSelectedClientInfo(data);
     }
     
     setClientToEdit(null);
     setShowClientForm(false);
+    
+    // Restauramos valores del formulario si se hubieran modificado por efectos secundarios
+    const afterValues = form.getValues();
+    if (afterValues.items.length === 0 && backupValues.items.length > 0) {
+      console.log("⚠️ Detectada pérdida de datos del formulario - restaurando...");
+      form.reset(backupValues);
+    }
     
     toast({
       title: clientToEdit ? "Cliente actualizado" : "Cliente creado",
@@ -588,7 +646,29 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const handleSubmit = (data: InvoiceFormValues) => {
     // Si el modal de cliente está abierto, evitamos enviar el formulario de factura
     if (showClientForm) {
-      console.log("Modal de cliente abierto, ignorando submit de factura");
+      console.log("⚠️ Modal de cliente abierto, ignorando submit de factura");
+      return;
+    }
+    
+    // Verificamos que tengamos datos mínimos para crear una factura válida
+    if (!data.clientId) {
+      console.log("⚠️ No se puede crear factura sin cliente");
+      toast({
+        title: "Cliente requerido",
+        description: "Debes seleccionar un cliente para la factura",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.items || data.items.length === 0 || 
+        !data.items.some(item => item.description && (item.quantity > 0 || item.unitPrice > 0))) {
+      console.log("⚠️ No se puede crear factura sin líneas de concepto válidas");
+      toast({
+        title: "Conceptos requeridos",
+        description: "Añade al menos un concepto a la factura con descripción e importe",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -597,7 +677,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     data.tax = calculatedTotals.tax;
     data.total = calculatedTotals.total;
     
-    console.log("Enviando datos de factura", data);
+    console.log("✅ Enviando datos de factura", data);
     
     // Enviar datos
     mutation.mutate(data);

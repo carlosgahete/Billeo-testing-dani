@@ -101,11 +101,18 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
       });
       
       // Primero notificamos al componente padre sobre el cliente creado
-      onClientCreated(data);
+      // usando un pequeño retraso para evitar race conditions con estados
+      setTimeout(() => {
+        onClientCreated(data);
+      }, 50);
       
       // Después cerramos el modal y limpiamos el formulario
-      onOpenChange(false);
       form.reset();
+      
+      // Retrasamos ligeramente el cierre del modal para evitar problemas de estado
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 100);
     },
     onError: (error: any) => {
       toast({
