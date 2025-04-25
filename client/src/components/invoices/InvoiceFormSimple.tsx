@@ -451,60 +451,46 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para manejar la creación o actualización de un cliente
   const handleClientCreated = (data: any) => {
-    console.log("🔄 Cliente creado/actualizado - Asegurando que no se envíe la factura automáticamente");
+    console.log("🔄 Cliente creado/actualizado", data.id);
     
-    // Explícitamente desactivamos la bandera de envío iniciado por usuario para prevenir envíos automáticos
+    // Explícitamente desactivamos cualquier envío de formulario
     setUserInitiatedSubmit(false);
     
-    // Prevenir cualquier acción automática de guardado de factura
+    // Actualizamos la lista de clientes para asegurarnos de que está actualizada
+    queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+    
+    // Guardamos una copia de los datos actuales por si acaso
     const currentValues = form.getValues();
-    const backupValues = { ...currentValues };
     
-    // Actualizamos la lista de clientes sin disparar eventos que podrían causar un submit
-    queryClient.invalidateQueries({ 
-      queryKey: ["/api/clients"],
-      refetchType: "none" // No refetcheamos automáticamente para evitar efectos secundarios
-    });
-    
-    // Solo después, manualmente actualizamos la referencia local
-    setTimeout(() => {
-      queryClient.refetchQueries({ queryKey: ["/api/clients"] });
-    }, 100);
-    
+    // Si es un nuevo cliente (no edición)
     if (!clientToEdit) {
-      // Al crear un nuevo cliente, actualizamos el clientId en el formulario
+      console.log("✅ Seleccionando nuevo cliente en el formulario:", data.id);
+      
+      // Actualizamos el clientId en el formulario
       form.setValue("clientId", data.id, {
         shouldDirty: true, 
         shouldTouch: true,
-        shouldValidate: false // Evitamos validación que podría disparar eventos
+        shouldValidate: false
       });
       
-      // Y guardamos sus datos para mostrarlos
+      // Guardamos la información del cliente para mostrarla
       setSelectedClientInfo(data);
     }
     
+    // Limpiamos los estados relacionados con el modal de cliente
     setClientToEdit(null);
-    setShowClientForm(false);
     
-    // Restauramos valores del formulario si se hubieran modificado por efectos secundarios
-    const afterValues = form.getValues();
-    if (afterValues.items.length === 0 && backupValues.items.length > 0) {
-      console.log("⚠️ Detectada pérdida de datos del formulario - restaurando...");
-      form.reset(backupValues);
-    }
-    
-    // Doble verificación para asegurarnos que la bandera está desactivada
-    setTimeout(() => {
-      setUserInitiatedSubmit(false);
-      console.log("🛡️ Estado de envío automático prevenido tras crear cliente");
-    }, 200);
-    
+    // Y mostramos un mensaje al usuario
     toast({
       title: clientToEdit ? "Cliente actualizado" : "Cliente creado",
-      description: clientToEdit 
-        ? `El cliente ${data.name} ha sido actualizado correctamente`
-        : `El cliente ${data.name} ha sido creado correctamente`,
+      description: `El cliente ${data.name} ha sido ${clientToEdit ? 'actualizado' : 'creado'} correctamente`,
     });
+    
+    // Prevenimos explícitamente cualquier envío automático del formulario
+    setTimeout(() => {
+      console.log("🛡️ Manteniendo estado de envío inactivo");
+      setUserInitiatedSubmit(false);
+    }, 500);
   };
   
   // Función para manejar el cierre del modal de cliente
@@ -1498,31 +1484,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                 type="button" 
                 className="bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={mutation.isPending}
-                onClick={() => {
-                  // Verificamos si la factura es válida antes de enviar
-                  const hasClient = !!form.getValues().clientId;
-                  const hasAmount = calculatedTotals.subtotal > 0;
-                  const hasTaxes = calculatedTotals.tax > 0 || (form.getValues().additionalTaxes?.length > 0);
-                  const hasExemptionReason = form.getValues().notes?.toLowerCase().includes('exención') || 
-                                           form.getValues().notes?.toLowerCase().includes('exento') ||
-                                           form.getValues().notes?.toLowerCase().includes('no sujeto');
-                  const hasDate = !!form.getValues().issueDate;
-
-                  // Si todo es válido, enviamos manualmente usando handleSubmit
-                  if (hasClient && hasAmount && (hasTaxes || hasExemptionReason) && hasDate) {
-                    console.log("✅ Validación correcta, procesando envío manual");
-                    
-                    // Obtener los datos del formulario
-                    const data = form.getValues();
-                    
-                    // Llamar a la función handleSubmit con los datos
-                    handleSubmit(data);
-                  } else {
-                    // Si no es válido, mostramos el diálogo de validación
-                    console.log("⚠️ Validación fallida, mostrando diálogo");
-                    setShowValidation(true);
-                  }
-                }}
+                onClick={handleSubmitButtonClick}
               >
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? "Actualizar factura" : "Crear factura"}
@@ -1607,7 +1569,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         onSubmit={async () => {
           setShowValidation(false);
           
-          // Obtener los datos del formulario 
+          // Activar la bandera de envío iniciado por usuario
+          setUserInitiatedSubmit(true);
+          
+          // Obtener los datos del formulario
           const data = form.getValues();
           
           // Llamar directamente a handleSubmit con los datos del formulario

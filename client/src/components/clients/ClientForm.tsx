@@ -116,30 +116,25 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
       
       // Agregamos una pausa más larga para asegurarnos que cualquier
       // posible envío automático se haya cancelado
-      setTimeout(() => {
-        // Enviamos un mensaje a la ventana principal para desactivar envíos automáticos
-        window.dispatchEvent(new CustomEvent('prevent-invoice-submit', {
-          detail: { timestamp: Date.now() }
-        }));
-        
-        console.log("🔒 Enviado evento de bloqueo de envío automático de factura");
-        
-        // Y luego notificamos al componente padre sobre el cliente creado
-        setTimeout(() => {
-          onClientCreated(data);
-        }, 100);
-      }, 200);
-      
-      // Después cerramos el modal y limpiamos el formulario
+      // Limpiamos el formulario inmediatamente
       form.reset();
       
-      // Retrasamos considerablemente el cierre del modal para evitar problemas de estado
+      // Enviamos un mensaje a la ventana principal para desactivar envíos automáticos
+      window.dispatchEvent(new CustomEvent('prevent-invoice-submit', {
+        detail: { timestamp: Date.now() }
+      }));
+      
+      console.log("🔒 Enviado evento de bloqueo antes de cerrar modal de cliente");
+      
+      // Cerrar el modal primero, luego notificar al componente padre
+      onOpenChange(false);
+      
+      // Esperamos un breve momento después de cerrar el modal
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('client-form-closing', {
-          detail: { timestamp: Date.now() }
-        }));
-        onOpenChange(false);
-      }, 300);
+        // Notificamos al componente padre sobre el cliente creado
+        console.log("💾 Notificando cliente creado", data.id);
+        onClientCreated(data);
+      }, 500);
     },
     onError: (error: any) => {
       toast({
