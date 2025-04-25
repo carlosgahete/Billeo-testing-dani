@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Pencil, Plus, Trash2, Users, ArrowLeft, FileText } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,11 +48,20 @@ interface Client {
 export default function ClientsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [showClientForm, setShowClientForm] = useState(false);
   const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isFromInvoice, setIsFromInvoice] = useState(false);
+  
+  // Determinar si llegamos desde la página de creación de facturas
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const fromInvoice = searchParams.get('from') === 'invoice';
+    setIsFromInvoice(fromInvoice);
+  }, []);
 
   // Query para obtener clientes
   const { data: clients = [], isLoading } = useQuery({
@@ -123,6 +134,25 @@ export default function ClientsPage() {
       deleteMutation.mutate(clientToDelete.id);
     }
   };
+  
+  const handleGoBack = () => {
+    if (isFromInvoice) {
+      navigate('/invoices/create');
+    } else {
+      navigate('/');
+    }
+  };
+  
+  const handleSelectClientForInvoice = (client: Client) => {
+    // Guardamos el cliente seleccionado en sessionStorage para recuperarlo en la página de facturas
+    sessionStorage.setItem('selectedClient', JSON.stringify(client));
+    navigate('/invoices/create');
+    
+    toast({
+      title: "Cliente seleccionado",
+      description: `Se ha seleccionado a ${client.name} para la nueva factura`,
+    });
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -193,6 +223,17 @@ export default function ClientsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {isFromInvoice && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelectClientForInvoice(client)}
+                              className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              <span className="hidden md:inline">Seleccionar</span>
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -216,6 +257,22 @@ export default function ClientsPage() {
             </div>
           )}
         </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={handleGoBack}
+            className="flex items-center"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> 
+            Volver {isFromInvoice ? 'a crear factura' : 'al dashboard'}
+          </Button>
+          
+          {isFromInvoice && (
+            <div className="text-sm text-muted-foreground">
+              Selecciona un cliente para incluirlo en tu factura
+            </div>
+          )}
+        </CardFooter>
       </Card>
 
       {/* Formulario para crear/editar cliente */}
