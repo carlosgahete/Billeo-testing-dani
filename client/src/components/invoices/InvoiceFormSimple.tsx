@@ -124,8 +124,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const [selectedClientInfo, setSelectedClientInfo] = useState<any>(null);
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const [showValidation, setShowValidation] = useState(false);
+  
+  // Estado para controlar si el usuario quiere enviar el formulario
   const [userInitiatedSubmit, setUserInitiatedSubmit] = useState(false);
+  
+  // Estado para mostrar el diálogo de validación
+  const [showValidation, setShowValidation] = useState(false);
   
   const isEditMode = !!invoiceId;
   

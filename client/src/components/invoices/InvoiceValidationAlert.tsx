@@ -23,7 +23,7 @@ interface ValidationItem {
 interface InvoiceValidationAlertProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void>;
   hasClient: boolean;
   hasAmount: boolean;
   hasTaxes: boolean;
