@@ -823,32 +823,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     <>
       <Form {...form}>
         <form onSubmit={(e) => {
-          console.log(`ℹ️ Estado de formulario: Modal=${showClientForm}, UserSubmit=${userInitiatedSubmit}, BlockSubmits=${blockAllSubmits}`);
+          // Siempre prevenimos el envío automático del formulario
+          console.log("⛔ Interceptando envío de formulario");
+          e.preventDefault();
           
-          // Si el modal de cliente está abierto, prevenir completamente la acción por defecto
-          if (showClientForm) {
-            console.log("⛔ Modal de cliente abierto - BLOQUEANDO ENVÍO DEL FORMULARIO");
-            e.preventDefault();
-            return false;
-          }
-          
-          // Si hay un bloqueo global activo (creando o cerrando modal de cliente)
-          if (blockAllSubmits) {
-            console.log("⛔ Bloqueo global activo - BLOQUEANDO ENVÍO DEL FORMULARIO");
-            e.preventDefault();
-            return false;
-          }
-          
-          // Si no está activada la bandera de envío por usuario, también prevenimos
-          if (!userInitiatedSubmit) {
-            console.log("⛔ No es un envío iniciado por usuario - BLOQUEANDO ENVÍO DEL FORMULARIO");
-            e.preventDefault();
-            return false;
-          }
-          
-          // En caso contrario, procesamos normalmente
-          console.log("✅ Enviando formulario normalmente");
-          return form.handleSubmit(handleSubmit)(e);
+          // El envío real se hace a través del botón y la validación
+          return false;
         }} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
@@ -1528,26 +1508,18 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                            form.getValues().notes?.toLowerCase().includes('no sujeto');
                   const hasDate = !!form.getValues().issueDate;
 
-                  // Si todo es válido, entonces enviamos
+                  // Si todo es válido, enviamos manualmente usando handleSubmit
                   if (hasClient && hasAmount && (hasTaxes || hasExemptionReason) && hasDate) {
-                    setUserInitiatedSubmit(true);
-                    // Usando setTimeout para que el estado se actualice antes de hacer el submit
-                    setTimeout(() => {
-                      // Buscar el formulario en el DOM
-                      const formElement = document.querySelector('form');
-                      if (formElement) {
-                        const submitBtn = document.createElement("button");
-                        submitBtn.type = "submit";
-                        submitBtn.style.display = "none";
-                        formElement.appendChild(submitBtn);
-                        submitBtn.click();
-                        submitBtn.remove();
-                      } else {
-                        console.error("No se pudo encontrar el elemento del formulario");
-                      }
-                    }, 100);
+                    console.log("✅ Validación correcta, procesando envío manual");
+                    
+                    // Obtener los datos del formulario
+                    const data = form.getValues();
+                    
+                    // Llamar a la función handleSubmit con los datos
+                    handleSubmit(data);
                   } else {
                     // Si no es válido, mostramos el diálogo de validación
+                    console.log("⚠️ Validación fallida, mostrando diálogo");
                     setShowValidation(true);
                   }
                 }}
@@ -1634,22 +1606,13 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         onClose={() => setShowValidation(false)}
         onSubmit={async () => {
           setShowValidation(false);
-          setUserInitiatedSubmit(true);
-          // Dar tiempo para que se actualice el estado antes de enviar
-          setTimeout(() => {
-            // Buscar el formulario en el DOM
-            const formElement = document.querySelector('form');
-            if (formElement) {
-              const submitBtn = document.createElement("button");
-              submitBtn.type = "submit";
-              submitBtn.style.display = "none";
-              formElement.appendChild(submitBtn);
-              submitBtn.click();
-              submitBtn.remove();
-            } else {
-              console.error("No se pudo encontrar el elemento del formulario");
-            }
-          }, 100);
+          
+          // Obtener los datos del formulario 
+          const data = form.getValues();
+          
+          // Llamar directamente a handleSubmit con los datos del formulario
+          console.log("✅ Validación aceptada desde el diálogo, procesando envío manual");
+          handleSubmit(data);
         }}
         hasClient={!!form.getValues().clientId}
         hasAmount={calculatedTotals.subtotal > 0}
