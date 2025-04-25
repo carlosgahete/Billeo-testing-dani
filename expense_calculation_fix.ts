@@ -386,11 +386,42 @@ app.get("/api/stats/dashboard-fix", simplifiedAuth, async (req: Request, res: Re
       }, 0);
       
       // 4. IVA repercutido (de ingresos)
-      // Si tenemos subtotal, usamos la diferencia con el total, si no estimamos 21%
+      // Cálculo correcto del IVA considerando el IRPF
       let ivaRepercutido = 0;
-      if (baseImponible > 0) {
-        ivaRepercutido = invoiceIncome - baseImponible;
-      } else {
+      let irpfTotal = 0;
+      
+      // Iteramos sobre cada factura para calcular el IVA correctamente
+      for (const invoice of paidInvoices) {
+        const subtotal = parseFloat(invoice.subtotal || '0');
+        const total = parseFloat(invoice.total || '0');
+        
+        // Primero calculamos el IRPF si existe
+        let irpfAmount = 0;
+        if (invoice.additionalTaxes) {
+          const taxes = typeof invoice.additionalTaxes === 'string' 
+            ? JSON.parse(invoice.additionalTaxes) 
+            : invoice.additionalTaxes;
+            
+          for (const tax of taxes) {
+            if (tax.name === 'IRPF') {
+              if (tax.isPercentage) {
+                irpfAmount = (Math.abs(tax.amount) * subtotal) / 100;
+              } else {
+                irpfAmount = Math.abs(tax.amount);
+              }
+              irpfTotal += irpfAmount;
+            }
+          }
+        }
+        
+        // El IVA es la diferencia entre (total + IRPF) y subtotal
+        // Esto corrige el cálculo para facturas con retención de IRPF
+        const ivaFactura = total + irpfAmount - subtotal;
+        ivaRepercutido += ivaFactura;
+      }
+      
+      // Si después de todo no hay base imponible (casos atípicos), usamos estimación
+      if (baseImponible === 0 && invoiceIncome > 0) {
         ivaRepercutido = invoiceIncome * 0.21;
       }
       
