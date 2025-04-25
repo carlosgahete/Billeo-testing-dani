@@ -125,6 +125,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [showValidation, setShowValidation] = useState(false);
+  const [userInitiatedSubmit, setUserInitiatedSubmit] = useState(false);
   
   const isEditMode = !!invoiceId;
   
@@ -691,6 +692,50 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       window.removeEventListener('client-form-closing', preventFormSubmitHandler);
     };
   }, []);
+  
+  // Función para verificar la validez de los datos de la factura
+  const verifyInvoiceValidity = () => {
+    const data = form.getValues();
+    
+    // Verificamos si hay un cliente seleccionado
+    const hasClient = !!data.clientId;
+    
+    // Verificamos si hay importe (base imponible)
+    const hasAmount = calculatedTotals.subtotal > 0;
+    
+    // Verificamos si tiene impuestos (IVA/IRPF) o razón de exención
+    const hasTaxes = calculatedTotals.tax > 0 || (data.additionalTaxes && data.additionalTaxes.length > 0);
+    
+    // Verificamos si tiene razón de exención fiscal
+    const hasExemptionReason = data.notes?.toLowerCase().includes('exención') || 
+                              data.notes?.toLowerCase().includes('exento') ||
+                              data.notes?.toLowerCase().includes('no sujeto');
+    
+    // Verificamos si tiene fecha de factura válida
+    const hasDate = !!data.issueDate;
+    
+    return {
+      hasClient,
+      hasAmount,
+      hasTaxes,
+      hasExemptionReason,
+      hasDate
+    };
+  };
+  
+  // Función para manejar el botón de envío
+  const handleSubmitButtonClick = () => {
+    // Verificamos los datos de la factura
+    const validity = verifyInvoiceValidity();
+    
+    // Si el formulario es válido, procedemos con el envío
+    if (validity.hasClient && validity.hasAmount && (validity.hasTaxes || validity.hasExemptionReason) && validity.hasDate) {
+      setUserInitiatedSubmit(true);
+    } else {
+      // Mostramos diálogo de validación
+      setShowValidation(true);
+    }
+  };
   
   // Manejar submit del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
@@ -1545,6 +1590,30 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         onOpenChange={handleClientModalClose}
         onClientCreated={handleClientCreated}
         clientToEdit={clientToEdit}
+      />
+
+      {/* Alerta de validación de factura */}
+      <InvoiceValidationAlert 
+        show={showValidation}
+        onClose={() => setShowValidation(false)}
+        onSubmit={() => {
+          setShowValidation(false);
+          setUserInitiatedSubmit(true);
+          // Dar tiempo para que se actualice el estado antes de hacer clic
+          setTimeout(() => {
+            document.querySelector('button[type="submit"]')?.click();
+          }, 100);
+        }}
+        hasClient={!!form.getValues().clientId}
+        hasAmount={calculatedTotals.subtotal > 0}
+        hasTaxes={calculatedTotals.tax > 0 || (form.getValues().additionalTaxes?.length > 0)}
+        hasExemptionReason={
+          form.getValues().notes?.toLowerCase().includes('exención') || 
+          form.getValues().notes?.toLowerCase().includes('exento') ||
+          form.getValues().notes?.toLowerCase().includes('no sujeto')
+        }
+        hasDate={!!form.getValues().issueDate}
+        inProgress={mutation.isPending}
       />
     </>
   );
