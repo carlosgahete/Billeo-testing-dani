@@ -51,7 +51,7 @@ import { useLocation } from "wouter";
 import { InvoiceValidationAlert } from "./InvoiceValidationAlert";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
-import { InvoiceClientCreate } from "../clients/InvoiceClientCreate";
+import { ClientFormNoSubmit } from "../clients/ClientFormNoSubmit";
 
 // Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
