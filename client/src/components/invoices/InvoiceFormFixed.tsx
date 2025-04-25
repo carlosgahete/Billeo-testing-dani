@@ -402,9 +402,21 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Función para obtener el siguiente número de factura
   const fetchNextInvoiceNumber = async () => {
     try {
+      console.log("Solicitando número de factura al servidor...");
       const response = await apiRequest("GET", "/api/invoices/next-number");
       const data = await response.json();
-      form.setValue("invoiceNumber", data.nextNumber);
+      console.log("Respuesta del servidor:", data);
+      
+      // Asegurarse de usar el nombre de campo correcto según la respuesta del API
+      if (data.invoiceNumber) {
+        console.log(`Estableciendo número de factura: ${data.invoiceNumber}`);
+        form.setValue("invoiceNumber", data.invoiceNumber);
+      } else if (data.nextNumber) {
+        console.log(`Estableciendo número de factura: ${data.nextNumber}`);
+        form.setValue("invoiceNumber", data.nextNumber);
+      } else {
+        console.error("La respuesta del servidor no contiene un número de factura válido:", data);
+      }
     } catch (error) {
       console.error("Error al obtener número de factura:", error);
     }
