@@ -48,6 +48,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
 import { useLocation } from "wouter";
+import { InvoiceValidationAlert } from "./InvoiceValidationAlert";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
 
@@ -123,6 +124,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const [selectedClientInfo, setSelectedClientInfo] = useState<any>(null);
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const [showValidation, setShowValidation] = useState(false);
   
   const isEditMode = !!invoiceId;
   
@@ -663,9 +665,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       });
     },
   });
-  
-  // Una bandera que indica si el usuario ha solicitado explícitamente guardar la factura
-  const [userInitiatedSubmit, setUserInitiatedSubmit] = useState(false);
   
   // Bandera adicional para bloquear completamente envíos de formulario durante un periodo
   const [blockAllSubmits, setBlockAllSubmits] = useState(false);
