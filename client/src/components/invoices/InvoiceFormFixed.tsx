@@ -385,6 +385,27 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
     } else {
       // Si no estamos en modo edición, intentar obtener el siguiente número de factura
       fetchNextInvoiceNumber();
+      
+      // Verificar si hay un cliente seleccionado en sessionStorage
+      try {
+        const selectedClientJSON = sessionStorage.getItem('selectedClient');
+        if (selectedClientJSON) {
+          const selectedClient = JSON.parse(selectedClientJSON);
+          console.log("🔍 Cliente encontrado en sessionStorage:", selectedClient);
+          
+          // Si el cliente tiene un ID válido, lo establecemos en el formulario
+          if (selectedClient && selectedClient.id) {
+            form.setValue("clientId", selectedClient.id);
+            setSelectedClientInfo(selectedClient);
+            console.log(`✅ Cliente ${selectedClient.name} seleccionado automáticamente`);
+            
+            // Limpiar sessionStorage para no volver a cargar este cliente
+            sessionStorage.removeItem('selectedClient');
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar cliente desde sessionStorage:", error);
+      }
     }
   }, [isEditMode, initialData, form]);
 
