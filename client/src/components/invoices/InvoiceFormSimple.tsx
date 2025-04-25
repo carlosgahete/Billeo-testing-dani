@@ -667,6 +667,32 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Una bandera que indica si el usuario ha solicitado explícitamente guardar la factura
   const [userInitiatedSubmit, setUserInitiatedSubmit] = useState(false);
   
+  // Bandera adicional para bloquear completamente envíos de formulario durante un periodo
+  const [blockAllSubmits, setBlockAllSubmits] = useState(false);
+  
+  // Escuchar eventos personalizados de prevención de envío automático
+  useEffect(() => {
+    const preventFormSubmitHandler = () => {
+      console.log("🛑 Recibida solicitud para bloquear envíos de formulario de factura");
+      setUserInitiatedSubmit(false);
+      setBlockAllSubmits(true);
+      
+      // Liberar el bloqueo después de un tiempo
+      setTimeout(() => {
+        setBlockAllSubmits(false);
+        console.log("✅ Liberado bloqueo de envío de formulario de factura");
+      }, 1000);
+    };
+    
+    window.addEventListener('prevent-invoice-submit', preventFormSubmitHandler);
+    window.addEventListener('client-form-closing', preventFormSubmitHandler);
+    
+    return () => {
+      window.removeEventListener('prevent-invoice-submit', preventFormSubmitHandler);
+      window.removeEventListener('client-form-closing', preventFormSubmitHandler);
+    };
+  }, []);
+  
   // Manejar submit del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
     // Si el modal de cliente está abierto, evitamos enviar el formulario de factura
@@ -748,7 +774,34 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={(e) => {
+          console.log(`ℹ️ Estado de formulario: Modal=${showClientForm}, UserSubmit=${userInitiatedSubmit}, BlockSubmits=${blockAllSubmits}`);
+          
+          // Si el modal de cliente está abierto, prevenir completamente la acción por defecto
+          if (showClientForm) {
+            console.log("⛔ Modal de cliente abierto - BLOQUEANDO ENVÍO DEL FORMULARIO");
+            e.preventDefault();
+            return false;
+          }
+          
+          // Si hay un bloqueo global activo (creando o cerrando modal de cliente)
+          if (blockAllSubmits) {
+            console.log("⛔ Bloqueo global activo - BLOQUEANDO ENVÍO DEL FORMULARIO");
+            e.preventDefault();
+            return false;
+          }
+          
+          // Si no está activada la bandera de envío por usuario, también prevenimos
+          if (!userInitiatedSubmit) {
+            console.log("⛔ No es un envío iniciado por usuario - BLOQUEANDO ENVÍO DEL FORMULARIO");
+            e.preventDefault();
+            return false;
+          }
+          
+          // En caso contrario, procesamos normalmente
+          console.log("✅ Enviando formulario normalmente");
+          return form.handleSubmit(handleSubmit)(e);
+        }} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm overflow-hidden bg-white/95 backdrop-blur-sm rounded-xl">
               <div className="bg-[#f5f5f7] border-b border-gray-200 p-4 text-gray-900">

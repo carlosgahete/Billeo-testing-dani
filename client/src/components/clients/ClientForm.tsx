@@ -86,10 +86,24 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
   // Mutación para crear o actualizar un cliente
   const mutation = useMutation({
     mutationFn: async (data: ClientFormValues) => {
+      // Añadimos mecanismos de prevención de envío automático del formulario padre
+      // Nota: agregamos un metadato especial para marcar esta solicitud
       if (isEditMode) {
-        return apiRequest("PUT", `/api/clients/${clientToEdit.id}`, data);
+        return apiRequest("PUT", `/api/clients/${clientToEdit.id}`, {
+          ...data,
+          _internal_metadata: {
+            preventAutoSubmit: true,
+            timestamp: Date.now()
+          }
+        });
       } else {
-        return apiRequest("POST", "/api/clients", data);
+        return apiRequest("POST", "/api/clients", {
+          ...data,
+          _internal_metadata: {
+            preventAutoSubmit: true,
+            timestamp: Date.now()
+          }
+        });
       }
     },
     onSuccess: (data) => {
@@ -100,19 +114,32 @@ export function ClientForm({ open, onOpenChange, onClientCreated, clientToEdit }
           : "El cliente se ha creado correctamente",
       });
       
-      // Primero notificamos al componente padre sobre el cliente creado
-      // usando un pequeño retraso para evitar race conditions con estados
+      // Agregamos una pausa más larga para asegurarnos que cualquier
+      // posible envío automático se haya cancelado
       setTimeout(() => {
-        onClientCreated(data);
-      }, 50);
+        // Enviamos un mensaje a la ventana principal para desactivar envíos automáticos
+        window.dispatchEvent(new CustomEvent('prevent-invoice-submit', {
+          detail: { timestamp: Date.now() }
+        }));
+        
+        console.log("🔒 Enviado evento de bloqueo de envío automático de factura");
+        
+        // Y luego notificamos al componente padre sobre el cliente creado
+        setTimeout(() => {
+          onClientCreated(data);
+        }, 100);
+      }, 200);
       
       // Después cerramos el modal y limpiamos el formulario
       form.reset();
       
-      // Retrasamos ligeramente el cierre del modal para evitar problemas de estado
+      // Retrasamos considerablemente el cierre del modal para evitar problemas de estado
       setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('client-form-closing', {
+          detail: { timestamp: Date.now() }
+        }));
         onOpenChange(false);
-      }, 100);
+      }, 300);
     },
     onError: (error: any) => {
       toast({
