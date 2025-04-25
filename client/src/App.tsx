@@ -20,6 +20,7 @@ import NotFound from "@/pages/not-found";
 import CompleteDashboardPage from "@/pages/complete-dashboard";
 import InvoicesPage from "@/pages/invoices/index";
 import CreateInvoicePage from "@/pages/invoices/create";
+import CreateInvoiceFixedPage from "@/pages/invoices/create-simple";
 import InvoiceDetailPage from "@/pages/invoices/[id]";
 import EditInvoicePage from "@/pages/invoices/EditInvoicePage";
 import QuotesPage from "@/pages/quotes/index";
