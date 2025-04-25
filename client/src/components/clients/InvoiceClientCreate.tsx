@@ -90,12 +90,23 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
       // Limpiar y cerrar formulario
       form.reset();
       
-      // Llamar a la función para seleccionar el cliente recién creado
+      // Primero cerrar el formulario, luego seleccionar el cliente
+      console.log("Cliente creado exitosamente con ID:", data.id);
+      
+      // Disparar evento para prevenir envío automático
+      window.dispatchEvent(new CustomEvent('prevent-invoice-submit'));
+      
+      // Cerrar primero el formulario
+      onClose();
+      
+      // Después de un tiempo, seleccionar el cliente (pero sin que se envíe el formulario)
       setTimeout(() => {
         console.log("Seleccionando nuevo cliente:", data.id);
         onClientSelect(data.id);
-        onClose();
-      }, 300);
+        
+        // Notificar que el cliente ha sido seleccionado pero que no se debe enviar el formulario
+        window.dispatchEvent(new CustomEvent('client-selected-do-not-submit'));
+      }, 500);
     },
     onError: (error: any) => {
       toast({
