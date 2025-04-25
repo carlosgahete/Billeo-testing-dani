@@ -795,10 +795,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   // =============== DATOS DE LA APLICACIÓN =================
   
-  // Cargar datos de clientes
-  const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
-    queryKey: ["/api/clients"],
-  });
+  // Ya tenemos los datos de los clientes a través de clientList, evitamos la duplicación
 
   // Cargar datos de la empresa
   const { data: companyData, isLoading: companyLoading } = useQuery<any>({
@@ -806,7 +803,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   });
 
   // Mostrar pantalla de carga mientras esperamos datos necesarios
-  if ((isEditMode && !initialData) || clientsLoading) {
+  if ((isEditMode && !initialData) || isLoadingClients) {
     return <div className="flex justify-center p-8">Cargando...</div>;
   }
 
@@ -871,45 +868,17 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="max-h-60">
-                                {clients?.map((client: any) => (
-                                  <div key={client.id} className="flex items-center justify-between p-1 px-2 hover:bg-muted/50 rounded-sm group">
-                                    <SelectItem value={client.id.toString()} className="flex-1 data-[highlighted]:bg-transparent">
-                                      <div className="flex flex-col">
-                                        <span>{client.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                          {client.taxId} - {client.city || client.address}
-                                        </span>
-                                      </div>
-                                    </SelectItem>
-                                    <div className="flex">
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          editClient(client);
-                                        }}
-                                      >
-                                        <Pencil className="h-4 w-4 text-blue-500" />
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="ml-1 p-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteClient(client.id);
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                      </Button>
+                                {Array.isArray(clientList) && clientList.map((client: any) => (
+                                  <SelectItem key={client.id} value={client.id.toString()}>
+                                    <div className="flex flex-col">
+                                      <span>{client.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {client.taxId} - {client.city || client.address}
+                                      </span>
                                     </div>
-                                  </div>
+                                  </SelectItem>
                                 ))}
-                                {clients?.length === 0 && (
+                                {(!clientList || !Array.isArray(clientList) || clientList.length === 0) && (
                                   <div className="px-2 py-3 text-sm text-muted-foreground">
                                     No hay clientes disponibles
                                   </div>
@@ -1575,7 +1544,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           onClose={() => setShowClientForm(false)}
           onClientSelect={(clientId) => {
             // Buscar el cliente por ID
-            const selectedClient = clients?.find((client: any) => client.id === clientId);
+            const clients = clientList || [];
+            const selectedClient = Array.isArray(clients) ? 
+              clients.find((client: any) => client.id === clientId) : null;
+              
             if (selectedClient) {
               // Establecer el cliente seleccionado en el formulario
               form.setValue("clientId", clientId);
