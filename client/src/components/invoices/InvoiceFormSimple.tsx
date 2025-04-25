@@ -444,6 +444,11 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para manejar la creación o actualización de un cliente
   const handleClientCreated = (data: any) => {
+    console.log("🔄 Cliente creado/actualizado - Asegurando que no se envíe la factura automáticamente");
+    
+    // Explícitamente desactivamos la bandera de envío iniciado por usuario para prevenir envíos automáticos
+    setUserInitiatedSubmit(false);
+    
     // Prevenir cualquier acción automática de guardado de factura
     const currentValues = form.getValues();
     const backupValues = { ...currentValues };
@@ -481,6 +486,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       form.reset(backupValues);
     }
     
+    // Doble verificación para asegurarnos que la bandera está desactivada
+    setTimeout(() => {
+      setUserInitiatedSubmit(false);
+      console.log("🛡️ Estado de envío automático prevenido tras crear cliente");
+    }, 200);
+    
     toast({
       title: clientToEdit ? "Cliente actualizado" : "Cliente creado",
       description: clientToEdit 
@@ -493,6 +504,17 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const handleClientModalClose = (open: boolean) => {
     if (!open) {
       setClientToEdit(null);
+      
+      // Asegurarnos de que no se envíe el formulario automáticamente al cerrar el modal
+      setUserInitiatedSubmit(false);
+      console.log("🛡️ Bandera de envío automático desactivada al cerrar modal cliente");
+      
+      // Verificar y restaurar datos si fuera necesario
+      const currentFormData = form.getValues();
+      if (!currentFormData.clientId && selectedClientInfo) {
+        console.log("🔄 Restaurando datos de cliente seleccionado tras cierre de modal");
+        form.setValue("clientId", selectedClientInfo.id);
+      }
     }
     setShowClientForm(open);
   };
