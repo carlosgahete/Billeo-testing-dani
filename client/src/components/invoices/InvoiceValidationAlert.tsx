@@ -1,38 +1,27 @@
-import { useEffect, useState } from "react";
-import { 
-  Alert, 
-  AlertDescription, 
-  AlertTitle 
-} from "@/components/ui/alert";
-import { 
-  AlertCircle, 
-  CheckCircle2, 
-  XCircle,
-  ShieldAlert 
-} from "lucide-react";
+// client/src/components/invoices/InvoiceValidationAlert.tsx
+import { useState } from "react";
+import { AlertCircle, Check, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-interface ValidationItem {
-  id: string;
-  label: string;
-  valid: boolean;
-  required: boolean;
-  message?: string;
-}
 
 interface InvoiceValidationAlertProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: () => Promise<void> | void;
+  onSubmit: () => void;
   hasClient: boolean;
   hasAmount: boolean;
   hasTaxes: boolean;
-  hasExemptionReason: boolean | undefined;
-  hasDate: boolean;
-  inProgress: boolean;
+  hasExemptionReason: boolean;
 }
 
-export function InvoiceValidationAlert({
+const InvoiceValidationAlert = ({
   show,
   onClose,
   onSubmit,
@@ -40,114 +29,94 @@ export function InvoiceValidationAlert({
   hasAmount,
   hasTaxes,
   hasExemptionReason,
-  hasDate,
-  inProgress
-}: InvoiceValidationAlertProps) {
-  const [validationItems, setValidationItems] = useState<ValidationItem[]>([]);
-  const [canSubmit, setCanSubmit] = useState(false);
+}: InvoiceValidationAlertProps) => {
+  const [userConfirmed, setUserConfirmed] = useState(false);
 
-  // Actualizar validaciones cuando cambien las props
-  useEffect(() => {
-    const items: ValidationItem[] = [
-      {
-        id: "client",
-        label: "Cliente",
-        valid: hasClient,
-        required: true,
-        message: "Debes seleccionar o crear un cliente válido"
-      },
-      {
-        id: "amount",
-        label: "Importe base (Base imponible)",
-        valid: hasAmount,
-        required: true,
-        message: "El importe debe ser mayor que cero"
-      },
-      {
-        id: "taxes",
-        label: "Impuestos (IVA/IRPF) o Exención",
-        valid: hasTaxes || !!hasExemptionReason,
-        required: true,
-        message: "Debes añadir impuestos o indicar motivo de exención"
-      },
-      {
-        id: "date",
-        label: "Fecha de factura",
-        valid: hasDate,
-        required: true,
-        message: "Debes establecer una fecha válida para la factura"
-      }
-    ];
-
-    setValidationItems(items);
-    
-    // Comprobar si se puede enviar la factura
-    const requiredItems = items.filter(item => item.required);
-    const validRequiredItems = requiredItems.filter(item => item.valid);
-    setCanSubmit(validRequiredItems.length === requiredItems.length);
-  }, [hasClient, hasAmount, hasTaxes, hasExemptionReason, hasDate]);
-
-  if (!show) return null;
+  const handleSubmit = () => {
+    setUserConfirmed(true);
+    onSubmit();
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <ShieldAlert className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold">Verificación de la factura</h2>
-          </div>
-          
-          <Alert className="mb-4 bg-blue-50 border-blue-200">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertTitle>Verificando campos obligatorios</AlertTitle>
-            <AlertDescription className="text-sm text-gray-600">
-              Antes de crear la factura, comprueba que has completado todos los campos obligatorios.
-            </AlertDescription>
-          </Alert>
+    <Dialog open={show} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center text-amber-700">
+            <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
+            Datos incompletos en la factura
+          </DialogTitle>
+          <DialogDescription className="text-gray-600">
+            Hay algunos datos importantes que faltan o no son válidos en tu factura. Por favor revisa los siguientes puntos:
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="space-y-3 mb-6">
-            {validationItems.map((item) => (
-              <div key={item.id} className="flex items-start gap-2">
-                {item.valid ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                )}
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            {!hasClient && (
+              <div className="flex items-start gap-2 text-red-700 bg-red-50 p-3 rounded-md">
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
                 <div>
-                  <p className="font-medium">{item.label}</p>
-                  {!item.valid && (
-                    <p className="text-sm text-red-600">{item.message}</p>
-                  )}
+                  <p className="font-medium">Cliente no seleccionado</p>
+                  <p className="text-sm text-red-600">
+                    Debes seleccionar un cliente para la factura
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
 
-          {!canSubmit && (
-            <Alert className="mb-4 bg-amber-50 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertTitle>No se puede crear la factura</AlertTitle>
-              <AlertDescription className="text-sm text-gray-600">
-                Por favor, completa los campos marcados en rojo antes de continuar.
-              </AlertDescription>
-            </Alert>
-          )}
+            {!hasAmount && (
+              <div className="flex items-start gap-2 text-red-700 bg-red-50 p-3 rounded-md">
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Base imponible cero</p>
+                  <p className="text-sm text-red-600">
+                    El importe total de la factura no puede ser cero
+                  </p>
+                </div>
+              </div>
+            )}
 
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={onClose} disabled={inProgress}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={onSubmit} 
-              disabled={!canSubmit || inProgress}
-              className={!canSubmit ? "opacity-50 cursor-not-allowed" : ""}
-            >
-              {inProgress ? "Creando factura..." : "Crear factura"}
-            </Button>
+            {!hasTaxes && !hasExemptionReason && (
+              <div className="flex items-start gap-2 text-amber-700 bg-amber-50 p-3 rounded-md">
+                <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Sin impuestos ni exención</p>
+                  <p className="text-sm text-amber-600">
+                    La factura no tiene impuestos aplicados (IVA/IRPF) ni incluye un motivo de exención en las notas
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {hasClient && hasAmount && (hasTaxes || hasExemptionReason) && (
+              <div className="flex items-start gap-2 text-green-700 bg-green-50 p-3 rounded-md">
+                <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Todo correcto</p>
+                  <p className="text-sm text-green-600">
+                    La factura cumple con todos los requisitos básicos
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    </div>
+
+        <DialogFooter className="sm:justify-between">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={userConfirmed}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {userConfirmed ? "Procesando..." : "Confirmar y guardar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+export default InvoiceValidationAlert;
