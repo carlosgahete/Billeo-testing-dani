@@ -45,12 +45,13 @@ import {
 } from "@/components/ui/accordion";
 import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown, Loader2, User } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
 import { useLocation } from "wouter";
 import { InvoiceValidationAlert } from "./InvoiceValidationAlert";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
+import { InvoiceClientCreate } from "../clients/InvoiceClientCreate";
 
 // Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
@@ -122,6 +123,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   });
   const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [selectedClientInfo, setSelectedClientInfo] = useState<any>(null);
+  
+  // Obtener la lista de clientes
+  const { data: clientList, isLoading: isLoadingClients } = useQuery({
+    queryKey: ["/api/clients"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   
@@ -1555,12 +1562,34 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       </Dialog>
 
       {/* Modal de cliente */}
-      <ClientForm 
-        open={showClientForm}
-        onOpenChange={handleClientModalClose}
-        onClientCreated={handleClientCreated}
-        clientToEdit={clientToEdit}
-      />
+      {isEditMode ? (
+        <ClientForm 
+          open={showClientForm}
+          onOpenChange={handleClientModalClose}
+          onClientCreated={handleClientCreated}
+          clientToEdit={clientToEdit}
+        />
+      ) : (
+        <InvoiceClientCreate 
+          open={showClientForm}
+          onClose={() => setShowClientForm(false)}
+          onClientSelect={(clientId) => {
+            // Buscar el cliente por ID
+            const selectedClient = clients?.find((client: any) => client.id === clientId);
+            if (selectedClient) {
+              // Establecer el cliente seleccionado en el formulario
+              form.setValue("clientId", clientId);
+              setSelectedClientInfo(selectedClient);
+              
+              // Mostrar mensaje al usuario
+              toast({
+                title: "Cliente seleccionado",
+                description: `Cliente ${selectedClient.name} seleccionado correctamente`,
+              });
+            }
+          }}
+        />
+      )}
 
       {/* Alerta de validación de factura */}
       <InvoiceValidationAlert 
