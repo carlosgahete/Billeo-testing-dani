@@ -82,7 +82,12 @@ function Router() {
       </Route>
       <Route path="/invoices/create">
         <Layout>
-          <ProtectedRoute path="/invoices/create" component={CreateInvoicePage} />
+          <ProtectedRoute path="/invoices/create" component={CreateInvoiceFixedPage} />
+        </Layout>
+      </Route>
+      <Route path="/invoices/create-legacy">
+        <Layout>
+          <ProtectedRoute path="/invoices/create-legacy" component={CreateInvoicePage} />
         </Layout>
       </Route>
       <Route path="/invoices/edit/:id">
