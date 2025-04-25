@@ -521,10 +521,20 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para manejar la selección de cliente del desplegable
   const handleClientSelection = (clientId: string) => {
-    const selectedClient = clients?.find((client: any) => client.id.toString() === clientId);
+    // Prevenir que esta selección de cliente cause un envío automático
+    if (blockAllSubmits) {
+      console.log("⚠️ Selección de cliente durante periodo de bloqueo, evitando posible envío");
+      setUserInitiatedSubmit(false);
+    }
+    
+    // Buscamos el cliente seleccionado en la lista de clientes
+    const selectedClient = clientList?.find((client: any) => client.id.toString() === clientId);
+    
     if (selectedClient) {
       // Guardamos toda la información del cliente seleccionado en el estado
       setSelectedClientInfo(selectedClient);
+      
+      console.log("✅ Cliente seleccionado manualmente:", selectedClient.name);
     }
   };
 
@@ -681,12 +691,33 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       }, 1000);
     };
     
+    // Manejador específico para cuando se selecciona un cliente después de crearlo
+    const clientSelectedHandler = () => {
+      console.log("📢 Cliente seleccionado después de crearlo, evitando envío automático");
+      setUserInitiatedSubmit(false);
+      setBlockAllSubmits(true);
+      
+      // Mostrar toast informativo
+      toast({
+        title: "Cliente seleccionado",
+        description: "Ya puede continuar completando la factura y enviarla cuando esté lista",
+      });
+      
+      // Liberar el bloqueo después de un tiempo más largo para asegurar que no haya envío automático
+      setTimeout(() => {
+        setBlockAllSubmits(false);
+        console.log("✅ Liberado bloqueo especial tras selección de cliente");
+      }, 2000);
+    };
+    
     window.addEventListener('prevent-invoice-submit', preventFormSubmitHandler);
     window.addEventListener('client-form-closing', preventFormSubmitHandler);
+    window.addEventListener('client-selected-do-not-submit', clientSelectedHandler);
     
     return () => {
       window.removeEventListener('prevent-invoice-submit', preventFormSubmitHandler);
       window.removeEventListener('client-form-closing', preventFormSubmitHandler);
+      window.removeEventListener('client-selected-do-not-submit', clientSelectedHandler);
     };
   }, []);
   
@@ -742,6 +773,20 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       return;
     }
     
+    // Verificamos si hay un bloqueo activo (especialmente después de crear un cliente)
+    if (blockAllSubmits) {
+      console.log("⚠️ Bloqueo activo, ignorando submit de factura");
+      
+      // Notificar al usuario
+      toast({
+        title: "Formulario en proceso",
+        description: "Espere un momento antes de enviar la factura",
+        variant: "destructive",
+      });
+      
+      return;
+    }
+    
     // Verificamos si el envío fue iniciado explícitamente por el usuario o es un envío automático
     if (!userInitiatedSubmit) {
       console.log("⚠️ Detectado envío automático del formulario, bloqueando...");
@@ -749,6 +794,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       // Prevenimos el envío automático, pero guardamos los datos actuales para referencia
       const currentFormData = form.getValues();
       console.log("Datos actuales preservados:", currentFormData);
+      
+      // Notificar que se detectó un envío automático (posiblemente después de crear cliente)
+      toast({
+        title: "Acción bloqueada",
+        description: "Por favor, complete todos los datos de la factura y después pulse 'Crear Factura'",
+      });
       
       // Marcamos este evento como procesado para evitar procesamientos adicionales
       setTimeout(() => setUserInitiatedSubmit(false), 100);
