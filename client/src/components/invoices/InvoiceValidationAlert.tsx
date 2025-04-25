@@ -23,11 +23,11 @@ interface ValidationItem {
 interface InvoiceValidationAlertProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: () => Promise<void>;
+  onSubmit: () => Promise<void> | void;
   hasClient: boolean;
   hasAmount: boolean;
   hasTaxes: boolean;
-  hasExemptionReason: boolean;
+  hasExemptionReason: boolean | undefined;
   hasDate: boolean;
   inProgress: boolean;
 }
@@ -66,7 +66,7 @@ export function InvoiceValidationAlert({
       {
         id: "taxes",
         label: "Impuestos (IVA/IRPF) o Exención",
-        valid: hasTaxes || hasExemptionReason,
+        valid: hasTaxes || !!hasExemptionReason,
         required: true,
         message: "Debes añadir impuestos o indicar motivo de exención"
       },

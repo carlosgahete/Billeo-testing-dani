@@ -108,7 +108,15 @@ export function InvoiceClientCreate({ open, onClose, onClientSelect }: InvoiceCl
   });
 
   const onSubmit = (data: ClientFormValues) => {
+    // Prevenir múltiples envíos
+    if (isSubmitting) return;
+    
+    // Marcar como en proceso de envío
     setIsSubmitting(true);
+    
+    console.log("🔄 Enviando datos del nuevo cliente (formulario independiente)");
+    
+    // Realizar la mutación
     mutation.mutate(data);
   };
 
