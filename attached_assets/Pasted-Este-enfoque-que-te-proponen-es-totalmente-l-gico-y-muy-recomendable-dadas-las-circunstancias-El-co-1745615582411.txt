@@ -1,0 +1,50 @@
+Este enfoque que te proponen es totalmente lógico y muy recomendable dadas las circunstancias. El comportamiento que estás viendo (envío automático de la factura al crear el cliente) ya no es un bug sencillo de aislar, y parece estar relacionado con cómo está estructurada la lógica de renderizado, actualización de estado y posiblemente mutaciones encadenadas de React Query u otro gestor.
+
+⸻
+
+Mi recomendación: Aceptar la solución radical (flujo separado)
+
+Separar completamente el flujo es la solución más limpia, predecible y profesional. Aquí te detallo por qué:
+
+⸻
+
+Ventajas del nuevo enfoque
+	1.	Evita colisiones entre formularios y estados
+	•	No hay más conflictos entre crear cliente y crear factura en la misma pantalla.
+	2.	Mejor UX para el usuario
+	•	Es más intuitivo: primero creo el cliente, luego creo la factura.
+	3.	Más fácil de mantener y depurar
+	•	Cada pantalla hace una cosa. Más fácil de testear, mejorar y escalar.
+	4.	Solución inmediata sin bugs raros
+	•	No más “facturas fantasmas” por 0€ ni sorpresas al guardar.
+
+⸻
+
+Implementación sugerida
+
+1. Pantalla de gestión de clientes
+	•	Un botón “Crear nuevo cliente”
+	•	Una tabla con búsqueda y edición de clientes
+
+2. En el formulario de factura
+	•	Un Select o Autocomplete con todos los clientes existentes
+	•	Si no encuentras al cliente, botón: “Crear cliente → te lleva a la pantalla de clientes”
+
+3. Mensaje claro en la interfaz
+
+“Para evitar errores, por favor crea los clientes desde la sección ‘Clientes’ antes de hacer la factura.”
+
+Incluso lo puedes hacer más elegante: si no hay cliente seleccionado, ocultas o desactivas el botón “Crear factura”.
+
+⸻
+
+¿Y si en el futuro quieres permitir ambas cosas?
+
+Cuando tengas más control del flujo o una refactorización completa, podrías usar un sistema más avanzado:
+	•	Formularios desacoplados
+	•	Wizard en pasos (1. Cliente / 2. Importe / 3. Impuestos / 4. Confirmar)
+	•	Persistencia local (usar Zustand o Redux para guardar el estado del cliente entre pantallas)
+
+⸻
+
+¿Te ayudo a diseñar esta nueva pantalla de gestión de clientes o el selector en la factura?

@@ -43,7 +43,7 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from "@/components/ui/accordion";
-import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown, Loader2, User } from "lucide-react";
+import { Trash2, Plus, FileText, Minus, CalendarIcon, Pencil, ChevronDown, Loader2, User, AlertTriangle, UserPlus, UserX } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { forceDashboardRefresh, notifyDashboardUpdate } from "@/lib/dashboard-helpers";
@@ -945,6 +945,13 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         <FormLabel>Cliente</FormLabel>
                         <div className="flex gap-2 items-start">
                           <div className="flex-1">
+                            <div className="mb-2 p-2.5 rounded-md border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+                              <p className="flex items-center">
+                                <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
+                                <strong>Recomendación:</strong> Crea primero tus clientes en la sección &quot;Clientes&quot; antes de hacer facturas.
+                              </p>
+                            </div>
+                            
                             <Select
                               onValueChange={(value) => {
                                 field.onChange(Number(value));
@@ -953,24 +960,29 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                               value={field.value ? field.value.toString() : undefined}
                             >
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar cliente" />
+                                <SelectTrigger className="border-blue-200 focus:border-blue-300 h-12">
+                                  <SelectValue placeholder="Seleccione un cliente existente" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="max-h-60">
-                                {Array.isArray(clientList) && clientList.map((client: any) => (
-                                  <SelectItem key={client.id} value={client.id.toString()}>
-                                    <div className="flex flex-col">
-                                      <span>{client.name}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {client.taxId} - {client.city || client.address}
-                                      </span>
+                              <SelectContent className="max-h-72">
+                                {Array.isArray(clientList) && clientList.length > 0 ? (
+                                  clientList.map((client: any) => (
+                                    <SelectItem key={client.id} value={client.id.toString()}>
+                                      <div className="flex flex-col py-1">
+                                        <span className="font-medium">{client.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {client.taxId} - {client.city || client.address}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <div className="px-2 py-4 text-sm text-center text-muted-foreground">
+                                    <div className="flex flex-col items-center gap-2">
+                                      <UserX className="h-5 w-5 text-gray-400" />
+                                      <span>No hay clientes disponibles</span>
+                                      <span className="text-xs">Cree sus clientes primero en la sección de Clientes</span>
                                     </div>
-                                  </SelectItem>
-                                ))}
-                                {(!clientList || !Array.isArray(clientList) || clientList.length === 0) && (
-                                  <div className="px-2 py-3 text-sm text-muted-foreground">
-                                    No hay clientes disponibles
                                   </div>
                                 )}
                               </SelectContent>
@@ -979,10 +991,18 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           <Button 
                             type="button" 
                             variant="outline" 
-                            onClick={() => setShowClientForm(true)}
-                            className="shrink-0"
+                            onClick={() => {
+                              toast({
+                                title: "Recomendación",
+                                description: "Para evitar problemas, te recomendamos crear los clientes desde la sección 'Clientes'",
+                                variant: "default"
+                              });
+                              navigate("/clients/create");
+                            }}
+                            className="shrink-0 flex items-center gap-1 h-12"
                           >
-                            Nuevo
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Ir a crear cliente
                           </Button>
                         </div>
                         <FormMessage />
