@@ -1395,6 +1395,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                 type="submit" 
                 className="bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={mutation.isPending}
+                onClick={() => setUserInitiatedSubmit(true)}
               >
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? "Actualizar factura" : "Crear factura"}
