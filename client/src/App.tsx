@@ -55,6 +55,8 @@ import TaxesPage from "@/pages/taxes";
 import FilterTestPage from "@/pages/FilterTest";
 import FilterTestSimplePage from "@/pages/FilterTestSimple";
 import AppleDashboardDemo from "@/pages/apple-dashboard-demo";
+import ClientsPage from "@/pages/clients/index";
+import CreateClientPage from "@/pages/clients/create";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
