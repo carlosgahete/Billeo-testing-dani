@@ -1171,31 +1171,57 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       </div>
                     </div>
                     <div className="p-4 space-y-3">
+                      {/* Base imponible */}
                       <div className="flex justify-between py-2 border-b">
                         <span className="text-gray-600">Base imponible</span>
                         <span className="font-medium">{formatCurrency(calculatedTotals.subtotal)}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">Impuestos</span>
-                        <span className="font-medium">{formatCurrency(calculatedTotals.tax)}</span>
-                      </div>
                       
-                      {/* Mostramos los impuestos adicionales en detalle */}
-                      {form.watch("additionalTaxes")?.length > 0 && (
-                        <div className="space-y-1 py-2">
-                          <span className="text-sm text-gray-500">Desglose de impuestos:</span>
-                          {form.watch("additionalTaxes")?.map((tax, index) => (
-                            <div key={index} className="flex justify-between text-sm pl-4">
-                              <span className="text-gray-500">{tax.name}</span>
-                              <span className="text-gray-700">
-                                {tax.isPercentage ? 
-                                  `${tax.name.toLowerCase().includes('irpf') ? '-' : ''}${tax.amount}%` : 
-                                  formatCurrency(tax.amount)
-                                }
-                              </span>
-                            </div>
-                          ))}
+                      {/* IVA de los conceptos */}
+                      {form.watch("items")?.some(item => Number(item.taxRate) > 0) && (
+                        <div className="flex justify-between py-2 pl-4 text-sm">
+                          <span className="text-gray-500">IVA (conceptos)</span>
+                          <span className="text-gray-700">
+                            {formatCurrency(form.watch("items").reduce((sum, item) => {
+                              const itemSubtotal = Number(item.quantity) * Number(item.unitPrice);
+                              return sum + (itemSubtotal * (Number(item.taxRate) / 100));
+                            }, 0))}
+                          </span>
                         </div>
+                      )}
+                      
+                      {/* Desglose de impuestos adicionales */}
+                      {form.watch("additionalTaxes")?.length > 0 && (
+                        <>
+                          <div className="flex justify-between py-2 border-b font-medium">
+                            <span className="text-gray-600">Impuestos adicionales</span>
+                          </div>
+                          
+                          {form.watch("additionalTaxes")?.map((tax, index) => {
+                            // Calculamos el valor real del impuesto
+                            const isIRPF = tax.name.toLowerCase().includes('irpf') || 
+                                          tax.name.toLowerCase().includes('retención');
+                            const taxAmount = tax.isPercentage 
+                              ? calculatedTotals.subtotal * (tax.amount / 100)
+                              : tax.amount;
+                            
+                            return (
+                              <div key={index} className="flex justify-between py-1 pl-4 text-sm">
+                                <div className="flex items-center">
+                                  <span className={`${isIRPF ? 'text-red-600' : 'text-blue-600'} mr-1`}>
+                                    {isIRPF ? '(-)' : ''} 
+                                  </span>
+                                  <span className="text-gray-600">
+                                    {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
+                                  </span>
+                                </div>
+                                <span className={`font-medium ${isIRPF ? 'text-red-600' : 'text-gray-700'}`}>
+                                  {formatCurrency(taxAmount)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </>
                       )}
                       
                       <div className="flex justify-between pt-3 font-bold">
