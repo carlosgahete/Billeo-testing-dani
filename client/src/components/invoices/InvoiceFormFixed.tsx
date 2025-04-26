@@ -443,56 +443,77 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
     }
   };
 
-  // Calcular totales basados en items y impuestos adicionales
-  const calculatedTotals = form.watch(["items", "additionalTaxes"]).reduce((acc, current, index) => {
-    if (index === 0 && Array.isArray(current)) { // items
-      const itemsSubtotal = current.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0;
-        const unitPrice = Number(item.unitPrice) || 0;
-        const taxRate = Number(item.taxRate) || 0;
-        
-        const itemSubtotal = quantity * unitPrice;
-        const itemTax = itemSubtotal * (taxRate / 100);
-        
-        return {
-          subtotal: sum.subtotal + itemSubtotal,
-          tax: sum.tax + itemTax,
-          total: sum.total + itemSubtotal + itemTax
-        };
-      }, { subtotal: 0, tax: 0, total: 0 });
-      
-      return itemsSubtotal;
-    } else if (index === 1 && Array.isArray(current)) { // additionalTaxes
-      const withAdditionalTaxes = current.reduce((sum, tax) => {
-        const taxAmount = tax.isPercentage 
-          ? sum.subtotal * (tax.amount / 100) 
-          : tax.amount;
-        
-        // Verificar si es IRPF para aplicarlo como deducción (negativo)
-        const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
-        
-        if (isIRPF) {
-          // Para IRPF, lo restamos del total
-          return {
-            ...sum,
-            tax: sum.tax + taxAmount, // Seguimos sumando al total de impuestos para reportes
-            total: sum.total - taxAmount // Pero lo restamos del total a pagar
-          };
-        } else {
-          // Para otros impuestos (IVA, etc), lo sumamos normalmente
-          return {
-            ...sum,
-            tax: sum.tax + taxAmount,
-            total: sum.total + taxAmount
-          };
-        }
-      }, acc);
-      
-      return withAdditionalTaxes;
-    }
+  // Calcula sólo la base imponible basado en los conceptos (para evitar que cambie)
+  const calculateBaseAmount = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return 0;
     
-    return acc;
-  }, { subtotal: 0, tax: 0, total: 0 });
+    return items.reduce((total, item) => {
+      const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unitPrice) || 0;
+      return total + (quantity * unitPrice);
+    }, 0);
+  };
+  
+  // Calcula el IVA de los conceptos
+  const calculateItemsTax = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return 0;
+    
+    return items.reduce((total, item) => {
+      const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unitPrice) || 0;
+      const taxRate = Number(item.taxRate) || 0;
+      const itemSubtotal = quantity * unitPrice;
+      return total + (itemSubtotal * (taxRate / 100));
+    }, 0);
+  };
+  
+  // Calcula los impuestos adicionales (incluido el IRPF)
+  const calculateAdditionalTaxes = (taxes, baseAmount) => {
+    if (!Array.isArray(taxes) || taxes.length === 0) return { additionalTax: 0, negativeAdjustments: 0 };
+    
+    return taxes.reduce((result, tax) => {
+      const taxAmount = tax.isPercentage 
+        ? baseAmount * (tax.amount / 100) 
+        : tax.amount;
+      
+      // Verificar si es IRPF para aplicarlo como deducción (negativo)
+      const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+      
+      if (isIRPF) {
+        // IRPF es una deducción, va como negativo
+        return {
+          additionalTax: result.additionalTax + taxAmount, // suma a impuestos para reportes
+          negativeAdjustments: result.negativeAdjustments + taxAmount // pero lo guardamos como negativo
+        };
+      } else {
+        // Otros impuestos son positivos
+        return {
+          additionalTax: result.additionalTax + taxAmount,
+          negativeAdjustments: result.negativeAdjustments
+        };
+      }
+    }, { additionalTax: 0, negativeAdjustments: 0 });
+  };
+  
+  // Vigilar cambios en elementos y aplicar cálculos
+  const items = form.watch("items") || [];
+  const additionalTaxes = form.watch("additionalTaxes") || [];
+  
+  // Calcular base imponible (nunca debe cambiar excepto al modificar conceptos)
+  const baseAmount = calculateBaseAmount(items);
+  
+  // Calcular IVA de los conceptos
+  const itemsTax = calculateItemsTax(items);
+  
+  // Calcular impuestos adicionales (incluido el IRPF que va como negativo)
+  const { additionalTax, negativeAdjustments } = calculateAdditionalTaxes(additionalTaxes, baseAmount);
+  
+  // Calcular totales
+  const calculatedTotals = {
+    subtotal: baseAmount,
+    tax: itemsTax + additionalTax,
+    total: baseAmount + itemsTax + additionalTax - negativeAdjustments
+  };
 
   // Actualizar campos calculados en el formulario
   useEffect(() => {
@@ -1178,31 +1199,30 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       </div>
                       
                       {/* IVA de los conceptos */}
-                      {form.watch("items")?.some(item => Number(item.taxRate) > 0) && (
+                      {itemsTax > 0 && (
                         <div className="flex justify-between py-2 pl-4 text-sm">
                           <span className="text-gray-500">IVA (conceptos)</span>
                           <span className="text-gray-700">
-                            {formatCurrency(form.watch("items").reduce((sum, item) => {
-                              const itemSubtotal = Number(item.quantity) * Number(item.unitPrice);
-                              return sum + (itemSubtotal * (Number(item.taxRate) / 100));
-                            }, 0))}
+                            {formatCurrency(itemsTax)}
                           </span>
                         </div>
                       )}
                       
                       {/* Desglose de impuestos adicionales */}
-                      {form.watch("additionalTaxes")?.length > 0 && (
+                      {additionalTaxes.length > 0 && (
                         <>
                           <div className="flex justify-between py-2 border-b font-medium">
                             <span className="text-gray-600">Impuestos adicionales</span>
                           </div>
                           
-                          {form.watch("additionalTaxes")?.map((tax, index) => {
-                            // Calculamos el valor real del impuesto
+                          {additionalTaxes.map((tax, index) => {
+                            // Determinar si es IRPF u otro impuesto con retención
                             const isIRPF = tax.name.toLowerCase().includes('irpf') || 
                                           tax.name.toLowerCase().includes('retención');
+                            
+                            // Calcular el monto del impuesto
                             const taxAmount = tax.isPercentage 
-                              ? calculatedTotals.subtotal * (tax.amount / 100)
+                              ? baseAmount * (tax.amount / 100)
                               : tax.amount;
                             
                             return (
