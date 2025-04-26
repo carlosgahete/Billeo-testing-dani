@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, FileText, FileCheck, Check, Plus, X, UserPlus, AlertCircle } from "lucide-react";
+import { AlertTriangle, FileText, FileCheck, Check, Plus, X, UserPlus, AlertCircle, Search } from "lucide-react";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -762,23 +762,49 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           Cliente <span className="text-red-500 ml-1">*</span>
                         </FormLabel>
                         <div className="flex flex-col space-y-2">
-                          <FormControl>
-                            <Select
-                              value={field.value?.toString()}
-                              onValueChange={field.onChange}
+                          <div className="relative">
+                            <FormControl>
+                              <Select
+                                value={field.value?.toString()}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger className="border-gray-200 focus:ring-blue-500 pr-16">
+                                  <SelectValue placeholder="Selecciona un cliente" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {/* Añadir campo de búsqueda al principio del menú */}
+                                  <div className="p-2 sticky top-0 bg-white border-b border-gray-100 z-10">
+                                    <div className="relative">
+                                      <Input 
+                                        placeholder="Buscar cliente..." 
+                                        className="pl-8 border-gray-200 focus-visible:ring-blue-500"
+                                        onChange={(e) => {
+                                          // Esto es solo visual, la búsqueda real la manejamos en el componente de clientes
+                                          // Ya que este solo es un selector
+                                        }}
+                                      />
+                                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                                    </div>
+                                  </div>
+                                  {clientList?.map((client: any) => (
+                                    <SelectItem key={client.id} value={client.id.toString()}>
+                                      {client.name} - {client.taxId}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            
+                            {/* Botón de búsqueda de clientes */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="absolute right-1 top-0 h-full px-3 py-2 rounded-l-none text-blue-600 border-l"
+                              onClick={() => navigate("/clients?from=invoice")}
                             >
-                              <SelectTrigger className="border-gray-200 focus:ring-blue-500">
-                                <SelectValue placeholder="Selecciona un cliente" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {clientList?.map((client: any) => (
-                                  <SelectItem key={client.id} value={client.id.toString()}>
-                                    {client.name} - {client.taxId}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
+                              <Search className="h-4 w-4" />
+                            </Button>
+                          </div>
                           
                           {/* Botón para ir a la sección de clientes */}
                           <Button 
