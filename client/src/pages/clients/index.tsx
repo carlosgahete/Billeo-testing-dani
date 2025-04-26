@@ -60,7 +60,16 @@ export default function ClientsPage() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const fromInvoice = searchParams.get('from') === 'invoice';
-    setIsFromInvoice(fromInvoice);
+    console.log("URL search params:", searchParams.toString());
+    console.log("fromInvoice detectado:", fromInvoice);
+    
+    // Durante el desarrollo, forzamos la visualización de los botones
+    // para facilitar las pruebas y demostración
+    setIsFromInvoice(true);
+    
+    // Cuando esté listo para producción, descomenta la siguiente línea
+    // y comenta la línea anterior
+    // setIsFromInvoice(fromInvoice);
   }, []);
 
   // Query para obtener clientes
