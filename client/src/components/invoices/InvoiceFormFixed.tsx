@@ -527,20 +527,30 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const newTaxes = [...currentTaxes];
       newTaxes[existingIRPFIndex] = {
         name: "IRPF",
-        amount: 15,
+        amount: 15, // El valor se muestra como negativo en la UI pero se guarda como positivo
         isPercentage: true
       };
       form.setValue("additionalTaxes", newTaxes);
+      
+      toast({
+        title: 'IRPF actualizado',
+        description: 'Se ha aplicado una retención de IRPF del -15% a esta factura.',
+      });
     } else {
       // Agregar nuevo IRPF
       form.setValue("additionalTaxes", [
         ...currentTaxes,
         {
           name: "IRPF",
-          amount: 15,
+          amount: 15, // El valor se muestra como negativo en la UI pero se guarda como positivo
           isPercentage: true
         }
       ]);
+      
+      toast({
+        title: 'IRPF añadido',
+        description: 'Se ha aplicado una retención de IRPF del -15% a esta factura.',
+      });
     }
   };
 
