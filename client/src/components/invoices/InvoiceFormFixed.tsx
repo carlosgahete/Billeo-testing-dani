@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, FileText, FileCheck, Check, Plus, X, UserPlus, AlertCircle, Search } from "lucide-react";
+import { AlertTriangle, FileText, FileCheck, Check, Plus, X, UserPlus, AlertCircle, Search, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -1037,15 +1037,14 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   </div>
 
                   {/* Sección de líneas de factura */}
-                  <div className="space-y-4 rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 p-4 border-b border-blue-100">
-                      <h3 className="text-gray-800 font-medium flex items-center">
-                        <span className="h-5 w-1 bg-blue-500 rounded-full mr-2"></span>
+                  <div className="border rounded-md overflow-hidden">
+                    <div className="bg-gray-50 p-3 border-b">
+                      <h3 className="text-sm font-medium text-gray-700">
                         Conceptos
                       </h3>
                     </div>
                     
-                    <div className="p-4 bg-white">
+                    <div className="p-4">
                       <InvoiceLineItems
                         control={form.control}
                         name="items"
@@ -1056,33 +1055,32 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
                   {/* Mostrar impuestos adicionales si existen */}
                   {form.watch("additionalTaxes")?.length > 0 && (
-                    <div className="space-y-4 rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                      <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 p-4 border-b border-blue-100">
-                        <h3 className="text-gray-800 font-medium flex items-center">
-                          <span className="h-5 w-1 bg-blue-500 rounded-full mr-2"></span>
+                    <div className="border rounded-md overflow-hidden">
+                      <div className="bg-gray-50 p-3 border-b">
+                        <h3 className="text-sm font-medium text-gray-700">
                           Impuestos adicionales
                         </h3>
                       </div>
                       
-                      <div className="p-4 bg-white space-y-2">
+                      <div className="p-4 space-y-2">
                         {form.watch("additionalTaxes")?.map((tax, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 shadow-sm">
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-md">
                             <div className="flex items-center">
-                              <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${
+                              <div className={`rounded px-2 py-1 text-xs font-medium mr-2 ${
                                 tax.name.toLowerCase().includes('irpf') 
                                   ? 'bg-red-100 text-red-700' 
                                   : 'bg-blue-100 text-blue-700'
                               }`}>
-                                <span className="text-xs font-bold">{tax.isPercentage ? `${tax.amount}%` : '€'}</span>
+                                {tax.isPercentage ? `${tax.amount}%` : '€'}
                               </div>
-                              <span className="font-medium">{tax.name}</span>
+                              <span>{tax.name}</span>
                             </div>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveTax(index)}
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                              className="h-8 w-8 p-0 text-red-500"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -1093,19 +1091,21 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   )}
 
                   {/* Resumen de totales */}
-                  <div className="mt-8 bg-white rounded-2xl overflow-hidden border border-gray-100 shadow">
-                    <div className="flex items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
-                      <h3 className="text-lg font-medium">Resumen de la factura</h3>
-                      <div className="text-2xl font-bold">{formatCurrency(calculatedTotals.total)}</div>
-                    </div>
-                    <div className="p-5 space-y-3">
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-600">Base imponible</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(calculatedTotals.subtotal)}</span>
+                  <div className="border rounded-md overflow-hidden">
+                    <div className="bg-blue-600 p-3 text-white">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium">Resumen de la factura</h3>
+                        <div className="font-bold">{formatCurrency(calculatedTotals.total)}</div>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-gray-100">
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Base imponible</span>
+                        <span className="font-medium">{formatCurrency(calculatedTotals.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
                         <span className="text-gray-600">Impuestos</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(calculatedTotals.tax)}</span>
+                        <span className="font-medium">{formatCurrency(calculatedTotals.tax)}</span>
                       </div>
                       
                       {/* Mostramos los impuestos adicionales en detalle */}
@@ -1121,9 +1121,9 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         </div>
                       )}
                       
-                      <div className="flex justify-between pt-4 font-bold">
-                        <span className="text-gray-800">Total a pagar</span>
-                        <span className="text-xl text-blue-600">{formatCurrency(calculatedTotals.total)}</span>
+                      <div className="flex justify-between pt-3 font-bold">
+                        <span>Total a pagar</span>
+                        <span className="text-blue-600">{formatCurrency(calculatedTotals.total)}</span>
                       </div>
                     </div>
                   </div>
@@ -1132,16 +1132,16 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Card>
           </div>
 
-          {/* Botones de acción con estilo Apple */}
-          <div className="flex flex-col items-center justify-center space-y-3 pb-12 mt-8">
+          {/* Botones de acción simplificados */}
+          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
             <Button 
               type="submit" 
-              className="w-full max-w-md py-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 text-base"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               disabled={createMutation.isPending || updateMutation.isPending || blockAllSubmits}
             >
               {(createMutation.isPending || updateMutation.isPending) ? (
                 <div className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -1149,7 +1149,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
-                  <Check className="mr-2 h-5 w-5" />
+                  <Check className="mr-2 h-4 w-4" />
                   <span>{isEditMode ? "Actualizar factura" : "Crear factura"}</span>
                 </div>
               )}
@@ -1157,11 +1157,11 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={() => navigate("/invoices")}
-              className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              className="w-full border-gray-300"
             >
-              Cancelar y volver
+              Cancelar
             </Button>
           </div>
         </form>
