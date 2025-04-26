@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2, Users, ArrowLeft, FileText } from "lucide-react";
+import { Pencil, Plus, Trash2, Users, ArrowLeft, FileText, Info } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Table,
@@ -166,26 +166,51 @@ export default function ClientsPage() {
   return (
     <div className="container mx-auto py-6">
       <Card>
-        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <CardTitle className="text-2xl">Clientes</CardTitle>
-            <CardDescription>
-              Gestiona la información de tus clientes
-            </CardDescription>
-          </div>
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative">
-              <Input
-                placeholder="Buscar clientes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full md:w-64"
-              />
+        <CardHeader className="flex flex-col space-y-4">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full">
+            <div className="flex items-center">
+              {isFromInvoice && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleGoBack}
+                  className="flex items-center mr-4"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" /> 
+                  Volver a crear factura
+                </Button>
+              )}
+              
+              <div>
+                <CardTitle className="text-2xl">Clientes</CardTitle>
+                <CardDescription>
+                  Gestiona la información de tus clientes
+                </CardDescription>
+              </div>
             </div>
-            <Button onClick={handleOpenCreateForm}>
-              <Plus className="h-4 w-4 mr-2" /> Nuevo cliente
-            </Button>
+            
+            <div className="flex flex-col md:flex-row gap-3 mt-4 md:mt-0">
+              <div className="relative">
+                <Input
+                  placeholder="Buscar clientes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full md:w-64"
+                />
+              </div>
+              <Button onClick={handleOpenCreateForm}>
+                <Plus className="h-4 w-4 mr-2" /> Nuevo cliente
+              </Button>
+            </div>
           </div>
+          
+          {isFromInvoice && (
+            <div className="bg-blue-50 p-3 rounded-md border border-blue-100 text-blue-700 text-sm">
+              <p className="flex items-center">
+                <Info className="h-4 w-4 mr-2" />
+                Selecciona un cliente para incluirlo en tu factura
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
