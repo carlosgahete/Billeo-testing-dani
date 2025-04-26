@@ -468,11 +468,24 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
           ? sum.subtotal * (tax.amount / 100) 
           : tax.amount;
         
-        return {
-          ...sum,
-          tax: sum.tax + taxAmount,
-          total: sum.total + taxAmount
-        };
+        // Verificar si es IRPF para aplicarlo como deducción (negativo)
+        const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+        
+        if (isIRPF) {
+          // Para IRPF, lo restamos del total
+          return {
+            ...sum,
+            tax: sum.tax + taxAmount, // Seguimos sumando al total de impuestos para reportes
+            total: sum.total - taxAmount // Pero lo restamos del total a pagar
+          };
+        } else {
+          // Para otros impuestos (IVA, etc), lo sumamos normalmente
+          return {
+            ...sum,
+            tax: sum.tax + taxAmount,
+            total: sum.total + taxAmount
+          };
+        }
       }, acc);
       
       return withAdditionalTaxes;
