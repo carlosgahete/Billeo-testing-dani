@@ -1008,7 +1008,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       <div className="flex items-center">
                         <span className="text-base font-medium">IRPF</span>
                       </div>
-                      <span className="text-sm font-bold bg-white px-2 py-1 rounded">15%</span>
+                      <span className="text-sm font-bold bg-white px-2 py-1 rounded">-15%</span>
                     </Button>
                     
                     <Button
@@ -1071,7 +1071,9 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   ? 'bg-red-100 text-red-700' 
                                   : 'bg-blue-100 text-blue-700'
                               }`}>
-                                {tax.isPercentage ? `${tax.amount}%` : '€'}
+                                {tax.isPercentage ? 
+                                 `${tax.name.toLowerCase().includes('irpf') ? '-' : ''}${tax.amount}%` 
+                                 : '€'}
                               </div>
                               <span>{tax.name}</span>
                             </div>
@@ -1115,7 +1117,12 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           {form.watch("additionalTaxes")?.map((tax, index) => (
                             <div key={index} className="flex justify-between text-sm pl-4">
                               <span className="text-gray-500">{tax.name}</span>
-                              <span className="text-gray-700">{tax.isPercentage ? `${tax.amount}%` : formatCurrency(tax.amount)}</span>
+                              <span className="text-gray-700">
+                                {tax.isPercentage ? 
+                                  `${tax.name.toLowerCase().includes('irpf') ? '-' : ''}${tax.amount}%` : 
+                                  formatCurrency(tax.amount)
+                                }
+                              </span>
                             </div>
                           ))}
                         </div>
