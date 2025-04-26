@@ -504,7 +504,32 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Función para agregar un impuesto adicional desde el diálogo
   const handleAddTaxFromDialog = () => {
     const currentTaxes = form.getValues("additionalTaxes") || [];
-    const newTaxes = [...currentTaxes, newTaxData];
+    
+    // Verificar si ya existe un impuesto con el mismo nombre para actualizar en lugar de duplicar
+    const existingTaxIndex = currentTaxes.findIndex(tax => 
+      tax.name.toLowerCase() === newTaxData.name.toLowerCase()
+    );
+    
+    let newTaxes;
+    
+    if (existingTaxIndex >= 0) {
+      // Si existe, actualizar en lugar de agregar uno nuevo
+      newTaxes = [...currentTaxes];
+      newTaxes[existingTaxIndex] = newTaxData;
+      
+      toast({
+        title: 'Impuesto actualizado',
+        description: `El impuesto ${newTaxData.name} ha sido actualizado.`,
+      });
+    } else {
+      // Si no existe, agregar nuevo
+      newTaxes = [...currentTaxes, newTaxData];
+      
+      toast({
+        title: 'Impuesto añadido',
+        description: `Se ha añadido ${newTaxData.name} a esta factura.`,
+      });
+    }
     
     form.setValue("additionalTaxes", newTaxes);
     
@@ -577,6 +602,17 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
         taxRate: 21 // Establecer 21% de IVA
       }));
       form.setValue("items", updatedItems);
+      
+      toast({
+        title: 'IVA añadido',
+        description: 'Se ha aplicado un IVA del 21% a todos los conceptos.',
+      });
+    } else {
+      toast({
+        title: 'No hay conceptos',
+        description: 'Agrega al menos un concepto a la factura antes de aplicar IVA.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -590,6 +626,17 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
         taxRate: 0 // Exento de IVA
       }));
       form.setValue("items", updatedItems);
+      
+      toast({
+        title: 'IVA Exento',
+        description: 'Se ha marcado la factura como exenta de IVA. Recuerda incluir la referencia legal en las notas.',
+      });
+    } else {
+      toast({
+        title: 'No hay conceptos',
+        description: 'Agrega al menos un concepto a la factura antes de aplicar la exención de IVA.',
+        variant: 'destructive'
+      });
     }
   };
 
