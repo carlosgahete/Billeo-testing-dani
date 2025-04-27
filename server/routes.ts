@@ -2056,8 +2056,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }, null, 2));
           
           // Crear datos para la transacción de ingreso - aseguramos que amount sea un string
-          const total = typeof newInvoice.total === 'number' ? 
-            newInvoice.total.toString() : newInvoice.total;
+          // Usar operador de encadenamiento opcional para evitar problemas con valores nulos o indefinidos
+          const total = (typeof newInvoice?.total === 'number') ? 
+            newInvoice.total.toString() : 
+            (newInvoice?.total ? String(newInvoice.total) : "0");
             
           const transactionData = {
             userId: req.session.userId,
