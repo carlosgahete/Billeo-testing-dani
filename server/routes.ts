@@ -1884,13 +1884,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
+      // Verificar si el objeto req.body y sus propiedades existen
+      if (!req.body) {
+        return res.status(400).json({ message: "Missing request body" });
+      }
+      
       const { invoice, items } = req.body;
+      
+      // Verificar si el objeto invoice existe
+      if (!invoice) {
+        return res.status(400).json({ message: "Missing invoice data" });
+      }
       
       console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
       
       // Generar número de factura siguiendo formato [AÑO]-[NÚMERO] (ej: 2025-001)
       // Convertir fecha de emisión a objeto Date para obtener el año
-      const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();
+      const issueDate = invoice && invoice.issueDate ? new Date(invoice.issueDate) : new Date();
       const currentYear = issueDate.getFullYear();
       
       // Buscar la última factura de este año
