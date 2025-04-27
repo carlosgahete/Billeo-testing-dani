@@ -45,7 +45,24 @@ import { eq, desc, and } from "drizzle-orm";
 import { db, sql } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { hashPassword, comparePasswords } from "./auth";
+// Implementación de las funciones en el propio archivo para evitar una importación circular
+import { scrypt, randomBytes as nodeRandomBytes, timingSafeEqual as cryptoTimingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPasswordStorage(password: string) {
+  const salt = nodeRandomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswordsStorage(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return cryptoTimingSafeEqual(hashedBuf, suppliedBuf);
+}
 
 const PostgresSessionStore = connectPg(session);
 
@@ -481,6 +498,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
+    // Asegurar que el password esté encriptado si no lo está ya
+    // (Si no contiene un punto, significa que no está en el formato hash.salt)
+    if (!user.password.includes('.')) {
+      user.password = await hashPasswordStorage(user.password);
+    }
+    
     const result = await db.insert(users).values(user).returning();
     return result[0];
   }
@@ -564,7 +587,7 @@ export class DatabaseStorage implements IStorage {
   async resetPassword(userId: number, newPassword: string): Promise<boolean> {
     try {
       // Encriptar la nueva contraseña
-      const hashedPassword = await hashPassword(newPassword);
+      const hashedPassword = await hashPasswordStorage(newPassword);
       
       // Actualizar la contraseña y limpiar el token de recuperación
       const result = await db.update(users)
@@ -649,7 +672,7 @@ export class DatabaseStorage implements IStorage {
   async setSecurityQuestion(userId: number, question: string, answer: string): Promise<boolean> {
     try {
       // Encriptar la respuesta para mayor seguridad
-      const hashedAnswer = await hashPassword(answer.toLowerCase().trim());
+      const hashedAnswer = await hashPasswordStorage(answer.toLowerCase().trim());
       
       // Actualizar la pregunta y respuesta de seguridad
       const result = await db.update(users)
@@ -676,7 +699,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Verificar la respuesta
-      const isCorrect = await comparePasswords(answer.toLowerCase().trim(), user.securityAnswer);
+      const isCorrect = await comparePasswordsStorage(answer.toLowerCase().trim(), user.securityAnswer);
       if (!isCorrect) {
         return undefined; // Respuesta incorrecta
       }

@@ -84,6 +84,11 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // sets up /api/register, /api/login, /api/logout, /api/user
+  // Si no está ya configurado en otro lugar
+  if (!app._router.stack.some((layer: any) => layer.route && layer.route.path === '/api/user')) {
+    setupAuth(app);
+  }
   // Middleware para verificar autenticación de manera consistente
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     // Verificar si el usuario está autenticado mediante passport o mediante sesión
