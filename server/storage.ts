@@ -89,6 +89,9 @@ export interface IStorage {
   // Dashboard preferences operations
   getDashboardPreferences(userId: number): Promise<DashboardPreferences | undefined>;
   saveDashboardPreferences(userId: number, data: { layout?: { blocks: any[] }, emailNotifications?: boolean }): Promise<DashboardPreferences>;
+  
+  // Session store para autenticación
+  sessionStore: session.SessionStore;
 
   // Company operations
   getCompany(id: number): Promise<Company | undefined>;
