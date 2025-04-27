@@ -482,11 +482,12 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       if (isIRPF) {
         // IRPF es una deducción, va como negativo
         return {
-          additionalTax: result.additionalTax + taxAmount, // suma a impuestos para reportes
-          negativeAdjustments: result.negativeAdjustments + taxAmount // pero lo guardamos como negativo
+          // NO sumamos el IRPF como impuesto adicional, sólo como ajuste negativo
+          additionalTax: result.additionalTax,
+          negativeAdjustments: result.negativeAdjustments + taxAmount // guardamos como ajuste negativo
         };
       } else {
-        // Otros impuestos son positivos
+        // Otros impuestos son positivos y se suman normalmente
         return {
           additionalTax: result.additionalTax + taxAmount,
           negativeAdjustments: result.negativeAdjustments
@@ -511,8 +512,10 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Calcular totales
   const calculatedTotals = {
     subtotal: baseAmount,
-    tax: itemsTax + additionalTax,
-    total: baseAmount + itemsTax + additionalTax - negativeAdjustments
+    // Restar el IRPF de los impuestos, ya que es una retención y no un impuesto que se suma
+    tax: itemsTax + additionalTax - negativeAdjustments,
+    // El total debe incluir la base imponible + IVA - IRPF
+    total: baseAmount + itemsTax - negativeAdjustments
   };
 
   // Actualizar campos calculados en el formulario
@@ -593,7 +596,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       
       toast({
         title: 'IRPF actualizado',
-        description: 'Se ha aplicado una retención de IRPF del -15% a esta factura.',
+        description: 'Se ha aplicado una retención de IRPF del 15% a esta factura. Este importe se restará del total.',
       });
     } else {
       // Agregar nuevo IRPF
@@ -608,7 +611,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       
       toast({
         title: 'IRPF añadido',
-        description: 'Se ha aplicado una retención de IRPF del -15% a esta factura.',
+        description: 'Se ha aplicado una retención de IRPF del 15% a esta factura. Este importe se restará del total.',
       });
     }
   };
