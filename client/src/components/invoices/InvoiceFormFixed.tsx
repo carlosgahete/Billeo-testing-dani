@@ -838,7 +838,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   }
 
   return (
-    <div className="w-full" style={{ margin: "0 auto", width: "98%", maxWidth: "1600px" }}>
+    <div className="w-full" style={{ margin: "0 auto", width: "100%"}}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="flex items-center justify-between mb-3">
@@ -855,9 +855,9 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 2xl:grid-cols-12 xl:grid-cols-12 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 2xl:grid-cols-14 xl:grid-cols-14 lg:grid-cols-14 md:grid-cols-12 sm:grid-cols-1 gap-4">
             {/* Sección 1: Datos de la factura - ocupa 4 columnas en pantallas grandes */}
-            <Card className="shadow-sm 2xl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-12">
+            <Card className="shadow-sm 2xl:col-span-3 xl:col-span-3 lg:col-span-3 md:col-span-12">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-blue-500" />
@@ -1106,7 +1106,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Card>
 
             {/* Sección 2: Líneas de factura e impuestos - ocupa más columnas en pantallas grandes */}
-            <Card className="shadow-sm 2xl:col-span-8 xl:col-span-8 lg:col-span-8 md:col-span-12" style={{ maxWidth: "none" }}>
+            <Card className="shadow-sm 2xl:col-span-11 xl:col-span-11 lg:col-span-11 md:col-span-12" style={{ maxWidth: "none" }}>
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-blue-500" />
