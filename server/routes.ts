@@ -1884,13 +1884,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const { invoice, items } = req.body;
+      const { invoice: invoiceData, items } = req.body;
+      
+      // Verificación crítica: Si invoice está undefined o no es un objeto, devolver error 400
+      if (!invoiceData || typeof invoiceData !== 'object') {
+        console.error("Error: Datos de factura no proporcionados o inválidos", {
+          receivedData: req.body,
+          invoicePresent: !!invoiceData,
+          invoiceType: typeof invoiceData
+        });
+        return res.status(400).json({ 
+          message: "Los datos de la factura son inválidos o están faltando",
+          details: "Se requiere un objeto 'invoice' con los datos de la factura"
+        });
+      }
+      
+      // Crear una copia del objeto para evitar modificar el original
+      const invoice = { ...invoiceData };
       
       console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
       
       // Generar número de factura siguiendo formato [AÑO]-[NÚMERO] (ej: 2025-001)
-      // Convertir fecha de emisión a objeto Date para obtener el año
-      const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();
+      // Convertir fecha de emisión a objeto Date para obtener el año con manejo seguro
+      const issueDate = (invoice && invoice.issueDate) ? new Date(invoice.issueDate) : new Date();
       const currentYear = issueDate.getFullYear();
       
       // Buscar la última factura de este año
@@ -1964,7 +1980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? validateDate(invoice.dueDate) 
         : new Date(safeIssueDate.getTime() + 30 * 24 * 60 * 60 * 1000);
       
-      const invoiceData = {
+      const processedInvoiceData = {
         ...invoice,
         userId: req.session.userId,
         invoiceNumber: finalInvoiceNumber, // Usar el nuevo formato de número de factura o el proporcionado por el usuario
@@ -1976,10 +1992,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dueDate: safeDueDate
       };
       
-      console.log("Processed invoice data:", JSON.stringify(invoiceData, null, 2));
+      console.log("Processed invoice data:", JSON.stringify(processedInvoiceData, null, 2));
       
       // Usamos el esquema con soporte para impuestos adicionales
-      const invoiceResult = invoiceWithTaxesSchema.safeParse(invoiceData);
+      const invoiceResult = invoiceWithTaxesSchema.safeParse(processedInvoiceData);
       
       if (!invoiceResult.success) {
         console.log("Validation errors:", JSON.stringify(invoiceResult.error.errors, null, 2));
@@ -2008,7 +2024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // crear automáticamente una transacción de ingreso en la sección de ingresos/gastos
       // MEJORA: Verificamos múltiples condiciones para mayor seguridad
       // IMPORTANTE: Las facturas deben guardarse en ambos lugares: en facturas y en ingresos/gastos
-      if (newInvoice.status === 'paid' || invoiceData.status === 'paid' || invoice.createTransaction === true) {
+      if (newInvoice.status === 'paid' || processedInvoiceData.status === 'paid' || invoice.createTransaction === true) {
         try {
           console.log(`[SERVER] ⭐⭐⭐ Factura ${newInvoice.id} (${newInvoice.invoiceNumber}) creada como pagada. Verificando/creando transacción de ingreso automática`);
           
@@ -2237,6 +2253,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { invoice: invoiceData, items } = req.body;
+      
+      // Verificación crítica: Si invoiceData está undefined o no es un objeto, devolver error 400
+      if (!invoiceData || typeof invoiceData !== 'object') {
+        console.error("Error: Datos de actualización de factura no proporcionados o inválidos", {
+          receivedBody: req.body,
+          invoicePresent: !!invoiceData,
+          invoiceType: typeof invoiceData
+        });
+        return res.status(400).json({ 
+          message: "Los datos de actualización de la factura son inválidos o están faltando",
+          details: "Se requiere un objeto 'invoice' con los datos de la factura a actualizar"
+        });
+      }
       
       console.log("[SERVER] Actualizando factura:", invoiceId);
       console.log("[SERVER] Datos recibidos:", JSON.stringify(invoiceData, null, 2));
