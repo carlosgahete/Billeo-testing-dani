@@ -6,12 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import billeoLogo from '../assets/billeo-logo.png';
-import { Eye, EyeOff, User, Mail, Lock, Building2 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
-  const { user, isLoading, loginMutation, registerMutation } = useAuth();
+  const { user, isLoading, loginMutation } = useAuth();
   const { toast } = useToast();
 
   // Redirect to appropriate page if already logged in
@@ -41,29 +40,13 @@ export default function AuthPage() {
     password: "",
   });
   
-  // Registration form state
-  const [registerFormData, setRegisterFormData] = useState({
-    username: "",
-    password: "",
-    name: "",
-    email: "",
-    businessType: "freelance",
-  });
-  
   // Password visibility state
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   // Handle login form changes
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginFormData((prev) => ({ ...prev, [name]: value }));
-  };
-  
-  // Handle registration form changes
-  const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setRegisterFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle login form submission
@@ -90,330 +73,120 @@ export default function AuthPage() {
       });
     }
   };
-  
-  // Handle registration form submission
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Intentando registrar usuario:", registerFormData);
-    
-    try {
-      // Mostrar mensaje informativo
-      toast({
-        title: "Creando cuenta...",
-        description: "Configurando tu nuevo perfil",
-      });
-      
-      // Usar el método de registro
-      registerMutation.mutate(registerFormData);
-    } catch (error) {
-      console.error("Error al registrar:", error);
-      toast({
-        title: "Error de registro",
-        description: "Hubo un problema al crear la cuenta",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const isLoginPending = loginMutation.isPending;
-  const isRegisterPending = registerMutation.isPending;
+  const isPending = loginMutation.isPending;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row items-stretch">
-      {/* Hero Section - Right Side on Desktop */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-12 flex-col justify-between">
-        <div className="mb-auto">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
+      {/* Elementos decorativos de fondo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-gradient-to-br from-blue-100/40 to-blue-200/30 blur-3xl"></div>
+        <div className="absolute top-1/4 -left-20 w-60 h-60 rounded-full bg-gradient-to-tr from-indigo-100/30 to-indigo-200/20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-screen h-1/3 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
+      </div>
+      
+      {/* Logo y cabecera central */}
+      <div className="text-center mb-10 relative z-10 animate-fadeIn">
+        <div className="flex justify-center mb-2">
           <img 
             src={billeoLogo} 
             alt="Billeo Logo" 
-            className="h-10 mb-8 invert"
+            className="h-10 animate-scaleIn"
             loading="eager"
           />
         </div>
-        
-        <div className="space-y-6">
-          <h1 className="text-4xl font-bold">Gestión financiera para profesionales</h1>
-          <p className="text-lg text-blue-100 max-w-md">
-            Billeo simplifica la gestión financiera para autónomos y pequeñas empresas en España.
-          </p>
-          <div className="space-y-4 pt-4">
-            <div className="flex items-start space-x-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Facturación y presupuestos</h3>
-                <p className="text-sm text-blue-100">Crea facturas y presupuestos profesionales en segundos</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Gestión de impuestos</h3>
-                <p className="text-sm text-blue-100">Calcula automáticamente IVA e IRPF para tus declaraciones</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Analítica financiera</h3>
-                <p className="text-sm text-blue-100">Visualiza y entiende tu situación financiera con claridad</p>
-              </div>
-            </div>
+        <p className="text-gray-500 mt-2 max-w-sm">
+          Gestión financiera simplificada
+        </p>
+      </div>
+      
+      {/* Panel de autenticación simplificado - Sin registro */}
+      <div className="w-full max-w-sm relative z-10 animate-fadeSlideUp">
+        <div className="mb-8 p-1 bg-white/80 backdrop-blur-md rounded-xl flex justify-center w-full shadow-lg border border-blue-100/50">
+          <div className="rounded-lg flex-1 bg-gradient-to-b from-blue-50 to-blue-100/50 shadow-sm text-blue-700 px-4 py-2 text-sm font-medium text-center">
+            Iniciar Sesión
           </div>
         </div>
         
-        <div className="mt-auto pt-12 text-sm text-blue-100">
-          <p>© {new Date().getFullYear()} Billeo • Todos los derechos reservados</p>
+        {/* Login Form */}
+        <div className="p-6 bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-blue-100/50">
+          <form onSubmit={handleLoginSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="login-username" className="text-gray-700 font-medium text-sm block mb-2">
+                Usuario o Email
+              </Label>
+              <Input
+                id="login-username"
+                name="username"
+                placeholder="usuario o correo@ejemplo.com"
+                value={loginFormData.username}
+                onChange={handleLoginChange}
+                required
+                className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all"
+              />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="login-password" className="text-gray-700 font-medium text-sm">
+                  Contraseña
+                </Label>
+                <Link to="/forgot-password" className="text-xs text-blue-500 hover:text-blue-700">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  name="password"
+                  type={showLoginPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={loginFormData.password}
+                  onChange={handleLoginChange}
+                  required
+                  className="h-10 rounded-lg border-blue-100 bg-white/90 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm w-full transition-all pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showLoginPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <Button
+              className="w-full shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium px-4 py-2 h-12 rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              type="submit"
+              disabled={isPending}
+            >
+              {loginMutation.isPending ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Iniciando sesión...
+                </span>
+              ) : (
+                "Iniciar sesión"
+              )}
+            </Button>
+            
+            {/* Se eliminaron credenciales demo y opciones de diagnóstico */}
+          </form>
         </div>
       </div>
       
-      {/* Form Section - Left Side on Desktop */}
-      <div className="flex flex-col justify-center p-6 md:p-12 md:w-1/2 bg-gray-50">
-        <div className="w-full max-w-md mx-auto">
-          <div className="md:hidden mb-8">
-            <img 
-              src={billeoLogo} 
-              alt="Billeo Logo" 
-              className="h-8 mb-4"
-              loading="eager"
-            />
-            <h1 className="text-2xl font-bold text-gray-900">Bienvenido a Billeo</h1>
-            <p className="text-gray-600">Tu plataforma de gestión financiera</p>
-          </div>
-          
-          <div className="bg-white shadow-md rounded-xl p-6 md:p-8">
-            <Tabs defaultValue="login" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="register">Crear Cuenta</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-6">
-                <form onSubmit={handleLoginSubmit} className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="login-username" className="text-gray-700 font-medium text-sm block mb-2">
-                        Usuario o Email
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="login-username"
-                          name="username"
-                          placeholder="usuario o correo@ejemplo.com"
-                          value={loginFormData.username}
-                          onChange={handleLoginChange}
-                          required
-                          className="pl-10 h-11"
-                        />
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label htmlFor="login-password" className="text-gray-700 font-medium text-sm">
-                          Contraseña
-                        </Label>
-                        <Link to="/forgot-password" className="text-xs text-blue-500 hover:text-blue-700">
-                          ¿Olvidaste tu contraseña?
-                        </Link>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          id="login-password"
-                          name="password"
-                          type={showLoginPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          value={loginFormData.password}
-                          onChange={handleLoginChange}
-                          required
-                          className="pl-10 pr-10 h-11"
-                        />
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <button
-                          type="button"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                          tabIndex={-1}
-                        >
-                          {showLoginPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    className="w-full h-11"
-                    type="submit"
-                    disabled={isLoginPending}
-                  >
-                    {isLoginPending ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Iniciando sesión...
-                      </span>
-                    ) : (
-                      "Iniciar sesión"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="register" className="space-y-6">
-                <form onSubmit={handleRegisterSubmit} className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="register-name" className="text-gray-700 font-medium text-sm block mb-2">
-                        Nombre completo
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="register-name"
-                          name="name"
-                          placeholder="Nombre y apellidos"
-                          value={registerFormData.name}
-                          onChange={handleRegisterChange}
-                          required
-                          className="pl-10 h-11"
-                        />
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="register-email" className="text-gray-700 font-medium text-sm block mb-2">
-                        Email
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="register-email"
-                          name="email"
-                          type="email"
-                          placeholder="correo@ejemplo.com"
-                          value={registerFormData.email}
-                          onChange={handleRegisterChange}
-                          required
-                          className="pl-10 h-11"
-                        />
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="register-username" className="text-gray-700 font-medium text-sm block mb-2">
-                        Nombre de usuario
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="register-username"
-                          name="username"
-                          placeholder="username"
-                          value={registerFormData.username}
-                          onChange={handleRegisterChange}
-                          required
-                          className="pl-10 h-11"
-                        />
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="register-business-type" className="text-gray-700 font-medium text-sm block mb-2">
-                        Tipo de actividad
-                      </Label>
-                      <div className="relative">
-                        <select
-                          id="register-business-type"
-                          name="businessType"
-                          value={registerFormData.businessType}
-                          onChange={handleRegisterChange}
-                          className="pl-10 h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                          <option value="freelance">Autónomo / Freelance</option>
-                          <option value="small_business">Pequeña Empresa</option>
-                          <option value="agency">Agencia</option>
-                          <option value="other">Otro</option>
-                        </select>
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="register-password" className="text-gray-700 font-medium text-sm block mb-2">
-                        Contraseña
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="register-password"
-                          name="password"
-                          type={showRegisterPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          value={registerFormData.password}
-                          onChange={handleRegisterChange}
-                          required
-                          className="pl-10 pr-10 h-11"
-                        />
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <button
-                          type="button"
-                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                          tabIndex={-1}
-                        >
-                          {showRegisterPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    className="w-full h-11"
-                    type="submit"
-                    disabled={isRegisterPending}
-                  >
-                    {isRegisterPending ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Creando cuenta...
-                      </span>
-                    ) : (
-                      "Crear cuenta"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          </div>
-          
-          <div className="md:hidden mt-6 text-center text-xs text-gray-500">
-            <p>© {new Date().getFullYear()} Billeo • Todos los derechos reservados</p>
-          </div>
-        </div>
+      {/* Footer solo visible en pantallas medianas y grandes */}
+      <div className="hidden sm:block absolute bottom-6 left-0 right-0 text-center">
+        <p className="text-xs text-blue-400/60">© {new Date().getFullYear()} Billeo · Tu gestión financiera</p>
       </div>
     </div>
   );

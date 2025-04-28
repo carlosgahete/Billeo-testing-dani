@@ -84,11 +84,6 @@ const storage_disk = multer.diskStorage({
 const upload = multer({ storage: storage_disk });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // sets up /api/register, /api/login, /api/logout, /api/user
-  // Si no está ya configurado en otro lugar
-  if (!app._router.stack.some((layer: any) => layer.route && layer.route.path === '/api/user')) {
-    setupAuth(app);
-  }
   // Middleware para verificar autenticación de manera consistente
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     // Verificar si el usuario está autenticado mediante passport o mediante sesión
@@ -1889,23 +1884,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      // Verificar si el objeto req.body y sus propiedades existen
-      if (!req.body) {
-        return res.status(400).json({ message: "Missing request body" });
-      }
-      
       const { invoice, items } = req.body;
-      
-      // Verificar si el objeto invoice existe
-      if (!invoice) {
-        return res.status(400).json({ message: "Missing invoice data" });
-      }
       
       console.log("Received invoice data:", JSON.stringify(invoice, null, 2));
       
       // Generar número de factura siguiendo formato [AÑO]-[NÚMERO] (ej: 2025-001)
       // Convertir fecha de emisión a objeto Date para obtener el año
-      const issueDate = invoice && invoice.issueDate ? new Date(invoice.issueDate) : new Date();
+      const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();
       const currentYear = issueDate.getFullYear();
       
       // Buscar la última factura de este año
@@ -2061,10 +2046,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }, null, 2));
           
           // Crear datos para la transacción de ingreso - aseguramos que amount sea un string
-          // Usar operador de encadenamiento opcional para evitar problemas con valores nulos o indefinidos
-          const total = (typeof newInvoice?.total === 'number') ? 
-            newInvoice.total.toString() : 
-            (newInvoice?.total ? String(newInvoice.total) : "0");
+          const total = typeof newInvoice.total === 'number' ? 
+            newInvoice.total.toString() : newInvoice.total;
             
           const transactionData = {
             userId: req.session.userId,
