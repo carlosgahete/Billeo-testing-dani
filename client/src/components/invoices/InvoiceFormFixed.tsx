@@ -855,9 +855,9 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Sección 1: Datos de la factura */}
-            <Card className="shadow-sm">
+          <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-5">
+            {/* Sección 1: Datos de la factura - ocupa 2 columnas en pantallas grandes */}
+            <Card className="shadow-sm xl:col-span-2 lg:col-span-2">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-blue-500" />
@@ -1105,8 +1105,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
-            {/* Sección 2: Líneas de factura e impuestos */}
-            <Card className="shadow-sm">
+            {/* Sección 2: Líneas de factura e impuestos - ocupa 2 columnas en pantallas grandes */}
+            <Card className="shadow-sm xl:col-span-2 lg:col-span-1">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-blue-500" />
