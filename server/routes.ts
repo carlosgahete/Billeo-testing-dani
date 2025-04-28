@@ -2242,14 +2242,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[SERVER] Datos recibidos:", JSON.stringify(invoiceData, null, 2));
       
       // Asegurarnos que tenemos todos los campos originales si no se están actualizando
+      
+      // Función auxiliar para validar y convertir fechas
+      const validateDate = (dateString: string | null | undefined, fallbackDate: Date): Date => {
+        if (!dateString) return fallbackDate;
+        
+        try {
+          const date = new Date(dateString);
+          // Verificar si la fecha es válida (no es NaN)
+          if (isNaN(date.getTime())) {
+            console.log(`[SERVER] ⚠️ Fecha inválida recibida: "${dateString}", usando fecha de respaldo`);
+            return fallbackDate;
+          }
+          return date;
+        } catch (err) {
+          console.log(`[SERVER] ⚠️ Error al convertir fecha "${dateString}": ${err}`);
+          return fallbackDate;
+        }
+      };
+      
+      // Procesar fechas de forma segura
+      const safeIssueDate = invoiceData.issueDate 
+        ? validateDate(invoiceData.issueDate, invoice.issueDate) 
+        : invoice.issueDate;
+        
+      const safeDueDate = invoiceData.dueDate 
+        ? validateDate(invoiceData.dueDate, invoice.dueDate) 
+        : invoice.dueDate;
+      
       const completeInvoiceData = {
         ...invoice,                  // Datos actuales
         ...invoiceData,              // Datos nuevos que sobrescriben
         userId: req.session.userId,  // Mantener siempre el userID original
         id: invoiceId,               // Mantener siempre el ID
-        // Convertir explícitamente las fechas de string a Date
-        issueDate: invoiceData.issueDate ? new Date(invoiceData.issueDate) : invoice.issueDate,
-        dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : invoice.dueDate
+        // Usar las fechas validadas y seguras
+        issueDate: safeIssueDate,
+        dueDate: safeDueDate
       };
       
       console.log("[SERVER] Datos completos a actualizar:", JSON.stringify(completeInvoiceData, null, 2));
