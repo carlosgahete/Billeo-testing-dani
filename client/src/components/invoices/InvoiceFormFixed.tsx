@@ -669,6 +669,10 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const requestBody = {
         invoice: {
           ...data,
+          // Convertir campos monetarios a strings (requisito del servidor)
+          subtotal: data.subtotal?.toString() || "0",
+          tax: data.tax?.toString() || "0",
+          total: data.total?.toString() || "0",
           // Asegurar que las fechas estén en formato correcto
           issueDate: data.issueDate,
           dueDate: data.dueDate
@@ -711,6 +715,10 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const requestBody = {
         invoice: {
           ...data,
+          // Convertir campos monetarios a strings (requisito del servidor)
+          subtotal: data.subtotal?.toString() || "0",
+          tax: data.tax?.toString() || "0",
+          total: data.total?.toString() || "0",
           // Asegurar que las fechas estén en formato correcto
           issueDate: data.issueDate,
           dueDate: data.dueDate
@@ -720,7 +728,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       
       console.log("📦 Cuerpo de actualización estructurado:", requestBody);
       
-      const response = await apiRequest("PATCH", `/api/invoices/${invoiceId}`, requestBody);
+      // Usar PUT en lugar de PATCH ya que parece que el endpoint PATCH no está implementado
+      const response = await apiRequest("PUT", `/api/invoices/${invoiceId}`, requestBody);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Error al actualizar factura");
@@ -1106,32 +1115,44 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardHeader>
               <CardContent className="pt-5">
                 <div className="space-y-6">
-                  {/* Botones de impuestos simples */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleAddIVA}
-                      className="flex justify-between items-center py-2 px-4 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"
-                    >
-                      <div className="flex items-center">
-                        <span className="text-base font-medium">IVA</span>
-                      </div>
-                      <span className="text-sm font-bold bg-white px-2 py-1 rounded">21%</span>
-                    </Button>
+                  {/* Botones de impuestos principales */}
+                  <div className="flex flex-col space-y-4 mb-4">
+                    <div className="text-gray-700 font-medium mb-1">
+                      Impuestos principales:
+                    </div>
                     
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleAddIRPF}
-                      className="flex justify-between items-center py-2 px-4 border-red-200 bg-red-50 hover:bg-red-100 text-red-700"
-                    >
-                      <div className="flex items-center">
-                        <span className="text-base font-medium">IRPF</span>
-                      </div>
-                      <span className="text-sm font-bold bg-white px-2 py-1 rounded">-15%</span>
-                    </Button>
-                    
+                    {/* Botones grandes para IVA e IRPF */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddIVA}
+                        className="flex justify-between items-center py-4 px-5 border-2 border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg shadow-sm"
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-lg font-bold">IVA</span>
+                          <span className="text-sm text-blue-600">Impuesto valor añadido</span>
+                        </div>
+                        <span className="text-xl font-bold bg-white px-3 py-2 rounded-lg border border-blue-200">21%</span>
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddIRPF}
+                        className="flex justify-between items-center py-4 px-5 border-2 border-red-300 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg shadow-sm"
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-lg font-bold">IRPF</span>
+                          <span className="text-sm text-red-600">Retención obligatoria</span>
+                        </div>
+                        <span className="text-xl font-bold bg-white px-3 py-2 rounded-lg border border-red-200">-15%</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Botones de impuestos secundarios */}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
                     <Button
                       type="button"
                       onClick={handleExemptIVA}
