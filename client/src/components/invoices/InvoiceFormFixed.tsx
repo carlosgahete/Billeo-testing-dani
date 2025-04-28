@@ -838,10 +838,10 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   }
 
   return (
-    <>
+    <div className="w-full px-1 max-w-[2000px] mx-auto">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-medium text-gray-900">Nueva Factura</h1>
             <Button
               type="button"
@@ -855,7 +855,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 gap-4">
             {/* Sección 1: Datos de la factura - ocupa 2 columnas en pantallas grandes */}
             <Card className="shadow-sm xl:col-span-2 lg:col-span-2">
               <CardHeader className="bg-gray-50 border-b pb-3">
@@ -1105,8 +1105,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
-            {/* Sección 2: Líneas de factura e impuestos - ocupa 2 columnas en pantallas grandes */}
-            <Card className="shadow-sm xl:col-span-2 lg:col-span-1">
+            {/* Sección 2: Líneas de factura e impuestos - ocupa más columnas en pantallas grandes */}
+            <Card className="shadow-sm 2xl:col-span-3 xl:col-span-2 lg:col-span-1">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-blue-500" />
@@ -1434,7 +1434,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
           }
         />
       )}
-    </>
+    </div>
   );
 };
 
