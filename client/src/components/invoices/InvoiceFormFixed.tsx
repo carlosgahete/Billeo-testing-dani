@@ -855,7 +855,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Sección 1: Datos de la factura */}
             <Card className="shadow-sm">
               <CardHeader className="bg-gray-50 border-b pb-3">
@@ -1121,13 +1121,13 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       Impuestos:
                     </div>
                     
-                    {/* Botones de impuestos principales en estilo Apple */}
-                    <div className="flex flex-wrap gap-2">
+                    {/* Botones de impuestos principales en grid responsivo */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleAddIVA}
-                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
+                        className="flex items-center justify-between py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
                       >
                         <span className="font-medium">IVA</span>
                         <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">21%</span>
@@ -1137,7 +1137,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         type="button"
                         variant="outline"
                         onClick={handleAddIRPF}
-                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
+                        className="flex items-center justify-between py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
                       >
                         <span className="font-medium">IRPF</span>
                         <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">-15%</span>
@@ -1147,7 +1147,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         type="button"
                         onClick={handleExemptIVA}
                         variant="outline"
-                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
+                        className="flex items-center justify-between py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
                       >
                         <span className="font-medium">Exento</span>
                         <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">0%</span>
@@ -1157,10 +1157,13 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         type="button"
                         onClick={() => setShowTaxDialog(true)}
                         variant="outline"
-                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
+                        className="flex items-center justify-between py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        <span className="font-medium">Otro</span>
+                        <div className="flex items-center">
+                          <Plus className="h-4 w-4 mr-1" />
+                          <span className="font-medium">Otro</span>
+                        </div>
+                        <span className="opacity-0">-</span>
                       </Button>
                     </div>
                   </div>
