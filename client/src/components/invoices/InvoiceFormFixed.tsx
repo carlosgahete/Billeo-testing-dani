@@ -856,8 +856,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Sección 1: Datos de la factura */}
-            <Card className="shadow-sm">
+            {/* Sección 1: Datos de la factura - ocupa 7/12 en pantallas grandes */}
+            <Card className="shadow-sm lg:col-span-7">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-blue-500" />
@@ -865,18 +865,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-5">
-                {/* Alerta simple */}
-                <div className="mb-4">
-                  <Alert variant="default" className="bg-amber-50 border-amber-200">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-amber-700 text-sm font-medium">Recuerda</AlertTitle>
-                    <AlertDescription className="text-amber-700 text-xs">
-                      Crea tus clientes primero en la 
-                      sección de <Button variant="link" className="p-0 h-auto text-amber-800 underline font-medium" 
-                      onClick={() => navigate("/clients")}>Clientes</Button> y luego selecciónalos aquí.
-                    </AlertDescription>
-                  </Alert>
-                </div>
+                {/* Alerta eliminada para tener un diseño más limpio */}
 
                 <div className="space-y-4">
                   <FormField
@@ -1105,8 +1094,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
-            {/* Sección 2: Líneas de factura e impuestos */}
-            <Card className="shadow-sm">
+            {/* Sección 2: Líneas de factura e impuestos - ocupa 5/12 en pantallas grandes */}
+            <Card className="shadow-sm lg:col-span-5">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-blue-500" />

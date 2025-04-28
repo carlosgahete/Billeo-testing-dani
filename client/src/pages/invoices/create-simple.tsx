@@ -26,23 +26,7 @@ export default function CreateInvoiceFixedPage() {
         </div>
       </div>
 
-      {/* Alerta sobre el nuevo flujo de trabajo */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
-          <div>
-            <h3 className="font-medium text-blue-800">Nuevo flujo de trabajo mejorado</h3>
-            <p className="text-blue-700 mt-1">
-              Para solucionar problemas anteriores, ahora el proceso es más claro:
-            </p>
-            <ol className="list-decimal ml-5 mt-2 space-y-1 text-blue-700">
-              <li>Primero crea tus clientes en la sección de <strong>Clientes</strong></li>
-              <li>Luego crea tus facturas seleccionando el cliente del desplegable</li>
-              <li>Completa todos los campos y envía la factura</li>
-            </ol>
-          </div>
-        </div>
-      </div>
+      {/* Espacio intencionalmente eliminado para optimizar el espacio en pantalla */}
 
       {/* Formulario de factura */}
       <InvoiceFormFixed />
