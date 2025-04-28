@@ -765,6 +765,9 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
         subtotal: Number(data.subtotal) || 0,
         tax: Number(data.tax) || 0,
         total: Number(data.total) || 0,
+        // Asegurar que las fechas existan y tengan formato correcto
+        issueDate: data.issueDate || formatDateForInput(new Date().toISOString()),
+        dueDate: data.dueDate || formatDateForInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()),
         // Procesar los items para asegurar que todos los campos son números
         items: data.items?.map(item => ({
           ...item,

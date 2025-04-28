@@ -1938,7 +1938,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Asegurar que todos los campos requeridos estén presentes
-      // Convertir las cadenas de fecha ISO en objetos Date
+      // Convertir las cadenas de fecha ISO en objetos Date con manejo mejorado de errores
+      
+      // Función auxiliar para validar y convertir fechas
+      const validateDate = (dateString: string | null | undefined): Date => {
+        if (!dateString) return new Date();
+        
+        try {
+          const date = new Date(dateString);
+          // Verificar si la fecha es válida (no es NaN)
+          if (isNaN(date.getTime())) {
+            console.log(`Fecha inválida recibida: "${dateString}", usando fecha actual como fallback`);
+            return new Date();
+          }
+          return date;
+        } catch (err) {
+          console.log(`Error al convertir fecha "${dateString}": ${err}`);
+          return new Date();
+        }
+      };
+      
+      // Procesar fechas con el nuevo validador
+      const safeIssueDate = validateDate(invoice.issueDate);
+      const safeDueDate = invoice.dueDate 
+        ? validateDate(invoice.dueDate) 
+        : new Date(safeIssueDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      
       const invoiceData = {
         ...invoice,
         userId: req.session.userId,
@@ -1946,9 +1971,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: invoice.status || "pending",
         notes: invoice.notes ?? null,
         attachments: invoice.attachments ?? null,
-        // Convertir explícitamente las fechas de string a Date
-        issueDate: issueDate,
-        dueDate: invoice.dueDate ? new Date(invoice.dueDate) : new Date(issueDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+        // Usar las fechas validadas y seguras
+        issueDate: safeIssueDate,
+        dueDate: safeDueDate
       };
       
       console.log("Processed invoice data:", JSON.stringify(invoiceData, null, 2));
