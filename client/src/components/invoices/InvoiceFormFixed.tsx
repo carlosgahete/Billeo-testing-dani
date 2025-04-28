@@ -33,36 +33,41 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Descripción
-              </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Cantidad
-              </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio
-              </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                IVA %
-              </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Subtotal
-              </th>
-              <th scope="col" className="relative px-3 py-3">
-                <span className="sr-only">Acciones</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {fields.map((field, index) => {
-              // Calcular subtotal para este item
-              const quantity = control._formValues[name]?.[index]?.quantity || 0;
-              const unitPrice = control._formValues[name]?.[index]?.unitPrice || 0;
-              const subtotal = quantity * unitPrice;
+      {fields.length === 0 ? (
+        <div className="text-center py-6 bg-white border rounded-md">
+          <p className="text-gray-500">No hay conceptos añadidos. Pulsa "Añadir concepto" para comenzar.</p>
+        </div>
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Descripción
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Cantidad
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Precio
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  IVA %
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Subtotal
+                </th>
+                <th scope="col" className="relative px-3 py-3">
+                  <span className="sr-only">Acciones</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {fields.map((field, index) => {
+                // Calcular subtotal para este item
+                const quantity = control._formValues[name]?.[index]?.quantity || 0;
+                const unitPrice = control._formValues[name]?.[index]?.unitPrice || 0;
+                const subtotal = quantity * unitPrice;
               
               return (
                 <tr key={field.id}>
