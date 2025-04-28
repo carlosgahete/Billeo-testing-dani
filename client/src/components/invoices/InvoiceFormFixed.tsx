@@ -838,10 +838,10 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   }
 
   return (
-    <div className="w-full" style={{ margin: "0 auto", width: "100%"}}>
+    <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="flex items-center justify-between mb-3">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-medium text-gray-900">Nueva Factura</h1>
             <Button
               type="button"
@@ -855,9 +855,9 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 2xl:grid-cols-14 xl:grid-cols-14 lg:grid-cols-14 md:grid-cols-12 sm:grid-cols-1 gap-4">
-            {/* Sección 1: Datos de la factura - ocupa 4 columnas en pantallas grandes */}
-            <Card className="shadow-sm 2xl:col-span-3 xl:col-span-3 lg:col-span-3 md:col-span-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Sección 1: Datos de la factura */}
+            <Card className="shadow-sm">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-blue-500" />
@@ -1105,8 +1105,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardContent>
             </Card>
 
-            {/* Sección 2: Líneas de factura e impuestos - ocupa más columnas en pantallas grandes */}
-            <Card className="shadow-sm 2xl:col-span-11 xl:col-span-11 lg:col-span-11 md:col-span-12" style={{ maxWidth: "none" }}>
+            {/* Sección 2: Líneas de factura e impuestos */}
+            <Card className="shadow-sm">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-blue-500" />
@@ -1434,7 +1434,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
           }
         />
       )}
-    </div>
+    </>
   );
 };
 
