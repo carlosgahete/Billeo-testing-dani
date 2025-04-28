@@ -343,12 +343,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
       total: 0,
       paymentMethod: "Transferencia",
       status: "pending",
-      items: [{
-        description: "",
-        quantity: 1,
-        unitPrice: 0,
-        taxRate: 21
-      }],
+      items: [],
       additionalTaxes: []
     }
   });
@@ -375,12 +370,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
         total: Number(invoice.total) || 0,
         paymentMethod: invoice.paymentMethod || "Transferencia",
         status: invoice.status || "pending",
-        items: processedItems.length > 0 ? processedItems : [{
-          description: "",
-          quantity: 1,
-          unitPrice: 0,
-          taxRate: 21
-        }],
+        items: processedItems.length > 0 ? processedItems : [],
         additionalTaxes: invoice.additionalTaxes || []
       });
       
