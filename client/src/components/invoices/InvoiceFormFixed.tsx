@@ -1115,67 +1115,54 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </CardHeader>
               <CardContent className="pt-5">
                 <div className="space-y-6">
-                  {/* Botones de impuestos principales */}
-                  <div className="flex flex-col space-y-4 mb-4">
-                    <div className="text-gray-700 font-medium mb-1">
-                      Impuestos principales:
+                  {/* Botones de impuestos estilo minimalista */}
+                  <div className="space-y-3">
+                    <div className="text-gray-600 text-sm mb-1">
+                      Impuestos:
                     </div>
                     
-                    {/* Botones grandes para IVA e IRPF */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Botones de impuestos principales en estilo Apple */}
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleAddIVA}
-                        className="flex justify-between items-center py-4 px-5 border-2 border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg shadow-sm"
+                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
                       >
-                        <div className="flex flex-col items-start">
-                          <span className="text-lg font-bold">IVA</span>
-                          <span className="text-sm text-blue-600">Impuesto valor añadido</span>
-                        </div>
-                        <span className="text-xl font-bold bg-white px-3 py-2 rounded-lg border border-blue-200">21%</span>
+                        <span className="font-medium">IVA</span>
+                        <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">21%</span>
                       </Button>
                       
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleAddIRPF}
-                        className="flex justify-between items-center py-4 px-5 border-2 border-red-300 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg shadow-sm"
+                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
                       >
-                        <div className="flex flex-col items-start">
-                          <span className="text-lg font-bold">IRPF</span>
-                          <span className="text-sm text-red-600">Retención obligatoria</span>
-                        </div>
-                        <span className="text-xl font-bold bg-white px-3 py-2 rounded-lg border border-red-200">-15%</span>
+                        <span className="font-medium">IRPF</span>
+                        <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">-15%</span>
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        onClick={handleExemptIVA}
+                        variant="outline"
+                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
+                      >
+                        <span className="font-medium">Exento</span>
+                        <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">0%</span>
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        onClick={() => setShowTaxDialog(true)}
+                        variant="outline"
+                        className="flex items-center py-2 px-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 rounded-md"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        <span className="font-medium">Otro</span>
                       </Button>
                     </div>
-                  </div>
-                  
-                  {/* Botones de impuestos secundarios */}
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Button
-                      type="button"
-                      onClick={handleExemptIVA}
-                      variant="outline"
-                      className="flex justify-between items-center py-2 px-4 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
-                    >
-                      <div className="flex items-center">
-                        <span className="text-base font-medium">Exento</span>
-                      </div>
-                      <span className="text-sm font-bold bg-white px-2 py-1 rounded">0%</span>
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      onClick={() => setShowTaxDialog(true)}
-                      variant="outline"
-                      className="flex justify-between items-center py-2 px-4 border-gray-200 hover:bg-gray-100 text-gray-700"
-                    >
-                      <div className="flex items-center">
-                        <Plus className="h-4 w-4 mr-2" />
-                        <span className="text-base font-medium">Otro impuesto</span>
-                      </div>
-                    </Button>
                   </div>
 
                   {/* Sección de líneas de factura */}
