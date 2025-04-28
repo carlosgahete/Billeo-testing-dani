@@ -838,7 +838,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   }
 
   return (
-    <div className="w-full px-4 max-w-[2000px] mx-auto">
+    <div className="container mx-auto px-6 max-w-[2000px]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="flex items-center justify-between mb-3">
