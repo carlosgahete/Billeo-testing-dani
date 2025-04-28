@@ -10,7 +10,7 @@ export default function CreateInvoiceFixedPage() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="container max-w-7xl py-6">
+    <div className="container w-full px-4 py-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-2">
