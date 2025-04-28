@@ -664,7 +664,21 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   // Mutación para enviar el formulario
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/invoices", data);
+      // Importante: Estructurar correctamente el cuerpo de la petición para que coincida con
+      // lo que espera el servidor (invoice + items)
+      const requestBody = {
+        invoice: {
+          ...data,
+          // Asegurar que las fechas estén en formato correcto
+          issueDate: data.issueDate,
+          dueDate: data.dueDate
+        },
+        items: data.items || []
+      };
+      
+      console.log("📦 Cuerpo de la petición estructurado:", requestBody);
+      
+      const response = await apiRequest("POST", "/api/invoices", requestBody);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Error al crear factura");
@@ -693,7 +707,20 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PATCH", `/api/invoices/${invoiceId}`, data);
+      // Estructurar de la misma forma que createMutation para consistencia
+      const requestBody = {
+        invoice: {
+          ...data,
+          // Asegurar que las fechas estén en formato correcto
+          issueDate: data.issueDate,
+          dueDate: data.dueDate
+        },
+        items: data.items || []
+      };
+      
+      console.log("📦 Cuerpo de actualización estructurado:", requestBody);
+      
+      const response = await apiRequest("PATCH", `/api/invoices/${invoiceId}`, requestBody);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Error al actualizar factura");
