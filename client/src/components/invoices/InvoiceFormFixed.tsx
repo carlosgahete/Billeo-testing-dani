@@ -838,7 +838,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
   }
 
   return (
-    <div className="w-full" style={{ margin: "0 auto", width: "96%", maxWidth: "1400px" }}>
+    <div className="w-full" style={{ margin: "0 auto", width: "98%", maxWidth: "1600px" }}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="flex items-center justify-between mb-3">
@@ -856,8 +856,8 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </div>
           
           <div className="grid grid-cols-1 2xl:grid-cols-12 xl:grid-cols-12 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-1 gap-6">
-            {/* Sección 1: Datos de la factura - ocupa 5 columnas en pantallas grandes */}
-            <Card className="shadow-sm 2xl:col-span-5 xl:col-span-5 lg:col-span-5 md:col-span-12">
+            {/* Sección 1: Datos de la factura - ocupa 4 columnas en pantallas grandes */}
+            <Card className="shadow-sm 2xl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-12">
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-blue-500" />
@@ -1106,7 +1106,7 @@ const InvoiceFormFixed = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </Card>
 
             {/* Sección 2: Líneas de factura e impuestos - ocupa más columnas en pantallas grandes */}
-            <Card className="shadow-sm 2xl:col-span-7 xl:col-span-7 lg:col-span-7 md:col-span-12">
+            <Card className="shadow-sm 2xl:col-span-8 xl:col-span-8 lg:col-span-8 md:col-span-12" style={{ maxWidth: "none" }}>
               <CardHeader className="bg-gray-50 border-b pb-3">
                 <CardTitle className="text-base flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-blue-500" />
