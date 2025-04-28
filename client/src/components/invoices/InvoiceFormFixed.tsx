@@ -68,125 +68,126 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                 const quantity = control._formValues[name]?.[index]?.quantity || 0;
                 const unitPrice = control._formValues[name]?.[index]?.unitPrice || 0;
                 const subtotal = quantity * unitPrice;
-              
-              return (
-                <tr key={field.id}>
-                  {/* Descripción */}
-                  <td className="px-3 py-2">
-                    <Controller
-                      control={control}
-                      name={`${name}.${index}.description`}
-                      render={({ field }) => (
-                        <div>
-                          <Input {...field} className="w-full" placeholder="Descripción del producto o servicio" />
-                          {formState.errors?.[name]?.[index]?.description && (
-                            <p className="text-xs text-red-500 mt-1">
-                              {formState.errors[name][index].description.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </td>
-                  
-                  {/* Cantidad */}
-                  <td className="px-3 py-2">
-                    <Controller
-                      control={control}
-                      name={`${name}.${index}.quantity`}
-                      render={({ field }) => (
-                        <div>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="0"
-                            step="1"
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            className="w-20"
-                          />
-                          {formState.errors?.[name]?.[index]?.quantity && (
-                            <p className="text-xs text-red-500 mt-1">
-                              {formState.errors[name][index].quantity.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </td>
-                  
-                  {/* Precio */}
-                  <td className="px-3 py-2">
-                    <Controller
-                      control={control}
-                      name={`${name}.${index}.unitPrice`}
-                      render={({ field }) => (
-                        <div>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            className="w-24"
-                          />
-                          {formState.errors?.[name]?.[index]?.unitPrice && (
-                            <p className="text-xs text-red-500 mt-1">
-                              {formState.errors[name][index].unitPrice.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </td>
-                  
-                  {/* IVA % */}
-                  <td className="px-3 py-2">
-                    <Controller
-                      control={control}
-                      name={`${name}.${index}.taxRate`}
-                      render={({ field }) => (
-                        <div>
-                          <Select
-                            value={field.value?.toString()}
-                            onValueChange={(value) => field.onChange(Number(value))}
-                          >
-                            <SelectTrigger className="w-[80px]">
-                              <SelectValue placeholder="IVA" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="0">0%</SelectItem>
-                              <SelectItem value="4">4%</SelectItem>
-                              <SelectItem value="10">10%</SelectItem>
-                              <SelectItem value="21">21%</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    />
-                  </td>
-                  
-                  {/* Subtotal */}
-                  <td className="px-3 py-2 text-gray-900 font-medium">
-                    {formatCurrency(subtotal)}
-                  </td>
-                  
-                  {/* Botón de eliminar */}
-                  <td className="px-3 py-2 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => remove(index)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                
+                return (
+                  <tr key={field.id}>
+                    {/* Descripción */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`${name}.${index}.description`}
+                        render={({ field }) => (
+                          <div>
+                            <Input {...field} className="w-full" placeholder="Descripción del producto o servicio" />
+                            {formState.errors?.[name]?.[index]?.description && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {formState.errors[name][index].description.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </td>
+                    
+                    {/* Cantidad */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`${name}.${index}.quantity`}
+                        render={({ field }) => (
+                          <div>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="0"
+                              step="1"
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              className="w-20"
+                            />
+                            {formState.errors?.[name]?.[index]?.quantity && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {formState.errors[name][index].quantity.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </td>
+                    
+                    {/* Precio */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`${name}.${index}.unitPrice`}
+                        render={({ field }) => (
+                          <div>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              className="w-24"
+                            />
+                            {formState.errors?.[name]?.[index]?.unitPrice && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {formState.errors[name][index].unitPrice.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </td>
+                    
+                    {/* IVA % */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`${name}.${index}.taxRate`}
+                        render={({ field }) => (
+                          <div>
+                            <Select
+                              value={field.value?.toString()}
+                              onValueChange={(value) => field.onChange(Number(value))}
+                            >
+                              <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder="IVA" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="0">0%</SelectItem>
+                                <SelectItem value="4">4%</SelectItem>
+                                <SelectItem value="10">10%</SelectItem>
+                                <SelectItem value="21">21%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      />
+                    </td>
+                    
+                    {/* Subtotal */}
+                    <td className="px-3 py-2 text-gray-900 font-medium">
+                      {formatCurrency(subtotal)}
+                    </td>
+                    
+                    {/* Botón de eliminar */}
+                    <td className="px-3 py-2 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(index)}
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       
       <Button
         type="button"
