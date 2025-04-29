@@ -30,9 +30,13 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
   return (
     <div className="space-y-4">
       {fields.length === 0 ? (
-        <div className="text-center py-6 bg-white border rounded-md">
-          <p className="text-gray-500">No hay conceptos añadidos. Pulsa "Añadir concepto" para comenzar.</p>
-        </div>
+        // Si no hay campos, añadir uno vacío automáticamente
+        <>
+          {append({ description: "", quantity: 1, unitPrice: 0, taxRate: 21 })}
+          <div className="rounded-md border overflow-x-auto">
+            <p className="text-center py-3 text-gray-500">Cargando tabla de conceptos...</p>
+          </div>
+        </>
       ) : (
         <div className="rounded-md border overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -340,7 +344,15 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
       total: 0,
       paymentMethod: "Transferencia",
       status: "pending",
-      items: [],
+      // Añadir un concepto inicial vacío por defecto
+      items: [
+        { 
+          description: "", 
+          quantity: 1, 
+          unitPrice: 0, 
+          taxRate: 21 
+        }
+      ],
       additionalTaxes: []
     }
   });
