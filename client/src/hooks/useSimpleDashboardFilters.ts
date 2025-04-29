@@ -203,10 +203,25 @@ export function useSimpleDashboardFilters() {
     });
     window.dispatchEvent(event);
     
-    // Forzamos una actualización de los datos al cambiar los filtros
-    // pero usando un enfoque más selectivo
+    // Optimización: Almacenar datos de consultas anteriores en sessionStorage
+    // para mejorar el rendimiento al cambiar entre filtros
+    const previousData = sessionStorage.getItem(`dashboard_cache_${year}_${period}`);
+    if (previousData) {
+      console.log(`🚀 Usando caché local para ${year}/${period} mientras se actualiza en segundo plano`);
+      try {
+        // Restaurar los datos en caché para una respuesta inmediata
+        const cachedData = JSON.parse(previousData);
+        queryClient.setQueryData(['/api/dashboard-direct', year, period], cachedData);
+      } catch (e) {
+        console.error('Error al usar datos en caché:', e);
+      }
+    }
+    
+    // Actualizamos en segundo plano, sin afectar la interfaz
     queryClient.invalidateQueries({
       queryKey: ['/api/dashboard-direct', year, period],
+      // No refetch immediately to avoid UI lag
+      refetchType: 'active',
     });
   }, [year, period, queryClient, globalRefreshTrigger]);
   

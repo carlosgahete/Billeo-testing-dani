@@ -142,6 +142,8 @@ export function useDashboardData(
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true, // Aseguramos que se ejecuta cuando cambian los parámetros
+    cacheTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 3 * 60 * 1000, // 3 minutos para mejorar la velocidad de filtrado
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
       
@@ -190,6 +192,14 @@ export function useDashboardData(
           }
           return res.json();
         });
+        
+        // Guardar los datos en sessionStorage para futuras consultas
+        try {
+          sessionStorage.setItem(`dashboard_cache_${year}_${period}`, JSON.stringify(data));
+          console.log(`💾 Datos guardados en caché local para ${year}/${period}`);
+        } catch (error) {
+          console.warn('No se pudo guardar los datos en caché:', error);
+        }
         
         console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
         return data;
