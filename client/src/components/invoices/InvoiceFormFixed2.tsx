@@ -1167,27 +1167,23 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     )}
                   </div>
                   
-                  <Tabs defaultValue="items" className="w-full">
-                    <TabsList className="grid w-full grid-cols-1">
-                      <TabsTrigger value="items">Conceptos</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="items" className="pt-4">
-                      <FormField
-                        control={form.control}
-                        name="items"
-                        render={({ field }) => (
-                          <FormItem>
-                            <InvoiceLineItems
-                              control={form.control}
-                              name="items"
-                              formState={form.formState}
-                            />
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-                  </Tabs>
+                  <div className="w-full">
+                    <h3 className="text-sm font-semibold mb-3">Conceptos</h3>
+                    <FormField
+                      control={form.control}
+                      name="items"
+                      render={({ field }) => (
+                        <FormItem>
+                          <InvoiceLineItems
+                            control={form.control}
+                            name="items"
+                            formState={form.formState}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
