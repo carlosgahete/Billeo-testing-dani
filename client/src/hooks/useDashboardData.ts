@@ -142,7 +142,7 @@ export function useDashboardData(
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true, // Aseguramos que se ejecuta cuando cambian los parámetros
-    cacheTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos (tiempo antes de que los datos en caché sean eliminados)
     staleTime: 3 * 60 * 1000, // 3 minutos para mejorar la velocidad de filtrado
     queryFn: async ({ queryKey }) => {
       const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
@@ -237,8 +237,7 @@ export function useDashboardData(
         };
       }
     },
-    staleTime: 60 * 1000, // Reducido a 1 minuto para permitir actualizaciones más frecuentes
-    refetchOnWindowFocus: true, // Ahora sí refrescamos al cambiar el foco para obtener datos actualizados
+    refetchOnWindowFocus: true // Ahora sí refrescamos al cambiar el foco para obtener datos actualizados
   });
 
   // Depuración

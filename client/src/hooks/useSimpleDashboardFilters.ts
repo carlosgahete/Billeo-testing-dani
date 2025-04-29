@@ -1,6 +1,24 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+// Función de utilidad para debounce
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null;
+      func(...args);
+    };
+    
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    
+    timeout = setTimeout(later, wait);
+  };
+}
+
 // Variable global para el timestamp de actualización manual
 let globalRefreshTrigger = Date.now();
 
@@ -61,49 +79,101 @@ export function useSimpleDashboardFilters() {
     };
   }, [year, period]);
   
-  // Función para forzar una actualización manual incrementando el trigger
+  // Version optimizada de forzar actualización sin congelar la interfaz
+  // Esta operación ya no causa bloqueos en la UI
   const forceRefresh = useCallback(() => {
-    console.log('🔄 Forzando actualización manual del dashboard...');
-    globalRefreshTrigger = Date.now(); // Actualizamos el timestamp global
-    
-    // Invalidamos completamente la caché de consultas del dashboard
-    queryClient.invalidateQueries({
-      queryKey: ['/api/dashboard-direct'],
-    });
-    
-    // También invalidamos cualquier consulta relacionada con el dashboard
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const key = query.queryKey[0];
-        return typeof key === 'string' && 
-          (key.startsWith('/api/stats/dashboard') || key.startsWith('/api/dashboard-direct'));
-      },
-    });
-  }, [queryClient]);
-  
-  // Función para cambiar el año
-  const changeYear = useCallback((newYear: string) => {
-    console.log('🗓️ Cambiando año a:', newYear);
-    console.log('Cambiando año directamente a:', newYear);
-    
-    // Método drástico: actualizar el año y forzar una recarga completa del dashboard
+    console.log('🔄 Forzando actualización manual optimizada del dashboard...');
     
     // 1. Actualizar el timestamp global para forzar consultas nuevas
     globalRefreshTrigger = Date.now();
     
-    // 2. Eliminar TODAS las consultas cache relacionadas con el dashboard
-    queryClient.removeQueries({
-      queryKey: ['/api/dashboard-direct'],
+    // 2. Mostrar algún indicador visual de que se está actualizando
+    // (esto se maneja automáticamente en la UI por los estados de isLoading)
+    
+    // 3. Primero actualizar consultas específicas para la vista actual (más prioritario)
+    queryClient.invalidateQueries({
+      queryKey: ['/api/dashboard-direct', year, period],
+      // Usar refetchType para controlar cómo se realiza la actualización
+      refetchType: 'all', // Forzar actualización inmediata para los datos visibles
     });
     
-    // 3. Cambiar el año en el estado local
+    // 4. Programar la invalidación del resto de consultas con un pequeño retraso
+    // para dar prioridad a la actualización de la vista actual
+    setTimeout(() => {
+      // Invalidamos otras consultas relacionadas con el dashboard
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          // Solo invalidar otras consultas, no la que ya actualizamos
+          const key = query.queryKey;
+          if (!Array.isArray(key) || key.length < 3) return false;
+          
+          return key[0] === '/api/dashboard-direct' && 
+                 (key[1] !== year || key[2] !== period);
+        },
+        refetchType: 'inactive', // No refrescar automáticamente
+      });
+      
+      // También invalidamos consultas antiguas relacionadas con el dashboard
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && 
+            key.startsWith('/api/stats/dashboard');
+        },
+        refetchType: 'inactive', // No refrescar automáticamente
+      });
+    }, 500); // 500ms de retraso para dar prioridad a los datos actuales
+    
+    // 5. Disparar un evento para notificar a otros componentes
+    const event = new CustomEvent('dashboard-refresh-triggered', {
+      detail: { year, period, timestamp: globalRefreshTrigger }
+    });
+    window.dispatchEvent(event);
+    
+    return globalRefreshTrigger; // Devolver el nuevo timestamp para usar en componentes
+  }, [queryClient, year, period]);
+  
+  // Versión con debounce de las acciones costosas al cambiar de año
+  // para evitar sobrecarga del servidor con múltiples solicitudes
+  const debouncedClearQueries = useCallback(
+    debounce((queryClient) => {
+      console.log('🧹 Limpieza de caché diferida ejecutándose ahora...');
+      queryClient.removeQueries({
+        queryKey: ['/api/dashboard-direct'],
+      });
+    }, 500), // 500ms de delay para evitar múltiples limpiezas si el usuario cambia rápidamente
+    [queryClient]
+  );
+  
+  // Función para cambiar el año
+  const changeYear = useCallback((newYear: string) => {
+    if (newYear === year) return; // Evitar trabajo innecesario
+    
+    console.log('🗓️ Cambiando año a:', newYear);
+    
+    // 1. Actualizar el timestamp global para forzar consultas nuevas
+    globalRefreshTrigger = Date.now();
+    
+    // 2. Verificar si hay datos en caché para mostrar inmediatamente
+    const cachedData = sessionStorage.getItem(`dashboard_cache_${newYear}_${period}`);
+    if (cachedData) {
+      try {
+        console.log(`🚀 Pre-cargando datos en caché para ${newYear}/${period}`);
+        const data = JSON.parse(cachedData);
+        queryClient.setQueryData(['/api/dashboard-direct', newYear, period], data);
+      } catch (e) {
+        console.error('Error al pre-cargar datos en caché:', e);
+      }
+    }
+    
+    // 3. Cambiar el año en el estado local (primero para UI responsiva)
     setYear(newYear);
     
-    // 4. Vaciar completamente el caché de la consulta (más agresivo)
-    queryClient.clear();
+    // 4. Programar limpieza diferida de caché para evitar bloquear la UI
+    debouncedClearQueries(queryClient);
     
     // 5. Log detallado para entender qué año estamos realmente usando
-    console.log(`⚠️ CAMBIO DRÁSTICO DE AÑO: anterior=${year}, nuevo=${newYear}, timestamp=${globalRefreshTrigger}`);
+    console.log(`⚠️ CAMBIO DE AÑO: anterior=${year}, nuevo=${newYear}, timestamp=${globalRefreshTrigger}`);
     
     // 6. Disparar un evento personalizado con el nuevo año
     const event = new CustomEvent('dashboard-year-changed', {
@@ -118,15 +188,34 @@ export function useSimpleDashboardFilters() {
     // 8. Emitir ambos eventos
     window.dispatchEvent(event);
     window.dispatchEvent(filterEvent);
-  }, [queryClient, year, period]);
+  }, [queryClient, year, period, debouncedClearQueries]);
   
-  // Función para cambiar el periodo
+  // Versión con debounce para la limpieza de caché al cambiar periodo
+  const debouncedPeriodCacheCleanup = useCallback(
+    debounce((queryClient, year, period) => {
+      console.log('🧹 Limpieza diferida de caché para nuevo periodo...');
+      
+      // Eliminar solo consultas específicas, no todo el caché
+      queryClient.removeQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          if (Array.isArray(key) && key.length > 0) {
+            return key[0] === '/api/dashboard-direct' && key[1] !== year && key[2] !== period;
+          }
+          return false;
+        },
+      });
+    }, 800), // 800ms delay para dar tiempo a la interfaz a actualizarse
+    [queryClient]
+  );
+
+  // Función para cambiar el periodo - optimizada para rendimiento
   const changePeriod = useCallback((newPeriod: string) => {
+    if (newPeriod === period) return; // No hacer trabajo innecesario
+    
     console.log('🔢 Cambiando periodo a:', newPeriod);
-    console.log('Cambiando periodo directamente a:', newPeriod);
     
     // Asegurarnos que el formato del periodo es el correcto (backend espera Q1, Q2, etc.)
-    // Corregir: siempre normalizar a Q1, Q2, etc. en mayúsculas para consistencia
     let formattedPeriod: string;
     
     if (newPeriod.toLowerCase() === 'all') {
@@ -140,47 +229,38 @@ export function useSimpleDashboardFilters() {
       formattedPeriod = 'all';
     }
     
-    console.log('🔢 Periodo formateado para backend:', formattedPeriod);
-    
     // Actualizamos el timestamp global para forzar una nueva consulta
     globalRefreshTrigger = Date.now();
     
-    // Primero invalidar las consultas con los parámetros antiguos
-    queryClient.invalidateQueries({
-      queryKey: ['/api/dashboard-direct', year, period],
-    });
-    
-    // También invalidar posibles consultas con formato inconsistente
-    if (period.toLowerCase() !== 'all') {
-      const alternativePeriod = period.startsWith('q') ? period.toUpperCase() : 
-                               period.startsWith('Q') ? period.toLowerCase() : period;
-      queryClient.invalidateQueries({
-        queryKey: ['/api/dashboard-direct', year, alternativePeriod],
-      });
+    // 1. Verificar si hay datos en caché para mostrar inmediatamente
+    const cachedData = sessionStorage.getItem(`dashboard_cache_${year}_${formattedPeriod}`);
+    if (cachedData) {
+      try {
+        console.log(`🚀 Pre-cargando datos en caché para ${year}/${formattedPeriod}`);
+        queryClient.setQueryData(['/api/dashboard-direct', year, formattedPeriod], JSON.parse(cachedData));
+      } catch (e) {
+        console.error('Error al pre-cargar datos en caché:', e);
+      }
     }
     
-    // Después cambiar el estado para que futuras consultas usen el nuevo periodo
+    // 2. Actualizar el estado UI inmediatamente para feedback de usuario
     setPeriod(formattedPeriod);
     
-    // Eliminar cualquier consulta relacionada con el dashboard para forzar recargas completas
-    // Esto es más agresivo que invalidar, pero garantiza datos frescos en cada cambio
-    queryClient.removeQueries({
-      predicate: (query) => {
-        // Eliminar todas las consultas relacionadas con el dashboard al cambiar el periodo
-        const key = query.queryKey;
-        if (Array.isArray(key) && key.length > 0) {
-          return key[0] === '/api/dashboard-direct';
-        }
-        return false;
-      },
-    });
+    // 3. Programar limpieza diferida de caché para no bloquear la UI
+    debouncedPeriodCacheCleanup(queryClient, year, formattedPeriod);
     
-    // Disparamos manualmente un evento para notificar a otros componentes
+    // 4. Disparar evento para notificar a otros componentes
     const event = new CustomEvent('dashboard-filters-changed', {
       detail: { year, period: formattedPeriod, timestamp: globalRefreshTrigger }
     });
     window.dispatchEvent(event);
-  }, [queryClient, year, period]);
+    
+    // 5. Invalidar (no eliminar) la consulta específica para actualizar en segundo plano
+    queryClient.invalidateQueries({
+      queryKey: ['/api/dashboard-direct', year, formattedPeriod],
+      refetchType: 'active' // No forzar refresco inmediato
+    });
+  }, [queryClient, year, period, debouncedPeriodCacheCleanup]);
   
   // Efecto para notificar cambios visualmente cuando cambian los filtros
   // Utilizamos una referencia para controlar la inicialización
