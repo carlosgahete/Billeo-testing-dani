@@ -26,6 +26,8 @@ import {
   RefreshCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { isSuperAdmin } from "@/lib/is-superadmin";
 import { generateInvoicePDFBlob, generateInvoicePDF } from "@/lib/pdf";
 import { formatInvoiceFileName, downloadFilteredInvoicesAsZip } from "@/lib/zipService";
 import { notifyDashboardUpdate, forceDashboardRefresh } from "@/lib/dashboard-helpers";
@@ -334,16 +336,24 @@ const MarkAsPaidButton = ({
 const DeleteInvoiceDialog = ({ 
   invoiceId, 
   invoiceNumber,
-  status, 
+  status,
+  invoiceUserId,
   onConfirm 
 }: { 
   invoiceId: number; 
   invoiceNumber: string;
-  status: string; 
+  status: string;
+  invoiceUserId?: number;
   onConfirm: () => void | Promise<void>; 
 }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isPending, setIsPending] = useState(false);
+  
+  // Ya tenemos isSuperAdmin importado en la parte superior del archivo
+  
+  // Verificar permisos: usuario es dueño de la factura o es superadmin
+  const canModifyInvoice = !invoiceUserId || invoiceUserId === user?.id || isSuperAdmin(user);
   
   // No permitir eliminar facturas con estado "paid" (cobradas)
   const isPaid = status === 'paid';
@@ -450,7 +460,30 @@ const DeleteInvoiceDialog = ({
     );
   }
 
-  // Para facturas no pagadas, permitir eliminar normalmente
+  // Si el usuario no tiene permisos, mostrar tooltip explicativo
+  if (!canModifyInvoice) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-400" 
+              disabled
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ponte en contacto con tu gestor para eliminar esta factura</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // Para facturas no pagadas y con permisos, permitir eliminar normalmente
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
