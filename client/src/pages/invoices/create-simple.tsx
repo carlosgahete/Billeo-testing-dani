@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import InvoiceFormFixed from "@/components/invoices/InvoiceFormFixed";
+import InvoiceFormFixed2 from "@/components/invoices/InvoiceFormFixed2";
 import { Button } from "@/components/ui/button";
 import { FileText, ChevronLeft, AlertCircle } from "lucide-react";
 
@@ -28,8 +28,8 @@ export default function CreateInvoiceFixedPage() {
 
       {/* Espacio intencionalmente eliminado para optimizar el espacio en pantalla */}
 
-      {/* Formulario de factura */}
-      <InvoiceFormFixed />
+      {/* Formulario de factura mejorado que gestiona correctamente múltiples impuestos adicionales */}
+      <InvoiceFormFixed2 />
     </div>
   );
 }
