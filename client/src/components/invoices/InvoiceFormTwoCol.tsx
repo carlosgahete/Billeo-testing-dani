@@ -1,4 +1,4 @@
-// client/src/components/invoices/InvoiceFormApple.tsx
+// client/src/components/invoices/InvoiceFormTwoCol.tsx
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -24,6 +24,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 // Importamos el diálogo de validación directamente
 import InvoiceValidationAlert from "./InvoiceValidationAlert";
+
+// Función para formatear moneda
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2
+  }).format(amount);
+};
 
 // Implementación en línea del componente de líneas de factura
 const InvoiceLineItems = ({ control, name, formState }: any) => {
@@ -211,15 +220,6 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
   );
 };
 
-// Función para formatear moneda
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2
-  }).format(amount);
-};
-
 // Tipo para los impuestos adicionales
 interface AdditionalTax {
   name: string;
@@ -233,7 +233,7 @@ interface InvoiceFormProps {
   initialData?: any;
 }
 
-const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
+const InvoiceFormTwoCol = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showTaxDialog, setShowTaxDialog] = useState(false);
@@ -819,10 +819,10 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
           {/* Layout principal de dos columnas equilibradas */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full">
-            {/* Columna izquierda: Datos del cliente */}
-            <div className="w-full">
+            {/* Columna izquierda: Datos del cliente y factura */}
+            <div className="w-full space-y-6 lg:space-y-8">
               {/* Sección Cliente */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto] mb-6 lg:mb-8 w-full">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto] w-full">
                 <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                   <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
                     <UserPlus className="h-5 w-5 text-blue-500 mr-2" />
@@ -830,370 +830,374 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   </h3>
                 </div>
                 <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
-                <FormField
-                  control={form.control}
-                  name="clientId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Cliente *</FormLabel>
-                      <div className="flex space-x-2">
-                        <FormControl>
-                          <Select
-                            value={field.value?.toString() || ""}
-                            onValueChange={(value) => field.onChange(value)}
-                            disabled={isLoadingClients}
+                  <FormField
+                    control={form.control}
+                    name="clientId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Cliente *</FormLabel>
+                        <div className="flex space-x-2">
+                          <FormControl>
+                            <Select
+                              value={field.value?.toString() || ""}
+                              onValueChange={(value) => field.onChange(value)}
+                              disabled={isLoadingClients}
+                            >
+                              <SelectTrigger className="w-full border border-gray-200 rounded-lg shadow-sm bg-white hover:border-blue-200 transition-colors focus:ring-2 focus:ring-blue-100 focus:border-blue-300">
+                                <SelectValue placeholder="Selecciona un cliente" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-lg">
+                                {isLoadingClients ? (
+                                  <SelectItem value="loading">Cargando clientes...</SelectItem>
+                                ) : clientList && Array.isArray(clientList) && clientList.length > 0 ? (
+                                  clientList.map((client: any) => (
+                                    <SelectItem key={client.id} value={client.id.toString()}>
+                                      {client.name} - {client.taxId}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="empty">No hay clientes disponibles</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={navigateToClientCreation}
+                            className="min-w-[40px] w-auto bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300 transition-colors"
                           >
-                            <SelectTrigger className="w-full border border-gray-200 rounded-lg shadow-sm bg-white hover:border-blue-200 transition-colors focus:ring-2 focus:ring-blue-100 focus:border-blue-300">
-                              <SelectValue placeholder="Selecciona un cliente" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-lg">
-                              {isLoadingClients ? (
-                                <SelectItem value="loading">Cargando clientes...</SelectItem>
-                              ) : clientList && Array.isArray(clientList) && clientList.length > 0 ? (
-                                clientList.map((client: any) => (
-                                  <SelectItem key={client.id} value={client.id.toString()}>
-                                    {client.name} - {client.taxId}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="empty">No hay clientes disponibles</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={navigateToClientCreation}
-                          className="min-w-[40px] w-auto bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300 transition-colors"
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span className="hidden sm:inline ml-2">Nuevo</span>
-                        </Button>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {hasSelectedClient && (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
-                    <h3 className="font-medium text-gray-700 mb-2">{selectedClientInfo.name}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                      <div><span className="font-medium">NIF/CIF:</span> {selectedClientInfo.taxId}</div>
-                      <div><span className="font-medium">Email:</span> {selectedClientInfo.email || "No especificado"}</div>
-                      <div className="sm:col-span-2"><span className="font-medium">Dirección:</span> {selectedClientInfo.address}, {selectedClientInfo.city} {selectedClientInfo.postalCode}, {selectedClientInfo.country}</div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="invoiceNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">Número de factura *</FormLabel>
-                        <FormControl>
-                          <Input {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" placeholder="2023-001" />
-                        </FormControl>
+                            <Plus className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-2">Nuevo</span>
+                          </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">Estado</FormLabel>
-                        <FormControl>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg">
-                              <SelectValue placeholder="Selecciona estado" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-lg">
-                              <SelectItem value="pending">
-                                <span className="flex items-center gap-2">
-                                  <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                  Pendiente
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="paid">
-                                <span className="flex items-center gap-2">
-                                  <Check className="h-4 w-4 text-green-500" />
-                                  Pagada
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="draft">
-                                <span className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-gray-500" />
-                                  Borrador
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="sent">
-                                <span className="flex items-center gap-2">
-                                  <FileCheck className="h-4 w-4 text-blue-500" />
-                                  Enviada
-                                </span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="issueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">Fecha de emisión *</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="dueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">Fecha de vencimiento *</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="paymentMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Método de pago</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col sm:flex-row sm:flex-wrap gap-3"
-                        >
-                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-                            <RadioGroupItem value="Transferencia" id="Transferencia" className="text-blue-500" />
-                            <Label htmlFor="Transferencia" className="text-sm font-medium">Transferencia</Label>
-                          </div>
-                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-                            <RadioGroupItem value="Tarjeta" id="Tarjeta" className="text-blue-500" />
-                            <Label htmlFor="Tarjeta" className="text-sm font-medium">Tarjeta</Label>
-                          </div>
-                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-                            <RadioGroupItem value="Efectivo" id="Efectivo" className="text-blue-500" />
-                            <Label htmlFor="Efectivo" className="text-sm font-medium">Efectivo</Label>
-                          </div>
-                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-                            <RadioGroupItem value="Otro" id="Otro" className="text-blue-500" />
-                            <Label htmlFor="Otro" className="text-sm font-medium">Otro</Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Notas o comentarios</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Añade información adicional, términos, condiciones, etc."
-                          {...field}
-                          className="h-20 resize-none border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Sección conceptos e impuestos */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto] lg:col-span-2">
-              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
-                  <FileText className="h-5 w-5 text-blue-500 mr-2" />
-                  Conceptos e impuestos
-                </h3>
-              </div>
-              <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos:</h4>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleAddIVA}
-                      className="border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 rounded-full px-4 shadow-sm transition-all"
-                    >
-                      IVA <span className="ml-1 font-bold">21%</span>
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleAddIRPF}
-                      className="border border-red-200 bg-white hover:bg-red-50 text-red-700 rounded-full px-4 shadow-sm transition-all"
-                    >
-                      IRPF <span className="ml-1 font-bold">-15%</span>
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleExemptIVA}
-                      className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-full px-4 shadow-sm transition-all"
-                    >
-                      Exento IVA
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowTaxDialog(true)}
-                      className="border border-green-200 bg-white hover:bg-green-50 text-green-700 rounded-full px-4 shadow-sm transition-all"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Impuesto personalizado
-                    </Button>
-                  </div>
-                  
-                  {/* Lista de impuestos adicionales ya aplicados */}
-                  {additionalTaxes.length > 0 && (
+                  {hasSelectedClient && (
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos aplicados:</h4>
-                      <ul className="space-y-2">
+                      <h3 className="font-medium text-gray-700 mb-2">{selectedClientInfo.name}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                        <div><span className="font-medium">NIF/CIF:</span> {selectedClientInfo.taxId}</div>
+                        <div><span className="font-medium">Email:</span> {selectedClientInfo.email || "No especificado"}</div>
+                        <div className="sm:col-span-2"><span className="font-medium">Dirección:</span> {selectedClientInfo.address}, {selectedClientInfo.city} {selectedClientInfo.postalCode}, {selectedClientInfo.country}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="invoiceNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Número de factura *</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" placeholder="2023-001" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Estado</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg">
+                                <SelectValue placeholder="Selecciona estado" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-lg">
+                                <SelectItem value="pending">
+                                  <span className="flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                    Pendiente
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="paid">
+                                  <span className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-green-500" />
+                                    Pagada
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="draft">
+                                  <span className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-gray-500" />
+                                    Borrador
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="sent">
+                                  <span className="flex items-center gap-2">
+                                    <FileCheck className="h-4 w-4 text-blue-500" />
+                                    Enviada
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="issueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Fecha de emisión *</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Fecha de vencimiento *</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Método de pago</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col sm:flex-row sm:flex-wrap gap-3"
+                          >
+                            <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                              <RadioGroupItem value="Transferencia" id="Transferencia" className="text-blue-500" />
+                              <Label htmlFor="Transferencia" className="text-sm font-medium">Transferencia</Label>
+                            </div>
+                            <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                              <RadioGroupItem value="Tarjeta" id="Tarjeta" className="text-blue-500" />
+                              <Label htmlFor="Tarjeta" className="text-sm font-medium">Tarjeta</Label>
+                            </div>
+                            <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                              <RadioGroupItem value="Efectivo" id="Efectivo" className="text-blue-500" />
+                              <Label htmlFor="Efectivo" className="text-sm font-medium">Efectivo</Label>
+                            </div>
+                            <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                              <RadioGroupItem value="Otro" id="Otro" className="text-blue-500" />
+                              <Label htmlFor="Otro" className="text-sm font-medium">Otro</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Notas o comentarios</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Añade información adicional, términos, condiciones, etc."
+                            {...field}
+                            className="h-20 resize-none border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              {/* Resumen de factura */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
+                  <h3 className="text-base sm:text-lg font-medium text-blue-700">
+                    Resumen de la factura
+                  </h3>
+                </div>
+                <div className="px-4 sm:px-6 py-4 sm:py-5 flex-grow">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span className="text-sm sm:text-base text-gray-700">Base imponible</span>
+                      <span className="font-medium text-sm sm:text-base">{formatCurrency(calculatedTotals.subtotal)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
+                      <span className="text-sm sm:text-base text-gray-700">
+                        IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
+                      </span>
+                      <span className="font-medium text-sm sm:text-base">{formatCurrency(itemsTax)}</span>
+                    </div>
+                    
+                    {/* Mostrar impuestos adicionales en el resumen */}
+                    {additionalTaxes.length > 0 && (
+                      <>
                         {additionalTaxes.map((tax, index) => {
+                          // Calcular el importe del impuesto
+                          const taxAmount = tax.isPercentage 
+                            ? baseAmount * (tax.amount / 100) 
+                            : tax.amount;
+                          
+                          // Verificar si es IRPF para mostrarlo como negativo
                           const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
                           
                           return (
-                            <li key={index} className="flex justify-between items-center text-sm bg-white p-2 rounded-lg border border-gray-100">
-                              <span>
-                                <Badge variant={isIRPF ? "destructive" : "default"} className="mr-2 bg-opacity-90">
-                                  {tax.name}
-                                </Badge>
-                                {tax.isPercentage ? `${tax.amount}%` : formatCurrency(tax.amount)}
+                            <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
+                              <div className="text-sm sm:text-base text-gray-700">
+                                <span>
+                                  {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
+                                </span>
+                              </div>
+                              <span className={`font-medium text-sm sm:text-base ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
+                                {formatCurrency(taxAmount)}
                               </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveTax(index)}
-                                className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </li>
+                            </div>
                           );
                         })}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="w-full">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Conceptos</h3>
-                  <FormField
-                    control={form.control}
-                    name="items"
-                    render={({ field }) => (
-                      <FormItem>
-                        <InvoiceLineItems
-                          control={form.control}
-                          name="items"
-                          formState={form.formState}
-                        />
-                        <FormMessage />
-                      </FormItem>
+                      </>
                     )}
-                  />
+                    
+                    <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
+                      <span className="font-medium text-base sm:text-lg">Total a pagar</span>
+                      <span className="font-bold text-base sm:text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Resumen de factura */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
-              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
-                <h3 className="text-base sm:text-lg font-medium text-blue-700">
-                  Resumen de la factura
-                </h3>
-              </div>
-              <div className="px-4 sm:px-6 py-4 sm:py-5 flex-grow">
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm sm:text-base text-gray-700">Base imponible</span>
-                    <span className="font-medium text-sm sm:text-base">{formatCurrency(calculatedTotals.subtotal)}</span>
+            
+            {/* Columna derecha: Conceptos e impuestos */}
+            <div className="w-full space-y-6 lg:space-y-8">
+              {/* Sección conceptos e impuestos */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto] w-full">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
+                    <FileText className="h-5 w-5 text-blue-500 mr-2" />
+                    Conceptos e impuestos
+                  </h3>
+                </div>
+                <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos:</h4>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddIVA}
+                        className="border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 rounded-full px-4 shadow-sm transition-all"
+                      >
+                        IVA <span className="ml-1 font-bold">21%</span>
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddIRPF}
+                        className="border border-red-200 bg-white hover:bg-red-50 text-red-700 rounded-full px-4 shadow-sm transition-all"
+                      >
+                        IRPF <span className="ml-1 font-bold">-15%</span>
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleExemptIVA}
+                        className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-full px-4 shadow-sm transition-all"
+                      >
+                        Exento IVA
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowTaxDialog(true)}
+                        className="border border-green-200 bg-white hover:bg-green-50 text-green-700 rounded-full px-4 shadow-sm transition-all"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Impuesto personalizado
+                      </Button>
+                    </div>
+                    
+                    {/* Lista de impuestos adicionales ya aplicados */}
+                    {additionalTaxes.length > 0 && (
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos aplicados:</h4>
+                        <ul className="space-y-2">
+                          {additionalTaxes.map((tax, index) => {
+                            const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+                            
+                            return (
+                              <li key={index} className="flex justify-between items-center text-sm bg-white p-2 rounded-lg border border-gray-100">
+                                <span>
+                                  <Badge variant={isIRPF ? "destructive" : "default"} className="mr-2 bg-opacity-90">
+                                    {tax.name}
+                                  </Badge>
+                                  {tax.isPercentage ? `${tax.amount}%` : formatCurrency(tax.amount)}
+                                </span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveTax(index)}
+                                  className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
-                    <span className="text-sm sm:text-base text-gray-700">
-                      IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
-                    </span>
-                    <span className="font-medium text-sm sm:text-base">{formatCurrency(itemsTax)}</span>
-                  </div>
-                  
-                  {/* Mostrar impuestos adicionales en el resumen */}
-                  {additionalTaxes.length > 0 && (
-                    <>
-                      {additionalTaxes.map((tax, index) => {
-                        // Calcular el importe del impuesto
-                        const taxAmount = tax.isPercentage 
-                          ? baseAmount * (tax.amount / 100) 
-                          : tax.amount;
-                        
-                        // Verificar si es IRPF para mostrarlo como negativo
-                        const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
-                        
-                        return (
-                          <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
-                            <div className="text-sm sm:text-base text-gray-700">
-                              <span>
-                                {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
-                              </span>
-                            </div>
-                            <span className={`font-medium text-sm sm:text-base ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
-                              {formatCurrency(taxAmount)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
-                  
-                  <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
-                    <span className="font-medium text-base sm:text-lg">Total a pagar</span>
-                    <span className="font-bold text-base sm:text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
+                  <div className="w-full">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Conceptos</h3>
+                    <FormField
+                      control={form.control}
+                      name="items"
+                      render={({ field }) => (
+                        <FormItem>
+                          <InvoiceLineItems
+                            control={form.control}
+                            name="items"
+                            formState={form.formState}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
               </div>
@@ -1318,4 +1322,4 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   );
 };
 
-export default InvoiceFormApple;
+export default InvoiceFormTwoCol;

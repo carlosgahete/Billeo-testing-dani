@@ -1,7 +1,7 @@
 // client/src/pages/invoices/create-simple.tsx
 
 import { useLocation } from "wouter";
-import InvoiceFormApple from "@/components/invoices/InvoiceFormApple";
+import InvoiceFormTwoCol from "@/components/invoices/InvoiceFormTwoCol";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 
@@ -9,7 +9,7 @@ export default function CreateInvoiceFixedPage() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="container w-full px-4 py-6">
+    <div className="w-full px-4 py-6">
       {/* Header con estilo Apple */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-2">
@@ -25,8 +25,8 @@ export default function CreateInvoiceFixedPage() {
         </div>
       </div>
 
-      {/* Formulario de factura con diseño estilo Apple */}
-      <InvoiceFormApple />
+      {/* Formulario de factura con diseño de dos columnas equilibradas */}
+      <InvoiceFormTwoCol />
     </div>
   );
 }
