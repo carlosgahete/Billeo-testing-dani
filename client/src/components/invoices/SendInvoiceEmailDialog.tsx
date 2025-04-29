@@ -4,6 +4,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { generateInvoicePDFAsBase64 } from "@/lib/pdf";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
+import { isSuperAdmin } from "@/lib/is-superadmin";
 import billeoLogo from '../../assets/billeo-logo.png';
 import {
   Dialog,
@@ -37,6 +39,7 @@ interface Invoice {
   status: string;
   notes?: string;
   additionalTaxes?: any[] | null;
+  userId?: number; // ID del usuario que creó la factura
 }
 
 interface Client {
@@ -92,12 +95,17 @@ export function SendInvoiceEmailDialog({
     console.error("SendInvoiceEmailDialog: No se proporcionó un cliente válido");
     return null;
   }
+  
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(client?.email || "");
   const [ccEmail, setCcEmail] = useState("");
   const [isPending, setIsPending] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Verificar permisos para esta factura
+  const canModifyInvoice = invoice.userId === undefined || invoice.userId === user?.id || isSuperAdmin(user);
 
   // Cargar los items de la factura cuando se abre el diálogo
   const { data: invoiceItems, isLoading: isLoadingItems } = useQuery<any[]>({
@@ -106,6 +114,16 @@ export function SendInvoiceEmailDialog({
   });
 
   const handleSendEmail = async () => {
+    // Verificar permisos primero
+    if (!canModifyInvoice) {
+      toast({
+        title: "Permiso denegado",
+        description: "No tienes permisos para enviar esta factura por email. Ponte en contacto con el gestor.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!recipientEmail) {
       toast({
         title: "Email requerido",
@@ -178,14 +196,18 @@ export function SendInvoiceEmailDialog({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blue-600 hover:bg-blue-50"
+                  className={canModifyInvoice ? "text-blue-600 hover:bg-blue-50" : "text-gray-400"}
                   onClick={handleButtonClick}
+                  disabled={!canModifyInvoice}
                 >
                   <Mail className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Enviar por email</p>
+                {canModifyInvoice 
+                  ? <p>Enviar por email</p> 
+                  : <p>Ponte en contacto con tu gestor para enviar esta factura</p>
+                }
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
