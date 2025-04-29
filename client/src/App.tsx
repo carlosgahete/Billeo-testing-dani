@@ -57,6 +57,7 @@ import FilterTestSimplePage from "@/pages/FilterTestSimple";
 import AppleDashboardDemo from "@/pages/apple-dashboard-demo";
 import ClientsPage from "@/pages/clients/index";
 import CreateClientPage from "@/pages/clients/create";
+import NotificationsPage from "@/pages/notifications";
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -304,6 +305,13 @@ function Router() {
       <Route path="/apple-dashboard-demo">
         <Layout>
           <ProtectedRoute path="/apple-dashboard-demo" component={AppleDashboardDemo} />
+        </Layout>
+      </Route>
+      
+      {/* Ruta para la página de notificaciones */}
+      <Route path="/notifications">
+        <Layout>
+          <ProtectedRoute path="/notifications" component={NotificationsPage} />
         </Layout>
       </Route>
       

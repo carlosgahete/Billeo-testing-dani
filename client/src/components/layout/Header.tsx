@@ -150,7 +150,11 @@ const Header = ({ isMobile, mobileMenuOpen, setMobileMenuOpen }: HeaderProps) =>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Button variant="link" className="w-full justify-center h-auto py-2">
+              <Button 
+                variant="link" 
+                className="w-full justify-center h-auto py-2"
+                onClick={() => navigate("/notifications")}
+              >
                 Ver todas las notificaciones
               </Button>
             </DropdownMenuItem>
