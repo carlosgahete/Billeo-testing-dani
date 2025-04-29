@@ -350,8 +350,6 @@ const DeleteInvoiceDialog = ({
   const { user } = useAuth();
   const [isPending, setIsPending] = useState(false);
   
-  // Ya tenemos isSuperAdmin importado en la parte superior del archivo
-  
   // Verificar permisos: usuario es dueño de la factura o es superadmin
   const canModifyInvoice = !invoiceUserId || invoiceUserId === user?.id || isSuperAdmin(user);
   
@@ -1626,124 +1624,171 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
       id: "actions",
       cell: ({ row }) => {
         const invoice = row.original;
+        const { user } = useAuth();
+        
+        // Verificar permisos para modificar esta factura
+        const canModifyInvoice = !invoice.userId || invoice.userId === user?.id || isSuperAdmin(user);
         
         return (
           <>
             {/* Versión móvil: Botones esenciales */}
             <div className="flex justify-end md:hidden space-x-1">
               {/* Botón de enviar por email */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-blue-600 hover:bg-blue-50"
-                aria-label="Enviar por email"
-                onClick={() => {
-                  // Buscar el diálogo de email
-                  const emailButton = document.querySelector(`[data-invoice-id="${invoice.id}"] button[aria-label="Enviar por email"]`);
-                  if (emailButton) {
-                    (emailButton as HTMLButtonElement).click();
-                  }
-                }}
-              >
-                <Mail className="h-4 w-4" />
-              </Button>
-              
-              {/* Botón de descargar */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-green-600 hover:bg-green-50"
-                onClick={() => handleExportInvoicePDF(invoice)}
-              >
-                <FileDown className="h-4 w-4" />
-              </Button>
-              
-              {/* Botón de eliminar */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-600 hover:bg-red-50"
-                onClick={() => {
-                  if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
-                    apiRequest("DELETE", `/api/invoices/${invoice.id}`)
-                      .then((response) => {
-                        // Verificar si la respuesta es exitosa
-                        if (response.ok) {
-                          toast({
-                            title: "Factura eliminada",
-                            description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
-                          });
-                          
-                          // Disparar eventos personalizados para actualizar los datos en toda la app
-                          window.dispatchEvent(new CustomEvent('invoice-deleted', { 
-                            detail: { invoiceId: invoice.id }
-                          }));
-                          console.log(`🔔 Evento invoice-deleted disparado para factura ${invoice.id}`);
-                          
-                          // Actualizar la lista de facturas y estadísticas
-                          queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                          queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-                          // Forzar la actualización de datos
-                          forceDataRefresh();
-                        } else {
-                          // Si la respuesta no es 200-299, convertir a JSON para obtener el mensaje de error
-                          return response.json().then(errorData => {
-                            throw new Error(errorData.detail || errorData.message || "Error al eliminar la factura");
-                          });
-                        }
-                      })
-                      .catch((error) => {
-                        console.error("Error al eliminar factura (versión móvil):", error);
-                        
-                        // Extraer mensaje de error de varias fuentes posibles
-                        let errorMsg = "No se pudo eliminar la factura";
-                        
-                        if (error.response?.data?.detail) {
-                          errorMsg = error.response.data.detail;
-                        } else if (error.response?.data?.message) {
-                          errorMsg = error.response.data.message;
-                        } else if (error.message) {
-                          errorMsg = error.message;
-                        }
-                        
-                        // Mostrar mensaje de error
-                        toast({
-                          title: "Error al eliminar factura",
-                          description: errorMsg,
-                          variant: "destructive",
-                        });
-                        
-                        // Asegurar que la interfaz se actualice en caso de error
-                        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-                      });
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Versión desktop: Botones individuales */}
-            <div className="hidden md:flex justify-end space-x-1" data-invoice-id={invoice.id}>
-
-
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
+                      className={canModifyInvoice ? "text-blue-600 hover:bg-blue-50" : "text-gray-400"}
+                      aria-label="Enviar por email"
+                      disabled={!canModifyInvoice}
+                      onClick={() => {
+                        if (!canModifyInvoice) return;
+                        // Buscar el diálogo de email
+                        const emailButton = document.querySelector(`[data-invoice-id="${invoice.id}"] button[aria-label="Enviar por email"]`);
+                        if (emailButton) {
+                          (emailButton as HTMLButtonElement).click();
+                        }
+                      }}
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {canModifyInvoice 
+                      ? <p>Enviar por email</p> 
+                      : <p>Ponte en contacto con tu gestor para enviar esta factura</p>
+                    }
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {/* Botón de descargar (siempre disponible) */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-green-600 hover:bg-green-50"
+                      onClick={() => handleExportInvoicePDF(invoice)}
+                    >
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Exportar PDF</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {/* Botón de eliminar con verificación de permisos */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={canModifyInvoice ? "text-red-600 hover:bg-red-50" : "text-gray-400"}
+                      disabled={!canModifyInvoice}
+                      onClick={() => {
+                        if (!canModifyInvoice) return;
+                        
+                        if (confirm(`¿Estás seguro de eliminar la factura ${invoice.invoiceNumber}?`)) {
+                          apiRequest("DELETE", `/api/invoices/${invoice.id}`)
+                            .then((response) => {
+                              // Verificar si la respuesta es exitosa
+                              if (response.ok) {
+                                toast({
+                                  title: "Factura eliminada",
+                                  description: `La factura ${invoice.invoiceNumber} ha sido eliminada con éxito`,
+                                });
+                                
+                                // Disparar eventos personalizados para actualizar los datos en toda la app
+                                window.dispatchEvent(new CustomEvent('invoice-deleted', { 
+                                  detail: { invoiceId: invoice.id }
+                                }));
+                                console.log(`🔔 Evento invoice-deleted disparado para factura ${invoice.id}`);
+                                
+                                // Actualizar la lista de facturas y estadísticas
+                                queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                                queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
+                                // Forzar la actualización de datos
+                                forceDataRefresh();
+                              } else {
+                                // Si la respuesta no es 200-299, convertir a JSON para obtener el mensaje de error
+                                return response.json().then(errorData => {
+                                  throw new Error(errorData.detail || errorData.message || "Error al eliminar la factura");
+                                });
+                              }
+                            })
+                            .catch((error) => {
+                              console.error("Error al eliminar factura (versión móvil):", error);
+                              
+                              // Extraer mensaje de error de varias fuentes posibles
+                              let errorMsg = "No se pudo eliminar la factura";
+                              
+                              if (error.response?.data?.detail) {
+                                errorMsg = error.response.data.detail;
+                              } else if (error.response?.data?.message) {
+                                errorMsg = error.response.data.message;
+                              } else if (error.message) {
+                                errorMsg = error.message;
+                              }
+                              
+                              // Mostrar mensaje de error
+                              toast({
+                                title: "Error al eliminar factura",
+                                description: errorMsg,
+                                variant: "destructive",
+                              });
+                              
+                              // Asegurar que la interfaz se actualice en caso de error
+                              queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+                            });
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {canModifyInvoice 
+                      ? <p>Eliminar factura</p> 
+                      : <p>Ponte en contacto con tu gestor para eliminar esta factura</p>
+                    }
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            
+            {/* Versión desktop: Botones individuales */}
+            <div className="hidden md:flex justify-end space-x-1" data-invoice-id={invoice.id}>
+              {/* Botón de editar */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={!canModifyInvoice}
+                      className={!canModifyInvoice ? "text-gray-400" : ""}
+                      onClick={canModifyInvoice ? () => navigate(`/invoices/edit/${invoice.id}`) : undefined}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Editar factura</p>
+                    {canModifyInvoice 
+                      ? <p>Editar factura</p> 
+                      : <p>Ponte en contacto con tu gestor para editar esta factura</p>
+                    }
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
+              {/* Botón de descargar (siempre disponible) */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1761,18 +1806,59 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                 </Tooltip>
               </TooltipProvider>
 
-              {/* Botón para marcar factura como pagada */}
-              <MarkAsPaidButton invoice={invoice} />
-              
-              {/* Botón para enviar factura por email */}
-              {clientsData?.find(c => c.id === invoice.clientId) && (
-                <SendInvoiceEmailDialog 
-                  invoice={invoice} 
-                  client={clientsData?.find(c => c.id === invoice.clientId) as Client}
-                  company={companyData || null}
-                />
+              {/* Botón para marcar factura como pagada (solo si tiene permisos) */}
+              {canModifyInvoice ? (
+                <MarkAsPaidButton invoice={invoice} />
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-gray-400" 
+                        disabled
+                      >
+                        <DollarSign className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Ponte en contacto con tu gestor para marcar esta factura como pagada</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               
+              {/* Botón para enviar factura por email (solo si tiene permisos) */}
+              {clientsData?.find(c => c.id === invoice.clientId) && (
+                canModifyInvoice ? (
+                  <SendInvoiceEmailDialog 
+                    invoice={invoice} 
+                    client={clientsData?.find(c => c.id === invoice.clientId) as Client}
+                    company={companyData || null}
+                  />
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-gray-400" 
+                          disabled
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Ponte en contacto con tu gestor para enviar esta factura por email</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              )}
+              
+              {/* Botón para eliminar factura */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1781,6 +1867,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                         invoiceId={invoice.id}
                         invoiceNumber={invoice.invoiceNumber}
                         status={invoice.status}
+                        invoiceUserId={invoice.userId}
                         onConfirm={() => {
                           // Invalidar consultas después de eliminar
                           forceDataRefresh();
