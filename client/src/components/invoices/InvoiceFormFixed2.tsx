@@ -475,13 +475,13 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
       if (isIRPF) {
         // IRPF es una deducción, va como negativo
         return {
-          additionalTax: result.additionalTax + taxAmount, // suma a impuestos para reportes
-          negativeAdjustments: result.negativeAdjustments + taxAmount // pero lo guardamos como negativo
+          additionalTax: result.additionalTax, // No sumamos el IRPF a los impuestos, es una retención
+          negativeAdjustments: result.negativeAdjustments + taxAmount // Guardamos como ajuste negativo
         };
       } else {
         // Otros impuestos son positivos
         return {
-          additionalTax: result.additionalTax + taxAmount,
+          additionalTax: result.additionalTax + taxAmount, // Solo sumamos impuestos positivos como IVA
           negativeAdjustments: result.negativeAdjustments
         };
       }
@@ -1296,9 +1296,9 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
           form.handleSubmit(onSubmit)();
         }}
         hasClient={!!form.getValues().clientId}
-        hasAmount={form.getValues().subtotal > 0}
-        hasTaxes={form.getValues().tax > 0}
-        hasExemptionReason={form.getValues().notes?.toLowerCase().includes('exento') || false}
+        hasAmount={(form.getValues().subtotal || 0) > 0}
+        hasTaxes={(form.getValues().tax || 0) > 0}
+        hasExemptionReason={(form.getValues().notes || '').toLowerCase().includes('exento')}
       />
     </div>
   );
