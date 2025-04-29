@@ -44,25 +44,25 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
         </>
       ) : (
         <div className="rounded-xl border border-gray-100 overflow-x-auto shadow-sm">
-          <table className="min-w-full divide-y divide-gray-100">
+          <table className="w-full divide-y divide-gray-100">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Descripción
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cantidad
+                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Cant.
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Precio
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  IVA %
+                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  IVA
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Subtotal
                 </th>
-                <th scope="col" className="relative px-3 py-3">
+                <th scope="col" className="relative px-2 sm:px-3 py-2 sm:py-3 w-10">
                   <span className="sr-only">Acciones</span>
                 </th>
               </tr>
@@ -77,13 +77,17 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                 return (
                   <tr key={field.id}>
                     {/* Descripción */}
-                    <td className="px-4 py-3">
+                    <td className="px-2 sm:px-4 py-2 sm:py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.description`}
                         render={({ field }) => (
                           <div>
-                            <Input {...field} className="w-full border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" placeholder="Descripción del producto o servicio" />
+                            <Input 
+                              {...field} 
+                              className="w-full border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg text-sm py-1 px-2 sm:py-2 sm:px-3" 
+                              placeholder="Descripción" 
+                            />
                             {formState.errors?.[name]?.[index]?.description && (
                               <p className="text-xs text-red-500 mt-1">
                                 {formState.errors[name][index].description.message}
@@ -95,7 +99,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* Cantidad */}
-                    <td className="px-4 py-3">
+                    <td className="px-2 sm:px-4 py-2 sm:py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.quantity`}
@@ -107,7 +111,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                               min="0"
                               step="1"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className="w-20 border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
+                              className="w-16 sm:w-20 border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg text-sm py-1 px-2 sm:py-2 sm:px-3"
                             />
                             {formState.errors?.[name]?.[index]?.quantity && (
                               <p className="text-xs text-red-500 mt-1">
@@ -120,7 +124,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* Precio */}
-                    <td className="px-4 py-3">
+                    <td className="px-2 sm:px-4 py-2 sm:py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.unitPrice`}
@@ -132,7 +136,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                               min="0"
                               step="0.01"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className="w-24 border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
+                              className="w-20 sm:w-24 border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg text-sm py-1 px-2 sm:py-2 sm:px-3"
                             />
                             {formState.errors?.[name]?.[index]?.unitPrice && (
                               <p className="text-xs text-red-500 mt-1">
@@ -145,7 +149,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* IVA % */}
-                    <td className="px-4 py-3">
+                    <td className="px-2 sm:px-4 py-2 sm:py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.taxRate`}
@@ -155,7 +159,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                               value={field.value?.toString()}
                               onValueChange={(value) => field.onChange(Number(value))}
                             >
-                              <SelectTrigger className="w-[80px] border border-gray-200 hover:border-blue-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg">
+                              <SelectTrigger className="w-14 sm:w-[80px] border border-gray-200 hover:border-blue-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg text-sm py-1 px-2 sm:py-2 sm:px-3">
                                 <SelectValue placeholder="IVA" />
                               </SelectTrigger>
                               <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-md">
@@ -171,19 +175,19 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* Subtotal */}
-                    <td className="px-4 py-3 text-gray-900 font-medium">
+                    <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-900 font-medium text-sm">
                       {formatCurrency(subtotal)}
                     </td>
                     
                     {/* Botón de eliminar */}
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-1 sm:px-3 py-2 sm:py-3 text-right">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => remove(index)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </td>
                   </tr>
@@ -198,9 +202,9 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
         type="button"
         variant="outline"
         onClick={() => append({ description: "", quantity: 1, unitPrice: 0, taxRate: 21 })}
-        className="rounded-full border border-blue-200 bg-white hover:bg-blue-50 text-blue-600 flex items-center px-4 shadow-sm transition-all"
+        className="rounded-full border border-blue-200 bg-white hover:bg-blue-50 text-blue-600 flex items-center px-3 sm:px-4 py-1 sm:py-2 text-sm shadow-sm transition-all"
       >
-        <Plus className="h-4 w-4 mr-2" />
+        <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
         Añadir concepto
       </Button>
     </div>
@@ -810,20 +814,20 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const hasSelectedClient = !!selectedClientInfo;
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
           {/* Sección superior: Cliente y datos básicos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Sección Cliente */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                <h3 className="flex items-center text-lg font-medium text-gray-800">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
+              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
                   <UserPlus className="h-5 w-5 text-blue-500 mr-2" />
                   Cliente y datos básicos
                 </h3>
               </div>
-              <div className="px-6 py-5 space-y-5">
+              <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
                 <FormField
                   control={form.control}
                   name="clientId"
@@ -1030,15 +1034,15 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </div>
 
             {/* Panel derecho: Impuestos y Conceptos */}
-            <div className="flex flex-col space-y-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                  <h3 className="flex items-center text-lg font-medium text-gray-800">
+            <div className="flex flex-col space-y-4 sm:space-y-6 lg:space-y-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
                     <FileText className="h-5 w-5 text-blue-500 mr-2" />
                     Conceptos e impuestos
                   </h3>
                 </div>
-                <div className="px-6 py-5 space-y-5">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos:</h4>
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -1138,24 +1142,24 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </div>
 
               {/* Resumen de factura */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
-                  <h3 className="text-lg font-medium text-blue-700">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
+                  <h3 className="text-base sm:text-lg font-medium text-blue-700">
                     Resumen de la factura
                   </h3>
                 </div>
-                <div className="px-6 py-5">
-                  <div className="space-y-3">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 flex-grow">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-gray-700">Base imponible</span>
-                      <span className="font-medium">{formatCurrency(calculatedTotals.subtotal)}</span>
+                      <span className="text-sm sm:text-base text-gray-700">Base imponible</span>
+                      <span className="font-medium text-sm sm:text-base">{formatCurrency(calculatedTotals.subtotal)}</span>
                     </div>
                     
                     <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
-                      <span className="text-gray-700">
+                      <span className="text-sm sm:text-base text-gray-700">
                         IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
                       </span>
-                      <span className="font-medium">{formatCurrency(itemsTax)}</span>
+                      <span className="font-medium text-sm sm:text-base">{formatCurrency(itemsTax)}</span>
                     </div>
                     
                     {/* Mostrar impuestos adicionales en el resumen */}
@@ -1172,12 +1176,12 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           
                           return (
                             <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
-                              <div className="text-gray-700">
+                              <div className="text-sm sm:text-base text-gray-700">
                                 <span>
                                   {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
                                 </span>
                               </div>
-                              <span className={`font-medium ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
+                              <span className={`font-medium text-sm sm:text-base ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
                                 {formatCurrency(taxAmount)}
                               </span>
                             </div>
@@ -1187,8 +1191,8 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     )}
                     
                     <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
-                      <span className="font-medium text-lg">Total a pagar</span>
-                      <span className="font-bold text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
+                      <span className="font-medium text-base sm:text-lg">Total a pagar</span>
+                      <span className="font-bold text-base sm:text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
                     </div>
                   </div>
                 </div>
@@ -1197,10 +1201,10 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </div>
 
           {/* Botones de acción simplificados */}
-          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4 sm:mt-6">
             <Button 
               type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors py-2.5"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-sm transition-colors py-2.5"
               disabled={createMutation.isPending || updateMutation.isPending || blockAllSubmits}
             >
               {(createMutation.isPending || updateMutation.isPending) ? (
@@ -1223,10 +1227,10 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
               type="button"
               variant="outline"
               onClick={() => navigate("/invoices")}
-              className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg shadow-sm transition-colors py-2.5"
+              className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl shadow-sm transition-colors py-2.5"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver
+              <span>Volver</span>
             </Button>
           </div>
         </form>
@@ -1234,10 +1238,10 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       
       {/* Diálogo para añadir impuesto personalizado */}
       <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
-        <DialogContent className="bg-white rounded-xl shadow-lg border border-gray-100">
+        <DialogContent className="bg-white rounded-xl shadow-lg border border-gray-100 w-[95%] max-w-md mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg font-medium text-gray-800">Añadir impuesto personalizado</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogTitle className="text-base sm:text-lg font-medium text-gray-800">Añadir impuesto personalizado</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
               Introduce los detalles del impuesto que quieres añadir a esta factura.
             </DialogDescription>
           </DialogHeader>
@@ -1255,7 +1259,7 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="taxAmount" className="text-sm font-medium text-gray-700">Valor</Label>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                 <Input 
                   id="taxAmount" 
                   type="number" 
@@ -1276,18 +1280,18 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
             </div>
           </div>
           
-          <DialogFooter className="flex space-x-2 justify-end">
+          <DialogFooter className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-end">
             <Button 
               variant="outline" 
               onClick={() => setShowTaxDialog(false)}
-              className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+              className="w-full sm:w-auto border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg"
             >
               Cancelar
             </Button>
             <Button 
               type="button" 
               onClick={handleAddTaxFromDialog}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               disabled={!newTaxData.name || newTaxData.amount <= 0}
             >
               Añadir impuesto
