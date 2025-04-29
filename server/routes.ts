@@ -3154,10 +3154,10 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         (currentUser.username && SUPERADMIN_USERNAMES.includes(currentUser.username))
       );
       
-      // Si no es el propietario ni es superadmin, denegar acceso
-      if (invoice.userId !== req.session.userId && !isSuperAdmin) {
-        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede eliminar la factura ${invoiceId} (pertenece a usuario ${invoice.userId})`);
-        return res.status(403).json({ message: "Unauthorized to delete this invoice" });
+      // Solo permitir eliminar facturas a superadmins
+      if (!isSuperAdmin) {
+        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede eliminar la factura ${invoiceId} (no es superadmin)`);
+        return res.status(403).json({ message: "Solo los administradores pueden eliminar facturas" });
       }
       
       // Si es superadmin eliminando factura de otro usuario, registrar en logs
@@ -3233,10 +3233,10 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         (currentUser.username && SUPERADMIN_USERNAMES.includes(currentUser.username))
       );
       
-      // Si no es el propietario ni es superadmin, denegar acceso
-      if (invoice.userId !== req.session.userId && !isSuperAdmin) {
-        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede enviar la factura ${invoiceId} (pertenece a usuario ${invoice.userId})`);
-        return res.status(403).json({ message: "You don't have permission to access this invoice" });
+      // Solo permitir enviar facturas por email a superadmins
+      if (!isSuperAdmin) {
+        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede enviar la factura ${invoiceId} por email (no es superadmin)`);
+        return res.status(403).json({ message: "Solo los administradores pueden enviar facturas por email" });
       }
       
       // Si es superadmin enviando factura de otro usuario, registrar en logs

@@ -475,7 +475,7 @@ const DeleteInvoiceDialog = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Ponte en contacto con tu gestor para eliminar esta factura</p>
+            <p>Solo los administradores pueden eliminar facturas</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
