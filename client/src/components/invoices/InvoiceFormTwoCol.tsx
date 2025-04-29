@@ -1170,13 +1170,18 @@ const InvoiceFormTwoCol = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       {additionalTaxes.length > 0 && (
                         <>
                           {additionalTaxes.map((tax, index) => {
-                            // Calcular el importe del impuesto
+                            // Calcular el importe del impuesto (usar un valor fijo para evitar recálculos)
+                            const baseAmountForCalc = calculatedTotals.subtotal;
                             const taxAmount = tax.isPercentage 
-                              ? baseAmount * (tax.amount / 100) 
+                              ? baseAmountForCalc * (tax.amount / 100) 
                               : tax.amount;
                             
                             // Verificar si es IRPF para mostrarlo como negativo
                             const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+                            
+                            // Guardar el monto calculado para este impuesto
+                            // Esto permite que sea consistente a lo largo de toda la interfaz
+                            const displayAmount = taxAmount;
                             
                             return (
                               <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
@@ -1186,7 +1191,7 @@ const InvoiceFormTwoCol = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   </span>
                                 </div>
                                 <span className={`font-medium text-sm ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
-                                  {isIRPF ? "-" : ""}{formatCurrency(taxAmount)}
+                                  {isIRPF ? "-" : ""}{formatCurrency(displayAmount)}
                                 </span>
                               </div>
                             );
