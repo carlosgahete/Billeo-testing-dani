@@ -1034,63 +1034,6 @@ const InvoiceFormTwoCol = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   />
                 </div>
               </div>
-              
-              {/* Resumen de factura */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
-                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
-                  <h3 className="text-base sm:text-lg font-medium text-blue-700">
-                    Resumen de la factura
-                  </h3>
-                </div>
-                <div className="px-4 sm:px-6 py-4 sm:py-5 flex-grow">
-                  <div className="space-y-2 sm:space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm sm:text-base text-gray-700">Base imponible</span>
-                      <span className="font-medium text-sm sm:text-base">{formatCurrency(calculatedTotals.subtotal)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
-                      <span className="text-sm sm:text-base text-gray-700">
-                        IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
-                      </span>
-                      <span className="font-medium text-sm sm:text-base">{formatCurrency(itemsTax)}</span>
-                    </div>
-                    
-                    {/* Mostrar impuestos adicionales en el resumen */}
-                    {additionalTaxes.length > 0 && (
-                      <>
-                        {additionalTaxes.map((tax, index) => {
-                          // Calcular el importe del impuesto
-                          const taxAmount = tax.isPercentage 
-                            ? baseAmount * (tax.amount / 100) 
-                            : tax.amount;
-                          
-                          // Verificar si es IRPF para mostrarlo como negativo
-                          const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
-                          
-                          return (
-                            <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
-                              <div className="text-sm sm:text-base text-gray-700">
-                                <span>
-                                  {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
-                                </span>
-                              </div>
-                              <span className={`font-medium text-sm sm:text-base ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
-                                {formatCurrency(taxAmount)}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </>
-                    )}
-                    
-                    <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
-                      <span className="font-medium text-base sm:text-lg">Total a pagar</span>
-                      <span className="font-bold text-base sm:text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
             
             {/* Columna derecha: Conceptos e impuestos */}
@@ -1198,6 +1141,64 @@ const InvoiceFormTwoCol = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         </FormItem>
                       )}
                     />
+                  </div>
+                  
+                  {/* Resumen de factura (ahora dentro de la sección de conceptos) */}
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm mt-6">
+                    <h3 className="text-base font-medium text-gray-700 mb-3 flex items-center">
+                      <span className="bg-blue-100 text-blue-600 p-1 rounded-md mr-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                      Resumen de la factura
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 bg-white rounded-lg border border-gray-100">
+                        <span className="text-sm text-gray-700">Base imponible</span>
+                        <span className="font-medium text-sm">{formatCurrency(calculatedTotals.subtotal)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
+                        <span className="text-sm text-gray-700">
+                          IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
+                        </span>
+                        <span className="font-medium text-sm">{formatCurrency(itemsTax)}</span>
+                      </div>
+                      
+                      {/* Mostrar impuestos adicionales en el resumen */}
+                      {additionalTaxes.length > 0 && (
+                        <>
+                          {additionalTaxes.map((tax, index) => {
+                            // Calcular el importe del impuesto
+                            const taxAmount = tax.isPercentage 
+                              ? baseAmount * (tax.amount / 100) 
+                              : tax.amount;
+                            
+                            // Verificar si es IRPF para mostrarlo como negativo
+                            const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+                            
+                            return (
+                              <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
+                                <div className="text-sm text-gray-700">
+                                  <span>
+                                    {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
+                                  </span>
+                                </div>
+                                <span className={`font-medium text-sm ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
+                                  {isIRPF ? "-" : ""}{formatCurrency(taxAmount)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                      
+                      <div className="flex justify-between items-center p-3 mt-2 bg-blue-100 rounded-lg border border-blue-200">
+                        <span className="font-medium text-base">Total a pagar</span>
+                        <span className="font-bold text-base text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
