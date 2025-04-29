@@ -5,6 +5,7 @@ import express from "express";
 import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { requireAuth, requireAdmin } from './auth-middleware';
+import { canEditInvoice } from './auth-roles';
 import testEmailRoutes from './test-email';
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
@@ -2235,7 +2236,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  app.put("/api/invoices/:id", async (req: Request, res: Response) => {
+  // Código original sin cambios
+
+app.put("/api/invoices/:id", async (req: Request, res: Response) => {
     try {
       if (!req.session || !req.session.userId) {
         return res.status(401).json({ message: "Not authenticated" });
@@ -2248,8 +2251,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Invoice not found" });
       }
       
-      if (invoice.userId !== req.session.userId) {
+      // Verificar si el usuario es superadmin (nombres específicos o rol explícito)
+      const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
+      
+      // Obtener datos del usuario actual
+      const currentUser = await storage.getUser(req.session.userId);
+      const isSuperAdmin = currentUser && (
+        currentUser.role === 'superadmin' || 
+        currentUser.role === 'SUPERADMIN' ||
+        (currentUser.username && SUPERADMIN_USERNAMES.includes(currentUser.username))
+      );
+      
+      // Si no es el propietario ni es superadmin, denegar acceso
+      if (invoice.userId !== req.session.userId && !isSuperAdmin) {
+        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede editar la factura ${invoiceId} (pertenece a usuario ${invoice.userId})`);
         return res.status(403).json({ message: "Unauthorized to update this invoice" });
+      }
+      
+      // Si es superadmin editando factura de otro usuario, registrar en logs
+      if (invoice.userId !== req.session.userId && isSuperAdmin) {
+        console.log(`⚠️ Superadmin ${currentUser.username} (ID: ${currentUser.id}) está editando factura ${invoiceId} del usuario ${invoice.userId}`);
       }
       
       const { invoice: invoiceData, items } = req.body;
@@ -3122,8 +3143,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Invoice not found" });
       }
       
-      if (invoice.userId !== req.session.userId) {
+      // Verificar si el usuario es superadmin (nombres específicos o rol explícito)
+      const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
+      
+      // Obtener datos del usuario actual
+      const currentUser = await storage.getUser(req.session.userId);
+      const isSuperAdmin = currentUser && (
+        currentUser.role === 'superadmin' || 
+        currentUser.role === 'SUPERADMIN' ||
+        (currentUser.username && SUPERADMIN_USERNAMES.includes(currentUser.username))
+      );
+      
+      // Si no es el propietario ni es superadmin, denegar acceso
+      if (invoice.userId !== req.session.userId && !isSuperAdmin) {
+        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede eliminar la factura ${invoiceId} (pertenece a usuario ${invoice.userId})`);
         return res.status(403).json({ message: "Unauthorized to delete this invoice" });
+      }
+      
+      // Si es superadmin eliminando factura de otro usuario, registrar en logs
+      if (invoice.userId !== req.session.userId && isSuperAdmin) {
+        console.log(`⚠️ Superadmin ${currentUser.username} (ID: ${currentUser.id}) está eliminando factura ${invoiceId} del usuario ${invoice.userId}`);
       }
       
       // Comentamos la restricción para permitir eliminar cualquier factura
@@ -3183,9 +3222,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Invoice not found" });
       }
       
-      // Verificar que la factura pertenece al usuario autenticado
-      if (invoice.userId !== req.session.userId) {
+      // Verificar si el usuario es superadmin
+      const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
+      
+      // Obtener datos del usuario actual
+      const currentUser = await storage.getUser(req.session.userId);
+      const isSuperAdmin = currentUser && (
+        currentUser.role === 'superadmin' || 
+        currentUser.role === 'SUPERADMIN' ||
+        (currentUser.username && SUPERADMIN_USERNAMES.includes(currentUser.username))
+      );
+      
+      // Si no es el propietario ni es superadmin, denegar acceso
+      if (invoice.userId !== req.session.userId && !isSuperAdmin) {
+        console.log(`❌ Acceso denegado: El usuario ${req.session.userId} no puede enviar la factura ${invoiceId} (pertenece a usuario ${invoice.userId})`);
         return res.status(403).json({ message: "You don't have permission to access this invoice" });
+      }
+      
+      // Si es superadmin enviando factura de otro usuario, registrar en logs
+      if (invoice.userId !== req.session.userId && isSuperAdmin) {
+        console.log(`⚠️ Superadmin ${currentUser.username} (ID: ${currentUser.id}) está enviando por email la factura ${invoiceId} del usuario ${invoice.userId}`);
       }
       
       // Obtener cliente y elementos de la factura
