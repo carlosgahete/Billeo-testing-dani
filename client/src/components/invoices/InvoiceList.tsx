@@ -144,6 +144,7 @@ interface Invoice {
   status: "pending" | "paid" | "overdue" | "canceled";
   notes?: string;
   attachments?: string[];
+  userId?: number; // ID del usuario que creó la factura
 }
 
 interface Client {
@@ -1624,10 +1625,12 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
       id: "actions",
       cell: ({ row }) => {
         const invoice = row.original;
-        const { user } = useAuth();
+        const auth = useAuth();
+        const { toast } = useToast();
+        const queryClient = useQueryClient();
         
         // Verificar permisos para modificar esta factura
-        const canModifyInvoice = !invoice.userId || invoice.userId === user?.id || isSuperAdmin(user);
+        const canModifyInvoice = invoice.userId === undefined || invoice.userId === auth.user?.id || isSuperAdmin(auth.user);
         
         return (
           <>
