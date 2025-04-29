@@ -18,13 +18,19 @@ interface Notification {
   date?: string; // Fecha completa para mostrar en la vista detallada
 }
 
-// Página de notificaciones
-export default function NotificationsPage() {
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
+// Función auxiliar para obtener notificaciones del sessionStorage
+const getStoredNotifications = (): Notification[] => {
+  try {
+    const stored = sessionStorage.getItem('notifications');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Error al leer notificaciones:', e);
+  }
   
-  // Estado para almacenar las notificaciones (simulado por ahora)
-  const [notifications, setNotifications] = useState<Notification[]>([
+  // Notificaciones por defecto si no hay ninguna guardada
+  return [
     { 
       id: 1, 
       title: 'Factura pendiente', 
@@ -70,7 +76,28 @@ export default function NotificationsPage() {
       type: "info",
       date: "22 Abr 2025, 16:10"
     }
-  ]);
+  ];
+};
+
+// Función auxiliar para guardar notificaciones en sessionStorage
+const storeNotifications = (notifications: Notification[]) => {
+  try {
+    sessionStorage.setItem('notifications', JSON.stringify(notifications));
+    
+    // Disparar evento para notificar a otros componentes
+    window.dispatchEvent(new Event('notifications-updated'));
+  } catch (e) {
+    console.error('Error al guardar notificaciones:', e);
+  }
+};
+
+// Página de notificaciones
+export default function NotificationsPage() {
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
+  // Estado para almacenar las notificaciones
+  const [notifications, setNotifications] = useState<Notification[]>(getStoredNotifications());
 
   // Contadores para las pestañas
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -78,9 +105,12 @@ export default function NotificationsPage() {
 
   // Función para marcar notificación como leída
   const markAsRead = (id: number) => {
-    setNotifications(notifications.map(n => 
+    const updatedNotifications = notifications.map(n => 
       n.id === id ? { ...n, read: true } : n
-    ));
+    );
+    setNotifications(updatedNotifications);
+    storeNotifications(updatedNotifications);
+    
     toast({
       title: "Notificación marcada como leída",
       description: "La notificación ha sido marcada como leída correctamente",
@@ -90,7 +120,10 @@ export default function NotificationsPage() {
 
   // Función para marcar todas las notificaciones como leídas
   const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updatedNotifications);
+    storeNotifications(updatedNotifications);
+    
     toast({
       title: "Notificaciones actualizadas",
       description: "Todas las notificaciones han sido marcadas como leídas",
@@ -100,7 +133,10 @@ export default function NotificationsPage() {
 
   // Función para eliminar una notificación
   const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+    const updatedNotifications = notifications.filter(n => n.id !== id);
+    setNotifications(updatedNotifications);
+    storeNotifications(updatedNotifications);
+    
     toast({
       title: "Notificación eliminada",
       description: "La notificación ha sido eliminada correctamente",
@@ -111,6 +147,8 @@ export default function NotificationsPage() {
   // Función para eliminar todas las notificaciones
   const deleteAllNotifications = () => {
     setNotifications([]);
+    storeNotifications([]);
+    
     toast({
       title: "Notificaciones eliminadas",
       description: "Todas las notificaciones han sido eliminadas",
@@ -131,24 +169,19 @@ export default function NotificationsPage() {
     }
   };
 
-  // Efectos para sincronizar notificaciones con el Header
+  // Efecto para sincronizar notificaciones si cambian en el Header
   useEffect(() => {
-    // Aquí se podría implementar la lógica para cargar las notificaciones desde el servidor
-    // o sincronizar con otros componentes
-    const storedNotifications = sessionStorage.getItem('notifications');
-    if (storedNotifications) {
-      try {
-        setNotifications(JSON.parse(storedNotifications));
-      } catch (e) {
-        console.error('Error al cargar notificaciones:', e);
-      }
-    }
-  }, []);
+    const handleStorageChange = () => {
+      setNotifications(getStoredNotifications());
+    };
 
-  // Guardar notificaciones en sessionStorage cuando cambien
-  useEffect(() => {
-    sessionStorage.setItem('notifications', JSON.stringify(notifications));
-  }, [notifications]);
+    // Evento personalizado para detectar cambios
+    window.addEventListener('notifications-updated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('notifications-updated', handleStorageChange);
+    };
+  }, []);
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
