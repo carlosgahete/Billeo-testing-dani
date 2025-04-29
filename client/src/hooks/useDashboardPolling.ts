@@ -4,12 +4,12 @@ import { useEffect, useState, useRef, useCallback } from 'react';
  * Hook para manejar actualizaciones del dashboard mediante polling
  * Reemplaza a useWebSocketDashboard con un enfoque más robusto y eficiente
  * @param refreshCallback - Función a llamar cuando se detecte un cambio
- * @param pollingInterval - Intervalo de consulta en ms (por defecto 10000ms = 10s)
+ * @param pollingInterval - Intervalo de consulta en ms (ahora por defecto 30000ms = 30s)
  * @returns Estado de la conexión y último mensaje recibido
  */
 export function useDashboardPolling(
   refreshCallback: () => void,
-  pollingInterval: number = 10000
+  pollingInterval: number = 30000  // Aumentado a 30 segundos para reducir carga
 ) {
   const [isActive, setIsActive] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
@@ -64,13 +64,26 @@ export function useDashboardPolling(
       console.log('🕒 Última actualización local:', lastUpdatedAt);
       console.log('🕒 Última actualización del servidor:', data.updated_at);
       
-      // Si es la primera consulta o si detectamos un cambio (con margen de seguridad de 100ms)
-      if (lastUpdatedAt === null || (data.updated_at && data.updated_at > lastUpdatedAt + 100)) {
+      // Si es la primera consulta o si detectamos un cambio (con margen de seguridad de 500ms)
+      // Aumentamos el margen para evitar actualizaciones innecesarias por pequeñas diferencias
+      if (lastUpdatedAt === null || (data.updated_at && data.updated_at > lastUpdatedAt + 500)) {
         console.log('🔄 Cambio significativo detectado en el dashboard:', data);
         setLastUpdatedAt(data.updated_at);
         setLastMessage({ type: data.lastEvent || 'dashboard-refresh-required' });
         
-        // Llamar al callback de refresco
+        // Comprobar si hay datos en sessionStorage antes de llamar al callback
+        const cacheKey = sessionStorage.getItem('current_dashboard_cache_key');
+        if (cacheKey) {
+          const cachedData = sessionStorage.getItem(cacheKey);
+          if (cachedData) {
+            console.log('💾 Usando datos en caché mientras se actualiza en segundo plano:', cacheKey);
+            // El callback solo se llamará si no hay datos en caché
+            setTimeout(refreshCallback, 250); // Ligero retraso para permitir renderizado de la UI
+            return;
+          }
+        }
+        
+        // Si no hay caché, actualizamos inmediatamente
         refreshCallback();
       }
       

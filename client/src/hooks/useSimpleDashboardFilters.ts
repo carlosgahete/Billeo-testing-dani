@@ -145,47 +145,69 @@ export function useSimpleDashboardFilters() {
     [queryClient]
   );
   
-  // Función para cambiar el año
+  // Función para cambiar el año - optimizada para rendimiento
   const changeYear = useCallback((newYear: string) => {
     if (newYear === year) return; // Evitar trabajo innecesario
     
     console.log('🗓️ Cambiando año a:', newYear);
     
+    // Indicar que esta es una actualización manual
+    window.forceDashboardRefresh = false;
+    
     // 1. Actualizar el timestamp global para forzar consultas nuevas
     globalRefreshTrigger = Date.now();
     
     // 2. Verificar si hay datos en caché para mostrar inmediatamente
-    const cachedData = sessionStorage.getItem(`dashboard_cache_${newYear}_${period}`);
+    const cacheKey = `dashboard_cache_${newYear}_${period}`;
+    sessionStorage.setItem('current_dashboard_cache_key', cacheKey);
+    const cachedData = sessionStorage.getItem(cacheKey);
+    
     if (cachedData) {
       try {
         console.log(`🚀 Pre-cargando datos en caché para ${newYear}/${period}`);
         const data = JSON.parse(cachedData);
         queryClient.setQueryData(['/api/dashboard-direct', newYear, period], data);
+        
+        // 3. Cambiar el año en el estado local (primero para UI responsiva)
+        setYear(newYear);
+        
+        // 4. Actualizar en segundo plano sin bloquear la interfaz
+        setTimeout(() => {
+          // Forzar actualización en segundo plano
+          queryClient.invalidateQueries({
+            queryKey: ['/api/dashboard-direct', newYear, period],
+            refetchType: 'inactive' // No refrescar automáticamente
+          });
+        }, 500);
       } catch (e) {
         console.error('Error al pre-cargar datos en caché:', e);
+        // Si falla la caché, simplemente cambiamos el año
+        setYear(newYear);
       }
+    } else {
+      // Sin caché disponible, actualizar inmediatamente
+      setYear(newYear);
     }
     
-    // 3. Cambiar el año en el estado local (primero para UI responsiva)
-    setYear(newYear);
+    // 5. Programar limpieza diferida de caché para evitar bloquear la UI
+    // pero no limpiar todo, solo las consultas más antiguas
+    setTimeout(() => {
+      debouncedClearQueries(queryClient);
+    }, 1000);
     
-    // 4. Programar limpieza diferida de caché para evitar bloquear la UI
-    debouncedClearQueries(queryClient);
-    
-    // 5. Log detallado para entender qué año estamos realmente usando
+    // 6. Log detallado para entender qué año estamos realmente usando
     console.log(`⚠️ CAMBIO DE AÑO: anterior=${year}, nuevo=${newYear}, timestamp=${globalRefreshTrigger}`);
     
-    // 6. Disparar un evento personalizado con el nuevo año
+    // 7. Disparar eventos personalizados con el nuevo año
     const event = new CustomEvent('dashboard-year-changed', {
       detail: { year: newYear, period, timestamp: globalRefreshTrigger }
     });
     
-    // 7. Disparar un evento normal de cambio de filtros
     const filterEvent = new CustomEvent('dashboard-filters-changed', {
       detail: { year: newYear, period, timestamp: globalRefreshTrigger }
     });
     
-    // 8. Emitir ambos eventos
+    // Emitir ambos eventos
     window.dispatchEvent(event);
     window.dispatchEvent(filterEvent);
   }, [queryClient, year, period, debouncedClearQueries]);
@@ -197,7 +219,7 @@ export function useSimpleDashboardFilters() {
       
       // Eliminar solo consultas específicas, no todo el caché
       queryClient.removeQueries({
-        predicate: (query) => {
+        predicate: (query: any) => {
           const key = query.queryKey;
           if (Array.isArray(key) && key.length > 0) {
             return key[0] === '/api/dashboard-direct' && key[1] !== year && key[2] !== period;

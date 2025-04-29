@@ -1,0 +1,178 @@
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { DashboardStats } from "@/lib/types";
+
+// Endpoint para obtener datos directos del dashboard (más optimizado)
+const DASHBOARD_DIRECT_ENDPOINT = "/api/dashboard-direct";
+
+// Función auxiliar para generar un valor aleatorio (evitar caché)
+const generateRandomString = () => Math.random().toString(36).substring(2, 15);
+
+// Función auxiliar para obtener datos frescos del servidor (creada fuera de la función principal)
+const fetchDashboardData = async (
+  endpoint: string, 
+  year: string, 
+  period: string, 
+  trigger: number
+): Promise<DashboardStats> => {
+  const cacheKey = `dashboard_cache_${year}_${period}`;
+  
+  // Crear una URL con parámetros explícitos y una marca de tiempo aleatoria para evitar caché
+  const randomParam = generateRandomString();
+  const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}`;
+  
+  // Obtener el timestamp actual para prevenir aún más el caché
+  const timestamp = new Date().getTime();
+  const urlWithTimestamp = `${url}&_t=${timestamp}`;
+  
+  console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", urlWithTimestamp);
+  
+  // Incluir los parámetros de filtro en la URL y headers adicionales
+  const data = await fetch(urlWithTimestamp, {
+    credentials: "include", // Importante: incluir las cookies en la petición
+    headers: { 
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Refresh-Trigger': trigger.toString(), // Enviamos el refreshTrigger como header
+      'X-Dashboard-Year': year, // Añadimos año como header para facilitar depuración
+      'X-Dashboard-Period': period, // Añadimos periodo como header para facilitar depuración
+      'X-Force-Refresh': 'true', // Header adicional para indicar que es un refresco forzado
+      'X-Random': randomParam // Header adicional para evitar caché
+    }
+  }).then(res => {
+    if (!res.ok) {
+      throw new Error(`Error al cargar datos: ${res.status}`);
+    }
+    return res.json();
+  });
+  
+  // Guardar los datos en sessionStorage para futuras consultas
+  try {
+    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+    console.log(`💾 Datos guardados en caché local para ${year}/${period}`);
+  } catch (error) {
+    console.warn('No se pudo guardar los datos en caché:', error);
+  }
+  
+  // Resetear la bandera de forzar refresco
+  window.forceDashboardRefresh = false;
+  
+  console.log(`✅ Datos actualizados del dashboard (${year}/${period}) cargados correctamente`);
+  return data;
+};
+
+export function useDashboardData(
+  year: string | undefined = new Date().getFullYear().toString(),
+  period: string | undefined = "all",
+  trigger: number = Date.now()
+) {
+  const [previousData, setPreviousData] = useState<DashboardStats | null>(null);
+  
+  // Asegurarse de que los valores sean válidos o usar valores predeterminados
+  const finalYear = year || new Date().getFullYear().toString();
+  const finalPeriod = period || "all";
+  
+  // Endpoint optimizado que responde más rápido
+  const endpoint = DASHBOARD_DIRECT_ENDPOINT;
+  
+  // Depuración inicial
+  useEffect(() => {
+    console.log("📊 useDashboardData: Detectado cambio en refreshTrigger:", trigger);
+    console.log("📊 CONECTANDO A ENDPOINT DIRECTO: año=" + finalYear + ", periodo=" + finalPeriod + " [" + trigger + "]...");
+  }, [finalYear, finalPeriod, trigger]);
+  
+  const dashboardQuery = useQuery<DashboardStats>({
+    queryKey: [endpoint, finalYear, finalPeriod, trigger],
+    queryFn: async () => {
+      // Validaciones básicas para prevenir errores
+      if (!finalYear) {
+        throw new Error("Año no definido en la solicitud del dashboard");
+      }
+      
+      try {
+        // Guardar la clave de caché actual para su uso en polling
+        const cacheKey = `dashboard_cache_${finalYear}_${finalPeriod}`;
+        sessionStorage.setItem('current_dashboard_cache_key', cacheKey);
+        
+        // Verificar si hay datos en caché que podemos usar mientras se carga
+        let cachedData = null;
+        const cachedString = sessionStorage.getItem(cacheKey);
+        
+        if (cachedString) {
+          try {
+            cachedData = JSON.parse(cachedString);
+            // Si tenemos datos en caché y es una actualización de fondo (no forzada),
+            // devolver inmediatamente los datos en caché
+            if (cachedData && !window.forceDashboardRefresh) {
+              console.log(`🚀 Usando caché existente para ${finalYear}/${finalPeriod} mientras se actualiza en segundo plano`);
+              
+              // Actualizar en segundo plano sin bloquear la interfaz
+              setTimeout(() => {
+                fetchDashboardData(endpoint, finalYear, finalPeriod, trigger)
+                  .catch(e => console.error('Error en actualización en segundo plano:', e));
+              }, 300);
+              
+              return cachedData;
+            }
+          } catch (e) {
+            console.warn('Error al parsear datos en caché:', e);
+          }
+        }
+        
+        // Si no hay datos en caché o se fuerza la actualización, obtener datos frescos
+        return await fetchDashboardData(endpoint, finalYear, finalPeriod, trigger);
+      } catch (error) {
+        console.error("❌ Error al cargar datos del dashboard:", error);
+        
+        // Proporcionar una estructura de datos base para que la UI no falle
+        return {
+          income: 0,
+          expenses: 0,
+          pendingInvoices: 0,
+          pendingCount: 0,
+          baseImponible: 0,
+          baseImponibleGastos: 0,
+          balance: 0,
+          result: 0,
+          netIncome: 0,
+          netExpenses: 0,
+          netResult: 0,
+          taxes: {
+            vat: 0,
+            incomeTax: 0,
+            ivaALiquidar: 0
+          },
+          taxStats: {
+            ivaRepercutido: 0,
+            ivaSoportado: 0,
+            ivaLiquidar: 0,
+            irpfRetenido: 0,
+            irpfTotal: 0,
+            irpfPagar: 0
+          },
+          year: finalYear,
+          period: finalPeriod
+        };
+      }
+    },
+    refetchOnWindowFocus: true // Ahora sí refrescamos al cambiar el foco para obtener datos actualizados
+  });
+
+  // Depuración
+  if (dashboardQuery.data) {
+    console.log("Dashboard stats", {
+      income: dashboardQuery.data.income,
+      expenses: dashboardQuery.data.expenses,
+      baseImponible: dashboardQuery.data.baseImponible,
+      result: dashboardQuery.data.result
+    });
+  }
+
+  return {
+    data: dashboardQuery.data,
+    isLoading: dashboardQuery.isLoading,
+    isError: dashboardQuery.isError,
+    refetch: dashboardQuery.refetch
+  };
+}
