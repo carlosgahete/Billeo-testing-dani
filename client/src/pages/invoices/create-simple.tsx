@@ -1,35 +1,32 @@
 // client/src/pages/invoices/create-simple.tsx
 
-import { useEffect } from "react";
 import { useLocation } from "wouter";
-import InvoiceFormFixed2 from "@/components/invoices/InvoiceFormFixed2";
+import InvoiceFormApple from "@/components/invoices/InvoiceFormApple";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronLeft, AlertCircle } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function CreateInvoiceFixedPage() {
   const [, navigate] = useLocation();
 
   return (
     <div className="container w-full px-4 py-6">
-      {/* Header */}
+      {/* Header con estilo Apple */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/invoices")}
-            className="mr-2"
+            className="mr-2 rounded-full hover:bg-gray-100"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5 text-gray-600" />
           </Button>
-          <h1 className="text-2xl font-bold">Nueva Factura</h1>
+          <h1 className="text-2xl font-medium text-gray-800">Nueva factura</h1>
         </div>
       </div>
 
-      {/* Espacio intencionalmente eliminado para optimizar el espacio en pantalla */}
-
-      {/* Formulario de factura mejorado que gestiona correctamente múltiples impuestos adicionales */}
-      <InvoiceFormFixed2 />
+      {/* Formulario de factura con diseño estilo Apple */}
+      <InvoiceFormApple />
     </div>
   );
 }

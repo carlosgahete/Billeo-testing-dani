@@ -1,4 +1,4 @@
-// client/src/components/invoices/InvoiceFormFixed2.tsx
+// client/src/components/invoices/InvoiceFormApple.tsx
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -19,6 +19,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// Importamos el diálogo de validación directamente
+import InvoiceValidationAlert from "./InvoiceValidationAlert";
 
 // Implementación en línea del componente de líneas de factura
 const InvoiceLineItems = ({ control, name, formState }: any) => {
@@ -38,23 +43,23 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
           </div>
         </>
       ) : (
-        <div className="rounded-md border overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="rounded-xl border border-gray-100 overflow-x-auto shadow-sm">
+          <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Descripción
                 </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Cantidad
                 </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Precio
                 </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   IVA %
                 </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Subtotal
                 </th>
                 <th scope="col" className="relative px-3 py-3">
@@ -62,7 +67,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {fields.map((field, index) => {
                 // Calcular subtotal para este item
                 const quantity = control._formValues[name]?.[index]?.quantity || 0;
@@ -72,13 +77,13 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                 return (
                   <tr key={field.id}>
                     {/* Descripción */}
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.description`}
                         render={({ field }) => (
                           <div>
-                            <Input {...field} className="w-full" placeholder="Descripción del producto o servicio" />
+                            <Input {...field} className="w-full border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" placeholder="Descripción del producto o servicio" />
                             {formState.errors?.[name]?.[index]?.description && (
                               <p className="text-xs text-red-500 mt-1">
                                 {formState.errors[name][index].description.message}
@@ -90,7 +95,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* Cantidad */}
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.quantity`}
@@ -102,7 +107,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                               min="0"
                               step="1"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className="w-20"
+                              className="w-20 border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
                             />
                             {formState.errors?.[name]?.[index]?.quantity && (
                               <p className="text-xs text-red-500 mt-1">
@@ -115,7 +120,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* Precio */}
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.unitPrice`}
@@ -127,7 +132,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                               min="0"
                               step="0.01"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className="w-24"
+                              className="w-24 border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
                             />
                             {formState.errors?.[name]?.[index]?.unitPrice && (
                               <p className="text-xs text-red-500 mt-1">
@@ -140,7 +145,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* IVA % */}
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <Controller
                         control={control}
                         name={`${name}.${index}.taxRate`}
@@ -150,10 +155,10 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                               value={field.value?.toString()}
                               onValueChange={(value) => field.onChange(Number(value))}
                             >
-                              <SelectTrigger className="w-[80px]">
+                              <SelectTrigger className="w-[80px] border border-gray-200 hover:border-blue-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg">
                                 <SelectValue placeholder="IVA" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-md">
                                 <SelectItem value="0">0%</SelectItem>
                                 <SelectItem value="4">4%</SelectItem>
                                 <SelectItem value="10">10%</SelectItem>
@@ -166,17 +171,17 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
                     </td>
                     
                     {/* Subtotal */}
-                    <td className="px-3 py-2 text-gray-900 font-medium">
+                    <td className="px-4 py-3 text-gray-900 font-medium">
                       {formatCurrency(subtotal)}
                     </td>
                     
                     {/* Botón de eliminar */}
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-3 py-3 text-right">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => remove(index)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -193,7 +198,7 @@ const InvoiceLineItems = ({ control, name, formState }: any) => {
         type="button"
         variant="outline"
         onClick={() => append({ description: "", quantity: 1, unitPrice: 0, taxRate: 21 })}
-        className="mt-2"
+        className="rounded-full border border-blue-200 bg-white hover:bg-blue-50 text-blue-600 flex items-center px-4 shadow-sm transition-all"
       >
         <Plus className="h-4 w-4 mr-2" />
         Añadir concepto
@@ -211,12 +216,6 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Importamos el diálogo de validación directamente
-import InvoiceValidationAlert from "./InvoiceValidationAlert";
-
 // Tipo para los impuestos adicionales
 interface AdditionalTax {
   name: string;
@@ -230,7 +229,7 @@ interface InvoiceFormProps {
   initialData?: any;
 }
 
-const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
+const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showTaxDialog, setShowTaxDialog] = useState(false);
@@ -654,156 +653,164 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
       form.setValue("items", updatedItems);
       
       toast({
-        title: 'IVA Exento',
-        description: 'Se ha marcado la factura como exenta de IVA. Recuerda incluir la referencia legal en las notas.',
+        title: 'IVA exento',
+        description: 'Se ha marcado todos los conceptos como exentos de IVA.',
       });
     } else {
       toast({
         title: 'No hay conceptos',
-        description: 'Agrega al menos un concepto a la factura antes de aplicar la exención de IVA.',
+        description: 'Agrega al menos un concepto a la factura antes de aplicar exención de IVA.',
         variant: 'destructive'
       });
     }
   };
 
-  // Mutación para enviar el formulario
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      // Importante: Estructurar correctamente el cuerpo de la petición para que coincida con
-      // lo que espera el servidor (invoice + items)
-      const requestBody = {
-        invoice: {
-          ...data,
-          // Asegurar que los impuestos adicionales se envíen correctamente
-          additionalTaxes: data.additionalTaxes || [],
-          // Convertir campos monetarios a strings (requisito del servidor)
-          subtotal: data.subtotal?.toString() || "0",
-          tax: data.tax?.toString() || "0",
-          total: data.total?.toString() || "0",
-          // Asegurar que las fechas estén en formato correcto
-          issueDate: data.issueDate,
-          dueDate: data.dueDate
-        },
-        items: data.items || []
-      };
-      
-      console.log("📦 Cuerpo de la petición estructurado:", requestBody);
-      
-      const response = await apiRequest("POST", "/api/invoices", requestBody);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al crear factura");
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      toast({
-        title: "Factura creada",
-        description: "La factura se ha creado correctamente",
-        variant: "default",
-      });
-      navigate("/invoices");
-    },
-    onError: (error: Error) => {
-      console.error("Error en la mutación de creación:", error);
-      toast({
-        title: "Error al crear factura",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+  // Navegación a crear cliente
+  const navigateToClientCreation = () => {
+    // Guardar el estado actual del formulario antes de navegar
+    sessionStorage.setItem('invoiceFormData', JSON.stringify(form.getValues()));
+    
+    // Navegar a la creación de cliente
+    navigate('/clients/create?returnToInvoice=true');
+  };
   
-  // Mutación para actualizar el formulario si estamos en modo edición
-  const updateMutation = useMutation({
-    mutationFn: async (data: any) => {
-      if (!invoiceId) throw new Error("No se especificó ID de factura para actualizar");
-      
-      // Estructurar de la misma forma que createMutation para consistencia
-      const requestBody = {
-        invoice: {
-          ...data,
-          // Asegurar que los impuestos adicionales se envíen correctamente
-          additionalTaxes: data.additionalTaxes || [],
-          // Convertir campos monetarios a strings (requisito del servidor)
-          subtotal: data.subtotal?.toString() || "0",
-          tax: data.tax?.toString() || "0",
-          total: data.total?.toString() || "0",
-          // Asegurar que las fechas estén en formato correcto
-          issueDate: data.issueDate,
-          dueDate: data.dueDate
-        },
-        items: data.items || []
-      };
-      
-      console.log("📦 Cuerpo de actualización estructurado:", requestBody);
-      
-      // Usar PUT en lugar de PATCH ya que parece que el endpoint PATCH no está implementado
-      const response = await apiRequest("PUT", `/api/invoices/${invoiceId}`, requestBody);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al actualizar factura");
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
-      toast({
-        title: "Factura actualizada",
-        description: "La factura se ha actualizado correctamente",
-        variant: "default",
-      });
-      navigate("/invoices");
-    },
-    onError: (error: Error) => {
-      console.error("Error en la mutación de actualización:", error);
-      toast({
-        title: "Error al actualizar factura",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
   // Función para manejar el envío del formulario
   const onSubmit = async (data: z.infer<typeof invoiceFormSchema>) => {
-    // Validar que el formulario tenga al menos un ítem
-    const items = data.items || [];
-    
-    if (items.length === 0) {
+    try {
+      // Bloquear múltiples envíos
+      if (blockAllSubmits) {
+        console.log("Envío bloqueado: ya hay una solicitud en curso");
+        return;
+      }
+      
+      setBlockAllSubmits(true);
+      
+      // Validar elementos críticos
+      const hasClient = !!data.clientId;
+      const hasAmount = (data.subtotal || 0) > 0;
+      const hasTaxes = (data.tax || 0) > 0;
+      const hasExemptionReason = (data.notes || '').toLowerCase().includes('exento');
+      
+      // Solo validar si el usuario no ha iniciado el envío manualmente
+      if (!userInitiatedSubmit && (!hasClient || !hasAmount || (!hasTaxes && !hasExemptionReason))) {
+        // Mostrar el diálogo de validación en lugar de enviar
+        setShowValidation(true);
+        setBlockAllSubmits(false);
+        return;
+      }
+      
+      // Si llegamos aquí, el formulario pasó la validación o el usuario confirmó el envío
+      
+      // Preparar los datos para el envío
+      const payload = {
+        invoice: {
+          ...data,
+          // Asegurarse de que los valores monetarios sean strings para el servidor
+          subtotal: String(data.subtotal || 0),
+          tax: String(data.tax || 0),
+          total: String(data.total || 0),
+          // Si estamos en modo edición, incluir el ID
+          ...(isEditMode ? { id: invoiceId } : {})
+        },
+        items: data.items || []
+      };
+      
+      console.log("Enviando datos de la factura:", payload);
+      
+      if (isEditMode) {
+        // Actualizar factura existente
+        await updateMutation.mutateAsync(payload);
+      } else {
+        // Crear nueva factura
+        await createMutation.mutateAsync(payload);
+      }
+      
+      // Resetear banderas
+      setUserInitiatedSubmit(false);
+      setBlockAllSubmits(false);
+      
+    } catch (error) {
+      console.error("Error al enviar el formulario:", error);
+      
       toast({
-        title: "Faltan datos",
-        description: "Debes añadir al menos un concepto a la factura",
-        variant: "destructive",
+        title: 'Error al guardar la factura',
+        description: 'Hubo un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.',
+        variant: 'destructive',
       });
-      return;
-    }
-    
-    // Verificar si el usuario está intentando actualizar o crear
-    if (isEditMode) {
-      // Actualizar factura existente
-      updateMutation.mutate(data);
-    } else {
-      // Crear nueva factura
-      createMutation.mutate(data);
+      
+      // Resetear banderas de control
+      setUserInitiatedSubmit(false);
+      setBlockAllSubmits(false);
     }
   };
-
-  // Función para navegar a la creación de clientes
-  const navigateToClientCreation = () => {
-    // Guardar el estado actual de la factura en sessionStorage
-    sessionStorage.setItem('invoiceFormState', JSON.stringify(form.getValues()));
-    // Navegar a la creación de clientes
-    navigate('/clients/create?from=invoice');
-  };
+  
+  // Mutación para crear facturas
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/invoices", data);
+      if (!response.ok) {
+        throw new Error(`Error al crear factura: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Factura creada',
+        description: 'La factura se ha creado correctamente.',
+      });
+      
+      // Invalidar consultas relacionadas
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Navegar a la lista de facturas
+      navigate("/invoices");
+    },
+    onError: (error: Error) => {
+      console.error("Error al crear factura:", error);
+      toast({
+        title: 'Error al crear factura',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Mutación para actualizar facturas
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/invoices/${invoiceId}`, data);
+      if (!response.ok) {
+        throw new Error(`Error al actualizar factura: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Factura actualizada',
+        description: 'La factura se ha actualizado correctamente.',
+      });
+      
+      // Invalidar consultas relacionadas
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      
+      // Navegar a la lista de facturas
+      navigate("/invoices");
+    },
+    onError: (error: Error) => {
+      console.error("Error al actualizar factura:", error);
+      toast({
+        title: 'Error al actualizar factura',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   // Verificar si hay cliente seleccionado para mostrar info
   const hasSelectedClient = !!selectedClientInfo;
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto px-4 py-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           {/* Sección superior: Cliente y datos básicos */}
@@ -864,7 +871,7 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                 />
 
                 {hasSelectedClient && (
-                  <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
                     <h3 className="font-medium text-gray-700 mb-2">{selectedClientInfo.name}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                       <div><span className="font-medium">NIF/CIF:</span> {selectedClientInfo.taxId}</div>
@@ -880,9 +887,9 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     name="invoiceNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Número de factura *</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">Número de factura *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="2023-001" />
+                          <Input {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" placeholder="2023-001" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -894,16 +901,16 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Estado</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">Estado</FormLabel>
                         <FormControl>
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg">
                               <SelectValue placeholder="Selecciona estado" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white rounded-lg border border-gray-200 shadow-lg">
                               <SelectItem value="pending">
                                 <span className="flex items-center gap-2">
                                   <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -943,9 +950,9 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     name="issueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fecha de emisión *</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">Fecha de emisión *</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input type="date" {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -957,9 +964,9 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fecha de vencimiento *</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">Fecha de vencimiento *</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input type="date" {...field} className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -972,28 +979,28 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   name="paymentMethod"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Método de pago</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Método de pago</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex flex-col sm:flex-row gap-3"
+                          className="flex flex-col sm:flex-row sm:flex-wrap gap-3"
                         >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Transferencia" id="Transferencia" />
-                            <Label htmlFor="Transferencia">Transferencia</Label>
+                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                            <RadioGroupItem value="Transferencia" id="Transferencia" className="text-blue-500" />
+                            <Label htmlFor="Transferencia" className="text-sm font-medium">Transferencia</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Tarjeta" id="Tarjeta" />
-                            <Label htmlFor="Tarjeta">Tarjeta</Label>
+                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                            <RadioGroupItem value="Tarjeta" id="Tarjeta" className="text-blue-500" />
+                            <Label htmlFor="Tarjeta" className="text-sm font-medium">Tarjeta</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Efectivo" id="Efectivo" />
-                            <Label htmlFor="Efectivo">Efectivo</Label>
+                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                            <RadioGroupItem value="Efectivo" id="Efectivo" className="text-blue-500" />
+                            <Label htmlFor="Efectivo" className="text-sm font-medium">Efectivo</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Otro" id="Otro" />
-                            <Label htmlFor="Otro">Otro</Label>
+                          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                            <RadioGroupItem value="Otro" id="Otro" className="text-blue-500" />
+                            <Label htmlFor="Otro" className="text-sm font-medium">Otro</Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -1007,40 +1014,40 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notas o comentarios</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Notas o comentarios</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Añade información adicional, términos, condiciones, etc."
                           {...field}
-                          className="h-20 resize-none"
+                          className="h-20 resize-none border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Panel derecho: Impuestos y Conceptos */}
-            <div className="flex flex-col space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                    <span>Conceptos e impuestos</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-5">
+            <div className="flex flex-col space-y-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  <h3 className="flex items-center text-lg font-medium text-gray-800">
+                    <FileText className="h-5 w-5 text-blue-500 mr-2" />
+                    Conceptos e impuestos
+                  </h3>
+                </div>
+                <div className="px-6 py-5 space-y-5">
                   <div>
-                    <h4 className="text-sm font-semibold mb-2">Impuestos:</h4>
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos:</h4>
+                    <div className="flex flex-wrap gap-2 mb-4">
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         onClick={handleAddIVA}
-                        className="border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"
+                        className="border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 rounded-full px-4 shadow-sm transition-all"
                       >
                         IVA <span className="ml-1 font-bold">21%</span>
                       </Button>
@@ -1050,7 +1057,7 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         size="sm"
                         variant="outline"
                         onClick={handleAddIRPF}
-                        className="border-red-200 bg-red-50 hover:bg-red-100 text-red-700"
+                        className="border border-red-200 bg-white hover:bg-red-50 text-red-700 rounded-full px-4 shadow-sm transition-all"
                       >
                         IRPF <span className="ml-1 font-bold">-15%</span>
                       </Button>
@@ -1060,127 +1067,58 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         size="sm"
                         variant="outline"
                         onClick={handleExemptIVA}
-                        className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-full px-4 shadow-sm transition-all"
                       >
-                        Exento <span className="ml-1 font-bold">0%</span>
+                        Exento IVA
                       </Button>
                       
-                      <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
-                        <DialogTrigger asChild>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
-                          >
-                            <Plus className="h-4 w-4 mr-1" /> Otro
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Añadir impuesto personalizado</DialogTitle>
-                            <DialogDescription>
-                              Añade impuestos o retenciones específicas para esta factura.
-                            </DialogDescription>
-                          </DialogHeader>
-
-                          <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                              <Label htmlFor="tax-name">Nombre del impuesto</Label>
-                              <Input
-                                id="tax-name"
-                                placeholder="Ej. IVA, IRPF, etc."
-                                value={newTaxData.name}
-                                onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="tax-amount">Valor</Label>
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  id="tax-amount"
-                                  type="number"
-                                  placeholder="Importe o porcentaje"
-                                  min="0"
-                                  step="0.01"
-                                  value={newTaxData.amount}
-                                  onChange={(e) => setNewTaxData({...newTaxData, amount: parseFloat(e.target.value) || 0})}
-                                />
-                                <div className="flex items-center gap-2">
-                                  <Switch
-                                    id="tax-is-percentage"
-                                    checked={newTaxData.isPercentage}
-                                    onCheckedChange={(checked) => setNewTaxData({...newTaxData, isPercentage: checked})}
-                                  />
-                                  <Label htmlFor="tax-is-percentage">%</Label>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <DialogFooter className="sm:justify-end">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={() => setShowTaxDialog(false)}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button
-                              type="button"
-                              onClick={handleAddTaxFromDialog}
-                              disabled={!newTaxData.name || newTaxData.amount <= 0}
-                            >
-                              Añadir
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowTaxDialog(true)}
+                        className="border border-green-200 bg-white hover:bg-green-50 text-green-700 rounded-full px-4 shadow-sm transition-all"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Impuesto personalizado
+                      </Button>
                     </div>
-
-                    {/* Lista de impuestos adicionales aplicados */}
+                    
+                    {/* Lista de impuestos adicionales ya aplicados */}
                     {additionalTaxes.length > 0 && (
-                      <div className="space-y-2 mb-3">
-                        <h5 className="text-xs text-gray-500">Impuestos aplicados:</h5>
-                        {additionalTaxes.map((tax, index) => {
-                          // Determinar si es IRPF para aplicar estilo especial
-                          const isIRPF = tax.name?.toLowerCase().includes('irpf') || 
-                                        tax.name?.toLowerCase().includes('retención');
-                          
-                          // Calcular el importe del impuesto
-                          const taxAmount = tax.isPercentage 
-                            ? baseAmount * (tax.amount / 100) 
-                            : tax.amount;
-                          
-                          return (
-                            <div key={index} className="flex justify-between items-center text-sm p-2 border border-gray-100 bg-gray-50 rounded">
-                              <div className="flex items-center gap-1">
-                                <span className="text-gray-600">
-                                  {tax.name} {tax.isPercentage ? `(${isIRPF ? '-' : ''}${tax.amount}%)` : ''}
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos aplicados:</h4>
+                        <ul className="space-y-2">
+                          {additionalTaxes.map((tax, index) => {
+                            const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+                            
+                            return (
+                              <li key={index} className="flex justify-between items-center text-sm bg-white p-2 rounded-lg border border-gray-100">
+                                <span>
+                                  <Badge variant={isIRPF ? "destructive" : "default"} className="mr-2 bg-opacity-90">
+                                    {tax.name}
+                                  </Badge>
+                                  {tax.isPercentage ? `${tax.amount}%` : formatCurrency(tax.amount)}
                                 </span>
-                              </div>
-                              <span className={`font-medium ${isIRPF ? 'text-red-600' : 'text-gray-700'}`}>
-                                {formatCurrency(taxAmount)}
-                              </span>
-                              
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveTax(index)}
-                                className="h-6 w-6 p-0 ml-1 text-gray-400 hover:text-red-500"
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          );
-                        })}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveTax(index)}
+                                  className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       </div>
                     )}
                   </div>
                   
                   <div className="w-full">
-                    <h3 className="text-sm font-semibold mb-3">Conceptos</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Conceptos</h3>
                     <FormField
                       control={form.control}
                       name="items"
@@ -1196,25 +1134,25 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       )}
                     />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Resumen de factura */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl text-blue-600">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
+                  <h3 className="text-lg font-medium text-blue-700">
                     Resumen de la factura
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Base imponible</span>
+                  </h3>
+                </div>
+                <div className="px-6 py-5">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span className="text-gray-700">Base imponible</span>
                       <span className="font-medium">{formatCurrency(calculatedTotals.subtotal)}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">
+                    <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
+                      <span className="text-gray-700">
                         IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
                       </span>
                       <span className="font-medium">{formatCurrency(itemsTax)}</span>
@@ -1233,13 +1171,13 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                           const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
                           
                           return (
-                            <div key={index} className="flex justify-between items-center">
-                              <div className="text-gray-600">
-                                <span className="text-gray-600">
+                            <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
+                              <div className="text-gray-700">
+                                <span>
                                   {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
                                 </span>
                               </div>
-                              <span className={`font-medium ${isIRPF ? 'text-red-600' : 'text-gray-700'}`}>
+                              <span className={`font-medium ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
                                 {formatCurrency(taxAmount)}
                               </span>
                             </div>
@@ -1248,13 +1186,13 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       </>
                     )}
                     
-                    <div className="flex justify-between pt-3 font-bold">
-                      <span>Total a pagar</span>
-                      <span className="text-blue-600">{formatCurrency(calculatedTotals.total)}</span>
+                    <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
+                      <span className="font-medium text-lg">Total a pagar</span>
+                      <span className="font-bold text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1262,7 +1200,7 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
           <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
             <Button 
               type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors py-2.5"
               disabled={createMutation.isPending || updateMutation.isPending || blockAllSubmits}
             >
               {(createMutation.isPending || updateMutation.isPending) ? (
@@ -1284,8 +1222,8 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
             <Button
               type="button"
               variant="outline"
-              className="w-full"
               onClick={() => navigate("/invoices")}
+              className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg shadow-sm transition-colors py-2.5"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver
@@ -1293,6 +1231,70 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </div>
         </form>
       </Form>
+      
+      {/* Diálogo para añadir impuesto personalizado */}
+      <Dialog open={showTaxDialog} onOpenChange={setShowTaxDialog}>
+        <DialogContent className="bg-white rounded-xl shadow-lg border border-gray-100">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-medium text-gray-800">Añadir impuesto personalizado</DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Introduce los detalles del impuesto que quieres añadir a esta factura.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="taxName" className="text-sm font-medium text-gray-700">Nombre del impuesto</Label>
+              <Input 
+                id="taxName" 
+                value={newTaxData.name} 
+                onChange={(e) => setNewTaxData({...newTaxData, name: e.target.value})}
+                placeholder="Ej: IVA reducido, IGIC, etc."
+                className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="taxAmount" className="text-sm font-medium text-gray-700">Valor</Label>
+              <div className="flex items-center space-x-2">
+                <Input 
+                  id="taxAmount" 
+                  type="number" 
+                  value={newTaxData.amount}
+                  onChange={(e) => setNewTaxData({...newTaxData, amount: Number(e.target.value)})}
+                  placeholder="Importe o porcentaje"
+                  className="border border-gray-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 rounded-lg"
+                />
+                <div className="flex items-center space-x-1">
+                  <Switch 
+                    id="isPercentage" 
+                    checked={newTaxData.isPercentage}
+                    onCheckedChange={(checked) => setNewTaxData({...newTaxData, isPercentage: checked})}
+                  />
+                  <Label htmlFor="isPercentage" className="text-sm text-gray-700">Es porcentaje (%)</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowTaxDialog(false)}
+              className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleAddTaxFromDialog}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={!newTaxData.name || newTaxData.amount <= 0}
+            >
+              Añadir impuesto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Diálogo de validación (para mostrar errores o confirmar envío) */}
       <InvoiceValidationAlert 
@@ -1312,4 +1314,4 @@ const InvoiceFormFixed2 = ({ invoiceId, initialData }: InvoiceFormProps) => {
   );
 };
 
-export default InvoiceFormFixed2;
+export default InvoiceFormApple;
