@@ -814,11 +814,11 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const hasSelectedClient = !!selectedClientInfo;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+    <div className="w-full px-2 sm:px-4 py-4 sm:py-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
           {/* Sección superior: Cliente y datos básicos */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Sección Cliente */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
               <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
@@ -1033,167 +1033,165 @@ const InvoiceFormApple = ({ invoiceId, initialData }: InvoiceFormProps) => {
               </div>
             </div>
 
-            {/* Panel derecho: Impuestos y Conceptos */}
-            <div className="flex flex-col space-y-4 sm:space-y-6 lg:space-y-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
-                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                  <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
-                    <FileText className="h-5 w-5 text-blue-500 mr-2" />
-                    Conceptos e impuestos
-                  </h3>
-                </div>
-                <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos:</h4>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={handleAddIVA}
-                        className="border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 rounded-full px-4 shadow-sm transition-all"
-                      >
-                        IVA <span className="ml-1 font-bold">21%</span>
-                      </Button>
-                      
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={handleAddIRPF}
-                        className="border border-red-200 bg-white hover:bg-red-50 text-red-700 rounded-full px-4 shadow-sm transition-all"
-                      >
-                        IRPF <span className="ml-1 font-bold">-15%</span>
-                      </Button>
-                      
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={handleExemptIVA}
-                        className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-full px-4 shadow-sm transition-all"
-                      >
-                        Exento IVA
-                      </Button>
-                      
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowTaxDialog(true)}
-                        className="border border-green-200 bg-white hover:bg-green-50 text-green-700 rounded-full px-4 shadow-sm transition-all"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Impuesto personalizado
-                      </Button>
-                    </div>
+            {/* Sección conceptos e impuestos */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto] lg:col-span-2">
+              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <h3 className="flex items-center text-base sm:text-lg font-medium text-gray-800">
+                  <FileText className="h-5 w-5 text-blue-500 mr-2" />
+                  Conceptos e impuestos
+                </h3>
+              </div>
+              <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 flex-grow">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos:</h4>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAddIVA}
+                      className="border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 rounded-full px-4 shadow-sm transition-all"
+                    >
+                      IVA <span className="ml-1 font-bold">21%</span>
+                    </Button>
                     
-                    {/* Lista de impuestos adicionales ya aplicados */}
-                    {additionalTaxes.length > 0 && (
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
-                        <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos aplicados:</h4>
-                        <ul className="space-y-2">
-                          {additionalTaxes.map((tax, index) => {
-                            const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
-                            
-                            return (
-                              <li key={index} className="flex justify-between items-center text-sm bg-white p-2 rounded-lg border border-gray-100">
-                                <span>
-                                  <Badge variant={isIRPF ? "destructive" : "default"} className="mr-2 bg-opacity-90">
-                                    {tax.name}
-                                  </Badge>
-                                  {tax.isPercentage ? `${tax.amount}%` : formatCurrency(tax.amount)}
-                                </span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveTax(index)}
-                                  className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAddIRPF}
+                      className="border border-red-200 bg-white hover:bg-red-50 text-red-700 rounded-full px-4 shadow-sm transition-all"
+                    >
+                      IRPF <span className="ml-1 font-bold">-15%</span>
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleExemptIVA}
+                      className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-full px-4 shadow-sm transition-all"
+                    >
+                      Exento IVA
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowTaxDialog(true)}
+                      className="border border-green-200 bg-white hover:bg-green-50 text-green-700 rounded-full px-4 shadow-sm transition-all"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Impuesto personalizado
+                    </Button>
                   </div>
                   
-                  <div className="w-full">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">Conceptos</h3>
-                    <FormField
-                      control={form.control}
-                      name="items"
-                      render={({ field }) => (
-                        <FormItem>
-                          <InvoiceLineItems
-                            control={form.control}
-                            name="items"
-                            formState={form.formState}
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Resumen de factura */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
-                <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
-                  <h3 className="text-base sm:text-lg font-medium text-blue-700">
-                    Resumen de la factura
-                  </h3>
-                </div>
-                <div className="px-4 sm:px-6 py-4 sm:py-5 flex-grow">
-                  <div className="space-y-2 sm:space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm sm:text-base text-gray-700">Base imponible</span>
-                      <span className="font-medium text-sm sm:text-base">{formatCurrency(calculatedTotals.subtotal)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
-                      <span className="text-sm sm:text-base text-gray-700">
-                        IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
-                      </span>
-                      <span className="font-medium text-sm sm:text-base">{formatCurrency(itemsTax)}</span>
-                    </div>
-                    
-                    {/* Mostrar impuestos adicionales en el resumen */}
-                    {additionalTaxes.length > 0 && (
-                      <>
+                  {/* Lista de impuestos adicionales ya aplicados */}
+                  {additionalTaxes.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Impuestos aplicados:</h4>
+                      <ul className="space-y-2">
                         {additionalTaxes.map((tax, index) => {
-                          // Calcular el importe del impuesto
-                          const taxAmount = tax.isPercentage 
-                            ? baseAmount * (tax.amount / 100) 
-                            : tax.amount;
-                          
-                          // Verificar si es IRPF para mostrarlo como negativo
                           const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
                           
                           return (
-                            <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
-                              <div className="text-sm sm:text-base text-gray-700">
-                                <span>
-                                  {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
-                                </span>
-                              </div>
-                              <span className={`font-medium text-sm sm:text-base ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
-                                {formatCurrency(taxAmount)}
+                            <li key={index} className="flex justify-between items-center text-sm bg-white p-2 rounded-lg border border-gray-100">
+                              <span>
+                                <Badge variant={isIRPF ? "destructive" : "default"} className="mr-2 bg-opacity-90">
+                                  {tax.name}
+                                </Badge>
+                                {tax.isPercentage ? `${tax.amount}%` : formatCurrency(tax.amount)}
                               </span>
-                            </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveTax(index)}
+                                className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </li>
                           );
                         })}
-                      </>
-                    )}
-                    
-                    <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
-                      <span className="font-medium text-base sm:text-lg">Total a pagar</span>
-                      <span className="font-bold text-base sm:text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
+                      </ul>
                     </div>
+                  )}
+                </div>
+                
+                <div className="w-full">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Conceptos</h3>
+                  <FormField
+                    control={form.control}
+                    name="items"
+                    render={({ field }) => (
+                      <FormItem>
+                        <InvoiceLineItems
+                          control={form.control}
+                          name="items"
+                          formState={form.formState}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Resumen de factura */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[auto]">
+              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
+                <h3 className="text-base sm:text-lg font-medium text-blue-700">
+                  Resumen de la factura
+                </h3>
+              </div>
+              <div className="px-4 sm:px-6 py-4 sm:py-5 flex-grow">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm sm:text-base text-gray-700">Base imponible</span>
+                    <span className="font-medium text-sm sm:text-base">{formatCurrency(calculatedTotals.subtotal)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-2 bg-blue-50 bg-opacity-50 rounded-lg">
+                    <span className="text-sm sm:text-base text-gray-700">
+                      IVA ({items.length > 0 ? (items[0].taxRate + '%') : '0%'})
+                    </span>
+                    <span className="font-medium text-sm sm:text-base">{formatCurrency(itemsTax)}</span>
+                  </div>
+                  
+                  {/* Mostrar impuestos adicionales en el resumen */}
+                  {additionalTaxes.length > 0 && (
+                    <>
+                      {additionalTaxes.map((tax, index) => {
+                        // Calcular el importe del impuesto
+                        const taxAmount = tax.isPercentage 
+                          ? baseAmount * (tax.amount / 100) 
+                          : tax.amount;
+                        
+                        // Verificar si es IRPF para mostrarlo como negativo
+                        const isIRPF = tax.name?.toLowerCase().includes('irpf') || tax.name?.toLowerCase().includes('retención');
+                        
+                        return (
+                          <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isIRPF ? 'bg-red-50 bg-opacity-50' : 'bg-green-50 bg-opacity-50'}`}>
+                            <div className="text-sm sm:text-base text-gray-700">
+                              <span>
+                                {tax.name} {tax.isPercentage ? `(${tax.amount}%)` : ''}
+                              </span>
+                            </div>
+                            <span className={`font-medium text-sm sm:text-base ${isIRPF ? 'text-red-600' : 'text-green-700'}`}>
+                              {formatCurrency(taxAmount)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+                  
+                  <div className="flex justify-between items-center p-3 mt-2 bg-gray-100 rounded-lg">
+                    <span className="font-medium text-base sm:text-lg">Total a pagar</span>
+                    <span className="font-bold text-base sm:text-lg text-blue-700">{formatCurrency(calculatedTotals.total)}</span>
                   </div>
                 </div>
               </div>
