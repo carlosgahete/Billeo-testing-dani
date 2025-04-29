@@ -351,8 +351,8 @@ const DeleteInvoiceDialog = ({
   const { user } = useAuth();
   const [isPending, setIsPending] = useState(false);
   
-  // Verificar permisos: usuario es dueño de la factura o es superadmin
-  const canModifyInvoice = !invoiceUserId || invoiceUserId === user?.id || isSuperAdmin(user);
+  // Solo superadmin puede eliminar facturas
+  const canModifyInvoice = isSuperAdmin(user);
   
   // No permitir eliminar facturas con estado "paid" (cobradas)
   const isPaid = status === 'paid';
@@ -1629,8 +1629,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
         const { toast } = useToast();
         const queryClient = useQueryClient();
         
-        // Verificar permisos para modificar esta factura
-        const canModifyInvoice = invoice.userId === undefined || invoice.userId === auth.user?.id || isSuperAdmin(auth.user);
+        // Solo superadmin puede editar facturas
+        const canModifyInvoice = isSuperAdmin(auth.user);
         
         return (
           <>
@@ -1785,7 +1785,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                   <TooltipContent>
                     {canModifyInvoice 
                       ? <p>Editar factura</p> 
-                      : <p>Ponte en contacto con tu gestor para editar esta factura</p>
+                      : <p>Solo los administradores pueden editar facturas</p>
                     }
                   </TooltipContent>
                 </Tooltip>
@@ -1826,7 +1826,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Ponte en contacto con tu gestor para marcar esta factura como pagada</p>
+                      <p>Solo los administradores pueden cambiar el estado de las facturas</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1854,7 +1854,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Ponte en contacto con tu gestor para enviar esta factura por email</p>
+                        <p>Solo los administradores pueden enviar facturas por email</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -2296,10 +2296,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                                     // Obtener contexto de autenticación
                                     const auth = useAuth();
                                     
-                                    // Verificar permisos para modificar esta factura
-                                    const canModifyInvoice = invoice.userId === undefined || 
-                                                            invoice.userId === auth.user?.id || 
-                                                            isSuperAdmin(auth.user);
+                                    // Solo superadmin puede editar facturas
+                                    const canModifyInvoice = isSuperAdmin(auth.user);
                                     
                                     return (
                                       <button
@@ -2332,13 +2330,11 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                                 <TooltipContent>
                                   {(() => {
                                     const auth = useAuth();
-                                    const canModifyInvoice = invoice.userId === undefined || 
-                                                           invoice.userId === auth.user?.id || 
-                                                           isSuperAdmin(auth.user);
+                                    const canModifyInvoice = isSuperAdmin(auth.user);
                                     
                                     return canModifyInvoice 
                                       ? <p>Editar factura</p> 
-                                      : <p>Ponte en contacto con tu gestor para editar esta factura</p>;
+                                      : <p>Solo los administradores pueden editar facturas</p>;
                                   })()}
                                 </TooltipContent>
                               </Tooltip>
