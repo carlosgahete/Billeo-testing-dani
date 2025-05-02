@@ -68,8 +68,8 @@ import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 import RepairInvoiceButton from "./RepairInvoiceButton";
 
 // Función optimizada para forzar la actualización de datos
-const forceDataRefresh = async () => {
-  const { toast } = useToast();
+// Recibe toast como parámetro para no depender del hook useToast
+const forceDataRefresh = async (toastFn?: any) => {
   console.log("🔄 Iniciando actualización optimizada de datos...");
   
   try {
@@ -88,21 +88,25 @@ const forceDataRefresh = async () => {
     const event = new Event('updateInvoices');
     window.dispatchEvent(event);
     
-    // Mostrar notificación de éxito
-    toast({
-      title: "Actualizado",
-      description: "Lista de facturas actualizada correctamente",
-      variant: "default",
-    });
+    // Mostrar notificación de éxito si tenemos la función toast
+    if (toastFn) {
+      toastFn({
+        title: "Actualizado",
+        description: "Lista de facturas actualizada correctamente",
+        variant: "default",
+      });
+    }
   } catch (error) {
     console.error("❌ Error durante la actualización forzada:", error);
     
-    // Mostrar notificación de error
-    toast({
-      title: "Error",
-      description: "No se pudo actualizar la lista de facturas",
-      variant: "destructive",
-    });
+    // Mostrar notificación de error si tenemos la función toast
+    if (toastFn) {
+      toastFn({
+        title: "Error",
+        description: "No se pudo actualizar la lista de facturas",
+        variant: "destructive",
+      });
+    }
     
     // Intentar con el método tradicional de React Query en caso de error
     queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
@@ -383,7 +387,7 @@ const DeleteInvoiceDialog = ({
       onConfirm();
       
       // Actualizar la interfaz inmediatamente sin esperar refrescos
-      forceDataRefresh();
+      forceDataRefresh(toast);
       
       // Actualizar la vista sin redireccionar completamente para una experiencia más rápida
       // Disparamos eventos personalizados para actualizar los datos
@@ -609,7 +613,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
         // Actualizar también el dashboard para mantener consistencia
         console.log("🔄 Actualizando dashboard...");
         queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] });
-        forceDashboardRefresh();
+        forceDashboardRefresh({ silentMode: true });
         
         // Mostrar notificación de éxito
         toast({
