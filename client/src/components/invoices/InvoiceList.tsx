@@ -2330,7 +2330,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                                 <TooltipContent>
                                   {(() => {
                                     const auth = useAuth();
-                                    const canModifyInvoice = isSuperAdmin(auth.user);
+                                    // Usar la función del contexto de autenticación que ya considera originalAdmin
+                                    const canModifyInvoice = auth.hasAdminPrivileges();
                                     
                                     return canModifyInvoice 
                                       ? <p>Editar factura</p> 

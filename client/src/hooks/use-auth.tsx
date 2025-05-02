@@ -7,6 +7,7 @@ import {
 import { User as SelectUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { isSuperAdmin } from "@/lib/is-superadmin";
 
 type LoginData = {
   username: string;
@@ -336,36 +337,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Función para verificar si el usuario tiene privilegios administrativos
   const hasAdminPrivileges = useCallback(() => {
-    // Importación dinámica para asegurar que el módulo se carga correctamente
-    try {
-      // Usar la función centralizada de verificación de superadmin
-      const { isSuperAdmin } = require('@/lib/is-superadmin');
-      return isSuperAdmin(user, originalAdmin);
-    } catch (error) {
-      console.error("Error al importar la función isSuperAdmin:", error);
-      
-      // Fallback a la implementación antigua si hay error en la importación
-      // Si tenemos un originalAdmin con privilegios de superadmin
-      if (originalAdmin && originalAdmin.isSuperAdmin) {
-        console.log("Usuario tiene privilegios de administrador por ser admin original");
-        return true;
-      }
-      
-      // Si el usuario actual es superadmin por su rol
-      if (user && (user.role === 'superadmin' || user.role === 'SUPERADMIN')) {
-        console.log("Usuario tiene privilegios de administrador por su rol");
-        return true;
-      }
-      
-      // Si el usuario actual es superadmin por su username (lista blanca)
-      const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
-      if (user && user.username && SUPERADMIN_USERNAMES.includes(user.username)) {
-        console.log("Usuario tiene privilegios de administrador por su username");
-        return true;
-      }
-      
-      return false;
+    // Usar directamente la función centralizada importada al inicio del archivo
+    const result = isSuperAdmin(user, originalAdmin);
+    
+    if (result) {
+      console.log("Usuario tiene privilegios de administrador", 
+        originalAdmin ? "por ser admin original" : 
+        user?.role === 'superadmin' ? "por su rol" : 
+        "por su username");
     }
+    
+    return result;
   }, [user, originalAdmin]);
 
   return (
