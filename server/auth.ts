@@ -98,6 +98,14 @@ export const requireAuth = async (req: any, res: any, next: any) => {
   });
 };
 
+// Obtener información del admin original si existe en la sesión
+export const getOriginalAdminInfo = (req: any) => {
+  if (req.session && req.session.originalAdmin) {
+    return req.session.originalAdmin;
+  }
+  return null;
+};
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'financial-app-secret-key',

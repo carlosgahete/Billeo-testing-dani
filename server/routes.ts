@@ -732,7 +732,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "ID de usuario inválido" });
       }
       
-      const adminId = (req.user as any).id;
+      // Guardar información del administrador original
+      const adminUser = req.user as any;
+      const adminId = adminUser.id;
+      
+      // Verificar si el admin es superadmin
+      const isSuperAdmin = 
+        adminUser.role === 'superadmin' || 
+        adminUser.role === 'SUPERADMIN' || 
+        adminUser.username === 'Superadmin' ||
+        adminUser.username === 'billeo_admin';
+      
+      const isAdmin = adminUser.role === 'admin' || adminUser.role === 'ADMIN';
+      
       const result = await storage.loginAsUser(adminId, targetUserId);
       
       if (!result.success) {
@@ -745,7 +757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
       
-      // Cerrar la sesión actual y crear una nueva con el usuario objetivo
+      // Cerrar la sesión actual y crear una nueva con el usuario objetivo, pero mantener privilegios
       req.logout((err) => {
         if (err) {
           console.error("Error al cerrar sesión:", err);
@@ -756,6 +768,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (err) {
             console.error("Error al iniciar sesión como usuario:", err);
             return res.status(500).json({ message: "Error al iniciar sesión como usuario" });
+          }
+          
+          // NUEVO: Guardar información del admin original en la sesión
+          if (req.session) {
+            req.session.originalAdmin = {
+              id: adminId,
+              username: adminUser.username,
+              role: adminUser.role,
+              isSuperAdmin: isSuperAdmin,
+              isAdmin: isAdmin
+            };
+            console.log(`Guardando información de administrador original en sesión: ${JSON.stringify(req.session.originalAdmin)}`);
           }
           
           // Omitir la contraseña en la respuesta
@@ -967,12 +991,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Keep compatibility with old auth endpoint
   app.get("/api/auth/session", async (req, res) => {
+    // Obtener información del admin original (si existe)
+    const originalAdmin = req.session?.originalAdmin;
+    
     // Verificar si el usuario está autenticado mediante passport
     if (req.isAuthenticated()) {
       const { password, ...userWithoutPassword } = req.user as any;
       return res.status(200).json({
         authenticated: true,
-        user: userWithoutPassword
+        user: userWithoutPassword,
+        // Incluir información del admin original si existe
+        originalAdmin: originalAdmin || null
       });
     }
     
@@ -984,7 +1013,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { password, ...userWithoutPassword } = user;
           return res.status(200).json({
             authenticated: true,
-            user: userWithoutPassword
+            user: userWithoutPassword,
+            // Incluir información del admin original si existe
+            originalAdmin: originalAdmin || null
           });
         }
       } catch (error) {

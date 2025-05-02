@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
+import { getOriginalAdminInfo } from './auth';
 
 // Lista de usernames de superadmin
 const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
@@ -24,6 +25,73 @@ export const isSuperAdmin = (user: any): boolean => {
 };
 
 /**
+ * Verifica si un usuario tiene permisos de administrador considerando también
+ * si está accediendo como cliente pero realmente es admin/superadmin
+ */
+export const hasAdminPrivileges = (req: Request): boolean => {
+  // Verificar si el usuario actual es admin/superadmin
+  if (req.user && isSuperAdmin(req.user)) {
+    return true;
+  }
+  
+  // Verificar si hay información de admin original en la sesión
+  const originalAdmin = getOriginalAdminInfo(req);
+  if (originalAdmin && originalAdmin.isSuperAdmin) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
+ * Middleware general para verificar privilegios de administrador,
+ * incluyendo cuando un admin ha iniciado sesión como otro usuario
+ */
+export const requireAdminPrivileges = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Verificar autenticación básica
+    if (!req.session || (!req.session.userId && !req.user)) {
+      return res.status(401).json({ message: 'No autenticado. Por favor inicie sesión.' });
+    }
+    
+    // Verificar si hay información de admin original en la sesión
+    const originalAdmin = getOriginalAdminInfo(req);
+    if (originalAdmin && originalAdmin.isSuperAdmin) {
+      console.log(`✅ Acceso permitido por privilegios originales: ${originalAdmin.username} (admin/superadmin) está viendo como cliente`);
+      return next();
+    }
+    
+    // Obtener el usuario actual si no está ya disponible
+    let currentUser = req.user;
+    if (!currentUser && req.session.userId) {
+      currentUser = await storage.getUser(req.session.userId);
+    }
+    
+    if (!currentUser) {
+      return res.status(401).json({ message: 'No autenticado. Por favor inicie sesión.' });
+    }
+    
+    // Verificar si el usuario actual es admin/superadmin
+    if (isSuperAdmin(currentUser)) {
+      console.log(`✅ Acceso permitido: ${currentUser.username} es admin/superadmin`);
+      req.user = currentUser; // Asegurar que el usuario esté disponible
+      return next();
+    }
+    
+    // Si no es admin ni superadmin original, denegar acceso
+    console.log(`❌ Acceso denegado: ${currentUser.username} no tiene privilegios administrativos`);
+    return res.status(403).json({ 
+      message: 'Acceso denegado. Solo los administradores pueden realizar esta acción.'
+    });
+  } catch (error) {
+    console.error('Error en middleware requireAdminPrivileges:', error);
+    return res.status(500).json({ 
+      message: 'Error interno al verificar permisos de administrador'
+    });
+  }
+};
+
+/**
  * Middleware para requerir rol de superadmin
  */
 export const requireSuperAdmin = async (req: Request, res: Response, next: NextFunction) => {
@@ -31,6 +99,13 @@ export const requireSuperAdmin = async (req: Request, res: Response, next: NextF
     // Primero verificar autenticación
     if (!req.session || (!req.session.userId && !req.user)) {
       return res.status(401).json({ message: 'No autenticado. Por favor inicie sesión.' });
+    }
+    
+    // Verificar si hay información de admin original en la sesión
+    const originalAdmin = getOriginalAdminInfo(req);
+    if (originalAdmin && originalAdmin.isSuperAdmin) {
+      console.log(`✅ Acceso permitido por privilegios originales: Admin original ${originalAdmin.username} es superadmin`);
+      return next();
     }
     
     // Obtener el usuario actual
@@ -77,6 +152,13 @@ export const canEditInvoice = async (req: Request, res: Response, next: NextFunc
     // Verificar autenticación
     if (!req.session || (!req.session.userId && !req.user)) {
       return res.status(401).json({ message: 'No autenticado. Por favor inicie sesión.' });
+    }
+    
+    // Verificar si hay información de admin original en la sesión
+    const originalAdmin = getOriginalAdminInfo(req);
+    if (originalAdmin && originalAdmin.isSuperAdmin) {
+      console.log(`✅ Acceso permitido a factura por privilegios originales: Admin original ${originalAdmin.username} es superadmin`);
+      return next();
     }
     
     // Obtener el ID de la factura
