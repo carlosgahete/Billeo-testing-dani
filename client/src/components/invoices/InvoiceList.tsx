@@ -2296,8 +2296,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
                                     // Obtener contexto de autenticación
                                     const auth = useAuth();
                                     
-                                    // Solo superadmin puede editar facturas
-                                    const canModifyInvoice = isSuperAdmin(auth.user);
+                                    // Verificar permisos usando la función centralizada que considera originalAdmin
+                                    const canModifyInvoice = auth.hasAdminPrivileges();
                                     
                                     return (
                                       <button

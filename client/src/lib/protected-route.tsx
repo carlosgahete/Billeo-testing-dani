@@ -123,12 +123,10 @@ function ProtectedAdminRouteGuard({
     );
   }
   
-  // Si el usuario no es administrador, redirigir al dashboard
-  if (user.role !== 'admin' && 
-      user.role !== 'superadmin' && 
-      user.role !== 'SUPERADMIN' && 
-      user.username !== 'Superadmin' &&
-      user.username !== 'billeo_admin') {
+  // Usar la función centralizada que también considera originalAdmin
+  const { hasAdminPrivileges } = useAuth();
+  
+  if (!hasAdminPrivileges()) {
     console.log(`⛔ ProtectedAdminRouteGuard: Acceso denegado a ${route} - Usuario ${user.username} no tiene permisos de administrador (Redirigiendo...)`);
     
     return (

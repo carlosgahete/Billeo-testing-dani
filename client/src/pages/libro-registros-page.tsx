@@ -7,8 +7,8 @@ import { FileText, BarChart3, PieChart, ArrowLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const LibroRegistrosSelector: React.FC = () => {
-  const { user } = useAuth();
-  const hasAccess = user && (user.role === 'superadmin' || user.role === 'SUPERADMIN' || user.role === 'admin');
+  const { user, hasAdminPrivileges } = useAuth();
+  const hasAccess = hasAdminPrivileges();
 
   if (!hasAccess) {
     return (
