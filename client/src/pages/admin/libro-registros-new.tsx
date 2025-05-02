@@ -101,7 +101,7 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
   // Usar los parámetros pasados por prop o por URL
   const params = propsParams || urlParams;
   const userId = params?.userId || '';
-  const { user } = useAuth();
+  const { user, hasAdminPrivileges } = useAuth();
   
   // Estado para el selector de usuarios con búsqueda
   const [userSearchTerm, setUserSearchTerm] = useState<string>("");
@@ -115,17 +115,10 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
   // Verificar si el usuario está intentando acceder a su propio libro de registros
   const isViewingSelf = params?.userId && parseInt(params.userId) === user.id;
   
-  // Si se está forzando que solo vea sus propios datos (desde /mis-registros),
-  // no necesitamos más comprobaciones de seguridad
-  if (forceOwnUser) {
-    console.log("Forzando acceso a los propios datos del usuario");
-    // No redireccionamos ni bloqueamos - permitimos acceso
-  }
-  // Usar la función centralizada que considera originalAdmin para verificar permisos
-  const { hasAdminPrivileges } = useAuth();
+  // Verificación de seguridad: sólo permitir acceso a los propios datos o si es admin
+  const accessAllowed = forceOwnUser || isViewingSelf || hasAdminPrivileges();
   
-  // Si no es un admin ni está viendo su propio libro, redireccionar
-  if (!isViewingSelf && !hasAdminPrivileges()) {
+  if (!accessAllowed) {
     console.log("Acceso denegado - no es admin ni está viendo sus propios datos");
     return <Redirect to="/" />;
   }
@@ -206,7 +199,7 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
     };
     
     fetchUsersList();
-  }, [user, userId, setLocation]);
+  }, [user, userId, setLocation, hasAdminPrivileges]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -261,7 +254,7 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
       setLoading(false);
       setError("No se pudieron cargar los datos del libro de registros");
     }
-  }, [userId, user]);
+  }, [userId, user, hasAdminPrivileges]);
 
   if (loading) {
     return (
