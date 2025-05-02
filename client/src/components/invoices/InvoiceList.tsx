@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { isSuperAdmin } from "@/lib/is-superadmin";
 import { generateInvoicePDFBlob, generateInvoicePDF } from "@/lib/pdf";
 import { formatInvoiceFileName, downloadFilteredInvoicesAsZip } from "@/lib/zipService";
 import { notifyDashboardUpdate, forceDashboardRefresh } from "@/lib/dashboard-helpers";
@@ -70,6 +69,7 @@ import RepairInvoiceButton from "./RepairInvoiceButton";
 
 // Función optimizada para forzar la actualización de datos
 const forceDataRefresh = async () => {
+  const { toast } = useToast();
   console.log("🔄 Iniciando actualización optimizada de datos...");
   
   try {
@@ -348,11 +348,11 @@ const DeleteInvoiceDialog = ({
   onConfirm: () => void | Promise<void>; 
 }) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const auth = useAuth();
   const [isPending, setIsPending] = useState(false);
   
   // Solo superadmin puede eliminar facturas
-  const canModifyInvoice = isSuperAdmin(user);
+  const canModifyInvoice = auth.hasAdminPrivileges();
   
   // No permitir eliminar facturas con estado "paid" (cobradas)
   const isPaid = status === 'paid';
@@ -1630,7 +1630,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onYearFilterChange }) => {
         const queryClient = useQueryClient();
         
         // Solo superadmin puede editar facturas
-        const canModifyInvoice = isSuperAdmin(auth.user);
+        const canModifyInvoice = auth.hasAdminPrivileges();
         
         return (
           <>
