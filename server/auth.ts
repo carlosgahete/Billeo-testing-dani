@@ -106,6 +106,24 @@ export const getOriginalAdminInfo = (req: any) => {
   return null;
 };
 
+/**
+ * Función auxiliar para extraer los datos de usuario desde la base de datos
+ * y devolver un objeto usuario sin la contraseña
+ */
+export async function getUserDataSafely(userId: number) {
+  try {
+    const user = await storage.getUser(userId);
+    if (!user) return null;
+    
+    // Crear una copia sin la contraseña
+    const { password, ...safeUser } = user;
+    return safeUser;
+  } catch (error) {
+    console.error("Error obteniendo datos de usuario:", error);
+    return null;
+  }
+}
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'financial-app-secret-key',
@@ -412,6 +430,51 @@ export function setupAuth(app: Express) {
         }
       });
     });
+  });
+
+  // Nueva ruta para obtener información completa de la sesión (usuario y admin original)
+  app.get("/api/auth/session", async (req, res) => {
+    console.log("Recibida petición a /api/auth/session en auth.ts");
+    
+    try {
+      // Verificamos si el usuario está autenticado
+      const isAuthenticated = req.isAuthenticated() || (req.session && req.session.userId);
+      if (!isAuthenticated) {
+        return res.status(200).json({
+          authenticated: false,
+          user: null,
+          originalAdmin: null
+        });
+      }
+      
+      // Obtenemos el ID del usuario actual
+      const userId = req.user?.id || req.session.userId;
+      if (!userId) {
+        return res.status(200).json({
+          authenticated: false,
+          user: null,
+          originalAdmin: null
+        });
+      }
+      
+      // Obtenemos los datos del usuario sin la contraseña
+      const user = await getUserDataSafely(userId);
+      
+      // Obtenemos la información del admin original si existe
+      const originalAdmin = getOriginalAdminInfo(req);
+      
+      return res.status(200).json({
+        authenticated: true,
+        user,
+        originalAdmin
+      });
+    } catch (error) {
+      console.error("Error en /api/auth/session:", error);
+      return res.status(500).json({
+        authenticated: false,
+        error: "Error interno al obtener información de sesión"
+      });
+    }
   });
 
   app.get("/api/user", async (req, res) => {

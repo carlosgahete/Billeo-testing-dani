@@ -19,14 +19,26 @@ type RegisterData = LoginData & {
   role?: string;
 };
 
+// Tipo para información del administrador original
+type OriginalAdmin = {
+  id: number;
+  username: string;
+  role: string;
+  isSuperAdmin: boolean;
+  isAdmin: boolean;
+};
+
 type AuthContextType = {
   user: SelectUser | null;
+  originalAdmin: OriginalAdmin | null; // Información del admin original
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<Omit<SelectUser, "password">, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<Omit<SelectUser, "password">, Error, RegisterData>;
   refreshUser: () => void;
+  // Función para verificar si el usuario tiene privilegios administrativos
+  hasAdminPrivileges: () => boolean;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,15 +46,42 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
+  // Usamos una consulta personalizada para obtener tanto el usuario como la información de admin original
   const {
-    data: user,
+    data: authData,
     error,
     isLoading,
     refetch
-  } = useQuery<SelectUser | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+  } = useQuery<{ user: SelectUser | null, originalAdmin: OriginalAdmin | null }, Error>({
+    queryKey: ["/api/auth/session"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/session", {
+        credentials: "include"
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          return { user: null, originalAdmin: null };
+        }
+        throw new Error("Error al obtener información de sesión");
+      }
+      
+      const data = await res.json();
+      
+      if (!data.authenticated) {
+        return { user: null, originalAdmin: null };
+      }
+      
+      return { 
+        user: data.user || null, 
+        originalAdmin: data.originalAdmin || null 
+      };
+    }
   });
+  
+  // Extraer usuario y admin original del resultado de la consulta
+  const user = authData?.user || null;
+  const originalAdmin = authData?.originalAdmin || null;
   
   // Efecto para cargar los datos de la empresa al iniciar la app si el usuario está autenticado
   useEffect(() => {
@@ -282,16 +321,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Función para verificar si el usuario tiene privilegios administrativos
+  const hasAdminPrivileges = useCallback(() => {
+    // Si tenemos un originalAdmin con privilegios de superadmin
+    if (originalAdmin && originalAdmin.isSuperAdmin) {
+      console.log("Usuario tiene privilegios de administrador por ser admin original");
+      return true;
+    }
+    
+    // Si el usuario actual es superadmin por su rol
+    if (user && (user.role === 'superadmin' || user.role === 'SUPERADMIN')) {
+      console.log("Usuario tiene privilegios de administrador por su rol");
+      return true;
+    }
+    
+    // Si el usuario actual es superadmin por su username (lista blanca)
+    const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
+    if (user && user.username && SUPERADMIN_USERNAMES.includes(user.username)) {
+      console.log("Usuario tiene privilegios de administrador por su username");
+      return true;
+    }
+    
+    return false;
+  }, [user, originalAdmin]);
+
   return (
     <AuthContext.Provider
       value={{
         user: user ?? null,
+        originalAdmin: originalAdmin ?? null,
         isLoading,
         error,
         loginMutation,
         logoutMutation,
         registerMutation,
-        refreshUser
+        refreshUser,
+        hasAdminPrivileges
       }}
     >
       {children}
