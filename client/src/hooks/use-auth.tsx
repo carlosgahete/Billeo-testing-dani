@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Función para refrescar manualmente los datos del usuario
   const refreshUser = useCallback(() => {
     console.log('Refrescando datos del usuario...');
-    queryClient.invalidateQueries({queryKey: ["/api/user"]});
+    queryClient.invalidateQueries({queryKey: ["/api/auth/session"]});
     refetch();
     
     // También cargar datos de la empresa si el usuario está autenticado
@@ -184,6 +184,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Actualizar caché de forma inmediata
       queryClient.setQueryData(["/api/user"], userData);
+      
+      // Actualizar también la caché de la sesión
+      queryClient.setQueryData(["/api/auth/session"], {
+        authenticated: true,
+        user: userData,
+        originalAdmin: null
+      });
       
       // Configurar el header global para todas las solicitudes fetch
       const originalFetch = window.fetch;
@@ -297,7 +304,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
+      // Limpiar toda la información de sesión
       queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/auth/session"], {
+        authenticated: false,
+        user: null,
+        originalAdmin: null
+      });
       
       // Limpiar datos de empresa del sessionStorage al cerrar sesión
       try {
@@ -323,26 +336,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Función para verificar si el usuario tiene privilegios administrativos
   const hasAdminPrivileges = useCallback(() => {
-    // Si tenemos un originalAdmin con privilegios de superadmin
-    if (originalAdmin && originalAdmin.isSuperAdmin) {
-      console.log("Usuario tiene privilegios de administrador por ser admin original");
-      return true;
+    // Importación dinámica para asegurar que el módulo se carga correctamente
+    try {
+      // Usar la función centralizada de verificación de superadmin
+      const { isSuperAdmin } = require('@/lib/is-superadmin');
+      return isSuperAdmin(user, originalAdmin);
+    } catch (error) {
+      console.error("Error al importar la función isSuperAdmin:", error);
+      
+      // Fallback a la implementación antigua si hay error en la importación
+      // Si tenemos un originalAdmin con privilegios de superadmin
+      if (originalAdmin && originalAdmin.isSuperAdmin) {
+        console.log("Usuario tiene privilegios de administrador por ser admin original");
+        return true;
+      }
+      
+      // Si el usuario actual es superadmin por su rol
+      if (user && (user.role === 'superadmin' || user.role === 'SUPERADMIN')) {
+        console.log("Usuario tiene privilegios de administrador por su rol");
+        return true;
+      }
+      
+      // Si el usuario actual es superadmin por su username (lista blanca)
+      const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
+      if (user && user.username && SUPERADMIN_USERNAMES.includes(user.username)) {
+        console.log("Usuario tiene privilegios de administrador por su username");
+        return true;
+      }
+      
+      return false;
     }
-    
-    // Si el usuario actual es superadmin por su rol
-    if (user && (user.role === 'superadmin' || user.role === 'SUPERADMIN')) {
-      console.log("Usuario tiene privilegios de administrador por su rol");
-      return true;
-    }
-    
-    // Si el usuario actual es superadmin por su username (lista blanca)
-    const SUPERADMIN_USERNAMES = ['admin', 'danielperla', 'perlancelot', 'billeo_admin', 'Superadmin'];
-    if (user && user.username && SUPERADMIN_USERNAMES.includes(user.username)) {
-      console.log("Usuario tiene privilegios de administrador por su username");
-      return true;
-    }
-    
-    return false;
   }, [user, originalAdmin]);
 
   return (
