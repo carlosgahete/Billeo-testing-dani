@@ -122,13 +122,9 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
     // No redireccionamos ni bloqueamos - permitimos acceso
   }
   // Si no es un admin ni está viendo su propio libro, redireccionar
-  else if (!isViewingSelf && (
-    user.role !== 'superadmin' && 
-    user.role !== 'SUPERADMIN' && 
-    user.role !== 'admin' &&
-    user.username !== 'Superadmin' &&
-    user.username !== 'billeo_admin'
-  )) {
+  // Usar la función centralizada que considera originalAdmin
+  const { hasAdminPrivileges } = useAuth();
+  else if (!isViewingSelf && !hasAdminPrivileges()) {
     console.log("Acceso denegado - no es admin ni está viendo sus propios datos");
     return <Redirect to="/" />;
   }

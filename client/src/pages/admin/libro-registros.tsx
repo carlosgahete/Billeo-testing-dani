@@ -103,13 +103,14 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
   const [sortColumn, setSortColumn] = useState<string>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
-  // Verificación de permisos - permitir acceso a superadmin y admin
-  if (!user || (user.role !== "admin" && user.role !== "superadmin" && user.role !== "SUPERADMIN")) {
+  // Verificación de permisos usando la función centralizada que considera originalAdmin
+  const { hasAdminPrivileges } = useAuth();
+  if (!hasAdminPrivileges()) {
     return <Redirect to="/auth" />;
   }
   
-  // Variable para determinar si el usuario actual es superadmin
-  const isSuperAdmin = user && (user.role === "superadmin" || user.role === "SUPERADMIN" || user.username === "billeo_admin" || user.username === "Superadmin");
+  // Variable para determinar si el usuario actual es superadmin usando la función centralizada
+  const isSuperAdmin = hasAdminPrivileges();
   
   // Estado para clientes asignados (solo para administradores no superadmin)
   const [assignedClients, setAssignedClients] = useState<any[]>([]);
