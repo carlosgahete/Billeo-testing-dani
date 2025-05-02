@@ -121,10 +121,11 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
     console.log("Forzando acceso a los propios datos del usuario");
     // No redireccionamos ni bloqueamos - permitimos acceso
   }
-  // Si no es un admin ni está viendo su propio libro, redireccionar
-  // Usar la función centralizada que considera originalAdmin
+  // Usar la función centralizada que considera originalAdmin para verificar permisos
   const { hasAdminPrivileges } = useAuth();
-  else if (!isViewingSelf && !hasAdminPrivileges()) {
+  
+  // Si no es un admin ni está viendo su propio libro, redireccionar
+  if (!isViewingSelf && !hasAdminPrivileges()) {
     console.log("Acceso denegado - no es admin ni está viendo sus propios datos");
     return <Redirect to="/" />;
   }
@@ -136,9 +137,10 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
         return;
       }
       
-      // Determinar si el usuario es admin o superadmin
-      const isAdmin = user.role === 'admin' || user.role === 'superadmin' || 
-                     user.username === 'Superadmin' || user.username === 'billeo_admin';
+      // Determinar si el usuario tiene privilegios administrativos usando la función centralizada
+      const isAdmin = hasAdminPrivileges();
+      // En este caso, consideramos superadmin igual que admin para simplificar
+      const isSuperAdmin = isAdmin;
       
       if (!isAdmin) {
         return;
@@ -149,7 +151,8 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
         
         // Para superadmin cargamos todos los usuarios
         // Para admin normal cargamos solo los clientes asignados
-        const apiUrl = user.role === 'superadmin' || user.username === 'Superadmin' || user.username === 'billeo_admin' 
+        // Usamos la función isSuperAdmin para determinar el tipo de permiso
+        const apiUrl = isSuperAdmin 
           ? '/api/admin/users' 
           : '/api/admin/assigned-clients';
           
@@ -211,12 +214,8 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
         setLoading(true);
         setError(null);
         
-        // Detectar si es superadmin para saber cómo manejar el userId
-        const isSuperAdmin = 
-          user?.role === 'superadmin' || 
-          user?.role === 'SUPERADMIN' || 
-          user?.username === 'Superadmin' ||
-          user?.username === 'billeo_admin';
+        // Detectar si es superadmin usando la función centralizada
+        const isSuperAdmin = hasAdminPrivileges();
         
         // Si no se especifica userId (o es vacío), usamos el ID del usuario actual
         let idToUse = userId;
