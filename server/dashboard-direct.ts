@@ -111,8 +111,14 @@ export function registerDirectDashboardEndpoint(app: Express) {
       
       console.log(`📊 Solicitando datos fiscales: año=${year || 'todos'}, periodo=${period || 'todos'}`);
       
-      // Obtener el ID del usuario autenticado
+      // Obtener el ID del usuario para el que se mostrarán los datos
       const userId = req.session?.userId || 1; // Defaultear a 1 en caso de que no haya sesión
+      
+      // Verificar si hay un administrador original viendo como cliente
+      const originalAdmin = req.session?.originalAdmin;
+      if (originalAdmin) {
+        console.log(`📊 Admin original ${originalAdmin.username} está viendo los datos del usuario ${userId}`);
+      }
       
       // Obtener datos de facturas
       const invoices = await storage.getInvoicesByUserId(userId);

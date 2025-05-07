@@ -215,9 +215,14 @@ async function fetchDashboardData(
   // Generar parámetros para evitar caché
   const randomParam = Math.random().toString(36).substring(2, 15);
   const timestamp = new Date().getTime();
+  
+  // Verificar si somos un administrador viendo como otro usuario
+  const adminInfo = sessionStorage.getItem('admin_viewing_as_user');
+  const isAdminViewingAsUser = !!adminInfo;
+  
   const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}&_t=${timestamp}`;
   
-  console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", url);
+  console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", url, isAdminViewingAsUser ? "(Admin viendo como usuario)" : "");
   
   // Realizar petición al servidor
   const response = await fetch(url, {
@@ -230,7 +235,8 @@ async function fetchDashboardData(
       'X-Dashboard-Year': year,
       'X-Dashboard-Period': period,
       'X-Force-Refresh': 'true',
-      'X-Random': randomParam
+      'X-Random': randomParam,
+      'X-Admin-Viewing': isAdminViewingAsUser ? 'true' : 'false'
     }
   });
   

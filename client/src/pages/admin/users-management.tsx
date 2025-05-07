@@ -164,9 +164,29 @@ export default function UsersManagement() {
           description: `Sesión iniciada como ${data.user.name}`,
         });
         
+        // Guardar información de admin original en sessionStorage para uso en el cliente
+        if (data.originalAdmin) {
+          console.log("Guardando información de admin original en sessionStorage", data.originalAdmin);
+          sessionStorage.setItem('admin_viewing_as_user', JSON.stringify(data.originalAdmin));
+        } else {
+          console.log("No se recibió información de admin original");
+        }
+        
         // Actualizar el usuario en la caché de react-query
         queryClient.setQueryData(["/api/user"], data.user);
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        
+        // Invalidar caché de dashboard para forzar recarga con nuevo usuario
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard-direct'] });
+        
+        // Limpiar caché de dashboard en sessionStorage
+        Object.keys(sessionStorage).forEach(key => {
+          if (key.startsWith('dashboard_cache_')) {
+            console.log(`Eliminando caché de dashboard: ${key}`);
+            sessionStorage.removeItem(key);
+          }
+        });
+        
         window.location.href = "/"; // Redireccionar al inicio
       } else {
         const errorData = await response.json();
