@@ -117,17 +117,27 @@ export function registerDirectDashboardEndpoint(app: Express) {
       // Obtener el ID del usuario para el que se mostrarán los datos
       let userId: number;
       
-      // Si el usuario está autenticado, usar su ID real
-      if (req.user) {
+      // 1. Verificar si está en la URL (parámetro explícito)
+      if (req.query.userId) {
+        userId = parseInt(req.query.userId as string, 10);
+        console.log(`📊 Usando ID de usuario de URL: ${userId}`);
+      }
+      // 2. Verificar si está en el header X-User-ID (enviado desde el cliente frontend)
+      else if (req.headers['x-user-id']) {
+        userId = parseInt(req.headers['x-user-id'] as string, 10);
+        console.log(`📊 Usando ID de usuario del header X-User-ID: ${userId}`);
+      } 
+      // 3. Si el usuario está autenticado, usar su ID real
+      else if (req.user) {
         userId = (req.user as any).id;
         console.log(`📊 Usando ID de usuario autenticado: ${userId}`);
       } 
-      // Si hay un ID en la sesión, usarlo
+      // 4. Si hay un ID en la sesión, usarlo
       else if (req.session?.userId) {
         userId = req.session.userId;
         console.log(`📊 Usando ID de usuario en sesión: ${userId}`);
       }
-      // Como último recurso, si no hay autenticación, usar el usuario demo
+      // 5. Como último recurso, si no hay autenticación, usar el usuario demo
       else {
         userId = 1; // Usuario demo como fallback
         console.log(`📊 Usando ID de usuario demo por defecto: ${userId}`);
@@ -139,9 +149,30 @@ export function registerDirectDashboardEndpoint(app: Express) {
         console.log(`📊 Admin original ${originalAdmin.username} está viendo los datos del usuario ${userId}`);
       }
       
+      // Validación adicional para depuración
+      const headerKeys = Object.keys(req.headers).filter(key => 
+        key.toLowerCase().includes('user') || 
+        key.toLowerCase().includes('auth') || 
+        key.toLowerCase().includes('session')
+      );
+      
+      console.log("📊 Headers relacionados con autenticación:", headerKeys);
+      console.log("📊 Cookies disponibles:", req.headers.cookie ? "Sí" : "No");
+      
+      // Registrar parámetros de URL para diagnóstico
+      console.log("📊 Parámetros de URL:", Object.keys(req.query).map(k => `${k}=${req.query[k]}`).join(", "));
+      
+      // Información de diagnóstico adicional
+      console.log(`📊 ID DEFINITIVO USADO PARA CARGAR DATOS: ${userId}`);
+      console.log(`📊 SESSIÓN ID: ${req.sessionID || 'No disponible'}`);
+      console.log(`📊 USUARIO AUTENTICADO: ${req.isAuthenticated() ? 'Sí' : 'No'}`);
+      
       // Obtener datos de facturas
       const invoices = await storage.getInvoicesByUserId(userId);
       const transactions = await storage.getTransactionsByUserId(userId);
+      
+      // Comprobación adicional para validar que estamos obteniendo datos
+      console.log(`📊 Datos obtenidos: ${invoices.length} facturas, ${transactions.length} transacciones para usuario ${userId}`);
       
       // Función auxiliar para obtener el trimestre
       const getQuarterFromDate = (date: Date): number => {

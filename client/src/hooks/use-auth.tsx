@@ -84,6 +84,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = authData?.user || null;
   const originalAdmin = authData?.originalAdmin || null;
   
+  // Efecto para sincronizar la información del usuario en sessionStorage
+  useEffect(() => {
+    if (user) {
+      console.log("Sincronizando información del usuario con sessionStorage...");
+      try {
+        // Guardar información del usuario en sessionStorage para que esté disponible para el dashboard
+        sessionStorage.setItem('user_info', JSON.stringify({
+          id: user.id,
+          username: user.username,
+          role: user.role || 'user',
+          name: user.name,
+          email: user.email
+        }));
+        console.log("✅ Información de usuario actualizada en sessionStorage al cargar");
+      } catch (err) {
+        console.error("❌ Error actualizando información de usuario en sessionStorage:", err);
+      }
+    } else {
+      // Si no hay usuario, asegurarse de limpiar los datos
+      try {
+        sessionStorage.removeItem('user_info');
+      } catch (err) {
+        console.error("Error limpiando sessionStorage:", err);
+      }
+    }
+  }, [user]);
+  
   // Efecto para cargar los datos de la empresa al iniciar la app si el usuario está autenticado
   useEffect(() => {
     if (user) {
@@ -178,6 +205,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user_authenticated', 'true');
       localStorage.setItem('user_id', userData.id.toString());
       localStorage.setItem('username', userData.username);
+      
+      // Guardar información completa del usuario en sessionStorage para ser accesible por el dashboard
+      try {
+        sessionStorage.setItem('user_info', JSON.stringify({
+          id: userData.id,
+          username: userData.username,
+          role: userData.role || 'user',
+          name: userData.name,
+          email: userData.email
+        }));
+        console.log("✅ Información de usuario guardada en sessionStorage para dashboard");
+      } catch (err) {
+        console.error("❌ Error guardando información de usuario en sessionStorage:", err);
+      }
       
       // También almacenar en cookie para acceso del servidor
       document.cookie = `userId=${userData.id}; path=/; max-age=86400`;
@@ -313,10 +354,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         originalAdmin: null
       });
       
-      // Limpiar datos de empresa del sessionStorage al cerrar sesión
+      // Limpiar datos del sessionStorage al cerrar sesión
       try {
+        // Limpiar datos de empresa
         sessionStorage.removeItem('companyData');
-        console.log("Datos de empresa eliminados de sessionStorage");
+        // Limpiar información del usuario
+        sessionStorage.removeItem('user_info');
+        // Limpiar caché del dashboard
+        sessionStorage.removeItem('current_dashboard_cache_key');
+        // Limpiar estado de admin viendo como usuario
+        sessionStorage.removeItem('admin_viewing_as_user');
+        
+        // También limpiar cualquier clave de caché del dashboard
+        Object.keys(sessionStorage).forEach(key => {
+          if (key.startsWith('dashboard_cache_')) {
+            sessionStorage.removeItem(key);
+          }
+        });
+        
+        console.log("✅ Datos de usuario eliminados correctamente de sessionStorage");
       } catch (err) {
         console.error("Error limpiando sessionStorage:", err);
       }
