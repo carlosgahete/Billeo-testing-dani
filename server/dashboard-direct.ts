@@ -75,14 +75,17 @@ export const simplifiedAuth = async (req: Request, res: Response, next: NextFunc
       return next();
     }
     
-    // Para desarrollo, usar siempre usuario demo
+    // Para desarrollo, comprobar si estamos en modo integrado o con autenticación real
     if (process.env.NODE_ENV !== 'production') {
-      // Forzar autenticación con usuario demo (ID 1)
-      if (req.session) {
-        req.session.userId = 1;
+      // Solo usar el bypass si realmente no hay un usuario autenticado
+      // Esto permite que los administradores como perlancelot mantengan su identidad
+      if (!req.isAuthenticated() && !req.user) {
+        console.log("✅ Acceso a dashboard-fix permitido - Usuario autenticado vía bypass de desarrollo (ID=1)");
+        return next();
+      } else {
+        console.log("✅ Acceso a dashboard-fix permitido - Usuario ya autenticado:", req.user ? (req.user as any).username : "desconocido");
+        return next();
       }
-      console.log("✅ Acceso a dashboard-fix permitido - Usuario autenticado vía bypass de desarrollo (ID=1)");
-      return next();
     }
     
     // En producción, validar autenticación
@@ -112,7 +115,23 @@ export function registerDirectDashboardEndpoint(app: Express) {
       console.log(`📊 Solicitando datos fiscales: año=${year || 'todos'}, periodo=${period || 'todos'}`);
       
       // Obtener el ID del usuario para el que se mostrarán los datos
-      const userId = req.session?.userId || 1; // Defaultear a 1 en caso de que no haya sesión
+      let userId: number;
+      
+      // Si el usuario está autenticado, usar su ID real
+      if (req.user) {
+        userId = (req.user as any).id;
+        console.log(`📊 Usando ID de usuario autenticado: ${userId}`);
+      } 
+      // Si hay un ID en la sesión, usarlo
+      else if (req.session?.userId) {
+        userId = req.session.userId;
+        console.log(`📊 Usando ID de usuario en sesión: ${userId}`);
+      }
+      // Como último recurso, si no hay autenticación, usar el usuario demo
+      else {
+        userId = 1; // Usuario demo como fallback
+        console.log(`📊 Usando ID de usuario demo por defecto: ${userId}`);
+      }
       
       // Verificar si hay un administrador original viendo como cliente
       const originalAdmin = req.session?.originalAdmin;
