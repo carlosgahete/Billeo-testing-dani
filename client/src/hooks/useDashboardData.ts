@@ -220,7 +220,22 @@ async function fetchDashboardData(
   const adminInfo = sessionStorage.getItem('admin_viewing_as_user');
   const isAdminViewingAsUser = !!adminInfo;
   
-  const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}&_t=${timestamp}`;
+  // Obtener información del usuario autenticado si está disponible
+  const userInfoString = sessionStorage.getItem('user_info');
+  let userId: string | number | null = null;
+  
+  if (userInfoString) {
+    try {
+      const userInfo = JSON.parse(userInfoString);
+      userId = userInfo?.id || null;
+      console.log(`📊 Usuario identificado para la petición: ID=${userId}`);
+    } catch (e) {
+      console.warn('Error al parsear información del usuario:', e);
+    }
+  }
+  
+  // Construir URL incluyendo el ID del usuario si está disponible
+  const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}&_t=${timestamp}${userId ? `&userId=${userId}` : ''}`;
   
   console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", url, isAdminViewingAsUser ? "(Admin viendo como usuario)" : "");
   
@@ -236,7 +251,9 @@ async function fetchDashboardData(
       'X-Dashboard-Period': period,
       'X-Force-Refresh': 'true',
       'X-Random': randomParam,
-      'X-Admin-Viewing': isAdminViewingAsUser ? 'true' : 'false'
+      'X-Admin-Viewing': isAdminViewingAsUser ? 'true' : 'false',
+      // Añadir el ID de usuario en los headers si está disponible
+      ...(userId ? { 'X-User-ID': userId.toString() } : {})
     }
   });
   
