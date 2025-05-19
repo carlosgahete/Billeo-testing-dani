@@ -335,14 +335,14 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   let taxAmount = 0;
   let ivaRate = 21; // Valor por defecto
   
-  console.log("=== BUSCANDO IVA EN LA FACTURA ===");
+  devLog("=== BUSCANDO IVA EN LA FACTURA ===");
   for (const pattern of taxPatterns) {
     const match = normalizedText.match(pattern);
-    console.log(`Probando patrón de IVA: ${pattern.toString()}`);
+    devLog(`Probando patrón de IVA: ${pattern.toString()}`);
     if (match) {
-      console.log(`✅ Coincidencia encontrada con patrón: ${pattern.toString()}`);
-      console.log(`Texto coincidente: "${match[0]}"`);
-      console.log(`Grupos capturados: ${JSON.stringify(match.slice(1))}`);
+      devLog(`✅ Coincidencia encontrada con patrón: ${pattern.toString()}`);
+      devLog(`Texto coincidente: "${match[0]}"`);
+      devLog(`Grupos capturados: ${JSON.stringify(match.slice(1))}`);
       
       // Si el patrón captura el porcentaje del IVA (primer grupo)
       if (match[1]) {
@@ -389,27 +389,27 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   let irpfAmount = 0;
   let irpfRate = 15; // Valor por defecto
   
-  console.log("=== BUSCANDO IRPF EN LA FACTURA ===");
-  console.log(`Texto a analizar: "${normalizedText.substring(0, 200)}..."`);
+  devLog("=== BUSCANDO IRPF EN LA FACTURA ===");
+  devLog(`Texto a analizar: "${normalizedText.substring(0, 200)}..."`);
 
   for (const pattern of irpfPatterns) {
     const match = normalizedText.match(pattern);
-    console.log(`Probando patrón de IRPF: ${pattern.toString()}`);
+    devLog(`Probando patrón de IRPF: ${pattern.toString()}`);
     if (match) {
-      console.log(`✅ Coincidencia encontrada con patrón: ${pattern.toString()}`);
-      console.log(`Texto coincidente: "${match[0]}"`);
-      console.log(`Grupos capturados: ${JSON.stringify(match.slice(1))}`);
+      devLog(`✅ Coincidencia encontrada con patrón: ${pattern.toString()}`);
+      devLog(`Texto coincidente: "${match[0]}"`);
+      devLog(`Grupos capturados: ${JSON.stringify(match.slice(1))}`);
       
       // Capturar porcentaje si está disponible
       if (match[1]) {
         irpfRate = parseInt(match[1]);
-        console.log(`Porcentaje de IRPF detectado: ${irpfRate}%`);
+        devLog(`Porcentaje de IRPF detectado: ${irpfRate}%`);
       }
       
       // El último grupo siempre captura el monto
       const lastIndex = match.length - 1;
       if (match[lastIndex]) {
-        console.log(`¡Coincidencia encontrada! Valor IRPF: ${match[lastIndex]}`);
+        devLog(`¡Coincidencia encontrada! Valor IRPF: ${match[lastIndex]}`);
         // Limpiar y convertir a número
         let irpfStr = match[lastIndex].trim();
         if (irpfStr.includes('.') && irpfStr.includes(',')) {
