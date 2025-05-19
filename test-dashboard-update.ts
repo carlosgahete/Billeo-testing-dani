@@ -97,7 +97,7 @@ async function updateDashboardState(type: string, data: DashboardEventData | nul
 // Ejecuta el test y luego cierra la conexión
 async function runTest() {
   try {
-    console.log('🧪 Iniciando prueba de actualizaciones de dashboard');
+    devLog('🧪 Iniciando prueba de actualizaciones de dashboard');
     
     // Simular actualizaciones para diferentes usuarios
     await updateDashboardState('test-update-1', { test: true }, 1);
@@ -109,17 +109,17 @@ async function runTest() {
     
     // Verificar el estado actual de la tabla
     const states = await db.select().from(dashboardState);
-    console.log('📊 Estado actual de la tabla dashboard_state:', states);
+    devLog('📊 Estado actual de la tabla dashboard_state:', states);
     
-    console.log('✅ Prueba completada');
+    devLog('✅ Prueba completada');
     
     // Cerrar la conexión a la base de datos después de un tiempo
     setTimeout(() => {
       sql.end();
-      console.log('🔌 Conexión cerrada');
+      devLog('🔌 Conexión cerrada');
     }, 500);
   } catch (error) {
-    console.error('❌ Error en la prueba:', error);
+    devError('❌ Error en la prueba:', error);
     sql.end();
   }
 }

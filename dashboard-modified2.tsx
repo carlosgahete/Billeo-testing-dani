@@ -45,7 +45,7 @@ interface DashboardStats {
   expenses: number;
   pendingInvoices: number;
   pendingCount: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const Dashboard = () => {
