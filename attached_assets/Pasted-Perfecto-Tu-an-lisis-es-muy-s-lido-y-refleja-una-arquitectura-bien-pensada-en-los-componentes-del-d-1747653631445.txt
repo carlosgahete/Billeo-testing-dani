@@ -1,0 +1,65 @@
+Perfecto. Tu análisis es muy sólido y refleja una arquitectura bien pensada en los componentes del dashboard. Aquí te resumo y complemento lo que ya tienes optimizado, y te doy una propuesta clara para los siguientes pasos:
+
+---
+
+### ✅ Lo que **ya está optimizado**:
+
+* `useDashboardData` implementa `staleTime`, `cacheTime` y almacenamiento con `sessionStorage` → ✅
+* `useSimpleDashboardFilters` usa `debounce` correctamente → ✅
+* `ComparativeChart.tsx`:
+
+  * Handlers definidos con `useCallback` → ✅
+  * Eliminación de callbacks en línea → ✅
+* `CompleteDashboard.tsx`:
+
+  * Uso de `useMemo`, `useCallback`, `React.memo` → ✅
+
+---
+
+### 🔍 Siguientes pasos sugeridos:
+
+1. **Revisar `CustomizableDashboard.tsx`**:
+
+   * Asegúrate de que esté usando los mismos principios que `CompleteDashboard.tsx`.
+   * Confirmar que no tenga:
+
+     * `refetch` directo sin debounce.
+     * `useEffect` con dependencias innecesarias.
+     * Filtros o props que no estén memoizados.
+
+2. **Revisar `dashboard-modified.tsx`**:
+
+   * Este archivo apareció como sospechoso en múltiples análisis (con `useQuery` sin memoización adecuada y funciones directamente en `render`).
+   * Si este archivo se está usando en entornos legacy o de pruebas, aún puede estar provocando ralentizaciones.
+
+3. **Validar si el `refetch` manual se dispara tras cada render**:
+
+   * Verifica que no haya un patrón como:
+
+     ```tsx
+     useEffect(() => {
+       refetch();
+     }, [selectedYear, selectedQuarter]);
+     ```
+   * En su lugar, asegúrate de que `useQuery` se encargue de esto a través del `queryKey`.
+
+---
+
+### 🧠 ¿Qué puedes decirle a tu IA ahora?
+
+```markdown
+Quiero que revises los componentes `CustomizableDashboard.tsx` y `dashboard-modified.tsx` y confirmes que:
+
+1. Todos los filtros usan debounce (ya sea dentro del hook o en los event handlers).
+2. Las funciones derivadas de los filtros están memoizadas con `useMemo`.
+3. No hay funciones inline (`()=>{}`) dentro del JSX sin `useCallback`.
+4. Los `useEffect` no están haciendo `refetch` si `useQuery` ya lo gestiona con `queryKey`.
+5. Los `queryKey` incluyen año y trimestre: `["dashboardData", selectedYear, selectedQuarter]`.
+6. El componente está envuelto con `React.memo` si no depende de contexto o globales reactivos.
+
+Si alguno de estos puntos falla, corrige el código con la estructura ya usada en `CompleteDashboard.tsx` como base.
+```
+
+---
+
+¿Quieres que te lo convierta en un `checklist.json` para que lo procese directamente otra IA o script?

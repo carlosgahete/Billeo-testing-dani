@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus, X, ArrowUp, ArrowDown, Settings, Pencil, Check, PieChart, Move, Save, Maximize, Minimize } from "lucide-react";
