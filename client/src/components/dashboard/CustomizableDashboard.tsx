@@ -90,10 +90,13 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
   // Referencia al contenedor del dashboard
   const dashboardRef = useRef<HTMLDivElement>(null);
   
-  // Obtener preferencias del usuario
+  // Obtener preferencias del usuario - optimizado con staleTime y cacheTime
   const { data: preferences, isLoading: preferencesLoading } = useQuery<DashboardPreferences>({
     queryKey: ["/api/dashboard/preferences"],
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
+    gcTime: 1000 * 60 * 10,   // Mantener en caché por 10 minutos
+    refetchOnWindowFocus: false,
   });
   
   // Estado local para los bloques en el dashboard (nuevo formato)
@@ -134,10 +137,13 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     },
   });
 
-  // Consulta de estadísticas del dashboard
+  // Consulta de estadísticas del dashboard - optimizada con filtros y cache
   const { data: statsData, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats/dashboard"],
+    queryKey: ["/api/stats/dashboard", year, period],
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
+    gcTime: 1000 * 60 * 10,   // Mantener en caché por 10 minutos
+    refetchOnWindowFocus: false
   });
 
   // Actualizar dashboardBlocks cuando se carguen las preferencias
@@ -173,15 +179,15 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     }
   }, [preferences, preferencesLoading]);
 
-  // Guardar el layout en la base de datos
-  const saveLayout = (blocks: DashboardBlock[]) => {
+  // Guardar el layout en la base de datos - memoizado para evitar recreaciones
+  const saveLayout = useCallback((blocks: DashboardBlock[]) => {
     updatePreferences({
       blocks: blocks,
     });
-  };
+  }, [updatePreferences]);
 
-  // Manejar el cambio de posición de un bloque con reordenamiento automático
-  const handlePositionChange = (blockId: string, newPosition: { x: number; y: number }) => {
+  // Manejar el cambio de posición de un bloque con reordenamiento automático - memoizado para evitar recreaciones
+  const handlePositionChange = useCallback((blockId: string, newPosition: { x: number; y: number }) => {
     setDashboardBlocks(prevBlocks => {
       // Encontrar el bloque que se está moviendo
       const blockIndex = prevBlocks.findIndex(block => block.id === blockId);
@@ -278,10 +284,10 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
       setHasUnsavedChanges(true);
       return updatedBlocks;
     });
-  };
+  }, [gridConfig.cols, setHasUnsavedChanges]);
 
-  // Manejar el cambio de tamaño de un bloque con reordenamiento automático
-  const handleResizeBlock = (blockId: string, newSize: { w: number; h: number }) => {
+  // Manejar el cambio de tamaño de un bloque con reordenamiento automático - memoizado para evitar recreaciones
+  const handleResizeBlock = useCallback((blockId: string, newSize: { w: number; h: number }) => {
     setDashboardBlocks(prevBlocks => {
       // Crear una copia de los bloques
       const updatedBlocks = [...prevBlocks];
@@ -372,8 +378,8 @@ const CustomizableDashboard = ({ userId }: CustomizableDashboardProps) => {
     });
   };
 
-  // Agregar un bloque al dashboard
-  const addBlock = (blockType: string, sizeType?: WidgetSizeType) => {
+  // Agregar un bloque al dashboard - memoizado para evitar recreaciones
+  const addBlock = useCallback((blockType: string, sizeType?: WidgetSizeType) => {
     // Calcular posición para el nuevo bloque
     // Por defecto, lo colocamos en la primera fila disponible
     let maxY = 0;
