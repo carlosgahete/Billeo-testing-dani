@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { formatCurrency } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
@@ -47,14 +47,14 @@ const SimpleDashboard: React.FC<SimpleDashboardProps> = ({ className = '' }) => 
     );
   }
   
-  // Datos predeterminados si no hay datos
-  const stats = dashboardData || { 
+  // Datos predeterminados si no hay datos - memoizado para evitar recálculos
+  const stats = useMemo(() => dashboardData || { 
     income: 0, 
     expenses: 0,
     pendingInvoices: 0,
     pendingCount: 0,
     taxes: { vat: 0, incomeTax: 0, ivaALiquidar: 0 }
-  };
+  }, [dashboardData]);
   
   return (
     <div className="p-4 bg-white rounded-lg shadow">

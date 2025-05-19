@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import type { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -59,15 +59,16 @@ interface ExpenseByCategoryData {
   categoryId?: number | string | null;
 }
 
-// Función para formatear moneda
-const formatCurrency = (value: number) => {
+// Formatter memoizado para números de moneda
+const formatCurrency = React.useCallback((value: number) => {
+  // Usamos Intl.NumberFormat para dar formato de moneda española
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
     maximumFractionDigits: 2,
     minimumFractionDigits: 2
   }).format(value);
-};
+}, []);
 
 const ExpensesByCategoryCard: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
   // Estado para guardar las categorías procesadas
@@ -205,8 +206,10 @@ const ExpensesByCategoryCard: React.FC<DashboardBlockProps> = ({ data, isLoading
     );
   }
 
-  // Tomar solo las 5 principales categorías para mostrar
-  const topCategories = processedCategories.slice(0, 5);
+  // Tomar solo las 5 principales categorías para mostrar - memoizado para evitar recálculos
+  const topCategories = useMemo(() => 
+    processedCategories.slice(0, 5), 
+    [processedCategories]);
   
   return (
     <Card className="overflow-hidden">
@@ -270,4 +273,5 @@ const ExpensesByCategoryCard: React.FC<DashboardBlockProps> = ({ data, isLoading
   );
 };
 
-export default ExpensesByCategoryCard;
+// Aplicar memoización al componente para evitar renderizados innecesarios
+export default React.memo(ExpensesByCategoryCard);
