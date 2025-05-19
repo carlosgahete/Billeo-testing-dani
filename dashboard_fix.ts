@@ -1,6 +1,23 @@
+// Función para determinar si estamos en modo desarrollo
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+// Log condicional solo en desarrollo
+function devLog(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.log(...args);
+  }
+}
+
+// Error log condicional solo en desarrollo
+function devError(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.error(...args);
+  }
+}
+
 app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response) => {
   try {
-    console.log("Iniciando manejo de solicitud a /api/stats/dashboard - VERSIÓN SIMPLIFICADA");
+    devLog("Iniciando manejo de solicitud a /api/stats/dashboard - VERSIÓN SIMPLIFICADA");
     
     // Configurar encabezados para evitar almacenamiento en caché de datos financieros
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -12,7 +29,7 @@ app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response)
     
     // Registrar la consulta para depuración
     const formattedDate = timestamp ? new Date(timestamp as string).toISOString() : new Date().toISOString();
-    console.log(`📊 Consultando datos fiscales [FORZADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
+    devLog(`📊 Consultando datos fiscales [FORZADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
     
     // Obtener el ID del usuario autenticado
     const userId = req.session.userId;
@@ -27,7 +44,7 @@ app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response)
       
       // Calcular años únicos para mostrar en filtros
       const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
-      console.log("Años de transacciones:", uniqueYears);
+      devLog("Años de transacciones:", uniqueYears);
       
       // Filtrar facturas por año si se proporciona
       const filteredInvoices = year 

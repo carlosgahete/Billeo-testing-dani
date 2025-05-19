@@ -1,22 +1,39 @@
-import { Request, Response } from 'express';
+import { Request, Response, Application, RequestHandler } from 'express';
 import { IStorage } from '../storage';
+
+// Función para determinar si estamos en modo desarrollo
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+// Log condicional solo en desarrollo
+function devLog(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.log(...args);
+  }
+}
+
+// Error log condicional solo en desarrollo
+function devError(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.error(...args);
+  }
+}
 
 /**
  * Endpoint simplificado para el dashboard que solo realiza cálculos básicos
  * para garantizar que los datos se muestren correctamente
  */
 export function setupSimplifiedDashboardEndpoint(
-  app: any, 
-  requireAuth: any, 
+  app: Application, 
+  requireAuth: RequestHandler, 
   storage: IStorage
 ) {
-  // Importamos el middleware de autenticación mejorado
+  // Importamos el middleware de autenticación mejorada
   import('../fixes/autenticacion-mejorada').then(({ requiereDemoAuth }) => {
     // Reemplazamos requireAuth con requiereDemoAuth en la implementación
     requireAuth = requiereDemoAuth;
-    console.log("✅ Middleware de autenticación reemplazado con éxito en el dashboard simplificado");
+    devLog("✅ Middleware de autenticación reemplazado con éxito en el dashboard simplificado");
   }).catch(err => {
-    console.error("❌ Error al cargar el middleware mejorado:", err);
+    devError("❌ Error al cargar el middleware mejorado:", err);
   });
   app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
     try {
