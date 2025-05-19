@@ -37,7 +37,7 @@ export function setupSimplifiedDashboardEndpoint(
   });
   app.get("/api/stats/dashboard-fix", requireAuth, async (req: Request, res: Response) => {
     try {
-      console.log("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
+      devLog("Iniciando manejo de solicitud a /api/stats/dashboard-fix - VERSIÓN SIMPLIFICADA");
       
       // Configurar encabezados para evitar almacenamiento en caché de datos financieros
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -49,7 +49,7 @@ export function setupSimplifiedDashboardEndpoint(
       
       // Registrar la consulta para depuración
       const formattedDate = timestamp ? new Date(timestamp as string).toISOString() : new Date().toISOString();
-      console.log(`📊 Consultando datos fiscales [SIMPLIFICADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
+      devLog(`📊 Consultando datos fiscales [SIMPLIFICADO]: { year: '${year}', period: '${period}', timestamp: '${formattedDate}' }`);
       
       // Obtener el ID del usuario autenticado
       const userId = req.session.userId;
@@ -60,7 +60,7 @@ export function setupSimplifiedDashboardEndpoint(
         
         // Calcular años únicos para mostrar en filtros
         const uniqueYears = [...new Set(invoices.map(inv => new Date(inv.issueDate).getFullYear()))];
-        console.log("Años de transacciones:", uniqueYears);
+        devLog("Años de transacciones:", uniqueYears);
         
         // Función auxiliar para obtener el trimestre de una fecha (1-4)
         const getQuarterFromDate = (date: Date): number => {
@@ -71,19 +71,19 @@ export function setupSimplifiedDashboardEndpoint(
           return 4; // Q4: Oct-Dic
         };
         
-        console.log(`\n===== DETALLE DE TODAS LAS FACTURAS ANTES DEL FILTRADO =====`);
-        console.log(`Total de facturas sin filtrar: ${invoices.length}`);
+        devLog(`\n===== DETALLE DE TODAS LAS FACTURAS ANTES DEL FILTRADO =====`);
+        devLog(`Total de facturas sin filtrar: ${invoices.length}`);
         invoices.forEach(invoice => {
           // Mostrar información detallada de cada factura
           const fecha = new Date(invoice.issueDate);
           const mes = fecha.getMonth() + 1; // getMonth() devuelve 0-11
           const trimestre = Math.ceil(mes / 3); // Calcula el trimestre (1-4)
-          console.log(`Factura ID=${invoice.id}, Fecha=${fecha.toISOString().split('T')[0]}, Mes=${mes}, Trimestre=Q${trimestre}, Estado=${invoice.status}, Total=${invoice.total}`);
+          devLog(`Factura ID=${invoice.id}, Fecha=${fecha.toISOString().split('T')[0]}, Mes=${mes}, Trimestre=Q${trimestre}, Estado=${invoice.status}, Total=${invoice.total}`);
         });
-        console.log(`===== FIN DETALLE FACTURAS SIN FILTRAR =====\n`);
+        devLog(`===== FIN DETALLE FACTURAS SIN FILTRAR =====\n`);
         
         // Filtrar facturas por año y trimestre si se proporciona
-        console.log(`🔎🔎🔎 DEBUG DE FILTRADO DE FACTURAS - año: ${year}, trimestre: ${period}`);
+        devLog(`🔎🔎🔎 DEBUG DE FILTRADO DE FACTURAS - año: ${year}, trimestre: ${period}`);
         
         const filteredInvoices = invoices.filter(invoice => {
           const invoiceDate = new Date(invoice.issueDate);
@@ -334,7 +334,7 @@ export function setupSimplifiedDashboardEndpoint(
             totalIrpfGastos += irpfAmount;
             
             // Log para depuración
-            console.log(`Gasto procesado: ID=${transaction.id}, Total=${totalAmount}, Base=${baseAmount}, IVA=${ivaAmount}, IRPF=${irpfAmount}`);
+            devLog(`Gasto procesado: ID=${transaction.id}, Total=${totalAmount}, Base=${baseAmount}, IVA=${ivaAmount}, IRPF=${irpfAmount}`);
           } catch (error) {
             console.error("Error procesando gasto:", error);
           }
@@ -432,17 +432,17 @@ export function setupSimplifiedDashboardEndpoint(
         // Calculamos expenses como la suma total por compatibilidad con logs antiguos
         const expenses = totalBaseImponibleGastos + totalIvaSoportado;
         
-        console.log("=== RESUMEN DE CÁLCULOS SIMPLIFICADOS ===");
-        console.log(`Ingresos (facturas pagadas): ${invoiceIncome}€`);
-        console.log(`Base imponible ingresos: ${baseImponible}€`);
-        console.log(`IVA repercutido: ${ivaRepercutido}€`);
-        console.log(`Gastos (transacciones): ${expenses}€`);
-        console.log(`Base imponible gastos: ${baseImponibleGastos}€`);
-        console.log(`IVA soportado: ${ivaSoportado}€`);
-        console.log(`IRPF retenido: ${irpfRetenidoIngresos}€`);
-        console.log(`IRPF en gastos: ${totalIrpfGastos}€`);
-        console.log(`Balance bruto: ${balance}€`);
-        console.log(`Resultado neto: ${result}€`);
+        devLog("=== RESUMEN DE CÁLCULOS SIMPLIFICADOS ===");
+        devLog(`Ingresos (facturas pagadas): ${invoiceIncome}€`);
+        devLog(`Base imponible ingresos: ${baseImponible}€`);
+        devLog(`IVA repercutido: ${ivaRepercutido}€`);
+        devLog(`Gastos (transacciones): ${expenses}€`);
+        devLog(`Base imponible gastos: ${baseImponibleGastos}€`);
+        devLog(`IVA soportado: ${ivaSoportado}€`);
+        devLog(`IRPF retenido: ${irpfRetenidoIngresos}€`);
+        devLog(`IRPF en gastos: ${totalIrpfGastos}€`);
+        devLog(`Balance bruto: ${balance}€`);
+        devLog(`Resultado neto: ${result}€`);
         
         // Preparar respuesta segura
         
