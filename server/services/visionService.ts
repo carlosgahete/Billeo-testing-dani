@@ -422,7 +422,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
         if (irpfAmount < 0) {
           irpfAmount = Math.abs(irpfAmount);
         }
-        console.log(`IRPF detectado: ${irpfAmount}€`);
+        devLog(`IRPF detectado: ${irpfAmount}€`);
         break;
       }
     }
@@ -432,7 +432,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   // Esto es más restrictivo que la versión anterior - requiere menciones específicas de IRPF o retención
   const hasIrpfIndicators = /irpf|retencion|retención/i.test(normalizedText);
   
-  console.log(`¿Se encontraron indicadores explícitos de IRPF? ${hasIrpfIndicators ? 'SÍ' : 'NO'}`);
+  devLog(`¿Se encontraron indicadores explícitos de IRPF? ${hasIrpfIndicators ? 'SÍ' : 'NO'}`);
   
   // Inferencias si no se encontraron valores explícitos
   
@@ -440,25 +440,25 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   if (subtotal > 0 && taxAmount === 0) {
     // Calcular IVA basado en la tasa estándar
     taxAmount = subtotal * (ivaRate / 100);
-    console.log(`IVA calculado: ${taxAmount.toFixed(2)}€ (${ivaRate}% de ${subtotal}€)`);
+    devLog(`IVA calculado: ${taxAmount.toFixed(2)}€ (${ivaRate}% de ${subtotal}€)`);
   }
   
   // Ahora SOLO calculamos IRPF si hay indicadores EXPLÍCITOS en el documento
   if (subtotal > 0 && hasIrpfIndicators && irpfAmount === 0) {
     irpfAmount = subtotal * (irpfRate / 100);
-    console.log(`IRPF calculado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal}€)`);
+    devLog(`IRPF calculado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal}€)`);
   } else if (!hasIrpfIndicators) {
     // Si NO hay indicadores de IRPF, aseguramos que no se aplique
     irpfAmount = 0;
     irpfRate = 0;
-    console.log(`No se encontraron menciones de IRPF en el documento - no se aplicará retención`);
+    devLog(`No se encontraron menciones de IRPF en el documento - no se aplicará retención`);
   }
   
   // Si tenemos subtotal pero no importe total, calcular el total
   if (subtotal > 0 && amount === 0) {
     // Calcular el total a partir del subtotal + IVA - IRPF
     amount = subtotal + taxAmount - irpfAmount;
-    console.log(`Importe total calculado: ${amount}€`);
+    devLog(`Importe total calculado: ${amount}€`);
   }
   
   // Si tenemos total pero no subtotal, calcular el subtotal
@@ -466,14 +466,14 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     // Si tenemos IVA y IRPF explícitos
     if (taxAmount > 0 || irpfAmount > 0) {
       subtotal = amount - taxAmount + irpfAmount;
-      console.log(`Subtotal calculado: ${subtotal}€`);
+      devLog(`Subtotal calculado: ${subtotal}€`);
     } else {
       // Estimar el subtotal basado en el IVA estándar
       // Fórmula: Base imponible = Total / (1 + (IVA% / 100))
       subtotal = amount / (1 + (ivaRate / 100));
       taxAmount = amount - subtotal;
-      console.log(`Subtotal estimado: ${subtotal.toFixed(2)}€ (asumiendo IVA ${ivaRate}%)`);
-      console.log(`IVA estimado: ${taxAmount.toFixed(2)}€`);
+      devLog(`Subtotal estimado: ${subtotal.toFixed(2)}€ (asumiendo IVA ${ivaRate}%)`);
+      devLog(`IVA estimado: ${taxAmount.toFixed(2)}€`);
       
       // Solo estimamos IRPF si hay indicadores EXPLÍCITOS de IRPF
       // Ahora somos más estrictos para evitar asignar IRPF cuando no existe
