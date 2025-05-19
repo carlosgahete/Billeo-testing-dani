@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useSimpleDashboardFilters } from '@/hooks/useSimpleDashboardFilters';
 import { formatCurrency } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,28 +10,25 @@ interface SimpleDashboardProps {
 }
 
 const SimpleDashboard: React.FC<SimpleDashboardProps> = ({ className = '' }) => {
-  // Usar el hook para datos del dashboard
-  const { data: dashboardData, isLoading, filters, refetch } = useDashboardData();
+  // Usar hooks para datos del dashboard y filtros
+  const { data: dashboardData, isLoading, refetch } = useDashboardData();
+  const filters = useSimpleDashboardFilters();
   
   // Estado local para controlar la apertura/cierre de los dropdowns
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
   
-  // Funciones para cambiar los filtros
+  // Funciones para cambiar los filtros - memoizadas para evitar recreaciones
   const handleYearChange = useCallback((newYear: string) => {
-    if (filters) {
-      console.log('Cambiando año a:', newYear);
-      filters.changeYear(newYear);
-      setYearDropdownOpen(false);
-    }
+    console.log('Cambiando año a:', newYear);
+    filters.changeYear(newYear);
+    setYearDropdownOpen(false);
   }, [filters]);
   
   const handlePeriodChange = useCallback((newPeriod: string) => {
-    if (filters) {
-      console.log('Cambiando periodo a:', newPeriod);
-      filters.changePeriod(newPeriod);
-      setPeriodDropdownOpen(false);
-    }
+    console.log('Cambiando periodo a:', newPeriod);
+    filters.changePeriod(newPeriod);
+    setPeriodDropdownOpen(false);
   }, [filters]);
   
   // Función para refrescar manualmente los datos
@@ -210,4 +208,5 @@ const SimpleDashboard: React.FC<SimpleDashboardProps> = ({ className = '' }) => 
   );
 };
 
-export default SimpleDashboard;
+// Aplicar memoización al componente para evitar renderizados innecesarios
+export default React.memo(SimpleDashboard);
