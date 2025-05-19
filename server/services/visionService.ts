@@ -479,12 +479,12 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       // Ahora somos más estrictos para evitar asignar IRPF cuando no existe
       if (hasIrpfIndicators && irpfRate > 0) {
         irpfAmount = subtotal * (irpfRate / 100);
-        console.log(`IRPF estimado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal.toFixed(2)}€)`);
+        devLog(`IRPF estimado: ${irpfAmount.toFixed(2)}€ (${irpfRate}% de ${subtotal.toFixed(2)}€)`);
       } else {
         // Si no hay indicadores explícitos de IRPF, no aplicamos IRPF
         irpfAmount = 0;
         irpfRate = 0;
-        console.log(`No se encontraron menciones de IRPF, no se aplicará IRPF automáticamente`);
+        devLog(`No se encontraron menciones de IRPF, no se aplicará IRPF automáticamente`);
       }
     }
   }
@@ -492,17 +492,17 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   // Verificación de coherencia: Total debe ser Base + IVA - IRPF
   const calculatedTotal = parseFloat((subtotal + taxAmount - irpfAmount).toFixed(2));
   if (Math.abs(amount - calculatedTotal) > 0.1) {
-    console.log(`⚠️ Advertencia: El total (${amount}€) no coincide con Base + IVA - IRPF (${calculatedTotal}€)`);
+    devLog(`⚠️ Advertencia: El total (${amount}€) no coincide con Base + IVA - IRPF (${calculatedTotal}€)`);
     
     // Verificar si el total está cerca del valor esperado específico de 199.65€
     const expectedTotal = 199.65;
     if (Math.abs(amount - expectedTotal) < 0.1) {
-      console.log(`✅ El total declarado (${amount}€) coincide con el valor esperado (${expectedTotal}€). Manteniendo.`);
+      devLog(`✅ El total declarado (${amount}€) coincide con el valor esperado (${expectedTotal}€). Manteniendo.`);
       // Mantener el valor declarado
     } 
     // Ajustar el total si la diferencia es significativa y no coincide con valores esperados
     else if (Math.abs(amount - calculatedTotal) > 1) {
-      console.log(`⚠️ Ajustando total para mantener coherencia fiscal`);
+      devLog(`⚠️ Ajustando total para mantener coherencia fiscal`);
       amount = calculatedTotal;
     }
   }
@@ -607,14 +607,14 @@ function extractExpenseInfo(text: string): ExtractedExpense {
           !/^\d+/.test(line) && // Evitar líneas que empiecen con números
           line.length < 50) { // Evitar líneas demasiado largas
         vendor = line;
-        console.log(`Vendedor detectado por posición en cabecera: "${vendor}"`);
+        devLog(`Vendedor detectado por posición en cabecera: "${vendor}"`);
         break;
       }
     }
   }
   
   // Buscar cliente (quien recibe la factura)
-  console.log("=== BUSCANDO CLIENTE DE LA FACTURA ===");
+  devLog("=== BUSCANDO CLIENTE DE LA FACTURA ===");
   let client = '';
 
   // 1. Buscar por títulos explícitos para el cliente
