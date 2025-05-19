@@ -7,6 +7,26 @@ import pdfParse from './pdf-parser';
 import { InsertTransaction } from '@shared/schema';
 
 /**
+ * Logging condicional para desarrollo
+ * Solo muestra logs cuando DEBUG=true en el entorno
+ */
+function devLog(...args: unknown[]): void {
+  if (process.env.DEBUG === 'true') {
+    console.log(...args);
+  }
+}
+
+/**
+ * Logging de errores condicional para desarrollo
+ * Solo muestra errores cuando DEBUG=true en el entorno
+ */
+function devError(...args: unknown[]): void {
+  if (process.env.DEBUG === 'true') {
+    console.error(...args);
+  }
+}
+
+/**
  * Función para simplificar el nombre del cliente
  * Extrae solo la parte principal de un nombre evitando información adicional
  * Mejorada para detectar nombres de empresas como "Rojo Paella Polo Inc"

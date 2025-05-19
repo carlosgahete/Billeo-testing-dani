@@ -192,13 +192,13 @@ export function setupSimplifiedDashboardEndpoint(
           
           // Si no hay filtro de año, mostramos todos
           if (!year) {
-            console.log(`✅ Presupuesto ${quote.id} incluido (no hay filtro de año)`);
+            devLog(`✅ Presupuesto ${quote.id} incluido (no hay filtro de año)`);
             return true;
           }
           
           // Si el año no coincide, filtramos
           if (quoteYear !== year) {
-            console.log(`❌ Presupuesto ${quote.id} filtrado por año: ${quoteYear} ≠ ${year}`);
+            devLog(`❌ Presupuesto ${quote.id} filtrado por año: ${quoteYear} ≠ ${year}`);
             return false;
           }
           
@@ -211,20 +211,20 @@ export function setupSimplifiedDashboardEndpoint(
               if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
                 const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
                 const matches = quoteQuarter === requestedQuarter;
-                console.log(`🔍 Comparando trimestre de presupuesto: ${quoteQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+                devLog(`🔍 Comparando trimestre de presupuesto: ${quoteQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
                 return matches;
               } else {
-                console.log(`⚠️ Formato de period no reconocido para presupuestos: '${period}'`);
+                devLog(`⚠️ Formato de period no reconocido para presupuestos: '${period}'`);
               }
             } catch (error) {
-              console.error(`❌ Error procesando period '${period}' para presupuestos:`, error);
+              devError(`❌ Error procesando period '${period}' para presupuestos:`, error);
             }
             // Si hay un error o el formato no es reconocido, devolvemos false para ser conservadores
             return false;
           }
           
           // Si tiene el año correcto y no hay filtro de trimestre, lo incluimos
-          console.log(`✅ Presupuesto ${quote.id} incluido (año ${quoteYear})`);
+          devLog(`✅ Presupuesto ${quote.id} incluido (año ${quoteYear})`);
           return true;
         });
         
