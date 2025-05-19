@@ -591,7 +591,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       const match = fullText.match(pattern);
       if (match && match[1]) {
         vendor = `${match[1].trim()} ${match[2]}`;
-        console.log(`Empresa encontrada por formato legal: "${vendor}"`);
+        devLog(`Empresa encontrada por formato legal: "${vendor}"`);
         break;
       }
     }
@@ -989,22 +989,22 @@ Extraído automáticamente mediante reconocimiento de texto.`;
   // Usar la descripción directamente si está disponible
   if (extractedData.description && extractedData.description.trim() !== '') {
     description = extractedData.description;
-    console.log(`Usando descripción detectada: "${description}"`);
+    devLog(`Usando descripción detectada: "${description}"`);
   } 
   // De lo contrario, combinar cliente y proveedor (si están disponibles)
   else if (extractedData.client || extractedData.vendor) {
     if (extractedData.vendor) {
       description = extractedData.vendor;
-      console.log(`Usando proveedor como descripción: "${description}"`);
+      devLog(`Usando proveedor como descripción: "${description}"`);
     } else if (extractedData.client) {
       description = extractedData.client;
-      console.log(`Usando cliente como descripción: "${description}"`);
+      devLog(`Usando cliente como descripción: "${description}"`);
     }
   } 
   // Si no hay información suficiente, usar una descripción genérica
   else {
     description = "Gasto";
-    console.log(`Sin datos suficientes, usando descripción predeterminada: "${description}"`);
+    devLog(`Sin datos suficientes, usando descripción predeterminada: "${description}"`);
   }
   
   // Generar un título para la transacción - más específico y conciso que la descripción
