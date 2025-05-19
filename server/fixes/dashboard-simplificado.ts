@@ -90,17 +90,17 @@ export function setupSimplifiedDashboardEndpoint(
           const invoiceYear = invoiceDate.getFullYear().toString();
           const invoiceQuarter = getQuarterFromDate(invoiceDate);
           
-          console.log(`📋 DEBUG FACTURA: ID=${invoice.id}, fecha=${invoice.issueDate}, año=${invoiceYear}, trimestre=Q${invoiceQuarter}`);
+          devLog(`📋 DEBUG FACTURA: ID=${invoice.id}, fecha=${invoice.issueDate}, año=${invoiceYear}, trimestre=Q${invoiceQuarter}`);
           
           // Si no hay filtro de año, mostramos todas
           if (!year) {
-            console.log(`✅ Factura ${invoice.id} incluida (no hay filtro de año)`);
+            devLog(`✅ Factura ${invoice.id} incluida (no hay filtro de año)`);
             return true;
           }
           
           // Si el año no coincide, filtramos
           if (invoiceYear !== year) {
-            console.log(`❌ Factura ${invoice.id} filtrada por año: ${invoiceYear} ≠ ${year}`);
+            devLog(`❌ Factura ${invoice.id} filtrada por año: ${invoiceYear} ≠ ${year}`);
             return false;
           }
           
@@ -113,20 +113,20 @@ export function setupSimplifiedDashboardEndpoint(
               if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
                 const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
                 const matches = invoiceQuarter === requestedQuarter;
-                console.log(`🔍 Comparando trimestre de factura: ${invoiceQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+                devLog(`🔍 Comparando trimestre de factura: ${invoiceQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
                 return matches;
               } else {
-                console.log(`⚠️ Formato de period no reconocido: '${period}', se esperaba Q1-Q4`);
+                devLog(`⚠️ Formato de period no reconocido: '${period}', se esperaba Q1-Q4`);
               }
             } catch (error) {
-              console.error(`❌ Error procesando period '${period}':`, error);
+              devError(`❌ Error procesando period '${period}':`, error);
             }
             // Si hay un error o el formato no es reconocido, devolvemos false para ser conservadores
             return false;
           }
           
           // Si tiene el año correcto y no hay filtro de trimestre (o es 'all'), la incluimos
-          console.log(`✅ Factura ${invoice.id} incluida (año ${invoiceYear})`);
+          devLog(`✅ Factura ${invoice.id} incluida (año ${invoiceYear})`);
           return true;
         });
           
@@ -336,7 +336,7 @@ export function setupSimplifiedDashboardEndpoint(
             // Log para depuración
             devLog(`Gasto procesado: ID=${transaction.id}, Total=${totalAmount}, Base=${baseAmount}, IVA=${ivaAmount}, IRPF=${irpfAmount}`);
           } catch (error) {
-            console.error("Error procesando gasto:", error);
+            devError("Error procesando gasto:", error);
           }
         }
         
