@@ -37,7 +37,11 @@ const SimpleDashboard: React.FC<SimpleDashboardProps> = ({ className = '' }) => 
     refetch();
   }, [refetch]);
   
-  if (isLoading) {
+  // Optimizamos la experiencia de carga para mantener la interfaz visible 
+  // durante actualizaciones parciales
+  const isInitialLoading = isLoading && !dashboardData;
+  
+  if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -176,19 +180,34 @@ const SimpleDashboard: React.FC<SimpleDashboardProps> = ({ className = '' }) => 
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Ingresos */}
-        <div className="bg-green-50 p-4 rounded-lg">
+        <div className="bg-green-50 p-4 rounded-lg relative">
+          {isLoading && (
+            <div className="absolute top-2 right-2">
+              <Loader2 className="h-4 w-4 animate-spin text-green-500" />
+            </div>
+          )}
           <h3 className="text-lg font-medium text-green-800">Ingresos</h3>
           <p className="text-3xl font-bold text-green-600">{formatCurrency(stats.income)}</p>
         </div>
         
         {/* Gastos */}
-        <div className="bg-red-50 p-4 rounded-lg">
+        <div className="bg-red-50 p-4 rounded-lg relative">
+          {isLoading && (
+            <div className="absolute top-2 right-2">
+              <Loader2 className="h-4 w-4 animate-spin text-red-500" />
+            </div>
+          )}
           <h3 className="text-lg font-medium text-red-800">Gastos</h3>
           <p className="text-3xl font-bold text-red-600">{formatCurrency(stats.expenses)}</p>
         </div>
         
         {/* Resultado */}
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-blue-50 p-4 rounded-lg relative">
+          {isLoading && (
+            <div className="absolute top-2 right-2">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+            </div>
+          )}
           <h3 className="text-lg font-medium text-blue-800">Resultado</h3>
           <p className="text-3xl font-bold text-blue-600">{formatCurrency(stats.income - stats.expenses)}</p>
         </div>

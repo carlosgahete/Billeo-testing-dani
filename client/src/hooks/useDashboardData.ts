@@ -139,9 +139,10 @@ export function useDashboardData(
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true,
-    // Configuración para optimizar rendimiento y prevenir peticiones innecesarias
+    // Configuración avanzada para optimizar rendimiento
     gcTime: 10 * 60 * 1000, // 10 minutos (tiempo antes de que los datos en caché sean eliminados)
     staleTime: 5 * 60 * 1000, // 5 minutos para mejorar significativamente la velocidad de filtrado
+    placeholderData: (previousData) => previousData, // En React Query v5, esta es la forma de mantener datos previos
     queryFn: async ({ queryKey }) => {
       try {
         // Extraer parámetros de la consulta

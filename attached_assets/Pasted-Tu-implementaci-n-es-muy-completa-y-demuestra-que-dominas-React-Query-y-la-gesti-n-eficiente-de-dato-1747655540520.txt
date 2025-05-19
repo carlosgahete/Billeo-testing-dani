@@ -1,0 +1,67 @@
+Tu implementación es muy completa y demuestra que dominas React Query y la gestión eficiente de datos en dashboards. Has aplicado técnicas de nivel avanzado, pero si **todavía notas lentitud o irregularidades**, aquí tienes una **última checklist extrema** para exprimir hasta el último milisegundo de rendimiento:
+
+---
+
+### ✅ Lo que ya hiciste (excelente):
+
+* [x] **StaleTime & gcTime ajustados** → menos tráfico innecesario.
+* [x] **Control de frescura** con timestamps → cache inteligente.
+* [x] **Filtrado por año en backend** → no más `.filter` en cliente.
+* [x] **Memorización de handlers y cálculos** con `useMemo`, `useCallback`, `React.memo`.
+
+---
+
+### 🔍 Qué podrías revisar a continuación (nivel experto):
+
+#### 1. **¿Estás mostrando loaders mínimos?**
+
+* Aunque el fetch sea corto, si hay `setLoading(true)` o un `Skeleton` global, puede **dar sensación de lentitud**.
+* ✅ Solución: usa `isFetching` condicional:
+
+  ```tsx
+  {isFetching && !isLoading && <Spinner />}
+  ```
+
+---
+
+#### 2. **¿Reusas contextos o causas renders globales?**
+
+* Cambiar `selectedYear` en un `<DashboardContext>` **puede provocar rerender de todo el árbol**.
+* ✅ Solución: pasa valores directamente como props a componentes memoizados cuando sea posible.
+
+---
+
+#### 3. **¿Los gráficos (charts) se recalculan completos?**
+
+* Librerías como `chart.js` o `recharts` recrean todo si reciben nuevas props.
+* ✅ Solución: usa `useMemo` para sus `data` y `options`.
+
+---
+
+#### 4. **¿Estás limpiando correctamente los efectos?**
+
+* Algunos `useEffect(() => {...}, [year, quarter])` disparan animaciones o cálculos que se acumulan si no haces cleanup.
+* ✅ Solución:
+
+  ```tsx
+  useEffect(() => {
+    const timeout = setTimeout(...);
+    return () => clearTimeout(timeout); // limpiar
+  }, [year, quarter]);
+  ```
+
+---
+
+#### 5. **¿Usas `keepPreviousData: true` en `useQuery`?**
+
+* Si no lo haces, cada cambio de filtro muestra un `isLoading = true` → lo cual **rompe la experiencia UX incluso si la caché está cargada**.
+
+---
+
+### 🧠 Mensaje final para tu IA:
+
+> Verifica si todavía hay **momentos de carga visual innecesarios**, renders de componentes enteros (charts, context consumers), o cálculos derivados no memorizados. Asegura `keepPreviousData: true`, revisa animaciones o efectos sin `cleanup`, y reduce uso global de estado si no es imprescindible.
+
+---
+
+¿Quieres que te genere ahora un informe técnico en formato `.md` o `.json` con esta auditoría para pasarla como input a otro sistema o IA?
