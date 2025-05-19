@@ -1602,4 +1602,4 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   );
 };
 
-export default InvoiceForm;
+export default React.memo(InvoiceForm);
