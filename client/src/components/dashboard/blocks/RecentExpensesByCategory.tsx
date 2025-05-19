@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreditCard, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
@@ -50,7 +50,7 @@ interface Category {
 }
 
 // Componente principal
-const RecentExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
+const RecentExpensesByCategoryBase: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
   const [_, setLocation] = useLocation();
   
   // Estado para el rango de fechas
@@ -76,18 +76,18 @@ const RecentExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
     queryKey: ["/api/categories"],
   });
 
-  // Formato para moneda
-  const formatCurrency = (value: number) => {
+  // Formato para moneda - memoizado para evitar recreaciones en cada render
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 2,
       minimumFractionDigits: 2
     }).format(value / 100);
-  };
+  }, []);
   
-  // Manejador para el cambio de período predefinido
-  const handlePeriodChange = (value: string) => {
+  // Manejador para el cambio de período predefinido - memoizado para evitar recreaciones
+  const handlePeriodChange = useCallback((value: string) => {
     setSelectedPeriod(value);
     
     const today = new Date();
@@ -111,15 +111,15 @@ const RecentExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
     }
     
     setDateRange({ from, to: today });
-  };
+  }, []);
   
-  // Formatear fechas para mostrar
-  const formatDateDisplay = () => {
+  // Formatear fechas para mostrar - memoizado para mejorar rendimiento
+  const formatDateDisplay = useCallback(() => {
     if (dateRange?.from && dateRange?.to) {
       return `${format(dateRange.from, "d MMM yyyy", { locale: es })} - ${format(dateRange.to, "d MMM yyyy", { locale: es })}`;
     }
     return "";
-  };
+  }, [dateRange]);
 
   // Efecto para procesar las transacciones cuando cambia alguna dependencia
   useEffect(() => {
@@ -165,10 +165,10 @@ const RecentExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
     }
   }, [transactions, categories, dateRange]);
 
-  // Navegación a la página de detalles
-  const goToTransactionDetails = (id: number) => {
+  // Navegación a la página de detalles - memoizado para evitar recreaciones
+  const goToTransactionDetails = useCallback((id: number) => {
     setLocation(`/transactions/${id}`);
-  };
+  }, [setLocation]);
 
   // Determinar si está cargando
   const isLoading = dashboardLoading || transactionsLoading || categoriesLoading || isProcessing;
@@ -305,4 +305,5 @@ const RecentExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoadi
   );
 };
 
-export default RecentExpensesByCategory;
+// Aplicar memoización al componente para evitar renderizados innecesarios
+export default React.memo(RecentExpensesByCategoryBase);
