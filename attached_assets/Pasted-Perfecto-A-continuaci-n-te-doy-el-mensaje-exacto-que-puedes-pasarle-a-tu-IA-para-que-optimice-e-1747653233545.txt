@@ -1,0 +1,64 @@
+Perfecto. A continuación te doy el **mensaje exacto que puedes pasarle a tu IA** para que optimice el comportamiento del Dashboard al aplicar filtros de año y trimestre:
+
+---
+
+### 📦 Instrucciones para IA: Optimización del Dashboard con filtros
+
+#### Archivos a modificar:
+
+* `dashboard-modified.tsx`
+* `dashboard-modified2.tsx`
+* `SimpleDashboard.tsx`
+* `CustomizableDashboard.tsx`
+
+#### Problemas detectados:
+
+1. Uso de `useQuery` sin configurar `staleTime` ni `cacheTime`.
+2. Filtros de año/trimestre (`selectedYear`, `selectedQuarter`) que provocan renders innecesarios.
+3. `refetch` llamado directamente en `useEffect` o handlers sin `debounce`.
+4. Falta de `useMemo` y `useCallback` en valores derivados.
+
+#### Cambios a aplicar:
+
+```tsx
+// 1. Asegura que el hook useQuery esté configurado así:
+const { data, isLoading } = useQuery(
+  ["dashboardData", selectedYear, selectedQuarter],
+  () => fetchDashboardData(selectedYear, selectedQuarter),
+  {
+    staleTime: 1000 * 60 * 5, // cache por 5 min
+    cacheTime: 1000 * 60 * 10,
+    keepPreviousData: true,
+  }
+);
+
+// 2. Usa debounce en los handlers de filtro (si usas refetch manual):
+const debounce = (fn: Function, delay = 300) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+};
+
+const handleFilterChange = debounce(() => {
+  refetch(); // o setear estado que actualice useQuery
+}, 300);
+
+// 3. Usa useMemo para computar datos derivados del fetch
+const filteredData = useMemo(() => {
+  if (!data) return [];
+  return data.filter(item => item.year === selectedYear && item.quarter === selectedQuarter);
+}, [data, selectedYear, selectedQuarter]);
+
+// 4. Si usas useEffect, asegúrate de no hacer doble refetch
+useEffect(() => {
+  // evitar recarga doble o sin necesidad
+}, [selectedYear, selectedQuarter]);
+```
+
+---
+
+**Objetivo:** reducir la latencia y evitar renderizados o fetchs innecesarios al cambiar filtros.
+
+¿Quieres que te lo convierta a patch `.diff` o directamente lo reemplace en tus archivos reales?
