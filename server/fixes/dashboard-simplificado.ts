@@ -139,17 +139,17 @@ export function setupSimplifiedDashboardEndpoint(
           const txnYear = txnDate.getFullYear().toString();
           const txnQuarter = getQuarterFromDate(txnDate);
           
-          console.log(`💰 DEBUG TRANSACCIÓN: ID=${txn.id}, fecha=${txn.date}, año=${txnYear}, trimestre=Q${txnQuarter}, tipo=${txn.type}`);
+          devLog(`💰 DEBUG TRANSACCIÓN: ID=${txn.id}, fecha=${txn.date}, año=${txnYear}, trimestre=Q${txnQuarter}, tipo=${txn.type}`);
           
           // Si no hay filtro de año, mostramos todas
           if (!year) {
-            console.log(`✅ Transacción ${txn.id} incluida (no hay filtro de año)`);
+            devLog(`✅ Transacción ${txn.id} incluida (no hay filtro de año)`);
             return true;
           }
           
           // Si el año no coincide, filtramos
           if (txnYear !== year) {
-            console.log(`❌ Transacción ${txn.id} filtrada por año: ${txnYear} ≠ ${year}`);
+            devLog(`❌ Transacción ${txn.id} filtrada por año: ${txnYear} ≠ ${year}`);
             return false;
           }
           
@@ -162,20 +162,20 @@ export function setupSimplifiedDashboardEndpoint(
               if (periodUpper.startsWith('Q') && /^Q[1-4]$/.test(periodUpper)) {
                 const requestedQuarter = parseInt(periodUpper.replace('Q', ''));
                 const matches = txnQuarter === requestedQuarter;
-                console.log(`🔍 Comparando trimestre de transacción: ${txnQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
+                devLog(`🔍 Comparando trimestre de transacción: ${txnQuarter} ${matches ? '=' : '≠'} ${requestedQuarter} (solicitado)`);
                 return matches;
               } else {
-                console.log(`⚠️ Formato de period no reconocido para transacciones: '${period}'`);
+                devLog(`⚠️ Formato de period no reconocido para transacciones: '${period}'`);
               }
             } catch (error) {
-              console.error(`❌ Error procesando period '${period}' para transacciones:`, error);
+              devError(`❌ Error procesando period '${period}' para transacciones:`, error);
             }
             // Si hay un error o el formato no es reconocido, devolvemos false para ser conservadores
             return false;
           }
           
           // Si tiene el año correcto y no hay filtro de trimestre, la incluimos
-          console.log(`✅ Transacción ${txn.id} incluida (año ${txnYear})`);
+          devLog(`✅ Transacción ${txn.id} incluida (año ${txnYear})`);
           return true;
         });
           
@@ -188,7 +188,7 @@ export function setupSimplifiedDashboardEndpoint(
           const quoteYear = quoteDate.getFullYear().toString();
           const quoteQuarter = getQuarterFromDate(quoteDate);
           
-          console.log(`📝 DEBUG PRESUPUESTO: ID=${quote.id}, fecha=${quote.issueDate}, año=${quoteYear}, trimestre=Q${quoteQuarter}`);
+          devLog(`📝 DEBUG PRESUPUESTO: ID=${quote.id}, fecha=${quote.issueDate}, año=${quoteYear}, trimestre=Q${quoteQuarter}`);
           
           // Si no hay filtro de año, mostramos todos
           if (!year) {
