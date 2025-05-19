@@ -26,6 +26,10 @@ const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) =>
   // Opciones de periodo
   const [period, setPeriod] = useState("Trimestral");
   
+  // Handlers memoizados para cambios de periodo
+  const handleTrimestralClick = useCallback(() => setPeriod("Trimestral"), []);
+  const handle2025Click = useCallback(() => setPeriod("2025"), []);
+  
   // Si está cargando, mostrar skeleton
   if (isLoading) {
     return (
@@ -94,13 +98,13 @@ const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) =>
           <div className="inline-flex items-center space-x-1 text-sm border rounded-md overflow-hidden">
             <button 
               className={`px-3 py-1.5 ${period === "Trimestral" ? "bg-blue-50 text-blue-600" : "bg-white text-gray-600 hover:bg-gray-50"}`}
-              onClick={useCallback(() => setPeriod("Trimestral"), [])}
+              onClick={handleTrimestralClick}
             >
               Trimestral
             </button>
             <button 
               className={`px-3 py-1.5 ${period === "2025" ? "bg-blue-50 text-blue-600" : "bg-white text-gray-600 hover:bg-gray-50"}`}
-              onClick={useCallback(() => setPeriod("2025"), [])}
+              onClick={handle2025Click}
             >
               2025
             </button>
