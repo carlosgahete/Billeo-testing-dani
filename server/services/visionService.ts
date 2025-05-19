@@ -307,7 +307,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
         subtotalStr = subtotalStr.replace(',', '.');
       }
       subtotal = parseFloat(subtotalStr);
-      console.log(`Base imponible/subtotal detectado: ${subtotal}€`);
+      devLog(`Base imponible/subtotal detectado: ${subtotal}€`);
       break;
     }
   }
@@ -353,7 +353,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       // El último grupo captura siempre el monto
       const lastIndex = match.length - 1;
       if (match[lastIndex]) {
-        console.log(`¡Coincidencia encontrada! Valor IVA: ${match[lastIndex]}`);
+        devLog(`¡Coincidencia encontrada! Valor IVA: ${match[lastIndex]}`);
         // Limpiar y convertir a número 
         let taxStr = match[lastIndex].trim();
         if (taxStr.includes('.') && taxStr.includes(',')) {
@@ -362,7 +362,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
           taxStr = taxStr.replace(',', '.');
         }
         taxAmount = parseFloat(taxStr);
-        console.log(`IVA detectado: ${taxAmount}€`);
+        devLog(`IVA detectado: ${taxAmount}€`);
         break;
       }
     }
