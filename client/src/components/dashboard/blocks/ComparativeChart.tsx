@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -14,14 +14,14 @@ import {
 import { LineChart, AreaChart } from "lucide-react";
 
 const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) => {
-  // Formato para moneda
-  const formatCurrency = (value: number) => {
+  // Formato para moneda - memoizado para evitar recreaciones en cada renderizado
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 0
     }).format(value / 100);
-  };
+  }, []);
   
   // Opciones de periodo
   const [period, setPeriod] = useState("Trimestral");
@@ -45,8 +45,8 @@ const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) =>
     );
   }
 
-  // Datos para el gráfico
-  const chartData = [
+  // Datos para el gráfico - memoizados para evitar recálculos en cada renderizado
+  const chartData = useMemo(() => [
     {
       name: "Q1",
       ingresos: data.income * 0.25 || 0,
@@ -71,7 +71,7 @@ const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) =>
       gastos: data.expenses * 0.2 || 0,
       resultado: (data.income * 0.1) - (data.expenses * 0.2) || 0
     },
-  ];
+  ], [data.income, data.expenses]);
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -94,13 +94,13 @@ const ComparativeChart: React.FC<DashboardBlockProps> = ({ data, isLoading }) =>
           <div className="inline-flex items-center space-x-1 text-sm border rounded-md overflow-hidden">
             <button 
               className={`px-3 py-1.5 ${period === "Trimestral" ? "bg-blue-50 text-blue-600" : "bg-white text-gray-600 hover:bg-gray-50"}`}
-              onClick={() => setPeriod("Trimestral")}
+              onClick={useCallback(() => setPeriod("Trimestral"), [])}
             >
               Trimestral
             </button>
             <button 
               className={`px-3 py-1.5 ${period === "2025" ? "bg-blue-50 text-blue-600" : "bg-white text-gray-600 hover:bg-gray-50"}`}
-              onClick={() => setPeriod("2025")}
+              onClick={useCallback(() => setPeriod("2025"), [])}
             >
               2025
             </button>
