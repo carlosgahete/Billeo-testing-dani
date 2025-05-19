@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { DashboardBlockProps } from "@/types/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -122,18 +122,18 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: da
     queryKey: ["/api/categories"],
   });
 
-  // Formato para moneda
-  const formatCurrency = (value: number) => {
+  // Formato para moneda - memoizado para evitar recreaciones en cada render
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 2,
       minimumFractionDigits: 2
     }).format(value / 100);
-  };
+  }, []);
   
-  // Manejador para el cambio de período predefinido
-  const handlePeriodChange = (value: string) => {
+  // Manejador para el cambio de período predefinido - memoizado para evitar recreaciones
+  const handlePeriodChange = useCallback((value: string) => {
     setSelectedPeriod(value);
     
     const today = new Date();
@@ -157,7 +157,7 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: da
     }
     
     setDateRange({ from, to: today });
-  };
+  }, []);
   
   // Formatear fechas para mostrar
   const formatDateDisplay = () => {

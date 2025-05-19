@@ -4,6 +4,26 @@ import { ImageAnnotatorClient } from '@google-cloud/vision';
 import { getVisionClient } from './visionService';
 
 /**
+ * Logging condicional para desarrollo
+ * Solo muestra logs cuando DEBUG=true en el entorno
+ */
+function devLog(...args: unknown[]): void {
+  if (process.env.DEBUG === 'true') {
+    console.log(...args);
+  }
+}
+
+/**
+ * Logging de errores condicional para desarrollo
+ * Solo muestra errores cuando DEBUG=true en el entorno
+ */
+function devError(...args: unknown[]): void {
+  if (process.env.DEBUG === 'true') {
+    console.error(...args);
+  }
+}
+
+/**
  * Interfaz para los datos extraídos de facturas
  */
 export interface ExtractedInvoice {
@@ -57,7 +77,7 @@ export async function processInvoiceImage(imagePath: string): Promise<ExtractedI
     // Extraer información de la factura del texto
     return extractInvoiceInfo(text);
   } catch (error) {
-    console.error('Error al procesar la imagen de la factura:', error);
+    devError('Error al procesar la imagen de la factura:', error);
     throw new Error(`Error al procesar la imagen: ${error.message}`);
   }
 }
@@ -89,7 +109,7 @@ export async function processInvoicePDF(pdfPath: string): Promise<ExtractedInvoi
     // Extraer información de la factura del texto
     return extractInvoiceInfo(text);
   } catch (error) {
-    console.error('Error al procesar el PDF de la factura:', error);
+    devError('Error al procesar el PDF de la factura:', error);
     throw new Error(`Error al procesar el PDF: ${error.message || "Error desconocido al procesar PDF"}`);
   }
 }
