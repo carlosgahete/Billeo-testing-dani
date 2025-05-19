@@ -98,7 +98,7 @@ interface Category {
   color: string | null;
 }
 
-const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
+const ExpensesByCategoryComponent: React.FC<DashboardBlockProps> = ({ data, isLoading: dashboardLoading }) => {
   // Estado para el rango de fechas
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subMonths(new Date(), 3),
@@ -252,15 +252,17 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: da
     }
   }, [transactions, categories, dateRange]);
 
-  // Datos para el gráfico circular
-  const chartData = processedCategories.map(cat => ({
+  // Datos para el gráfico circular - memoizados para evitar recálculos en cada render
+  const chartData = useMemo(() => processedCategories.map(cat => ({
     name: cat.name,
     value: cat.value,
     color: cat.color
-  }));
+  })), [processedCategories]);
 
-  // Calcular el total de gastos
-  const totalExpenses = processedCategories.reduce((sum, cat) => sum + cat.value, 0);
+  // Calcular el total de gastos - memoizado para evitar recálculos en cada render
+  const totalExpenses = useMemo(() => 
+    processedCategories.reduce((sum, cat) => sum + cat.value, 0), 
+    [processedCategories]);
   
   // Determinar si está cargando
   const isLoading = dashboardLoading || transactionsLoading || categoriesLoading || isProcessing;
@@ -395,4 +397,5 @@ const ExpensesByCategory: React.FC<DashboardBlockProps> = ({ data, isLoading: da
   );
 };
 
-export default ExpensesByCategory;
+// Memoizar el componente completo para evitar renderizados innecesarios
+export default React.memo(ExpensesByCategoryComponent);
