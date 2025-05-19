@@ -170,7 +170,7 @@ export interface ExtractedExpense {
  */
 export async function processReceiptImage(imagePath: string): Promise<ExtractedExpense> {
   try {
-    console.log(`Procesando imagen: ${imagePath}`);
+    devLog(`Procesando imagen: ${imagePath}`);
 
     // Ejecutar OCR en la imagen usando el cliente inicializado bajo demanda
     const client = getVisionClient();
@@ -183,12 +183,12 @@ export async function processReceiptImage(imagePath: string): Promise<ExtractedE
 
     // El primer elemento contiene todo el texto
     const fullText = detections[0].description || '';
-    console.log('Texto detectado:', fullText);
+    devLog('Texto detectado:', fullText);
 
     // Extraer información relevante del texto
     return extractExpenseInfo(fullText);
   } catch (error: any) {
-    console.error('Error al procesar la imagen:', error);
+    devError('Error al procesar la imagen:', error);
     throw error;
   }
 }
@@ -198,7 +198,7 @@ export async function processReceiptImage(imagePath: string): Promise<ExtractedE
  */
 export async function processReceiptPDF(pdfPath: string): Promise<ExtractedExpense> {
   try {
-    console.log(`Procesando PDF: ${pdfPath}`);
+    devLog(`Procesando PDF: ${pdfPath}`);
     
     // Leer el PDF
     const dataBuffer = fs.readFileSync(pdfPath);
@@ -206,12 +206,12 @@ export async function processReceiptPDF(pdfPath: string): Promise<ExtractedExpen
     
     // Extraer el texto
     const fullText = pdfData.text;
-    console.log('Texto extraído del PDF:', fullText);
+    devLog('Texto extraído del PDF:', fullText);
     
     // Extraer información relevante del texto
     return extractExpenseInfo(fullText);
   } catch (error: any) {
-    console.error('Error al procesar el PDF:', error);
+    devError('Error al procesar el PDF:', error);
     throw error;
   }
 }
@@ -282,7 +282,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
         amountStr = amountStr.replace(',', '.');
       }
       amount = parseFloat(amountStr);
-      console.log(`Importe detectado: ${amount}€`);
+      devLog(`Importe detectado: ${amount}€`);
       break;
     }
   }
