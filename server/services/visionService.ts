@@ -635,7 +635,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       const fullClientText = match[1].trim();
       client = simplifyClientName(fullClientText);
       
-      console.log(`Cliente encontrado por título explícito: "${client}" (original: "${fullClientText}")`);
+      devLog(`Cliente encontrado por título explícito: "${client}" (original: "${fullClientText}")`);
       break;
     }
   }
@@ -666,7 +666,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
             // Usar la misma función de simplificación
             client = simplifyClientName(fullClientText);
             
-            console.log(`Cliente encontrado en sección de datos de cliente: "${client}" (original: "${fullClientText}")`);
+            devLog(`Cliente encontrado en sección de datos de cliente: "${client}" (original: "${fullClientText}")`);
             break;
           }
         }
@@ -710,7 +710,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
             
             // Usar la función simplifyClientName para extraer el nombre principal
             client = simplifyClientName(line.trim());
-            console.log(`Nombre de cliente encontrado cerca del segundo CIF: "${client}" (original: "${line.trim()}")`);
+            devLog(`Nombre de cliente encontrado cerca del segundo CIF: "${client}" (original: "${line.trim()}")`);
             break;
           }
         }
@@ -732,7 +732,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   const match1 = text.match(conceptoPatterns[0]);
   if (match1 && match1[1]) {
     description = match1[1].trim();
-    console.log(`Descripción/concepto detectado (patrón 1): ${description}`);
+    devLog(`Descripción/concepto detectado (patrón 1): ${description}`);
   } else {
     // Si encontramos la estructura de una tabla, buscar líneas específicas
     if (text.match(conceptoPatterns[1])) {
@@ -743,7 +743,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
             !/total|importe|subtotal|iva|fecha|factura|numero/i.test(line) &&
             /[a-z]{5,}/i.test(line)) {
           description = line.trim();
-          console.log(`Descripción/concepto detectado (patrón tabla): ${description}`);
+          devLog(`Descripción/concepto detectado (patrón tabla): ${description}`);
           break;
         }
       }
