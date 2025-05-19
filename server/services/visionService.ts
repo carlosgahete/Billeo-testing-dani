@@ -508,7 +508,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
   }
   
   // Buscar empresa/vendedor/proveedor con mayor precisión
-  console.log("=== BUSCANDO PROVEEDOR DE LA FACTURA ===");
+  devLog("=== BUSCANDO PROVEEDOR DE LA FACTURA ===");
   const lines = text.split('\n');
   let vendor = '';
   
@@ -529,7 +529,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     const match = normalizedText.match(pattern);
     if (match && match[1]) {
       vendor = match[1].trim();
-      console.log(`Proveedor encontrado por título explícito: "${vendor}"`);
+      devLog(`Proveedor encontrado por título explícito: "${vendor}"`);
       break;
     }
   }
@@ -541,7 +541,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     
     if (cifMatch && cifMatch[1]) {
       const emisorCIF = cifMatch[1];
-      console.log(`CIF/NIF de emisor detectado: ${emisorCIF}`);
+      devLog(`CIF/NIF de emisor detectado: ${emisorCIF}`);
       
       // Buscar el nombre asociado a este CIF, suele estar en la línea anterior o posterior
       const cifPosition = normalizedText.indexOf(emisorCIF.toLowerCase());
