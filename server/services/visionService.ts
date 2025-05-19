@@ -103,7 +103,7 @@ let visionClient: ImageAnnotatorClient | undefined;
 export function getVisionClient(): ImageAnnotatorClient {
   if (!visionClient) {
     try {
-      console.log("Inicializando Vision API client bajo demanda...");
+      devLog("Inicializando Vision API client bajo demanda...");
       
       // Verificar si tenemos credenciales en variables de entorno
       if (!process.env.GOOGLE_CLOUD_CREDENTIALS) {
@@ -116,7 +116,7 @@ export function getVisionClient(): ImageAnnotatorClient {
       
       // Comprobar si parece una API key simple
       if (apiKeyPattern.test(credentials)) {
-        console.log("Usando API key para Vision API");
+        devLog("Usando API key para Vision API");
         // Usar la API key directamente
         visionClient = new ImageAnnotatorClient({
           apiKey: credentials
@@ -129,7 +129,7 @@ export function getVisionClient(): ImageAnnotatorClient {
             credentials: credentialsJson
           });
         } catch (jsonError) {
-          console.error('Error al parsear credenciales como JSON:', jsonError);
+          devError('Error al parsear credenciales como JSON:', jsonError);
           // Intentar como último recurso usarla como API key
           visionClient = new ImageAnnotatorClient({
             apiKey: credentials
@@ -137,9 +137,9 @@ export function getVisionClient(): ImageAnnotatorClient {
         }
       }
       
-      console.log("Cliente de Vision API inicializado correctamente");
+      devLog("Cliente de Vision API inicializado correctamente");
     } catch (error: any) {
-      console.error('Error al inicializar Vision API client:', error);
+      devError('Error al inicializar Vision API client:', error);
       throw new Error(`No se pudo inicializar el cliente de Vision API: ${error.message}`);
     }
   }
@@ -857,7 +857,7 @@ export async function verifyExpenseWithAI(expenseData: {
         categoryHint: guessCategory(expenseData.description)
       };
     } catch (parseError) {
-      console.error("Error al parsear la respuesta de la IA:", parseError);
+      devError("Error al parsear la respuesta de la IA:", parseError);
       // Respuesta por defecto
       return {
         isValid: true,
@@ -866,7 +866,7 @@ export async function verifyExpenseWithAI(expenseData: {
       };
     }
   } catch (error) {
-    console.error("Error al verificar el gasto con IA:", error);
+    devError("Error al verificar el gasto con IA:", error);
     // En caso de error, permitimos el gasto pero informamos
     return {
       isValid: true,
