@@ -53,7 +53,18 @@ const Dashboard = () => {
   const [year, setYear] = useState("2025");
   const [period, setPeriod] = useState("all");
   
-  const { data: user, isLoading: userLoading } = useQuery<any>({
+  interface AuthUser {
+    user: {
+      id: number;
+      username: string;
+      role: string;
+      [key: string]: unknown;
+    };
+    authenticated: boolean;
+    [key: string]: unknown;
+  }
+  
+  const { data: user, isLoading: userLoading } = useQuery<AuthUser>({
     queryKey: ["/api/auth/session"],
   });
   

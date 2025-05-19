@@ -14,33 +14,56 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([promise, timeout(ms)]);
 }
 
+// Función para determinar si estamos en modo desarrollo
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+// Log condicional solo en desarrollo
+function devLog(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.log(...args);
+  }
+}
+
+// Error log condicional solo en desarrollo
+function devError(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.error(...args);
+  }
+}
+
 // Prueba de conexión a la base de datos
 async function testDatabaseConnection() {
-  console.log("Probando conexión a la base de datos...");
+  devLog("Probando conexión a la base de datos...");
   
   try {
+    // Verificar que DATABASE_URL exista
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error("DATABASE_URL no está definida en las variables de entorno");
+    }
+    
     // Crear cliente SQL con timeout
-    const sql = postgres(process.env.DATABASE_URL, {
+    const sql = postgres(dbUrl, {
       max: 1, // usar solo una conexión
-      debug: true // mostrar consultas SQL
+      debug: isDevelopment // mostrar consultas SQL solo en desarrollo
     });
     
     // Probar la conexión con timeout de 5 segundos
     const result = await withTimeout(sql`SELECT NOW()`, 5000);
-    console.log("Conexión a la base de datos exitosa:", result);
+    devLog("Conexión a la base de datos exitosa:", result);
     
     // Cerrar conexión
     await sql.end();
     return true;
   } catch (error) {
-    console.error("ERROR de conexión a la base de datos:", error);
+    devError("ERROR de conexión a la base de datos:", error);
     return false;
   }
 }
 
 async function startServer() {
   // Creamos un servidor express básico
-  console.log("Iniciando servidor de diagnóstico...");
+  devLog("Iniciando servidor de diagnóstico...");
   const app = express();
 
   // Probar la base de datos primero
@@ -48,7 +71,7 @@ async function startServer() {
   
   // Middleware para logging
   app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
+    devLog(`${req.method} ${req.path}`);
     next();
   });
 
@@ -70,13 +93,13 @@ async function startServer() {
     port,
     host: "0.0.0.0",
   }, () => {
-    console.log(`Servidor de diagnóstico escuchando en puerto ${port}`);
-    console.log(`Estado de la base de datos: ${dbConnected ? "Conectada" : "Error de conexión"}`);
+    devLog(`Servidor de diagnóstico escuchando en puerto ${port}`);
+    devLog(`Estado de la base de datos: ${dbConnected ? "Conectada" : "Error de conexión"}`);
   });
 }
 
 // Iniciar servidor
 startServer().catch(err => {
-  console.error("Error al iniciar el servidor:", err);
+  devError("Error al iniciar el servidor:", err);
   process.exit(1);
 });
