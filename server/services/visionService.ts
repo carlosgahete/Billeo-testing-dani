@@ -347,7 +347,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
       // Si el patrón captura el porcentaje del IVA (primer grupo)
       if (match[1]) {
         ivaRate = parseInt(match[1]);
-        console.log(`Porcentaje de IVA detectado: ${ivaRate}%`);
+        devLog(`Porcentaje de IVA detectado: ${ivaRate}%`);
       }
       
       // El último grupo captura siempre el monto
@@ -565,11 +565,11 @@ function extractExpenseInfo(text: string): ExtractedExpense {
             
             if (companyMatch) {
               vendor = companyMatch[0].trim();
-              console.log(`Nombre de empresa con formato legal encontrado cerca del CIF: "${vendor}"`);
+              devLog(`Nombre de empresa con formato legal encontrado cerca del CIF: "${vendor}"`);
               break;
             } else {
               vendor = line.trim();
-              console.log(`Posible nombre de emisor encontrado cerca del CIF: "${vendor}"`);
+              devLog(`Posible nombre de emisor encontrado cerca del CIF: "${vendor}"`);
               break;
             }
           }
