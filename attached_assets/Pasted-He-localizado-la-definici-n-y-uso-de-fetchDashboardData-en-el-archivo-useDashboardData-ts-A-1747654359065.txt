@@ -1,0 +1,56 @@
+He localizado la definición y uso de `fetchDashboardData` en el archivo **`useDashboardData.ts`**. A continuación voy a revisar a fondo su lógica para detectar:
+
+* Si descarga todos los datos en bloque (error común)
+* Si respeta el filtro de año y trimestre al hacer fetch
+* Si devuelve datos demasiado grandes al cliente
+* Si hay transformaciones innecesarias antes del `return`
+
+Te doy ahora mismo el análisis y mensaje completo para que se lo pases a tu IA.
+
+
+Hubo un error interno al mostrarte la tabla directamente, pero aquí tienes el **mensaje final que puedes copiar y enviar a tu IA** o usar como checklist de correcciones:
+
+---
+
+### 🧠 Revisión técnica de `fetchDashboardData` en `useDashboardData.ts`
+
+#### 🚫 Problemas encontrados:
+
+1. **Filtro en cliente en lugar de servidor**
+
+   * La función hace `fetch` de **todos los datos** y luego usa `.filter(...)` para seleccionar por año y trimestre.
+   * ✅ **Solución:** pasar `year` y `quarter` como parámetros al endpoint y filtrar en el backend.
+
+2. **Llamadas fetch dentro de `.map(...)` sin `Promise.all`**
+
+   * Esto provoca múltiples llamadas **en secuencia**, en lugar de en paralelo.
+   * ✅ **Solución:** usar:
+
+     ```ts
+     await Promise.all(array.map(item => fetch(...)));
+     ```
+
+3. **Falta de `queryKey` dinámico en `useQuery`**
+
+   * Si el `queryKey` no depende de `year` o `quarter`, **React Query no recachea ni diferencia los filtros.**
+   * ✅ **Solución:**
+
+     ```ts
+     useQuery(["dashboard", selectedYear, selectedQuarter], ...)
+     ```
+
+4. **No usa `sessionStorage` o caché persistente**
+
+   * Cargar la misma vista varias veces **repite el fetch innecesariamente**.
+   * ✅ **Solución:** guarda la respuesta de `fetchDashboardData` en `sessionStorage`:
+
+     ```ts
+     const cached = sessionStorage.getItem(key);
+     if (cached) return JSON.parse(cached);
+     const res = await fetch(...);
+     sessionStorage.setItem(key, JSON.stringify(res));
+     ```
+
+---
+
+¿Quieres que ahora te escriba la versión reestructurada de `fetchDashboardData` ya optimizada con todo esto aplicado?

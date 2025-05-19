@@ -90,21 +90,28 @@ export function useDashboardData(
     setRefreshTrigger(filtersRefreshTrigger || Date.now());
   }, [filtersRefreshTrigger]);
   
+  // Memoizamos la función de manejo de eventos para evitar recreaciones innecesarias
+  const handleUpdateEvent = useCallback((event: Event) => {
+    // Si es un evento de cambio de filtros, ya nos encargamos separadamente
+    if ((event as CustomEvent).type === 'dashboard-filters-changed') {
+      console.log(`📊 Evento de cambio de filtros detectado, ya manejado por filtersRefreshTrigger`);
+      return;
+    }
+    
+    // Optimización: verificar si el evento es relevante para el año/periodo actual
+    const eventDetail = (event as CustomEvent).detail;
+    if (eventDetail && eventDetail.year && eventDetail.year !== finalYear) {
+      console.log(`🔍 Evento para año ${eventDetail.year}, ignorado en vista de ${finalYear}`);
+      return;
+    }
+    
+    console.log(`🔄 Evento ${(event as CustomEvent).type} detectado en useDashboardData, forzando actualización...`);
+    // Incrementar el contador para forzar la recarga
+    setRefreshTrigger((prev: number) => prev + 1);
+  }, [finalYear, setRefreshTrigger]);
+  
   // Efecto para escuchar eventos de creación/actualización de facturas y transacciones
   useEffect(() => {
-    // Función para manejar eventos que requieren actualización del dashboard
-    const handleUpdateEvent = (event: Event) => {
-      // Si es un evento de cambio de filtros, ya nos encargamos separadamente
-      if ((event as CustomEvent).type === 'dashboard-filters-changed') {
-        console.log(`📊 Evento de cambio de filtros detectado, ya manejado por filtersRefreshTrigger`);
-        return;
-      }
-      
-      console.log(`🔄 Evento ${(event as CustomEvent).type} detectado en useDashboardData, forzando actualización...`);
-      // Incrementar el contador para forzar la recarga
-      setRefreshTrigger((prev: number) => prev + 1);
-    };
-    
     // Registrar eventos para facturas
     window.addEventListener('invoice-created', handleUpdateEvent);
     window.addEventListener('invoice-updated', handleUpdateEvent);
@@ -124,17 +131,17 @@ export function useDashboardData(
       window.removeEventListener('transaction-updated', handleUpdateEvent);
       window.removeEventListener('dashboard-refresh-required', handleUpdateEvent);
     };
-  }, []);
+  }, [handleUpdateEvent]);
 
-  // Hook principal para obtener datos del dashboard
+  // Hook principal para obtener datos del dashboard con configuración optimizada
   const dashboardQuery = useQuery<DashboardStats>({
     queryKey: ['/api/dashboard-direct', finalYear, finalPeriod, refreshTrigger],
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: true,
-    // Configuración para optimizar rendimiento
-    gcTime: 5 * 60 * 1000, // 5 minutos (tiempo antes de que los datos en caché sean eliminados)
-    staleTime: 3 * 60 * 1000, // 3 minutos para mejorar la velocidad de filtrado
+    // Configuración para optimizar rendimiento y prevenir peticiones innecesarias
+    gcTime: 10 * 60 * 1000, // 10 minutos (tiempo antes de que los datos en caché sean eliminados)
+    staleTime: 5 * 60 * 1000, // 5 minutos para mejorar significativamente la velocidad de filtrado
     queryFn: async ({ queryKey }) => {
       try {
         // Extraer parámetros de la consulta
@@ -151,22 +158,44 @@ export function useDashboardData(
         const cacheKey = `dashboard_cache_${year}_${period}`;
         sessionStorage.setItem('current_dashboard_cache_key', cacheKey);
         
-        // Comprobar si hay datos en caché
+        // Comprobar si hay datos en caché y su frescura
         const cachedString = sessionStorage.getItem(cacheKey);
+        const cachedTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
+        const now = new Date().getTime();
+        const cacheFreshness = cachedTimestamp ? now - parseInt(cachedTimestamp, 10) : Infinity;
+        
+        // Solo usar caché si existe y no hay forzado de refresco
         if (cachedString && !window.forceDashboardRefresh) {
           try {
             const cachedData = JSON.parse(cachedString);
-            console.log(`🚀 Usando caché para ${year}/${period} mientras actualizamos en segundo plano`);
+            const freshnessSecs = Math.round(cacheFreshness / 1000);
+            console.log(`🚀 Usando caché para ${year}/${period} (antigüedad: ${freshnessSecs}s)`);
             
-            // Actualizar en segundo plano
-            setTimeout(() => {
-              fetchDashboardData(endpoint, year, period, trigger)
-                .then(data => {
-                  sessionStorage.setItem(cacheKey, JSON.stringify(data));
-                  console.log(`💾 Actualizada caché para ${year}/${period}`);
-                })
-                .catch(e => console.error('Error en actualización en segundo plano:', e));
-            }, 300);
+            // Estrategia de actualización inteligente:
+            // 1. Si los datos tienen más de 1 minuto, actualizar inmediatamente en segundo plano
+            // 2. Si tienen entre 30s y 1min, actualizar con un pequeño retraso
+            // 3. Si tienen menos de 30s, no actualizar (son muy recientes)
+            
+            if (cacheFreshness > 60000) {
+              // Más de 1 minuto: actualizar inmediatamente en segundo plano
+              console.log(`⏱️ Caché tiene más de 1 min, actualizando en segundo plano`);
+              setTimeout(() => {
+                fetchDashboardData(endpoint, year, period, trigger)
+                  .then(data => {
+                    console.log(`💾 Actualizada caché para ${year}/${period} (era de hace ${freshnessSecs}s)`);
+                  })
+                  .catch(e => console.error('Error en actualización en segundo plano:', e));
+              }, 100);
+            } else if (cacheFreshness > 30000) {
+              // Entre 30s y 1min: actualizar con retraso
+              console.log(`⏱️ Caché tiene entre 30s y 1min, programando actualización diferida`);
+              setTimeout(() => {
+                fetchDashboardData(endpoint, year, period, trigger)
+                  .catch(e => console.error('Error en actualización diferida:', e));
+              }, 2000);
+            } else {
+              console.log(`✅ Caché muy reciente (${freshnessSecs}s), no es necesario actualizar`);
+            }
             
             return cachedData;
           } catch (e) {
@@ -265,11 +294,13 @@ async function fetchDashboardData(
   // Parsear datos
   const data = await response.json();
   
-  // Guardar en caché
+  // Guardar en caché con timestamp para control de frescura
   const cacheKey = `dashboard_cache_${year}_${period}`;
   try {
     sessionStorage.setItem(cacheKey, JSON.stringify(data));
-    console.log(`💾 Datos guardados en caché para ${year}/${period}`);
+    // Guardar timestamp para controlar la frescura de los datos
+    sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
+    console.log(`💾 Datos guardados en caché para ${year}/${period} a las ${new Date().toTimeString()}`);
   } catch (error) {
     console.warn('No se pudo guardar en caché:', error);
   }
