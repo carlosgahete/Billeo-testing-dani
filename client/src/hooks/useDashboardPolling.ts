@@ -4,12 +4,12 @@ import { useEffect, useState, useRef, useCallback } from 'react';
  * Hook para manejar actualizaciones del dashboard mediante polling
  * Reemplaza a useWebSocketDashboard con un enfoque más robusto y eficiente
  * @param refreshCallback - Función a llamar cuando se detecte un cambio
- * @param pollingInterval - Intervalo de consulta en ms (ahora por defecto 30000ms = 30s)
+ * @param pollingInterval - Intervalo de consulta en ms (ahora por defecto 300000ms = 5 minutos)
  * @returns Estado de la conexión y último mensaje recibido
  */
 export function useDashboardPolling(
   refreshCallback: () => void,
-  pollingInterval: number = 30000  // Aumentado a 30 segundos para reducir carga
+  pollingInterval: number = 300000  // CORREGIDO: 5 minutos (300,000ms) en lugar de 30 segundos
 ) {
   const [isActive, setIsActive] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
@@ -24,7 +24,6 @@ export function useDashboardPolling(
       // Cancelar consulta anterior si existe
       if (abortControllerRef.current) {
         try {
-          // Verificamos que el controlador no esté ya abortado antes de llamar a abort()
           if (!abortControllerRef.current.signal.aborted && 
               typeof abortControllerRef.current.abort === 'function') {
             abortControllerRef.current.abort();
@@ -37,15 +36,13 @@ export function useDashboardPolling(
       // Crear un nuevo AbortController para esta petición
       abortControllerRef.current = new AbortController();
       
-      // Obtener ID de usuario del localStorage para enviarlo como header (lo mantenemos por compatibilidad)
+      // Obtener ID de usuario del localStorage para enviarlo como header
       const userId = localStorage.getItem('user_id') || '';
       const username = localStorage.getItem('username') || '';
       
-      // Usar la nueva ruta de polling que no requiere autenticación
-      // Esta ruta siempre permite acceso usando el usuario demo
       const response = await fetch('/api/polling/dashboard-status', {
         signal: abortControllerRef.current.signal,
-        credentials: 'include', // Mantener por compatibilidad
+        credentials: 'include',
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
@@ -60,31 +57,23 @@ export function useDashboardPolling(
       
       const data = await response.json();
       
-      // Imprimir logs para depuración
-      console.log('🕒 Última actualización local:', lastUpdatedAt);
-      console.log('🕒 Última actualización del servidor:', data.updated_at);
+      // CORREGIDO: Solo hacer log cada 10 consultas para reducir ruido
+      const shouldLog = Math.random() < 0.1; // 10% de probabilidad
+      if (shouldLog) {
+        console.log('🕒 Polling dashboard status - última actualización:', new Date(data.updated_at).toLocaleTimeString());
+      }
       
-      // Si es la primera consulta o si detectamos un cambio (con margen de seguridad de 500ms)
-      // Aumentamos el margen para evitar actualizaciones innecesarias por pequeñas diferencias
-      if (lastUpdatedAt === null || (data.updated_at && data.updated_at > lastUpdatedAt + 500)) {
-        console.log('🔄 Cambio significativo detectado en el dashboard:', data);
+      // CORREGIDO: Solo actualizar si hay un cambio SIGNIFICATIVO (más de 30 segundos)
+      if (lastUpdatedAt === null || (data.updated_at && data.updated_at > lastUpdatedAt + 30000)) {
+        console.log('🔄 Cambio significativo detectado después de 30s+:', data);
         setLastUpdatedAt(data.updated_at);
         setLastMessage({ type: data.lastEvent || 'dashboard-refresh-required' });
         
-        // Comprobar si hay datos en sessionStorage antes de llamar al callback
-        const cacheKey = sessionStorage.getItem('current_dashboard_cache_key');
-        if (cacheKey) {
-          const cachedData = sessionStorage.getItem(cacheKey);
-          if (cachedData) {
-            console.log('💾 Usando datos en caché mientras se actualiza en segundo plano:', cacheKey);
-            // El callback solo se llamará si no hay datos en caché
-            setTimeout(refreshCallback, 250); // Ligero retraso para permitir renderizado de la UI
-            return;
-          }
+        // CORREGIDO: No llamar callback automáticamente, dejar que sea manual
+        // Solo notificar que hay cambios disponibles
+        if (shouldLog) {
+          console.log('📊 Datos del dashboard actualizados - usar botón refresh para obtener cambios');
         }
-        
-        // Si no hay caché, actualizamos inmediatamente
-        refreshCallback();
       }
       
       // Reiniciar contador de errores

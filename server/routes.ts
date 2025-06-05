@@ -3959,10 +3959,10 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
       
       console.log(`Procesando documento: ${filePath}, extensión: ${fileExtension}`);
       
-      // Comprobar si el formato de archivo es válido
-      if (!['.jpg', '.jpeg', '.png', '.pdf'].includes(fileExtension)) {
+      // Comprobar si el formato de archivo es válido (ahora incluye HEIC)
+      if (!['.jpg', '.jpeg', '.png', '.pdf', '.heic'].includes(fileExtension)) {
         return res.status(400).json({ 
-          message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG) o un PDF" 
+          message: "Formato de archivo no soportado. Por favor, suba una imagen (JPG, PNG, HEIC) o un PDF" 
         });
       }
       
@@ -4005,7 +4005,7 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         console.log(`Procesando archivo: ${filePath} con extensión: ${fileExtension}. Servicio mockup: ${useMockService ? 'Sí' : 'No'}`);
         
         // Intentar con el servicio seleccionado (real o simulado)
-        if (['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
+        if (['.jpg', '.jpeg', '.png', '.heic'].includes(fileExtension)) {
           try {
             extractedData = await visionService.processReceiptImage(filePath);
           } catch (visionError) {
@@ -4077,6 +4077,19 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
       
       // Asegurarnos de que estamos trabajando con los datos correctos
       const processedData = extractedData.extractedData ? extractedData.extractedData : extractedData;
+      
+      // IMPORTANTE: Si se procesó un archivo HEIC, debemos usar la ruta del archivo convertido
+      let attachmentPath = filePath;
+      if (path.extname(filePath).toLowerCase() === '.heic') {
+        // Buscar el archivo JPG convertido
+        const jpgPath = filePath.replace(/\.heic$/i, '.jpg');
+        if (fs.existsSync(jpgPath)) {
+          attachmentPath = jpgPath;
+          console.log(`📎 Usando archivo JPG convertido para attachment: ${jpgPath}`);
+        } else {
+          console.log(`⚠️ No se encontró archivo JPG convertido, usando original: ${filePath}`);
+        }
+      }
       
       // Verificar si el documento realmente contiene indicadores de IRPF
       const textContainsIRPF = processedData?.description?.toLowerCase().includes('irpf') ||
@@ -4161,7 +4174,7 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         notes: transactionData.notes,
         additionalTaxes: transactionData.additionalTaxes,
         // Añadir el archivo adjunto - crucial para poder acceder al documento original
-        attachments: [filePath] // Guardar la ruta completa del archivo procesado
+        attachments: [attachmentPath] // Guardar la ruta completa del archivo procesado
       };
       
       try {

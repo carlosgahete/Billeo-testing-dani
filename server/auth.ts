@@ -4,6 +4,7 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { sql } from "./db";
 import { User as SelectUser } from "@shared/schema";
@@ -36,9 +37,11 @@ export async function comparePasswords(supplied: string, stored: string) {
         return isValid;
       }
       
-      // Para otros usuarios con formato bcrypt, derivamos a una biblioteca de verificación
-      console.log("La contraseña bcrypt no tiene una verificación personalizada");
-      return false; // En una implementación real, usaríamos bcrypt.compare
+      // Para otros usuarios con formato bcrypt, usar bcrypt.compare
+      console.log("Verificando contraseña bcrypt...");
+      const isValid = await bcrypt.compare(supplied, stored);
+      console.log("Resultado verificación bcrypt:", isValid);
+      return isValid;
     }
     
     // Formato propio: hash.salt

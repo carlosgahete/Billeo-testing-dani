@@ -72,29 +72,48 @@ export function useDashboardData(
   isError: boolean;
   refetch: () => void;
 } {
-  // Obtenemos los filtros y el trigger de actualización del hook centralizado
+  // CAMBIO RADICAL: Obtener valores directamente de la URL en lugar del hook
+  const getParamsFromURL = () => {
+    if (typeof window === 'undefined') return { year: new Date().getFullYear().toString(), period: 'all' };
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      year: urlParams.get('year') || new Date().getFullYear().toString(),
+      period: urlParams.get('period') || 'all'
+    };
+  };
+  
+  const urlParams = getParamsFromURL();
+  
+  // Obtenemos el hook solo para el refreshTrigger
   const filters = useSimpleDashboardFilters();
-  const { year, period, refreshTrigger: filtersRefreshTrigger } = filters;
+  const { refreshTrigger: filtersRefreshTrigger } = filters;
   
-  // Usar los valores proporcionados o los del filtro global
-  const finalYear = forcedYear || year;
-  const finalPeriod = forcedPeriod || period;
+  // Usar los valores de la URL como fuente de verdad
+  const finalYear = forcedYear || urlParams.year;
+  const finalPeriod = forcedPeriod || urlParams.period;
+  const refreshTrigger = filtersRefreshTrigger;
   
-  // Definimos un estado para forzar actualizaciones manuales
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(filtersRefreshTrigger || Date.now());
+  // LOGS DETALLADOS PARA DEBUG (solo mostrar lo esencial)
+  console.log('🔍 Dashboard usando:', { finalYear, finalPeriod, refreshTrigger });
   
-  // Efecto para responder a cambios en el filtro global
-  useEffect(() => {
-    // Cuando el filtro global cambia, actualizar nuestro trigger local
-    console.log(`📊 useDashboardData: Detectado cambio en refreshTrigger: ${filtersRefreshTrigger}`);
-    setRefreshTrigger(filtersRefreshTrigger || Date.now());
-  }, [filtersRefreshTrigger]);
+  // Crear una queryKey única que SIEMPRE cambie cuando cambien los parámetros
+  const uniqueQueryKey = [
+    '/api/dashboard-direct',
+    finalYear,
+    finalPeriod,
+    refreshTrigger
+  ];
+  
+  // Log simple para debug (solo cuando cambien los valores importantes)
+  console.log(`📊 Dashboard Query: año=${finalYear}, periodo=${finalPeriod}, trigger=${refreshTrigger}`);
   
   // Memoizamos la función de manejo de eventos para evitar recreaciones innecesarias
   const handleUpdateEvent = useCallback((event: Event) => {
-    // Si es un evento de cambio de filtros, ya nos encargamos separadamente
+    // Si es un evento de cambio de filtros, forzar refresh
     if ((event as CustomEvent).type === 'dashboard-filters-changed') {
-      console.log(`📊 Evento de cambio de filtros detectado, ya manejado por filtersRefreshTrigger`);
+      console.log(`📊 Evento de cambio de filtros detectado, refrescando...`);
+      // Forzar un nuevo trigger usando el hook de filtros
+      filters.forceRefresh();
       return;
     }
     
@@ -106,9 +125,9 @@ export function useDashboardData(
     }
     
     console.log(`🔄 Evento ${(event as CustomEvent).type} detectado en useDashboardData, forzando actualización...`);
-    // Incrementar el contador para forzar la recarga
-    setRefreshTrigger((prev: number) => prev + 1);
-  }, [finalYear, setRefreshTrigger]);
+    // Usar el forceRefresh del hook de filtros
+    filters.forceRefresh();
+  }, [finalYear, filters]);
   
   // Efecto para escuchar eventos de creación/actualización de facturas y transacciones
   useEffect(() => {
@@ -135,77 +154,39 @@ export function useDashboardData(
 
   // Hook principal para obtener datos del dashboard con configuración optimizada
   const dashboardQuery = useQuery<DashboardStats>({
-    queryKey: ['/api/dashboard-direct', finalYear, finalPeriod, refreshTrigger],
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    queryKey: uniqueQueryKey, // Usar la queryKey única que SIEMPRE cambia
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     enabled: true,
-    // Configuración avanzada para optimizar rendimiento
-    gcTime: 10 * 60 * 1000, // 10 minutos (tiempo antes de que los datos en caché sean eliminados)
-    staleTime: 5 * 60 * 1000, // 5 minutos para mejorar significativamente la velocidad de filtrado
-    placeholderData: (previousData) => previousData, // En React Query v5, esta es la forma de mantener datos previos
+    // CORREGIDO: Configuración ultra agresiva para asegurar actualizaciones inmediatas
+    gcTime: 0, // Sin caché en memoria
+    staleTime: 0, // Siempre considerar datos obsoletos
+    retry: false, // Sin reintentos para acelerar
+    refetchOnWindowFocus: false,
+    // CLAVE: Forzar nuevo fetch cuando cambie CUALQUIER parte de la queryKey
     queryFn: async ({ queryKey }) => {
       try {
         // Extraer parámetros de la consulta
         const [endpoint, year, period, trigger] = queryKey as [string, string, string, number];
         
-        console.log(`📊 CONECTANDO A ENDPOINT DIRECTO: año=${year}, periodo=${period} [${trigger}]...`);
+        console.log(`🚀 NUEVA QUERY EJECUTÁNDOSE: año=${year}, period=${period}, trigger=${trigger}`);
         
         // Validar parámetros
         if (!year || year === "undefined") {
           throw new Error("Año no definido en la solicitud del dashboard");
         }
         
-        // Nombre de clave para caché
+        // SIEMPRE limpiar caché local
         const cacheKey = `dashboard_cache_${year}_${period}`;
-        sessionStorage.setItem('current_dashboard_cache_key', cacheKey);
+        sessionStorage.removeItem(cacheKey);
+        sessionStorage.removeItem(`${cacheKey}_timestamp`);
         
-        // Comprobar si hay datos en caché y su frescura
-        const cachedString = sessionStorage.getItem(cacheKey);
-        const cachedTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
-        const now = new Date().getTime();
-        const cacheFreshness = cachedTimestamp ? now - parseInt(cachedTimestamp, 10) : Infinity;
+        // Obtener datos SIEMPRE frescos del servidor
+        const data = await fetchDashboardData(endpoint, year, period, trigger);
         
-        // Solo usar caché si existe y no hay forzado de refresco
-        if (cachedString && !window.forceDashboardRefresh) {
-          try {
-            const cachedData = JSON.parse(cachedString);
-            const freshnessSecs = Math.round(cacheFreshness / 1000);
-            console.log(`🚀 Usando caché para ${year}/${period} (antigüedad: ${freshnessSecs}s)`);
-            
-            // Estrategia de actualización inteligente:
-            // 1. Si los datos tienen más de 1 minuto, actualizar inmediatamente en segundo plano
-            // 2. Si tienen entre 30s y 1min, actualizar con un pequeño retraso
-            // 3. Si tienen menos de 30s, no actualizar (son muy recientes)
-            
-            if (cacheFreshness > 60000) {
-              // Más de 1 minuto: actualizar inmediatamente en segundo plano
-              console.log(`⏱️ Caché tiene más de 1 min, actualizando en segundo plano`);
-              setTimeout(() => {
-                fetchDashboardData(endpoint, year, period, trigger)
-                  .then(data => {
-                    console.log(`💾 Actualizada caché para ${year}/${period} (era de hace ${freshnessSecs}s)`);
-                  })
-                  .catch(e => console.error('Error en actualización en segundo plano:', e));
-              }, 100);
-            } else if (cacheFreshness > 30000) {
-              // Entre 30s y 1min: actualizar con retraso
-              console.log(`⏱️ Caché tiene entre 30s y 1min, programando actualización diferida`);
-              setTimeout(() => {
-                fetchDashboardData(endpoint, year, period, trigger)
-                  .catch(e => console.error('Error en actualización diferida:', e));
-              }, 2000);
-            } else {
-              console.log(`✅ Caché muy reciente (${freshnessSecs}s), no es necesario actualizar`);
-            }
-            
-            return cachedData;
-          } catch (e) {
-            console.warn('Error con los datos en caché:', e);
-          }
-        }
+        console.log(`🎯 DATOS RECIBIDOS: income=${data.income}, expenses=${data.expenses}, año=${year}, period=${period}`);
         
-        // Si no hay caché o se fuerza actualización, obtener datos frescos
-        return await fetchDashboardData(endpoint, year, period, trigger);
+        return data;
         
       } catch (error) {
         console.error("❌ Error al cargar datos del dashboard:", error);
@@ -213,8 +194,7 @@ export function useDashboardData(
         // Devolver estructura base para evitar errores en UI
         return getEmptyDashboardData(finalYear, finalPeriod);
       }
-    },
-    refetchOnWindowFocus: true
+    }
   });
 
   // Mostrar estadísticas básicas
@@ -267,7 +247,8 @@ async function fetchDashboardData(
   // Construir URL incluyendo el ID del usuario si está disponible
   const url = `${endpoint}?year=${year}&period=${period}&forceRefresh=true&random=${randomParam}&_t=${timestamp}${userId ? `&userId=${userId}` : ''}`;
   
-  console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", url, isAdminViewingAsUser ? "(Admin viendo como usuario)" : "");
+  console.log("🔍 SOLICITUD A ENDPOINT DIRECTO:", url);
+  console.log("🚨 ENVIANDO:", { year, period });
   
   // Realizar petición al servidor
   const response = await fetch(url, {

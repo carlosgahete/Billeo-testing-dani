@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { DashboardStats } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, ArrowUp, ArrowDown, PiggyBank, FileText, BarChart3, InfoIcon, ExternalLink, ChevronDown, Receipt, ClipboardCheck, Calculator, RefreshCw } from "lucide-react";
@@ -34,30 +34,43 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   const [_, navigate] = useLocation();
   const [updateFlash, setUpdateFlash] = useState(false);
   const [lastUpdateType, setLastUpdateType] = useState<string | null>(null);
-  const [isLoadingLocal, setIsLoadingLocal] = useState(false); // Estado local para controlar la visualización de carga
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // CORREGIDO: Estados para controlar dropdowns
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
   
   // Año actual como string para uso en cálculos
   const currentYearStr = new Date().getFullYear().toString();
   
-  // Usamos el hook centralizado para obtener datos del dashboard
+  // CORREGIDO: Usar hook centralizado para datos y filtros
   const { data: dashboardData, isLoading, isError, refetch: refetchData } = useDashboardData();
-  // Obtenemos los filtros directamente del hook
   const filters = useSimpleDashboardFilters();
   
-  // Callback para actualizar datos cuando detectamos cambios mediante polling
+  // Log para debug cuando cambian los datos
+  useEffect(() => {
+    console.log('🔄 CompleteDashboard: dashboardData cambió:', dashboardData ? {
+      income: dashboardData.income,
+      expenses: dashboardData.expenses,
+      period: dashboardData.period,
+      year: dashboardData.year
+    } : 'null');
+  }, [dashboardData]);
+  
+  // Callback para actualizar datos cuando detectamos cambios
   const handleDashboardRefresh = useCallback(() => {
     console.log("🔄 Cambios detectados en el dashboard - refrescando datos...");
     
     // Activar animación de actualización
     setUpdateFlash(true);
     
-    // Cancelar cualquier temporizador existente
+    // Cancelar temporizador existente
     if (updateTimerRef.current) {
       clearTimeout(updateTimerRef.current);
     }
     
-    // Configurar un temporizador para desactivar la animación después de 1.5 segundos
+    // Configurar temporizador para desactivar animación
     updateTimerRef.current = setTimeout(() => {
       setUpdateFlash(false);
     }, 1500);
@@ -66,132 +79,68 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     refetchData();
   }, [refetchData]);
   
-  // Usamos polling en lugar de WebSockets para monitorear actualizaciones del dashboard
-  const { isConnected, lastMessage, lastUpdatedAt } = useDashboardPolling(handleDashboardRefresh);
+  // Polling muy reducido - solo para actualizaciones importantes
+  const { isConnected } = useDashboardPolling(handleDashboardRefresh);
   
-  // Detectar tipo de actualización para mostrar indicador específico
+  // Funciones SIMPLIFICADAS para cambio de filtros
+  const handleChangeYear = useCallback((newYear: string) => {
+    console.log("🎯 COMPONENTE: handleChangeYear llamado con:", newYear);
+    console.log("🎯 COMPONENTE: Año actual del filtro:", filters?.year);
+    setYearDropdownOpen(false); // Cerrar dropdown
+    filters.changeYear(newYear);
+    console.log("🎯 COMPONENTE: changeYear ejecutado, nuevo año debería ser:", newYear);
+  }, [filters]);
+  
+  const handleChangePeriod = useCallback((newPeriod: string) => {
+    console.log("📅 COMPONENTE: handleChangePeriod llamado con:", newPeriod);
+    console.log("📅 COMPONENTE: Periodo actual del filtro:", filters?.period);
+    setPeriodDropdownOpen(false); // Cerrar dropdown
+    filters.changePeriod(newPeriod);
+    console.log("📅 COMPONENTE: changePeriod ejecutado, nuevo periodo debería ser:", newPeriod);
+  }, [filters]);
+  
+  // Función de refresh manual SIMPLIFICADA
+  const handleRefresh = useCallback(() => {
+    console.log("🔄 Refresh manual iniciado");
+    setIsLoadingLocal(true);
+    setUpdateFlash(true);
+    
+    // Usar forceRefresh del hook
+    filters.forceRefresh();
+    
+    // Indicadores visuales
+    setTimeout(() => {
+      setIsLoadingLocal(false);
+      setUpdateFlash(false);
+    }, 1000);
+  }, [filters]);
+  
+  // Efecto para cerrar dropdowns al hacer clic fuera
   useEffect(() => {
-    if (lastMessage?.type) {
-      setLastUpdateType(lastMessage.type);
-      // También se resetea automáticamente después de un tiempo
-      setTimeout(() => setLastUpdateType(null), 3000);
-    }
-  }, [lastMessage]);
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // Cerrar dropdown de año si click fuera de él
+      if (!target.closest('[data-dropdown="year"]')) {
+        setYearDropdownOpen(false);
+      }
+      
+      // Cerrar dropdown de periodo si click fuera de él
+      if (!target.closest('[data-dropdown="period"]')) {
+        setPeriodDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
   
-  // Limpiar el temporizador al desmontar
+  // Limpiar temporizadores al desmontar
   useEffect(() => {
     return () => {
       if (updateTimerRef.current) {
         clearTimeout(updateTimerRef.current);
       }
-    };
-  }, []);
-  
-  // Mostrar estado de conexión en la consola
-  useEffect(() => {
-    if (isConnected) {
-      console.log("✅ Sistema de actualización automática activado");
-    }
-  }, [isConnected]);
-  
-  // Ya no necesitamos WebSockets, estamos usando un sistema de polling
-  // que es más robusto en conexiones inestables
-  
-  // Estados locales para UI
-  // Importante: Usamos directamente los filtros del hook global
-  // En lugar de mantener estado local que podría desincronizarse
-  
-  // Creamos funciones específicas para cada acción de filtro para evitar la confusión
-  const handleChangeYear = useCallback((newYear: string) => {
-    if (filters) {
-      console.log("APLICANDO CAMBIO DE AÑO DIRECTO:", newYear);
-      
-      // Mostrar indicador de carga mientras cambiamos año
-      setIsLoadingLocal(true);
-      
-      // 1. Limpiar la caché completamente
-      queryClient.clear();
-      
-      // 2. Cambiar el año usando el hook global
-      filters.changeYear(newYear);
-      
-      // 3. Forzar actualización directa de datos
-      window.sessionStorage.setItem('dashboard_force_refresh', Date.now().toString());
-      
-      // 4. Usar un pequeño retraso para permitir que la UI muestre el estado de carga
-      setTimeout(() => {
-        // 5. Forzar una navegación para recargar el dashboard con el nuevo año
-        // Esta es una solución drástica pero efectiva
-        window.location.href = `/?year=${newYear}&refresh=${Date.now()}`;
-      }, 300);
-      
-      // Mostrar un mensaje de transición al usuario
-      setUpdateFlash(true);
-      setLastUpdateType(`cambiando-año-${newYear}`);
-    }
-  }, [filters]);
-  
-  const handleChangePeriod = useCallback((newPeriod: string) => {
-    if (filters) {
-      console.log("APLICANDO CAMBIO DE PERIODO DIRECTO:", newPeriod);
-      
-      // Mostrar indicador de carga mientras cambiamos periodo
-      setIsLoadingLocal(true);
-      
-      // 1. Limpiar la caché completamente
-      queryClient.clear();
-      
-      // 2. Cambiar el periodo usando el hook global
-      filters.changePeriod(newPeriod);
-      
-      // 3. Forzar actualización directa de datos
-      window.sessionStorage.setItem('dashboard_force_refresh', Date.now().toString());
-      
-      // 4. Usar un pequeño retraso para permitir que la UI muestre el estado de carga
-      setTimeout(() => {
-        // 5. Forzar una navegación para recargar el dashboard con el nuevo periodo
-        // Esta es una solución drástica pero efectiva
-        window.location.href = `/?period=${newPeriod}&year=${filters.year}&refresh=${Date.now()}`;
-      }, 300);
-      
-      // Mostrar un mensaje de transición al usuario
-      setUpdateFlash(true);
-      setLastUpdateType(`cambiando-periodo-${newPeriod}`);
-    }
-  }, [filters]);
-  
-  // Efecto para cerrar los menus al hacer clic fuera de ellos
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Cerrar el dropdown de año si el clic es fuera
-      const yearButton = document.querySelector('button[aria-controls="year-dropdown"]');
-      const yearDropdown = document.getElementById('year-dropdown');
-      
-      if (yearDropdown && 
-          !yearDropdown.contains(event.target as Node) && 
-          yearButton && 
-          !yearButton.contains(event.target as Node)) {
-        yearDropdown.classList.add('hidden');
-      }
-      
-      // Cerrar el dropdown de período si el clic es fuera
-      const periodButton = document.querySelector('button[aria-controls="period-dropdown"]');
-      const periodDropdown = document.getElementById('period-dropdown');
-      
-      if (periodDropdown && 
-          !periodDropdown.contains(event.target as Node) && 
-          periodButton && 
-          !periodButton.contains(event.target as Node)) {
-        periodDropdown.classList.add('hidden');
-      }
-    };
-    
-    // Agregar el listener al documento
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    // Limpiar el listener cuando el componente se desmonte
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -213,32 +162,55 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
   // Estadísticas para usar (reales o predeterminadas)
   const stats = dashboardData || defaultStats;
 
-  // Calcular valores específicos usando los datos directos de la API
-  // Usamos los valores directos de la API que provienen directamente del cálculo del backend
-  const baseImponibleIngresos = stats.income || 0;
-  const ivaRepercutido = stats.ivaRepercutido || 0;
+  // CORREGIDO: Usar useMemo para recalcular valores cuando stats cambie
+  const calculatedValues = useMemo(() => {
+    // Calcular valores específicos usando los datos directos de la API
+    const baseImponibleIngresos = stats.income || 0;
+    const ivaRepercutido = stats.ivaRepercutido || 0;
+    
+    // La API está enviando la base imponible de gastos en el campo 'expenses'
+    const baseImponibleGastos = stats.expenses || 0;
+    const ivaSoportado = stats.ivaSoportado || 0;
+    
+    // Resultado total (diferencia entre ingresos y gastos)
+    const finalResult = baseImponibleIngresos - baseImponibleGastos;
+    
+    // Otros valores fiscales
+    const ivaALiquidar = stats.taxes?.ivaALiquidar || 0;
+    const retencionesIrpf = stats.irpfRetenidoIngresos || 0;
+    const irpfRetenciones = stats.totalWithholdings || 0;
+    
+    console.log("🔄 Recalculando valores del dashboard:", {
+      income: stats.income,
+      expenses: stats.expenses,
+      baseImponibleIngresos,
+      baseImponibleGastos,
+      finalResult
+    });
+    
+    return {
+      baseImponibleIngresos,
+      ivaRepercutido,
+      baseImponibleGastos,
+      ivaSoportado,
+      finalResult,
+      ivaALiquidar,
+      retencionesIrpf,
+      irpfRetenciones
+    };
+  }, [stats]);
   
-  // CORRECCIÓN: La API está enviando la base imponible de gastos en el campo 'expenses'
-  // Ya no necesitamos hacer más cálculos, pues el backend ya lo está calculando correctamente
-  const baseImponibleGastos = stats.expenses || 0;
-  const ivaSoportado = stats.ivaSoportado || 0;
-  
-  // Resultado total (diferencia entre ingresos y gastos)
-  const finalResult = baseImponibleIngresos - baseImponibleGastos;
-  
-  // Otros valores fiscales
-  const ivaALiquidar = stats.taxes?.ivaALiquidar || 0;
-  const retencionesIrpf = stats.irpfRetenidoIngresos || 0;
-  // Obtener el IRPF retenido en facturas de gastos
-  const irpfRetenciones = stats.totalWithholdings || 0;
-  
-  // Imprimir los datos para debug
-  console.log("Dashboard stats", {
-    income: stats.income,
-    expenses: stats.expenses,
-    baseImponible: baseImponibleIngresos,
-    result: finalResult
-  });
+  // Extraer valores calculados
+  const {
+    baseImponibleIngresos,
+    ivaRepercutido,
+    baseImponibleGastos,
+    ivaSoportado,
+    finalResult,
+    ivaALiquidar,
+    retencionesIrpf,
+    irpfRetenciones
+  } = calculatedValues;
   
   // Comprobar signos y valores para colores
   const isPositiveResult = finalResult >= 0;
@@ -252,8 +224,8 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     return "Q4";
   };
 
-  // Preparar datos para el gráfico de comparativa financiera
-  const prepareFinancialComparisonData = () => {
+  // CORREGIDO: Usar useMemo para recalcular datos del gráfico cuando cambien los valores
+  const financialComparisonData = useMemo(() => {
     // Vista por trimestres
     if (comparisonViewType === "quarterly") {
       // Datos trimestrales simplificados
@@ -270,7 +242,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       quarterlyData["Q2"].Gastos = baseImponibleGastos;
       quarterlyData["Q2"].Resultado = baseImponibleIngresos - baseImponibleGastos;
       
-      console.log("Quarterly data for financial comparison (net values):", quarterlyData);
+      console.log("🔄 Recalculando datos trimestrales del gráfico:", quarterlyData);
 
       // Convertir a array para el gráfico
       return Object.entries(quarterlyData).map(([quarter, data]) => ({
@@ -288,7 +260,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         [(parseInt(filters?.year || currentYearStr) - 2).toString()]: { Ingresos: 0, Gastos: 0, Resultado: 0 }
       };
 
-      console.log("Yearly data for financial comparison:", yearlyData);
+      console.log("🔄 Recalculando datos anuales del gráfico:", yearlyData);
 
       // Convertir a array para el gráfico
       return Object.entries(yearlyData).map(([year, data]) => ({
@@ -298,10 +270,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
         Resultado: data.Resultado
       })).reverse(); // Ordenamos de año más antiguo a más reciente
     }
-  };
-
-  // Datos para el gráfico de comparativa financiera
-  const financialComparisonData = prepareFinancialComparisonData();
+  }, [comparisonViewType, baseImponibleIngresos, baseImponibleGastos, filters?.year, currentYearStr]);
   
   // Verificar si hay algún tipo de error
   if (isError) {
@@ -374,36 +343,45 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           <div className="hidden md:flex items-center mr-1 text-xs text-gray-600">
             <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
             <span className="text-xs">
-              {lastUpdatedAt ? `Última actualización: hace ${Math.round((Date.now() - lastUpdatedAt) / 1000)}s` : 'Sincronizando...'}
+              {(() => {
+                // CORREGIDO: Usar el timestamp real de los datos en lugar del polling
+                const currentTime = Date.now();
+                let actualLastUpdate: number | null = null;
+                
+                // 1. Intentar obtener timestamp de sessionStorage (más reciente)
+                const year = filters?.year || new Date().getFullYear().toString();
+                const period = filters?.period || "all";
+                const cacheTimestamp = sessionStorage.getItem(`dashboard_cache_${year}_${period}_timestamp`);
+                if (cacheTimestamp) {
+                  actualLastUpdate = parseInt(cacheTimestamp);
+                }
+                
+                // 2. Usar timestamp actual si no hay cache
+                if (!actualLastUpdate) {
+                  actualLastUpdate = Date.now() - 60000; // 1 minuto atrás por defecto
+                }
+                
+                // 3. Calcular y mostrar tiempo transcurrido
+                if (actualLastUpdate) {
+                  const secondsAgo = Math.floor((currentTime - actualLastUpdate) / 1000);
+                  if (secondsAgo < 60) {
+                    return `Última actualización: hace ${secondsAgo}s`;
+                  } else if (secondsAgo < 3600) {
+                    const minutesAgo = Math.floor(secondsAgo / 60);
+                    return `Última actualización: hace ${minutesAgo}m`;
+                  } else {
+                    const hoursAgo = Math.floor(secondsAgo / 3600);
+                    return `Última actualización: hace ${hoursAgo}h`;
+                  }
+                } else {
+                  return 'Sincronizando...';
+                }
+              })()}
             </span>
             
             {/* Botón de refresco manual */}
             <button 
-              onClick={() => {
-                console.log("Botón de refresco manual pulsado");
-                // Forzar una actualización global cambiando el refreshTrigger
-                filters.forceRefresh();
-                // También refrescar directamente los datos
-                // Primero realizamos una actualización de estado
-                setUpdateFlash(true);
-                setLastUpdateType("manual");
-                
-                // Luego refrescamos los datos
-                refetchData();
-                
-                // Registramos el resultado en consola
-                console.log("✅ Refresco manual solicitado");
-                
-                // Quitar el flash después de 2 segundos
-                if (updateTimerRef.current) {
-                  clearTimeout(updateTimerRef.current);
-                }
-                
-                updateTimerRef.current = setTimeout(() => {
-                  setUpdateFlash(false);
-                  console.log("✅ Refresco manual completado");
-                }, 2000);
-              }}
+              onClick={handleRefresh}
               className="ml-2 p-1 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
               title="Refrescar datos manualmente"
             >
@@ -420,14 +398,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                   className="flex items-center ml-2 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs"
                 >
                   <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                  <span>
-                    {lastUpdateType === 'invoice-created' && 'Nueva factura'}
-                    {lastUpdateType === 'invoice-updated' && 'Factura actualizada'}
-                    {lastUpdateType === 'invoice-paid' && 'Factura pagada'}
-                    {lastUpdateType === 'transaction-created' && 'Nuevo movimiento'}
-                    {lastUpdateType === 'transaction-updated' && 'Movimiento actualizado'}
-                    {!lastUpdateType && 'Actualizando...'}
-                  </span>
+                  <span>Actualizando...</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -436,7 +407,40 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           {/* Indicador de estado de sincronización - Versión para móvil (solo punto) */}
           <div className="flex md:hidden items-center mr-1 absolute top-[-18px] right-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                 title={lastUpdatedAt ? `Última actualización: hace ${Math.round((Date.now() - lastUpdatedAt) / 1000)}s` : 'Sincronizando...'}></div>
+                 title={(() => {
+                   // Usar el timestamp real de los datos
+                   const currentTime = Date.now();
+                   let actualLastUpdate: number | null = null;
+                   
+                   // 1. Intentar obtener timestamp de sessionStorage (más reciente)
+                   const year = filters?.year || new Date().getFullYear().toString();
+                   const period = filters?.period || "all";
+                   const cacheTimestamp = sessionStorage.getItem(`dashboard_cache_${year}_${period}_timestamp`);
+                   if (cacheTimestamp) {
+                     actualLastUpdate = parseInt(cacheTimestamp);
+                   }
+                   
+                   // 2. Usar timestamp actual si no hay cache
+                   if (!actualLastUpdate) {
+                     actualLastUpdate = Date.now() - 60000; // 1 minuto atrás por defecto
+                   }
+                   
+                   // 3. Calcular y mostrar tiempo transcurrido
+                   if (actualLastUpdate) {
+                     const secondsAgo = Math.floor((currentTime - actualLastUpdate) / 1000);
+                     if (secondsAgo < 60) {
+                       return `Última actualización: hace ${secondsAgo}s`;
+                     } else if (secondsAgo < 3600) {
+                       const minutesAgo = Math.floor(secondsAgo / 60);
+                       return `Última actualización: hace ${minutesAgo}m`;
+                     } else {
+                       const hoursAgo = Math.floor(secondsAgo / 3600);
+                       return `Última actualización: hace ${hoursAgo}h`;
+                     }
+                   } else {
+                     return 'Sincronizando...';
+                   }
+                 })()}></div>
             
             {/* Notificación móvil */}
             <AnimatePresence>
@@ -454,10 +458,10 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
           
           {/* Botón de Año - En móvil ocupa el 45% del ancho */}
-          <div className="relative w-[45%] sm:w-auto">
+          <div className="relative w-[45%] sm:w-auto" data-dropdown="year">
             <button 
               type="button"
-              onClick={() => document.getElementById('year-dropdown')?.classList.toggle('hidden')}
+              onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="year-dropdown"
             >
@@ -468,11 +472,11 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </button>
             
             {/* Dropdown años */}
-            <div id="year-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none">
+            <div id="year-dropdown" className={`${yearDropdownOpen ? '' : 'hidden'} absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-24 py-1 border border-gray-200 focus:outline-none`}>
               <button
                 onClick={() => {
                   handleChangeYear("2025");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                  setYearDropdownOpen(false);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2025" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -481,7 +485,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <button
                 onClick={() => {
                   handleChangeYear("2024");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                  setYearDropdownOpen(false);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2024" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -490,7 +494,7 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
               <button
                 onClick={() => {
                   handleChangeYear("2023");
-                  document.getElementById('year-dropdown')?.classList.add('hidden');
+                  setYearDropdownOpen(false);
                 }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.year === "2023" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
@@ -500,19 +504,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
           </div>
           
           {/* Botón de Periodo - En móvil ocupa el 55% del ancho */}
-          <div className="relative w-[55%] sm:w-auto">
+          <div className="relative w-[55%] sm:w-auto" data-dropdown="period">
             <button 
               type="button"
-              onClick={() => document.getElementById('period-dropdown')?.classList.toggle('hidden')}
+              onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
               className="inline-flex items-center justify-center w-full gap-1 px-4 py-1.5 rounded-md border shadow-sm text-sm font-medium focus:outline-none md:bg-white md:border-gray-200 md:text-gray-700 md:hover:bg-gray-50 bg-[#007AFF]/90 border-[#007AFF]/90 text-white hover:bg-[#0069D9]/90"
               aria-controls="period-dropdown"
             >
               <span>
-                {filters?.period === "all" ? "Todo el año" : 
-                filters?.period === "Q1" || filters?.period === "q1" ? "Trimestre 1" : 
-                filters?.period === "Q2" || filters?.period === "q2" ? "Trimestre 2" : 
-                filters?.period === "Q3" || filters?.period === "q3" ? "Trimestre 3" : 
-                filters?.period === "Q4" || filters?.period === "q4" ? "Trimestre 4" : "Todo el año"}
+                {(filters?.period) === "all" ? "Todo el año" : 
+                (filters?.period) === "Q1" || (filters?.period) === "q1" ? "Trimestre 1" : 
+                (filters?.period) === "Q2" || (filters?.period) === "q2" ? "Trimestre 2" : 
+                (filters?.period) === "Q3" || (filters?.period) === "q3" ? "Trimestre 3" : 
+                (filters?.period) === "Q4" || (filters?.period) === "q4" ? "Trimestre 4" : "Todo el año"}
               </span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 md:text-gray-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -520,49 +524,49 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
             </button>
             
             {/* Dropdown periodos - Ancho completo en móvil */}
-            <div id="period-dropdown" className="hidden absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none">
+            <div id="period-dropdown" className={`${periodDropdownOpen ? '' : 'hidden'} absolute z-10 mt-1 bg-white rounded-md shadow-lg w-full sm:w-40 py-1 border border-gray-200 focus:outline-none`}>
               <button
                 onClick={() => {
                   handleChangePeriod("all");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setPeriodDropdownOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${(filters?.period) === "all" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Todo el año
               </button>
               <button
                 onClick={() => {
                   handleChangePeriod("Q1");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setPeriodDropdownOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q1" || filters?.period === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${(filters?.period) === "Q1" || (filters?.period) === "q1" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 1
               </button>
               <button
                 onClick={() => {
                   handleChangePeriod("Q2");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setPeriodDropdownOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q2" || filters?.period === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${(filters?.period) === "Q2" || (filters?.period) === "q2" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 2
               </button>
               <button
                 onClick={() => {
                   handleChangePeriod("Q3");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setPeriodDropdownOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q3" || filters?.period === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${(filters?.period) === "Q3" || (filters?.period) === "q3" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 3
               </button>
               <button
                 onClick={() => {
                   handleChangePeriod("Q4");
-                  document.getElementById('period-dropdown')?.classList.add('hidden');
+                  setPeriodDropdownOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${filters?.period === "Q4" || filters?.period === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${(filters?.period) === "Q4" || (filters?.period) === "q4" ? "font-semibold text-blue-600 bg-blue-50" : "text-gray-700"}`}
               >
                 Trimestre 4
               </button>

@@ -1,4 +1,4 @@
-import { ImageAnnotatorClient } from '@google-cloud/vision';
+import Tesseract from 'tesseract.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createCanvas, loadImage } from 'canvas';
@@ -95,55 +95,18 @@ function simplifyClientName(text: string): string {
   return simpleName;
 }
 
-// Configuración del cliente de Vision API
-// Inicializar como undefined para inicialización diferida
-let visionClient: ImageAnnotatorClient | undefined;
+// Configuración de Tesseract
+let isInitialized = false;
 
-// Función para obtener o inicializar el cliente Vision
-export function getVisionClient(): ImageAnnotatorClient {
-  if (!visionClient) {
-    try {
-      devLog("Inicializando Vision API client bajo demanda...");
-      
-      // Verificar si tenemos credenciales en variables de entorno
-      if (!process.env.GOOGLE_CLOUD_CREDENTIALS) {
-        throw new Error('No se encontraron credenciales de Google Cloud Vision');
-      }
-      
-      // Intentar detectar si es una API key o un JSON de credenciales
-      const apiKeyPattern = /^[A-Za-z0-9_-]+$/;
-      const credentials = process.env.GOOGLE_CLOUD_CREDENTIALS;
-      
-      // Comprobar si parece una API key simple
-      if (apiKeyPattern.test(credentials)) {
-        devLog("Usando API key para Vision API");
-        // Usar la API key directamente
-        visionClient = new ImageAnnotatorClient({
-          apiKey: credentials
-        });
-      } else {
-        // Intentar parsear como JSON
-        try {
-          const credentialsJson = JSON.parse(credentials);
-          visionClient = new ImageAnnotatorClient({
-            credentials: credentialsJson
-          });
-        } catch (jsonError) {
-          devError('Error al parsear credenciales como JSON:', jsonError);
-          // Intentar como último recurso usarla como API key
-          visionClient = new ImageAnnotatorClient({
-            apiKey: credentials
-          });
-        }
-      }
-      
-      devLog("Cliente de Vision API inicializado correctamente");
-    } catch (error: any) {
-      devError('Error al inicializar Vision API client:', error);
-      throw new Error(`No se pudo inicializar el cliente de Vision API: ${error.message}`);
-    }
+/**
+ * Inicializa Tesseract con configuración optimizada para facturas en español
+ */
+async function initializeTesseract(): Promise<void> {
+  if (!isInitialized) {
+    devLog("Inicializando Tesseract.js para OCR...");
+    isInitialized = true;
+    devLog("Tesseract.js listo para procesar documentos");
   }
-  return visionClient;
 }
 
 // Interfaz para los resultados procesados
@@ -166,29 +129,85 @@ export interface ExtractedExpense {
 }
 
 /**
- * Procesa una imagen y extrae datos de facturas/recibos
+ * Convierte un archivo HEIC a JPG
+ */
+async function convertHeicToJpg(heicPath: string): Promise<string> {
+  try {
+    devLog(`Convirtiendo HEIC a JPG: ${heicPath}`);
+    
+    // Importación dinámica para evitar problemas de tipos
+    const heicConvert = await import('heic-convert');
+    
+    // Leer el archivo HEIC
+    const inputBuffer = fs.readFileSync(heicPath);
+    
+    // Convertir a JPG
+    const outputBuffer = await heicConvert.default({
+      buffer: inputBuffer,
+      format: 'JPEG',
+      quality: 0.9
+    });
+    
+    // Crear nombre del archivo JPG
+    const jpgPath = heicPath.replace(/\.heic$/i, '.jpg');
+    
+    // Guardar el archivo convertido
+    fs.writeFileSync(jpgPath, outputBuffer);
+    
+    devLog(`HEIC convertido exitosamente a: ${jpgPath}`);
+    return jpgPath;
+  } catch (error) {
+    devError('Error al convertir HEIC a JPG:', error);
+    throw new Error(`No se pudo convertir el archivo HEIC: ${error}`);
+  }
+}
+
+/**
+ * Procesa una imagen y extrae datos de facturas/recibos usando Tesseract
  */
 export async function processReceiptImage(imagePath: string): Promise<ExtractedExpense> {
   try {
-    devLog(`Procesando imagen: ${imagePath}`);
+    devLog(`Procesando imagen con Tesseract: ${imagePath}`);
 
-    // Ejecutar OCR en la imagen usando el cliente inicializado bajo demanda
-    const client = getVisionClient();
-    const [result] = await client.textDetection(imagePath);
-    const detections = result.textAnnotations || [];
+    // Verificar si es un archivo HEIC y convertirlo
+    let processedImagePath = imagePath;
+    if (path.extname(imagePath).toLowerCase() === '.heic') {
+      try {
+        processedImagePath = await convertHeicToJpg(imagePath);
+        devLog(`✅ HEIC convertido exitosamente a: ${processedImagePath}`);
+      } catch (heicError) {
+        devError('❌ Error al convertir HEIC, intentando procesar directamente:', heicError);
+        // Si falla la conversión, intentar procesar el archivo original
+        processedImagePath = imagePath;
+      }
+    }
+
+    // Inicializar Tesseract si es necesario
+    await initializeTesseract();
+
+    // Ejecutar OCR en la imagen usando Tesseract con configuración optimizada para facturas
+    devLog(`🔍 Ejecutando OCR en: ${processedImagePath}`);
     
-    if (detections.length === 0) {
+    const result = await Tesseract.recognize(processedImagePath, 'spa+eng', {
+      logger: (m) => {
+        if (process.env.DEBUG === 'true' && m.status === 'recognizing text') {
+          devLog(`Tesseract progreso: ${Math.round(m.progress * 100)}%`);
+        }
+      }
+    });
+    
+    const fullText = result.data.text || '';
+    
+    if (!fullText.trim()) {
       throw new Error('No se detectó texto en la imagen');
     }
 
-    // El primer elemento contiene todo el texto
-    const fullText = detections[0].description || '';
-    devLog('Texto detectado:', fullText);
+    devLog('📄 Texto detectado por Tesseract:', fullText.substring(0, 800));
 
     // Extraer información relevante del texto
     return extractExpenseInfo(fullText);
   } catch (error: any) {
-    devError('Error al procesar la imagen:', error);
+    devError('❌ Error al procesar la imagen con Tesseract:', error);
     throw error;
   }
 }
@@ -224,6 +243,10 @@ export async function processReceiptPDF(pdfPath: string): Promise<ExtractedExpen
  * Mejorado para detectar correctamente la Base Imponible, IVA e IRPF según los requisitos
  */
 function extractExpenseInfo(text: string): ExtractedExpense {
+  devLog("=== PROCESANDO FACTURA ===");
+  devLog(`Texto completo detectado:\n${text.substring(0, 500)}...`);
+  devLog("===============================");
+  
   // Normalizar texto: convertir a minúsculas y eliminar acentos
   const normalizedText = text.toLowerCase()
     .normalize("NFD")
@@ -257,22 +280,40 @@ function extractExpenseInfo(text: string): ExtractedExpense {
     }
   }
   
-  // Buscar importe total (mejorado para detectar cantidades grandes)
+  // Buscar importe total (mejorado para detectar cantidades grandes y facturas de gasolina)
   const amountPatterns = [
     /total\s*a\s*pagar\s*:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /total\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /total:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /importe:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
     /total\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
-    /a pagar:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
-    /total a pagar\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
-    /total\s+\(?eur\)?:?\s*([\d.,]+[.,]?\d*)/i
+    /a\s*pagar:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /total\s*a\s*pagar\s*\(?eur\)?:?\s*[\€\$]?\s*([\d.,]+[.,]?\d*)/i,
+    /total\s+\(?eur\)?:?\s*([\d.,]+[.,]?\d*)/i,
+    // NUEVOS PATRONES MÁS FLEXIBLES
+    /(?:precio|importe|total|cantidad|valor).*?(\d+[.,]\d+)\s*[€\$]/i,
+    /(\d+[.,]\d+)\s*[€\$].*?(?:total|final|pagar)/i,
+    // Patrones para números grandes al final de líneas
+    /.*(\d{1,3}[.,]?\d{3}[.,]\d{2})\s*[€\$]?\s*$/mi,
+    // PATRONES ESPECÍFICOS PARA GASOLINA
+    /sin\s*plomo.*?(\d+[.,]\d+)/i,
+    /diesel.*?(\d+[.,]\d+)/i,
+    /gasolina.*?(\d+[.,]\d+)/i,
+    // Patrón para precios con formato especial (ej: 42,95 * 1,779)
+    /(\d+[.,]\d+)\s*\*\s*[\d.,]+/i,
+    // Buscar cualquier número con formato de dinero al final de línea
+    /(\d{1,3}[.,]\d{2})\s*€?\s*$/mi,
+    // Buscar números en contexto de facturas de combustible
+    /[\d.,]+\s*\*\s*[\d.,]+\s*.*?(\d+[.,]\d+)/i
   ];
   
   let amount = 0;
+  devLog("=== BUSCANDO IMPORTE TOTAL ===");
   for (const pattern of amountPatterns) {
     const match = normalizedText.match(pattern);
+    devLog(`Probando patrón: ${pattern.toString()}`);
     if (match && match[1]) {
+      devLog(`✅ Coincidencia encontrada: "${match[0]}"`);
       // Limpiar y convertir a número (manejo de diferentes formatos de números)
       let amountStr = match[1].trim();
       // Manejar formato europeo (1.234,56) y convertirlo a formato punto decimal
@@ -282,7 +323,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
         amountStr = amountStr.replace(',', '.');
       }
       amount = parseFloat(amountStr);
-      devLog(`Importe detectado: ${amount}€`);
+      devLog(`✅ Importe detectado: ${amount}€`);
       break;
     }
   }
@@ -792,7 +833,7 @@ function extractExpenseInfo(text: string): ExtractedExpense {
 }
 
 /**
- * Verifica un gasto manual con IA para determinar si es coherente
+ * Verifica un gasto manual con heurísticas básicas para determinar si es coherente
  */
 export async function verifyExpenseWithAI(expenseData: {
   description: string;
@@ -803,74 +844,45 @@ export async function verifyExpenseWithAI(expenseData: {
   categoryHint?: string;
 }> {
   try {
-    const client = getVisionClient();
+    devLog("Verificando gasto con heurísticas básicas:", expenseData);
     
-    // Crear un mensaje para que la IA analice
-    const prompt = `Analiza el siguiente gasto empresarial:
-    Descripción: ${expenseData.description}
-    Importe: ${expenseData.amount}€
+    const amount = parseFloat(expenseData.amount);
+    const description = expenseData.description.toLowerCase();
     
-    Proporciona un análisis sobre si este gasto parece correcto y coherente. 
-    Considera si el importe parece razonable para el tipo de gasto descrito.
-    Si pudieras categorizar este gasto para contabilidad, ¿en qué categoría lo pondrías?
+    // Validaciones básicas
+    let isValid = true;
+    let suggestion = "";
     
-    Responde en formato JSON con los siguientes campos:
-    {
-      "isValid": true o false,
-      "reason": "explicación breve",
-      "suggestion": "sugerencia de mejora si aplica",
-      "categoryHint": "categoría sugerida"
-    }`;
-    
-    // Usar la API de documentos para analizar el texto
-    const [result] = await client.documentTextDetection({
-      image: {
-        content: Buffer.from(prompt).toString('base64')
-      }
-    });
-    
-    // Extraer el texto completo de la respuesta
-    const fullText = result.fullTextAnnotation?.text || '';
-    
-    // Intentar extraer el JSON de la respuesta
-    try {
-      // Buscar patrón de JSON en el texto
-      const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-      
-      if (jsonMatch) {
-        const jsonResponse = JSON.parse(jsonMatch[0]);
-        return {
-          isValid: jsonResponse.isValid,
-          suggestion: jsonResponse.suggestion || jsonResponse.reason,
-          categoryHint: jsonResponse.categoryHint
-        };
-      }
-      
-      // Si no se encuentra un patrón JSON, analizar con heurísticas
-      const isValid = !fullText.toLowerCase().includes("no parece") && 
-                      !fullText.toLowerCase().includes("incoherente") &&
-                      !fullText.toLowerCase().includes("incorrecto");
-                      
-      return {
-        isValid,
-        suggestion: "No se pudo obtener un análisis detallado",
-        categoryHint: guessCategory(expenseData.description)
-      };
-    } catch (parseError) {
-      devError("Error al parsear la respuesta de la IA:", parseError);
-      // Respuesta por defecto
-      return {
-        isValid: true,
-        suggestion: "No se pudo analizar el gasto con IA, pero se ha registrado",
-        categoryHint: guessCategory(expenseData.description)
-      };
+    // Verificar que el importe sea razonable
+    if (amount <= 0) {
+      isValid = false;
+      suggestion = "El importe debe ser mayor que 0";
+    } else if (amount > 10000) {
+      suggestion = "Importe muy alto, verifica que sea correcto";
     }
+    
+    // Verificar que la descripción no esté vacía
+    if (!expenseData.description.trim()) {
+      isValid = false;
+      suggestion = "La descripción no puede estar vacía";
+    }
+    
+    // Adivinar categoría
+    const categoryHint = guessCategory(expenseData.description);
+    
+    devLog(`Resultado de verificación: isValid=${isValid}, categoryHint=${categoryHint}`);
+    
+    return {
+      isValid,
+      suggestion: suggestion || "Gasto registrado correctamente",
+      categoryHint
+    };
   } catch (error) {
-    devError("Error al verificar el gasto con IA:", error);
+    devError("Error al verificar el gasto:", error);
     // En caso de error, permitimos el gasto pero informamos
     return {
       isValid: true,
-      suggestion: "No se pudo conectar con el servicio de IA, pero el gasto ha sido registrado",
+      suggestion: "No se pudo analizar el gasto, pero se ha registrado",
       categoryHint: guessCategory(expenseData.description)
     };
   }

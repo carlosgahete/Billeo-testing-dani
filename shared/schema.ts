@@ -111,6 +111,7 @@ export const invoices = pgTable("invoices", {
   notes: text("notes"),
   attachments: text("attachments").array(),
   logo: text("logo"), // Logo para la factura (opcional)
+  paymentMethod: text("payment_method"), // Método de pago (opcional)
 });
 
 // Definición del tipo de impuesto adicional
@@ -129,9 +130,44 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
 });
 
 // Modificamos el esquema para incluir el campo additionalTaxes como un array de impuestos
+// y hacer más flexible la validación de campos numéricos
 export const invoiceWithTaxesSchema = insertInvoiceSchema.extend({
-  additionalTaxes: z.array(additionalTaxSchema).optional().nullable()
-});
+  additionalTaxes: z.array(additionalTaxSchema).optional().nullable(),
+  // Hacer los campos numéricos más flexibles para aceptar strings y números
+  subtotal: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  tax: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  total: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  // Hacer clientId más flexible
+  clientId: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseInt(val);
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  // Añadir paymentMethod como campo opcional
+  paymentMethod: z.string().optional(),
+  // Permitir el campo items pero ignorarlo (será procesado por separado)
+  items: z.any().optional()
+}).omit({ items: true }); // Omitir el campo items del esquema de factura
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
@@ -149,6 +185,45 @@ export const invoiceItems = pgTable("invoice_items", {
 
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ 
   id: true 
+}).extend({
+  // Hacer los campos numéricos más flexibles para aceptar strings y números
+  quantity: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  unitPrice: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  taxRate: z.union([z.string(), z.number()]).transform(val => {
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  }),
+  subtotal: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (val === undefined || val === null) {
+      return 0; // Se calculará en el servidor
+    }
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(',', '.'));
+      return isNaN(num) ? 0 : num;
+    }
+    return val;
+  })
+}).transform((data) => {
+  // Calcular subtotal automáticamente si no está presente o es 0
+  if (!data.subtotal || data.subtotal === 0) {
+    data.subtotal = data.quantity * data.unitPrice;
+  }
+  return data;
 });
 export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
