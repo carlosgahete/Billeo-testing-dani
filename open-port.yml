@@ -1,0 +1,40 @@
+name: Open Port 3000
+
+on:
+  workflow_dispatch:
+
+jobs:
+  open-port:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Open port 3000 on server
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.LIGHTSAIL_HOST }}
+        username: ${{ secrets.LIGHTSAIL_USER }}
+        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        script: |
+          echo "=== Configurando firewall ==="
+          
+          # Verificar estado actual
+          sudo ufw status
+          
+          # Permitir puerto 3000
+          sudo ufw allow 3000/tcp
+          
+          # Permitir SSH (por seguridad)
+          sudo ufw allow ssh
+          
+          # Habilitar firewall si no está activo
+          sudo ufw --force enable
+          
+          # Verificar configuración
+          echo "=== Estado final del firewall ==="
+          sudo ufw status
+          
+          echo "=== Verificando que la app esté corriendo ==="
+          pm2 status
+          
+          echo "=== Probando conexión local ==="
+          curl -I http://localhost:3000 || echo "App no responde localmente" 
