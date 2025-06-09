@@ -1,0 +1,80 @@
+name: Fix Nginx Port - 5000
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-nginx-port:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Fix Nginx to point to correct port 5000
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LIGHTSAIL_HOST }}
+        username: ${{ secrets.LIGHTSAIL_USER }}
+        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        script: |
+          echo "=== Corrigiendo puerto de Nginx ==="
+          
+          # Parar nginx
+          sudo systemctl stop nginx
+          
+          # Corregir configuración para apuntar al puerto 5000
+          sudo tee /etc/nginx/sites-available/billeo << 'EOF'
+          server {
+              listen 80;
+              server_name app.billeo.es;
+              
+              client_max_body_size 50M;
+              
+              location / {
+                  proxy_pass http://localhost:5000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header X-Forwarded-Host $server_name;
+                  
+                  # WebSocket support
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  
+                  # Timeouts
+                  proxy_connect_timeout 60s;
+                  proxy_send_timeout 60s;
+                  proxy_read_timeout 60s;
+              }
+              
+              # Static files caching
+              location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+                  proxy_pass http://localhost:5000;
+                  expires 1y;
+                  add_header Cache-Control "public, immutable";
+              }
+          }
+          EOF
+          
+          # Verificar configuración
+          sudo nginx -t
+          
+          # Iniciar nginx
+          sudo systemctl start nginx
+          
+          echo -e "\n=== Verificando servicios ==="
+          echo "🔍 Nginx status:"
+          sudo systemctl status nginx --no-pager | head -3
+          
+          echo -e "\n🔍 PM2 status:"
+          pm2 status
+          
+          echo -e "\n🔍 Probando conexiones:"
+          echo "Puerto 5000 (app):"
+          curl -I http://localhost:5000 2>/dev/null | head -1 || echo "❌ App no responde en 5000"
+          
+          echo "Puerto 80 (nginx → 5000):"
+          curl -I http://localhost:80 2>/dev/null | head -1 || echo "❌ Nginx no responde"
+          
+          echo -e "\n✅ Nginx corregido para puerto 5000"
+          echo "Accesible en: http://app.billeo.es" 
