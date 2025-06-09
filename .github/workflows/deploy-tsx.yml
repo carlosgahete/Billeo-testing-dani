@@ -1,0 +1,62 @@
+name: Deploy with TSX
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy with TSX (no bundle)
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LIGHTSAIL_HOST }}
+        username: ${{ secrets.LIGHTSAIL_USER }}
+        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        script: |
+          echo "=== Deploy directo con TSX ==="
+          
+          cd /home/ubuntu/billeo-app
+          
+          # Parar aplicación actual
+          pm2 stop all || true
+          pm2 delete all || true
+          
+          # Actualizar código
+          git pull origin main
+          
+          # Instalar dependencias (incluyendo dev para tsx)
+          npm install
+          
+          # Instalar tsx globalmente si no está
+          npm install -g tsx
+          
+          # Crear archivos necesarios
+          mkdir -p uploads logs
+          
+          echo -e "\n🚀 Iniciando con TSX directamente:"
+          PORT=5000 NODE_ENV=production pm2 start "tsx server/index.ts" --name billeo-app
+          
+          # Esperar un momento
+          sleep 5
+          
+          echo -e "\n🔍 Estado después del inicio:"
+          pm2 status
+          
+          echo -e "\n🔍 Logs recientes:"
+          pm2 logs billeo-app --lines 10 --nostream || echo "Sin logs"
+          
+          echo -e "\n🔍 Probando puerto 5000:"
+          curl -I http://localhost:5000 2>/dev/null || echo "❌ No responde"
+          
+          echo -e "\n🔍 Probando nginx:"
+          curl -I http://localhost:80 2>/dev/null || echo "❌ Nginx no responde"
+          
+          # Guardar configuración
+          pm2 save
+          
+          echo -e "\n✅ Deploy con TSX completado" 
