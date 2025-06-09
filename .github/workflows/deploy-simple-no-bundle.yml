@@ -33,6 +33,11 @@ jobs:
           # Crear directorios
           mkdir -p uploads logs
           
+          # BUILD DEL FRONTEND (para producción)
+          echo -e "\n🏗️ Construyendo frontend:"
+          npm run build:frontend || npm run build || echo "Intentando vite build directo..."
+          npx vite build --outDir server/public || echo "Error en build"
+          
           # Verificar que npm start está definido
           echo "📋 Scripts disponibles:"
           npm run --silent | grep -E "(start|dev)" || echo "No hay script start/dev"
