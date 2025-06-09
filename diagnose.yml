@@ -1,0 +1,45 @@
+name: Diagnose Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Full server diagnosis
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.LIGHTSAIL_HOST }}
+        username: ${{ secrets.LIGHTSAIL_USER }}
+        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        script: |
+          echo "=== 1. VERIFICAR PROCESOS PM2 ==="
+          pm2 status
+          pm2 logs billeo-app --lines 20
+          
+          echo -e "\n=== 2. VERIFICAR PUERTOS ABIERTOS ==="
+          sudo netstat -tlnp | grep :3000 || echo "Puerto 3000 no está escuchando"
+          sudo netstat -tlnp | grep LISTEN
+          
+          echo -e "\n=== 3. VERIFICAR FIREWALL ==="
+          sudo ufw status numbered
+          
+          echo -e "\n=== 4. PROBAR CONEXIONES ==="
+          curl -I http://localhost:3000 || echo "localhost:3000 FALLA"
+          curl -I http://127.0.0.1:3000 || echo "127.0.0.1:3000 FALLA"
+          
+          echo -e "\n=== 5. VERIFICAR ARCHIVOS APP ==="
+          cd /home/*/billeo-app || cd ~/billeo-app
+          pwd
+          ls -la
+          
+          echo -e "\n=== 6. VERIFICAR PACKAGE.JSON ==="
+          cat package.json | grep -A5 -B5 "scripts\|main"
+          
+          echo -e "\n=== 7. VERIFICAR DIST ==="
+          ls -la dist/ || echo "No hay directorio dist"
+          
+          echo -e "\n=== 8. INTENTAR EJECUTAR DIRECTAMENTE ==="
+          timeout 5 node dist/index.js || echo "Error ejecutando directamente" 
