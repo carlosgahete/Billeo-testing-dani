@@ -24,8 +24,8 @@ COPY tailwind.config.ts ./
 COPY postcss.config.js ./
 COPY drizzle.config.ts ./
 
-# Instalar dependencias
-RUN npm ci --only=production
+# Instalar TODAS las dependencias (incluyendo dev) para el build
+RUN npm ci
 
 # Copiar código fuente
 COPY . .
@@ -35,6 +35,9 @@ RUN mkdir -p uploads logs
 
 # Build de la aplicación
 RUN npm run build
+
+# Limpiar devDependencies después del build
+RUN npm ci --only=production && npm cache clean --force
 
 # Exponer puerto
 EXPOSE 3000
