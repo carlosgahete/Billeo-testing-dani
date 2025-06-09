@@ -15,7 +15,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
 
     - name: Install dependencies
@@ -28,7 +28,7 @@ jobs:
       run: |
         mkdir -p deploy-package
         cp -r dist/ deploy-package/
-        cp package*.json deploy-package/
+        cp package.production.json deploy-package/package.json
         cp *.traineddata deploy-package/ || true
         cp -r uploads/ deploy-package/ || true
         cp database.db deploy-package/ || true
@@ -57,22 +57,22 @@ jobs:
           pm2 delete billeo-app || true
           
           # Backup de uploads y database si existen
-          cp -r uploads uploads_backup || true
-          cp database.db database_backup.db || true
+          cp -r uploads uploads_backup 2>/dev/null || true
+          cp database.db database_backup.db 2>/dev/null || true
           
           # Actualizar archivos desde temporal
           cp -r /tmp/billeo-deploy/deploy-package/* .
           
           # Restaurar uploads y database
-          cp -r uploads_backup/* uploads/ || true
-          cp database_backup.db database.db || true
-          rm -rf uploads_backup database_backup.db || true
+          cp -r uploads_backup/* uploads/ 2>/dev/null || true
+          cp database_backup.db database.db 2>/dev/null || true
+          rm -rf uploads_backup database_backup.db 2>/dev/null || true
           
           # Limpiar temporal
           rm -rf /tmp/billeo-deploy
           
-          # Instalar dependencias de producción
-          npm ci --only=production
+          # Instalar solo dependencias de producción mínimas
+          npm install
           
           # Crear directorios necesarios
           mkdir -p uploads logs
