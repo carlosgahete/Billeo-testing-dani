@@ -35,8 +35,7 @@ jobs:
           
           # BUILD DEL FRONTEND (para producción)
           echo -e "\n🏗️ Construyendo frontend:"
-          npm run build:frontend || npm run build || echo "Intentando vite build directo..."
-          npx vite build --outDir server/public || echo "Error en build"
+          npx vite build --outDir server/public
           
           # Verificar que npm start está definido
           echo "📋 Scripts disponibles:"
