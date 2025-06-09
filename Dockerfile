@@ -33,6 +33,9 @@ COPY . .
 # Crear directorio para uploads y logs
 RUN mkdir -p uploads logs
 
+# Aumentar memoria para el build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Build de la aplicación
 RUN npm run build
 

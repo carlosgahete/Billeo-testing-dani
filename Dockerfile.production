@@ -1,0 +1,38 @@
+# Dockerfile para producción - Solo ejecutar app precompilada
+FROM node:18-alpine
+
+# Instalar dependencias mínimas del sistema para canvas
+RUN apk add --no-cache \
+    cairo \
+    jpeg \
+    pango \
+    giflib \
+    librsvg \
+    pixman
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar solo los archivos necesarios para producción
+COPY package*.json ./
+COPY dist/ ./dist/
+COPY client/public/ ./client/public/
+COPY database.db ./database.db
+COPY uploads/ ./uploads/
+COPY *.traineddata ./
+
+# Instalar solo dependencias de producción
+RUN npm ci --only=production && npm cache clean --force
+
+# Crear directorios necesarios
+RUN mkdir -p uploads logs
+
+# Variables de entorno por defecto
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Exponer puerto
+EXPOSE 3000
+
+# Comando de inicio
+CMD ["node", "dist/index.js"] 

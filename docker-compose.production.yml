@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - DOMAIN=${DOMAIN}
+      - FRONTEND_URL=${FRONTEND_URL}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./database.db:/app/database.db
+    restart: unless-stopped 
