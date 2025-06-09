@@ -1,7 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
-import { getVisionClient } from './visionService';
+
+/**
+ * Obtiene un cliente de Google Cloud Vision API
+ */
+function getVisionClient(): ImageAnnotatorClient {
+  return new ImageAnnotatorClient();
+}
 
 /**
  * Logging condicional para desarrollo
@@ -72,13 +78,14 @@ export async function processInvoiceImage(imagePath: string): Promise<ExtractedI
     }
     
     // El primer elemento contiene todo el texto
-    const text = detections[0].description;
+    const text = detections[0].description || '';
     
     // Extraer información de la factura del texto
     return extractInvoiceInfo(text);
   } catch (error) {
     devError('Error al procesar la imagen de la factura:', error);
-    throw new Error(`Error al procesar la imagen: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    throw new Error(`Error al procesar la imagen: ${errorMessage}`);
   }
 }
 
@@ -104,13 +111,14 @@ export async function processInvoicePDF(pdfPath: string): Promise<ExtractedInvoi
       throw new Error('No se detectó texto en el PDF');
     }
     
-    const text = fullTextAnnotation.text;
+    const text = fullTextAnnotation.text || '';
     
     // Extraer información de la factura del texto
     return extractInvoiceInfo(text);
   } catch (error) {
     devError('Error al procesar el PDF de la factura:', error);
-    throw new Error(`Error al procesar el PDF: ${error.message || "Error desconocido al procesar PDF"}`);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido al procesar PDF';
+    throw new Error(`Error al procesar el PDF: ${errorMessage}`);
   }
 }
 
