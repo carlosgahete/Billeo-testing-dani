@@ -61,6 +61,9 @@ jobs:
         script: |
           cd /home/ubuntu/billeo-app
           
+          # Arreglar permisos del directorio si es necesario
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/billeo-app
+          
           # Parar aplicación actual
           sudo docker-compose -f docker-compose.production.yml down || true
           
@@ -70,7 +73,7 @@ jobs:
           # Limpiar temporal
           rm -rf /tmp/billeo-deploy
           
-          # Iniciar nueva versión
+          # Iniciar nueva versión usando el docker-compose correcto
           sudo docker-compose -f docker-compose.production.yml up --build -d
           
           # Limpiar imágenes viejas
