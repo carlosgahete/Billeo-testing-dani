@@ -1,0 +1,47 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Lightsail
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build frontend
+        run: |
+          cd client
+          npm ci
+          npm run build
+          ls -la dist/
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to Lightsail
+        run: |
+          # Subir código del servidor
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} 'mkdir -p /home/ubuntu/billeo'
+          rsync -avz --exclude 'node_modules' --exclude '.git' --exclude 'client/node_modules' . ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/ubuntu/billeo/
+          
+          # Instalar dependencias y reiniciar app
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} 'cd /home/ubuntu/billeo && npm install && pm2 restart billeo || pm2 start server/index.ts --name billeo --interpreter tsx' 
