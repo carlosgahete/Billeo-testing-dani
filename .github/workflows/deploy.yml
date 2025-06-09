@@ -28,7 +28,7 @@ jobs:
           cd client
           npm ci
           npm run build
-          ls -la dist/
+          ls -la ../dist/
       
       - name: Setup SSH key
         run: |
