@@ -1,0 +1,65 @@
+name: Full Server Diagnosis
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Complete Server Diagnosis
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LIGHTSAIL_HOST }}
+        username: ${{ secrets.LIGHTSAIL_USER }}
+        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        script: |
+          echo "=== DIAGNÓSTICO COMPLETO ==="
+          
+          echo "📁 Directorio actual:"
+          pwd
+          ls -la
+          
+          echo -e "\n📁 Contenido de billeo-app:"
+          cd /home/ubuntu/billeo-app
+          ls -la | head -20
+          
+          echo -e "\n📁 Verificando dist:"
+          ls -la dist/ | head -10
+          
+          echo -e "\n🔍 PM2 status detallado:"
+          pm2 status
+          
+          echo -e "\n🔍 PM2 logs (últimas 20 líneas):"
+          pm2 logs --lines 20 --nostream || echo "No hay logs"
+          
+          echo -e "\n🔍 Procesos corriendo en puertos:"
+          sudo netstat -tlnp 2>/dev/null | grep -E ":(80|443|5000|3000)" || sudo ss -tlnp | grep -E ":(80|443|5000|3000)"
+          
+          echo -e "\n🔍 Variables de entorno:"
+          echo "NODE_ENV: $NODE_ENV"
+          echo "PORT: $PORT"
+          
+          echo -e "\n🔍 Nginx status:"
+          sudo systemctl status nginx --no-pager
+          
+          echo -e "\n🔍 Nginx configuración:"
+          cat /etc/nginx/sites-available/billeo
+          
+          echo -e "\n🔍 Nginx error logs:"
+          sudo tail -n 10 /var/log/nginx/error.log
+          
+          echo -e "\n🔍 Probando conectividad local:"
+          echo "Puerto 5000:"
+          timeout 5 curl -v http://localhost:5000 2>&1 | head -10
+          
+          echo -e "\nPuerto 80:"
+          timeout 5 curl -v http://localhost:80 2>&1 | head -10
+          
+          echo -e "\n🔍 Verificando si la app está realmente corriendo:"
+          ps aux | grep node | grep -v grep
+          
+          echo -e "\n🔍 Memoria y CPU:"
+          free -h
+          df -h | head -5 
