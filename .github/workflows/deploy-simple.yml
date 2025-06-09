@@ -1,8 +1,8 @@
-name: Build and Deploy to Lightsail (DISABLED - Using Docker)
+name: Deploy to Lightsail (No Docker)
 
 on:
   push:
-    branches: [disabled] # Desactivado - usar deploy-simple.yml
+    branches: [main, master]
 
 jobs:
   build-and-deploy:
@@ -29,20 +29,10 @@ jobs:
         mkdir -p deploy-package
         cp -r dist/ deploy-package/
         cp package*.json deploy-package/
-        cp Dockerfile.production deploy-package/
-        cp docker-compose.production.yml deploy-package/
         cp *.traineddata deploy-package/ || true
+        cp -r uploads/ deploy-package/ || true
+        cp database.db deploy-package/ || true
         
-    - name: Deploy to Lightsail
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.LIGHTSAIL_HOST }}
-        username: ${{ secrets.LIGHTSAIL_USER }}
-        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-        script: |
-          # Crear directorio temporal
-          mkdir -p /tmp/billeo-deploy
-          
     - name: Transfer files
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -52,29 +42,47 @@ jobs:
         source: "deploy-package/*"
         target: "/tmp/billeo-deploy/"
         
-    - name: Update application
+    - name: Deploy application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.LIGHTSAIL_HOST }}
         username: ${{ secrets.LIGHTSAIL_USER }}
         key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
         script: |
+          # Ir al directorio de la aplicación
           cd /home/ubuntu/billeo-app
           
-          # Arreglar permisos del directorio si es necesario
-          sudo chown -R ubuntu:ubuntu /home/ubuntu/billeo-app
+          # Parar la aplicación actual
+          pm2 stop billeo-app || true
+          pm2 delete billeo-app || true
           
-          # Parar aplicación actual
-          sudo docker-compose -f docker-compose.production.yml down || true
+          # Backup de uploads y database si existen
+          cp -r uploads uploads_backup || true
+          cp database.db database_backup.db || true
           
-          # Actualizar archivos
+          # Actualizar archivos desde temporal
           cp -r /tmp/billeo-deploy/deploy-package/* .
+          
+          # Restaurar uploads y database
+          cp -r uploads_backup/* uploads/ || true
+          cp database_backup.db database.db || true
+          rm -rf uploads_backup database_backup.db || true
           
           # Limpiar temporal
           rm -rf /tmp/billeo-deploy
           
-          # Iniciar nueva versión usando el docker-compose correcto
-          sudo docker-compose -f docker-compose.production.yml up --build -d
+          # Instalar dependencias de producción
+          npm ci --only=production
           
-          # Limpiar imágenes viejas
-          sudo docker system prune -f 
+          # Crear directorios necesarios
+          mkdir -p uploads logs
+          
+          # Instalar PM2 si no está instalado
+          sudo npm install -g pm2 || true
+          
+          # Iniciar la aplicación con PM2
+          pm2 start dist/index.js --name billeo-app --env production
+          
+          # Guardar configuración PM2
+          pm2 save
+          pm2 startup | grep sudo | bash || true 
