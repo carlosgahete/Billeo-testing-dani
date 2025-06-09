@@ -6,6 +6,7 @@ Aplicación de gestión financiera.
 - ✅ GitHub Actions autodeploy activado
 - ✅ Node.js directo (sin Docker)
 - ✅ PM2 para gestión de procesos
+- 🔄 IP actualizada: 51.44.25.110
 
 ## URL
 - Producción: https://app.billeo.es 
