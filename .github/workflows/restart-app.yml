@@ -1,0 +1,51 @@
+name: Restart App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-app:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Restart Billeo App
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LIGHTSAIL_HOST }}
+        username: ${{ secrets.LIGHTSAIL_USER }}
+        key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        script: |
+          echo "=== Reiniciando aplicación ==="
+          
+          # Ir al directorio de la app
+          cd /home/ubuntu/billeo-app
+          
+          # Parar todos los procesos PM2
+          pm2 stop all
+          pm2 delete all
+          
+          echo -e "\n🔍 Verificando que el build existe:"
+          ls -la dist/index.js || echo "❌ No existe dist/index.js"
+          
+          echo -e "\n🚀 Iniciando aplicación en puerto 5000:"
+          PORT=5000 pm2 start dist/index.js --name billeo-app --env production
+          
+          # Esperar un momento
+          sleep 3
+          
+          echo -e "\n🔍 Estado de PM2:"
+          pm2 status
+          
+          echo -e "\n🔍 Logs recientes:"
+          pm2 logs billeo-app --lines 10 --nostream || echo "No hay logs disponibles"
+          
+          echo -e "\n🔍 Probando aplicación:"
+          curl -I http://localhost:5000 2>/dev/null | head -1 || echo "❌ App no responde en puerto 5000"
+          
+          echo -e "\n🔍 Probando nginx:"
+          curl -I http://localhost:80 2>/dev/null | head -1 || echo "❌ Nginx no responde"
+          
+          # Guardar configuración PM2
+          pm2 save
+          
+          echo -e "\n✅ Aplicación reiniciada" 
