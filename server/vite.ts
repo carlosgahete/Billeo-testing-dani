@@ -24,10 +24,10 @@ export async function setupVite(app: Express, server: Server) {
   }
 
   try {
-    // Importaciones dinámicas para evitar errores en producción
-    const viteModule = await import("vite");
-    const viteConfigModule = await import("../vite.config");
-    const nanoidModule = await import("nanoid");
+    // Usar require dinámico que esbuild no puede bundlear
+    const viteModule = await eval('import("vite")');
+    const viteConfigModule = await eval('import("../vite.config")');
+    const nanoidModule = await eval('import("nanoid")');
     
     const { createServer: createViteServer, createLogger } = viteModule;
     const viteConfig = viteConfigModule.default;
